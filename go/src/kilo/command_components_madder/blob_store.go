@@ -47,6 +47,7 @@ func (cmd *BlobStore) MakeBlobStoreFromConfigPath(
 		if blobStore.BlobStore, err = blob_stores.MakeBlobStore(
 			envBlobStore,
 			blobStore.ConfigNamed,
+			nil,
 		); err != nil {
 			envBlobStore.Cancel(err)
 			return blobStore
@@ -100,6 +101,7 @@ func (cmd *BlobStore) MakeBlobStoreFromIdOrConfigPath(
 			if blobStore.BlobStore, err = blob_stores.MakeBlobStore(
 				envBlobStore,
 				blobStore.ConfigNamed,
+				nil,
 			); err != nil {
 				envBlobStore.Cancel(err)
 				return blobStore

@@ -100,6 +100,7 @@ func MakeBlobStores(
 		if blobStore.BlobStore, err = MakeBlobStore(
 			envDir,
 			blobStore.ConfigNamed,
+			blobStores,
 		); err != nil {
 			ctx.Cancel(err)
 			return blobStores
@@ -123,6 +124,7 @@ func MakeRemoteBlobStore(
 		if blobStore.BlobStore, err = MakeBlobStore(
 			envDir,
 			configNamed,
+			nil,
 		); err != nil {
 			envDir.GetActiveContext().Cancel(err)
 			return blobStore
@@ -132,10 +134,18 @@ func MakeRemoteBlobStore(
 	return blobStore
 }
 
+// NOTE: blobStores parameter added to support inventory archive's
+// loose-blob-store-id resolution. This couples MakeBlobStore to the
+// store map, which may not scale well if more store types need
+// cross-references. If this becomes a problem, switch to two-pass
+// initialization: first pass creates all stores without cross-refs,
+// second pass wires them up.
+//
 // TODO describe base path agnostically
 func MakeBlobStore(
 	envDir env_dir.Env,
 	configNamed blob_store_configs.ConfigNamed,
+	blobStores BlobStoreMap,
 ) (store domain_interfaces.BlobStore, err error) {
 	printer := ui.MakePrefixPrinter(
 		ui.Err(),
@@ -199,7 +209,7 @@ func MakeBlobStore(
 			otherStorePath.GetConfig(),
 		)
 
-		return MakeBlobStore(envDir, configNamed)
+		return MakeBlobStore(envDir, configNamed, blobStores)
 
 	default:
 		err = errors.BadRequestf(
