@@ -71,3 +71,7 @@ func (config TomlInventoryArchiveV0) GetBlobEncryption() domain_interfaces.Markl
 func (config TomlInventoryArchiveV0) GetLooseBlobStoreId() blob_store_id.Id {
 	return config.LooseBlobStoreId
 }
+
+func (config TomlInventoryArchiveV0) GetCompressionType() compression_type.CompressionType {
+	return config.CompressionType
+}

@@ -63,6 +63,7 @@ type (
 		ConfigHashType
 		domain_interfaces.BlobIOWrapper
 		GetLooseBlobStoreId() blob_store_id.Id
+		GetCompressionType() compression_type.CompressionType
 	}
 
 	ConfigPointer interface {

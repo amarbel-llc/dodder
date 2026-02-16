@@ -18,6 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
 	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
 )
 
 func TestMakeBlobReaderFromArchive(t *testing.T) {
@@ -106,6 +107,7 @@ type stubBlobStore struct {
 	makeBlobReaderCalled bool
 	makeBlobReaderId     domain_interfaces.MarklId
 	allBlobIds           []domain_interfaces.MarklId
+	blobData             map[string][]byte
 }
 
 func (s *stubBlobStore) MakeBlobReader(
@@ -113,6 +115,15 @@ func (s *stubBlobStore) MakeBlobReader(
 ) (domain_interfaces.BlobReader, error) {
 	s.makeBlobReaderCalled = true
 	s.makeBlobReaderId = id
+
+	if s.blobData != nil {
+		if data, ok := s.blobData[id.String()]; ok {
+			return markl_io.MakeReadCloser(
+				markl.FormatHashSha256.Get(),
+				bytes.NewReader(data),
+			), nil
+		}
+	}
 
 	return markl_io.MakeNopReadCloser(
 		markl.FormatHashSha256.Get(),
@@ -456,5 +467,186 @@ func TestAllBlobsDeduplication(t *testing.T) {
 	// Total should be exactly 2
 	if len(seen) != 2 {
 		t.Errorf("expected 2 unique blobs, got %d", len(seen))
+	}
+}
+
+func TestPack(t *testing.T) {
+	basePath := t.TempDir()
+	cachePath := t.TempDir()
+
+	hashFormat := markl.FormatHashSha256
+
+	testData1 := []byte("pack test blob one")
+	testData2 := []byte("pack test blob two")
+	rawHash1 := sha256.Sum256(testData1)
+	rawHash2 := sha256.Sum256(testData2)
+
+	id1, repool1 := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash1[:]),
+	)
+	defer repool1()
+
+	id2, repool2 := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash2[:]),
+	)
+	defer repool2()
+
+	stub := &stubBlobStore{
+		allBlobIds: []domain_interfaces.MarklId{id1, id2},
+		blobData: map[string][]byte{
+			id1.String(): testData1,
+			id2.String(): testData2,
+		},
+	}
+
+	config := blob_store_configs.TomlInventoryArchiveV0{
+		HashTypeId:      markl.FormatIdHashSha256,
+		CompressionType: compression_type.CompressionTypeNone,
+	}
+
+	store := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       basePath,
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index:          make(map[string]archiveEntry),
+		config:         config,
+	}
+
+	if err := store.Pack(); err != nil {
+		t.Fatalf("Pack: %v", err)
+	}
+
+	// Verify both blobs are now in the in-memory index
+	if !store.HasBlob(id1) {
+		t.Fatal("expected id1 in index after pack")
+	}
+
+	if !store.HasBlob(id2) {
+		t.Fatal("expected id2 in index after pack")
+	}
+
+	// Verify archive data file was written
+	dataMatches, err := filepath.Glob(
+		filepath.Join(basePath, "*"+inventory_archive.DataFileExtension),
+	)
+	if err != nil {
+		t.Fatalf("globbing data files: %v", err)
+	}
+
+	if len(dataMatches) != 1 {
+		t.Fatalf("expected 1 data file, got %d", len(dataMatches))
+	}
+
+	// Verify index file was written
+	indexMatches, err := filepath.Glob(
+		filepath.Join(basePath, "*"+inventory_archive.IndexFileExtension),
+	)
+	if err != nil {
+		t.Fatalf("globbing index files: %v", err)
+	}
+
+	if len(indexMatches) != 1 {
+		t.Fatalf("expected 1 index file, got %d", len(indexMatches))
+	}
+
+	// Verify cache file was written
+	cacheFilePath := filepath.Join(cachePath, inventory_archive.CacheFileName)
+
+	if _, err := os.Stat(cacheFilePath); err != nil {
+		t.Fatalf("expected cache file at %s: %v", cacheFilePath, err)
+	}
+
+	// Verify we can read the packed blobs from the archive
+	reader1, err := store.MakeBlobReader(id1)
+	if err != nil {
+		t.Fatalf("MakeBlobReader for id1 after pack: %v", err)
+	}
+
+	defer reader1.Close()
+
+	got1, err := io.ReadAll(reader1)
+	if err != nil {
+		t.Fatalf("ReadAll for id1: %v", err)
+	}
+
+	if !bytes.Equal(got1, testData1) {
+		t.Errorf("id1 data mismatch: got %q, want %q", got1, testData1)
+	}
+
+	reader2, err := store.MakeBlobReader(id2)
+	if err != nil {
+		t.Fatalf("MakeBlobReader for id2 after pack: %v", err)
+	}
+
+	defer reader2.Close()
+
+	got2, err := io.ReadAll(reader2)
+	if err != nil {
+		t.Fatalf("ReadAll for id2: %v", err)
+	}
+
+	if !bytes.Equal(got2, testData2) {
+		t.Errorf("id2 data mismatch: got %q, want %q", got2, testData2)
+	}
+}
+
+func TestPackSkipsAlreadyArchivedBlobs(t *testing.T) {
+	basePath := t.TempDir()
+	cachePath := t.TempDir()
+
+	hashFormat := markl.FormatHashSha256
+
+	testData := []byte("already archived blob")
+	rawHash := sha256.Sum256(testData)
+
+	id, repool := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash[:]),
+	)
+	defer repool()
+
+	stub := &stubBlobStore{
+		allBlobIds: []domain_interfaces.MarklId{id},
+		blobData: map[string][]byte{
+			id.String(): testData,
+		},
+	}
+
+	config := blob_store_configs.TomlInventoryArchiveV0{
+		HashTypeId:      markl.FormatIdHashSha256,
+		CompressionType: compression_type.CompressionTypeNone,
+	}
+
+	store := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       basePath,
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index: map[string]archiveEntry{
+			id.String(): {
+				ArchiveChecksum: "deadbeef00deadbeef00deadbeef00deadbeef00deadbeef00deadbeef00dead",
+				Offset:          0,
+				CompressedSize:  100,
+			},
+		},
+		config: config,
+	}
+
+	if err := store.Pack(); err != nil {
+		t.Fatalf("Pack: %v", err)
+	}
+
+	// No new archive files should have been written since all blobs
+	// were already in the index
+	dataMatches, err := filepath.Glob(
+		filepath.Join(basePath, "*"+inventory_archive.DataFileExtension),
+	)
+	if err != nil {
+		t.Fatalf("globbing data files: %v", err)
+	}
+
+	if len(dataMatches) != 0 {
+		t.Fatalf("expected 0 data files (all blobs already archived), got %d",
+			len(dataMatches))
 	}
 }

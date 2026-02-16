@@ -3,6 +3,7 @@ package commands_madder
 import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
 )
@@ -30,5 +31,23 @@ func (cmd *Pack) SetFlagDefinitions(
 
 func (cmd Pack) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)
-	_ = envBlobStore
+	blobStoreMap := envBlobStore.GetBlobStores()
+
+	for _, blobStore := range blobStoreMap {
+		if !cmd.StoreId.IsEmpty() {
+			if blobStore.Path.GetId().String() != cmd.StoreId.String() {
+				continue
+			}
+		}
+
+		packable, ok := blobStore.BlobStore.(blob_stores.PackableArchive)
+		if !ok {
+			continue
+		}
+
+		if err := packable.Pack(); err != nil {
+			req.Cancel(err)
+			return
+		}
+	}
 }
