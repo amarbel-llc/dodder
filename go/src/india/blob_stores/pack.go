@@ -8,25 +8,37 @@ import (
 	"path/filepath"
 	"sort"
 
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
 )
 
+// PackOptions controls the behavior of the Pack operation.
+type PackOptions struct {
+	// DeleteLoose causes loose blobs to be deleted after they have been
+	// packed into the archive and the archive has been validated.
+	DeleteLoose bool
+
+	// DeletionPrecondition is checked before any loose blobs are deleted.
+	// When nil, deletion proceeds without additional checks.
+	DeletionPrecondition DeletionPrecondition
+}
+
 // PackableArchive is implemented by blob stores that support packing loose
 // blobs into archive files.
 type PackableArchive interface {
-	Pack() error
+	Pack(options PackOptions) error
 }
 
-func (store inventoryArchive) Pack() (err error) {
+type packedBlob struct {
+	hash []byte
+	data []byte
+}
+
+func (store inventoryArchive) Pack(options PackOptions) (err error) {
 	hashFormatId := store.defaultHash.GetMarklFormatId()
 
-	type looseBlob struct {
-		hash []byte
-		data []byte
-	}
-
-	var blobs []looseBlob
+	var blobs []packedBlob
 
 	for looseId, iterErr := range store.looseBlobStore.AllBlobs() {
 		if iterErr != nil {
@@ -59,7 +71,7 @@ func (store inventoryArchive) Pack() (err error) {
 		hashBytes := make([]byte, len(looseId.GetBytes()))
 		copy(hashBytes, looseId.GetBytes())
 
-		blobs = append(blobs, looseBlob{hash: hashBytes, data: data})
+		blobs = append(blobs, packedBlob{hash: hashBytes, data: data})
 	}
 
 	if len(blobs) == 0 {
@@ -219,6 +231,135 @@ func (store inventoryArchive) Pack() (err error) {
 	); err != nil {
 		err = errors.Wrapf(err, "writing cache file %s", cachePath)
 		return err
+	}
+
+	if !options.DeleteLoose {
+		return nil
+	}
+
+	// Validate the archive by re-reading and rehashing every entry
+	if err = store.validateArchive(dataPath, blobs); err != nil {
+		return err
+	}
+
+	// Check deletion precondition if one was provided
+	if options.DeletionPrecondition != nil {
+		blobSeq := func(
+			yield func(domain_interfaces.MarklId, error) bool,
+		) {
+			for _, blob := range blobs {
+				marklId, repool := store.defaultHash.GetBlobIdForHexString(
+					hex.EncodeToString(blob.hash),
+				)
+
+				if !yield(marklId, nil) {
+					repool()
+					return
+				}
+
+				repool()
+			}
+		}
+
+		if err = options.DeletionPrecondition.CheckBlobsSafeToDelete(
+			blobSeq,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	// Delete loose blobs
+	if err = store.deleteLooseBlobs(blobs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (store inventoryArchive) validateArchive(
+	dataPath string,
+	blobs []packedBlob,
+) (err error) {
+	file, err := os.Open(dataPath)
+	if err != nil {
+		err = errors.Wrapf(err, "reopening archive for validation %s", dataPath)
+		return err
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	dataReader, err := inventory_archive.NewDataReader(file)
+	if err != nil {
+		err = errors.Wrapf(
+			err,
+			"reading archive header for validation %s",
+			dataPath,
+		)
+		return err
+	}
+
+	entries, err := dataReader.ReadAllEntries()
+	if err != nil {
+		err = errors.Wrapf(
+			err,
+			"reading archive entries for validation %s",
+			dataPath,
+		)
+		return err
+	}
+
+	if len(entries) != len(blobs) {
+		err = errors.Errorf(
+			"archive entry count mismatch: wrote %d, read %d",
+			len(blobs),
+			len(entries),
+		)
+		return err
+	}
+
+	for i, entry := range entries {
+		hash := store.defaultHash.Get()
+		hash.Write(entry.Data)
+		computed := hash.Sum(nil)
+		store.defaultHash.Put(hash)
+
+		if !bytes.Equal(computed, entry.Hash) {
+			err = errors.Errorf(
+				"archive validation failed: entry %d hash mismatch "+
+					"(expected %x, got %x)",
+				i,
+				entry.Hash,
+				computed,
+			)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (store inventoryArchive) deleteLooseBlobs(
+	blobs []packedBlob,
+) (err error) {
+	deleter, ok := store.looseBlobStore.(BlobDeleter)
+	if !ok {
+		err = errors.Errorf("loose blob store does not support deletion")
+		return err
+	}
+
+	for _, blob := range blobs {
+		marklId, repool := store.defaultHash.GetBlobIdForHexString(
+			hex.EncodeToString(blob.hash),
+		)
+
+		if deleteErr := deleter.DeleteBlob(marklId); deleteErr != nil {
+			repool()
+			err = errors.Wrap(deleteErr)
+			return err
+		}
+
+		repool()
 	}
 
 	return nil

@@ -45,7 +45,10 @@ func (cmd Pack) Run(req command.Request) {
 			continue
 		}
 
-		if err := packable.Pack(); err != nil {
+		if err := packable.Pack(blob_stores.PackOptions{
+			DeleteLoose:          cmd.DeleteLoose,
+			DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
+		}); err != nil {
 			req.Cancel(err)
 			return
 		}

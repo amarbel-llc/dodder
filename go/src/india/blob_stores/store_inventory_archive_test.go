@@ -108,6 +108,7 @@ type stubBlobStore struct {
 	makeBlobReaderId     domain_interfaces.MarklId
 	allBlobIds           []domain_interfaces.MarklId
 	blobData             map[string][]byte
+	deletedBlobIds       []string
 }
 
 func (s *stubBlobStore) MakeBlobReader(
@@ -145,6 +146,13 @@ func (s *stubBlobStore) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId
 			}
 		}
 	}
+}
+
+func (s *stubBlobStore) DeleteBlob(
+	id domain_interfaces.MarklId,
+) error {
+	s.deletedBlobIds = append(s.deletedBlobIds, id.String())
+	return nil
 }
 
 func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
@@ -513,7 +521,7 @@ func TestPack(t *testing.T) {
 		config:         config,
 	}
 
-	if err := store.Pack(); err != nil {
+	if err := store.Pack(PackOptions{}); err != nil {
 		t.Fatalf("Pack: %v", err)
 	}
 
@@ -632,7 +640,7 @@ func TestPackSkipsAlreadyArchivedBlobs(t *testing.T) {
 		config: config,
 	}
 
-	if err := store.Pack(); err != nil {
+	if err := store.Pack(PackOptions{}); err != nil {
 		t.Fatalf("Pack: %v", err)
 	}
 
@@ -648,5 +656,145 @@ func TestPackSkipsAlreadyArchivedBlobs(t *testing.T) {
 	if len(dataMatches) != 0 {
 		t.Fatalf("expected 0 data files (all blobs already archived), got %d",
 			len(dataMatches))
+	}
+}
+
+func TestPackDeleteLoose(t *testing.T) {
+	basePath := t.TempDir()
+	cachePath := t.TempDir()
+
+	hashFormat := markl.FormatHashSha256
+
+	testData1 := []byte("delete-loose blob one")
+	testData2 := []byte("delete-loose blob two")
+	rawHash1 := sha256.Sum256(testData1)
+	rawHash2 := sha256.Sum256(testData2)
+
+	id1, repool1 := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash1[:]),
+	)
+	defer repool1()
+
+	id2, repool2 := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash2[:]),
+	)
+	defer repool2()
+
+	stub := &stubBlobStore{
+		allBlobIds: []domain_interfaces.MarklId{id1, id2},
+		blobData: map[string][]byte{
+			id1.String(): testData1,
+			id2.String(): testData2,
+		},
+	}
+
+	config := blob_store_configs.TomlInventoryArchiveV0{
+		HashTypeId:      markl.FormatIdHashSha256,
+		CompressionType: compression_type.CompressionTypeNone,
+	}
+
+	store := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       basePath,
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index:          make(map[string]archiveEntry),
+		config:         config,
+	}
+
+	if err := store.Pack(PackOptions{
+		DeleteLoose:          true,
+		DeletionPrecondition: NopDeletionPrecondition(),
+	}); err != nil {
+		t.Fatalf("Pack with DeleteLoose: %v", err)
+	}
+
+	// Verify both blobs are in the archive index
+	if !store.HasBlob(id1) {
+		t.Fatal("expected id1 in index after pack")
+	}
+
+	if !store.HasBlob(id2) {
+		t.Fatal("expected id2 in index after pack")
+	}
+
+	// Verify DeleteBlob was called for both blobs
+	if len(stub.deletedBlobIds) != 2 {
+		t.Fatalf("expected 2 deleted blobs, got %d", len(stub.deletedBlobIds))
+	}
+
+	deletedSet := make(map[string]bool)
+	for _, id := range stub.deletedBlobIds {
+		deletedSet[id] = true
+	}
+
+	if !deletedSet[id1.String()] {
+		t.Errorf("expected id1 to be deleted")
+	}
+
+	if !deletedSet[id2.String()] {
+		t.Errorf("expected id2 to be deleted")
+	}
+
+	// Verify archive is still readable after deletion
+	reader1, err := store.MakeBlobReader(id1)
+	if err != nil {
+		t.Fatalf("MakeBlobReader for id1 after delete: %v", err)
+	}
+
+	defer reader1.Close()
+
+	got1, err := io.ReadAll(reader1)
+	if err != nil {
+		t.Fatalf("ReadAll for id1: %v", err)
+	}
+
+	if !bytes.Equal(got1, testData1) {
+		t.Errorf("id1 data mismatch: got %q, want %q", got1, testData1)
+	}
+}
+
+func TestPackDeleteLooseNotCalledWithoutFlag(t *testing.T) {
+	basePath := t.TempDir()
+	cachePath := t.TempDir()
+
+	hashFormat := markl.FormatHashSha256
+
+	testData := []byte("should not be deleted")
+	rawHash := sha256.Sum256(testData)
+
+	id, repool := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash[:]),
+	)
+	defer repool()
+
+	stub := &stubBlobStore{
+		allBlobIds: []domain_interfaces.MarklId{id},
+		blobData: map[string][]byte{
+			id.String(): testData,
+		},
+	}
+
+	config := blob_store_configs.TomlInventoryArchiveV0{
+		HashTypeId:      markl.FormatIdHashSha256,
+		CompressionType: compression_type.CompressionTypeNone,
+	}
+
+	store := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       basePath,
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index:          make(map[string]archiveEntry),
+		config:         config,
+	}
+
+	if err := store.Pack(PackOptions{}); err != nil {
+		t.Fatalf("Pack without DeleteLoose: %v", err)
+	}
+
+	if len(stub.deletedBlobIds) != 0 {
+		t.Fatalf("expected 0 deleted blobs when DeleteLoose is false, got %d",
+			len(stub.deletedBlobIds))
 	}
 }

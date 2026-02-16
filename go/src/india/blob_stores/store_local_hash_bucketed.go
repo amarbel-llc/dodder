@@ -2,6 +2,7 @@ package blob_stores
 
 import (
 	"bytes"
+	"os"
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
@@ -26,7 +27,10 @@ type localHashBucketed struct {
 	tempFS   env_dir.TemporaryFS
 }
 
-var _ domain_interfaces.BlobStore = localHashBucketed{}
+var (
+	_ domain_interfaces.BlobStore = localHashBucketed{}
+	_ BlobDeleter                 = localHashBucketed{}
+)
 
 func makeLocalHashBucketed(
 	envDir env_dir.Env,
@@ -231,4 +235,22 @@ func (blobStore localHashBucketed) blobReaderFrom(
 	}
 
 	return readCloser, err
+}
+
+func (blobStore localHashBucketed) DeleteBlob(
+	id domain_interfaces.MarklId,
+) (err error) {
+	path := env_dir.MakeHashBucketPathFromMerkleId(
+		id,
+		blobStore.buckets,
+		blobStore.multiHash,
+		blobStore.basePath,
+	)
+
+	if err = os.Remove(path); err != nil {
+		err = errors.Wrapf(err, "deleting blob %s", id)
+		return err
+	}
+
+	return nil
 }
