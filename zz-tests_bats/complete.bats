@@ -97,6 +97,7 @@ function complete_subcmd { # @test
 		blob_store-init-sftp-explicit
 		blob_store-init-sftp-ssh_config
 		blob_store-list
+		blob_store-pack
 		blob_store-read
 		blob_store-sync
 		blob_store-write
@@ -146,6 +147,7 @@ function complete_subcmd { # @test
 		serve
 		show
 		status
+		update
 	EOM
 }
 
