@@ -182,6 +182,53 @@ dodder new -edit=false -tags project,important -type md
 Tags and types can also be modified after creation through the `edit` and
 `organize` commands.
 
+### Import content from files
+
+Import an existing file as a new zettel:
+
+```bash
+dodder new -edit=false document.txt
+```
+
+Each file argument becomes a separate zettel. The file content becomes the
+blob, and dodder assigns a new two-part ID. Combine with `-tags` and `-type`
+to set metadata at import time:
+
+```bash
+dodder new -edit=false -tags reading-list -type md notes.md
+```
+
+### Check repository status
+
+After creating or editing zettels, inspect the state of checked-out objects:
+
+```bash
+dodder status
+```
+
+This displays each object's checkout state -- whether it exists only in the
+store (internal), is synced to the filesystem (checked out), has been modified
+locally (changed), or has no store counterpart (untracked). The status output
+mirrors the mental model of store versus working copy described below.
+
+### Checkout and checkin
+
+Materialize a zettel as a file on the filesystem for external editing:
+
+```bash
+dodder checkout one/uno
+```
+
+After editing the file, commit changes back to the store:
+
+```bash
+dodder checkin one/uno
+```
+
+The store records the new blob content and updates the inventory list. The
+original blob remains in the store (content is immutable); a new blob is
+created for the modified content.
+
 ## Mental Model
 
 Understanding dodder requires internalizing a few principles that differ from
