@@ -15,10 +15,10 @@ func MakeLuaSelfApplyV1(
 		panic("self was nil")
 	}
 
-	self := selfOriginal.CloneTransacted()
+	self, _ := selfOriginal.CloneTransacted()
 
 	return func(vm *lua.VM) (err error) {
-		selfTable := sku_lua.MakeLuaTablePoolV1(vm).Get()
+		selfTable, _ := sku_lua.MakeLuaTablePoolV1(vm).GetWithRepool()
 		sku_lua.ToLuaTableV1(self, vm.LState, selfTable)
 		vm.SetGlobal("Selbst", selfTable.Transacted)
 		return err
@@ -41,13 +41,10 @@ func (a *LuaV1) ResetWith(b LuaV1) {
 
 func (tb *LuaV1) ContainsSku(tg sku.TransactedGetter) bool {
 	// lb := b.luaVMPoolBuilder.Clone().WithApply(MakeSelfApply(sk))
-	vm, err := tb.Get()
-	if err != nil {
-		ui.Err().Printf("lua script error: %s", err)
-		return false
-	}
+	vm, vmRepool := tb.GetWithRepool()
+	defer vmRepool()
 
-	defer tb.Put(vm)
+	var err error
 
 	var t *lua.LTable
 
@@ -60,8 +57,8 @@ func (tb *LuaV1) ContainsSku(tg sku.TransactedGetter) bool {
 	// TODO safer
 	f := vm.VM.GetField(t, "contains_sku").(*lua.LFunction)
 
-	tSku := vm.TablePool.Get()
-	defer vm.TablePool.Put(tSku)
+	tSku, tSkuRepool := vm.TablePool.GetWithRepool()
+	defer tSkuRepool()
 
 	vm.VM.Push(f)
 

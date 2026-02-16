@@ -188,8 +188,8 @@ func (cmd Clean) shouldClean(
 	}
 
 	if cmd.includeParent {
-		mother := sku.GetTransactedPool().Get()
-		defer sku.GetTransactedPool().Put(mother)
+		mother, motherRepool := sku.GetTransactedPool().GetWithRepool()
+		defer motherRepool()
 
 		err := u.GetStore().GetStreamIndex().ReadOneObjectId(
 			co.GetSku().GetObjectId(),

@@ -14,7 +14,7 @@ type Library[
 	BLOB_PTR interfaces.Ptr[BLOB],
 ] struct {
 	envRepo env_repo.Env
-	pool    interfaces.Pool[BLOB, BLOB_PTR]
+	pool    interfaces.PoolPtr[BLOB, BLOB_PTR]
 	domain_interfaces.Format[BLOB, BLOB_PTR]
 	resetFunc func(BLOB_PTR)
 }
@@ -51,7 +51,7 @@ func (library *Library[BLOB, BLOB_PTR]) GetBlob(
 
 	defer errors.DeferredCloser(&err, readCloser)
 
-	blobPtr = library.pool.Get()
+	blobPtr, repool = library.pool.GetWithRepool()
 
 	if _, err = library.DecodeFrom(blobPtr, readCloser); err != nil {
 		err = errors.Wrapf(err, "BlobReader: %q", readCloser)
@@ -63,10 +63,6 @@ func (library *Library[BLOB, BLOB_PTR]) GetBlob(
 	if err = markl.AssertEqual(blobId, actual); err != nil {
 		err = errors.Wrap(err)
 		return blobPtr, repool, err
-	}
-
-	repool = func() {
-		library.pool.Put(blobPtr)
 	}
 
 	return blobPtr, repool, err

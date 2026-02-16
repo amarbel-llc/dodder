@@ -179,7 +179,7 @@ func (store *Store) CheckoutOne(
 		return checkedOut, err
 	}
 
-	checkedOut = GetCheckedOutPool().Get()
+	checkedOut, _ = GetCheckedOutPool().GetWithRepool()
 	var item Item
 
 	if err = item.Url.Set(yourl.String()); err != nil {
@@ -205,9 +205,10 @@ func (store *Store) CheckoutOne(
 	store.lock.Lock()
 	defer store.lock.Unlock()
 
+	clonedCo, _ := checkedOut.Clone()
 	existing := store.added[*yourl]
 	store.added[*yourl] = append(existing, checkedOutWithItem{
-		CheckedOut: checkedOut.Clone(),
+		CheckedOut: clonedCo,
 		Item:       item,
 	})
 

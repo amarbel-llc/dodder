@@ -45,8 +45,9 @@ func (store *Store) applyDormantAndRealizeTags(
 			return err
 		}
 
+		selfTag, _ := catgut.MakeFromString(objectIdString)
 		object.GetMetadataMutable().GetIndexMutable().GetTagPaths().AddSelf(
-			catgut.MakeFromString(objectIdString),
+			selfTag,
 		)
 	}
 
@@ -115,15 +116,13 @@ func (store *Store) addSuperTags(
 				return
 			}
 
-			defer sku.GetTransactedPool().Put(tagOrRepoOrTypeObject)
-
 			tagPaths := tagOrRepoOrTypeObject.GetMetadata().GetIndex().GetTagPaths()
 
 			if tagPaths.Paths.Len() <= 1 {
 				return
 			}
 
-			prefix := catgut.MakeFromString(expandedObjectIdComponent)
+			prefix, _ := catgut.MakeFromString(expandedObjectIdComponent)
 
 			newTagPaths := object.GetMetadataMutable().GetIndexMutable().GetTagPaths()
 
@@ -148,7 +147,8 @@ func (store *Store) addImplicitTags(
 	addImplicitTags := func(tag ids.Tag) (err error) {
 		tagPathWithType := tag_paths.MakePathWithType()
 		tagPathWithType.Type = tag_paths.TypeIndirect
-		tagPathWithType.Add(catgut.MakeFromString(tag.String()))
+		tagStr, _ := catgut.MakeFromString(tag.String())
+		tagPathWithType.Add(tagStr)
 
 		implicitTags := store.storeConfig.GetConfig().GetImplicitTags(tag)
 
@@ -159,9 +159,8 @@ func (store *Store) addImplicitTags(
 
 		for implicitTag := range implicitTags.All() {
 			tagPathWithTypeClone := tagPathWithType.Clone()
-			tagPathWithTypeClone.Add(
-				catgut.MakeFromString(implicitTag.String()),
-			)
+			implicitTagStr, _ := catgut.MakeFromString(implicitTag.String())
+			tagPathWithTypeClone.Add(implicitTagStr)
 
 			tagPaths.AddPathWithType(tagPathWithTypeClone)
 		}

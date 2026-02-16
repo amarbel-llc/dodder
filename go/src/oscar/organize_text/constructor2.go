@@ -20,7 +20,8 @@ func (c *constructor2) collectExplicitAndImplicitFor(
 	skus sku.SkuTypeSet,
 	re ids.TagStruct,
 ) (explicitCount, implicitCount int, err error) {
-	res := catgut.MakeFromString(re.String())
+	res, resRepool := catgut.MakeFromString(re.String())
+	defer resRepool()
 
 	for checkedOut := range skus.All() {
 		object := checkedOut.GetSkuExternal()
@@ -298,9 +299,10 @@ func (c *constructor2) makeAndAddUngrouped(
 func (c *constructor2) cloneObj(
 	named *obj,
 ) (z *obj, err error) {
+	clonedSku, _ := sku.CloneSkuType(named.sku)
 	z = &obj{
 		tipe: named.tipe,
-		sku:  sku.CloneSkuType(named.sku),
+		sku:  clonedSku,
 	}
 
 	// TODO explore using shas as keys

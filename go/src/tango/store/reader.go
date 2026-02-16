@@ -16,11 +16,12 @@ import (
 func (store *Store) ReadTransactedFromObjectId(
 	objectId domain_interfaces.ObjectId,
 ) (object *sku.Transacted, err error) {
-	object = sku.GetTransactedPool().Get()
+	var objectRepool interfaces.FuncRepool
+	object, objectRepool = sku.GetTransactedPool().GetWithRepool()
 
 	if err = store.ReadOneInto(objectId, object); err != nil {
 		if errors.IsErrNotFound(err) {
-			sku.GetTransactedPool().Put(object)
+			objectRepool()
 			object = nil
 		}
 
@@ -70,13 +71,14 @@ func (store *Store) ReadTypeObject(
 		panic(fmt.Sprintf("empty type lock for type: %q", typeLock.GetKey()))
 	}
 
-	typeObject = sku.GetTransactedPool().Get()
+	var typeObjectRepool interfaces.FuncRepool
+	typeObject, typeObjectRepool = sku.GetTransactedPool().GetWithRepool()
 
 	if !store.streamIndex.ReadOneMarklId(
 		typeLock.GetValue(),
 		typeObject,
 	) {
-		sku.GetTransactedPool().Put(typeObject)
+		typeObjectRepool()
 		typeObject = nil
 
 		err = errors.MakeErrNotFound(typeLock.GetKey())
@@ -94,7 +96,7 @@ func (store *Store) ReadOneObjectId(
 		return object, err
 	}
 
-	object = sku.GetTransactedPool().Get()
+	object, _ = sku.GetTransactedPool().GetWithRepool()
 
 	if err = store.streamIndex.ReadOneObjectId(objectId, object); err != nil {
 		if !errors.IsErrNotFound(err) {

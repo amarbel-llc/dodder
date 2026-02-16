@@ -47,22 +47,18 @@ func (s *env) luaSearcher(ls *lua.LState) int {
 	ls.Pop(1)
 
 	var err error
-	var object *sku.Transacted
 
-	if object, err = s.GetSkuFromString(lv); err != nil {
+	if _, err = s.GetSkuFromString(lv); err != nil {
 		ls.Push(lua.LString(err.Error()))
 		return 1
 	}
-
-	sku.GetTransactedPool().Put(object)
-
 	ls.Push(ls.NewFunction(s.LuaRequire))
 
 	return 1
 }
 
 func (s *env) GetSkuFromString(lv string) (object *sku.Transacted, err error) {
-	object = sku.GetTransactedPool().Get()
+	object, _ = sku.GetTransactedPool().GetWithRepool()
 
 	defer func() {
 		if err != nil {
@@ -107,7 +103,7 @@ func (s *env) LuaRequire(ls *lua.LState) int {
 		// return 1
 	}
 
-	defer sku.GetTransactedPool().Put(object)
+	// object lifecycle managed by caller
 
 	if err = s.objectStore.ReadOneInto(object.GetObjectId(), object); err != nil {
 		panic(err)

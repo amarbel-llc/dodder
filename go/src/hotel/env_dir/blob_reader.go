@@ -54,7 +54,9 @@ func NewReader(
 		}
 	}
 
-	reader.digester = markl_io.MakeWriter(config.hashFormat.GetHash(), nil)
+	hash, hashRepool := config.hashFormat.GetHash()
+	defer hashRepool()
+	reader.digester = markl_io.MakeWriter(hash, nil)
 	reader.tee = io.TeeReader(reader.expander, reader.digester)
 
 	return reader, err

@@ -62,7 +62,7 @@ func (index *Index) ReadManyMarklId(
 	}
 
 	for _, loc := range locs {
-		object := sku.GetTransactedPool().Get()
+		object, _ := sku.GetTransactedPool().GetWithRepool()
 
 		if !index.readOneLoc(loc, object) {
 			err = errors.Errorf("failed to read loc: %s", loc)
@@ -97,8 +97,8 @@ func (index *Index) ObjectExists(
 		return err
 	}
 
-	digest := index.hashType.FromStringContent(objectIdString)
-	defer markl.PutId(digest)
+	digest, digestRepool := index.hashType.GetMarklIdForString(objectIdString)
+	defer digestRepool()
 
 	if _, err = index.readOneMarklIdLoc(digest); err != nil {
 		err = errors.Wrap(err)
@@ -134,8 +134,8 @@ func (index *Index) ReadOneObjectId(
 func (index *Index) ReadManyObjectId(
 	objectId ids.Id,
 ) (objects []*sku.Transacted, err error) {
-	digest := markl.FormatHashSha256.FromStringContent(objectId.String())
-	defer markl.PutId(digest)
+	digest, digestRepool := markl.FormatHashSha256.GetMarklIdForString(objectId.String())
+	defer digestRepool()
 
 	if objects, err = index.ReadManyMarklId(digest); err != nil {
 		err = errors.Wrap(err)
@@ -157,10 +157,10 @@ func (index *Index) ReadOneObjectIdTai(
 
 	key := objectId.String() + tai.String()
 
-	digest := markl.FormatHashSha256.FromStringContent(key)
-	defer markl.PutId(digest)
+	digest, digestRepool := markl.FormatHashSha256.GetMarklIdForString(key)
+	defer digestRepool()
 
-	object = sku.GetTransactedPool().Get()
+	object, _ = sku.GetTransactedPool().GetWithRepool()
 
 	if !index.ReadOneMarklId(digest, object) {
 		err = errors.MakeErrNotFoundString(key)

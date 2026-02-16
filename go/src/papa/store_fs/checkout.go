@@ -196,8 +196,8 @@ func (store *Store) shouldCheckOut(
 		return false
 	}
 
-	mother := sku.GetTransactedPool().Get()
-	defer sku.GetTransactedPool().Put(mother)
+	mother, motherRepool := sku.GetTransactedPool().GetWithRepool()
+	defer motherRepool()
 
 	if err := store.storeSupplies.ReadOneInto(
 		checkedOut.GetSku().GetObjectId(),
@@ -386,7 +386,6 @@ func (store *Store) UpdateCheckoutFromCheckedOut(
 	fsOptions.Path = PathOptionTempLocal
 	options.StoreSpecificOptions = fsOptions
 
-	var replacement *sku.CheckedOut
 	var oldFDs, newFDs *sku.FSItem
 
 	if oldFDs, err = store.ReadFSItemFromExternal(object.GetSkuExternal()); err != nil {
@@ -394,15 +393,13 @@ func (store *Store) UpdateCheckoutFromCheckedOut(
 		return err
 	}
 
-	if replacement, newFDs, err = store.checkoutOneIfNecessary(
+	if _, newFDs, err = store.checkoutOneIfNecessary(
 		checkoutOptions,
 		object.GetSkuExternal(),
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
-
-	defer GetCheckedOutPool().Put(replacement)
 
 	if !oldFDs.Object.IsEmpty() &&
 		!newFDs.Object.IsEmpty() &&

@@ -62,7 +62,8 @@ func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(
 			sku.String(result.ObjectOrNil),
 		)
 
-		listMissingObjects.Add(result.ObjectOrNil.CloneTransacted())
+		clonedObj, _ := result.ObjectOrNil.CloneTransacted()
+		listMissingObjects.Add(clonedObj)
 
 		return err
 	}
@@ -223,7 +224,8 @@ func (server *Server) writeInventoryListLocalWorkingCopy(
 		)
 
 		// TODO switch to outputing object signatures
-		listMissingSkus.Add(result.ObjectOrNil.CloneTransacted())
+		clonedSku, _ := result.ObjectOrNil.CloneTransacted()
+		listMissingSkus.Add(clonedSku)
 
 		return err
 	}

@@ -88,7 +88,7 @@ func testIdNullAndEqualFor(t *ui.TestContext, formatHash FormatHash) {
 	}
 
 	var idZero Id
-	hash := formatHash.Get()
+	hash, _ := formatHash.Get()
 
 	{
 		idNull, _ := hash.GetMarklId()
@@ -140,8 +140,8 @@ func TestIdEncodeDecode(t1 *testing.T) {
 
 func testIdEncodeDecode(t *ui.TestContext) {
 	for _, formatHash := range formatHashes {
-		hash := formatHash.Get()
-		defer formatHash.Put(hash)
+		hash, hashRepool := formatHash.Get()
+		defer hashRepool()
 
 		if _, err := io.WriteString(hash, "test encode decode"); err != nil {
 			t.AssertNoError(err)

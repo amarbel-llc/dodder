@@ -36,8 +36,10 @@ func (parentStore Multi) MakeBlobReader(
 		}
 	}
 
+	clonedId, _ := markl.Clone(id)
+
 	return nil, env_dir.ErrBlobMissing{
-		BlobId: markl.Clone(id),
+		BlobId: clonedId,
 	}
 }
 

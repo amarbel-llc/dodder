@@ -13,7 +13,7 @@ import (
 func TestGob(t1 *testing.T) {
 	t := ui.T{T: t1}
 
-	ta := sku.GetTransactedPool().Get()
+	ta, _ := sku.GetTransactedPool().GetWithRepool()
 
 	if err := ta.ObjectId.Set("test-tag"); err != nil {
 		t.Fatalf("failed to set object id: %w", err)

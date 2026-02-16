@@ -87,7 +87,8 @@ func (local *Repo) Checkin(
 			return processed, err
 		}
 
-		if err = processed.Add(co.GetSkuExternal().CloneTransacted()); err != nil {
+		cloned, _ := co.GetSkuExternal().CloneTransacted()
+		if err = processed.Add(cloned); err != nil {
 			err = errors.Wrap(err)
 			return processed, err
 		}

@@ -69,7 +69,7 @@ func (executor *Executor) ExecuteExactlyOneExternalObject(
 			return object, err
 		}
 
-		object = sku.GetTransactedPool().Get()
+		object, _ = sku.GetTransactedPool().GetWithRepool()
 
 		var external sku.ExternalLike
 
@@ -98,7 +98,7 @@ func (executor *Executor) ExecuteExactlyOneExternalObject(
 			return object, err
 		}
 
-		object = sku.GetTransactedPool().Get()
+		object, _ = sku.GetTransactedPool().GetWithRepool()
 
 		if err = executor.FuncReadOneInto(
 			objectId,
@@ -121,7 +121,7 @@ func (executor *Executor) ExecuteExactlyOne() (object *sku.Transacted, err error
 		return object, err
 	}
 
-	object = sku.GetTransactedPool().Get()
+	object, _ = sku.GetTransactedPool().GetWithRepool()
 
 	if err = executor.ExecutionInfo.FuncReadOneInto(objectId, object); err != nil {
 		err = errors.Wrap(err)
@@ -345,8 +345,8 @@ func (e *Executor) makeEmitSkuSigilLatestSkuType(
 			}
 		}
 
-		co := sku.GetCheckedOutPool().Get()
-		defer sku.GetCheckedOutPool().Put(co)
+		co, coRepool := sku.GetCheckedOutPool().GetWithRepool()
+		defer coRepool()
 
 		sku.TransactedResetter.ResetWith(co.GetSkuExternal(), internal)
 

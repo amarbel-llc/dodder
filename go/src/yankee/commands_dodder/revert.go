@@ -133,7 +133,7 @@ func (cmd Revert) runRevertFromLast(
 			return err
 		}
 
-		defer sku.GetTransactedPool().Put(cachedSku)
+		// cachedSku lifecycle: used temporarily then discarded
 
 		revertId := store.RevertId{
 			ObjectId: cachedSku.GetObjectId(),

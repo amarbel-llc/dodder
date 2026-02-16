@@ -343,8 +343,9 @@ func (blobStore blobReaderFactory) BlobReader(
 	)
 	blobStore.t.AssertNoError(err)
 
+	hash, _ := hashType.Get()
 	readCloser = markl_io.MakeNopReadCloser(
-		hashType.Get(),
+		hash,
 		ohio.NopCloser(strings.NewReader(value)),
 	)
 

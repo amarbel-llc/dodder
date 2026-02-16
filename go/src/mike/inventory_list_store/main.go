@@ -174,7 +174,7 @@ func (store *Store) Create(
 		return object, err
 	}
 
-	object = sku.GetTransactedPool().Get()
+	object, _ = sku.GetTransactedPool().GetWithRepool()
 
 	object.GetMetadataMutable().GetTypeMutable().ResetWithType(store.getType())
 	object.GetMetadataMutable().GetDescriptionMutable().ResetWith(
@@ -325,7 +325,7 @@ func (store *Store) AllInventoryListContents(
 }
 
 func (store *Store) ReadLast() (*sku.Transacted, error) {
-	max := sku.GetTransactedPool().Get()
+	max, _ := sku.GetTransactedPool().GetWithRepool()
 
 	for list, err := range store.AllInventoryLists() {
 		if err != nil {

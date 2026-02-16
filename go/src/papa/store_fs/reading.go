@@ -30,7 +30,7 @@ func (store *Store) UpdateTransacted(internal *sku.Transacted) (err error) {
 	}
 
 	sku.Resetter.ResetWith(internal, external)
-	sku.GetTransactedPool().Put(external)
+	// external lifecycle managed by caller
 
 	return err
 }

@@ -11,16 +11,21 @@ import (
 	"code.linenisgreat.com/dodder/go/src/juliett/sku"
 )
 
+type pooledTransacted struct {
+	object *sku.Transacted
+	repool interfaces.FuncRepool
+}
+
 type PrinterComplete struct {
 	bufferedWriter *bufio.Writer
-	pool           interfaces.Pool[sku.Transacted, *sku.Transacted]
-	chObjects      chan *sku.Transacted
+	pool           interfaces.PoolPtr[sku.Transacted, *sku.Transacted]
+	chObjects      chan pooledTransacted
 	chDone         chan struct{}
 }
 
 func MakePrinterComplete(envLocal env_local.Env) *PrinterComplete {
 	printer := &PrinterComplete{
-		chObjects:      make(chan *sku.Transacted),
+		chObjects:      make(chan pooledTransacted),
 		chDone:         make(chan struct{}),
 		bufferedWriter: bufio.NewWriter(envLocal.GetUIFile()),
 		pool: pool.Make[sku.Transacted](
@@ -32,7 +37,9 @@ func MakePrinterComplete(envLocal env_local.Env) *PrinterComplete {
 	envLocal.After(printer.Close)
 
 	go func() {
-		for object := range printer.chObjects {
+		for pooled := range printer.chObjects {
+			object := pooled.object
+
 			ui.TodoP4("handle write errors")
 			printer.bufferedWriter.WriteString(object.GetObjectId().String())
 			printer.bufferedWriter.WriteByte('\t')
@@ -57,7 +64,7 @@ func MakePrinterComplete(envLocal env_local.Env) *PrinterComplete {
 			}
 
 			printer.bufferedWriter.WriteString("\n")
-			printer.pool.Put(object)
+			pooled.repool()
 		}
 
 		printer.chDone <- struct{}{}
@@ -74,14 +81,15 @@ func (printer *PrinterComplete) PrintOne(
 		return err
 	}
 
-	dst := printer.pool.Get()
+	dst, dstRepool := printer.pool.GetWithRepool()
 	sku.Resetter.ResetWith(dst, src)
 
 	select {
 	case <-printer.chDone:
+		dstRepool()
 		err = errors.MakeErrStopIteration()
 
-	case printer.chObjects <- dst:
+	case printer.chObjects <- pooledTransacted{object: dst, repool: dstRepool}:
 	}
 
 	return err

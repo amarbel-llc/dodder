@@ -64,7 +64,7 @@ func (av writer) write(a *Assignment) (err error) {
 			sb.WriteString("% ")
 		}
 
-		cursor := object.sku.Clone()
+		cursor, _ := object.sku.Clone()
 		cursorExternal := cursor.GetSkuExternal()
 		cursorExternal.GetMetadataMutable().Subtract(av.Metadata)
 		mes := ids.CloneTagSetMutable(cursorExternal.GetMetadataMutable().GetTags())

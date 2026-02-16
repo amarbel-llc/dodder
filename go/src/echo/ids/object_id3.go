@@ -23,7 +23,7 @@ var poolObjectId3 = pool.Make(
 	},
 )
 
-func getObjectIdPool3() interfaces.Pool[objectId3, *objectId3] {
+func getObjectIdPool3() interfaces.PoolPtr[objectId3, *objectId3] {
 	return poolObjectId3
 }
 
@@ -291,10 +291,10 @@ func (id *objectId3) UnmarshalBinary(bites []byte) (err error) {
 	return nil
 }
 
-func (id *objectId3) Clone() (clone *objectId3) {
-	clone = getObjectIdPool3().Get()
+func (id *objectId3) Clone() (clone *objectId3, repool interfaces.FuncRepool) {
+	clone, repool = getObjectIdPool3().GetWithRepool()
 	clone.ResetWithObjectId(id)
-	return clone
+	return clone, repool
 }
 
 func (id objectId3) MarshalText() (text []byte, err error) {

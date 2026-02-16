@@ -30,7 +30,8 @@ func MakeErrEmptyType(id domain_interfaces.MarklId) error {
 
 func AssertIdIsNull(id domain_interfaces.MarklId) error {
 	if !id.IsNull() {
-		return errors.WrapSkip(1, errIsNotNull{id: Clone(id)})
+		cloned, _ := Clone(id)
+		return errors.WrapSkip(1, errIsNotNull{id: cloned})
 	}
 
 	return nil

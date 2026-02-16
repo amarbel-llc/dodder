@@ -14,7 +14,7 @@ import (
 )
 
 type FormatHash struct {
-	pool interfaces.PoolValue[Hash]
+	pool interfaces.Pool[Hash]
 	id   string
 	null Id
 }
@@ -98,34 +98,17 @@ func GetFormatHashOrError(
 	return formatHash, err
 }
 
-func (formatHash FormatHash) GetHash() domain_interfaces.Hash {
-	return formatHash.Get()
+func (formatHash FormatHash) GetHash() (domain_interfaces.Hash, interfaces.FuncRepool) {
+	hash, repool := formatHash.Get()
+	return hash, repool
 }
 
-func (formatHash FormatHash) PutHash(hash domain_interfaces.Hash) {
-	if correctHashType, ok := hash.(*Hash); ok {
-		formatHash.Put(correctHashType)
-	} else {
-		panic(errors.Errorf("expected type %T but got %T", correctHashType, hash))
-	}
-}
-
-func (formatHash *FormatHash) Get() *Hash {
-	hash := formatHash.pool.Get()
+func (formatHash *FormatHash) Get() (*Hash, interfaces.FuncRepool) {
+	hash, repool := formatHash.pool.GetWithRepool()
 	hash.formatHash = formatHash
 	hash.written = 0
 	hash.hash.Reset()
-	return &hash
-}
-
-func (formatHash FormatHash) Put(hash *Hash) {
-	errors.PanicIfError(
-		MakeErrWrongType(
-			formatHash.id,
-			hash.GetMarklFormat().GetMarklFormatId(),
-		),
-	)
-	formatHash.pool.Put(*hash)
+	return &hash, repool
 }
 
 func (formatHash FormatHash) GetMarklFormatId() string {
@@ -137,8 +120,8 @@ func (formatHash FormatHash) GetSize() int {
 }
 
 func (formatHash FormatHash) GetBlobId() (domain_interfaces.MarklIdMutable, interfaces.FuncRepool) {
-	hash := formatHash.Get()
-	defer formatHash.Put(hash)
+	hash, repool := formatHash.Get()
+	defer repool()
 
 	return hash.GetMarklId()
 }
@@ -146,8 +129,8 @@ func (formatHash FormatHash) GetBlobId() (domain_interfaces.MarklIdMutable, inte
 func (formatHash FormatHash) GetMarklIdForString(
 	input string,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	hash := formatHash.Get()
-	defer formatHash.Put(hash)
+	hash, repool := formatHash.Get()
+	defer repool()
 
 	if _, err := io.WriteString(hash, input); err != nil {
 		errors.PanicIfError(err)
@@ -159,8 +142,8 @@ func (formatHash FormatHash) GetMarklIdForString(
 func (formatHash FormatHash) GetMarklIdForMarklId(
 	input domain_interfaces.MarklId,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	hash := formatHash.Get()
-	defer formatHash.Put(hash)
+	hash, repool := formatHash.Get()
+	defer repool()
 
 	if _, err := hash.Write(input.GetBytes()); err != nil {
 		errors.PanicIfError(err)
@@ -180,8 +163,8 @@ func (formatHash FormatHash) GetMarklIdFromStringFormat(
 	format string,
 	args ...any,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	hash := formatHash.Get()
-	defer formatHash.Put(hash)
+	hash, repool := formatHash.Get()
+	defer repool()
 
 	if _, err := fmt.Fprintf(hash, format, args...); err != nil {
 		errors.PanicIfError(err)
@@ -193,8 +176,8 @@ func (formatHash FormatHash) GetMarklIdFromStringFormat(
 func (formatHash FormatHash) GetBlobIdForHexString(
 	input string,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	hash := formatHash.pool.Get()
-	defer formatHash.pool.Put(hash)
+	hash, hashRepool := formatHash.pool.GetWithRepool()
+	defer hashRepool()
 
 	id, repool := hash.GetMarklId()
 

@@ -119,15 +119,17 @@ func (s *stubBlobStore) MakeBlobReader(
 
 	if s.blobData != nil {
 		if data, ok := s.blobData[id.String()]; ok {
+			hash, _ := markl.FormatHashSha256.Get()
 			return markl_io.MakeReadCloser(
-				markl.FormatHashSha256.Get(),
+				hash,
 				bytes.NewReader(data),
 			), nil
 		}
 	}
 
+	hash, _ := markl.FormatHashSha256.Get()
 	return markl_io.MakeNopReadCloser(
-		markl.FormatHashSha256.Get(),
+		hash,
 		ohio.NopCloser(bytes.NewReader(nil)),
 	), nil
 }

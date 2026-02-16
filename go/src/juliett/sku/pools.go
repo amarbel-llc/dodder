@@ -17,10 +17,10 @@ var (
 	)
 )
 
-func GetTransactedPool() interfaces.Pool[Transacted, *Transacted] {
+func GetTransactedPool() interfaces.PoolPtr[Transacted, *Transacted] {
 	return poolTransacted
 }
 
-func GetCheckedOutPool() interfaces.Pool[CheckedOut, *CheckedOut] {
+func GetCheckedOutPool() interfaces.PoolPtr[CheckedOut, *CheckedOut] {
 	return poolCheckedOut
 }

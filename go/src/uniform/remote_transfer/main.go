@@ -2,6 +2,7 @@ package remote_transfer
 
 import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/genres"
@@ -138,7 +139,7 @@ func (importer importer) importInventoryList(
 
 	if !importer.envRepo.GetDefaultBlobStore().HasBlob(blobDigest) {
 		err = env_dir.ErrBlobMissing{
-			BlobId: markl.Clone(blobDigest),
+			BlobId: func() domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(),
 		}
 
 		return checkedOut, err
@@ -196,7 +197,7 @@ func (importer importer) importLeaf(
 		return checkedOut, err
 	}
 
-	checkedOut = sku.GetCheckedOutPool().Get()
+	checkedOut, _ = sku.GetCheckedOutPool().GetWithRepool()
 
 	sku.Resetter.ResetWith(checkedOut.GetSkuExternal(), external)
 

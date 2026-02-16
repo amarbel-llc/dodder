@@ -19,33 +19,33 @@ type String struct {
 	data bytes.Buffer
 }
 
-func MakeFromReader(reader io.Reader, limit int) (str *String, err error) {
-	str = GetPool().Get()
+func MakeFromReader(reader io.Reader, limit int) (str *String, repool interfaces.FuncRepool, err error) {
+	str, repool = GetPool().GetWithRepool()
 
 	if _, err = io.CopyN(str, reader, int64(limit)); err != nil {
 		err = errors.Wrap(err)
-		return str, err
+		return str, repool, err
 	}
 
-	return str, err
+	return str, repool, err
 }
 
-func MakeFromString(v string) (s *String) {
-	s = GetPool().Get()
+func MakeFromString(v string) (s *String, repool interfaces.FuncRepool) {
+	s, repool = GetPool().GetWithRepool()
 	errors.PanicIfError(s.Set(v))
-	return s
+	return s, repool
 }
 
-func MakeFromBytes(b []byte) (s *String) {
-	s = GetPool().Get()
+func MakeFromBytes(b []byte) (s *String, repool interfaces.FuncRepool) {
+	s, repool = GetPool().GetWithRepool()
 	errors.PanicIfError(s.SetBytes(b))
-	return s
+	return s, repool
 }
 
-func Make(b *String) (a *String) {
-	a = GetPool().Get()
+func Make(b *String) (a *String, repool interfaces.FuncRepool) {
+	a, repool = GetPool().GetWithRepool()
 	errors.PanicIfError(a.SetBytes(b.Bytes()))
-	return a
+	return a, repool
 }
 
 // noescape hides a pointer from escape analysis. It is the identity function
@@ -258,15 +258,15 @@ func (dst *String) ReadFrom(r io.Reader) (n int64, err error) {
 	return dst.data.ReadFrom(r)
 }
 
-func (src *String) Clone() (dst *String, err error) {
-	dst = GetPool().Get()
+func (src *String) Clone() (dst *String, repool interfaces.FuncRepool, err error) {
+	dst, repool = GetPool().GetWithRepool()
 
 	if err = src.CopyTo(dst); err != nil {
 		err = errors.Wrap(err)
-		return dst, err
+		return dst, repool, err
 	}
 
-	return dst, err
+	return dst, repool, err
 }
 
 func (src *String) CopyTo(dst *String) (err error) {

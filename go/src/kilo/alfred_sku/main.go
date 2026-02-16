@@ -108,8 +108,8 @@ func (writer *Writer) addCommonMatches(
 ) {
 	id := &object.ObjectId
 
-	matchBuilder := alfred.GetPoolMatchBuilder().Get()
-	defer alfred.GetPoolMatchBuilder().Put(matchBuilder)
+	matchBuilder, matchBuilderRepool := alfred.GetPoolMatchBuilder().GetWithRepool()
+	defer matchBuilderRepool()
 
 	{
 		idString := id.String()
@@ -229,8 +229,8 @@ func (writer *Writer) zettelIdToItem(e ids.ZettelId) (a *alfred.Item) {
 
 	a.Arg = e.String()
 
-	mb := alfred.GetPoolMatchBuilder().Get()
-	defer alfred.GetPoolMatchBuilder().Put(mb)
+	mb, mbRepool := alfred.GetPoolMatchBuilder().GetWithRepool()
+	defer mbRepool()
 
 	mb.AddMatch(e.String())
 	mb.AddMatch(e.GetHead())

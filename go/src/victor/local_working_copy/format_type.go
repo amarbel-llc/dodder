@@ -216,14 +216,8 @@ var typeFormatters = map[string]FormatTypeFuncConstructorEntry{
 					return err
 				}
 
-				var vm *sku_lua.LuaVMV1
-
-				if vm, err = vp.Get(); err != nil {
-					err = errors.Wrap(err)
-					return err
-				}
-
-				defer vp.Put(vm)
+				vm, vmRepool := vp.GetWithRepool()
+				defer vmRepool()
 
 				f := vm.GetField(vm.Top, "on_pre_commit")
 

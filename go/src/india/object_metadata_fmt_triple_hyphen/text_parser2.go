@@ -27,8 +27,8 @@ func (parser *textParser2) ReadFrom(r io.Reader) (n int64, err error) {
 	metadata := parser.GetMetadataMutable()
 	objects.Resetter.Reset(metadata)
 
-	delimReader := delim_reader.MakeDelimReader('\n', r)
-	defer delim_reader.PutDelimReader(delimReader)
+	delimReader, delimRepool := delim_reader.MakeDelimReader('\n', r)
+	defer delimRepool()
 
 	for {
 		var line string

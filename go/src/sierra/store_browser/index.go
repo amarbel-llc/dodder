@@ -32,7 +32,7 @@ func (store *Store) initializeIndex() (err error) {
 				return err
 			}
 
-			cl := sku.GetTransactedPool().Get()
+			cl, _ := sku.GetTransactedPool().GetWithRepool()
 			sku.TransactedResetter.ResetWith(cl, object)
 
 			lock.Lock()

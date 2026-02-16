@@ -43,7 +43,7 @@ type flagCommas[
 ] struct {
 	policy   SetterPolicy
 	set      interfaces.SetMutable[VALUE]
-	pool     interfaces.Pool[VALUE, VALUE_PTR]
+	pool     interfaces.PoolPtr[VALUE, VALUE_PTR]
 	resetter interfaces.ResetterPtr[VALUE, VALUE_PTR]
 }
 

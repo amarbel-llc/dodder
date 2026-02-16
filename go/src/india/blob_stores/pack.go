@@ -319,10 +319,10 @@ func (store inventoryArchive) validateArchive(
 	}
 
 	for i, entry := range entries {
-		hash := store.defaultHash.Get()
+		hash, hashRepool := store.defaultHash.Get()
 		hash.Write(entry.Data)
 		computed := hash.Sum(nil)
-		store.defaultHash.Put(hash)
+		hashRepool()
 
 		if !bytes.Equal(computed, entry.Hash) {
 			err = errors.Errorf(

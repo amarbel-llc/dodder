@@ -961,8 +961,8 @@ var formatters = map[string]FormatFuncConstructorEntry{
 					return err
 				}
 
-				mother := sku.GetTransactedPool().Get()
-				defer sku.GetTransactedPool().Put(mother)
+				mother, motherRepool := sku.GetTransactedPool().GetWithRepool()
+				defer motherRepool()
 
 				if !repo.GetStore().GetStreamIndex().ReadOneMarklId(
 					motherSig,
@@ -1093,8 +1093,8 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			p := repo.PrinterTransacted()
 
 			return func(object *sku.Transacted) (err error) {
-				indexObject := sku.GetTransactedPool().Get()
-				defer sku.GetTransactedPool().Put(indexObject)
+				indexObject, indexObjectRepool := sku.GetTransactedPool().GetWithRepool()
+				defer indexObjectRepool()
 
 				if err = repo.GetStore().GetStreamIndex().ReadOneObjectId(
 					object.GetObjectId(),

@@ -75,7 +75,7 @@ func (compiled *compiled) addRepo(
 	compiled.lock.Lock()
 	defer compiled.lock.Unlock()
 
-	b := sku.GetTransactedPool().Get()
+	b, _ := sku.GetTransactedPool().GetWithRepool()
 
 	sku.Resetter.ResetWith(b, object)
 
@@ -99,7 +99,7 @@ func (compiled *compiled) addType(
 		return didChange, err
 	}
 
-	b := sku.GetTransactedPool().Get()
+	b, _ := sku.GetTransactedPool().GetWithRepool()
 
 	sku.Resetter.ResetWith(b, object)
 

@@ -869,7 +869,6 @@ func (server *Server) handlePostInventoryList(
 			return response
 		}
 
-		defer sku.GetTransactedPool().Put(object)
 	}
 
 	response = server.writeInventoryListLocalWorkingCopy(

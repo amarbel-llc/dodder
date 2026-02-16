@@ -231,14 +231,8 @@ func (store *Store) tryPreCommitHook(
 		return err
 	}
 
-	var vm *sku_lua.LuaVMV1
-
-	if vm, err = vp.Get(); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	defer vp.Put(vm)
+	vm, vmRepool := vp.GetWithRepool()
+	defer vmRepool()
 
 	var tt *lua.LTable
 
@@ -253,8 +247,8 @@ func (store *Store) tryPreCommitHook(
 		return err
 	}
 
-	tableKinder := vm.TablePool.Get()
-	defer vm.TablePool.Put(tableKinder)
+	tableKinder, tableKinderRepool := vm.TablePool.GetWithRepool()
+	defer tableKinderRepool()
 
 	sku_lua.ToLuaTableV1(
 		child,
@@ -265,8 +259,9 @@ func (store *Store) tryPreCommitHook(
 	var tableMutter *sku_lua.LuaTableV1
 
 	if mother != nil {
-		tableMutter = vm.TablePool.Get()
-		defer vm.TablePool.Put(tableMutter)
+		var tableMutterRepool interfaces.FuncRepool
+		tableMutter, tableMutterRepool = vm.TablePool.GetWithRepool()
+		defer tableMutterRepool()
 
 		sku_lua.ToLuaTableV1(
 			mother,
@@ -316,18 +311,8 @@ func (store *Store) tryHookWithName(
 		return err
 	}
 
-	var vm *sku_lua.LuaVMV1
-
-	if vm, err = vp.Get(); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	if err != nil {
-		return err
-	}
-
-	defer vp.Put(vm)
+	vm, vmRepool2 := vp.GetWithRepool()
+	defer vmRepool2()
 
 	var tt *lua.LTable
 
@@ -342,8 +327,8 @@ func (store *Store) tryHookWithName(
 		return err
 	}
 
-	tableKinder := vm.TablePool.Get()
-	defer vm.TablePool.Put(tableKinder)
+	tableKinder, tableKinderRepool2 := vm.TablePool.GetWithRepool()
+	defer tableKinderRepool2()
 
 	sku_lua.ToLuaTableV1(
 		child,
@@ -354,8 +339,9 @@ func (store *Store) tryHookWithName(
 	var tableMutter *sku_lua.LuaTableV1
 
 	if mother != nil {
-		tableMutter = vm.TablePool.Get()
-		defer vm.TablePool.Put(tableMutter)
+		var tableMutterRepool2 interfaces.FuncRepool
+		tableMutter, tableMutterRepool2 = vm.TablePool.GetWithRepool()
+		defer tableMutterRepool2()
 
 		sku_lua.ToLuaTableV1(
 			mother,

@@ -12,26 +12,32 @@ func TestAddPaths(t1 *testing.T) {
 
 	var es Tags
 
+	areaHome, _ := catgut.MakeFromString("area-home")
+	projectReno, _ := catgut.MakeFromString("project-reno")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("area-home"),
-		catgut.MakeFromString("project-reno"),
+		areaHome,
+		projectReno,
 	))
 
 	{
-		i, ok := es.All.ContainsTag(catgut.MakeFromString("area"))
+		area, _ := catgut.MakeFromString("area")
+		i, ok := es.All.ContainsTag(area)
 
 		if !ok {
 			t.Errorf("expected some tag: %d, %t, %s", i, ok, es)
 		}
 	}
 
+	areaCareer, _ := catgut.MakeFromString("area-career")
+	projectRecurse, _ := catgut.MakeFromString("project-recurse")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("area-career"),
-		catgut.MakeFromString("project-recurse"),
+		areaCareer,
+		projectRecurse,
 	))
 
 	{
-		i, ok := es.All.ContainsTag(catgut.MakeFromString("area"))
+		area, _ := catgut.MakeFromString("area")
+		i, ok := es.All.ContainsTag(area)
 
 		if !ok {
 			t.Errorf("expected some tag: %d, %t, %s", i, ok, es.All)
@@ -44,12 +50,15 @@ func TestRealWorld(t1 *testing.T) {
 
 	var es Tags
 
-	es.AddTag(catgut.MakeFromString("pom-1"))
-	es.AddTag(catgut.MakeFromString("req-comp-internet"))
-	es.AddTag(catgut.MakeFromString("today-in_progress"))
+	pom1, _ := catgut.MakeFromString("pom-1")
+	es.AddTag(pom1)
+	reqCompInternet, _ := catgut.MakeFromString("req-comp-internet")
+	es.AddTag(reqCompInternet)
+	todayInProgress, _ := catgut.MakeFromString("today-in_progress")
+	es.AddTag(todayInProgress)
 
 	{
-		e := catgut.MakeFromString("req-comp-internet")
+		e, _ := catgut.MakeFromString("req-comp-internet")
 		_, ok := es.All.ContainsTag(e)
 
 		if !ok {
@@ -57,12 +66,14 @@ func TestRealWorld(t1 *testing.T) {
 		}
 	}
 
+	project2022Recurse, _ := catgut.MakeFromString("project-2022-recurse")
+	project24q2TalentShow, _ := catgut.MakeFromString("project-24q2-talent_show")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("project-2022-recurse"),
-		catgut.MakeFromString("project-24q2-talent_show"),
+		project2022Recurse,
+		project24q2TalentShow,
 	))
 
-	e := catgut.MakeFromString("req-comp-internet")
+	e, _ := catgut.MakeFromString("req-comp-internet")
 	_, ok := es.All.ContainsTag(e)
 
 	if !ok {
@@ -73,17 +84,21 @@ func TestRealWorld(t1 *testing.T) {
 func BenchmarkMatchFirstYes(b *testing.B) {
 	var es Tags
 
+	areaHome, _ := catgut.MakeFromString("area-home")
+	projectReno, _ := catgut.MakeFromString("project-reno")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("area-home"),
-		catgut.MakeFromString("project-reno"),
+		areaHome,
+		projectReno,
 	))
 
+	areaCareer, _ := catgut.MakeFromString("area-career")
+	projectRecurse, _ := catgut.MakeFromString("project-recurse")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("area-career"),
-		catgut.MakeFromString("project-recurse"),
+		areaCareer,
+		projectRecurse,
 	))
 
-	m := catgut.MakeFromString("area")
+	m, _ := catgut.MakeFromString("area")
 
 	b.ResetTimer()
 
@@ -95,17 +110,21 @@ func BenchmarkMatchFirstYes(b *testing.B) {
 func BenchmarkMatchFirstNo(b *testing.B) {
 	var es Tags
 
+	areaHome, _ := catgut.MakeFromString("area-home")
+	projectReno, _ := catgut.MakeFromString("project-reno")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("area-home"),
-		catgut.MakeFromString("project-reno"),
+		areaHome,
+		projectReno,
 	))
 
+	areaCareer, _ := catgut.MakeFromString("area-career")
+	projectRecurse, _ := catgut.MakeFromString("project-recurse")
 	es.AddPath(MakePathWithType(
-		catgut.MakeFromString("area-career"),
-		catgut.MakeFromString("project-recurse"),
+		areaCareer,
+		projectRecurse,
 	))
 
-	m := catgut.MakeFromString("x")
+	m, _ := catgut.MakeFromString("x")
 
 	b.ResetTimer()
 

@@ -51,7 +51,7 @@ type (
 
 type ObjectId = objectId3
 
-func GetObjectIdPool() interfaces.Pool[ObjectId, *ObjectId] {
+func GetObjectIdPool() interfaces.PoolPtr[ObjectId, *ObjectId] {
 	return getObjectIdPool3()
 }
 
@@ -67,10 +67,10 @@ func MustObjectId(idWithParts Id) (id *ObjectId) {
 	return id
 }
 
-func MakeObjectId(value string) (objectId *ObjectId, err error) {
+func MakeObjectId(value string) (objectId *ObjectId, repool interfaces.FuncRepool, err error) {
 	if value == "" {
-		objectId = GetObjectIdPool().Get()
-		return objectId, err
+		objectId, repool = GetObjectIdPool().GetWithRepool()
+		return objectId, repool, err
 	}
 
 	var seq doddish.Seq
@@ -79,16 +79,16 @@ func MakeObjectId(value string) (objectId *ObjectId, err error) {
 		value,
 	); err != nil {
 		err = errors.Wrap(err)
-		return objectId, err
+		return objectId, repool, err
 	}
 
-	objectId = GetObjectIdPool().Get()
+	objectId, repool = GetObjectIdPool().GetWithRepool()
 
 	if err = objectId.SetWithSeq(seq); err != nil {
-		return objectId, err
+		return objectId, repool, err
 	}
 
-	return objectId, err
+	return objectId, repool, err
 }
 
 // TODO rewrite to use ToSeq comparison

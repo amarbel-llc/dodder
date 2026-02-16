@@ -276,11 +276,14 @@ func (format format) writeMetadata(
 		return blobDigest, err
 	}
 
-	marklWriter, repool := markl_io.MakeWriterWithRepool(
-		markl.FormatHashSha256.Get(),
+	hash, hashRepool := markl.FormatHashSha256.Get()
+	defer hashRepool()
+
+	marklWriter, writerRepool := markl_io.MakeWriterWithRepool(
+		hash,
 		writer,
 	)
-	defer repool()
+	defer writerRepool()
 
 	_, err = format.writeMetadataTo(marklWriter, context)
 	if err != nil {

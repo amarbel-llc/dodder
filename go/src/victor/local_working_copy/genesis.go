@@ -89,8 +89,8 @@ func (local *Repo) initDefaultTypeIfNecessaryAfterLock(
 	tipe := ids.DefaultOrPanic(genres.Type)
 	blob := type_blobs.Default()
 
-	object := sku.GetTransactedPool().Get()
-	defer sku.GetTransactedPool().Put(object)
+	object, objectRepool := sku.GetTransactedPool().GetWithRepool()
+	defer objectRepool()
 
 	if err = object.ObjectId.SetWithId(objectIdType); err != nil {
 		err = errors.Wrap(err)
@@ -149,7 +149,7 @@ func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 		return err
 	}
 
-	newConfig := sku.GetTransactedPool().Get()
+	newConfig, _ := sku.GetTransactedPool().GetWithRepool()
 
 	if err = newConfig.ObjectId.SetWithId(
 		ids.Config,

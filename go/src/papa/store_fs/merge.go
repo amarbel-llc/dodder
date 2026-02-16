@@ -257,7 +257,7 @@ func (store *Store) MakeMergedTransacted(
 
 	localItem.ResetWith(mergedItem)
 
-	merged = GetExternalPool().Get()
+	merged, _ = GetExternalPool().GetWithRepool()
 
 	merged.ObjectId.ResetWithObjectId(&conflicted.GetSku().ObjectId)
 
@@ -306,7 +306,7 @@ func (store *Store) checkoutOneForMerge(
 		},
 	}
 
-	co = GetCheckedOutPool().Get()
+	co, _ = GetCheckedOutPool().GetWithRepool()
 	sku.Resetter.ResetWith(co.GetSku(), sk)
 
 	if i, err = store.ReadFSItemFromExternal(co.GetSku()); err != nil {
@@ -490,8 +490,8 @@ func (store *Store) RunMergeTool(
 		return checkedOut, err
 	}
 
-	external := GetExternalPool().Get()
-	defer GetExternalPool().Put(external)
+	external, externalRepool := GetExternalPool().GetWithRepool()
+	defer externalRepool()
 
 	external.ObjectId.ResetWithObjectId(&checkedOut.GetSkuExternal().ObjectId)
 
@@ -523,7 +523,7 @@ func (store *Store) RunMergeTool(
 		return checkedOut, err
 	}
 
-	checkedOut = GetCheckedOutPool().Get()
+	checkedOut, _ = GetCheckedOutPool().GetWithRepool()
 
 	sku.TransactedResetter.ResetWith(checkedOut.GetSkuExternal(), external)
 

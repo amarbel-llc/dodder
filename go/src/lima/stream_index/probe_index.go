@@ -116,8 +116,8 @@ func (index *Index) VerifyObjectProbes(
 			return errors.Wrapf(err, "probe %q not found in index", probeId.Key)
 		}
 
-		checkObject := sku.GetTransactedPool().Get()
-		defer sku.GetTransactedPool().Put(checkObject)
+		checkObject, checkObjectRepool := sku.GetTransactedPool().GetWithRepool()
+		defer checkObjectRepool()
 
 		if !index.readOneLoc(loc, checkObject) {
 			return errors.Errorf("probe %q location invalid", probeId.Key)

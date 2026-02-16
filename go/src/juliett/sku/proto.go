@@ -55,14 +55,14 @@ func (proto Proto) Equals(metadata objects.MetadataMutable) (ok bool) {
 	return ok
 }
 
-func (proto Proto) Make() (object *Transacted) {
+func (proto Proto) Make() (object *Transacted, repool interfaces.FuncRepool) {
 	comments.Change("add type")
 	comments.Change("add description")
-	object = GetTransactedPool().Get()
+	object, repool = GetTransactedPool().GetWithRepool()
 
 	proto.Apply(object, genres.Zettel)
 
-	return object
+	return object, repool
 }
 
 func (proto Proto) ApplyType(

@@ -117,8 +117,8 @@ func (cmd CatAlfred) Run(dep command.Request) {
 					); err != nil {
 						if errors.IsErrNotFound(err) {
 							err = nil
-							tagObject = sku.GetTransactedPool().Get()
-							defer sku.GetTransactedPool().Put(tagObject)
+							tagObject, tagObjectRepool := sku.GetTransactedPool().GetWithRepool()
+							defer tagObjectRepool()
 
 							if err = tagObject.ObjectId.Set(tag.String()); err != nil {
 								err = errors.Wrap(err)

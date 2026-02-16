@@ -18,13 +18,14 @@ type heapPrivate[ELEMENT Element, ELEMENT_PTR ElementPtr[ELEMENT]] struct {
 	Lessor  interfaces.Lessor[ELEMENT_PTR]
 	equaler interfaces.Equaler[ELEMENT_PTR]
 
-	Resetter   interfaces.ResetterPtr[ELEMENT, ELEMENT_PTR]
-	Elements   []ELEMENT_PTR
-	lastPopped ELEMENT_PTR
-	pool       interfaces.Pool[ELEMENT, ELEMENT_PTR]
+	Resetter         interfaces.ResetterPtr[ELEMENT, ELEMENT_PTR]
+	Elements         []ELEMENT_PTR
+	lastPopped       ELEMENT_PTR
+	lastPoppedRepool interfaces.FuncRepool
+	pool             interfaces.PoolPtr[ELEMENT, ELEMENT_PTR]
 }
 
-func (heap *heapPrivate[ELEMENT, ELEMENT_PTR]) GetPool() interfaces.Pool[ELEMENT, ELEMENT_PTR] {
+func (heap *heapPrivate[ELEMENT, ELEMENT_PTR]) GetPool() interfaces.PoolPtr[ELEMENT, ELEMENT_PTR] {
 	if heap.pool == nil {
 		heap.pool = pool.MakeFakePool[ELEMENT, ELEMENT_PTR]()
 	}
@@ -72,7 +73,7 @@ func (heap *heapPrivate[ELEMENT, ELEMENT_PTR]) Pop() any {
 
 func (heap *heapPrivate[ELEMENT, ELEMENT_PTR]) saveLastPopped(e ELEMENT_PTR) {
 	if heap.lastPopped == nil {
-		heap.lastPopped = heap.GetPool().Get()
+		heap.lastPopped, heap.lastPoppedRepool = heap.GetPool().GetWithRepool()
 	}
 
 	heap.Resetter.ResetWith(heap.lastPopped, e)

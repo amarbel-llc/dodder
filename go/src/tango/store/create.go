@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/charlie/checkout_options"
@@ -63,10 +64,11 @@ func (store *Store) CreateOrUpdateBlobDigest(
 		return object, err
 	}
 
-	object = sku.GetTransactedPool().Get()
+	var objectRepool interfaces.FuncRepool
+	object, objectRepool = sku.GetTransactedPool().GetWithRepool()
 
 	if err = object.ObjectId.Set(objectId.String()); err != nil {
-		sku.GetTransactedPool().Put(object)
+		objectRepool()
 		object = nil
 
 		err = errors.Wrap(err)
@@ -74,7 +76,7 @@ func (store *Store) CreateOrUpdateBlobDigest(
 	}
 
 	if err = store.ReadOneInto(objectId, object); err != nil {
-		sku.GetTransactedPool().Put(object)
+		objectRepool()
 		object = nil
 
 		if errors.IsErrNotFound(err) {
@@ -118,8 +120,8 @@ func (store *Store) RevertTo(
 		return err
 	}
 
-	object := sku.GetTransactedPool().Get()
-	defer sku.GetTransactedPool().Put(object)
+	object, objectRepool := sku.GetTransactedPool().GetWithRepool()
+	defer objectRepool()
 
 	if !store.streamIndex.ReadOneMarklId(
 		revertId.Sig,

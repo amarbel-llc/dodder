@@ -6,28 +6,27 @@ import (
 	"code.linenisgreat.com/dodder/go/src/echo/checked_out_state"
 )
 
-func makeCheckedOut() *CheckedOut {
-	dst := GetCheckedOutPool().Get()
-	return dst
+func makeCheckedOut() (*CheckedOut, interfaces.FuncRepool) {
+	return GetCheckedOutPool().GetWithRepool()
 }
 
 func cloneFromTransactedCheckedOut(
 	src *Transacted,
 	newState checked_out_state.State,
-) *CheckedOut {
-	dst := GetCheckedOutPool().Get()
+) (*CheckedOut, interfaces.FuncRepool) {
+	dst, repool := GetCheckedOutPool().GetWithRepool()
 	TransactedResetter.ResetWith(dst.GetSku(), src)
 	TransactedResetter.ResetWith(dst.GetSkuExternal(), src)
 	dst.state = newState
-	return dst
+	return dst, repool
 }
 
-func cloneCheckedOut(co *CheckedOut) *CheckedOut {
+func cloneCheckedOut(co *CheckedOut) (*CheckedOut, interfaces.FuncRepool) {
 	return co.Clone()
 }
 
 type objectFactoryCheckedOut struct {
-	interfaces.PoolValue[*CheckedOut]
+	interfaces.Pool[*CheckedOut]
 	interfaces.Resetter[*CheckedOut]
 }
 
@@ -43,13 +42,14 @@ func (factory *objectFactoryCheckedOut) SetDefaultsIfNecessary() objectFactoryCh
 		}
 	}
 
-	if factory.PoolValue == nil {
-		factory.PoolValue = pool.Bespoke[*CheckedOut]{
+	if factory.Pool == nil {
+		factory.Pool = pool.Bespoke[*CheckedOut]{
 			FuncGet: func() *CheckedOut {
-				return GetCheckedOutPool().Get()
+				co, _ := GetCheckedOutPool().GetWithRepool()
+				return co
 			},
 			FuncPut: func(e *CheckedOut) {
-				GetCheckedOutPool().Put(e)
+				// no-op: pool items returned via repool
 			},
 		}
 	}

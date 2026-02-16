@@ -119,7 +119,8 @@ func (cmd *Organize) Run(req command.Request) {
 			lock.Lock()
 			defer lock.Unlock()
 
-			return objects.Add(checkedOut.Clone())
+			cloned, _ := checkedOut.Clone()
+			return objects.Add(cloned)
 		},
 	); err != nil {
 		repo.Cancel(err)

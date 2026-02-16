@@ -97,7 +97,7 @@ func (importer importer) importOne(
 ) (hasConflicts bool, err error) {
 	var checkedOut *sku.CheckedOut
 	checkedOut, err = importer.Import(object)
-	defer sku.GetCheckedOutPool().Put(checkedOut)
+	// checkedOut lifecycle managed by caller
 
 	if err == nil {
 		if checkedOut.GetState() == checked_out_state.Conflicted {
@@ -117,7 +117,7 @@ func (importer importer) importOne(
 		err = nil
 		return hasConflicts, err
 	} else if env_dir.IsErrBlobMissing(err) {
-		checkedOut := sku.GetCheckedOutPool().Get()
+		checkedOut, _ := sku.GetCheckedOutPool().GetWithRepool()
 		sku.TransactedResetter.ResetWith(
 			checkedOut.GetSkuExternal(),
 			object,

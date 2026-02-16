@@ -51,7 +51,7 @@ func (fb *pageAdditionsFileBacked) initialize(index *Index) (err error) {
 }
 
 func (fb *pageAdditionsFileBacked) add(object *sku.Transacted) {
-	objectClone := object.CloneTransacted()
+	objectClone, _ := object.CloneTransacted()
 
 	fb.objectIds[object.ObjectId.String()] = struct{}{}
 
@@ -132,7 +132,7 @@ func (fb *pageAdditionsFileBacked) All() interfaces.Seq[*sku.Transacted] {
 		})
 
 		for _, rc := range sorted {
-			object := sku.GetTransactedPool().Get()
+			object, objectRepool := sku.GetTransactedPool().GetWithRepool()
 
 			var objectWithCS objectWithCursorAndSigil
 			objectWithCS.Transacted = object
@@ -142,12 +142,12 @@ func (fb *pageAdditionsFileBacked) All() interfaces.Seq[*sku.Transacted] {
 				fb.file,
 				&objectWithCS,
 			); err != nil {
-				sku.GetTransactedPool().Put(object)
+				objectRepool()
 				panic(errors.Wrap(err))
 			}
 
 			if !yield(object) {
-				sku.GetTransactedPool().Put(object)
+				objectRepool()
 				return
 			}
 		}

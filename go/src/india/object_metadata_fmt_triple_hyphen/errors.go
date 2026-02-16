@@ -83,8 +83,8 @@ func MakeErrHasInlineBlobAndMetadataBlobId(
 	inline, metadata domain_interfaces.MarklId,
 ) (err *ErrHasInlineBlobAndMetadataDigest) {
 	err = &ErrHasInlineBlobAndMetadataDigest{}
-	err.metadata = markl.Clone(metadata)
-	err.Inline = markl.Clone(inline)
+	err.metadata, _ = markl.Clone(metadata)
+	err.Inline, _ = markl.Clone(inline)
 	return err
 }
 

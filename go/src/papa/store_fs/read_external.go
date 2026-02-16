@@ -34,7 +34,7 @@ func (store *Store) ReadExternalLikeFromObjectIdLike(
 	switch len(items) {
 	case 0:
 		if !isExternal {
-			external = sku.GetTransactedPool().Get()
+			external, _ = sku.GetTransactedPool().GetWithRepool()
 
 			var objectId ids.ObjectId
 
@@ -88,7 +88,7 @@ func (store *Store) ReadExternalFromItem(
 	item *sku.FSItem,
 	internal *sku.Transacted,
 ) (external *sku.Transacted, err error) {
-	external = GetExternalPool().Get()
+	external, _ = GetExternalPool().GetWithRepool()
 
 	if err = store.HydrateExternalFromItem(
 		commitOptions,

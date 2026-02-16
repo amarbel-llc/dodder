@@ -14,12 +14,8 @@ func MakeWriterWithRepool(
 	hash domain_interfaces.Hash,
 	in io.Writer,
 ) (writer *writer, repool func()) {
-	writer = poolWriter.Get()
+	writer, repool = poolWriter.GetWithRepool()
 	writer.Reset(hash, in)
-
-	repool = func() {
-		PutWriter(writer)
-	}
 
 	return writer, repool
 }
@@ -30,10 +26,6 @@ func MakeWriter(
 ) (writer *writer) {
 	writer, _ = MakeWriterWithRepool(hash, in)
 	return writer
-}
-
-func PutWriter(writer *writer) {
-	poolWriter.Put(writer)
 }
 
 type writer struct {

@@ -168,7 +168,7 @@ func streamInventoryList(
 		for {
 			errors.ContextContinueOrPanic(ctx)
 
-			object := sku.GetTransactedPool().Get()
+			object, _ := sku.GetTransactedPool().GetWithRepool()
 			// TODO Fix upstream issues with repooling
 			// defer sku.GetTransactedPool().Put(object)
 
@@ -222,7 +222,7 @@ func (coder SeqCoder) DecodeFrom(
 	for {
 		errors.ContextContinueOrPanic(coder.ctx)
 
-		object := sku.GetTransactedPool().Get()
+		object, _ := sku.GetTransactedPool().GetWithRepool()
 		// TODO Fix upstream issues with repooling
 		// defer sku.GetTransactedPool().Put(object)
 
@@ -256,7 +256,7 @@ func (coder SeqErrorDecoder) DecodeFrom(
 	for {
 		errors.ContextContinueOrPanic(coder.ctx)
 
-		object := sku.GetTransactedPool().Get()
+		object, _ := sku.GetTransactedPool().GetWithRepool()
 		// TODO Fix upstream issues with repooling
 		// defer sku.GetTransactedPool().Put(object)
 

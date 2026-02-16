@@ -17,8 +17,7 @@ type (
 	FormatHash interface {
 		MarklFormat
 
-		GetHash() Hash
-		PutHash(Hash)
+		GetHash() (Hash, interfaces.FuncRepool)
 
 		GetMarklIdForString(input string) (MarklId, interfaces.FuncRepool)
 		GetMarklIdFromStringFormat(

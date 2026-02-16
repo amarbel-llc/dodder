@@ -184,7 +184,9 @@ func (index *Index) ReadFrom(bufferedReader *bufio.Reader) (n int64, err error) 
 
 		var cs *catgut.String
 
-		if cs, err = catgut.MakeFromReader(bufferedReader, int(l)); err != nil {
+		var csRepool interfaces.FuncRepool
+		if cs, csRepool, err = catgut.MakeFromReader(bufferedReader, int(l)); err != nil {
+			_ = csRepool
 			err = errors.Wrap(err)
 			return n, err
 		}

@@ -445,8 +445,8 @@ func (dirInfo *dirInfo) processFDSet(
 	var recognizedGenre genres.Genre
 
 	{
-		recognized := sku.GetTransactedPool().Get()
-		defer sku.GetTransactedPool().Put(recognized)
+		recognized, recognizedRepool := sku.GetTransactedPool().GetWithRepool()
+		defer recognizedRepool()
 
 		var objectId ids.ObjectId
 

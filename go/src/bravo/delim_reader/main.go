@@ -11,14 +11,10 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/pool"
 )
 
-var delimReaderPool interfaces.Pool[delimReader, *delimReader]
+var delimReaderPool interfaces.PoolPtr[delimReader, *delimReader]
 
 func init() {
 	delimReaderPool = pool.MakeWithResetable[delimReader]()
-}
-
-func PutDelimReader(dr *delimReader) {
-	delimReaderPool.Put(dr)
 }
 
 // Not safe for parallel use
@@ -45,12 +41,12 @@ type delimReader struct {
 func MakeDelimReader(
 	delim byte,
 	ioReader io.Reader,
-) (reader *delimReader) {
-	reader = delimReaderPool.Get()
+) (reader *delimReader, repool interfaces.FuncRepool) {
+	reader, repool = delimReaderPool.GetWithRepool()
 	reader.Reader.Reset(ioReader)
 	reader.delim = delim
 
-	return reader
+	return reader, repool
 }
 
 func (reader *delimReader) N() int64 {

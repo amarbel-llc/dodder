@@ -178,7 +178,7 @@ func (tags *Tags) ReadFrom(bufferedReader *bufio.Reader) (n int64, err error) {
 
 		var cs *catgut.String
 
-		if cs, err = catgut.MakeFromReader(bufferedReader, int(l)); err != nil {
+		if cs, _, err = catgut.MakeFromReader(bufferedReader, int(l)); err != nil {
 			err = errors.Wrap(err)
 			return n, err
 		}

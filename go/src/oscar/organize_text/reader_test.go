@@ -53,7 +53,7 @@ func makeObjWithZettelIdAndDescription(
 	description string,
 ) (object *obj) {
 	object = &obj{
-		sku: sku.MakeSkuType(),
+		sku: func() sku.SkuType { s, _ := sku.MakeSkuType(); return s }(),
 	}
 
 	object.sku.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().ResetWith(

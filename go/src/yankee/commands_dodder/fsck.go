@@ -143,7 +143,8 @@ func (cmd Fsck) runVerification(
 					err := objectError{err: errIter}
 
 					if object != nil {
-						err.object = object.CloneTransacted()
+						cloned, _ := object.CloneTransacted()
+						err.object = cloned
 					}
 
 					objectErrors.Append(err)
@@ -154,19 +155,21 @@ func (cmd Fsck) runVerification(
 				if err := markl.AssertIdIsNotNull(
 					object.GetObjectDigest(),
 				); err != nil {
+					cloned, _ := object.CloneTransacted()
 					objectErrors.Append(
 						objectError{
 							err:    err,
-							object: object.CloneTransacted(),
+							object: cloned,
 						},
 					)
 				}
 
 				if err := finalizer.Verify(object); err != nil {
+					cloned, _ := object.CloneTransacted()
 					objectErrors.Append(
 						objectError{
 							err:    err,
-							object: object.CloneTransacted(),
+							object: cloned,
 						},
 					)
 				}
@@ -175,10 +178,11 @@ func (cmd Fsck) runVerification(
 					if err := repo.GetStore().GetStreamIndex().VerifyObjectProbes(
 						object,
 					); err != nil {
+						cloned, _ := object.CloneTransacted()
 						objectErrors.Append(
 							objectError{
 								err:    err,
-								object: object.CloneTransacted(),
+								object: cloned,
 							},
 						)
 					}
@@ -193,10 +197,11 @@ func (cmd Fsck) runVerification(
 							blobDigest,
 							io.Discard,
 						); err != nil {
+							cloned, _ := object.CloneTransacted()
 							objectErrors.Append(
 								objectError{
 									err:    errors.Wrapf(err, "blob verification failed"),
-									object: object.CloneTransacted(),
+									object: cloned,
 								},
 							)
 						}

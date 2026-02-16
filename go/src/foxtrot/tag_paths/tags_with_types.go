@@ -70,7 +70,8 @@ func (tags *Tags) AddSuperFrom(
 }
 
 func (tags *Tags) AddTagOld(tag ids.Tag) (err error) {
-	return tags.AddTag(catgut.MakeFromString(tag.String()))
+	s, _ := catgut.MakeFromString(tag.String())
+	return tags.AddTag(s)
 }
 
 func (tags *Tags) AddTag(e *Tag) (err error) {
@@ -141,7 +142,7 @@ func (tags *Tags) Set(v string) (err error) {
 			return err
 		}
 
-		es := catgut.MakeFromString(e.String())
+		es, _ := catgut.MakeFromString(e.String())
 
 		if err = tags.AddTag(es); err != nil {
 			err = errors.Wrap(err)

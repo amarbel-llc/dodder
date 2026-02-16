@@ -46,7 +46,7 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) All() interfaces.Seq[ELEMENT_PTR] {
 }
 
 func (heap *Heap[ELEMENT, ELEMENT_PTR]) SetPool(
-	v interfaces.Pool[ELEMENT, ELEMENT_PTR],
+	v interfaces.PoolPtr[ELEMENT, ELEMENT_PTR],
 ) {
 	heap.private.pool = v
 }
@@ -109,7 +109,7 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) popAndSave() (element ELEMENT_PTR, ok bo
 		return element, ok
 	}
 
-	element = heap.private.GetPool().Get()
+	element, _ = heap.private.GetPool().GetWithRepool()
 	e := pkg_heap.Pop(&heap.private).(ELEMENT_PTR)
 	heap.private.Resetter.ResetWith(element, e)
 	ok = true
@@ -131,7 +131,12 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) Restore() {
 func (heap *Heap[ELEMENT, ELEMENT_PTR]) restore() {
 	heap.private.Elements = heap.private.Elements[:heap.savedIndex]
 	heap.savedIndex = 0
-	heap.private.GetPool().Put(heap.private.lastPopped)
+
+	if heap.private.lastPoppedRepool != nil {
+		heap.private.lastPoppedRepool()
+		heap.private.lastPoppedRepool = nil
+	}
+
 	heap.private.lastPopped = nil
 
 	quiter.ReverseSortable(&heap.private)
@@ -163,7 +168,7 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) Pop() (element ELEMENT_PTR, ok bool) {
 		return element, ok
 	}
 
-	element = heap.private.GetPool().Get()
+	element, _ = heap.private.GetPool().GetWithRepool()
 	heap.private.Resetter.ResetWith(
 		element,
 		pkg_heap.Pop(&heap.private).(ELEMENT_PTR),
@@ -227,7 +232,12 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) Sorted() (heapCopy []ELEMENT_PTR) {
 
 func (heap *Heap[ELEMENT, ELEMENT_PTR]) Reset() {
 	heap.private.Elements = make([]ELEMENT_PTR, 0)
-	heap.private.GetPool().Put(heap.private.lastPopped)
+
+	if heap.private.lastPoppedRepool != nil {
+		heap.private.lastPoppedRepool()
+		heap.private.lastPoppedRepool = nil
+	}
+
 	heap.private.pool = nil
 	heap.private.lastPopped = nil
 }

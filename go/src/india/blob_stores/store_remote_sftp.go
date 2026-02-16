@@ -292,7 +292,10 @@ func (blobStore *remoteSftp) MakeBlobWriter(
 		config: blobStore.makeEnvDirConfig(),
 	}
 
-	if err = mover.initialize(blobStore.defaultHashType.Get()); err != nil {
+	hash, hashRepool := blobStore.defaultHashType.Get()
+	defer hashRepool()
+
+	if err = mover.initialize(hash); err != nil {
 		err = errors.Wrap(err)
 		return blobWriter, err
 	}
@@ -308,8 +311,10 @@ func (blobStore *remoteSftp) MakeBlobReader(
 	blobStore.initializeOnce()
 
 	if digest.IsNull() {
+		hash, hashRepool := blobStore.defaultHashType.Get()
+		defer hashRepool()
 		readCloser = markl_io.MakeNopReadCloser(
-			blobStore.defaultHashType.Get(),
+			hash,
 			ohio.NopCloser(bytes.NewReader(nil)),
 		)
 		return readCloser, err
@@ -321,8 +326,9 @@ func (blobStore *remoteSftp) MakeBlobReader(
 
 	if remoteFile, err = blobStore.sftpClient.Open(remotePath); err != nil {
 		if os.IsNotExist(err) {
+			clonedDigest, _ := markl.Clone(digest)
 			err = env_dir.ErrBlobMissing{
-				BlobId: markl.Clone(digest),
+				BlobId: clonedDigest,
 				Path:   remotePath,
 			}
 		} else {
@@ -342,8 +348,11 @@ func (blobStore *remoteSftp) MakeBlobReader(
 		config: config,
 	}
 
+	readerHash, readerHashRepool := blobStore.defaultHashType.Get()
+	defer readerHashRepool()
+
 	if readCloser, err = streamingReader.createReader(
-		blobStore.defaultHashType.Get(),
+		readerHash,
 	); err != nil {
 		remoteFile.Close()
 		err = errors.Wrap(err)

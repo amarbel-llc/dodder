@@ -277,7 +277,7 @@ func (assignmentReader *reader) readOneObj(
 	// logz.Print("reading one zettel", l)
 
 	var z obj
-	z.sku = assignmentReader.options.ObjectFactory.Get()
+	z.sku, _ = assignmentReader.options.ObjectFactory.GetWithRepool()
 	z.tipe = t
 
 	if _, err = assignmentReader.options.fmtBox.ReadStringFormat(

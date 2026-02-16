@@ -19,7 +19,7 @@ func TestBinaryOne(t1 *testing.T) {
 
 	coder := binaryEncoder{Sigil: ids.SigilLatest}
 	decoder := makeBinary(ids.SigilLatest)
-	expected := sku.GetTransactedPool().Get()
+	expected, _ := sku.GetTransactedPool().GetWithRepool()
 
 	var expectedN int64
 	var err error
@@ -101,7 +101,7 @@ func TestBinaryOne(t1 *testing.T) {
 
 	actual := objectWithCursorAndSigil{
 		objectWithSigil: objectWithSigil{
-			Transacted: sku.GetTransactedPool().Get(),
+			Transacted: func() *sku.Transacted { t, _ := sku.GetTransactedPool().GetWithRepool(); return t }(),
 		},
 	}
 

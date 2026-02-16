@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	stringSpace   = MakeFromString(" ")
-	stringNewline = MakeFromString("\n")
+	stringSpace, _   = MakeFromString(" ")
+	stringNewline, _ = MakeFromString("\n")
 )
 
 func WriteKeySpaceValueNewline(

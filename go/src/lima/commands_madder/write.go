@@ -188,12 +188,13 @@ func (cmd Write) doOne(
 
 	if cmd.Check {
 		{
+			hash, hashRepool := blobStore.GetDefaultHashType().GetHash()
 			var repool func()
 			writeCloser, repool = markl_io.MakeWriterWithRepool(
-				blobStore.GetDefaultHashType().GetHash(),
+				hash,
 				nil,
 			)
-			defer repool()
+			defer func() { repool(); hashRepool() }()
 		}
 	} else {
 		if writeCloser, err = blobStore.MakeBlobWriter(nil); err != nil {

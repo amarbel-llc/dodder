@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	poolExternal   interfaces.Pool[sku.Transacted, *sku.Transacted]
-	poolCheckedOut interfaces.Pool[sku.CheckedOut, *sku.CheckedOut]
+	poolExternal   interfaces.PoolPtr[sku.Transacted, *sku.Transacted]
+	poolCheckedOut interfaces.PoolPtr[sku.CheckedOut, *sku.CheckedOut]
 )
 
 func init() {
@@ -23,10 +23,10 @@ func init() {
 	)
 }
 
-func GetExternalPool() interfaces.Pool[sku.Transacted, *sku.Transacted] {
+func GetExternalPool() interfaces.PoolPtr[sku.Transacted, *sku.Transacted] {
 	return poolExternal
 }
 
-func GetCheckedOutPool() interfaces.Pool[sku.CheckedOut, *sku.CheckedOut] {
+func GetCheckedOutPool() interfaces.PoolPtr[sku.CheckedOut, *sku.CheckedOut] {
 	return poolCheckedOut
 }

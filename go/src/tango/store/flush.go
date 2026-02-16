@@ -38,7 +38,7 @@ func (store *Store) FlushInventoryList(
 			return err
 		}
 	} else {
-		defer sku.GetTransactedPool().Put(inventoryListSku)
+		// inventoryListSku ownership transfers to streamIndex.Add below
 	}
 
 	if inventoryListSku != nil {

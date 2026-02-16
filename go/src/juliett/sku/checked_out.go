@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/src/_/external_state"
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/echo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
@@ -48,10 +49,10 @@ func (checkedOut *CheckedOut) GetState() checked_out_state.State {
 	return checkedOut.state
 }
 
-func (checkedOut *CheckedOut) Clone() *CheckedOut {
-	dst := GetCheckedOutPool().Get()
+func (checkedOut *CheckedOut) Clone() (*CheckedOut, interfaces.FuncRepool) {
+	dst, repool := GetCheckedOutPool().GetWithRepool()
 	CheckedOutResetter.ResetWith(dst, checkedOut)
-	return dst
+	return dst, repool
 }
 
 func (checkedOut *CheckedOut) GetExternalObjectId() domain_interfaces.ExternalObjectId {

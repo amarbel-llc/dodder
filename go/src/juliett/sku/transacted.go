@@ -50,10 +50,10 @@ func (transacted *Transacted) GetExternalState() external_state.State {
 	return transacted.State
 }
 
-func (transacted *Transacted) CloneTransacted() (cloned *Transacted) {
-	cloned = GetTransactedPool().Get()
+func (transacted *Transacted) CloneTransacted() (cloned *Transacted, repool interfaces.FuncRepool) {
+	cloned, repool = GetTransactedPool().GetWithRepool()
 	TransactedResetter.ResetWith(cloned, transacted)
-	return cloned
+	return cloned, repool
 }
 
 func (transacted *Transacted) GetSku() *Transacted {

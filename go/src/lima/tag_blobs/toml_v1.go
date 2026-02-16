@@ -22,13 +22,10 @@ func (a *TomlV1) ResetWith(b TomlV1) {
 
 func (tb *TomlV1) ContainsSku(tg sku.TransactedGetter) bool {
 	// lb := b.luaVMPoolBuilder.Clone().WithApply(MakeSelfApply(sk))
-	vm, err := tb.Get()
-	if err != nil {
-		ui.Err().Printf("lua script error: %s", err)
-		return false
-	}
+	vm, vmRepool := tb.GetWithRepool()
+	defer vmRepool()
 
-	defer tb.Put(vm)
+	var err error
 
 	var t *lua.LTable
 
@@ -41,8 +38,8 @@ func (tb *TomlV1) ContainsSku(tg sku.TransactedGetter) bool {
 	// TODO safer
 	f := vm.VM.GetField(t, "contains_sku").(*lua.LFunction)
 
-	tSku := vm.TablePool.Get()
-	defer vm.TablePool.Put(tSku)
+	tSku, tSkuRepool := vm.TablePool.GetWithRepool()
+	defer tSkuRepool()
 
 	vm.VM.Push(f)
 

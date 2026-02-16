@@ -42,7 +42,8 @@ func (op Checkin) Run(
 			lock.Lock()
 			defer lock.Unlock()
 
-			return results.Add(co.Clone())
+			cloned, _ := co.Clone()
+			return results.Add(cloned)
 		},
 	); err != nil {
 		err = errors.Wrap(err)
@@ -129,7 +130,8 @@ func (op Checkin) runOrganize(
 	}
 
 	for _, co := range changes.After.AllSkuAndIndex() {
-		if err = results.Add(co.Clone()); err != nil {
+		clonedCo, _ := co.Clone()
+		if err = results.Add(clonedCo); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

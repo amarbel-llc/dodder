@@ -68,7 +68,7 @@ func (c WriteNewZettels) RunOne(
 func (c WriteNewZettels) runOneAlreadyLocked(
 	proto sku.Proto,
 ) (object *sku.Transacted, err error) {
-	object = proto.Make()
+	object, _ = proto.Make()
 
 	if err = c.GetStore().CreateOrUpdateDefaultProto(
 		object,

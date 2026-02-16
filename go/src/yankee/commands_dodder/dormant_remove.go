@@ -20,13 +20,16 @@ func (cmd DormantRemove) Run(dep command.Request) {
 	localWorkingCopy.Must(errors.MakeFuncContextFromFuncErr(localWorkingCopy.Lock))
 
 	for _, v := range dep.PopArgs() {
-		cs := catgut.MakeFromString(v)
+		cs, csRepool := catgut.MakeFromString(v)
 
 		if err := localWorkingCopy.GetDormantIndex().RemoveDormantTag(
 			cs,
 		); err != nil {
+			csRepool()
 			localWorkingCopy.Cancel(err)
 		}
+
+		csRepool()
 	}
 
 	localWorkingCopy.Must(errors.MakeFuncContextFromFuncErr(localWorkingCopy.Unlock))

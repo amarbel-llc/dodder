@@ -129,7 +129,7 @@ func (path *Path) Copy() (b *Path) {
 	}
 
 	for i, s := range *path {
-		sb := catgut.GetPool().Get()
+		sb, _ := catgut.GetPool().GetWithRepool()
 		s.CopyTo(sb)
 		(*b)[i] = sb
 	}
@@ -171,7 +171,8 @@ func (path *Path) AddPath(b *Path) {
 	}
 
 	for _, e := range *b {
-		*path = append(*path, catgut.GetPool().Get())
+		el, _ := catgut.GetPool().GetWithRepool()
+		*path = append(*path, el)
 		(*path)[path.Len()-1].SetBytes(e.Bytes())
 	}
 
@@ -188,7 +189,8 @@ func (path *Path) Add(es ...*Tag) {
 			return
 		}
 
-		*path = append(*path, catgut.GetPool().Get())
+		el, _ := catgut.GetPool().GetWithRepool()
+		*path = append(*path, el)
 		(*path)[path.Len()-1].SetBytes(e.Bytes())
 	}
 
@@ -223,7 +225,7 @@ func (path *Path) ReadFrom(r io.Reader) (n int64, err error) {
 		n += int64(n1)
 
 		if (*path)[i] == nil {
-			(*path)[i] = catgut.GetPool().Get()
+			(*path)[i], _ = catgut.GetPool().GetWithRepool()
 		}
 
 		_, err = io.CopyN((*path)[i], r, int64(cl))

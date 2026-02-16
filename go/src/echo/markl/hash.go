@@ -45,7 +45,7 @@ func (hash *Hash) GetMarklFormat() domain_interfaces.MarklFormat {
 }
 
 func (hash *Hash) GetMarklId() (domain_interfaces.MarklIdMutable, interfaces.FuncRepool) {
-	id := idPool.Get()
+	id, repool := idPool.GetWithRepool()
 	id.format = hash.GetMarklFormat()
 	id.allocDataIfNecessary(hash.Size())
 
@@ -54,15 +54,13 @@ func (hash *Hash) GetMarklId() (domain_interfaces.MarklIdMutable, interfaces.Fun
 		id.data = hash.hash.Sum(id.data)
 	}
 
-	return id, func() {
-		idPool.Put(id)
-	}
+	return id, repool
 }
 
 func (hash *Hash) GetBlobIdForReader(
 	reader io.Reader,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	id := idPool.Get()
+	id, repool := idPool.GetWithRepool()
 	id.format = hash.GetMarklFormat()
 	id.allocDataAndSetToCapIfNecessary(hash.Size())
 
@@ -70,16 +68,14 @@ func (hash *Hash) GetBlobIdForReader(
 		panic(errors.Wrap(err))
 	}
 
-	return id, func() {
-		idPool.Put(id)
-	}
+	return id, repool
 }
 
 func (hash *Hash) GetBlobIdForReaderAt(
 	reader io.ReaderAt,
 	off int64,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	id := idPool.Get()
+	id, repool := idPool.GetWithRepool()
 	id.format = hash.GetMarklFormat()
 	id.allocDataAndSetToCapIfNecessary(hash.Size())
 
@@ -87,7 +83,5 @@ func (hash *Hash) GetBlobIdForReaderAt(
 		panic(errors.Wrap(err))
 	}
 
-	return id, func() {
-		idPool.Put(id)
-	}
+	return id, repool
 }

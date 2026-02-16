@@ -35,8 +35,8 @@ func (deduper *deduper) shouldCommit(object *sku.Transacted) (err error) {
 		return err
 	}
 
-	id := markl.GetId()
-	defer markl.PutId(id)
+	id, idRepool := markl.GetId()
+	defer idRepool()
 
 	if err = object.CalculateDigestForPurpose(
 		markl.PurposeV5MetadataDigestWithoutTai,

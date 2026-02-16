@@ -270,8 +270,6 @@ func (server *Server) readMCPResourceObjects(
 			}
 		}
 
-		defer sku.GetTransactedPool().Put(object)
-
 		return server.readMCPResourceObject(object)
 	}
 
@@ -348,7 +346,6 @@ func (server *Server) readMCPResourceObject(
 				}
 			}
 
-			defer sku.GetTransactedPool().Put(typeObject)
 		}
 
 		{

@@ -6,15 +6,12 @@ import (
 	"io"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/alfa/pool"
 )
 
 var poolReader = pool.MakeWithResetable[reader]()
-
-func PutReader(dr *reader) {
-	poolReader.Put(dr)
-}
 
 // Not safe for parallel use
 type Reader interface {
@@ -40,12 +37,12 @@ type reader struct {
 func Make(
 	delim byte,
 	reader io.Reader,
-) (delimReader *reader) {
-	delimReader = poolReader.Get()
+) (delimReader *reader, repool interfaces.FuncRepool) {
+	delimReader, repool = poolReader.GetWithRepool()
 	delimReader.Reader.Reset(reader)
 	delimReader.delim = delim
 
-	return delimReader
+	return delimReader, repool
 }
 
 func (delimReader *reader) N() int64 {

@@ -38,7 +38,9 @@ func NewWriter(
 		return wrighter, err
 	}
 
-	wrighter.digester = markl_io.MakeWriter(config.hashFormat.GetHash(), nil)
+	hash, hashRepool := config.hashFormat.GetHash()
+	defer hashRepool()
+	wrighter.digester = markl_io.MakeWriter(hash, nil)
 
 	if wrighter.compressor, err = config.GetBlobCompression().WrapWriter(
 		wrighter.encrypter,

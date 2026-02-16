@@ -44,8 +44,8 @@ func (tagsWithParentsAndTypes TagsWithParentsAndTypes) containsObjectIdTag(
 	offset := 0
 
 	if ids.IsVirtual(id) {
-		percent := catgut.GetPool().Get()
-		defer catgut.GetPool().Put(percent)
+		percent, percentRepool := catgut.GetPool().GetWithRepool()
+		defer percentRepool()
 
 		percent.Set("%")
 
@@ -129,7 +129,7 @@ func (tagsWithParentsAndTypes *TagsWithParentsAndTypes) Add(
 ) (err error) {
 	var e *Tag
 
-	if e, err = e1.Clone(); err != nil {
+	if e, _, err = e1.Clone(); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -160,7 +160,7 @@ func (tagsWithParentsAndTypes *TagsWithParentsAndTypes) Add(
 func (tagsWithParentsAndTypes *TagsWithParentsAndTypes) Remove(e1 *Tag) (err error) {
 	var e *Tag
 
-	if e, err = e1.Clone(); err != nil {
+	if e, _, err = e1.Clone(); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

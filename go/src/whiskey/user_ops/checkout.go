@@ -81,7 +81,7 @@ func (op Checkout) RunQuery(
 		lock.Lock()
 		defer lock.Unlock()
 
-		cl := col.Clone()
+		cl, _ := col.Clone()
 
 		if err = checkedOut.Add(cl); err != nil {
 			err = errors.Wrap(err)

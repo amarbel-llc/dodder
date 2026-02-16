@@ -16,8 +16,7 @@ var poolMatchBuilder = pool.Make(
 	},
 )
 
-// TODO switch to returning repool function
-func GetPoolMatchBuilder() interfaces.Pool[MatchBuilder, *MatchBuilder] {
+func GetPoolMatchBuilder() interfaces.PoolPtr[MatchBuilder, *MatchBuilder] {
 	return poolMatchBuilder
 }
 

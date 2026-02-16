@@ -52,8 +52,9 @@ func (prefixSet *PrefixSet) AddSku(object sku.SkuType) (err error) {
 		return err
 	}
 
+	clonedSku, _ := sku.CloneSkuType(object)
 	o := obj{
-		sku: sku.CloneSkuType(object),
+		sku: clonedSku,
 	}
 
 	if err = prefixSet.Add(&o); err != nil {
@@ -204,7 +205,8 @@ func (prefixSet PrefixSet) Subset(
 	out.Ungrouped = makeObjSet()
 	out.Grouped = MakePrefixSet(len(prefixSet.innerMap))
 
-	tagString := catgut.MakeFromString(tag.String())
+	tagString, tagStringRepool := catgut.MakeFromString(tag.String())
+	defer tagStringRepool()
 
 	for prefixTag, objects := range prefixSet.innerMap {
 		if prefixTag == "" {

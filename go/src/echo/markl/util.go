@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/alfa/pool"
@@ -95,8 +96,8 @@ func CompareToReader(
 	reader io.Reader,
 	expected domain_interfaces.MarklId,
 ) int {
-	actual := idPool.Get()
-	defer idPool.Put(actual)
+	actual, repool := idPool.GetWithRepool()
+	defer repool()
 
 	actual.allocDataAndSetToCapIfNecessary(expected.GetSize())
 
@@ -112,8 +113,8 @@ func CompareToReaderAt(
 	offset int64,
 	expected domain_interfaces.MarklId,
 ) int {
-	actual := idPool.Get()
-	defer idPool.Put(actual)
+	actual, repool := idPool.GetWithRepool()
+	defer repool()
 
 	actual.allocDataAndSetToCapIfNecessary(expected.GetSize())
 
@@ -256,7 +257,7 @@ func Equals(a, b domain_interfaces.MarklId) (ok bool) {
 	return ok
 }
 
-func Clone(src domain_interfaces.MarklId) domain_interfaces.MarklId {
+func Clone(src domain_interfaces.MarklId) (domain_interfaces.MarklId, interfaces.FuncRepool) {
 	if !src.IsNull() {
 		errors.PanicIfError(MakeErrEmptyType(src))
 	}
@@ -265,10 +266,10 @@ func Clone(src domain_interfaces.MarklId) domain_interfaces.MarklId {
 		panic("empty markl type")
 	}
 
-	dst := idPool.Get()
+	dst, repool := idPool.GetWithRepool()
 	dst.ResetWithMarklId(src)
 
-	return dst
+	return dst, repool
 }
 
 // Creates a human-readable string representation of a digest.

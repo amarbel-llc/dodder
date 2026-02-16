@@ -19,9 +19,12 @@ func TestReadWrite(t1 *testing.T) {
 	b := new(bytes.Buffer)
 	var sut Path
 
-	sut.Add(catgut.MakeFromString("one"))
-	sut.Add(catgut.MakeFromString("two"))
-	sut.Add(catgut.MakeFromString("three"))
+	one, _ := catgut.MakeFromString("one")
+	sut.Add(one)
+	two, _ := catgut.MakeFromString("two")
+	sut.Add(two)
+	three, _ := catgut.MakeFromString("three")
+	sut.Add(three)
 
 	{
 		n, err := sut.WriteTo(b)

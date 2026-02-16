@@ -309,8 +309,9 @@ LOOP:
 				}
 			}
 
+			oid, _ := ids.GetObjectIdPool().GetWithRepool()
 			objectId := ObjectId{
-				ObjectId: ids.GetObjectIdPool().Get(),
+				ObjectId: oid,
 			}
 
 			// TODO if this fails, permit a workspace store to try to read this
@@ -490,8 +491,8 @@ func (buildState *buildState) makeTagOrLuaTag(
 		return exp, err
 	}
 
-	object := sku.GetTransactedPool().Get()
-	defer sku.GetTransactedPool().Put(object)
+	object, objectRepool := sku.GetTransactedPool().GetWithRepool()
+	defer objectRepool()
 
 	if err = buildState.builder.objectProbeIndex.ReadOneObjectId(
 		objectId,

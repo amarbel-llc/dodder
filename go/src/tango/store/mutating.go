@@ -1,6 +1,7 @@
 package store
 
 import (
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/expansion"
@@ -150,9 +151,7 @@ func (commitFacilitator commitFacilitator) commit(
 		return err
 	}
 
-	if mother != nil {
-		defer sku.GetTransactedPool().Put(mother)
-	}
+	// mother lifecycle managed by fetchMotherIfNecessary caller
 
 	if err = commitFacilitator.tryPrecommit(daughter, mother, options); err != nil {
 		err = errors.Wrap(err)
@@ -327,7 +326,8 @@ func (commitFacilitator commitFacilitator) fetchMotherIfNecessary(
 		return mother, err
 	}
 
-	mother = sku.GetTransactedPool().Get()
+	var motherRepool interfaces.FuncRepool
+	mother, motherRepool = sku.GetTransactedPool().GetWithRepool()
 
 	// TODO find a way to make this more performant when operating over sshfs
 	if !sku.ReadOneObjectId(
@@ -335,7 +335,7 @@ func (commitFacilitator commitFacilitator) fetchMotherIfNecessary(
 		objectId,
 		mother,
 	) {
-		sku.GetTransactedPool().Put(mother)
+		motherRepool()
 		mother = nil
 		return mother, err
 	}
@@ -370,8 +370,8 @@ func (commitFacilitator commitFacilitator) handleUnchanged(
 func (commitFacilitator commitFacilitator) createType(
 	typeId *ids.ObjectId,
 ) (err error) {
-	typeObject := sku.GetTransactedPool().Get()
-	defer sku.GetTransactedPool().Put(typeObject)
+	typeObject, typeObjectRepool := sku.GetTransactedPool().GetWithRepool()
+	defer typeObjectRepool()
 
 	switch typeId.GetGenre() {
 	default:

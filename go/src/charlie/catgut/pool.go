@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	p     interfaces.Pool[String, *String]
+	p     interfaces.PoolPtr[String, *String]
 	ponce sync.Once
 )
 
 func init() {
 }
 
-func GetPool() interfaces.Pool[String, *String] {
+func GetPool() interfaces.PoolPtr[String, *String] {
 	ponce.Do(
 		func() {
 			p = pool.Make[String, *String](

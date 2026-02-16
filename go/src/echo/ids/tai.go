@@ -144,8 +144,8 @@ func (tai *Tai) Set(value string) (err error) {
 	reader, repool := pool.GetStringReader(value)
 	defer repool()
 
-	delimiterReader := delim_io.Make('.', reader)
-	defer delim_io.PutReader(delimiterReader)
+	delimiterReader, delimRepool := delim_io.Make('.', reader)
+	defer delimRepool()
 
 	idx := 0
 	var val string

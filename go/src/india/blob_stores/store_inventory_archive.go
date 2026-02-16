@@ -291,8 +291,9 @@ func (store inventoryArchive) MakeBlobReader(
 	id domain_interfaces.MarklId,
 ) (readCloser domain_interfaces.BlobReader, err error) {
 	if id.IsNull() {
+		hash, _ := store.defaultHash.Get()
 		readCloser = markl_io.MakeNopReadCloser(
-			store.defaultHash.Get(),
+			hash,
 			ohio.NopCloser(bytes.NewReader(nil)),
 		)
 		return readCloser, err
@@ -335,7 +336,7 @@ func (store inventoryArchive) MakeBlobReader(
 		return readCloser, err
 	}
 
-	hash := store.defaultHash.Get()
+	hash, _ := store.defaultHash.Get()
 
 	readCloser = markl_io.MakeReadCloser(
 		hash,

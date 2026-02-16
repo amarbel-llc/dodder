@@ -128,8 +128,6 @@ func WriteDigest(
 		return err
 	}
 
-	defer markl.PutId(digest)
-
 	output.ResetWithMarklId(digest)
 
 	if err = output.SetPurposeId(format.purpose); err != nil {
