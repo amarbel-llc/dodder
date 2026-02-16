@@ -84,18 +84,13 @@ func (vpb *VMPoolBuilder) Build() (vmp *VMPool, err error) {
 	}
 
 	// try initializing a lua vm to make sure there are no errors
-	vm, err := vmp.Get()
-	if err != nil {
-		err = errors.Wrap(err)
-		return vmp, err
-	}
+	vm, repool := vmp.GetWithRepool()
+	defer repool()
 
 	if _, err = vm.GetTopTableOrError(); err != nil {
 		err = errors.Wrap(err)
 		return vmp, err
 	}
-
-	vmp.Put(vm)
 
 	return vmp, err
 }

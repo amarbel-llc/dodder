@@ -9,7 +9,7 @@ import (
 type VM struct {
 	*lua.LState
 	Top lua.LValue
-	interfaces.Pool[LTable, *LTable]
+	interfaces.PoolPtr[LTable, *LTable]
 }
 
 func (vm *VM) GetTopFunctionOrFunctionNamedError(

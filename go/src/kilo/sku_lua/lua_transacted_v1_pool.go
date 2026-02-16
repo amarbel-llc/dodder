@@ -19,10 +19,7 @@ func PushTopFuncV1(
 	lvm LuaVMPoolV1,
 	args []string,
 ) (vm *LuaVMV1, argsOut []string, err error) {
-	if vm, err = lvm.Get(); err != nil {
-		err = errors.Wrap(err)
-		return vm, argsOut, err
-	}
+	vm, _ = lvm.GetWithRepool()
 
 	vm.LValue = vm.Top
 
@@ -41,19 +38,14 @@ func PushTopFuncV1(
 }
 
 type (
-	LuaVMPoolV1    interfaces.PoolWithErrorsPtr[LuaVMV1, *LuaVMV1]
-	LuaTablePoolV1 = interfaces.Pool[LuaTableV1, *LuaTableV1]
+	LuaVMPoolV1    = interfaces.PoolPtr[LuaVMV1, *LuaVMV1]
+	LuaTablePoolV1 = interfaces.PoolPtr[LuaTableV1, *LuaTableV1]
 )
 
 func MakeLuaVMPoolV1(vmPool *lua.VMPool, self *sku.Transacted) LuaVMPoolV1 {
-	return pool.MakeWithError(
-		func() (out *LuaVMV1, err error) {
-			var vm *lua.VM
-
-			if vm, err = vmPool.PoolWithErrorsPtr.Get(); err != nil {
-				err = errors.Wrap(err)
-				return out, err
-			}
+	return pool.Make(
+		func() (out *LuaVMV1) {
+			vm, _ := vmPool.PoolPtr.GetWithRepool()
 
 			out = &LuaVMV1{
 				VM:        vm,
@@ -61,7 +53,7 @@ func MakeLuaVMPoolV1(vmPool *lua.VMPool, self *sku.Transacted) LuaVMPoolV1 {
 				Selbst:    self,
 			}
 
-			return out, err
+			return out
 		},
 		nil,
 	)
@@ -70,10 +62,14 @@ func MakeLuaVMPoolV1(vmPool *lua.VMPool, self *sku.Transacted) LuaVMPoolV1 {
 func MakeLuaTablePoolV1(vm *lua.VM) LuaTablePoolV1 {
 	return pool.Make(
 		func() (table *LuaTableV1) {
+			transacted, _ := vm.PoolPtr.GetWithRepool()
+			tags, _ := vm.PoolPtr.GetWithRepool()
+			tagsImplicit, _ := vm.PoolPtr.GetWithRepool()
+
 			table = &LuaTableV1{
-				Transacted:   vm.Pool.Get(),
-				Tags:         vm.Pool.Get(),
-				TagsImplicit: vm.Pool.Get(),
+				Transacted:   transacted,
+				Tags:         tags,
+				TagsImplicit: tagsImplicit,
 			}
 
 			vm.SetField(table.Transacted, "Etiketten", table.Tags)

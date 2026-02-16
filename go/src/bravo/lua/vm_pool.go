@@ -10,7 +10,7 @@ import (
 )
 
 type VMPool struct {
-	interfaces.PoolWithErrorsPtr[VM, *VM]
+	interfaces.PoolPtr[VM, *VM]
 	Require  LGFunction
 	Searcher LGFunction
 	compiled *lua.FunctionProto
@@ -20,7 +20,7 @@ func (sp *VMPool) PrepareVM(
 	vm *VM,
 	apply interfaces.FuncIter[*VM],
 ) (err error) {
-	vm.Pool = pool.Make(
+	vm.PoolPtr = pool.Make(
 		func() (t *lua.LTable) {
 			t = vm.NewTable()
 			return t
@@ -65,7 +65,7 @@ func (sp *VMPool) PrepareVM(
 			return 1
 		})
 
-		table := vm.Pool.Get()
+		table, _ := vm.PoolPtr.GetWithRepool()
 		vm.SetField(table, "require", vm.NewFunction(sp.Require))
 		vm.SetGlobal("der", table)
 		vm.SetGlobal("dodder", table)
@@ -79,7 +79,7 @@ func (sp *VMPool) PrepareVM(
 			loaderTable := vm.GetField(packageTable, "loaders").(*LTable)
 			loaderTable.Insert(1, vm.NewFunction(sp.Searcher))
 		} else {
-			searcherTable := vm.Pool.Get()
+			searcherTable, _ := vm.PoolPtr.GetWithRepool()
 			packageTable.Insert(1, searcherTable)
 			searcherTable.Insert(1, vm.NewFunction(sp.Searcher))
 		}
@@ -131,18 +131,17 @@ func (sp *VMPool) SetCompiled(
 ) (err error) {
 	sp.compiled = compiled
 
-	sp.PoolWithErrorsPtr = pool.MakeWithError(
-		func() (vm *VM, err error) {
+	sp.PoolPtr = pool.Make(
+		func() (vm *VM) {
 			vm = &VM{
 				LState: lua.NewState(),
 			}
 
-			if err = sp.PrepareVM(vm, apply); err != nil {
-				err = errors.Wrap(err)
-				return vm, err
+			if err := sp.PrepareVM(vm, apply); err != nil {
+				panic(errors.Wrap(err))
 			}
 
-			return vm, err
+			return vm
 		},
 		func(vm *VM) {
 			vm.SetTop(0)
