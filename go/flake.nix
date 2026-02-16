@@ -79,7 +79,6 @@
             fish
             gnumake
             gum
-            just
           ]) ++ [
             sandcastle.packages.${system}.default
             bats-assert-additions.packages.${system}.default

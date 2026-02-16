@@ -1,3 +1,4 @@
+set output-format := "tap"
 
 export DODDER_BIN := env("DODDER_BIN", "dodder")
 export DODDER_XDG_UTILITY_OVERRIDE := ""
