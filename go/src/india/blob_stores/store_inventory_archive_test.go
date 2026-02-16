@@ -11,6 +11,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
 	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
@@ -97,39 +100,52 @@ func TestMakeBlobReaderFromArchive(t *testing.T) {
 	}
 }
 
+type stubBlobStore struct {
+	domain_interfaces.BlobStore
+	makeBlobReaderCalled bool
+	makeBlobReaderId     domain_interfaces.MarklId
+}
+
+func (s *stubBlobStore) MakeBlobReader(
+	id domain_interfaces.MarklId,
+) (domain_interfaces.BlobReader, error) {
+	s.makeBlobReaderCalled = true
+	s.makeBlobReaderId = id
+
+	return markl_io.MakeNopReadCloser(
+		markl.FormatHashSha256.Get(),
+		ohio.NopCloser(bytes.NewReader(nil)),
+	), nil
+}
+
 func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
 	hashFormat := markl.FormatHashSha256
 
-	// Build a store with empty index and nil loose store
-	// When ID is not in the index, it should delegate to looseBlobStore.
-	// We don't have a real loose store here, so just verify the delegation path
-	// by checking that a missing entry doesn't panic and calls through.
+	stub := &stubBlobStore{}
+
 	store := inventoryArchive{
-		defaultHash: hashFormat,
-		basePath:    t.TempDir(),
-		index:       make(map[string]archiveEntry),
+		defaultHash:    hashFormat,
+		basePath:       t.TempDir(),
+		index:          make(map[string]archiveEntry),
+		looseBlobStore: stub,
 	}
 
-	// Create a non-null ID that is NOT in the index
 	nonNullHash := sha256.Sum256([]byte("not in archive"))
 	marklId, repool := hashFormat.GetBlobIdForHexString(
 		hex.EncodeToString(nonNullHash[:]),
 	)
 	defer repool()
 
-	// Without a looseBlobStore, this should panic/fail, confirming
-	// that MakeBlobReader delegates to loose when not in index.
-	// We verify by checking it doesn't try to open an archive file.
-	func() {
-		defer func() {
-			r := recover()
-			if r == nil {
-				t.Fatal("expected panic from nil looseBlobStore delegation")
-			}
-		}()
+	reader, err := store.MakeBlobReader(marklId)
+	if err != nil {
+		t.Fatalf("MakeBlobReader: %v", err)
+	}
 
-		store.MakeBlobReader(marklId)
-	}()
+	defer reader.Close()
+
+	if !stub.makeBlobReaderCalled {
+		t.Fatal("expected MakeBlobReader to delegate to loose blob store")
+	}
 }
 
 func TestMakeBlobReaderNullIdReturnsNopReader(t *testing.T) {
@@ -143,6 +159,10 @@ func TestMakeBlobReaderNullIdReturnsNopReader(t *testing.T) {
 
 	// A null markl ID (zero hash) should return an empty reader
 	nullId := hashFormat.FromStringContent("")
+
+	if !nullId.IsNull() {
+		t.Fatal("test setup: expected null ID")
+	}
 
 	reader, err := store.MakeBlobReader(nullId)
 	if err != nil {

@@ -118,6 +118,8 @@ func (store inventoryArchive) MakeBlobReader(
 		return readCloser, err
 	}
 
+	// Safe to defer-close: ReadEntryAt fully materializes decompressed data
+	// into dataEntry.Data before returning, so the file is not needed after.
 	defer errors.DeferredCloser(&err, file)
 
 	dataReader, err := inventory_archive.NewDataReader(file)
