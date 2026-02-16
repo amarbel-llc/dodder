@@ -59,3 +59,8 @@ do_lint \
 do_lint \
 	"no root packages" \
   find src -mindepth 2 -maxdepth 2 -type f
+
+# TODO-P2 enable after annotating existing intentional discards with //repool:owned
+# do_lint \
+# 	"no new discarded repool functions" \
+# 	bash -c 'ag --go ", _ :=.*(GetWithRepool|catgut\.Make)" src/ | grep -v "//repool:owned"'

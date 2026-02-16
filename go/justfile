@@ -158,7 +158,13 @@ check-go-vuln:
 check-go-vet:
   go vet ./... || true
 
-check: check-go-vuln check-go-vet
+build-analyzer-repool:
+  go build -o build/repool-analyzer ./src/alfa/analyzers/repool/cmd/
+
+check-go-repool: build-analyzer-repool
+  go vet -vettool=build/repool-analyzer ./... || true
+
+check: check-go-vuln check-go-vet check-go-repool
 
 #   _____         _
 #  |_   _|__  ___| |_

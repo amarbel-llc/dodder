@@ -27,9 +27,9 @@ func (pool Slice[_, SWIMMER_SLICE]) get() SWIMMER_SLICE {
 
 func (pool Slice[_, SWIMMER_SLICE]) GetWithRepool() (SWIMMER_SLICE, interfaces.FuncRepool) {
 	element := pool.get()
-	return element, func() {
+	return element, wrapRepoolDebug(func() {
 		pool.put(element)
-	}
+	})
 }
 
 func (pool Slice[_, SWIMMER_SLICE]) put(swimmer SWIMMER_SLICE) {

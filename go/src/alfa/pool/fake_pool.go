@@ -17,7 +17,7 @@ func (pool fakePool[T, TPtr]) get() TPtr {
 
 func (pool fakePool[SWIMMER, SWIMMER_PTR]) GetWithRepool() (SWIMMER_PTR, interfaces.FuncRepool) {
 	element := pool.get()
-	return element, func() {}
+	return element, wrapRepoolDebug(func() {})
 }
 
 func (pool fakePool[T, TPtr]) put(i TPtr) {}

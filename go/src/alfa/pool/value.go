@@ -41,9 +41,9 @@ func (pool value[SWIMMER]) get() SWIMMER {
 func (pool value[SWIMMER]) GetWithRepool() (SWIMMER, interfaces.FuncRepool) {
 	element := pool.get()
 
-	return element, func() {
+	return element, wrapRepoolDebug(func() {
 		pool.put(element)
-	}
+	})
 }
 
 func (pool value[SWIMMER]) put(swimmer SWIMMER) {

@@ -14,9 +14,9 @@ func (ip Bespoke[T]) get() T {
 func (pool Bespoke[SWIMMER]) GetWithRepool() (SWIMMER, interfaces.FuncRepool) {
 	element := pool.get()
 
-	return element, func() {
+	return element, wrapRepoolDebug(func() {
 		pool.put(element)
-	}
+	})
 }
 
 func (ip Bespoke[T]) put(i T) {
