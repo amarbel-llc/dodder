@@ -292,8 +292,7 @@ func (blobStore *remoteSftp) MakeBlobWriter(
 		config: blobStore.makeEnvDirConfig(),
 	}
 
-	hash, hashRepool := blobStore.defaultHashType.Get()
-	defer hashRepool()
+	hash, _ := blobStore.defaultHashType.Get() //repool:owned
 
 	if err = mover.initialize(hash); err != nil {
 		err = errors.Wrap(err)
@@ -311,8 +310,7 @@ func (blobStore *remoteSftp) MakeBlobReader(
 	blobStore.initializeOnce()
 
 	if digest.IsNull() {
-		hash, hashRepool := blobStore.defaultHashType.Get()
-		defer hashRepool()
+		hash, _ := blobStore.defaultHashType.Get() //repool:owned
 		readCloser = markl_io.MakeNopReadCloser(
 			hash,
 			ohio.NopCloser(bytes.NewReader(nil)),

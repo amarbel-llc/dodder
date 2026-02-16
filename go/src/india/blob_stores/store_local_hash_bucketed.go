@@ -117,8 +117,7 @@ func (blobStore localHashBucketed) MakeBlobReader(
 	digest domain_interfaces.MarklId,
 ) (readCloser domain_interfaces.BlobReader, err error) {
 	if digest.IsNull() {
-		hash, hashRepool := blobStore.defaultHashFormat.Get()
-		defer hashRepool()
+		hash, _ := blobStore.defaultHashFormat.Get() //repool:owned
 		readCloser = markl_io.MakeNopReadCloser(
 			hash,
 			ohio.NopCloser(bytes.NewReader(nil)),
@@ -189,8 +188,7 @@ func (blobStore localHashBucketed) blobReaderFrom(
 	basePath string,
 ) (readCloser domain_interfaces.BlobReader, err error) {
 	if digest.IsNull() {
-		hash, hashRepool := blobStore.defaultHashFormat.Get()
-		defer hashRepool()
+		hash, _ := blobStore.defaultHashFormat.Get() //repool:owned
 		readCloser = markl_io.MakeNopReadCloser(
 			hash,
 			ohio.NopCloser(bytes.NewReader(nil)),

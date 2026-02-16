@@ -29,6 +29,8 @@ All commands should be run from the `go/` directory.
 -   **Format**: `just codemod-go-fmt` (runs goimports + gofumpt)
 -   **Vulnerability Check**: `just check-go-vuln`
 -   **Go Vet**: `just check-go-vet`
+-   **Repool Analyzer**: `just check-go-repool` (detects leaked or discarded pool return functions)
+-   **All Checks**: `just check` (runs vuln + vet + repool)
 
 ### Alternative Build Systems
 
@@ -205,6 +207,43 @@ type TomlV2Common struct {
 - **Version Migration**: Gradual migration from old to new formats
 - **Interface Stability**: External code depends on interfaces, not implementations
 - **Extensibility**: New versions can add fields without breaking existing code
+
+### Pool Repool Lifecycle Rules
+
+`GetWithRepool()` returns `(element, FuncRepool)`. The repool function must be
+called exactly once when the caller is done with the element. Three tools enforce
+this:
+
+1.  **Static analyzer** (`just check-go-repool`): CFG-based `go vet` checker in
+    `src/alfa/analyzers/repool/`. Detects discarded repool functions (blank `_`
+    without `//repool:owned`) and repool variables not called on all code paths.
+
+2.  **Runtime debug poisoning** (`repool_debug.go`, build tag `debug`): Wraps
+    every repool function with an `atomic.Bool` guard that panics on
+    double-repool. Tracks outstanding borrows via `pool.OutstandingBorrows()`.
+    Zero overhead in release builds (`repool_release.go`).
+
+3.  **Lint check** (`bin/lint.bash`): Grep-based check for discarded repool
+    functions missing `//repool:owned` annotations (currently TODO-P2, pending
+    annotation of existing intentional discards).
+
+**Common repool pitfall — hash lifetime in blob readers/writers:**
+
+When a pooled `hash.Hash` is embedded in a blob reader or writer (via
+`markl_io.MakeWriter`), the hash's lifetime extends from construction through
+all reads/writes to `GetMarklId()` *after* `Close()`. The `localFileMover`
+pattern calls `writer.Close()` then `GetMarklId()` to compute the digest for
+the final file path. Any repool before `GetMarklId()` corrupts the digest.
+
+Because value pools (`pool.MakeValue[Hash]`) share the underlying `hash.Hash`
+interface pointer across copies, a premature `Reset()` via repool corrupts all
+copies simultaneously. If the hash lifetime cannot be bounded to a single scope,
+discard the repool with `//repool:owned`:
+
+```go
+hash, _ := config.hashFormat.GetHash() //repool:owned
+writer.digester = markl_io.MakeWriter(hash, nil)
+```
 
 ### Testing Strategy
 
