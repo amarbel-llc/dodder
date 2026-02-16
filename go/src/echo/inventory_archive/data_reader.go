@@ -151,10 +151,11 @@ func (dr *DataReader) ReadEntry() (entry DataEntry, err error) {
 	entry.Hash = make([]byte, dr.hashSize)
 
 	if _, err = io.ReadFull(dr.reader, entry.Hash); err != nil {
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
+		if err == io.EOF {
 			return entry, io.EOF
 		}
 
+		// io.ErrUnexpectedEOF means partial read = truncated file
 		err = errors.Wrapf(err, "reading entry hash")
 		return entry, err
 	}

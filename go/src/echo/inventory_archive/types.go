@@ -38,15 +38,16 @@ type DataEntry struct {
 }
 
 type IndexEntry struct {
-	Hash   []byte
-	Offset uint64
-	Size   uint64
+	Hash           []byte
+	PackOffset     uint64
+	CompressedSize uint64
 }
 
 type CacheEntry struct {
-	Hash   []byte
-	Offset uint64
-	Size   uint64
+	Hash            []byte
+	ArchiveChecksum []byte
+	Offset          uint64
+	CompressedSize  uint64
 }
 
 var compressionToByteMap = map[compression_type.CompressionType]byte{

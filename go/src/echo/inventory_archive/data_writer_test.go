@@ -250,6 +250,122 @@ func TestRoundTripZstd(t *testing.T) {
 	}
 }
 
+func TestValidateSucceeds(t *testing.T) {
+	var buf bytes.Buffer
+	hashFormatId := "sha256"
+	ct := compression_type.CompressionTypeNone
+
+	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	if err != nil {
+		t.Fatalf("NewDataWriter: %v", err)
+	}
+
+	if err := writer.WriteEntry(
+		sha256Hash([]byte("test")),
+		[]byte("test"),
+	); err != nil {
+		t.Fatalf("WriteEntry: %v", err)
+	}
+
+	if _, _, err := writer.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		t.Fatalf("NewDataReader: %v", err)
+	}
+
+	if err := reader.Validate(); err != nil {
+		t.Fatalf("Validate should succeed on valid archive: %v", err)
+	}
+}
+
+func TestValidateDetectsCorruption(t *testing.T) {
+	var buf bytes.Buffer
+	hashFormatId := "sha256"
+	ct := compression_type.CompressionTypeNone
+
+	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	if err != nil {
+		t.Fatalf("NewDataWriter: %v", err)
+	}
+
+	if err := writer.WriteEntry(
+		sha256Hash([]byte("test")),
+		[]byte("test"),
+	); err != nil {
+		t.Fatalf("WriteEntry: %v", err)
+	}
+
+	if _, _, err := writer.Close(); err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	// Corrupt a byte in the data section (after the header)
+	data := buf.Bytes()
+	corrupted := make([]byte, len(data))
+	copy(corrupted, data)
+	// Flip a byte in the middle of the data (well past the header)
+	midpoint := len(corrupted) / 2
+	corrupted[midpoint] ^= 0xFF
+
+	reader, err := NewDataReader(bytes.NewReader(corrupted))
+	if err != nil {
+		t.Fatalf("NewDataReader: %v", err)
+	}
+
+	if err := reader.Validate(); err == nil {
+		t.Fatal("Validate should fail on corrupted archive")
+	}
+}
+
+func TestEmptyArchiveRoundTrip(t *testing.T) {
+	var buf bytes.Buffer
+	hashFormatId := "sha256"
+	ct := compression_type.CompressionTypeNone
+
+	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	if err != nil {
+		t.Fatalf("NewDataWriter: %v", err)
+	}
+
+	checksum, writtenEntries, err := writer.Close()
+	if err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	if len(checksum) != sha256.Size {
+		t.Fatalf(
+			"expected checksum length %d, got %d",
+			sha256.Size,
+			len(checksum),
+		)
+	}
+
+	if len(writtenEntries) != 0 {
+		t.Fatalf("expected 0 entries, got %d", len(writtenEntries))
+	}
+
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		t.Fatalf("NewDataReader: %v", err)
+	}
+
+	readEntries, err := reader.ReadAllEntries()
+	if err != nil {
+		t.Fatalf("ReadAllEntries: %v", err)
+	}
+
+	if len(readEntries) != 0 {
+		t.Fatalf("expected 0 entries, got %d", len(readEntries))
+	}
+
+	if err := reader.Validate(); err != nil {
+		t.Fatalf("Validate should succeed on empty archive: %v", err)
+	}
+}
+
 func sha256Hash(data []byte) []byte {
 	h := sha256.Sum256(data)
 	return h[:]
