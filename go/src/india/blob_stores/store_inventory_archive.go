@@ -1,9 +1,16 @@
 package blob_stores
 
 import (
+	"bytes"
+	"os"
+	"path/filepath"
+
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
@@ -87,8 +94,57 @@ func (store inventoryArchive) MakeBlobWriter(
 func (store inventoryArchive) MakeBlobReader(
 	id domain_interfaces.MarklId,
 ) (readCloser domain_interfaces.BlobReader, err error) {
-	// TODO: archive reading comes in Task 8
-	return store.looseBlobStore.MakeBlobReader(id)
+	if id.IsNull() {
+		readCloser = markl_io.MakeNopReadCloser(
+			store.defaultHash.Get(),
+			ohio.NopCloser(bytes.NewReader(nil)),
+		)
+		return readCloser, err
+	}
+
+	entry, inArchive := store.index[id.String()]
+	if !inArchive {
+		return store.looseBlobStore.MakeBlobReader(id)
+	}
+
+	archivePath := filepath.Join(
+		store.basePath,
+		entry.ArchiveChecksum+inventory_archive.DataFileExtension,
+	)
+
+	file, err := os.Open(archivePath)
+	if err != nil {
+		err = errors.Wrapf(err, "opening archive %s", archivePath)
+		return readCloser, err
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	dataReader, err := inventory_archive.NewDataReader(file)
+	if err != nil {
+		err = errors.Wrapf(err, "reading archive header %s", archivePath)
+		return readCloser, err
+	}
+
+	dataEntry, err := dataReader.ReadEntryAt(entry.Offset)
+	if err != nil {
+		err = errors.Wrapf(
+			err,
+			"reading entry at offset %d in %s",
+			entry.Offset,
+			archivePath,
+		)
+		return readCloser, err
+	}
+
+	hash := store.defaultHash.Get()
+
+	readCloser = markl_io.MakeReadCloser(
+		hash,
+		bytes.NewReader(dataEntry.Data),
+	)
+
+	return readCloser, err
 }
 
 func (store inventoryArchive) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
