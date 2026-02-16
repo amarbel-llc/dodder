@@ -32,8 +32,10 @@ Rewrite root justfile test recipes with:
 
 Recipes:
 - `test` — build, unit tests, smart fixture check, bats (full pipeline)
-- `test-quick` — build, unit tests, bats without fixture generation
 - `test-bats` — build, smart fixture check, bats
+- `test-bats-quick` — build, bats without fixture generation (fast iteration)
+- `test-bats-targets` — build, run specific bats test files
+- `test-bats-tags` — build, run bats tests filtered by tag
 - `test-bats-update-fixtures` — force regenerate with proper error propagation
 
 ### 3. Smart fixture skip
