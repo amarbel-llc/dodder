@@ -68,33 +68,8 @@ func makeInventoryArchive(
 }
 
 func (store *inventoryArchive) loadIndex() (err error) {
-	cachePath := filepath.Join(store.cachePath, inventory_archive.CacheFileName)
-
-	file, openErr := os.Open(cachePath)
-	if openErr != nil {
-		return store.rebuildIndex()
-	}
-
-	defer errors.DeferredCloser(&err, file)
-
-	info, statErr := file.Stat()
-	if statErr != nil {
-		return store.rebuildIndex()
-	}
-
-	hashFormatId := store.defaultHash.GetMarklFormatId()
-
-	reader, readerErr := inventory_archive.NewCacheReader(
-		file,
-		info.Size(),
-		hashFormatId,
-	)
-	if readerErr != nil {
-		return store.rebuildIndex()
-	}
-
-	entries, readErr := reader.ReadAllEntries()
-	if readErr != nil {
+	entries, ok := store.tryReadCache()
+	if !ok {
 		return store.rebuildIndex()
 	}
 
@@ -113,6 +88,43 @@ func (store *inventoryArchive) loadIndex() (err error) {
 	}
 
 	return nil
+}
+
+func (store *inventoryArchive) tryReadCache() (
+	entries []inventory_archive.CacheEntry,
+	ok bool,
+) {
+	cachePath := filepath.Join(store.cachePath, inventory_archive.CacheFileName)
+
+	file, err := os.Open(cachePath)
+	if err != nil {
+		return nil, false
+	}
+
+	defer file.Close()
+
+	info, err := file.Stat()
+	if err != nil {
+		return nil, false
+	}
+
+	hashFormatId := store.defaultHash.GetMarklFormatId()
+
+	reader, err := inventory_archive.NewCacheReader(
+		file,
+		info.Size(),
+		hashFormatId,
+	)
+	if err != nil {
+		return nil, false
+	}
+
+	entries, err = reader.ReadAllEntries()
+	if err != nil {
+		return nil, false
+	}
+
+	return entries, true
 }
 
 func (store *inventoryArchive) rebuildIndex() (err error) {
@@ -199,6 +211,10 @@ func (store *inventoryArchive) rebuildIndex() (err error) {
 				},
 			)
 		}
+	}
+
+	if len(allCacheEntries) == 0 {
+		return nil
 	}
 
 	sort.Slice(allCacheEntries, func(i, j int) bool {
