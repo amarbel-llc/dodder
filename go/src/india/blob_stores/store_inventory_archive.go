@@ -346,6 +346,42 @@ func (store inventoryArchive) MakeBlobReader(
 }
 
 func (store inventoryArchive) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
-	// TODO: dedup comes in Task 10
-	return store.looseBlobStore.AllBlobs()
+	return func(yield func(domain_interfaces.MarklId, error) bool) {
+		id, repool := store.defaultHash.GetBlobId()
+		defer repool()
+
+		// Yield all archive index entries first
+		for key := range store.index {
+			if err := id.Set(key); err != nil {
+				if !yield(nil, errors.Wrap(err)) {
+					return
+				}
+
+				continue
+			}
+
+			if !yield(id, nil) {
+				return
+			}
+		}
+
+		// Yield loose blobs, skipping those already in the archive index
+		for looseId, err := range store.looseBlobStore.AllBlobs() {
+			if err != nil {
+				if !yield(nil, err) {
+					return
+				}
+
+				continue
+			}
+
+			if _, inArchive := store.index[looseId.String()]; inArchive {
+				continue
+			}
+
+			if !yield(looseId, nil) {
+				return
+			}
+		}
+	}
 }

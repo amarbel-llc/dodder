@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
 	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
@@ -104,6 +105,7 @@ type stubBlobStore struct {
 	domain_interfaces.BlobStore
 	makeBlobReaderCalled bool
 	makeBlobReaderId     domain_interfaces.MarklId
+	allBlobIds           []domain_interfaces.MarklId
 }
 
 func (s *stubBlobStore) MakeBlobReader(
@@ -122,6 +124,16 @@ func (s *stubBlobStore) HasBlob(
 	id domain_interfaces.MarklId,
 ) bool {
 	return false
+}
+
+func (s *stubBlobStore) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
+	return func(yield func(domain_interfaces.MarklId, error) bool) {
+		for _, id := range s.allBlobIds {
+			if !yield(id, nil) {
+				return
+			}
+		}
+	}
 }
 
 func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
@@ -383,5 +395,66 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 
 	if !store2.HasBlob(marklId) {
 		t.Fatal("expected HasBlob to return true when loaded from cache")
+	}
+}
+
+func TestAllBlobsDeduplication(t *testing.T) {
+	hashFormat := markl.FormatHashSha256
+
+	// Create two hashes: one in archive index, one only in loose
+	archiveHash := sha256.Sum256([]byte("archived blob"))
+	looseOnlyHash := sha256.Sum256([]byte("loose only blob"))
+
+	archiveId, archiveRepool := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(archiveHash[:]),
+	)
+	defer archiveRepool()
+
+	looseOnlyId, looseOnlyRepool := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(looseOnlyHash[:]),
+	)
+	defer looseOnlyRepool()
+
+	// The stub loose store returns both hashes
+	stub := &stubBlobStore{
+		allBlobIds: []domain_interfaces.MarklId{archiveId, looseOnlyId},
+	}
+
+	store := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       t.TempDir(),
+		looseBlobStore: stub,
+		index: map[string]archiveEntry{
+			archiveId.String(): {
+				ArchiveChecksum: "deadbeef",
+				Offset:          0,
+				CompressedSize:  100,
+			},
+		},
+	}
+
+	seen := make(map[string]int)
+
+	for id, err := range store.AllBlobs() {
+		if err != nil {
+			t.Fatalf("AllBlobs error: %v", err)
+		}
+
+		seen[id.String()]++
+	}
+
+	// archiveId should appear exactly once (from archive, not from loose)
+	if count := seen[archiveId.String()]; count != 1 {
+		t.Errorf("archive blob seen %d times, want 1", count)
+	}
+
+	// looseOnlyId should appear exactly once (from loose)
+	if count := seen[looseOnlyId.String()]; count != 1 {
+		t.Errorf("loose-only blob seen %d times, want 1", count)
+	}
+
+	// Total should be exactly 2
+	if len(seen) != 2 {
+		t.Errorf("expected 2 unique blobs, got %d", len(seen))
 	}
 }
