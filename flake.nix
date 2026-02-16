@@ -15,6 +15,7 @@
       system:
       {
         packages = dodder-go.packages.${system};
+        devShells = dodder-go.devShells.${system};
       }
     ));
 }
