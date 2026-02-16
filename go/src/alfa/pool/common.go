@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/_/pool_value"
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 	bufioWriter   = Make[bufio.Writer](nil, nil)
 	byteReaders   = Make[bytes.Reader](nil, nil)
 	stringReaders = Make[strings.Reader](nil, nil)
-	sha256Hash    = pool_value.Make(
+	sha256Hash    = MakeValue(
 		func() hash.Hash {
 			return sha256.New()
 		},
@@ -28,62 +28,37 @@ var (
 
 func GetStringReader(
 	value string,
-) (stringReader *strings.Reader, repool func()) {
-	stringReader = stringReaders.get()
+) (stringReader *strings.Reader, repool interfaces.FuncRepool) {
+	stringReader, repool = stringReaders.GetWithRepool()
 	stringReader.Reset(value)
-
-	repool = func() {
-		stringReaders.put(stringReader)
-	}
-
 	return stringReader, repool
 }
 
 func GetByteReader(
 	value []byte,
-) (byteReader *bytes.Reader, repool func()) {
-	byteReader = byteReaders.get()
+) (byteReader *bytes.Reader, repool interfaces.FuncRepool) {
+	byteReader, repool = byteReaders.GetWithRepool()
 	byteReader.Reset(value)
-
-	repool = func() {
-		byteReaders.put(byteReader)
-	}
-
 	return byteReader, repool
 }
 
-func GetSha256Hash() (hash hash.Hash, repool func()) {
-	hash = sha256Hash.Get()
-
-	repool = func() {
-		sha256Hash.Put(hash)
-	}
-
+func GetSha256Hash() (hash hash.Hash, repool interfaces.FuncRepool) {
+	hash, repool = sha256Hash.GetWithRepool()
 	return hash, repool
 }
 
 func GetBufferedWriter(
 	writer io.Writer,
-) (bufferedWriter *bufio.Writer, repool func()) {
-	bufferedWriter = bufioWriter.get()
+) (bufferedWriter *bufio.Writer, repool interfaces.FuncRepool) {
+	bufferedWriter, repool = bufioWriter.GetWithRepool()
 	bufferedWriter.Reset(writer)
-
-	repool = func() {
-		bufioWriter.put(bufferedWriter)
-	}
-
 	return bufferedWriter, repool
 }
 
 func GetBufferedReader(
 	reader io.Reader,
-) (bufferedReader *bufio.Reader, repool func()) {
-	bufferedReader = bufioReader.get()
+) (bufferedReader *bufio.Reader, repool interfaces.FuncRepool) {
+	bufferedReader, repool = bufioReader.GetWithRepool()
 	bufferedReader.Reset(reader)
-
-	repool = func() {
-		bufioReader.put(bufferedReader)
-	}
-
 	return bufferedReader, repool
 }
