@@ -11,6 +11,8 @@ type value[SWIMMER any] struct {
 	reset func(SWIMMER)
 }
 
+var _ interfaces.Pool[string] = value[string]{}
+
 func MakeValue[SWIMMER any](
 	New func() SWIMMER,
 	Reset func(SWIMMER),
@@ -32,24 +34,22 @@ func MakeValue[SWIMMER any](
 	}
 }
 
-func (pool value[SWIMMER]) Get() SWIMMER {
+func (pool value[SWIMMER]) get() SWIMMER {
 	return pool.inner.Get().(SWIMMER)
 }
 
 func (pool value[SWIMMER]) GetWithRepool() (SWIMMER, interfaces.FuncRepool) {
-	element := pool.Get()
+	element := pool.get()
 
 	return element, func() {
-		pool.Put(element)
+		pool.put(element)
 	}
 }
 
-func (pool value[SWIMMER]) Put(swimmer SWIMMER) (err error) {
+func (pool value[SWIMMER]) put(swimmer SWIMMER) {
 	if pool.reset != nil {
 		pool.reset(swimmer)
 	}
 
 	pool.inner.Put(swimmer)
-
-	return err
 }

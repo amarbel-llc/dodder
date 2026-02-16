@@ -11,7 +11,7 @@ type pool[SWIMMER any, SWIMMER_PTR interfaces.Ptr[SWIMMER]] struct {
 	reset func(SWIMMER_PTR)
 }
 
-var _ interfaces.Pool[string, *string] = pool[string, *string]{}
+var _ interfaces.PoolPtr[string, *string] = pool[string, *string]{}
 
 func MakeWithResetable[SWIMMER any, SWIMMER_PTR interfaces.ResetablePtr[SWIMMER]]() *pool[SWIMMER, SWIMMER_PTR] {
 	return Make(nil, func(swimmer SWIMMER_PTR) {
@@ -39,21 +39,21 @@ func Make[SWIMMER any, SWIMMER_PTR interfaces.Ptr[SWIMMER]](
 	}
 }
 
-func (pool pool[SWIMMER, SWIMMER_PTR]) Get() SWIMMER_PTR {
+func (pool pool[SWIMMER, SWIMMER_PTR]) get() SWIMMER_PTR {
 	return pool.inner.Get().(SWIMMER_PTR)
 }
 
 func (pool pool[SWIMMER, SWIMMER_PTR]) GetWithRepool() (SWIMMER_PTR, interfaces.FuncRepool) {
-	element := pool.Get()
+	element := pool.get()
 
 	return element, func() {
-		pool.Put(element)
+		pool.put(element)
 	}
 }
 
-func (pool pool[SWIMMER, SWIMMER_PTR]) Put(swimmer SWIMMER_PTR) (err error) {
+func (pool pool[SWIMMER, SWIMMER_PTR]) put(swimmer SWIMMER_PTR) {
 	if swimmer == nil {
-		return err
+		return
 	}
 
 	if pool.reset != nil {
@@ -61,6 +61,4 @@ func (pool pool[SWIMMER, SWIMMER_PTR]) Put(swimmer SWIMMER_PTR) (err error) {
 	}
 
 	pool.inner.Put(swimmer)
-
-	return err
 }

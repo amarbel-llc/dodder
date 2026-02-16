@@ -11,7 +11,8 @@ type poolWithError[SWIMMER any, SWIMMER_PTR interfaces.Ptr[SWIMMER]] struct {
 	reset func(SWIMMER_PTR)
 }
 
-var _ interfaces.PoolWithErrorsPtr[string, *string] = poolWithError[string, *string]{}
+// compile-time check removed — PoolWithErrorsPtr no longer exists
+// poolWithError will be deleted in a later task
 
 func MakeWithError[SWIMMER any, SWIMMER_PTR interfaces.Ptr[SWIMMER]](
 	New func() (SWIMMER_PTR, error),

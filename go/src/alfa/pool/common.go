@@ -29,11 +29,11 @@ var (
 func GetStringReader(
 	value string,
 ) (stringReader *strings.Reader, repool func()) {
-	stringReader = stringReaders.Get()
+	stringReader = stringReaders.get()
 	stringReader.Reset(value)
 
 	repool = func() {
-		stringReaders.Put(stringReader)
+		stringReaders.put(stringReader)
 	}
 
 	return stringReader, repool
@@ -42,11 +42,11 @@ func GetStringReader(
 func GetByteReader(
 	value []byte,
 ) (byteReader *bytes.Reader, repool func()) {
-	byteReader = byteReaders.Get()
+	byteReader = byteReaders.get()
 	byteReader.Reset(value)
 
 	repool = func() {
-		byteReaders.Put(byteReader)
+		byteReaders.put(byteReader)
 	}
 
 	return byteReader, repool
@@ -65,11 +65,11 @@ func GetSha256Hash() (hash hash.Hash, repool func()) {
 func GetBufferedWriter(
 	writer io.Writer,
 ) (bufferedWriter *bufio.Writer, repool func()) {
-	bufferedWriter = bufioWriter.Get()
+	bufferedWriter = bufioWriter.get()
 	bufferedWriter.Reset(writer)
 
 	repool = func() {
-		bufioWriter.Put(bufferedWriter)
+		bufioWriter.put(bufferedWriter)
 	}
 
 	return bufferedWriter, repool
@@ -78,11 +78,11 @@ func GetBufferedWriter(
 func GetBufferedReader(
 	reader io.Reader,
 ) (bufferedReader *bufio.Reader, repool func()) {
-	bufferedReader = bufioReader.Get()
+	bufferedReader = bufioReader.get()
 	bufferedReader.Reset(reader)
 
 	repool = func() {
-		bufioReader.Put(bufferedReader)
+		bufioReader.put(bufferedReader)
 	}
 
 	return bufferedReader, repool
