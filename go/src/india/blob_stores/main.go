@@ -190,6 +190,31 @@ func MakeBlobStore(
 			config,
 		)
 
+	case blob_store_configs.ConfigInventoryArchive:
+		var looseBlobStore domain_interfaces.BlobStore
+
+		if blobStores != nil {
+			looseBlobStoreId := config.GetLooseBlobStoreId().String()
+			if initialized, ok := blobStores[looseBlobStoreId]; ok {
+				looseBlobStore = initialized.BlobStore
+			}
+		}
+
+		if looseBlobStore == nil {
+			err = errors.BadRequestf(
+				"inventory archive store requires loose-blob-store-id %q but it was not found",
+				config.GetLooseBlobStoreId(),
+			)
+			return store, err
+		}
+
+		return makeInventoryArchive(
+			envDir,
+			configNamed.Path.GetBase(),
+			config,
+			looseBlobStore,
+		)
+
 	case blob_store_configs.ConfigPointer:
 		var typedConfig triple_hyphen_io.TypedBlob[blob_store_configs.Config]
 		otherStorePath := config.GetPath()
