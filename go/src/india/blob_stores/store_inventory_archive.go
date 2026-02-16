@@ -2,8 +2,11 @@ package blob_stores
 
 import (
 	"bytes"
+	"encoding/hex"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
@@ -50,12 +53,189 @@ func makeInventoryArchive(
 		return store, err
 	}
 
-	// TODO: derive cache path from envDir XDG cache dir
-	// TODO: load index from cache or rebuild
+	store.cachePath = envDir.GetXDGForBlobStores().Cache.MakePath(
+		"inventory-archives",
+	).String()
 
 	store.index = make(map[string]archiveEntry)
 
+	if err = store.loadIndex(); err != nil {
+		err = errors.Wrap(err)
+		return store, err
+	}
+
 	return store, err
+}
+
+func (store *inventoryArchive) loadIndex() (err error) {
+	cachePath := filepath.Join(store.cachePath, inventory_archive.CacheFileName)
+
+	file, openErr := os.Open(cachePath)
+	if openErr != nil {
+		return store.rebuildIndex()
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	info, statErr := file.Stat()
+	if statErr != nil {
+		return store.rebuildIndex()
+	}
+
+	hashFormatId := store.defaultHash.GetMarklFormatId()
+
+	reader, readerErr := inventory_archive.NewCacheReader(
+		file,
+		info.Size(),
+		hashFormatId,
+	)
+	if readerErr != nil {
+		return store.rebuildIndex()
+	}
+
+	entries, readErr := reader.ReadAllEntries()
+	if readErr != nil {
+		return store.rebuildIndex()
+	}
+
+	for _, entry := range entries {
+		marklId, repool := store.defaultHash.GetBlobIdForHexString(
+			hex.EncodeToString(entry.Hash),
+		)
+		key := marklId.String()
+		repool()
+
+		store.index[key] = archiveEntry{
+			ArchiveChecksum: hex.EncodeToString(entry.ArchiveChecksum),
+			Offset:          entry.Offset,
+			CompressedSize:  entry.CompressedSize,
+		}
+	}
+
+	return nil
+}
+
+func (store *inventoryArchive) rebuildIndex() (err error) {
+	pattern := filepath.Join(
+		store.basePath,
+		"*"+inventory_archive.IndexFileExtension,
+	)
+
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		err = errors.Wrapf(err, "globbing index files")
+		return err
+	}
+
+	hashFormatId := store.defaultHash.GetMarklFormatId()
+
+	var allCacheEntries []inventory_archive.CacheEntry
+
+	for _, indexPath := range matches {
+		base := filepath.Base(indexPath)
+		archiveChecksum := strings.TrimSuffix(
+			base,
+			inventory_archive.IndexFileExtension,
+		)
+
+		archiveChecksumBytes, decodeErr := hex.DecodeString(archiveChecksum)
+		if decodeErr != nil {
+			continue
+		}
+
+		file, openErr := os.Open(indexPath)
+		if openErr != nil {
+			err = errors.Wrapf(openErr, "opening index %s", indexPath)
+			return err
+		}
+
+		info, statErr := file.Stat()
+		if statErr != nil {
+			file.Close()
+			err = errors.Wrapf(statErr, "stat index %s", indexPath)
+			return err
+		}
+
+		reader, readerErr := inventory_archive.NewIndexReader(
+			file,
+			info.Size(),
+			hashFormatId,
+		)
+		if readerErr != nil {
+			file.Close()
+			err = errors.Wrapf(readerErr, "reading index %s", indexPath)
+			return err
+		}
+
+		indexEntries, readErr := reader.ReadAllEntries()
+
+		file.Close()
+
+		if readErr != nil {
+			err = errors.Wrapf(readErr, "reading entries from %s", indexPath)
+			return err
+		}
+
+		for _, ie := range indexEntries {
+			marklId, repool := store.defaultHash.GetBlobIdForHexString(
+				hex.EncodeToString(ie.Hash),
+			)
+			key := marklId.String()
+			repool()
+
+			store.index[key] = archiveEntry{
+				ArchiveChecksum: archiveChecksum,
+				Offset:          ie.PackOffset,
+				CompressedSize:  ie.CompressedSize,
+			}
+
+			allCacheEntries = append(
+				allCacheEntries,
+				inventory_archive.CacheEntry{
+					Hash:            ie.Hash,
+					ArchiveChecksum: archiveChecksumBytes,
+					Offset:          ie.PackOffset,
+					CompressedSize:  ie.CompressedSize,
+				},
+			)
+		}
+	}
+
+	sort.Slice(allCacheEntries, func(i, j int) bool {
+		return bytes.Compare(
+			allCacheEntries[i].Hash,
+			allCacheEntries[j].Hash,
+		) < 0
+	})
+
+	if err = os.MkdirAll(store.cachePath, 0o755); err != nil {
+		err = errors.Wrapf(err, "creating cache directory %s", store.cachePath)
+		return err
+	}
+
+	cachePath := filepath.Join(
+		store.cachePath,
+		inventory_archive.CacheFileName,
+	)
+
+	cacheFile, err := os.Create(cachePath)
+	if err != nil {
+		err = errors.Wrapf(err, "creating cache file %s", cachePath)
+		return err
+	}
+
+	defer errors.DeferredCloser(&err, cacheFile)
+
+	if _, err = inventory_archive.WriteCache(
+		cacheFile,
+		hashFormatId,
+		allCacheEntries,
+	); err != nil {
+		err = errors.Wrapf(err, "writing cache file %s", cachePath)
+		return err
+	}
+
+	return nil
 }
 
 func (store inventoryArchive) GetBlobStoreDescription() string {

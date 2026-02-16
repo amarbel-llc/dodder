@@ -118,6 +118,12 @@ func (s *stubBlobStore) MakeBlobReader(
 	), nil
 }
 
+func (s *stubBlobStore) HasBlob(
+	id domain_interfaces.MarklId,
+) bool {
+	return false
+}
+
 func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
 	hashFormat := markl.FormatHashSha256
 
@@ -250,5 +256,132 @@ func TestMakeBlobReaderFromArchiveZstd(t *testing.T) {
 
 	if !bytes.Equal(got, testData) {
 		t.Errorf("data mismatch: got %q, want %q", got, testData)
+	}
+}
+
+func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
+	basePath := t.TempDir()
+	cachePath := t.TempDir()
+
+	hashFormatId := markl.FormatIdHashSha256
+	hashFormat := markl.FormatHashSha256
+	ct := compression_type.CompressionTypeNone
+
+	testData := []byte("blob for index loading test")
+	rawHash := sha256.Sum256(testData)
+
+	// Write a data archive file
+	var archiveBuf bytes.Buffer
+
+	dataWriter, err := inventory_archive.NewDataWriter(
+		&archiveBuf,
+		hashFormatId,
+		ct,
+	)
+	if err != nil {
+		t.Fatalf("NewDataWriter: %v", err)
+	}
+
+	if err := dataWriter.WriteEntry(rawHash[:], testData); err != nil {
+		t.Fatalf("WriteEntry: %v", err)
+	}
+
+	checksum, writtenEntries, err := dataWriter.Close()
+	if err != nil {
+		t.Fatalf("Close: %v", err)
+	}
+
+	archiveChecksum := hex.EncodeToString(checksum)
+	archiveDataPath := filepath.Join(
+		basePath,
+		archiveChecksum+inventory_archive.DataFileExtension,
+	)
+
+	if err := os.WriteFile(
+		archiveDataPath,
+		archiveBuf.Bytes(),
+		0o644,
+	); err != nil {
+		t.Fatalf("writing archive data file: %v", err)
+	}
+
+	// Write a corresponding index file
+	indexEntries := []inventory_archive.IndexEntry{
+		{
+			Hash:           rawHash[:],
+			PackOffset:     writtenEntries[0].Offset,
+			CompressedSize: writtenEntries[0].CompressedSize,
+		},
+	}
+
+	var indexBuf bytes.Buffer
+
+	if _, err := inventory_archive.WriteIndex(
+		&indexBuf,
+		hashFormatId,
+		indexEntries,
+	); err != nil {
+		t.Fatalf("WriteIndex: %v", err)
+	}
+
+	indexPath := filepath.Join(
+		basePath,
+		archiveChecksum+inventory_archive.IndexFileExtension,
+	)
+
+	if err := os.WriteFile(indexPath, indexBuf.Bytes(), 0o644); err != nil {
+		t.Fatalf("writing index file: %v", err)
+	}
+
+	// Construct the store and let loadIndex rebuild from index files
+	stub := &stubBlobStore{}
+
+	store := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       basePath,
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index:          make(map[string]archiveEntry),
+	}
+
+	if err := store.loadIndex(); err != nil {
+		t.Fatalf("loadIndex: %v", err)
+	}
+
+	// Verify HasBlob returns true for the archived blob
+	marklId, repool := hashFormat.GetBlobIdForHexString(
+		hex.EncodeToString(rawHash[:]),
+	)
+	defer repool()
+
+	if !store.HasBlob(marklId) {
+		t.Fatal("expected HasBlob to return true for archived blob")
+	}
+
+	// Verify the cache file was written
+	cacheFilePath := filepath.Join(
+		cachePath,
+		inventory_archive.CacheFileName,
+	)
+
+	if _, err := os.Stat(cacheFilePath); err != nil {
+		t.Fatalf("expected cache file to exist at %s: %v", cacheFilePath, err)
+	}
+
+	// Verify a second loadIndex uses the cache (no index files needed)
+	store2 := inventoryArchive{
+		defaultHash:    hashFormat,
+		basePath:       t.TempDir(), // empty dir — no index files
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index:          make(map[string]archiveEntry),
+	}
+
+	if err := store2.loadIndex(); err != nil {
+		t.Fatalf("loadIndex from cache: %v", err)
+	}
+
+	if !store2.HasBlob(marklId) {
+		t.Fatal("expected HasBlob to return true when loaded from cache")
 	}
 }
