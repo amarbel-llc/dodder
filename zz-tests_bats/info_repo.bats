@@ -95,12 +95,14 @@ function info_xdg { # @test
 	set_xdg "$BATS_TEST_TMPDIR"
 	run_dodder_init_disable_age_xdg
 	run_dodder info-repo xdg
+	local resolved
+	resolved="$(realpath "$BATS_TEST_TMPDIR")"
 	assert_output - <<-EOM
-		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.xdg/data/dodder
-		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.xdg/config/dodder
-		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.xdg/state/dodder
-		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.xdg/cache/dodder
-		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.xdg/runtime/dodder
+		XDG_DATA_HOME=$resolved/.xdg/data/dodder
+		XDG_CONFIG_HOME=$resolved/.xdg/config/dodder
+		XDG_STATE_HOME=$resolved/.xdg/state/dodder
+		XDG_CACHE_HOME=$resolved/.xdg/cache/dodder
+		XDG_RUNTIME_HOME=$resolved/.xdg/runtime/dodder
 	EOM
 }
 

@@ -28,6 +28,9 @@ cat >"$srt_config" <<SETTINGS
 }
 SETTINGS
 
+export GIT_CONFIG_GLOBAL=/dev/null
+export GIT_CONFIG_SYSTEM=/dev/null
+
 exec sandcastle \
   --shell bash \
   --config "$srt_config" \
