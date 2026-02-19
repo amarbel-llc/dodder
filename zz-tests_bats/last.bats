@@ -28,7 +28,7 @@ function last_after_type_mutate { # @test
 	run_dodder show :b
 	assert_success
 	assert_output --regexp - <<-'EOM'
-		\[[0-9]+\.[0-9]+ @blake2b256-\w+ !inventory_list-v2]
+		\[[0-9]+\.[0-9]+ @blake2b256-[[:alnum:]]+ !inventory_list-v2]
 	EOM
 
 	cat >md.type <<-EOM
@@ -45,8 +45,8 @@ function last_after_type_mutate { # @test
 	run_dodder show :b
 	assert_success
 	assert_output --regexp - <<-'EOM'
-		\[[0-9]+\.[0-9]+ @blake2b256-\w+ !inventory_list-v2]
-		\[[0-9]+\.[0-9]+ @blake2b256-\w+ !inventory_list-v2]
+		\[[0-9]+\.[0-9]+ @blake2b256-[[:alnum:]]+ !inventory_list-v2]
+		\[[0-9]+\.[0-9]+ @blake2b256-[[:alnum:]]+ !inventory_list-v2]
 	EOM
 
 	run_dodder show -format blob :b
