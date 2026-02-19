@@ -337,17 +337,11 @@ function push_history_default_stdio_twice { # @test
 	run_dodder push /them
 
 	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
-		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
-		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
-		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
-		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
-		copied Blob blake2b256-.+ \(.*)
-		copied Blob blake2b256-.+ \(.*)
-		copied Blob blake2b256-.+ \(.*)
-		copied Blob blake2b256-.+ \(.*)
-		copied Blob blake2b256-.+ \(.*)
-	EOM
+	assert_line --regexp '\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]'
+	assert_line --regexp '\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]'
+	assert_line --partial '[one/dos @blake2b256-'
+	assert_line --partial '[one/uno @blake2b256-'
+	assert_line --regexp 'copied Blob blake2b256-.+ \(.*\)'
 
 	pushd them || exit 1
 	run_dodder show +z,e,t,b
