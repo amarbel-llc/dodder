@@ -35,11 +35,16 @@ These TODOs represent structural improvements that would improve code maintainab
 - `src/bravo/quiter/strings.go:12,29,61` - Move to collections_slice
 - `src/charlie/collections_value/construction.go:11,33,96` - Move construction to derived package
 
-#### Query Builder Refactoring
-Multiple related TODOs in `src/oscar/queries/builder.go`:
-- Lines 94, 100, 106, 112, 118, 126, 134, 142, 150 - Refactor into BuilderOption pattern
+#### Query Builder Refactoring ✅ COMPLETED
 
-**Recommendation**: The query builder refactoring is a cohesive task that would significantly clean up the API.
+~~Multiple related TODOs in `src/oscar/queries/builder.go`:~~
+~~- Lines 94, 100, 106, 112, 118, 126, 134, 142, 150 - Refactor into BuilderOption pattern~~
+
+**Status**: Completed in commit b9546cb6c
+- Removed 10 With* methods (WithPermittedSigil, WithDoNotMatchEmpty, WithRequireNonEmptyQuery, WithDebug, WithRepoId, WithFileExtensions, WithExpanders, WithDefaultGenres, WithDefaultSigil, WithHidden)
+- Added 5 new BuilderOptions (DoNotMatchEmpty, Debug, RepoId, FileExtensions, Expanders)
+- Updated all call sites to use BuilderOptions composition
+- Kept WithOptions, WithExternalLike, WithTransacted as methods
 
 ---
 
@@ -264,7 +269,7 @@ Multiple related TODOs in `src/oscar/queries/builder.go`:
 ### Immediate (High Value, Low Risk)
 
 1. **SSH Host Key Verification** - Security critical
-2. **Query Builder Refactoring** - Clean, contained refactor
+2. ~~**Query Builder Refactoring**~~ - ✅ COMPLETED (commit b9546cb6c)
 3. **Error System Improvements** - Debugging benefits across codebase
 
 ### Short-Term (High Value, Medium Effort)

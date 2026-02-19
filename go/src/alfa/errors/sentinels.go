@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
@@ -23,8 +22,35 @@ type (
 )
 
 func IsTyped[DISAMB any](err error) bool {
-	var target *errorString[DISAMB]
-	return Is(err, target)
+	// Check if error implements Typed[DISAMB]
+	var typed Typed[DISAMB]
+	if As(err, &typed) {
+		return true
+	}
+	return false
+}
+
+// MakeTypedSentinel creates a typed sentinel error and its checker function.
+// This is a convenience helper to reduce boilerplate when creating package errors.
+//
+// Usage:
+//
+//	type pkgErrDisamb struct{}
+//	var (
+//	    ErrMyError, IsMyError = errors.MakeTypedSentinel[pkgErrDisamb]("my error")
+//	)
+//
+// The returned sentinel implements errors.Typed[DISAMB] and can be checked with
+// either the returned checker function or errors.IsTyped[DISAMB](err).
+func MakeTypedSentinel[DISAMB any](text string) (
+	sentinel Typed[DISAMB],
+	check func(error) bool,
+) {
+	sentinel = NewWithType[DISAMB](text)
+	check = func(err error) bool {
+		return IsTyped[DISAMB](err)
+	}
+	return sentinel, check
 }
 
 func NewWithType[DISAMB any](text string) Typed[DISAMB] {
@@ -72,8 +98,7 @@ func MakeErrStopIteration() error {
 }
 
 func IsStopIteration(err error) bool {
-	ok := Is(err, errStopIteration)
-	return ok
+	return IsTyped[errStopIterationDisamb](err)
 }
 
 // Exists sentinel
@@ -88,24 +113,11 @@ type ErrNotFound struct {
 	Value string
 }
 
-func MakeErrNotFound(value interfaces.Stringer) error {
-	return ErrNotFound{Value: value.String()}
-}
-
-func MakeErrNotFoundString(s string) error {
-	return ErrNotFound{Value: s}
-}
-
-func IsErrNotFound(err error) bool {
-	return errors.Is(err, ErrNotFound{})
-}
-
 func (err ErrNotFound) Error() string {
 	if err.Value == "" {
 		return "not found"
-	} else {
-		return fmt.Sprintf("not found: %q", err.Value)
 	}
+	return fmt.Sprintf("not found: %q", err.Value)
 }
 
 func (err ErrNotFound) Is(target error) (ok bool) {
@@ -115,4 +127,29 @@ func (err ErrNotFound) Is(target error) (ok bool) {
 
 func (err ErrNotFound) GetErrorType() errNotFoundDisamb {
 	return errNotFoundDisamb{}
+}
+
+// MakeErrNotFound creates a not found error with the given value.
+func MakeErrNotFound(value interfaces.Stringer) error {
+	return ErrNotFound{Value: value.String()}
+}
+
+// MakeErrNotFoundString creates a not found error with the given string value.
+func MakeErrNotFoundString(s string) error {
+	return ErrNotFound{Value: s}
+}
+
+// IsErrNotFound checks if an error is a not found error (any value).
+func IsErrNotFound(err error) bool {
+	return IsTyped[errNotFoundDisamb](err)
+}
+
+// GetErrNotFound extracts the ErrNotFound from an error chain.
+// Returns the typed error and true if found, zero value and false otherwise.
+func GetErrNotFound(err error) (ErrNotFound, bool) {
+	var notFoundErr ErrNotFound
+	if As(err, &notFoundErr) {
+		return notFoundErr, true
+	}
+	return ErrNotFound{}, false
 }
