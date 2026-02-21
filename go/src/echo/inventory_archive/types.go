@@ -29,6 +29,22 @@ const (
 	CompressionByteZstd byte = 3
 )
 
+const (
+	DataFileVersionV1  uint16 = 1
+	IndexFileVersionV1 uint16 = 1
+	CacheFileVersionV1 uint16 = 1
+
+	DataFileExtensionV1  = ".inventory_archive-v1"
+	IndexFileExtensionV1 = ".inventory_archive_index-v1"
+	CacheFileNameV1      = "index_cache-v1"
+
+	EntryTypeFull  byte = 0x00
+	EntryTypeDelta byte = 0x01
+
+	FlagHasDeltas         uint16 = 1 << 0
+	FlagReservedCrossArch uint16 = 1 << 1
+)
+
 type DataEntry struct {
 	Hash             []byte
 	UncompressedSize uint64
@@ -48,6 +64,36 @@ type CacheEntry struct {
 	ArchiveChecksum []byte
 	Offset          uint64
 	CompressedSize  uint64
+}
+
+type DataEntryV1 struct {
+	Hash             []byte
+	EntryType        byte
+	Encoding         byte
+	UncompressedSize uint64
+	CompressedSize   uint64
+	Data             []byte
+	Offset           uint64
+	// Delta-specific fields (only set when EntryType == EntryTypeDelta)
+	DeltaAlgorithm byte
+	BaseHash       []byte
+}
+
+type IndexEntryV1 struct {
+	Hash           []byte
+	PackOffset     uint64
+	CompressedSize uint64
+	EntryType      byte
+	BaseOffset     uint64
+}
+
+type CacheEntryV1 struct {
+	Hash            []byte
+	ArchiveChecksum []byte
+	Offset          uint64
+	CompressedSize  uint64
+	EntryType       byte
+	BaseOffset      uint64
 }
 
 var compressionToByteMap = map[compression_type.CompressionType]byte{
