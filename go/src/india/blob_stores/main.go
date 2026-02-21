@@ -208,9 +208,7 @@ func MakeBlobStore(
 			return store, err
 		}
 
-		// TODO: implement v1 inventory archive store
-		// For now, fall through to v0 behavior by treating it as v0
-		return makeInventoryArchiveV0(
+		return makeInventoryArchiveV1(
 			envDir,
 			configNamed.Path.GetBase(),
 			config,

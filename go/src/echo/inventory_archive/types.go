@@ -71,7 +71,7 @@ type DataEntryV1 struct {
 	EntryType        byte
 	Encoding         byte
 	UncompressedSize uint64
-	CompressedSize   uint64
+	CompressedSize   uint64 // For delta entries, this is the compressed delta payload size
 	Data             []byte
 	Offset           uint64
 	// Delta-specific fields (only set when EntryType == EntryTypeDelta)
