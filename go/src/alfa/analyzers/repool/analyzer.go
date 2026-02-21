@@ -24,8 +24,10 @@ import (
 	"golang.org/x/tools/go/cfg"
 )
 
-const funcRepoolTypeName = "FuncRepool"
-const funcRepoolPkgSuffix = "interfaces"
+const (
+	funcRepoolTypeName  = "FuncRepool"
+	funcRepoolPkgSuffix = "interfaces"
+)
 
 var Analyzer = &analysis.Analyzer{
 	Name: "repool",
