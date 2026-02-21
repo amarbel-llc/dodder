@@ -190,6 +190,33 @@ func MakeBlobStore(
 			config,
 		)
 
+	case blob_store_configs.ConfigInventoryArchiveDelta:
+		var looseBlobStore domain_interfaces.BlobStore
+
+		if blobStores != nil {
+			looseBlobStoreId := config.GetLooseBlobStoreId().String()
+			if initialized, ok := blobStores[looseBlobStoreId]; ok {
+				looseBlobStore = initialized.BlobStore
+			}
+		}
+
+		if looseBlobStore == nil {
+			err = errors.BadRequestf(
+				"inventory archive store requires loose-blob-store-id %q but it was not found",
+				config.GetLooseBlobStoreId(),
+			)
+			return store, err
+		}
+
+		// TODO: implement v1 inventory archive store
+		// For now, fall through to v0 behavior by treating it as v0
+		return makeInventoryArchiveV0(
+			envDir,
+			configNamed.Path.GetBase(),
+			config,
+			looseBlobStore,
+		)
+
 	case blob_store_configs.ConfigInventoryArchive:
 		var looseBlobStore domain_interfaces.BlobStore
 
@@ -208,7 +235,7 @@ func MakeBlobStore(
 			return store, err
 		}
 
-		return makeInventoryArchive(
+		return makeInventoryArchiveV0(
 			envDir,
 			configNamed.Path.GetBase(),
 			config,

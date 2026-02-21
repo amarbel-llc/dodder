@@ -72,7 +72,7 @@ func TestMakeBlobReaderFromArchive(t *testing.T) {
 	defer repool()
 
 	// Build the store directly with a pre-populated index
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash: hashFormat,
 		basePath:    tmpDir,
 		index: map[string]archiveEntry{
@@ -162,7 +162,7 @@ func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
 
 	stub := &stubBlobStore{}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       t.TempDir(),
 		index:          make(map[string]archiveEntry),
@@ -190,7 +190,7 @@ func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
 func TestMakeBlobReaderNullIdReturnsNopReader(t *testing.T) {
 	hashFormat := markl.FormatHashSha256
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash: hashFormat,
 		basePath:    t.TempDir(),
 		index:       make(map[string]archiveEntry),
@@ -263,7 +263,7 @@ func TestMakeBlobReaderFromArchiveZstd(t *testing.T) {
 	)
 	defer repool()
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash: hashFormat,
 		basePath:    tmpDir,
 		index: map[string]archiveEntry{
@@ -369,7 +369,7 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 	// Construct the store and let loadIndex rebuild from index files
 	stub := &stubBlobStore{}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       basePath,
 		cachePath:      cachePath,
@@ -402,7 +402,7 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 	}
 
 	// Verify a second loadIndex uses the cache (no index files needed)
-	store2 := inventoryArchive{
+	store2 := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       t.TempDir(), // empty dir — no index files
 		cachePath:      cachePath,
@@ -441,7 +441,7 @@ func TestAllBlobsDeduplication(t *testing.T) {
 		allBlobIds: []domain_interfaces.MarklId{archiveId, looseOnlyId},
 	}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       t.TempDir(),
 		looseBlobStore: stub,
@@ -514,7 +514,7 @@ func TestPack(t *testing.T) {
 		CompressionType: compression_type.CompressionTypeNone,
 	}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       basePath,
 		cachePath:      cachePath,
@@ -627,7 +627,7 @@ func TestPackSkipsAlreadyArchivedBlobs(t *testing.T) {
 		CompressionType: compression_type.CompressionTypeNone,
 	}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       basePath,
 		cachePath:      cachePath,
@@ -695,7 +695,7 @@ func TestPackDeleteLoose(t *testing.T) {
 		CompressionType: compression_type.CompressionTypeNone,
 	}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       basePath,
 		cachePath:      cachePath,
@@ -782,7 +782,7 @@ func TestPackDeleteLooseNotCalledWithoutFlag(t *testing.T) {
 		CompressionType: compression_type.CompressionTypeNone,
 	}
 
-	store := inventoryArchive{
+	store := inventoryArchiveV0{
 		defaultHash:    hashFormat,
 		basePath:       basePath,
 		cachePath:      cachePath,

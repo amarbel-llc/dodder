@@ -25,7 +25,7 @@ type archiveEntry struct {
 	CompressedSize  uint64
 }
 
-type inventoryArchive struct {
+type inventoryArchiveV0 struct {
 	config         blob_store_configs.ConfigInventoryArchive
 	defaultHash    markl.FormatHash
 	basePath       string
@@ -34,14 +34,14 @@ type inventoryArchive struct {
 	index          map[string]archiveEntry // keyed by hex hash
 }
 
-var _ domain_interfaces.BlobStore = inventoryArchive{}
+var _ domain_interfaces.BlobStore = inventoryArchiveV0{}
 
-func makeInventoryArchive(
+func makeInventoryArchiveV0(
 	envDir env_dir.Env,
 	basePath string,
 	config blob_store_configs.ConfigInventoryArchive,
 	looseBlobStore domain_interfaces.BlobStore,
-) (store inventoryArchive, err error) {
+) (store inventoryArchiveV0, err error) {
 	store.config = config
 	store.looseBlobStore = looseBlobStore
 	store.basePath = basePath
@@ -67,7 +67,7 @@ func makeInventoryArchive(
 	return store, err
 }
 
-func (store *inventoryArchive) loadIndex() (err error) {
+func (store *inventoryArchiveV0) loadIndex() (err error) {
 	entries, ok := store.tryReadCache()
 	if !ok {
 		return store.rebuildIndex()
@@ -90,7 +90,7 @@ func (store *inventoryArchive) loadIndex() (err error) {
 	return nil
 }
 
-func (store *inventoryArchive) tryReadCache() (
+func (store *inventoryArchiveV0) tryReadCache() (
 	entries []inventory_archive.CacheEntry,
 	ok bool,
 ) {
@@ -127,7 +127,7 @@ func (store *inventoryArchive) tryReadCache() (
 	return entries, true
 }
 
-func (store *inventoryArchive) rebuildIndex() (err error) {
+func (store *inventoryArchiveV0) rebuildIndex() (err error) {
 	pattern := filepath.Join(
 		store.basePath,
 		"*"+inventory_archive.IndexFileExtension,
@@ -254,19 +254,19 @@ func (store *inventoryArchive) rebuildIndex() (err error) {
 	return nil
 }
 
-func (store inventoryArchive) GetBlobStoreDescription() string {
+func (store inventoryArchiveV0) GetBlobStoreDescription() string {
 	return "local inventory archive"
 }
 
-func (store inventoryArchive) GetBlobIOWrapper() domain_interfaces.BlobIOWrapper {
+func (store inventoryArchiveV0) GetBlobIOWrapper() domain_interfaces.BlobIOWrapper {
 	return store.config
 }
 
-func (store inventoryArchive) GetDefaultHashType() domain_interfaces.FormatHash {
+func (store inventoryArchiveV0) GetDefaultHashType() domain_interfaces.FormatHash {
 	return store.defaultHash
 }
 
-func (store inventoryArchive) HasBlob(
+func (store inventoryArchiveV0) HasBlob(
 	id domain_interfaces.MarklId,
 ) (ok bool) {
 	if id.IsNull() {
@@ -281,13 +281,13 @@ func (store inventoryArchive) HasBlob(
 	return store.looseBlobStore.HasBlob(id)
 }
 
-func (store inventoryArchive) MakeBlobWriter(
+func (store inventoryArchiveV0) MakeBlobWriter(
 	hashFormat domain_interfaces.FormatHash,
 ) (blobWriter domain_interfaces.BlobWriter, err error) {
 	return store.looseBlobStore.MakeBlobWriter(hashFormat)
 }
 
-func (store inventoryArchive) MakeBlobReader(
+func (store inventoryArchiveV0) MakeBlobReader(
 	id domain_interfaces.MarklId,
 ) (readCloser domain_interfaces.BlobReader, err error) {
 	if id.IsNull() {
@@ -346,7 +346,7 @@ func (store inventoryArchive) MakeBlobReader(
 	return readCloser, err
 }
 
-func (store inventoryArchive) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
+func (store inventoryArchiveV0) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
 	return func(yield func(domain_interfaces.MarklId, error) bool) {
 		id, repool := store.defaultHash.GetBlobId()
 		defer repool()
