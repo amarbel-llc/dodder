@@ -1,5 +1,5 @@
 ---
-name: design_pattern-triple-hyphen-io
+name: design_pattern-triple_hyphen_io
 description: >
   Use when working with the triple-hyphen serialization format, adding coders
   for versioned types, reading or writing typed blobs, or debugging

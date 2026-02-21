@@ -1,5 +1,5 @@
 ---
-name: design_pattern-typed-error-sentinels
+name: design_pattern-typed_error_sentinels
 description: >
   Use when creating error sentinels, defining package-specific error types,
   checking errors by type rather than value, or encountering Typed, IsTyped,

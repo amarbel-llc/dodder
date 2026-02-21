@@ -1,5 +1,5 @@
 ---
-name: design_pattern-horizontal-versioning
+name: design_pattern-horizontal_versioning
 description: >
   Use when adding a new version of a persistent data structure, creating a new
   blob or config type, implementing an upgrade path between versions, or

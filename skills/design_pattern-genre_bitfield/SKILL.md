@@ -1,5 +1,5 @@
 ---
-name: design_pattern-genre-bitfield
+name: design_pattern-genre_bitfield
 description: >
   Use when working with object genres, adding genre filters to queries,
   parsing sigils like :z :t :e :r :b, or modifying genre-based dispatch.
