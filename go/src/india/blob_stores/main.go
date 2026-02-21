@@ -93,8 +93,40 @@ func MakeBlobStores(
 		}
 	}
 
+	// Two-pass initialization: first pass creates stores that have no
+	// cross-references (e.g. local hash-bucketed, SFTP), second pass creates
+	// stores that depend on other stores (e.g. inventory archives that
+	// reference a loose blob store). This is necessary because Go map
+	// iteration order is non-deterministic, and inventory archive stores
+	// need their referenced loose blob store to be initialized first.
 	for blobStoreIdString := range blobStores {
 		blobStore := blobStores[blobStoreIdString]
+
+		if _, needsCrossRef := blobStore.Config.Blob.(blob_store_configs.ConfigInventoryArchive); needsCrossRef {
+			continue
+		}
+
+		var err error
+
+		if blobStore.BlobStore, err = MakeBlobStore(
+			envDir,
+			blobStore.ConfigNamed,
+			blobStores,
+		); err != nil {
+			ctx.Cancel(err)
+			return blobStores
+		}
+
+		blobStores[blobStoreIdString] = blobStore
+	}
+
+	for blobStoreIdString := range blobStores {
+		blobStore := blobStores[blobStoreIdString]
+
+		if blobStore.BlobStore != nil {
+			continue
+		}
+
 		var err error
 
 		if blobStore.BlobStore, err = MakeBlobStore(
