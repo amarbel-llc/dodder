@@ -260,3 +260,137 @@ the current version's type string.
 | Carrying forward deprecated fields "for compatibility" | New versions define only their own fields. The upgrade path handles transformation. |
 | Forgetting to update `VCurrent` | Always point `VCurrent` at the newest version after adding it. |
 | Modifying `Upgrade()` on the current version | Only non-current versions implement `ConfigUpgradeable`. The current version is the upgrade chain's terminus. |
+
+## Migration Status
+
+The codebase has three Coder architectures at different stages of migration
+toward the canonical `CoderToTypedBlob` pattern. This section tracks each
+versioned type family, its current architecture, and what remains to reach full
+compliance with the pattern described above.
+
+### Target Architecture
+
+All versioned types should use **Architecture A: `CoderToTypedBlob`** with
+`CoderTypeMapWithoutType` maps and `Progenitor` functions. All non-current
+versions should implement `Upgrade()` to form a complete chain from the oldest
+version to `VCurrent`.
+
+### Architecture Summary
+
+| Architecture | Description | Target? |
+|---|---|---|
+| **A: `CoderToTypedBlob`** | Declarative type-string→progenitor map in `coding.go`. Uses `triple_hyphen_io.CoderToml` with `Progenitor` functions. | Yes |
+| **B: `TypedStore` + switch** | Hand-written struct with one `domain_interfaces.TypedStore` field per version. Dispatch via `switch` on type string. | No — migrate to A |
+| **C: Custom constructor map** | Package-local `coderConstructors` map producing custom `coder` structs. `Closet` bridges to `CoderTypeMapWithoutType` at runtime. | No — migrate to A |
+
+### Per-Type Family Status
+
+#### `blob_store_configs` (Architecture A) — `golf/blob_store_configs/coding.go`
+
+| Version | Type String | Struct | Coder | Upgrade |
+|---|---|---|---|---|
+| V0 | `!toml-blob_store_config-v0` | `TomlV0` | registered | **missing** — no `Upgrade()` to V1 |
+| V1 | `!toml-blob_store_config-v1` | `TomlV1` | registered | V1→V2 implemented |
+| V2 (current) | `!toml-blob_store_config-v2` | `TomlV2` | registered | terminus |
+| SFTP Explicit V0 | `!toml-blob_store_config_sftp-explicit-v0` | `TomlSFTPV0` | registered | N/A (single version) |
+| SFTP SSH Config V0 | `!toml-blob_store_config_sftp-ssh_config-v0` | `TomlSFTPViaSSHConfigV0` | registered | N/A (single version) |
+| Pointer V0 | `!toml-blob_store_config-pointer-v0` | **no struct** | **no coder** | orphan type string |
+| Inventory Archive V0 | `!toml-blob_store_config-inventory_archive-v0` | **no struct** | **no coder** | orphan type string |
+
+Remaining work:
+- [ ] Add `TomlV0.Upgrade()` → V1
+- [ ] Remove or implement `TypeTomlBlobStoreConfigPointerV0` (orphan registration)
+- [ ] Remove or implement `TypeTomlBlobStoreConfigInventoryArchiveV0` (orphan registration)
+- [ ] Adopt `registerToml` helper (defined in `coding.go` but unused — dead code)
+
+#### `repo_configs` (Architecture A) — `golf/repo_configs/coding.go`
+
+| Version | Type String | Struct | Coder | Upgrade |
+|---|---|---|---|---|
+| V0 (deprecated) | `!toml-config-v0` | `V0` | registered | **missing** — no `Upgrade()` to V1 |
+| V1 | `!toml-config-v1` | `V1` | registered | **missing** — no `Upgrade()` to V2 |
+| V2 (current) | `!toml-config-v2` | `V2` | registered | terminus |
+
+Remaining work:
+- [ ] Add `V0.Upgrade()` → V1
+- [ ] Add `V1.Upgrade()` → V2
+- [ ] Define `ConfigUpgradeable` interface (or reuse from `blob_store_configs`)
+
+#### `genesis_configs` (Architecture A) — `hotel/genesis_configs/coder.go`
+
+| Version | Type String | Struct (Private) | Struct (Public) | Coder | Upgrade |
+|---|---|---|---|---|---|
+| V1 | `!toml-config-immutable-v1` | `TomlV1Private` | `TomlV1Public` | registered (both coders) | **missing** — no `Upgrade()` to V2 |
+| V2 (current) | `!toml-config-immutable-v2` | `TomlV2Private` | `TomlV2Public` | registered (both coders) | terminus |
+
+Remaining work:
+- [ ] Add `TomlV1Private.Upgrade()` → V2
+- [ ] Add `TomlV1Public.Upgrade()` → V2
+
+#### `repo_blobs` (Architecture A) — `golf/repo_blobs/coding.go`
+
+| Version | Type String | Struct | Coder | Upgrade |
+|---|---|---|---|---|
+| Local Override V0 | `!toml-repo-local_override_path-v0` | `TomlLocalOverridePathV0` | registered | N/A |
+| XDG V0 | `!toml-repo-dotenv_xdg-v0` | `TomlXDGV0` | registered | N/A |
+| URI V0 (default) | `!toml-repo-uri-v0` | `TomlUriV0` | registered | N/A |
+
+No version progression — all at V0. No work needed unless new versions are added.
+
+#### `workspace_config_blobs` (Architecture A) — `hotel/workspace_config_blobs/io.go`
+
+| Version | Type String | Struct | Coder | Upgrade |
+|---|---|---|---|---|
+| V0 (current) | `!toml-workspace_config-v0` | `V0` | registered | terminus |
+
+Single version. No work needed unless a new version is added.
+
+#### `type_blobs` (Architecture B) — `lima/type_blobs/coder.go`
+
+| Version | Type String | Struct | Coder | Upgrade |
+|---|---|---|---|---|
+| V0 (deprecated) | `!toml-type-v0` | `TomlV0` | `TypedStore` field + switch | **missing** — no `Upgrade()` to V1 |
+| V1 (current) | `!toml-type-v1` | `TomlV1` | `TypedStore` field + switch | terminus |
+
+Remaining work:
+- [ ] Migrate to `CoderToTypedBlob` pattern (replace struct + switch with `coding.go` map)
+- [ ] Add `TomlV0.Upgrade()` → V1
+
+#### `tag_blobs` (Architecture B) — `mike/typed_blob_store/tag.go`
+
+| Version | Type String | Struct | Coder | Upgrade |
+|---|---|---|---|---|
+| V0 | `!toml-tag-v0` | `V0` | `TypedStore` field + switch | **missing** |
+| Toml V1 | `!toml-tag-v1` | `TomlV1` | `TypedStore` field + switch | **missing** |
+| Lua V1 | `!lua-tag-v1` | `LuaV1` | `TypedStore` field + switch | **missing** |
+| Lua V2 (current) | `!lua-tag-v2` | `LuaV2` | `TypedStore` field + switch | terminus |
+
+Remaining work:
+- [ ] Migrate to `CoderToTypedBlob` pattern
+- [ ] Decide upgrade chain across format boundaries (Toml→Lua or separate chains)
+- [ ] Rename `V0` to `TomlV0` for naming consistency with other versions
+
+#### `inventory_list_coders` (Architecture C) — `lima/inventory_list_coders/main.go`
+
+| Version | Type String | Coder | Upgrade |
+|---|---|---|---|
+| V0 (deprecated) | `!inventory_list-v0` | **missing** — registered in `types_builtin.go` but no entry in `coderConstructors` | N/A |
+| V1 | `!inventory_list-v1` | custom `coder` via `coderConstructors` | **missing** — no `Upgrade()` to V2 |
+| V2 (current) | `!inventory_list-v2` | custom `coder` via `coderConstructors` | terminus |
+| JSON V0 | `!inventory_list-json-v0` | custom `coder` via `coderConstructors` | N/A (alternate format) |
+
+Remaining work:
+- [ ] Remove or implement coder for `TypeInventoryListV0` (orphan type string)
+- [ ] Migrate to `CoderToTypedBlob` pattern (partially bridged via `Closet`)
+- [ ] Add V1 upgrade to V2
+
+#### Orphan Type Strings
+
+Type strings registered in `echo/ids/types_builtin.go` with no struct or coder:
+
+| Type String | Constant | Status |
+|---|---|---|
+| `!toml-blob_store_config-pointer-v0` | `TypeTomlBlobStoreConfigPointerV0` | No struct, no coder |
+| `!toml-blob_store_config-inventory_archive-v0` | `TypeTomlBlobStoreConfigInventoryArchiveV0` | No struct, no coder |
+| `!inventory_list-v0` | `TypeInventoryListV0` | Deprecated, no coder |
+| `!zettel_id_list-v0` | `TypeZettelIdListV0` | Marked "not used yet", no coder |
