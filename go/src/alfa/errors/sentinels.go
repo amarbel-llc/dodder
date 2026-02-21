@@ -6,6 +6,19 @@ import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 )
 
+// Stop iteration sentinel
+type stopIterationDisamb struct{}
+
+var errStopIteration = NewWithType[stopIterationDisamb]("stop iteration")
+
+func MakeErrStopIteration() error {
+	return errStopIteration
+}
+
+func IsStopIteration(err error) bool {
+	return IsTyped[stopIterationDisamb](err)
+}
+
 type (
 	Typed[DISAMB any] interface {
 		error
@@ -22,7 +35,6 @@ type (
 )
 
 func IsTyped[DISAMB any](err error) bool {
-	// Check if error implements Typed[DISAMB]
 	var typed Typed[DISAMB]
 	if As(err, &typed) {
 		return true
@@ -88,19 +100,6 @@ func (err *errorString[DISAMB]) Is(target error) bool {
 	return ok
 }
 
-// Stop iteration sentinel
-type errStopIterationDisamb struct{}
-
-var errStopIteration = NewWithType[errStopIterationDisamb]("stop iteration")
-
-func MakeErrStopIteration() error {
-	return errStopIteration
-}
-
-func IsStopIteration(err error) bool {
-	return IsTyped[errStopIterationDisamb](err)
-}
-
 // Exists sentinel
 type errExistsDisamb struct{}
 
@@ -129,17 +128,14 @@ func (err ErrNotFound) GetErrorType() errNotFoundDisamb {
 	return errNotFoundDisamb{}
 }
 
-// MakeErrNotFound creates a not found error with the given value.
 func MakeErrNotFound(value interfaces.Stringer) error {
 	return ErrNotFound{Value: value.String()}
 }
 
-// MakeErrNotFoundString creates a not found error with the given string value.
 func MakeErrNotFoundString(s string) error {
 	return ErrNotFound{Value: s}
 }
 
-// IsErrNotFound checks if an error is a not found error (any value).
 func IsErrNotFound(err error) bool {
 	return IsTyped[errNotFoundDisamb](err)
 }
