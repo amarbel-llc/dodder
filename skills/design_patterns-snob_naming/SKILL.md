@@ -1,5 +1,5 @@
 ---
-name: design_pattern-snob_naming
+name: design_patterns-snob_naming
 description: >
   Use when naming packages, directories, type strings, skills, or any
   identifiers that need structured multi-part names. Also applies when
@@ -59,13 +59,35 @@ composing each component.
 | `!inventory_list-v1` | `inventory_list` \| `v1` |
 | `!zettel_id_list-v0` | `zettel_id_list` \| `v0` |
 
-### Skill Names
+### Skill Names (in `skills/` directory — plural category)
 
 | Name | Part Breakdown |
 |------|----------------|
-| `design_pattern-horizontal_versioning` | `design_pattern` \| `horizontal_versioning` |
-| `design_pattern-pool_repool` | `design_pattern` \| `pool_repool` |
-| `design_pattern-typed_error_sentinels` | `design_pattern` \| `typed_error_sentinels` |
+| `design_patterns-horizontal_versioning` | `design_patterns` \| `horizontal_versioning` |
+| `design_patterns-pool_repool` | `design_patterns` \| `pool_repool` |
+| `design_patterns-typed_error_sentinels` | `design_patterns` \| `typed_error_sentinels` |
+
+## Pluralization
+
+Plurals are contextual — they reflect the relationship between the name and
+its container.
+
+**Inside a plural container, use plural.** Skills live in `skills/`, so the
+category part is plural to match: `design_patterns-pool_repool`. Packages in
+Go are often plural when they hold collections of things: `blob_store_configs`,
+`type_blobs`, `inventory_list_coders`.
+
+**At the top level or in type strings, prefer singular.** Type string
+identifiers name a single thing: `!toml-blob_store_config-v0` (not
+`blob_store_configs`). Standalone identifiers default to singular unless the
+name inherently refers to a collection.
+
+| Context | Example | Why |
+|---------|---------|-----|
+| Type string | `!toml-blob_store_config-v0` | Names one config schema — singular |
+| Package name | `blob_store_configs` | Contains multiple config versions — plural |
+| Skill in `skills/` | `design_patterns-pool_repool` | Lives inside `skills/` — plural category |
+| Standalone identifier | `design_pattern` | Refers to the concept itself — singular |
 
 ## How to Apply
 
@@ -81,6 +103,10 @@ When naming something with multiple semantic parts:
 
 3. **Separate concepts with hyphens.** The format, the thing, and the version
    are different concepts, so they get hyphens between them.
+
+4. **Choose singular or plural based on context.** Inside a plural container
+   (like `skills/`), use plural for the category part. For type strings and
+   standalone identifiers, prefer singular.
 
 ## Common Patterns in Type Strings
 
@@ -103,6 +129,7 @@ Type strings follow a consistent structure:
 |---------|---------|
 | `blob-store-configs` (all kebab) | `blob_store_configs` (single compound noun) |
 | `triple_hyphen_io-toml_v0` (wrong split) | Depends on semantics — split on concept boundaries |
-| `design_pattern-tripleHyphenIo` (camelCase) | `design_pattern-triple_hyphen_io` |
-| `designPattern-tripleHyphenIo` (camelCase both) | `design_pattern-triple_hyphen_io` |
-| `design-pattern-triple-hyphen-io` (all kebab) | `design_pattern-triple_hyphen_io` |
+| `design_pattern-tripleHyphenIo` (camelCase) | `design_patterns-triple_hyphen_io` |
+| `designPattern-tripleHyphenIo` (camelCase both) | `design_patterns-triple_hyphen_io` |
+| `design-pattern-triple-hyphen-io` (all kebab) | `design_patterns-triple_hyphen_io` |
+| `design_pattern-pool_repool` in `skills/` (singular in plural container) | `design_patterns-pool_repool` |

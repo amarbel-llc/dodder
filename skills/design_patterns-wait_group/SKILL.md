@@ -1,5 +1,5 @@
 ---
-name: design_pattern-wait_group
+name: design_patterns-wait_group
 description: >
   Use when running concurrent operations with error collection, structuring
   parallel or serial work with cleanup, or encountering MakeWaitGroupParallel,

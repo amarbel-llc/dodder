@@ -1,5 +1,5 @@
 ---
-name: design_pattern-pool_repool
+name: design_patterns-pool_repool
 description: >
   Use when allocating pooled objects, calling GetWithRepool, handling FuncRepool
   return values, writing code that borrows from sync.Pool, or encountering

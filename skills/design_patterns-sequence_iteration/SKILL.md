@@ -1,5 +1,5 @@
 ---
-name: design_pattern-sequence_iteration
+name: design_patterns-sequence_iteration
 description: >
   Use when working with lazy sequences, SeqError iterators, combining or
   chaining iterators, or encountering Seq, SeqError, quiter, quiter_seq,

@@ -1,5 +1,5 @@
 ---
-name: design_pattern-catgut_string
+name: design_patterns-catgut_string
 description: >
   Use when working with catgut.String, encountering copy-detection panics,
   pooling strings, or needing mutable buffer-backed strings. Also applies when

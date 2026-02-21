@@ -1,5 +1,5 @@
 ---
-name: design_pattern-markl_id
+name: design_patterns-markl_id
 description: >
   Use when working with content-addressable identifiers, markl IDs, blob
   digests, purpose-tagged hashes, blech32 encoding, or encryption keys. Also
