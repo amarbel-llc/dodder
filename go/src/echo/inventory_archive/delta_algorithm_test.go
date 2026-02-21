@@ -14,13 +14,13 @@ func TestDeltaAlgorithmRegistryUnknown(t *testing.T) {
 }
 
 func TestDeltaAlgorithmNameLookup(t *testing.T) {
-	b, err := DeltaAlgorithmByteForName("xdelta")
+	b, err := DeltaAlgorithmByteForName("bsdiff")
 	if err != nil {
-		t.Fatalf("expected xdelta byte, got error: %v", err)
+		t.Fatalf("expected bsdiff byte, got error: %v", err)
 	}
 
-	if b != DeltaAlgorithmByteXdelta {
-		t.Errorf("expected byte %d, got %d", DeltaAlgorithmByteXdelta, b)
+	if b != DeltaAlgorithmByteBsdiff {
+		t.Errorf("expected byte %d, got %d", DeltaAlgorithmByteBsdiff, b)
 	}
 }
 

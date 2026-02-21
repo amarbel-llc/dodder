@@ -34,13 +34,13 @@ type DeltaAlgorithm interface {
 }
 
 const (
-	DeltaAlgorithmByteXdelta byte = 0
+	DeltaAlgorithmByteBsdiff byte = 0
 )
 
 var deltaAlgorithms = map[byte]DeltaAlgorithm{}
 
 var deltaAlgorithmNames = map[string]byte{
-	"xdelta": DeltaAlgorithmByteXdelta,
+	"bsdiff": DeltaAlgorithmByteBsdiff,
 }
 
 // RegisterDeltaAlgorithm adds a DeltaAlgorithm to the registry.
