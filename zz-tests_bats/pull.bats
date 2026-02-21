@@ -156,7 +156,9 @@ function pull_history_zettel_type_tag_no_conflicts_stdio_local { # @test
 	try_add_new_after_pull
 }
 
+# bats test_tags=timeout:long
 function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
+	BATS_TEST_TIMEOUT=60
 	them="them"
 	bootstrap_repo "$them"
 
@@ -267,7 +269,9 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 	try_add_new_after_pull
 }
 
+# bats test_tags=timeout:long
 function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @test
+	BATS_TEST_TIMEOUT=30
 	pushd "$BATS_TEST_TMPDIR" || exit 1
 	run_dodder_init_disable_age
 
@@ -338,7 +342,9 @@ function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @te
 	EOM
 }
 
+# bats test_tags=timeout:long
 function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
+	BATS_TEST_TIMEOUT=30
 	pushd "$BATS_TEST_TMPDIR" || exit 1
 	run_dodder_init_disable_age
 
