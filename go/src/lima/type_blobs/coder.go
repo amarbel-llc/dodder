@@ -4,48 +4,21 @@ import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/alfa/pool"
 	"code.linenisgreat.com/dodder/go/src/charlie/genres"
-	"code.linenisgreat.com/dodder/go/src/charlie/toml"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/juliett/env_repo"
-	"code.linenisgreat.com/dodder/go/src/kilo/blob_library"
 )
 
 type Coder struct {
-	toml_v0 domain_interfaces.TypedStore[TomlV0, *TomlV0]
-	toml_v1 domain_interfaces.TypedStore[TomlV1, *TomlV1]
+	envRepo env_repo.Env
 }
 
 func MakeTypeStore(
 	envRepo env_repo.Env,
 ) Coder {
 	return Coder{
-		toml_v0: blob_library.MakeBlobStore(
-			envRepo,
-			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[TomlV0](
-					envRepo.GetDefaultBlobStore(),
-				),
-				toml.TomlBlobEncoder[TomlV0, *TomlV0]{},
-				envRepo.GetDefaultBlobStore(),
-			),
-			func(a *TomlV0) {
-				a.Reset()
-			},
-		),
-		toml_v1: blob_library.MakeBlobStore(
-			envRepo,
-			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[TomlV1](
-					envRepo.GetDefaultBlobStore(),
-				),
-				toml.TomlBlobEncoder[TomlV1, *TomlV1]{},
-				envRepo.GetDefaultBlobStore(),
-			),
-			func(a *TomlV1) {
-				a.Reset()
-			},
-		),
+		envRepo: envRepo,
 	}
 }
 
@@ -58,23 +31,41 @@ func (store Coder) SaveBlobText(
 		return digest, n, err
 	}
 
-	switch tipe.String() {
-	default:
-		err = errors.Errorf("unsupported type: %q", tipe)
+	var writer domain_interfaces.BlobWriter
+
+	if writer, err = store.envRepo.GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
+		err = errors.Wrap(err)
 		return digest, n, err
-
-	case "", ids.TypeTomlTypeV0:
-		if digest, n, err = store.toml_v0.SaveBlobText(blob.(*TomlV0)); err != nil {
-			err = errors.Wrap(err)
-			return digest, n, err
-		}
-
-	case ids.TypeTomlTypeV1:
-		if digest, n, err = store.toml_v1.SaveBlobText(blob.(*TomlV1)); err != nil {
-			err = errors.Wrap(err)
-			return digest, n, err
-		}
 	}
+
+	defer errors.DeferredCloser(&err, writer)
+
+	tipeString := tipe.String()
+
+	if tipeString == "" {
+		tipeString = ids.TypeTomlTypeV0
+	}
+
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(writer)
+	defer repoolBufferedWriter()
+
+	if n, err = CoderToTypedBlob.Blob.EncodeTo(
+		&TypedBlob{
+			Type: ids.MustTypeStruct(tipeString),
+			Blob: blob,
+		},
+		bufferedWriter,
+	); err != nil {
+		err = errors.Wrap(err)
+		return digest, n, err
+	}
+
+	if err = bufferedWriter.Flush(); err != nil {
+		err = errors.Wrap(err)
+		return digest, n, err
+	}
+
+	digest = writer.GetMarklId()
 
 	return digest, n, err
 }
@@ -83,33 +74,39 @@ func (store Coder) ParseTypedBlob(
 	tipe domain_interfaces.ObjectId,
 	blobId domain_interfaces.MarklId,
 ) (common Blob, repool interfaces.FuncRepool, n int64, err error) {
-	switch tipe.String() {
-	default:
-		err = errors.Errorf("unsupported type: %q", tipe)
+	repool = func() {}
+
+	var reader domain_interfaces.BlobReader
+
+	if reader, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(blobId); err != nil {
+		err = errors.Wrap(err)
 		return common, repool, n, err
-
-	case "", ids.TypeTomlTypeV0:
-		store := store.toml_v0
-		var blob *TomlV0
-
-		if blob, repool, err = store.GetBlob(blobId); err != nil {
-			err = errors.Wrap(err)
-			return common, repool, n, err
-		}
-
-		common = blob
-
-	case ids.TypeTomlTypeV1:
-		store := store.toml_v1
-		var blob *TomlV1
-
-		if blob, repool, err = store.GetBlob(blobId); err != nil {
-			err = errors.Wrap(err)
-			return common, repool, n, err
-		}
-
-		common = blob
 	}
+
+	defer errors.DeferredCloser(&err, reader)
+
+	tipeString := tipe.String()
+
+	if tipeString == "" {
+		tipeString = ids.TypeTomlTypeV0
+	}
+
+	typedBlob := TypedBlob{
+		Type: ids.MustTypeStruct(tipeString),
+	}
+
+	bufferedReader, repoolBufferedReader := pool.GetBufferedReader(reader)
+	defer repoolBufferedReader()
+
+	if n, err = CoderToTypedBlob.Blob.DecodeFrom(
+		&typedBlob,
+		bufferedReader,
+	); err != nil {
+		err = errors.Wrap(err)
+		return common, repool, n, err
+	}
+
+	common = typedBlob.Blob
 
 	return common, repool, n, err
 }

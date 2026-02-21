@@ -349,11 +349,11 @@ Single version. No work needed unless a new version is added.
 
 | Version | Type String | Struct | Coder | Upgrade |
 |---|---|---|---|---|
-| V0 (deprecated) | `!toml-type-v0` | `TomlV0` | `TypedStore` field + switch | **missing** — no `Upgrade()` to V1 |
-| V1 (current) | `!toml-type-v1` | `TomlV1` | `TypedStore` field + switch | terminus |
+| V0 (deprecated) | `!toml-type-v0` | `TomlV0` | `CoderToTypedBlob` map | **missing** — no `Upgrade()` to V1 |
+| V1 (current) | `!toml-type-v1` | `TomlV1` | `CoderToTypedBlob` map | terminus |
 
 Remaining work:
-- [ ] Migrate to `CoderToTypedBlob` pattern (replace struct + switch with `coding.go` map)
+- [x] Migrate to `CoderToTypedBlob` pattern (replace struct + switch with `coding.go` map)
 - [ ] Add `TomlV0.Upgrade()` → V1
 
 #### `tag_blobs` (Architecture B) — `mike/typed_blob_store/tag.go`

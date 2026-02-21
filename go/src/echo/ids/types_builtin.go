@@ -45,6 +45,7 @@ const (
 	TypeTomlTagV1                                   = "!toml-tag-v1"
 	TypeTomlTypeV0                                  = "!toml-type-v0" // Deprecated
 	TypeTomlTypeV1                                  = "!toml-type-v1"
+	TypeTomlTypeVCurrent                            = TypeTomlTypeV1
 	TypeTomlWorkspaceConfigV0                       = "!toml-workspace_config-v0"
 	TypeTomlWorkspaceConfigVCurrent                 = TypeTomlWorkspaceConfigV0
 	TypeZettelIdListV0                              = "!zettel_id_list-v0" // not used yet
