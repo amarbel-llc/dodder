@@ -66,6 +66,19 @@ type (
 		GetCompressionType() compression_type.CompressionType
 	}
 
+	DeltaConfigImmutable interface {
+		GetDeltaEnabled() bool
+		GetDeltaAlgorithm() string
+		GetDeltaMinBlobSize() uint64
+		GetDeltaMaxBlobSize() uint64
+		GetDeltaSizeRatio() float64
+	}
+
+	ConfigInventoryArchiveDelta interface {
+		ConfigInventoryArchive
+		DeltaConfigImmutable
+	}
+
 	ConfigPointer interface {
 		Config
 		GetPath() directory_layout.BlobStorePath

@@ -18,6 +18,7 @@ type TomlInventoryArchiveV0 struct {
 
 var (
 	_ ConfigInventoryArchive = TomlInventoryArchiveV0{}
+	_ ConfigUpgradeable      = TomlInventoryArchiveV0{}
 	_ ConfigMutable          = &TomlInventoryArchiveV0{}
 	_                        = registerToml[TomlInventoryArchiveV0](
 		Coder.Blob,
@@ -74,4 +75,25 @@ func (config TomlInventoryArchiveV0) GetLooseBlobStoreId() blob_store_id.Id {
 
 func (config TomlInventoryArchiveV0) GetCompressionType() compression_type.CompressionType {
 	return config.CompressionType
+}
+
+func (config TomlInventoryArchiveV0) Upgrade() (Config, ids.TypeStruct) {
+	upgraded := &TomlInventoryArchiveV1{
+		HashTypeId:       config.HashTypeId,
+		CompressionType:  config.CompressionType,
+		LooseBlobStoreId: config.LooseBlobStoreId,
+		Delta: DeltaConfig{
+			Enabled:     false,
+			Algorithm:   "bsdiff",
+			MinBlobSize: 256,
+			MaxBlobSize: 10485760,
+			SizeRatio:   2.0,
+		},
+	}
+
+	upgraded.Encryption.ResetWithMarklId(config.Encryption)
+
+	return upgraded, ids.GetOrPanic(
+		ids.TypeTomlBlobStoreConfigInventoryArchiveV1,
+	).TypeStruct
 }
