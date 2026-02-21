@@ -11,6 +11,9 @@ import (
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 )
 
+// TomlV1 is the V1 configuration for the local hash-bucketed blob store.
+// TODO rename to TomlLocalHashBucketedV1 for disambiguation from other
+// blob store config types (e.g., TomlInventoryArchiveV1).
 type TomlV1 struct {
 	HashBuckets values.IntSlice `toml:"hash-buckets"`
 	BasePath    string          `toml:"base-path,omitempty"`

@@ -8,6 +8,9 @@ import (
 	"code.linenisgreat.com/dodder/go/src/foxtrot/markl_age_id"
 )
 
+// TomlV0 is the V0 configuration for the local hash-bucketed blob store.
+// TODO rename to TomlLocalHashBucketedV0 for disambiguation from other
+// blob store config types (e.g., TomlInventoryArchiveV0).
 type TomlV0 struct {
 	BasePath          string                           `toml:"base-path,omitempty"`
 	AgeEncryption     markl_age_id.Id                  `toml:"age-encryption,omitempty"`
