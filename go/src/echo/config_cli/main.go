@@ -1,6 +1,8 @@
 package config_cli
 
 import (
+	"io"
+
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/charlie/cli"
 	"code.linenisgreat.com/dodder/go/src/delta/debug"
@@ -12,6 +14,11 @@ type Config struct {
 	Quiet   bool
 	Todo    bool
 	dryRun  bool
+
+	// CustomOut and CustomErr override os.Stdout/os.Stderr when set.
+	// Used by MCP handlers to capture command output into buffers.
+	CustomOut io.Writer `toml:"-"`
+	CustomErr io.Writer `toml:"-"`
 }
 
 var _ interfaces.CommandComponentWriter = (*Config)(nil)
