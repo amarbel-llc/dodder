@@ -59,7 +59,7 @@ func (cmd PackObjects) Run(req command.Request) {
 
 	var blobStoreId blob_store_id.Id
 	storeIdString := ".default"
-	wroteAny := false
+	blobFilter := make(map[string]domain_interfaces.MarklId)
 
 	sawStdin := false
 
@@ -111,10 +111,10 @@ func (cmd PackObjects) Run(req command.Request) {
 		}
 
 		tw.Ok(fmt.Sprintf("%s %s", blobId, arg))
-		wroteAny = true
+		blobFilter[blobId.String()] = blobId
 	}
 
-	if !wroteAny {
+	if len(blobFilter) == 0 {
 		tw.Plan()
 		return
 	}
@@ -135,6 +135,7 @@ func (cmd PackObjects) Run(req command.Request) {
 	if err := packable.Pack(blob_stores.PackOptions{
 		DeleteLoose:          cmd.DeleteLoose,
 		DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
+		BlobFilter:           blobFilter,
 	}); err != nil {
 		tw.NotOk(
 			fmt.Sprintf("pack %s", storeIdString),

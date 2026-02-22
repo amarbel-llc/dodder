@@ -37,6 +37,12 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 			continue
 		}
 
+		if options.BlobFilter != nil {
+			if _, inFilter := options.BlobFilter[looseId.String()]; !inFilter {
+				continue
+			}
+		}
+
 		reader, readErr := store.looseBlobStore.MakeBlobReader(looseId)
 		if readErr != nil {
 			err = errors.Wrapf(readErr, "reading loose blob %s", looseId)
