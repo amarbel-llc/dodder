@@ -3,6 +3,7 @@ package blob_stores
 import (
 	"fmt"
 	"maps"
+	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
@@ -225,7 +226,24 @@ func MakeBlobStore(
 	case blob_store_configs.ConfigInventoryArchiveDelta:
 		var looseBlobStore domain_interfaces.BlobStore
 
-		if blobStores != nil {
+		if config.GetLooseBlobStoreId().IsEmpty() {
+			loosePath := filepath.Join(configNamed.Path.GetBase(), "loose")
+
+			embeddedConfig := &blob_store_configs.DefaultType{
+				HashTypeId:        config.GetDefaultHashTypeId(),
+				HashBuckets:       blob_store_configs.DefaultHashBuckets,
+				CompressionType:   config.GetCompressionType(),
+				LockInternalFiles: true,
+			}
+
+			if looseBlobStore, err = makeLocalHashBucketed(
+				envDir,
+				loosePath,
+				embeddedConfig,
+			); err != nil {
+				return store, err
+			}
+		} else if blobStores != nil {
 			looseBlobStoreId := config.GetLooseBlobStoreId().String()
 			if initialized, ok := blobStores[looseBlobStoreId]; ok {
 				looseBlobStore = initialized.BlobStore
