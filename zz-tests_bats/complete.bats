@@ -100,6 +100,7 @@ function complete_subcmd { # @test
 		blob_store-init-inventory-archive-v1
 		blob_store-init-sftp-ssh_config
 		blob_store-list
+		blob_store-mcp
 		blob_store-pack
 		blob_store-read
 		blob_store-sync
