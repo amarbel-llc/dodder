@@ -29,6 +29,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
+	github.com/amarbel-llc/tap-dancer/go v0.0.0-20260222022802-be680fd2b4ac // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
