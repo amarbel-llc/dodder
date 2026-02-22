@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -15,16 +16,27 @@ func MakePrinter(file *os.File) printer {
 
 func MakePrinterOn(file *os.File, on bool) printer {
 	return printer{
-		file:  file,
-		isTty: primordial.IsTty(file),
-		on:    on,
+		writer: file,
+		file:   file,
+		isTty:  primordial.IsTty(file),
+		on:     on,
+	}
+}
+
+func MakePrinterFromWriter(w io.Writer) printer {
+	return printer{
+		writer: w,
+		file:   nil,
+		isTty:  false,
+		on:     true,
 	}
 }
 
 type printer struct {
-	file  *os.File
-	isTty bool
-	on    bool
+	writer io.Writer
+	file   *os.File
+	isTty  bool
+	on     bool
 }
 
 var _ Printer = printer{}
@@ -45,7 +57,7 @@ func (printer printer) Write(b []byte) (n int, err error) {
 		return n, err
 	}
 
-	return printer.file.Write(b)
+	return printer.writer.Write(b)
 }
 
 func (printer printer) GetFile() *os.File {
@@ -76,7 +88,7 @@ func (printer printer) PrintDebug(args ...any) (err error) {
 	}
 
 	_, err = fmt.Fprintf(
-		printer.file,
+		printer.writer,
 		strings.Repeat("%#v ", len(args))+"\n",
 		args...,
 	)
@@ -90,7 +102,7 @@ func (printer printer) Print(args ...any) (err error) {
 	}
 
 	_, err = fmt.Fprintln(
-		printer.file,
+		printer.writer,
 		args...,
 	)
 
@@ -112,7 +124,7 @@ func (printer printer) printfStack(
 	args = append([]any{stackFrame}, args...)
 
 	_, err = fmt.Fprintln(
-		printer.file,
+		printer.writer,
 		fmt.Sprintf(format, args...),
 	)
 
@@ -125,7 +137,7 @@ func (printer printer) Printf(format string, args ...any) (err error) {
 	}
 
 	_, err = fmt.Fprintln(
-		printer.file,
+		printer.writer,
 		fmt.Sprintf(format, args...),
 	)
 

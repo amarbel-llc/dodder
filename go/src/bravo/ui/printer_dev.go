@@ -41,7 +41,7 @@ func (printer devPrinter) PrintDebug(args ...any) (err error) {
 	sb.WriteString("\n")
 
 	_, err = fmt.Fprintf(
-		printer.file,
+		printer.writer,
 		sb.String(),
 		args...,
 	)
@@ -95,7 +95,7 @@ func (printer devPrinter) FunctionName(skip int) {
 
 	stackFrame, _ := stack_frame.MakeFrame(skip + 1)
 	io.WriteString(
-		printer.file,
+		printer.writer,
 		fmt.Sprintf("%s %s\n", stackFrame, stackFrame.Function),
 	)
 }
@@ -109,7 +109,7 @@ func (printer devPrinter) Stack(skip, count int) {
 	frames := stack_frame.MakeFrames(skip+1, count)
 
 	io.WriteString(
-		printer.file,
+		printer.writer,
 		fmt.Sprintf(
 			"Printing Stack (skip: %d, count requested: %d, count actual: %d):\n\n",
 			skip,
@@ -120,7 +120,7 @@ func (printer devPrinter) Stack(skip, count int) {
 
 	for i, frame := range frames {
 		io.WriteString(
-			printer.file,
+			printer.writer,
 			fmt.Sprintf("%s (%d)\n", frame.StringLogLine(), i),
 		)
 	}
