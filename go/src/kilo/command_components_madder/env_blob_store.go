@@ -23,11 +23,14 @@ func (cmd EnvBlobStore) MakeEnvBlobStore(
 
 	var debugOptions debug.Options
 	var cliConfig domain_interfaces.CLIConfigProvider
+	var envOptions env_ui.Options
 
 	switch c := configAny.(type) {
 	case *config_cli.Config:
 		debugOptions = c.Debug
 		cliConfig = c
+		envOptions.CustomOut = c.CustomOut
+		envOptions.CustomErr = c.CustomErr
 	case *repo_config_cli.Config:
 		debugOptions = c.Debug
 		cliConfig = c
@@ -45,7 +48,7 @@ func (cmd EnvBlobStore) MakeEnvBlobStore(
 		req,
 		cliConfig,
 		debugOptions,
-		env_ui.Options{},
+		envOptions,
 	)
 
 	envLocal := env_local.Make(envUI, dir)

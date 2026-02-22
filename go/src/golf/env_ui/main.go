@@ -83,9 +83,19 @@ func Make(
 		Context:   context,
 		options:   options,
 		in:        fd.MakeStd(os.Stdin),
-		out:       fd.MakeStd(os.Stdout),
-		err:       fd.MakeStd(os.Stderr),
 		cliConfig: cliConfig,
+	}
+
+	if options.CustomOut != nil {
+		env.out = fd.MakeStdFromWriter(options.CustomOut)
+	} else {
+		env.out = fd.MakeStd(os.Stdout)
+	}
+
+	if options.CustomErr != nil {
+		env.err = fd.MakeStdFromWriter(options.CustomErr)
+	} else {
+		env.err = fd.MakeStd(os.Stderr)
 	}
 
 	if options.UIFileIsStderr {
