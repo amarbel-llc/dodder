@@ -9,8 +9,8 @@ fi
 
 cmd_bats=(
   bats
-  --tap
   --no-tempdir-cleanup
+  --tap
   migration/generate_fixture.bats
 )
 
