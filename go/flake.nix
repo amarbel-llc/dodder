@@ -4,8 +4,8 @@
     nixpkgs-master.url = "github:NixOS/nixpkgs/b28c4999ed71543e71552ccfd0d7e68c581ba7e9";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
-    devenv-go.url = "github:friedenberg/eng?dir=devenvs/go";
-    devenv-shell.url = "github:friedenberg/eng?dir=devenvs/shell";
+    devenv-go.url = "github:amarbel-llc/eng?dir=devenvs/go";
+    devenv-shell.url = "github:amarbel-llc/eng?dir=devenvs/shell";
     batman.url = "github:amarbel-llc/batman";
     sandcastle.url = "github:amarbel-llc/sandcastle";
   };
