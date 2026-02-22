@@ -173,3 +173,13 @@ function repo_fsck_tap14 { # @test
 	assert_output --partial "1.."
 	refute_output --partial "not ok"
 }
+
+function madder_fsck_tap14 { # @test
+	run_dodder_init_disable_age
+
+	run_dodder blob_store-fsck
+	assert_success
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
+}

@@ -2,15 +2,18 @@ package commands_madder
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"sync/atomic"
 	"time"
 
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/golf/env_ui"
+	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
 func init() {
@@ -29,46 +32,34 @@ func (cmd Fsck) Run(req command.Request) {
 
 	blobStores := cmd.MakeBlobStoresFromIdsOrAll(req, envBlobStore)
 
-	for _, blobStore := range blobStores {
-		printer := ui.MakePrefixPrinter(
-			ui.Err(),
-			fmt.Sprintf("(blob_store: %s)", blobStore.Path.GetId()),
-		)
+	tw := tap.NewWriter(os.Stdout)
 
-		printer.Print("starting fsck...")
+	for storeId, blobStore := range blobStores {
+		tw.Comment(fmt.Sprintf("(blob_store: %s) starting fsck...", storeId))
 
-		var count int
+		var count atomic.Uint32
+		var errorCount atomic.Uint32
 		var progressWriter env_ui.ProgressWriter
-
-		countSuccessPtr := &count
-
-		var blobErrors collections_slice.Slice[command_components_madder.BlobError]
 
 		if err := errors.RunChildContextWithPrintTicker(
 			envBlobStore,
 			func(ctx errors.Context) {
 				for digest, err := range blobStore.AllBlobs() {
 					errors.ContextContinueOrPanic(ctx)
-					// TODO keep track of blobs in a tridex and compare
-					// subsequent stores
 
 					if err != nil {
-						blobErrors.Append(command_components_madder.BlobError{Err: err})
+						tw.NotOk("(unknown blob)", tap_diagnostics.FromError(err))
+						errorCount.Add(1)
+						count.Add(1)
 
 						continue
 					}
 
-					count++
+					count.Add(1)
 
-					// TODO offer options:
-					// - check existence
-					// - verify can open
-					// - print size
-					// - compare against other blob stores
 					if !blobStore.HasBlob(digest) {
-						blobErrors.Append(
-							command_components_madder.BlobError{Err: errors.Errorf("blob missing")},
-						)
+						tw.NotOk(fmt.Sprintf("%s", digest), map[string]string{"severity": "fail", "message": "blob missing"})
+						errorCount.Add(1)
 
 						continue
 					}
@@ -77,39 +68,40 @@ func (cmd Fsck) Run(req command.Request) {
 						ctx,
 						blobStore,
 						digest,
-						&progressWriter,
+						io.MultiWriter(&progressWriter, io.Discard),
 					); err != nil {
-						blobErrors.Append(
-							command_components_madder.BlobError{Err: err},
-						)
+						tw.NotOk(fmt.Sprintf("%s", digest), tap_diagnostics.FromError(err))
+						errorCount.Add(1)
 
 						continue
 					}
+
+					tw.Ok(fmt.Sprintf("%s", digest))
 				}
 			},
 			func(time time.Time) {
-				printer.Printf(
-					"%d blobs / %s verified, %d errors",
-					*countSuccessPtr,
+				tw.Comment(fmt.Sprintf(
+					"(blob_store: %s) %d blobs / %s verified, %d errors",
+					storeId,
+					count.Load(),
 					progressWriter.GetWrittenHumanString(),
-					len(blobErrors),
-				)
+					errorCount.Load(),
+				))
 			},
 			3*time.Second,
 		); err != nil {
+			tw.BailOut(err.Error())
 			envBlobStore.Cancel(err)
 			return
 		}
 
-		printer.Printf("blobs verified: %d", count)
-		printer.Printf(
-			"blob bytes verified: %s",
+		tw.Comment(fmt.Sprintf(
+			"(blob_store: %s) blobs verified: %d, bytes verified: %s",
+			storeId,
+			count.Load(),
 			progressWriter.GetWrittenHumanString(),
-		)
-
-		command_components_madder.PrintBlobErrors(envBlobStore, blobErrors)
-
-		printer.Print("finished fsck")
-		ui.Out().Print()
+		))
 	}
+
+	tw.Plan()
 }
