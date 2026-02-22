@@ -96,9 +96,7 @@ EOM
   # when
   run_dodder blob_store-write <(echo the body but new)
   assert_success
-  assert_output --regexp - <<-EOM
-		blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
-	EOM
+  assert_output --partial 'ok 1 - blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza'
 
   run_dodder checkin-blob -new-tags et3 one/uno blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
   assert_success

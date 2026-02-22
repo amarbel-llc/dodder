@@ -1,7 +1,9 @@
 package commands_madder
 
 import (
+	"fmt"
 	"io"
+	"os"
 	"sync/atomic"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
@@ -9,14 +11,14 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/delta/script_value"
-	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
+	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/india/env_local"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
 func init() {
@@ -73,10 +75,11 @@ type blobWriteResult struct {
 	Path string
 }
 
-// TODO add support for blob store ids
 func (cmd Write) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)
 	blobStore := envBlobStore.GetDefaultBlobStore()
+
+	tw := tap.NewWriter(os.Stdout)
 
 	var failCount atomic.Uint32
 	var blobStoreId blob_store_id.Id
@@ -86,7 +89,7 @@ func (cmd Write) Run(req command.Request) {
 	for _, arg := range req.PopArgs() {
 		switch {
 		case arg == "-" && sawStdin:
-			ui.Err().Print("'-' passed in more than once. Ignoring")
+			tw.Comment("'-' passed in more than once. Ignoring")
 			continue
 
 		case arg == "-":
@@ -105,16 +108,17 @@ func (cmd Write) Run(req command.Request) {
 				arg,
 			); errors.IsNotExist(err) {
 				if err = blobStoreId.Set(arg); err != nil {
+					tw.BailOut(err.Error())
 					req.Cancel(err)
 					return
 				}
 
 				blobStore = envBlobStore.GetBlobStore(blobStoreId)
-				ui.Debug().Printf("remote path: %q", blobStore.Config.Blob.(blob_store_configs.ConfigSFTPRemotePath).GetRemotePath())
+				tw.Comment(fmt.Sprintf("switched to blob store: %s", blobStoreId))
 				continue
 			} else if err != nil {
+				tw.NotOk(arg, tap_diagnostics.FromError(err))
 				failCount.Add(1)
-				result.error = err
 				continue
 			}
 		}
@@ -122,48 +126,37 @@ func (cmd Write) Run(req command.Request) {
 		result.MarklId, result.error = cmd.doOne(blobStore, blobReader)
 
 		if result.error != nil {
-			envBlobStore.GetErr().Printf(
-				"%s: (error: %q)",
-				result.Path,
-				result.error,
-			)
+			tw.NotOk(arg, tap_diagnostics.FromError(result.error))
 			failCount.Add(1)
 			continue
 		}
 
 		if result.IsNull() {
-			ui.Err().Printf("digest for arg %q was null", arg)
+			tw.Skip(arg, "null digest")
 			continue
 		}
 
 		hasBlob := blobStore.HasBlob(result.MarklId)
 
 		if hasBlob {
-			if cmd.Check {
-				envBlobStore.GetUI().Printf(
-					"%s %s (already checked in)",
-					result.MarklId,
-					result.Path,
-				)
-			} else {
-				envBlobStore.GetUI().Printf(
-					"%s %s (checked in)",
-					result.MarklId,
-					result.Path,
-				)
-			}
+			tw.Ok(fmt.Sprintf("%s %s", result.MarklId, result.Path))
 		} else {
-			ui.Err().Printf(
-				"%s %s (untracked)",
-				result.MarklId,
-				result.Path,
-			)
-
 			if cmd.Check {
+				tw.NotOk(
+					fmt.Sprintf("%s %s", result.MarklId, result.Path),
+					map[string]string{
+						"severity": "fail",
+						"message":  "untracked",
+					},
+				)
 				failCount.Add(1)
+			} else {
+				tw.Ok(fmt.Sprintf("%s %s", result.MarklId, result.Path))
 			}
 		}
 	}
+
+	tw.Plan()
 
 	fc := failCount.Load()
 
