@@ -25,6 +25,10 @@ schema = 3
     version = 'v0.1.0'
     hash = 'sha256-WOs/RQYjQbn41ui8ztHgWSd4jxydE+fvIrl/0dmHD9Y='
 
+  [mod.'github.com/amarbel-llc/purse-first/libs/go-mcp']
+    version = 'v0.0.2'
+    hash = 'sha256-0Cc+9Z95rA/Epf+ecfwkRac3Uswcvq3D+ZSdqUOF0PM='
+
   [mod.'github.com/atotto/clipboard']
     version = 'v0.1.4'
     hash = 'sha256-ZZ7U5X0gWOu8zcjZcWbcpzGOGdycwq0TjTFh/eZHjXk='
