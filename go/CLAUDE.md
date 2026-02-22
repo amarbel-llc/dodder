@@ -245,6 +245,14 @@ hash, _ := config.hashFormat.GetHash() //repool:owned
 writer.digester = markl_io.MakeWriter(hash, nil)
 ```
 
+### Adding Subcommands
+
+When adding a new subcommand to any binary (dodder, madder, der), also add it to
+the `complete_subcmd` test in `zz-tests_bats/complete.bats`. Madder commands are
+exposed in dodder under the `blob_store-` prefix (e.g., madder's `mcp` becomes
+dodder's `blob_store-mcp`), so adding a madder command also requires updating
+the dodder completion test.
+
 ### Testing Strategy
 
 -   Unit tests: `*_test.go` files throughout codebase
