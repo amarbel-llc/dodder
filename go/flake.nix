@@ -6,7 +6,7 @@
 
     devenv-go.url = "github:amarbel-llc/eng?dir=devenvs/go";
     devenv-shell.url = "github:amarbel-llc/eng?dir=devenvs/shell";
-    batman.url = "github:amarbel-llc/batman";
+    purse-first.url = "github:amarbel-llc/purse-first";
   };
 
   outputs =
@@ -16,7 +16,7 @@
     , utils
     , devenv-go
     , devenv-shell
-    , batman
+    , purse-first
     ,
     }:
     (utils.lib.eachDefaultSystem
@@ -73,7 +73,7 @@
             gnumake
             gum
           ]) ++ [
-            batman.packages.${system}.default
+            purse-first.packages.${system}.batman
           ];
 
           inputsFrom = [
