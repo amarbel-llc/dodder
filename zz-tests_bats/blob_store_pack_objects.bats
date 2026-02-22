@@ -24,7 +24,7 @@ function pack_objects_file_into_archive { # @test
 	run_dodder blob_store-init-inventory-archive .archive
 	assert_success
 
-	run_dodder blob_store-pack-objects ..archive <(echo pack-objects-test-content)
+	run_dodder blob_store-pack-objects .archive <(echo pack-objects-test-content)
 	assert_success
 	assert_output --partial 'TAP version 14'
 	assert_output --partial 'ok 1'
@@ -39,7 +39,7 @@ function pack_objects_multiple_files { # @test
 	run_dodder blob_store-init-inventory-archive .archive
 	assert_success
 
-	run_dodder blob_store-pack-objects ..archive <(echo content-alpha) <(echo content-beta)
+	run_dodder blob_store-pack-objects .archive <(echo content-alpha) <(echo content-beta)
 	assert_success
 	assert_output --partial 'ok 1'
 	assert_output --partial 'ok 2'

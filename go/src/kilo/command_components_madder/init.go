@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/src/echo/directory_layout"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
 	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
@@ -15,12 +16,12 @@ type Init struct{}
 func (cmd Init) InitBlobStore(
 	ctx interfaces.ActiveContext,
 	envBlobStore env_repo.BlobStoreEnv,
-	name string,
+	id blob_store_id.Id,
 	config *blob_store_configs.TypedConfig,
 ) (path directory_layout.BlobStorePath) {
 	path = directory_layout.GetBlobStorePath(
 		envBlobStore,
-		name,
+		id.GetName(),
 	)
 
 	if err := envBlobStore.MakeDirs(

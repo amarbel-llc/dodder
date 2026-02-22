@@ -109,7 +109,7 @@ func (cmd *Init) Run(req command.Request) {
 	pathConfig := cmd.InitBlobStore(
 		req,
 		envBlobStore,
-		blobStoreId.String(),
+		blobStoreId,
 		&blob_store_configs.TypedConfig{
 			Type: cmd.tipe,
 			Blob: cmd.blobStoreConfig,

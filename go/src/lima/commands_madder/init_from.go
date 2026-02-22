@@ -80,7 +80,7 @@ func (cmd *InitFrom) Run(req command.Request) {
 	pathConfig := cmd.InitBlobStore(
 		req,
 		envBlobStore,
-		blobStoreId.String(),
+		blobStoreId,
 		&typedConfig,
 	)
 

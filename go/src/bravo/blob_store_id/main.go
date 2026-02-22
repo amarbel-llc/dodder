@@ -34,6 +34,10 @@ func MakeWithLocation(id string, locationType LocationTypeGetter) Id {
 	}
 }
 
+func (id Id) GetName() string {
+	return id.id
+}
+
 func (id Id) IsEmpty() bool {
 	return id.id == ""
 }
