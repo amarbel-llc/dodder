@@ -1,15 +1,18 @@
 package commands_dodder
 
 import (
+	"os"
+
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
+	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/juliett/sku"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
 	"code.linenisgreat.com/dodder/go/src/victor/local_working_copy"
 	"code.linenisgreat.com/dodder/go/src/xray/command_components_dodder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
 func init() {
@@ -35,40 +38,26 @@ func (cmd RepoFsck) Run(req command.Request) {
 		local_working_copy.OptionsAllowConfigReadError,
 	)
 
+	tw := tap.NewWriter(os.Stdout)
+
 	store := repo.GetStore()
-	missingObjects := sku.MakeListTransacted()
 
 	for objectWithList, err := range store.GetInventoryListStore().AllInventoryListObjectsAndContents() {
 		errors.ContextContinueOrPanic(repo)
 
 		if err == nil {
+			tw.Ok(sku.String(objectWithList.List))
 			continue
 		}
+
+		diag := tap_diagnostics.FromError(err)
 
 		if env_dir.IsErrBlobMissing(err) {
-			missingObjects.Add(objectWithList.List)
-			continue
+			diag["message"] = "blob missing"
 		}
 
-		unwrapped := errors.Unwrap(err)
-
-		if unwrapped != nil {
-			repo.GetErr().Print(unwrapped)
-		} else {
-			err = errors.Wrapf(
-				err,
-				"List: %s",
-				sku.String(objectWithList.List),
-			)
-
-			ui.CLIErrorTreeEncoder.EncodeTo(err, repo.GetErr())
-		}
-
+		tw.NotOk(sku.String(objectWithList.List), diag)
 	}
 
-	repo.GetUI().Print("missing list blobs: ")
-
-	for missingList := range missingObjects.All() {
-		repo.GetUI().Print(sku.String(missingList))
-	}
+	tw.Plan()
 }

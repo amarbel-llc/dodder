@@ -163,3 +163,13 @@ function fsck_from_version_skip_blobs { # @test
 	assert_output --partial "1.."
 	refute_output --partial "not ok"
 }
+
+function repo_fsck_tap14 { # @test
+	run_dodder_init_disable_age
+
+	run_dodder repo-fsck
+	assert_success
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
+}
