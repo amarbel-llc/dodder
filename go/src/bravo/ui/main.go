@@ -82,8 +82,6 @@ func init() {
 	}
 }
 
-// TODO add a TAP printer
-
 func Out() Printer {
 	return printerOut
 }
