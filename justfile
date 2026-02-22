@@ -2,7 +2,7 @@ set output-format := "tap"
 
 dir_build := absolute_path("go/build")
 
-default: build
+default: build test
 
 #   ____        _ _     _
 #  | __ ) _   _(_) | __| |

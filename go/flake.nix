@@ -69,12 +69,11 @@
           # inherit (gomod2nix.packages.${system}) mkGoEnv gomod2nix;
 
           packages = (with pkgs-master; [
-            bats
             fish
             gnumake
             gum
           ]) ++ [
-            batman.packages.${system}.bats-libs
+            batman.packages.${system}.default
           ];
 
           inputsFrom = [
