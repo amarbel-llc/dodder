@@ -155,19 +155,15 @@ func (query *Query) isEmpty() bool {
 	return len(query.userQueries) == 0
 }
 
-func (queryGroup *Query) getExactlyOneExternalObjectId(
-	permitInternal bool,
-) (objectId domain_interfaces.ObjectId, sigil ids.Sigil, err error) {
+func (queryGroup *Query) getExactlyOneQuery() (query *expSigilAndGenre, err error) {
 	if len(queryGroup.optimizedQueries) != 1 {
 		err = errors.ErrorWithStackf(
 			"expected exactly 1 genre query but got %d",
 			len(queryGroup.optimizedQueries),
 		)
 
-		return objectId, sigil, err
+		return query, err
 	}
-
-	var query *expSigilAndGenre
 
 	for _, query = range queryGroup.optimizedQueries {
 		break
@@ -179,6 +175,17 @@ func (queryGroup *Query) getExactlyOneExternalObjectId(
 			query.Sigil,
 		)
 
+		return query, err
+	}
+
+	return query, err
+}
+
+func (queryGroup *Query) getExactlyOneExternalObjectId(
+	permitInternal bool,
+) (objectId domain_interfaces.ObjectId, sigil ids.Sigil, err error) {
+	query, err := queryGroup.getExactlyOneQuery()
+	if err != nil {
 		return objectId, sigil, err
 	}
 
@@ -218,27 +225,8 @@ func (queryGroup *Query) getExactlyOneExternalObjectId(
 }
 
 func (queryGroup *Query) getExactlyOneObjectId() (objectId ObjectId, sigil ids.Sigil, err error) {
-	if len(queryGroup.optimizedQueries) != 1 {
-		err = errors.ErrorWithStackf(
-			"expected exactly 1 genre query but got %d",
-			len(queryGroup.optimizedQueries),
-		)
-
-		return objectId, sigil, err
-	}
-
-	var query *expSigilAndGenre
-
-	for _, query = range queryGroup.optimizedQueries {
-		break
-	}
-
-	if query.Sigil.ContainsOneOf(ids.SigilHistory) {
-		err = errors.ErrorWithStackf(
-			"sigil (%s) includes history, which may return multiple objects",
-			query.Sigil,
-		)
-
+	query, err := queryGroup.getExactlyOneQuery()
+	if err != nil {
 		return objectId, sigil, err
 	}
 
@@ -250,8 +238,8 @@ func (queryGroup *Query) getExactlyOneObjectId() (objectId ObjectId, sigil ids.S
 
 	switch {
 	case eoidsLen == 0 && oidsLen == 1:
-		for _, internalHoistedId := range internalObjectIds {
-			objectId = internalHoistedId
+		for _, internalObjectId := range internalObjectIds {
+			objectId = internalObjectId
 		}
 
 	default:

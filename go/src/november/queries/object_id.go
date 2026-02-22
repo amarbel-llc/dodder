@@ -98,35 +98,21 @@ func (objectId ObjectId) ContainsSku(
 			)
 		}
 
-		if ok {
-			return ok
-		}
-
 		return ok
 
 	case genres.Type:
 		if method(metadata.GetType().ToType(), objectId.GetObjectId()) {
-			ok = true
-			return ok
+			return true
 		}
 
-		if e, isExternal := objectGetter.(*sku.Transacted); isExternal {
-			if method(e.ExternalType, objectId.GetObjectId()) {
-				ok = true
-				return ok
+		if transacted, isExternal := objectGetter.(*sku.Transacted); isExternal {
+			if method(transacted.ExternalType, objectId.GetObjectId()) {
+				return true
 			}
 		}
 	}
 
-	idl := &object.ObjectId
-
-	if !method(idl, objectId.GetObjectId()) {
-		return ok
-	}
-
-	ok = true
-
-	return ok
+	return method(&object.ObjectId, objectId.GetObjectId())
 }
 
 func (objectId ObjectId) String() string {

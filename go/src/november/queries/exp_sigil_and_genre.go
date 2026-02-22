@@ -179,6 +179,17 @@ func (expSigilAndGenre *expSigilAndGenre) Merge(
 	return err
 }
 
+func (expSigilAndGenre *expSigilAndGenre) writeSigilAndGenreSuffix(
+	sb *strings.Builder,
+) {
+	if expSigilAndGenre.IsEmpty() && !expSigilAndGenre.IsLatestOrUnknown() {
+		sb.WriteString(expSigilAndGenre.Sigil.String())
+	} else if !expSigilAndGenre.IsEmpty() {
+		sb.WriteString(expSigilAndGenre.Sigil.String())
+		sb.WriteString(expSigilAndGenre.Genre.String())
+	}
+}
+
 func (expSigilAndGenre *expSigilAndGenre) StringDebug() string {
 	var sb strings.Builder
 
@@ -205,12 +216,7 @@ func (expSigilAndGenre *expSigilAndGenre) StringDebug() string {
 		sb.WriteString("]")
 	}
 
-	if expSigilAndGenre.IsEmpty() && !expSigilAndGenre.IsLatestOrUnknown() {
-		sb.WriteString(expSigilAndGenre.Sigil.String())
-	} else if !expSigilAndGenre.IsEmpty() {
-		sb.WriteString(expSigilAndGenre.Sigil.String())
-		sb.WriteString(expSigilAndGenre.Genre.String())
-	}
+	expSigilAndGenre.writeSigilAndGenreSuffix(&sb)
 
 	return sb.String()
 }
@@ -267,13 +273,7 @@ func (expSigilAndGenre *expSigilAndGenre) String() string {
 		sb.WriteString("]")
 	}
 
-	if expSigilAndGenre.Genre.IsEmpty() &&
-		!expSigilAndGenre.IsLatestOrUnknown() {
-		sb.WriteString(expSigilAndGenre.Sigil.String())
-	} else if !expSigilAndGenre.Genre.IsEmpty() {
-		sb.WriteString(expSigilAndGenre.Sigil.String())
-		sb.WriteString(expSigilAndGenre.Genre.String())
-	}
+	expSigilAndGenre.writeSigilAndGenreSuffix(&sb)
 
 	return sb.String()
 }
