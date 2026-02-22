@@ -99,7 +99,23 @@ func (env BlobStoreEnv) GetBlobStoresSorted() []blob_stores.BlobStoreInitialized
 func (env BlobStoreEnv) GetBlobStore(
 	blobStoreId blob_store_id.Id,
 ) blob_stores.BlobStoreInitialized {
-	return env.blobStores[blobStoreId.String()]
+	key := blobStoreId.String()
+
+	if blobStore, ok := env.blobStores[key]; ok {
+		return blobStore
+	}
+
+	available := slices.Collect(maps.Keys(env.blobStores))
+	sort.Strings(available)
+
+	errors.ContextCancelWithBadRequestf(
+		env,
+		"blob store not found: %q (available: %v)",
+		key,
+		available,
+	)
+
+	return blob_stores.BlobStoreInitialized{}
 }
 
 func (env BlobStoreEnv) GetDefaultBlobStoreAndRemaining() (blob_stores.BlobStoreInitialized, blob_stores.BlobStoreMap) {
