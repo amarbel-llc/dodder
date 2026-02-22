@@ -104,7 +104,7 @@ func (cmd InfoRepo) Run(req command.Request) {
 					Type: blobStoreConfig.Type,
 					Blob: blobStoreConfig.Blob,
 				},
-				env.GetUI().GetFile(),
+				env.GetUIFile(),
 			); err != nil {
 				env.Cancel(err)
 				return
