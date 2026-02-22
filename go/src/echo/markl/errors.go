@@ -56,7 +56,7 @@ func (err errIsNotNull) GetErrorType() pkgErrDisamb {
 
 func AssertIdIsNotNull(id domain_interfaces.MarklId) error {
 	if id.IsNull() {
-		return errors.WrapSkip(1, errIsNull{purpose: id.GetPurposeId()})
+		return errors.WrapSkip(1, ErrIsNull{Purpose: id.GetPurposeId()})
 	}
 
 	return nil
@@ -64,30 +64,30 @@ func AssertIdIsNotNull(id domain_interfaces.MarklId) error {
 
 func AssertIdIsNotNullWithPurpose(id domain_interfaces.MarklId, purpose string) error {
 	if id.IsNull() {
-		return errors.WrapSkip(1, errIsNull{purpose: purpose})
+		return errors.WrapSkip(1, ErrIsNull{Purpose: purpose})
 	}
 
 	return nil
 }
 
 func IsErrNull(target error) bool {
-	return errors.Is(target, errIsNull{})
+	return errors.Is(target, ErrIsNull{})
 }
 
-type errIsNull struct {
-	purpose string
+type ErrIsNull struct {
+	Purpose string
 }
 
-func (err errIsNull) Error() string {
-	return fmt.Sprintf("markl id is null for purpose %q", err.purpose)
+func (err ErrIsNull) Error() string {
+	return fmt.Sprintf("markl id is null for purpose %q", err.Purpose)
 }
 
-func (err errIsNull) Is(target error) bool {
-	_, ok := target.(errIsNull)
+func (err ErrIsNull) Is(target error) bool {
+	_, ok := target.(ErrIsNull)
 	return ok
 }
 
-func (err errIsNull) GetErrorType() pkgErrDisamb {
+func (err ErrIsNull) GetErrorType() pkgErrDisamb {
 	return pkgErrDisamb{}
 }
 
