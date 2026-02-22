@@ -1,17 +1,22 @@
 package commands_madder
 
 import (
+	"fmt"
 	"io"
 	"slices"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/flags"
+	"code.linenisgreat.com/dodder/go/src/delta/debug"
 	"code.linenisgreat.com/dodder/go/src/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/repo_config_cli"
+	"code.linenisgreat.com/dodder/go/src/golf/env_ui"
+	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
 	"code.linenisgreat.com/dodder/go/src/india/env_local"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/kilo/command_components"
 )
 
 func init() {
@@ -21,8 +26,6 @@ func init() {
 }
 
 type Complete struct {
-	command_components.Env
-
 	bashStyle  bool
 	inProgress string
 }
@@ -42,9 +45,43 @@ func (cmd *Complete) SetFlagDefinitions(
 	flagDefinitions.StringVar(&cmd.inProgress, "in-progress", "", "")
 }
 
+func (cmd Complete) makeEnv(req command.Request) env_local.Env {
+	configAny := req.Utility.GetConfigAny()
+
+	var debugOptions debug.Options
+	var cliConfig domain_interfaces.CLIConfigProvider
+
+	switch c := configAny.(type) {
+	case *config_cli.Config:
+		debugOptions = c.Debug
+		cliConfig = c
+	case *repo_config_cli.Config:
+		debugOptions = c.Debug
+		cliConfig = c
+	default:
+		panic(fmt.Sprintf("unsupported config type: %T", configAny))
+	}
+
+	dir := env_dir.MakeDefault(
+		req,
+		req.Utility.GetName(),
+		debugOptions,
+	)
+
+	return env_local.Make(
+		env_ui.Make(
+			req,
+			cliConfig,
+			debugOptions,
+			env_ui.Options{},
+		),
+		dir,
+	)
+}
+
 func (cmd Complete) Run(req command.Request) {
 	utility := req.Utility
-	envLocal := cmd.MakeEnv(req)
+	envLocal := cmd.makeEnv(req)
 
 	// TODO extract into constructor
 	// TODO find double-hyphen
