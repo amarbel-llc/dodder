@@ -45,6 +45,21 @@ func init() {
 		tipe: ids.GetOrPanic(
 			ids.TypeTomlBlobStoreConfigInventoryArchiveVCurrent,
 		).TypeStruct,
+		blobStoreConfig: &blob_store_configs.TomlInventoryArchiveV2{
+			Delta: blob_store_configs.DeltaConfig{
+				Enabled:     false,
+				Algorithm:   "bsdiff",
+				MinBlobSize: 256,
+				MaxBlobSize: 10485760,
+				SizeRatio:   2.0,
+			},
+		},
+	})
+
+	utility.AddCmd("init-inventory-archive-v1", &Init{
+		tipe: ids.GetOrPanic(
+			ids.TypeTomlBlobStoreConfigInventoryArchiveV1,
+		).TypeStruct,
 		blobStoreConfig: &blob_store_configs.TomlInventoryArchiveV1{
 			Delta: blob_store_configs.DeltaConfig{
 				Enabled:     false,
