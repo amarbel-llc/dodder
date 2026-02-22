@@ -57,6 +57,8 @@
           subPackages = [
             "cmd/der"
             # "cmd/dodder"
+            "cmd/mad"
+            "cmd/madder"
           ];
           modules = ./gomod2nix.toml;
           go = pkgs.go_1_25;
