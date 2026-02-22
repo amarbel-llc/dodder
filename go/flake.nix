@@ -4,9 +4,24 @@
     nixpkgs-master.url = "github:NixOS/nixpkgs/b28c4999ed71543e71552ccfd0d7e68c581ba7e9";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
-    devenv-go.url = "github:amarbel-llc/eng?dir=devenvs/go";
-    devenv-shell.url = "github:amarbel-llc/eng?dir=devenvs/shell";
-    purse-first.url = "github:amarbel-llc/purse-first";
+    devenv-go = {
+      url = "github:amarbel-llc/eng?dir=devenvs/go";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+    };
+    devenv-shell = {
+      url = "github:amarbel-llc/eng?dir=devenvs/shell";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+    };
+    purse-first = {
+      url = "github:amarbel-llc/purse-first";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+    };
   };
 
   outputs =
