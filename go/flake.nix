@@ -7,7 +7,6 @@
     devenv-go.url = "github:amarbel-llc/eng?dir=devenvs/go";
     devenv-shell.url = "github:amarbel-llc/eng?dir=devenvs/shell";
     batman.url = "github:amarbel-llc/batman";
-    sandcastle.url = "github:amarbel-llc/sandcastle";
   };
 
   outputs =
@@ -18,7 +17,6 @@
     , devenv-go
     , devenv-shell
     , batman
-    , sandcastle
     ,
     }:
     (utils.lib.eachDefaultSystem
@@ -77,7 +75,6 @@
             gum
           ]) ++ [
             batman.packages.${system}.bats-libs
-            sandcastle.packages.${system}.default
           ];
 
           inputsFrom = [

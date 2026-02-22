@@ -29,13 +29,13 @@ test-go *flags:
   just go/test-go-unit {{flags}}
 
 # Run bats integration tests, regenerating fixtures only if needed.
-test-bats: build _test-bats-preflight _test-bats-ensure-fixtures _test-bats-run
+test-bats: build _test-bats-ensure-fixtures _test-bats-run
 
 # Run bats integration tests with existing fixtures (no generation).
-test-bats-quick: build _test-bats-preflight _test-bats-run
+test-bats-quick: build _test-bats-run
 
 # Run specific bats test files.
-test-bats-targets *targets: build _test-bats-preflight
+test-bats-targets *targets: build
   #!/usr/bin/env bash
   set -euo pipefail
   export PATH="{{dir_build}}/debug:$PATH"
@@ -43,7 +43,7 @@ test-bats-targets *targets: build _test-bats-preflight
   just zz-tests_bats/test-targets {{targets}}
 
 # Run bats tests filtered by tag.
-test-bats-tags *tags: build _test-bats-preflight
+test-bats-tags *tags: build
   #!/usr/bin/env bash
   set -euo pipefail
   export PATH="{{dir_build}}/debug:$PATH"
@@ -51,7 +51,7 @@ test-bats-tags *tags: build _test-bats-preflight
   just zz-tests_bats/test-tags {{tags}}
 
 # Force-regenerate fixtures. Review diff, then git add + commit.
-test-bats-update-fixtures: build _test-bats-preflight
+test-bats-update-fixtures: build
   #!/usr/bin/env bash
   set -euo pipefail
   export PATH="{{dir_build}}/debug:$PATH"
@@ -66,35 +66,6 @@ test-bats-update-fixtures: build _test-bats-preflight
   echo ""
   echo "Review changes with: git diff -- zz-tests_bats/migration/"
   echo "Then: git add zz-tests_bats/migration/ && git commit -m 'Update test fixtures'"
-
-# Preflight: verify bats dependencies are available.
-[private]
-_test-bats-preflight:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  ok=true
-
-  if [[ -z "${BATS_LIB_PATH:-}" ]]; then
-    echo "error: BATS_LIB_PATH is not set." >&2
-    echo "  Are you in the nix devshell? Run: nix develop" >&2
-    ok=false
-  fi
-
-  if ! command -v sandcastle &>/dev/null; then
-    echo "error: sandcastle is not on PATH." >&2
-    echo "  Are you in the nix devshell? Run: nix develop" >&2
-    ok=false
-  fi
-
-  if ! command -v bats &>/dev/null; then
-    echo "error: bats is not on PATH." >&2
-    echo "  Are you in the nix devshell? Run: nix develop" >&2
-    ok=false
-  fi
-
-  if [[ "$ok" != "true" ]]; then
-    exit 1
-  fi
 
 # Smart fixture generation: skip if fixtures exist for current store version.
 [private]

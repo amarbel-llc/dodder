@@ -94,13 +94,13 @@ bats_timeout := "10"
 # runs specific bats test files, or a default of all.
 [group("test")]
 test-targets *targets="*.bats":
-  BATS_TEST_TIMEOUT="{{bats_timeout}}" ./bin/run-sandcastle-bats.bash \
+  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
     bats --tap --jobs {{num_cpus()}} {{targets}}
 
 # runs specific bats test tags
 [group("test")]
 test-tags *tags:
-  BATS_TEST_TIMEOUT="{{bats_timeout}}" ./bin/run-sandcastle-bats.bash \
+  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
     bats --tap --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
 
 [group("test")]
