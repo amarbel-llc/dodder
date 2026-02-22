@@ -6,7 +6,6 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/echo/config_cli"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/lima/commands_madder"
 )
 
 type BridgeResult struct {
@@ -20,9 +19,9 @@ type Bridge struct {
 	utility command.Utility
 }
 
-func MakeBridge() Bridge {
+func MakeBridge(utility command.Utility) Bridge {
 	return Bridge{
-		utility: commands_madder.GetUtility(),
+		utility: utility,
 	}
 }
 

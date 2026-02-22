@@ -3,10 +3,14 @@ package mcp_madder
 import (
 	"context"
 	"testing"
+
+	"code.linenisgreat.com/dodder/go/src/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/src/juliett/command"
 )
 
 func TestBridgeUnknownCommand(t *testing.T) {
-	bridge := MakeBridge()
+	utility := command.MakeUtility("madder", config_cli.Default())
+	bridge := MakeBridge(utility)
 	_, err := bridge.RunCommand(
 		context.Background(),
 		"nonexistent-command",
