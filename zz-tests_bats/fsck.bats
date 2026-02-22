@@ -11,14 +11,14 @@ teardown() {
 	chflags_and_rm
 }
 
-function fsck_basic { # @test
+function fsck_basic_tap14 { # @test
 	run_dodder_init_disable_age
 
 	run_dodder fsck
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects verified:"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_with_objects { # @test

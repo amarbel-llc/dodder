@@ -1,18 +1,20 @@
 package commands_dodder
 
 import (
+	"fmt"
 	"io"
+	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/genres"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/hotel/object_fmt_digest"
+	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/juliett/sku"
@@ -20,6 +22,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/november/queries"
 	"code.linenisgreat.com/dodder/go/src/victor/local_working_copy"
 	"code.linenisgreat.com/dodder/go/src/xray/command_components_dodder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
 func init() {
@@ -86,6 +89,8 @@ func (cmd *Fsck) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 func (cmd Fsck) Run(req command.Request) {
 	repo := cmd.MakeLocalWorkingCopy(req)
 
+	tw := tap.NewWriter(os.Stdout)
+
 	var seq interfaces.SeqError[*sku.Transacted]
 
 	if cmd.InventoryListPath == "" {
@@ -105,7 +110,7 @@ func (cmd Fsck) Run(req command.Request) {
 
 		seq = repo.GetStore().All(query)
 
-		ui.Out().Printf("verification for %q objects in progress...", query)
+		tw.Comment(fmt.Sprintf("verification for %q objects in progress...", query))
 	} else {
 		seq = cmd.MakeSeqFromPath(
 			repo,
@@ -115,21 +120,16 @@ func (cmd Fsck) Run(req command.Request) {
 		)
 	}
 
-	cmd.runVerification(repo, seq)
+	cmd.runVerification(repo, tw, seq)
 }
 
 func (cmd Fsck) runVerification(
 	repo *local_working_copy.Repo,
+	tw *tap.Writer,
 	seq interfaces.SeqError[*sku.Transacted],
 ) {
 	var count atomic.Uint32
-
-	type objectError struct {
-		object *sku.Transacted
-		err    error
-	}
-
-	var objectErrors collections_slice.Slice[objectError]
+	var errorCount atomic.Uint32
 
 	finalizer := object_finalizer.Builder().
 		WithVerifyOptions(cmd.VerifyOptions).
@@ -140,51 +140,36 @@ func (cmd Fsck) runVerification(
 		func(ctx errors.Context) {
 			for object, errIter := range seq {
 				if errIter != nil {
-					err := objectError{err: errIter}
-
+					desc := "iteration error"
 					if object != nil {
-						cloned, _ := object.CloneTransacted()
-						err.object = cloned
+						desc = sku.StringMetadataTaiMerkle(object)
 					}
 
-					objectErrors.Append(err)
+					tw.NotOk(desc, tap_diagnostics.FromError(errIter))
+					errorCount.Add(1)
+					count.Add(1)
 
 					continue
 				}
 
+				desc := sku.StringMetadataTaiMerkle(object)
+				var objectErrors []error
+
 				if err := markl.AssertIdIsNotNull(
 					object.GetObjectDigest(),
 				); err != nil {
-					cloned, _ := object.CloneTransacted()
-					objectErrors.Append(
-						objectError{
-							err:    err,
-							object: cloned,
-						},
-					)
+					objectErrors = append(objectErrors, err)
 				}
 
 				if err := finalizer.Verify(object); err != nil {
-					cloned, _ := object.CloneTransacted()
-					objectErrors.Append(
-						objectError{
-							err:    err,
-							object: cloned,
-						},
-					)
+					objectErrors = append(objectErrors, err)
 				}
 
 				if !cmd.SkipProbes {
 					if err := repo.GetStore().GetStreamIndex().VerifyObjectProbes(
 						object,
 					); err != nil {
-						cloned, _ := object.CloneTransacted()
-						objectErrors.Append(
-							objectError{
-								err:    err,
-								object: cloned,
-							},
-						)
+						objectErrors = append(objectErrors, err)
 					}
 				}
 
@@ -197,39 +182,42 @@ func (cmd Fsck) runVerification(
 							blobDigest,
 							io.Discard,
 						); err != nil {
-							cloned, _ := object.CloneTransacted()
-							objectErrors.Append(
-								objectError{
-									err:    errors.Wrapf(err, "blob verification failed"),
-									object: cloned,
-								},
-							)
+							objectErrors = append(objectErrors, errors.Wrapf(err, "blob verification failed"))
 						}
 					}
+				}
+
+				if len(objectErrors) == 0 {
+					tw.Ok(desc)
+				} else {
+					diag := tap_diagnostics.FromError(objectErrors[0])
+					if len(objectErrors) > 1 {
+						msgs := make([]string, len(objectErrors))
+						for i, e := range objectErrors {
+							msgs[i] = e.Error()
+						}
+						diag["message"] = strings.Join(msgs, "; ")
+					}
+					tw.NotOk(desc, diag)
+					errorCount.Add(1)
 				}
 
 				count.Add(1)
 			}
 		},
 		func(time time.Time) {
-			ui.Out().Printf(
+			tw.Comment(fmt.Sprintf(
 				"(in progress) %d verified, %d errors",
 				count.Load(),
-				len(objectErrors),
-			)
+				errorCount.Load(),
+			))
 		},
 		3*time.Second,
 	); err != nil {
+		tw.BailOut(err.Error())
 		repo.Cancel(err)
 		return
 	}
 
-	ui.Out().Printf("verification complete")
-	ui.Out().Printf("objects verified: %d", count.Load())
-	ui.Out().Printf("objects with errors: %d", len(objectErrors))
-
-	for _, objectError := range objectErrors {
-		ui.Out().Printf("%s:", sku.StringMetadataTaiMerkle(objectError.object))
-		ui.CLIErrorTreeEncoder.EncodeTo(objectError.err, ui.Out())
-	}
+	tw.Plan()
 }
