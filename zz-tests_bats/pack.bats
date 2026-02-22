@@ -76,17 +76,17 @@ function pack_inventory_archive_v1_delta { # @test
 
 	run_dodder blob_store-write "$blob1"
 	assert_success
-	hash1="$(echo "$output" | awk '{print $1}')"
+	hash1="$(echo "$output" | grep '^ok ' | awk '{print $4}')"
 	[[ -n "$hash1" ]] || fail "blob_store-write returned empty hash for blob one"
 
 	run_dodder blob_store-write "$blob2"
 	assert_success
-	hash2="$(echo "$output" | awk '{print $1}')"
+	hash2="$(echo "$output" | grep '^ok ' | awk '{print $4}')"
 	[[ -n "$hash2" ]] || fail "blob_store-write returned empty hash for blob two"
 
 	run_dodder blob_store-write "$blob3"
 	assert_success
-	hash3="$(echo "$output" | awk '{print $1}')"
+	hash3="$(echo "$output" | grep '^ok ' | awk '{print $4}')"
 	[[ -n "$hash3" ]] || fail "blob_store-write returned empty hash for blob three"
 
 	# Verify blobs exist in the default loose store before packing.
@@ -141,17 +141,17 @@ function pack_inventory_archive_v1_no_delta { # @test
 
 	run_dodder blob_store-write "$blob1"
 	assert_success
-	hash1="$(echo "$output" | awk '{print $1}')"
+	hash1="$(echo "$output" | grep '^ok ' | awk '{print $4}')"
 	[[ -n "$hash1" ]] || fail "blob_store-write returned empty hash for blob one"
 
 	run_dodder blob_store-write "$blob2"
 	assert_success
-	hash2="$(echo "$output" | awk '{print $1}')"
+	hash2="$(echo "$output" | grep '^ok ' | awk '{print $4}')"
 	[[ -n "$hash2" ]] || fail "blob_store-write returned empty hash for blob two"
 
 	run_dodder blob_store-write "$blob3"
 	assert_success
-	hash3="$(echo "$output" | awk '{print $1}')"
+	hash3="$(echo "$output" | grep '^ok ' | awk '{print $4}')"
 	[[ -n "$hash3" ]] || fail "blob_store-write returned empty hash for blob three"
 
 	# Verify blobs exist before packing.

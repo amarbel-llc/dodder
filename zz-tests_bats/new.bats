@@ -89,7 +89,7 @@ function use_blob_digests { # @test
 		  the blob
 	EOM
   assert_success
-  assert_output 'blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0 - (checked in)'
+  assert_output --partial 'ok 1 - blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0 -'
 
   run_dodder new -edit=false -shas blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0
   assert_success
@@ -102,7 +102,7 @@ function use_blob_digests { # @test
 		  the blob2
 	EOM
   assert_success
-  assert_output "$the_blob2_digest - (checked in)"
+  assert_output --partial "ok 1 - $the_blob2_digest -"
 
   run_dodder new -edit=false -shas -type txt "$the_blob2_digest"
   assert_success
