@@ -34,8 +34,10 @@ function fsck_with_objects { # @test
 
 	run_dodder fsck
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	assert_output --partial "ok "
+	refute_output --partial "not ok"
 }
 
 function fsck_skip_probes { # @test
@@ -51,8 +53,9 @@ function fsck_skip_probes { # @test
 
 	run_dodder fsck -skip-probes
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_multiple_objects { # @test
@@ -78,8 +81,10 @@ function fsck_multiple_objects { # @test
 
 	run_dodder fsck
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	assert_output --partial "ok "
+	refute_output --partial "not ok"
 }
 
 function fsck_from_version { # @test
@@ -87,8 +92,9 @@ function fsck_from_version { # @test
 
 	run_dodder fsck
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_from_version_skip_probes { # @test
@@ -96,8 +102,9 @@ function fsck_from_version_skip_probes { # @test
 
 	run_dodder fsck -skip-probes
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_skip_blobs { # @test
@@ -113,8 +120,9 @@ function fsck_skip_blobs { # @test
 
 	run_dodder fsck -skip-blobs
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_blob_verification { # @test
@@ -131,8 +139,9 @@ function fsck_blob_verification { # @test
 	# Verify blobs are checked (default behavior)
 	run_dodder fsck
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_from_version_with_blobs { # @test
@@ -140,8 +149,9 @@ function fsck_from_version_with_blobs { # @test
 
 	run_dodder fsck
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
 
 function fsck_from_version_skip_blobs { # @test
@@ -149,6 +159,7 @@ function fsck_from_version_skip_blobs { # @test
 
 	run_dodder fsck -skip-blobs
 	assert_success
-	assert_output --partial "verification complete"
-	assert_output --partial "objects with errors: 0"
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	refute_output --partial "not ok"
 }
