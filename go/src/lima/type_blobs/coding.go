@@ -19,6 +19,7 @@ var CoderToTypedBlob = triple_hyphen_io.CoderToTypedBlob[Blob]{
 				Progenitor: func() Blob {
 					return &TomlV0{}
 				},
+				IgnoreDecodeErrors: true,
 			},
 			ids.TypeTomlTypeV1: triple_hyphen_io.CoderToml[
 				Blob,
@@ -27,6 +28,7 @@ var CoderToTypedBlob = triple_hyphen_io.CoderToTypedBlob[Blob]{
 				Progenitor: func() Blob {
 					return &TomlV1{}
 				},
+				IgnoreDecodeErrors: true,
 			},
 		},
 	),

@@ -13,7 +13,8 @@ type CoderToml[
 	BLOB any,
 	BLOB_PTR interfaces.Ptr[BLOB],
 ] struct {
-	Progenitor func() BLOB
+	Progenitor         func() BLOB
+	IgnoreDecodeErrors bool
 }
 
 func (coder CoderToml[BLOB, BLOB_PTR]) DecodeFrom(
@@ -24,7 +25,7 @@ func (coder CoderToml[BLOB, BLOB_PTR]) DecodeFrom(
 	clone := coder.Progenitor()
 
 	if err = tomlDecoder.Decode(clone); err != nil {
-		if err == io.EOF {
+		if err == io.EOF || coder.IgnoreDecodeErrors {
 			err = nil
 		} else {
 			err = errors.Wrapf(err, "%T", err)

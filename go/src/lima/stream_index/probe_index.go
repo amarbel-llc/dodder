@@ -46,6 +46,17 @@ func (index *probeIndex) Initialize(
 	return err
 }
 
+func (index *probeIndex) Reset() (err error) {
+	if err = index.index.Reset(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	index.additionProbes.Reset()
+
+	return err
+}
+
 func (index *probeIndex) Flush() (err error) {
 	if err = index.index.Flush(); err != nil {
 		err = errors.Wrap(err)

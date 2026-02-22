@@ -176,6 +176,25 @@ func (index *Index) PrintAll(env env_ui.Env) (err error) {
 	return err
 }
 
+func (index *Index) Reset() (err error) {
+	for pageIndex := range index.pages {
+		page := &index.pages[pageIndex]
+
+		if page.file != nil {
+			if err = page.file.Close(); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			page.file = nil
+		}
+
+		page.added.Reset()
+	}
+
+	return err
+}
+
 func (index *Index) Flush() (err error) {
 	waitGroup := errors.MakeWaitGroupParallel()
 

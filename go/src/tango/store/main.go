@@ -140,6 +140,11 @@ func (store *Store) ResetIndexes() (err error) {
 		return err
 	}
 
+	if err = store.streamIndex.Reset(); err != nil {
+		err = errors.Wrapf(err, "failed to reset stream index")
+		return err
+	}
+
 	return err
 }
 

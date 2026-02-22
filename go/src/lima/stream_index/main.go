@@ -93,6 +93,15 @@ func (index *Index) Initialize() (err error) {
 	return err
 }
 
+func (index *Index) Reset() (err error) {
+	if err = index.probeIndex.Reset(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
+}
+
 func (index *Index) MakeReindexer(
 	ctx interfaces.ActiveContext,
 ) (reindexer *Reindexer, err error) {
