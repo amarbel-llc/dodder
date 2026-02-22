@@ -40,6 +40,28 @@ func init() {
 		).TypeStruct,
 		blobStoreConfig: &blob_store_configs.TomlSFTPViaSSHConfigV0{},
 	})
+
+	utility.AddCmd("init-inventory-archive", &Init{
+		tipe: ids.GetOrPanic(
+			ids.TypeTomlBlobStoreConfigInventoryArchiveVCurrent,
+		).TypeStruct,
+		blobStoreConfig: &blob_store_configs.TomlInventoryArchiveV1{
+			Delta: blob_store_configs.DeltaConfig{
+				Enabled:     false,
+				Algorithm:   "bsdiff",
+				MinBlobSize: 256,
+				MaxBlobSize: 10485760,
+				SizeRatio:   2.0,
+			},
+		},
+	})
+
+	utility.AddCmd("init-inventory-archive-v0", &Init{
+		tipe: ids.GetOrPanic(
+			ids.TypeTomlBlobStoreConfigInventoryArchiveV0,
+		).TypeStruct,
+		blobStoreConfig: &blob_store_configs.TomlInventoryArchiveV0{},
+	})
 }
 
 type Init struct {
