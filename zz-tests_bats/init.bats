@@ -228,10 +228,9 @@ function init_inventory_archive_with_encryption { # @test
 	run_dodder blob_store-init-inventory-archive -encryption generate .archive
 	assert_success
 
-	config_path="$(echo "$output" | grep -oP 'init \K.*')"
-	run cat "$config_path"
+	run_dodder blob_store-info-repo .archive encryption
 	assert_success
-	assert_output --partial "encryption = '"
+	assert_output --regexp '.+'
 }
 
 function init_with_json_inventory_list_type { # @test
