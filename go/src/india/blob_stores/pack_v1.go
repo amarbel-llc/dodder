@@ -49,64 +49,21 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 	ctx := options.Context
 	tw := options.TapWriter
 
-	// Phase 1: Collect metadata only (digest + size). No blob data is
-	// retained, bounding memory to the metadata slice.
-	var metas []packedBlobMeta
-
-	for looseId, iterErr := range store.looseBlobStore.AllBlobs() {
-		if err = packContextCancelled(ctx); err != nil {
-			err = errors.Wrap(err)
-			tapNotOk(tw, "collect loose blobs", err)
-			return err
-		}
-
-		if iterErr != nil {
-			err = errors.Wrap(iterErr)
-			tapNotOk(tw, "collect loose blobs", err)
-			return err
-		}
-
-		if looseId.IsNull() {
-			continue
-		}
-
-		if _, inArchive := store.index[looseId.String()]; inArchive {
-			continue
-		}
-
-		if options.BlobFilter != nil {
-			if _, inFilter := options.BlobFilter[looseId.String()]; !inFilter {
-				continue
-			}
-		}
-
-		blobSize, sizeErr := store.GetBlobSize(looseId)
-		if sizeErr != nil {
-			if options.SkipMissingBlobs {
-				tapComment(tw, fmt.Sprintf("blob skipped: %s", looseId))
-				continue
-			}
-
-			err = errors.Wrapf(sizeErr, "getting size of loose blob %s", looseId)
-			tapNotOk(tw, fmt.Sprintf("blob skipped: %s", looseId), err)
-			return err
-		}
-
-		digestBytes := make([]byte, len(looseId.GetBytes()))
-		copy(digestBytes, looseId.GetBytes())
-
-		metas = append(metas, packedBlobMeta{digest: digestBytes, size: blobSize})
+	metas, err := collectBlobMetasParallel(
+		ctx,
+		tw,
+		store.looseBlobStore,
+		indexPresenceFromV1(store.index),
+		options,
+		store.GetBlobSize,
+	)
+	if err != nil {
+		return err
 	}
 
 	if len(metas) == 0 {
 		return nil
 	}
-
-	tapOk(tw, fmt.Sprintf("collect %d loose blobs", len(metas)))
-
-	sort.Slice(metas, func(i, j int) bool {
-		return bytes.Compare(metas[i].digest, metas[j].digest) < 0
-	})
 
 	// Split into chunks based on max pack size.
 	maxPackSize := options.MaxPackSize
