@@ -28,8 +28,9 @@ type localHashBucketed struct {
 }
 
 var (
-	_ domain_interfaces.BlobStore = localHashBucketed{}
-	_ BlobDeleter                 = localHashBucketed{}
+	_ domain_interfaces.BlobStore              = localHashBucketed{}
+	_ BlobDeleter                              = localHashBucketed{}
+	_ domain_interfaces.BlobForeignDigestAdder = localHashBucketed{}
 )
 
 func makeLocalHashBucketed(
@@ -264,4 +265,51 @@ func (blobStore localHashBucketed) DeleteBlob(
 	}
 
 	return nil
+}
+
+func (blobStore localHashBucketed) AddForeignBlobDigestForNativeDigest(
+	foreign domain_interfaces.MarklId,
+	native domain_interfaces.MarklId,
+) (err error) {
+	if !blobStore.multiHash {
+		err = errors.Errorf(
+			"single-hash store does not support foreign digest mapping",
+		)
+		return err
+	}
+
+	nativePath := env_dir.MakeHashBucketPathFromMerkleId(
+		native,
+		blobStore.buckets,
+		blobStore.multiHash,
+		blobStore.basePath,
+	)
+
+	foreignPath := env_dir.MakeHashBucketPathFromMerkleId(
+		foreign,
+		blobStore.buckets,
+		blobStore.multiHash,
+		blobStore.basePath,
+	)
+
+	foreignDir := filepath.Dir(foreignPath)
+
+	if err = os.MkdirAll(foreignDir, os.ModeDir|0o755); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	var relTarget string
+
+	if relTarget, err = filepath.Rel(foreignDir, nativePath); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if err = os.Symlink(relTarget, foreignPath); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
 }
