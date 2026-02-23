@@ -3,9 +3,9 @@ package commands_madder
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/india/env_local"
@@ -23,7 +23,7 @@ type Pack struct {
 	command_components_madder.BlobStore
 
 	DeleteLoose      bool
-	MaxPackSize      uint64
+	MaxPackSize      ui.HumanReadableBytes
 	SkipMissingBlobs bool
 	Delta            bool
 }
@@ -52,14 +52,9 @@ func (cmd *Pack) SetFlagDefinitions(
 		"skip unreadable loose blobs instead of aborting")
 	flagSet.BoolVar(&cmd.Delta, "delta", false,
 		"enable delta compression during packing")
-	flagSet.Func("max-pack-size", "override max pack size in bytes (0 = unlimited)", func(v string) error {
-		n, err := strconv.ParseUint(v, 10, 64)
-		if err != nil {
-			return err
-		}
-		cmd.MaxPackSize = n
-		return nil
-	})
+	flagSet.Var(&cmd.MaxPackSize, "max-pack-size",
+		"override max pack size (e.g. 100M, 1G, 0 = unlimited)",
+	)
 }
 
 func (cmd Pack) Run(req command.Request) {
@@ -79,7 +74,7 @@ func (cmd Pack) Run(req command.Request) {
 			Context:              req,
 			DeleteLoose:          cmd.DeleteLoose,
 			DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
-			MaxPackSize:          cmd.MaxPackSize,
+			MaxPackSize:          cmd.MaxPackSize.GetByteCount(),
 			SkipMissingBlobs:     cmd.SkipMissingBlobs,
 			Delta:                cmd.Delta,
 			TapWriter:            tw,
