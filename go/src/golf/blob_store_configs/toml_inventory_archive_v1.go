@@ -61,6 +61,13 @@ func (config *TomlInventoryArchiveV1) SetFlagDefinitions(
 		"loose-blob-store-id",
 		"id of the loose blob store to read from and write to",
 	)
+
+	flagSet.BoolVar(
+		&config.Delta.Enabled,
+		"delta",
+		false,
+		"enable delta compression",
+	)
 }
 
 func (config TomlInventoryArchiveV1) getBasePath() string {

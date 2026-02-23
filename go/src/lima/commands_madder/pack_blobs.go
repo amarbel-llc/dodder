@@ -19,20 +19,21 @@ import (
 )
 
 func init() {
-	utility.AddCmd("pack-objects", &PackObjects{})
+	utility.AddCmd("pack-blobs", &PackBlobs{})
 }
 
-type PackObjects struct {
+type PackBlobs struct {
 	command_components_madder.EnvBlobStore
 	command_components_madder.BlobStoreLocal
 
 	DeleteLoose bool
 	MaxPackSize uint64
+	Delta       bool
 }
 
-var _ interfaces.CommandComponentWriter = (*PackObjects)(nil)
+var _ interfaces.CommandComponentWriter = (*PackBlobs)(nil)
 
-func (cmd PackObjects) Complete(
+func (cmd PackBlobs) Complete(
 	req command.Request,
 	envLocal env_local.Env,
 	commandLine command.CommandLineInput,
@@ -45,11 +46,13 @@ func (cmd PackObjects) Complete(
 	}
 }
 
-func (cmd *PackObjects) SetFlagDefinitions(
+func (cmd *PackBlobs) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
 	flagSet.BoolVar(&cmd.DeleteLoose, "delete-loose", false,
 		"validate archive then delete packed loose blobs")
+	flagSet.BoolVar(&cmd.Delta, "delta", false,
+		"enable delta compression during packing")
 	flagSet.Func("max-pack-size", "override max pack size in bytes (0 = unlimited)", func(v string) error {
 		n, err := strconv.ParseUint(v, 10, 64)
 		if err != nil {
@@ -60,7 +63,7 @@ func (cmd *PackObjects) SetFlagDefinitions(
 	})
 }
 
-func (cmd PackObjects) Run(req command.Request) {
+func (cmd PackBlobs) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)
 	blobStore := envBlobStore.GetDefaultBlobStore()
 
@@ -136,6 +139,7 @@ func (cmd PackObjects) Run(req command.Request) {
 		DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
 		BlobFilter:           blobFilter,
 		MaxPackSize:          cmd.MaxPackSize,
+		Delta:                cmd.Delta,
 		TapWriter:            tw,
 	}); err != nil {
 		tw.NotOk(
@@ -150,7 +154,7 @@ func (cmd PackObjects) Run(req command.Request) {
 	tw.Plan()
 }
 
-func (cmd PackObjects) doOne(
+func (cmd PackBlobs) doOne(
 	blobStore blob_stores.BlobStoreInitialized,
 	blobReader domain_interfaces.BlobReader,
 ) (blobId domain_interfaces.MarklId, err error) {

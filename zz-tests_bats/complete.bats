@@ -104,7 +104,7 @@ function complete_subcmd { # @test
 		blob_store-pack
 		blob_store-pack-cat-ids
 		blob_store-pack-list
-		blob_store-pack-objects
+		blob_store-pack-blobs
 		blob_store-read
 		blob_store-sync
 		blob_store-write

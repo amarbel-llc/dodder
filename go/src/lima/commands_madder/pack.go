@@ -25,6 +25,7 @@ type Pack struct {
 	DeleteLoose      bool
 	MaxPackSize      uint64
 	SkipMissingBlobs bool
+	Delta            bool
 }
 
 var _ interfaces.CommandComponentWriter = (*Pack)(nil)
@@ -49,6 +50,8 @@ func (cmd *Pack) SetFlagDefinitions(
 		"validate archive then delete packed loose blobs")
 	flagSet.BoolVar(&cmd.SkipMissingBlobs, "skip-missing-blobs", false,
 		"skip unreadable loose blobs instead of aborting")
+	flagSet.BoolVar(&cmd.Delta, "delta", false,
+		"enable delta compression during packing")
 	flagSet.Func("max-pack-size", "override max pack size in bytes (0 = unlimited)", func(v string) error {
 		n, err := strconv.ParseUint(v, 10, 64)
 		if err != nil {
@@ -78,6 +81,7 @@ func (cmd Pack) Run(req command.Request) {
 			DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
 			MaxPackSize:          cmd.MaxPackSize,
 			SkipMissingBlobs:     cmd.SkipMissingBlobs,
+			Delta:                cmd.Delta,
 			TapWriter:            tw,
 		}); err != nil {
 			tw.NotOk(

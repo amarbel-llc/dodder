@@ -42,6 +42,13 @@ func (config *TomlInventoryArchiveV2) SetFlagDefinitions(
 		"hash_type-id",
 		"hash type for archive checksums and blob hashes",
 	)
+
+	flagSet.BoolVar(
+		&config.Delta.Enabled,
+		"delta",
+		false,
+		"enable delta compression",
+	)
 }
 
 func (config TomlInventoryArchiveV2) getBasePath() string {

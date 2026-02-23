@@ -34,6 +34,9 @@ type PackOptions struct {
 	// blob emits a not-ok test point and stops packing.
 	SkipMissingBlobs bool
 
+	// Delta enables delta compression during packing.
+	Delta bool
+
 	// TapWriter emits phase-level TAP test points during packing. When nil,
 	// packing is silent (backward compatible for unit tests).
 	TapWriter *tap.Writer
