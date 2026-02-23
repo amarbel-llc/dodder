@@ -18,6 +18,43 @@ type packedBlob struct {
 	data []byte
 }
 
+// splitBlobChunks partitions sorted blobs into chunks where each chunk's
+// total data size does not exceed maxPackSize. A maxPackSize of 0 means
+// unlimited (all blobs in one chunk). A single blob larger than the limit
+// gets its own chunk.
+func splitBlobChunks(blobs []packedBlob, maxPackSize uint64) [][]packedBlob {
+	if len(blobs) == 0 {
+		return nil
+	}
+
+	if maxPackSize == 0 {
+		return [][]packedBlob{blobs}
+	}
+
+	var chunks [][]packedBlob
+	var current []packedBlob
+	var currentSize uint64
+
+	for _, blob := range blobs {
+		blobSize := uint64(len(blob.data))
+
+		if len(current) > 0 && currentSize+blobSize > maxPackSize {
+			chunks = append(chunks, current)
+			current = nil
+			currentSize = 0
+		}
+
+		current = append(current, blob)
+		currentSize += blobSize
+	}
+
+	if len(current) > 0 {
+		chunks = append(chunks, current)
+	}
+
+	return chunks
+}
+
 func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 	hashFormatId := store.defaultHash.GetMarklFormatId()
 
