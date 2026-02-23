@@ -221,6 +221,19 @@ function init_with_age { # @test
 	assert_output
 }
 
+function init_inventory_archive_with_encryption { # @test
+	run_dodder_init_disable_age
+	assert_success
+
+	run_dodder blob_store-init-inventory-archive -encryption generate .archive
+	assert_success
+
+	config_path="$(echo "$output" | grep -oP 'init \K.*')"
+	run cat "$config_path"
+	assert_success
+	assert_output --partial "encryption = '"
+}
+
 function init_with_json_inventory_list_type { # @test
 	run_dodder init \
 		-yin <(cat_yin) \

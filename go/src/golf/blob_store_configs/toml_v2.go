@@ -3,10 +3,8 @@ package blob_store_configs
 import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/values"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 )
 
@@ -56,46 +54,7 @@ func (blobStoreConfig *TomlV2) SetFlagDefinitions(
 		"determines the hash type used for new blobs written to the store",
 	)
 
-	flagSet.Func(
-		"encryption",
-		"add encryption for blobs",
-		func(value string) (err error) {
-			if files.Exists(value) {
-				if err = markl.SetFromPath(
-					&blobStoreConfig.Encryption,
-					value,
-				); err != nil {
-					err = errors.Wrapf(err, "Value: %q", value)
-					return err
-				}
-
-				return err
-			}
-
-			switch value {
-			case "none":
-				// no-op
-
-			case "", "generate":
-				if err = blobStoreConfig.Encryption.GeneratePrivateKey(
-					nil,
-					markl.FormatIdAgeX25519Sec,
-					markl.PurposeMadderPrivateKeyV1,
-				); err != nil {
-					err = errors.Wrap(err)
-					return err
-				}
-
-			default:
-				if err = blobStoreConfig.Encryption.Set(value); err != nil {
-					err = errors.Wrap(err)
-					return err
-				}
-			}
-
-			return err
-		},
-	)
+	setEncryptionFlagDefinition(flagSet, &blobStoreConfig.Encryption)
 
 	flagSet.BoolVar(
 		&blobStoreConfig.LockInternalFiles,

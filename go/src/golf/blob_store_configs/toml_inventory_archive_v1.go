@@ -62,6 +62,8 @@ func (config *TomlInventoryArchiveV1) SetFlagDefinitions(
 		"id of the loose blob store to read from and write to",
 	)
 
+	setEncryptionFlagDefinition(flagSet, &config.Encryption)
+
 	flagSet.BoolVar(
 		&config.Delta.Enabled,
 		"delta",

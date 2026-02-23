@@ -43,6 +43,8 @@ func (config *TomlInventoryArchiveV2) SetFlagDefinitions(
 		"hash type for archive checksums and blob hashes",
 	)
 
+	setEncryptionFlagDefinition(flagSet, &config.Encryption)
+
 	flagSet.BoolVar(
 		&config.Delta.Enabled,
 		"delta",
