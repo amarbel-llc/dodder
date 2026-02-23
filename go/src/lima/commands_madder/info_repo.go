@@ -36,13 +36,11 @@ func (cmd InfoRepo) Run(req command.Request) {
 
 	case 1:
 		blobStore = env.GetDefaultBlobStore()
-
 		keys = []string{req.PopArg("blob store config key")}
 
 	case 2:
 		blobStoreIndex := req.PopArg("blob store index")
 		blobStore = cmd.MakeBlobStoreFromIdString(env, blobStoreIndex)
-
 		keys = []string{req.PopArg("blob store config key")}
 
 	default:
@@ -52,16 +50,10 @@ func (cmd InfoRepo) Run(req command.Request) {
 	}
 
 	blobStoreConfig := blobStore.Config
+	configKVs := blob_store_configs.ConfigKeyValues(blobStoreConfig.Blob)
 
 	for _, key := range keys {
 		switch strings.ToLower(key) {
-		default:
-			errors.ContextCancelWithBadRequestf(
-				env,
-				"unsupported info key: %q",
-				key,
-			)
-
 		case "config-immutable":
 			if _, err := blob_store_configs.Coder.EncodeTo(
 				&blobStoreConfig,
@@ -70,45 +62,10 @@ func (cmd InfoRepo) Run(req command.Request) {
 				env.Cancel(err)
 			}
 
-		case "name":
-			// TODO
-
-			// TODO switch to `blob_stores.N.compression_type`
-		case "compression-type":
-			blobIOWrapper := blobStore.GetBlobIOWrapper()
-
-			// TODO read default blob store and expose config
-			env.GetUI().Print(
-				blobIOWrapper.GetBlobCompression(),
-			)
-
-			// TODO switch to `blob_stores.N.age_encryption`
-		case "blob_stores-0-encryption":
-			blobIOWrapper := blobStore.GetBlobIOWrapper()
-
-			env.GetUI().Print(
-				blobIOWrapper.GetBlobEncryption().StringWithFormat(),
-			)
-
-		case "blob_stores-0-config-path":
+		case "config-path":
 			env.GetUI().Print(
 				directory_layout.GetDefaultBlobStore(env).GetConfig(),
 			)
-
-		case "blob_stores-0-config":
-			blobStoreConfig := blobStore.ConfigNamed.Config
-
-			if err := cmd.PrintBlobStoreConfig(
-				env,
-				&blob_store_configs.TypedConfig{
-					Type: blobStoreConfig.Type,
-					Blob: blobStoreConfig.Blob,
-				},
-				env.GetUIFile(),
-			); err != nil {
-				env.Cancel(err)
-				return
-			}
 
 		case "dir-blob_stores":
 			env.GetUI().Print(env.MakePathBlobStore())
@@ -123,6 +80,25 @@ func (cmd InfoRepo) Run(req command.Request) {
 			if _, err := dotenv.WriteTo(env.GetUIFile()); err != nil {
 				env.Cancel(err)
 			}
+
+		default:
+			value, ok := configKVs[key]
+			if !ok {
+				availableKeys := blob_store_configs.ConfigKeyNames(
+					blobStoreConfig.Blob,
+				)
+
+				errors.ContextCancelWithBadRequestf(
+					env,
+					"unsupported info key: %q\navailable keys: %s",
+					key,
+					strings.Join(availableKeys, ", "),
+				)
+
+				return
+			}
+
+			env.GetUI().Print(value)
 		}
 	}
 }
