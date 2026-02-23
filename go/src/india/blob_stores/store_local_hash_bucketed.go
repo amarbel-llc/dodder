@@ -215,8 +215,17 @@ func (blobStore localHashBucketed) blobReaderFrom(
 		basePath,
 	)
 
+	var hashFormat markl.FormatHash
+
+	if hashFormat, err = markl.GetFormatHashOrError(
+		marklType.GetMarklFormatId(),
+	); err != nil {
+		err = errors.Wrap(err)
+		return readCloser, err
+	}
+
 	if readCloser, err = env_dir.NewFileReaderOrErrNotExist(
-		blobStore.makeEnvDirConfig(nil),
+		blobStore.makeEnvDirConfig(hashFormat),
 		basePath,
 	); err != nil {
 		if errors.IsNotExist(err) {
