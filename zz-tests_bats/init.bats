@@ -127,7 +127,7 @@ function init_and_with_another_age { # @test
 	run_dodder_init -yin <(cat_yin) -yang <(cat_yang) -encryption "$age_id" test-repo-id
 	assert_success
 
-	run_dodder info-repo blob_stores-0-encryption
+	run_dodder blob_store-info-repo encryption
 	assert_success
 	assert_output "$age_id"
 }
@@ -216,7 +216,7 @@ function init_with_age { # @test
 
 	run test -f .xdg/data/dodder/config-permanent
 
-	run_dodder info-repo blob_stores-0-encryption
+	run_dodder blob_store-info-repo encryption
 	assert_success
 	assert_output
 }
@@ -260,7 +260,7 @@ function init_with_json_inventory_list_type { # @test
 
 	run test -f .xdg/data/dodder/config-permanent
 
-	run_dodder info-repo blob_stores-0-encryption
+	run_dodder blob_store-info-repo encryption
 	assert_success
 	assert_output
 }
