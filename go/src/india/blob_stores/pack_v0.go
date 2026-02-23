@@ -56,8 +56,6 @@ func splitBlobChunks(blobs []packedBlob, maxPackSize uint64) [][]packedBlob {
 }
 
 func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
-	hashFormatId := store.defaultHash.GetMarklFormatId()
-
 	var blobs []packedBlob
 
 	for looseId, iterErr := range store.looseBlobStore.AllBlobs() {
@@ -108,6 +106,75 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		return bytes.Compare(blobs[i].hash, blobs[j].hash) < 0
 	})
 
+	chunks := splitBlobChunks(blobs, store.config.GetMaxPackSize())
+
+	type chunkResult struct {
+		dataPath string
+		blobs    []packedBlob
+	}
+
+	var results []chunkResult
+
+	for _, chunk := range chunks {
+		dataPath, packErr := store.packChunkArchive(chunk)
+		if packErr != nil {
+			return packErr
+		}
+
+		results = append(results, chunkResult{dataPath: dataPath, blobs: chunk})
+	}
+
+	if err = store.writeCache(); err != nil {
+		return err
+	}
+
+	if !options.DeleteLoose {
+		return nil
+	}
+
+	for _, r := range results {
+		if err = store.validateArchive(r.dataPath, r.blobs); err != nil {
+			return err
+		}
+	}
+
+	if options.DeletionPrecondition != nil {
+		blobSeq := func(
+			yield func(domain_interfaces.MarklId, error) bool,
+		) {
+			for _, blob := range blobs {
+				marklId, repool := store.defaultHash.GetBlobIdForHexString(
+					hex.EncodeToString(blob.hash),
+				)
+
+				if !yield(marklId, nil) {
+					repool()
+					return
+				}
+
+				repool()
+			}
+		}
+
+		if err = options.DeletionPrecondition.CheckBlobsSafeToDelete(
+			blobSeq,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	if err = store.deleteLooseBlobs(blobs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (store inventoryArchiveV0) packChunkArchive(
+	blobs []packedBlob,
+) (dataPath string, err error) {
+	hashFormatId := store.defaultHash.GetMarklFormatId()
 	ct := store.config.GetCompressionType()
 
 	var dataBuf bytes.Buffer
@@ -119,37 +186,37 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 	)
 	if err != nil {
 		err = errors.Wrap(err)
-		return err
+		return dataPath, err
 	}
 
 	for _, blob := range blobs {
 		if err = dataWriter.WriteEntry(blob.hash, blob.data); err != nil {
 			err = errors.Wrap(err)
-			return err
+			return dataPath, err
 		}
 	}
 
 	checksum, writtenEntries, err := dataWriter.Close()
 	if err != nil {
 		err = errors.Wrap(err)
-		return err
+		return dataPath, err
 	}
 
 	archiveChecksum := hex.EncodeToString(checksum)
 
 	if err = os.MkdirAll(store.basePath, 0o755); err != nil {
 		err = errors.Wrapf(err, "creating archive directory %s", store.basePath)
-		return err
+		return dataPath, err
 	}
 
-	dataPath := filepath.Join(
+	dataPath = filepath.Join(
 		store.basePath,
 		archiveChecksum+inventory_archive.DataFileExtension,
 	)
 
 	if err = os.WriteFile(dataPath, dataBuf.Bytes(), 0o644); err != nil {
 		err = errors.Wrapf(err, "writing data file %s", dataPath)
-		return err
+		return dataPath, err
 	}
 
 	// Build and write index file
@@ -170,7 +237,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		indexEntries,
 	); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return dataPath, err
 	}
 
 	indexPath := filepath.Join(
@@ -180,7 +247,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 
 	if err = os.WriteFile(indexPath, indexBuf.Bytes(), 0o644); err != nil {
 		err = errors.Wrapf(err, "writing index file %s", indexPath)
-		return err
+		return dataPath, err
 	}
 
 	// Update in-memory index
@@ -198,7 +265,12 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		}
 	}
 
-	// Build cache entries from the full in-memory index
+	return dataPath, nil
+}
+
+func (store inventoryArchiveV0) writeCache() (err error) {
+	hashFormatId := store.defaultHash.GetMarklFormatId()
+
 	var allCacheEntries []inventory_archive.CacheEntry
 
 	for key, entry := range store.index {
@@ -256,47 +328,6 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		allCacheEntries,
 	); err != nil {
 		err = errors.Wrapf(err, "writing cache file %s", cachePath)
-		return err
-	}
-
-	if !options.DeleteLoose {
-		return nil
-	}
-
-	// Validate the archive by re-reading and rehashing every entry
-	if err = store.validateArchive(dataPath, blobs); err != nil {
-		return err
-	}
-
-	// Check deletion precondition if one was provided
-	if options.DeletionPrecondition != nil {
-		blobSeq := func(
-			yield func(domain_interfaces.MarklId, error) bool,
-		) {
-			for _, blob := range blobs {
-				marklId, repool := store.defaultHash.GetBlobIdForHexString(
-					hex.EncodeToString(blob.hash),
-				)
-
-				if !yield(marklId, nil) {
-					repool()
-					return
-				}
-
-				repool()
-			}
-		}
-
-		if err = options.DeletionPrecondition.CheckBlobsSafeToDelete(
-			blobSeq,
-		); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
-	}
-
-	// Delete loose blobs
-	if err = store.deleteLooseBlobs(blobs); err != nil {
 		return err
 	}
 

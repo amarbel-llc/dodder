@@ -78,6 +78,10 @@ func (config TomlInventoryArchiveV0) GetCompressionType() compression_type.Compr
 	return config.CompressionType
 }
 
+func (config TomlInventoryArchiveV0) GetMaxPackSize() uint64 {
+	return 536870912 // 512 MiB default for V0
+}
+
 func (config TomlInventoryArchiveV0) Upgrade() (Config, ids.TypeStruct) {
 	upgraded := &TomlInventoryArchiveV1{
 		HashTypeId:       config.HashTypeId,

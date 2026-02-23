@@ -64,6 +64,7 @@ type (
 		domain_interfaces.BlobIOWrapper
 		GetLooseBlobStoreId() blob_store_id.Id
 		GetCompressionType() compression_type.CompressionType
+		GetMaxPackSize() uint64
 	}
 
 	DeltaConfigImmutable interface {
@@ -77,7 +78,6 @@ type (
 	ConfigInventoryArchiveDelta interface {
 		ConfigInventoryArchive
 		DeltaConfigImmutable
-		GetMaxPackSize() uint64
 	}
 
 	ConfigPointer interface {
