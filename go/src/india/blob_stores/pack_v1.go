@@ -842,6 +842,9 @@ func (store inventoryArchiveV1) deleteLooseBlobsV1(
 	return nil
 }
 
+// TODO(near-future): Replace read-and-discard with os.Stat for local
+// filesystem stores without compression/encryption. See BlobSizer
+// interface comment in pack_parallel.go.
 func (store inventoryArchiveV1) GetBlobSize(
 	id domain_interfaces.MarklId,
 ) (size uint64, err error) {

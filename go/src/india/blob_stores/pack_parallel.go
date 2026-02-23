@@ -14,6 +14,13 @@ import (
 	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
+// TODO(near-future): Add BlobSizer capability interface. Local
+// hash-bucketed stores without compression/encryption can implement
+// GetBlobSize via os.Stat (single syscall) instead of the current
+// read-and-discard fallback. The sizeFn callback already accepts this
+// signature — a fast implementation plugs in without changing the
+// parallel machinery.
+
 // blobSizeFn returns the uncompressed size of a blob given its ID.
 // Implementations may read through the full decompression pipeline or use
 // a fast path like os.Stat when available.
