@@ -88,4 +88,8 @@ type (
 	SavedBlobFormatter interface {
 		FormatSavedBlob(io.Writer, MarklId) (int64, error)
 	}
+
+	BlobForeignDigestAdder interface {
+		AddForeignBlobDigestForNativeDigest(foreign, native MarklId) error
+	}
 )
