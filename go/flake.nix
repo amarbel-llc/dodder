@@ -13,78 +13,28 @@
   };
 
   outputs =
-    { self
-    , nixpkgs
-    , nixpkgs-master
-    , utils
-    , purse-first
-    ,
+    {
+      self,
+      nixpkgs,
+      nixpkgs-master,
+      utils,
+      purse-first,
     }:
-    (utils.lib.eachDefaultSystem
-      (system:
+    (utils.lib.eachDefaultSystem (
+      system:
       let
-
-        pkgs = import nixpkgs {
-          inherit system;
-
-          overlays = [
-            purse-first.overlays.${system}.go
-          ];
+        result = import ./default.nix {
+          inherit
+            nixpkgs
+            nixpkgs-master
+            purse-first
+            system
+            ;
         };
-
-        pkgs-master = import nixpkgs-master {
-          inherit system;
-        };
-
-        dodder = pkgs.buildGoApplication {
-          pname = "dodder";
-          version = "0.0.1";
-          src = ./.;
-          subPackages = [
-            "cmd/der"
-            # "cmd/dodder"
-            "cmd/mad"
-            "cmd/madder"
-          ];
-          modules = ./gomod2nix.toml;
-          go = pkgs.go_1_25;
-          GOTOOLCHAIN = "local";
-        };
-
       in
       {
-
-        packages.dodder = dodder;
-        packages.default = dodder;
-
-        docker = pkgs-master.dockerTools.buildImage {
-          name = "dodder";
-          tag = "latest";
-          copyToRoot = [ dodder ];
-          config = {
-            Cmd = [ "${dodder}/bin/dodder" ];
-            Env = [ ];
-            ExposedPorts = { "9000/tcp" = { }; };
-          };
-        };
-
-        devShells.default = pkgs-master.mkShell {
-          # inherit (gomod2nix.packages.${system}) mkGoEnv gomod2nix;
-
-          packages = (with pkgs-master; [
-            fish
-            gnumake
-            gum
-          ]) ++ [
-            purse-first.packages.${system}.batman
-            purse-first.packages.${system}.tap-dancer
-          ];
-
-          inputsFrom = [
-            purse-first.devShells.${system}.go
-            purse-first.devShells.${system}.shell
-          ];
-        };
-      })
-    );
+        inherit (result) packages docker;
+        devShells.default = result.devShell;
+      }
+    ));
 }
