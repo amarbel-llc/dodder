@@ -319,7 +319,7 @@ func (store inventoryArchiveV0) MakeBlobReader(
 	// into dataEntry.Data before returning, so the file is not needed after.
 	defer errors.DeferredCloser(&err, file)
 
-	dataReader, err := inventory_archive.NewDataReader(file)
+	dataReader, err := inventory_archive.NewDataReader(file, nil)
 	if err != nil {
 		err = errors.Wrapf(err, "reading archive header %s", archivePath)
 		return readCloser, err

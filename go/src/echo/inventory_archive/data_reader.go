@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
 )
@@ -13,15 +14,18 @@ type DataReader struct {
 	reader          io.ReadSeeker
 	hashFormatId    string
 	compressionType compression_type.CompressionType
+	encryption      interfaces.IOWrapper
 	hashSize        int
 	dataStart       int64
 }
 
 func NewDataReader(
 	r io.ReadSeeker,
+	encryption interfaces.IOWrapper,
 ) (dr *DataReader, err error) {
 	dr = &DataReader{
-		reader: r,
+		reader:     r,
+		encryption: encryption,
 	}
 
 	if err = dr.readHeader(); err != nil {
@@ -109,10 +113,9 @@ func (dr *DataReader) readHeader() (err error) {
 		return err
 	}
 
-	// flags: 2 bytes reserved
-	var flags [2]byte
-
-	if _, err = io.ReadFull(dr.reader, flags[:]); err != nil {
+	// flags: 2 bytes
+	var flags uint16
+	if err = binary.Read(dr.reader, binary.BigEndian, &flags); err != nil {
 		err = errors.Wrapf(err, "reading flags")
 		return err
 	}
@@ -188,9 +191,28 @@ func (dr *DataReader) ReadEntry() (entry DataEntry, err error) {
 		return entry, err
 	}
 
+	// Decrypt if needed
+	dataToDecompress := storedData
+	if dr.encryption != nil {
+		decryptReader, decErr := dr.encryption.WrapReader(bytes.NewReader(storedData))
+		if decErr != nil {
+			err = errors.Wrapf(decErr, "creating decryption reader")
+			return entry, err
+		}
+		dataToDecompress, err = io.ReadAll(decryptReader)
+		if err != nil {
+			err = errors.Wrapf(err, "decrypting payload")
+			return entry, err
+		}
+		if err = decryptReader.Close(); err != nil {
+			err = errors.Wrapf(err, "closing decryption reader")
+			return entry, err
+		}
+	}
+
 	// Decompress data
 	decompressReader, err := dr.compressionType.WrapReader(
-		bytes.NewReader(storedData),
+		bytes.NewReader(dataToDecompress),
 	)
 	if err != nil {
 		err = errors.Wrapf(err, "creating decompression reader")

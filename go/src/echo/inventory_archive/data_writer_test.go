@@ -7,7 +7,9 @@ import (
 	"crypto/sha256"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/src/delta/age"
 )
 
 func TestRoundTripNoCompression(t *testing.T) {
@@ -15,7 +17,7 @@ func TestRoundTripNoCompression(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	writer, err := NewDataWriter(&buf, hashFormatId, ct, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
 	}
@@ -76,7 +78,7 @@ func TestRoundTripNoCompression(t *testing.T) {
 		}
 	}
 
-	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()))
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReader: %v", err)
 	}
@@ -161,7 +163,7 @@ func TestRoundTripZstd(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeZstd
 
-	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	writer, err := NewDataWriter(&buf, hashFormatId, ct, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
 	}
@@ -199,7 +201,7 @@ func TestRoundTripZstd(t *testing.T) {
 		)
 	}
 
-	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()))
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReader: %v", err)
 	}
@@ -255,7 +257,7 @@ func TestValidateSucceeds(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	writer, err := NewDataWriter(&buf, hashFormatId, ct, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
 	}
@@ -271,7 +273,7 @@ func TestValidateSucceeds(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 
-	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()))
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReader: %v", err)
 	}
@@ -286,7 +288,7 @@ func TestValidateDetectsCorruption(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	writer, err := NewDataWriter(&buf, hashFormatId, ct, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
 	}
@@ -310,7 +312,7 @@ func TestValidateDetectsCorruption(t *testing.T) {
 	midpoint := len(corrupted) / 2
 	corrupted[midpoint] ^= 0xFF
 
-	reader, err := NewDataReader(bytes.NewReader(corrupted))
+	reader, err := NewDataReader(bytes.NewReader(corrupted), nil)
 	if err != nil {
 		t.Fatalf("NewDataReader: %v", err)
 	}
@@ -325,7 +327,7 @@ func TestEmptyArchiveRoundTrip(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer, err := NewDataWriter(&buf, hashFormatId, ct)
+	writer, err := NewDataWriter(&buf, hashFormatId, ct, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
 	}
@@ -347,7 +349,7 @@ func TestEmptyArchiveRoundTrip(t *testing.T) {
 		t.Fatalf("expected 0 entries, got %d", len(writtenEntries))
 	}
 
-	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()))
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReader: %v", err)
 	}
@@ -363,6 +365,86 @@ func TestEmptyArchiveRoundTrip(t *testing.T) {
 
 	if err := reader.Validate(); err != nil {
 		t.Fatalf("Validate should succeed on empty archive: %v", err)
+	}
+}
+
+func TestEncryptedRoundTrip(t *testing.T) {
+	var buf bytes.Buffer
+	hashFormatId := "sha256"
+	ct := compression_type.CompressionTypeZstd
+
+	// Use age X25519 for encryption
+	var ageIdentity age.Identity
+	if err := ageIdentity.GenerateIfNecessary(); err != nil {
+		t.Fatal(err)
+	}
+
+	var encryption interfaces.IOWrapper = &ageIdentity
+
+	entries := []struct {
+		hash []byte
+		data []byte
+	}{
+		{hash: sha256Hash([]byte("blob1")), data: []byte("hello encrypted world")},
+		{hash: sha256Hash([]byte("blob2")), data: []byte("another encrypted blob")},
+	}
+
+	// Write with encryption
+	writer, err := NewDataWriter(&buf, hashFormatId, ct, encryption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, e := range entries {
+		if err := writer.WriteEntry(e.hash, e.data); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, writtenEntries, err := writer.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, we := range writtenEntries {
+		if we.LogicalSize != uint64(len(entries[i].data)) {
+			t.Errorf("entry %d: LogicalSize = %d, want %d",
+				i, we.LogicalSize, len(entries[i].data))
+		}
+	}
+
+	// Read with encryption — should recover plaintext
+	reader, err := NewDataReader(bytes.NewReader(buf.Bytes()), encryption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	readEntries, err := reader.ReadAllEntries()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(readEntries) != len(entries) {
+		t.Fatalf("got %d entries, want %d", len(readEntries), len(entries))
+	}
+
+	for i, re := range readEntries {
+		if !bytes.Equal(re.Data, entries[i].data) {
+			t.Errorf("entry %d: data mismatch", i)
+		}
+	}
+
+	// Read WITHOUT encryption — data should not match plaintext
+	readerNoKey, err := NewDataReader(bytes.NewReader(buf.Bytes()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rawEntries, err := readerNoKey.ReadAllEntries()
+	if err == nil && len(rawEntries) > 0 {
+		if bytes.Equal(rawEntries[0].Data, entries[0].data) {
+			t.Error("reading encrypted archive without key should not produce plaintext")
+		}
 	}
 }
 

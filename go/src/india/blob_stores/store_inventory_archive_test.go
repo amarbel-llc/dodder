@@ -37,6 +37,7 @@ func TestMakeBlobReaderFromArchive(t *testing.T) {
 		&archiveBuf,
 		hashFormatId,
 		ct,
+		nil,
 	)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
@@ -235,6 +236,7 @@ func TestMakeBlobReaderFromArchiveZstd(t *testing.T) {
 		&archiveBuf,
 		hashFormatId,
 		ct,
+		nil,
 	)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
@@ -310,6 +312,7 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 		&archiveBuf,
 		hashFormatId,
 		ct,
+		nil,
 	)
 	if err != nil {
 		t.Fatalf("NewDataWriter: %v", err)
