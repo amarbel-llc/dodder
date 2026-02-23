@@ -393,3 +393,99 @@ func TestPackV1DeltaFallsBackToFullWhenLarger(t *testing.T) {
 		)
 	}
 }
+
+func TestPackV1SplitsWhenExceedingMaxPackSize(t *testing.T) {
+	basePath := t.TempDir()
+	cachePath := t.TempDir()
+
+	hashFormat := markl.FormatHashSha256
+
+	// Create 4 blobs of ~100 bytes each. Set MaxPackSize to 250 so we
+	// get 2 pack files (2 blobs each).
+	var blobIds []domain_interfaces.MarklId
+	blobData := make(map[string][]byte)
+	var allData [][]byte
+
+	for i := range 4 {
+		data := bytes.Repeat([]byte{byte('a' + i)}, 100)
+		allData = append(allData, data)
+
+		rawHash := sha256.Sum256(data)
+		id, repool := hashFormat.GetBlobIdForHexString(
+			hex.EncodeToString(rawHash[:]),
+		)
+		defer repool()
+
+		blobIds = append(blobIds, id)
+		blobData[id.String()] = data
+	}
+
+	stub := &stubBlobStore{
+		allBlobIds: blobIds,
+		blobData:   blobData,
+	}
+
+	config := blob_store_configs.TomlInventoryArchiveV1{
+		HashTypeId:      markl.FormatIdHashSha256,
+		CompressionType: compression_type.CompressionTypeNone,
+		MaxPackSize:     250,
+		Delta: blob_store_configs.DeltaConfig{
+			Enabled:     false,
+			Algorithm:   "bsdiff",
+			MinBlobSize: 1,
+			MaxBlobSize: 10485760,
+			SizeRatio:   2.0,
+		},
+	}
+
+	store := inventoryArchiveV1{
+		defaultHash:    hashFormat,
+		basePath:       basePath,
+		cachePath:      cachePath,
+		looseBlobStore: stub,
+		index:          make(map[string]archiveEntryV1),
+		config:         config,
+	}
+
+	if err := store.Pack(PackOptions{}); err != nil {
+		t.Fatalf("Pack: %v", err)
+	}
+
+	// Verify all blobs are in the index.
+	for i, id := range blobIds {
+		if !store.HasBlob(id) {
+			t.Fatalf("expected blob %d in index after pack", i)
+		}
+	}
+
+	// Verify all blobs are readable with correct data.
+	for i, id := range blobIds {
+		reader, err := store.MakeBlobReader(id)
+		if err != nil {
+			t.Fatalf("MakeBlobReader for blob %d: %v", i, err)
+		}
+
+		got, err := io.ReadAll(reader)
+		reader.Close()
+
+		if err != nil {
+			t.Fatalf("ReadAll for blob %d: %v", i, err)
+		}
+
+		if !bytes.Equal(got, allData[i]) {
+			t.Errorf("blob %d data mismatch", i)
+		}
+	}
+
+	// Verify multiple data files were created (split happened).
+	dataMatches, err := filepath.Glob(
+		filepath.Join(basePath, "*"+inventory_archive.DataFileExtensionV1),
+	)
+	if err != nil {
+		t.Fatalf("globbing data files: %v", err)
+	}
+
+	if len(dataMatches) < 2 {
+		t.Fatalf("expected at least 2 data files (split), got %d", len(dataMatches))
+	}
+}
