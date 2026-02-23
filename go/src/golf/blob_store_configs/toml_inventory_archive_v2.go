@@ -14,6 +14,7 @@ type TomlInventoryArchiveV2 struct {
 	CompressionType compression_type.CompressionType `toml:"compression-type"`
 	Encryption      markl.Id                         `toml:"encryption"`
 	Delta           DeltaConfig                      `toml:"delta"`
+	MaxPackSize     uint64                           `toml:"max-pack-size"`
 }
 
 var (
@@ -90,4 +91,8 @@ func (config TomlInventoryArchiveV2) GetDeltaMaxBlobSize() uint64 {
 
 func (config TomlInventoryArchiveV2) GetDeltaSizeRatio() float64 {
 	return config.Delta.SizeRatio
+}
+
+func (config TomlInventoryArchiveV2) GetMaxPackSize() uint64 {
+	return config.MaxPackSize
 }

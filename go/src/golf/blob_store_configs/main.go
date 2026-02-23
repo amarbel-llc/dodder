@@ -77,6 +77,7 @@ type (
 	ConfigInventoryArchiveDelta interface {
 		ConfigInventoryArchive
 		DeltaConfigImmutable
+		GetMaxPackSize() uint64
 	}
 
 	ConfigPointer interface {

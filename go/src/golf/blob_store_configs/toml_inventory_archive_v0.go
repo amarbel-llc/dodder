@@ -90,6 +90,7 @@ func (config TomlInventoryArchiveV0) Upgrade() (Config, ids.TypeStruct) {
 			MaxBlobSize: 10485760,
 			SizeRatio:   2.0,
 		},
+		MaxPackSize: 536870912,
 	}
 
 	upgraded.Encryption.ResetWithMarklId(config.Encryption)

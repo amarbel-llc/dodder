@@ -26,6 +26,7 @@ type TomlInventoryArchiveV1 struct {
 	LooseBlobStoreId blob_store_id.Id                 `toml:"loose-blob-store-id"`
 	Encryption       markl.Id                         `toml:"encryption"`
 	Delta            DeltaConfig                      `toml:"delta"`
+	MaxPackSize      uint64                           `toml:"max-pack-size"`
 }
 
 var (
@@ -112,11 +113,16 @@ func (config TomlInventoryArchiveV1) GetDeltaSizeRatio() float64 {
 	return config.Delta.SizeRatio
 }
 
+func (config TomlInventoryArchiveV1) GetMaxPackSize() uint64 {
+	return config.MaxPackSize
+}
+
 func (config TomlInventoryArchiveV1) Upgrade() (Config, ids.TypeStruct) {
 	upgraded := &TomlInventoryArchiveV2{
 		HashTypeId:      config.HashTypeId,
 		CompressionType: config.CompressionType,
 		Delta:           config.Delta,
+		MaxPackSize:     config.MaxPackSize,
 	}
 
 	upgraded.Encryption.ResetWithMarklId(config.Encryption)
