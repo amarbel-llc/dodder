@@ -131,7 +131,7 @@ func (blobImporter *BlobImporter) ImportBlobToStoreIfNecessary(
 
 			copyResult.CopyResult = blob_stores.CopyBlobIfNecessary(
 				blobImporter.EnvBlobStore,
-				dst,
+				dst.GetBlobStore(),
 				blobImporter.Src.GetBlobStore(),
 				blobId,
 				&progressWriter,
