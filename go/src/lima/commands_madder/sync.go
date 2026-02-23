@@ -2,19 +2,20 @@ package commands_madder
 
 import (
 	"fmt"
+	"os"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
+	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/juliett/env_repo"
 	"code.linenisgreat.com/dodder/go/src/juliett/sku"
 	"code.linenisgreat.com/dodder/go/src/kilo/blob_transfers"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
 func init() {
@@ -68,10 +69,11 @@ func (cmd Sync) runStore(
 	source blob_stores.BlobStoreInitialized,
 	destination blob_stores.BlobStoreMap,
 ) {
-	// TODO output TAP
-	ui.Out().Print("Blob Stores:")
+	tw := tap.NewWriter(os.Stdout)
 
 	if len(destination) == 0 {
+		tw.BailOut("only one blob store, nothing to sync")
+
 		errors.ContextCancelWithBadRequestf(
 			req,
 			"only one blob store, nothing to sync",
@@ -132,13 +134,15 @@ func (cmd Sync) runStore(
 
 	defer req.Must(
 		func(_ interfaces.ActiveContext) error {
-			ui.Err().Printf(
+			tw.Comment(fmt.Sprintf(
 				"Successes: %d, Failures: %d, Ignored: %d, Total: %d",
 				blobImporter.Counts.Succeeded,
 				blobImporter.Counts.Failed,
 				blobImporter.Counts.Ignored,
 				blobImporter.Counts.Total,
-			)
+			))
+
+			tw.Plan()
 
 			return nil
 		},
@@ -146,27 +150,30 @@ func (cmd Sync) runStore(
 
 	for blobId, errIter := range source.AllBlobs() {
 		if errIter != nil {
-			ui.Err().Print(errIter)
+			tw.NotOk(
+				fmt.Sprintf("%s", blobId),
+				tap_diagnostics.FromError(errIter),
+			)
+
 			continue
 		}
 
 		if err := blobImporter.ImportBlobIfNecessary(blobId, nil); err != nil {
-			var errNotEqual markl.ErrNotEqual
-
-			if errors.As(err, &errNotEqual) {
-				ui.Err().Printf(
-					"%q -> %q",
-					errNotEqual.Expected,
-					errNotEqual.Actual,
+			if env_dir.IsErrBlobAlreadyExists(err) {
+				tw.Ok(fmt.Sprintf("%s", blobId))
+			} else {
+				tw.NotOk(
+					fmt.Sprintf("%s", blobId),
+					tap_diagnostics.FromError(err),
 				)
-			} else if !env_dir.IsErrBlobAlreadyExists(err) {
-				ui.Err().Print(err)
 			}
+		} else {
+			tw.Ok(fmt.Sprintf("%s", blobId))
 		}
 
 		if cmd.Limit > 0 &&
 			(blobImporter.Counts.Succeeded+blobImporter.Counts.Failed) > cmd.Limit {
-			ui.Err().Print("limit hit, stopping")
+			tw.Comment("limit hit, stopping")
 			break
 		}
 	}
