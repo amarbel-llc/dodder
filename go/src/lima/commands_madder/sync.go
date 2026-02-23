@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
 	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
@@ -127,10 +128,13 @@ func (cmd Sync) runStore(
 
 	blobImporter.UseDestinationHashType = useDestinationHashType
 
-	blobImporter.CopierDelegate = sku.MakeBlobCopierDelegate(
-		envBlobStore.GetUI(),
-		false,
-	)
+	var lastBytesWritten int64
+
+	blobImporter.CopierDelegate = func(result sku.BlobCopyResult) error {
+		bytesWritten, _ := result.GetBytesWrittenAndState()
+		lastBytesWritten = bytesWritten
+		return nil
+	}
 
 	defer req.Must(
 		func(_ interfaces.ActiveContext) error {
@@ -149,6 +153,8 @@ func (cmd Sync) runStore(
 	)
 
 	for blobId, errIter := range source.AllBlobs() {
+		lastBytesWritten = 0
+
 		if errIter != nil {
 			tw.NotOk(
 				fmt.Sprintf("%s", blobId),
@@ -160,15 +166,15 @@ func (cmd Sync) runStore(
 
 		if err := blobImporter.ImportBlobIfNecessary(blobId, nil); err != nil {
 			if env_dir.IsErrBlobAlreadyExists(err) {
-				tw.Ok(fmt.Sprintf("%s", blobId))
+				tw.Ok(formatBlobTestPoint(blobId, lastBytesWritten))
 			} else {
 				tw.NotOk(
-					fmt.Sprintf("%s", blobId),
+					formatBlobTestPoint(blobId, lastBytesWritten),
 					tap_diagnostics.FromError(err),
 				)
 			}
 		} else {
-			tw.Ok(fmt.Sprintf("%s", blobId))
+			tw.Ok(formatBlobTestPoint(blobId, lastBytesWritten))
 		}
 
 		if cmd.Limit > 0 &&
@@ -177,4 +183,15 @@ func (cmd Sync) runStore(
 			break
 		}
 	}
+}
+
+func formatBlobTestPoint(
+	blobId domain_interfaces.MarklId,
+	bytesWritten int64,
+) string {
+	if bytesWritten > 0 {
+		return fmt.Sprintf("%s (%s)", blobId, ui.GetHumanBytesStringOrError(bytesWritten))
+	}
+
+	return fmt.Sprintf("%s", blobId)
 }
