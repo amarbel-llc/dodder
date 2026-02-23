@@ -8,11 +8,13 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
+	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
 )
 
@@ -172,17 +174,49 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 			continue
 		}
 
+		var rawSize uint64
+		for _, blob := range blobs {
+			rawSize += uint64(len(blob.data))
+		}
+
 		dataPath, fullCount, deltaCount, packErr := store.packChunkArchiveV1(ctx, blobs)
 		if packErr != nil {
-			desc := fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks)
+			desc := fmt.Sprintf("write archive %d/%d", chunkIdx+1, totalChunks)
 			tapNotOk(tw, desc, packErr)
 			return packErr
 		}
 
-		tapOk(tw, fmt.Sprintf(
-			"write chunk %d/%d (%d entries, %d delta)",
-			chunkIdx+1, totalChunks, fullCount+deltaCount, deltaCount,
-		))
+		archiveChecksum := strings.TrimSuffix(
+			filepath.Base(dataPath),
+			inventory_archive.DataFileExtensionV1,
+		)
+
+		entryCount := fullCount + deltaCount
+
+		if fi, statErr := os.Stat(dataPath); statErr == nil {
+			archiveSize := uint64(fi.Size())
+
+			var compressionPct float64
+			if rawSize > 0 {
+				compressionPct = float64(archiveSize) / float64(rawSize) * 100
+			}
+
+			tapOk(tw, fmt.Sprintf(
+				"write archive %d/%d %s (%d entries, %d delta, %s, %.0f%%)",
+				chunkIdx+1, totalChunks,
+				archiveChecksum,
+				entryCount, deltaCount,
+				ui.GetHumanBytesString(archiveSize),
+				compressionPct,
+			))
+		} else {
+			tapOk(tw, fmt.Sprintf(
+				"write archive %d/%d %s (%d entries, %d delta)",
+				chunkIdx+1, totalChunks,
+				archiveChecksum,
+				entryCount, deltaCount,
+			))
+		}
 
 		// Release blob data — let GC reclaim before next chunk.
 		blobs = nil
@@ -210,12 +244,12 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 		}
 
 		if err = store.validateArchiveV1(r.dataPath, len(r.metas)); err != nil {
-			desc := fmt.Sprintf("validate chunk %d/%d", chunkIdx+1, totalChunks)
+			desc := fmt.Sprintf("validate archive %d/%d", chunkIdx+1, totalChunks)
 			tapNotOk(tw, desc, err)
 			return err
 		}
 
-		tapOk(tw, fmt.Sprintf("validate chunk %d/%d", chunkIdx+1, totalChunks))
+		tapOk(tw, fmt.Sprintf("validate archive %d/%d", chunkIdx+1, totalChunks))
 	}
 
 	if options.DeletionPrecondition != nil {
