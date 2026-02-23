@@ -59,13 +59,23 @@ func (location *location) SetPrefix(firstChar rune) (err error) {
 	return err
 }
 
+func (location location) IsPrefix(r rune) bool {
+	switch r {
+	case '/', '~', '.', '_':
+		return true
+
+	default:
+		return false
+	}
+}
+
 func (location location) GetPrefix() rune {
 	switch location {
 	case LocationTypeXDGSystem:
 		return '/'
 
 	case LocationTypeXDGUser:
-		return '~'
+		return 0
 
 	case LocationTypeCwd:
 		return '.'

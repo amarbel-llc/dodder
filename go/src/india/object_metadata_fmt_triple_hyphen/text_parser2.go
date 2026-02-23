@@ -98,6 +98,11 @@ func (parser *textParser2) readType(
 		return err
 	}
 
+	// Support old format where blob paths were written with `!` instead of `@`
+	if strings.Contains(typeString, "/") {
+		return parser.readBlobDigest(metadata, typeString)
+	}
+
 	marshaler := markl.MakeMutableLockCoderValueNotRequired(metadata.GetTypeLockMutable())
 
 	if err = marshaler.Set(ids.MakeTypeString(typeString)); err != nil {

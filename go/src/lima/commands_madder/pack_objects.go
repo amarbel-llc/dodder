@@ -9,7 +9,6 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
 	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/india/env_local"
@@ -73,32 +72,22 @@ func (cmd PackObjects) Run(req command.Request) {
 			sawStdin = true
 		}
 
-		var blobReader domain_interfaces.BlobReader
+		resolved := command_components_madder.ResolveFileOrBlobStoreId(arg)
 
-		{
-			var err error
-
-			if blobReader, err = env_dir.NewFileReaderOrErrNotExist(
-				env_dir.DefaultConfig,
-				arg,
-			); errors.IsNotExist(err) {
-				if err = blobStoreId.Set(arg); err != nil {
-					tw.BailOut(err.Error())
-					req.Cancel(err)
-					return
-				}
-
-				blobStore = envBlobStore.GetBlobStore(blobStoreId)
-				storeIdString = blobStoreId.String()
-				tw.Comment(fmt.Sprintf("switched to blob store: %s", storeIdString))
-				continue
-			} else if err != nil {
-				tw.NotOk(arg, tap_diagnostics.FromError(err))
-				continue
-			}
+		if resolved.Err != nil {
+			tw.NotOk(arg, tap_diagnostics.FromError(resolved.Err))
+			continue
 		}
 
-		blobId, err := cmd.doOne(blobStore, blobReader)
+		if resolved.IsStoreSwitch {
+			blobStoreId = resolved.BlobStoreId
+			blobStore = envBlobStore.GetBlobStore(blobStoreId)
+			storeIdString = blobStoreId.String()
+			tw.Comment(fmt.Sprintf("switched to blob store: %s", storeIdString))
+			continue
+		}
+
+		blobId, err := cmd.doOne(blobStore, resolved.BlobReader)
 
 		if err != nil {
 			tw.NotOk(arg, tap_diagnostics.FromError(err))

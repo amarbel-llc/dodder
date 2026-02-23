@@ -7,13 +7,14 @@ import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/src/bravo/quiter"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
-	"code.linenisgreat.com/dodder/go/src/bravo/values"
 	"code.linenisgreat.com/dodder/go/src/charlie/delim_io"
 	"code.linenisgreat.com/dodder/go/src/delta/script_value"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
+	"code.linenisgreat.com/dodder/go/src/india/env_local"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/juliett/env_repo"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
@@ -25,9 +26,7 @@ func init() {
 
 type Cat struct {
 	command_components_madder.EnvBlobStore
-	command_components_madder.BlobStore
-
-	BlobStoreIndex values.Int
+	command_components_madder.BlobStoreLocal
 
 	Utility   script_value.Utility
 	PrefixSha bool
@@ -35,11 +34,23 @@ type Cat struct {
 
 var _ interfaces.CommandComponentWriter = (*Cat)(nil)
 
+func (cmd Cat) Complete(
+	req command.Request,
+	envLocal env_local.Env,
+	commandLine command.CommandLineInput,
+) {
+	envBlobStore := cmd.MakeEnvBlobStore(req)
+	blobStores := envBlobStore.GetBlobStores()
+
+	for id, blobStore := range blobStores {
+		envLocal.GetOut().Printf("%s\t%s", id, blobStore.GetBlobStoreDescription())
+	}
+}
+
 func (cmd *Cat) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
 	flagSet.Var(&cmd.Utility, "utility", "")
-	flagSet.Var(&cmd.BlobStoreIndex, "blob-store", "")
 	flagSet.BoolVar(&cmd.PrefixSha, "prefix-sha", false, "")
 }
 
@@ -107,17 +118,34 @@ func (cmd Cat) makeBlobWriter(
 }
 
 func (cmd Cat) Run(req command.Request) {
-	// TODO support other blob stores
 	envBlobStore := cmd.MakeEnvBlobStore(req)
 	blobStore := envBlobStore.GetDefaultBlobStore()
 
 	blobWriter := cmd.makeBlobWriter(envBlobStore, blobStore)
 
-	// TODO run each blob with its own child context
-	for blobId := range command.PopRequestArgs[markl.Id](req, "blob id") {
-		if err := cmd.blob(blobStore, blobId, blobWriter); err != nil {
-			ui.Err().Print(err)
+	var blobStoreId blob_store_id.Id
+
+	for _, arg := range req.PopArgs() {
+		var blobId markl.Id
+
+		if err := blobId.Set(arg); err == nil {
+			if err := cmd.blob(blobStore, &blobId, blobWriter); err != nil {
+				ui.Err().Print(err)
+			}
+
+			continue
 		}
+
+		if err := blobStoreId.Set(arg); err == nil {
+			blobStore = envBlobStore.GetBlobStore(blobStoreId)
+			blobWriter = cmd.makeBlobWriter(envBlobStore, blobStore)
+			ui.Err().Printf("switched to blob store: %s", blobStoreId)
+			continue
+		}
+
+		ui.Err().Print(
+			errors.Errorf("invalid argument (not a blob id or store id): %s", arg),
+		)
 	}
 }
 

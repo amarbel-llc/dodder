@@ -14,18 +14,22 @@ Identifier type for blob stores with location-aware prefixes.
 
 ## ID Format
 
-A blob store ID is a location prefix character followed by a name string. The
-first character of the serialized form is always the location prefix:
+A blob store ID has an optional location prefix followed by a name string.
+Unprefixed IDs default to XDG user location.
 
-| Prefix | Location            | Example      | Filesystem root                         |
-|--------|---------------------|--------------|-----------------------------------------|
-| `~`    | XDG user            | `~.default`  | `$XDG_DATA_HOME/madder/blob_stores/`    |
-| `.`    | CWD (local overlay) | `..default`  | `./.madder/local/share/blob_stores/`    |
-| `/`    | XDG system          | `/.default`  | system data dir                         |
-| `_`    | Unknown             | `_.default`  | (custom path)                           |
+| Prefix     | Location            | Example    | Filesystem root                         |
+|------------|---------------------|------------|-----------------------------------------|
+| *(none)*   | XDG user            | `default`  | `$XDG_DATA_HOME/madder/blob_stores/`    |
+| `.`        | CWD                 | `.archive` | `$PWD/.madder/local/share/blob_stores/` |
+| `/`        | XDG system          | `/system`  | system data dir                         |
+| `_`        | Unknown             | `_custom`  | (custom path)                           |
+| `~`        | *(backward compat)* | `~default` | same as unprefixed (parsed as XDG user) |
 
-`Set()` parses the first character as the prefix and the remainder as the name.
-`String()` reconstructs `prefix + name`. Two IDs with the same name but
-different prefixes (e.g. `~.default` vs `..default`) refer to **different
-stores** at different filesystem locations. When `-override-xdg-with-cwd` is
-active, both CWD and XDG user stores coexist in the same store map.
+`Set()` checks if the first character is a known prefix (`.`, `/`, `_`, `~`).
+If so, it splits prefix + remainder. Otherwise the entire value is the name with
+XDG user location. `String()` omits the prefix for XDG user IDs. `~` is accepted
+on parse for backward compatibility but is never emitted.
+
+Two IDs with the same name but different locations (e.g. `default` vs `.default`)
+refer to **different stores** at different filesystem locations. CWD stores
+(`.` prefix) resolve relative to `$PWD`.

@@ -42,25 +42,46 @@ func (id Id) IsEmpty() bool {
 	return id.id == ""
 }
 
+func (id Id) GetLocationType() LocationType {
+	return id.location
+}
+
 func (id Id) String() string {
 	if id.id == "" {
 		return ""
 	}
 
-	return fmt.Sprintf("%s%s", string(id.location.GetPrefix()), id.id)
+	prefix := id.location.GetPrefix()
+
+	if prefix == 0 {
+		return id.id
+	}
+
+	return fmt.Sprintf("%c%s", prefix, id.id)
 }
 
 func (id *Id) Set(value string) (err error) {
-	var firstChar byte
-	firstChar, id.id = value[0], value[1:]
-
-	if err = id.location.SetPrefix(rune(firstChar)); err != nil {
-		err = errors.Errorf(
-			"unsupported first char for blob_store_id: %q",
-			string(firstChar),
-		)
-
+	if len(value) == 0 {
+		err = errors.Errorf("empty blob_store_id")
 		return err
+	}
+
+	firstChar := rune(value[0])
+
+	if id.location.IsPrefix(firstChar) {
+		id.id = value[1:]
+
+		if err = id.location.SetPrefix(firstChar); err != nil {
+			err = errors.Errorf(
+				"unsupported first char for blob_store_id: %q",
+				string(firstChar),
+			)
+
+			return err
+		}
+	} else {
+		id.location = LocationTypeXDGUser
+		id.id = value
 	}
 
 	return err

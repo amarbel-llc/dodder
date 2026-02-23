@@ -90,6 +90,18 @@ func (xdg XDG) CloneWithUtilityName(
 	return xdg
 }
 
+func (xdg XDG) CloneWithOverridePath(overridePath string) XDG {
+	initArgs := InitArgs{
+		Home:        xdg.Home.ActualValue,
+		Cwd:         xdg.Cwd.ActualValue,
+		UtilityName: xdg.UtilityName,
+	}
+
+	errors.PanicIfError(xdg.InitializeOverridden(initArgs, overridePath))
+
+	return xdg
+}
+
 func (xdg XDG) CloneWithoutOverride() XDG {
 	xdg.overridePath = ""
 

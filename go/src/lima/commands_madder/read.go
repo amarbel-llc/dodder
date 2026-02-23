@@ -7,8 +7,9 @@ import (
 
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/juliett/env_repo"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
 )
 
@@ -21,13 +22,15 @@ type Read struct {
 }
 
 type readBlobEntry struct {
-	Blob string `json:"blob"`
+	Blob  string `json:"blob"`
+	Store string `json:"store,omitempty"`
 }
 
 func (cmd Read) Run(dep command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(dep)
 
 	decoder := json.NewDecoder(envBlobStore.GetInFile())
+	blobStore := envBlobStore.GetDefaultBlobStore()
 
 	for {
 		var entry readBlobEntry
@@ -42,10 +45,21 @@ func (cmd Read) Run(dep command.Request) {
 			return
 		}
 
+		if entry.Store != "" {
+			var storeId blob_store_id.Id
+
+			if err := storeId.Set(entry.Store); err != nil {
+				envBlobStore.Cancel(err)
+				return
+			}
+
+			blobStore = envBlobStore.GetBlobStore(storeId)
+		}
+
 		{
 			var err error
 
-			if _, err = cmd.readOneBlob(envBlobStore, entry); err != nil {
+			if _, err = cmd.readOneBlob(blobStore, entry); err != nil {
 				envBlobStore.Cancel(err)
 			}
 		}
@@ -53,12 +67,12 @@ func (cmd Read) Run(dep command.Request) {
 }
 
 func (Read) readOneBlob(
-	envBlobStore env_repo.BlobStoreEnv,
+	blobStore blob_stores.BlobStoreInitialized,
 	entry readBlobEntry,
 ) (digest domain_interfaces.MarklId, err error) {
 	var writeCloser domain_interfaces.BlobWriter
 
-	if writeCloser, err = envBlobStore.GetDefaultBlobStore().MakeBlobWriter(
+	if writeCloser, err = blobStore.MakeBlobWriter(
 		nil,
 	); err != nil {
 		err = errors.Wrap(err)
