@@ -1,6 +1,9 @@
 package commands_madder
 
 import (
+	"fmt"
+	"os"
+
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
@@ -10,6 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/india/env_local"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
 func init() {
@@ -51,6 +55,8 @@ func (cmd *InitFrom) Run(req command.Request) {
 
 	req.AssertNoMoreArgs()
 
+	tw := tap.NewWriter(os.Stdout)
+
 	envBlobStore := cmd.MakeEnvBlobStore(req)
 
 	var typedConfig blob_store_configs.TypedConfig
@@ -62,6 +68,14 @@ func (cmd *InitFrom) Run(req command.Request) {
 			blob_store_configs.Coder,
 			configPathFD.String(),
 		); err != nil {
+			tw.NotOk(
+				fmt.Sprintf("init-from %s", configPathFD),
+				map[string]string{
+					"severity": "fail",
+					"message":  err.Error(),
+				},
+			)
+			tw.Plan()
 			envBlobStore.Cancel(err)
 			return
 		}
@@ -84,5 +98,6 @@ func (cmd *InitFrom) Run(req command.Request) {
 		&typedConfig,
 	)
 
-	envBlobStore.GetUI().Printf("Wrote config to %s", pathConfig)
+	tw.Ok(fmt.Sprintf("init-from %s", pathConfig.GetConfig()))
+	tw.Plan()
 }
