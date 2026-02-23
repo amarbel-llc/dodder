@@ -5,13 +5,13 @@
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
     devenv-go = {
-      url = "github:amarbel-llc/eng?dir=devenvs/go";
+      url = "github:amarbel-llc/purse-first?dir=devenvs/go";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
     };
     devenv-shell = {
-      url = "github:amarbel-llc/eng?dir=devenvs/shell";
+      url = "github:amarbel-llc/purse-first?dir=devenvs/shell";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
