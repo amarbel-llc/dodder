@@ -44,10 +44,6 @@ func (m *mapDeltaAssignments) AssignError(blobIndex int, err error) {
 }
 
 func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
-	// TODO: Collect all blob failures during packing, present summary
-	// to user with interactive choices (retry individual, skip to full
-	// entry, abort). For now, hard fail on first error.
-
 	ctx := options.Context
 	tw := options.TapWriter
 
@@ -84,8 +80,13 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 
 		blobSize, sizeErr := store.GetBlobSize(looseId)
 		if sizeErr != nil {
+			if options.SkipMissingBlobs {
+				tapComment(tw, fmt.Sprintf("blob skipped: %s", looseId))
+				continue
+			}
+
 			err = errors.Wrapf(sizeErr, "getting size of loose blob %s", looseId)
-			tapNotOk(tw, "collect loose blobs", err)
+			tapNotOk(tw, fmt.Sprintf("blob skipped: %s", looseId), err)
 			return err
 		}
 
@@ -128,19 +129,25 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 			return err
 		}
 
-		blobs := make([]packedBlob, len(chunkMetas))
+		var blobs []packedBlob
 
-		for i, meta := range chunkMetas {
+		for _, meta := range chunkMetas {
 			marklId, repool := store.defaultHash.GetBlobIdForHexString(
 				hex.EncodeToString(meta.digest),
 			)
+			idString := marklId.String()
 
 			reader, readErr := store.looseBlobStore.MakeBlobReader(marklId)
 			repool()
 
 			if readErr != nil {
+				if options.SkipMissingBlobs {
+					tapComment(tw, fmt.Sprintf("blob skipped: %s", idString))
+					continue
+				}
+
 				err = errors.Wrapf(readErr, "reading loose blob %x", meta.digest)
-				tapNotOk(tw, fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks), err)
+				tapNotOk(tw, fmt.Sprintf("blob skipped: %s", idString), err)
 				return err
 			}
 
@@ -148,12 +155,21 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 			reader.Close()
 
 			if readAllErr != nil {
+				if options.SkipMissingBlobs {
+					tapComment(tw, fmt.Sprintf("blob skipped: %s", idString))
+					continue
+				}
+
 				err = errors.Wrapf(readAllErr, "reading loose blob data %x", meta.digest)
-				tapNotOk(tw, fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks), err)
+				tapNotOk(tw, fmt.Sprintf("blob skipped: %s", idString), err)
 				return err
 			}
 
-			blobs[i] = packedBlob{digest: meta.digest, data: data}
+			blobs = append(blobs, packedBlob{digest: meta.digest, data: data})
+		}
+
+		if len(blobs) == 0 {
+			continue
 		}
 
 		dataPath, fullCount, deltaCount, packErr := store.packChunkArchiveV1(ctx, blobs)

@@ -29,6 +29,11 @@ type PackOptions struct {
 	// MaxPackSize overrides the configured max pack size when non-zero.
 	MaxPackSize uint64
 
+	// SkipMissingBlobs causes unreadable loose blobs to be skipped with a
+	// TAP comment instead of aborting the pack. When false, an unreadable
+	// blob emits a not-ok test point and stops packing.
+	SkipMissingBlobs bool
+
 	// TapWriter emits phase-level TAP test points during packing. When nil,
 	// packing is silent (backward compatible for unit tests).
 	TapWriter *tap.Writer
@@ -63,5 +68,11 @@ func tapOk(tw *tap.Writer, desc string) {
 func tapNotOk(tw *tap.Writer, desc string, err error) {
 	if tw != nil {
 		tw.NotOk(desc, tap_diagnostics.FromError(err))
+	}
+}
+
+func tapComment(tw *tap.Writer, msg string) {
+	if tw != nil {
+		tw.Comment(msg)
 	}
 }

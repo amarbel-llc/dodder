@@ -22,8 +22,9 @@ type Pack struct {
 	command_components_madder.EnvBlobStore
 	command_components_madder.BlobStore
 
-	DeleteLoose bool
-	MaxPackSize uint64
+	DeleteLoose      bool
+	MaxPackSize      uint64
+	SkipMissingBlobs bool
 }
 
 var _ interfaces.CommandComponentWriter = (*Pack)(nil)
@@ -46,6 +47,8 @@ func (cmd *Pack) SetFlagDefinitions(
 ) {
 	flagSet.BoolVar(&cmd.DeleteLoose, "delete-loose", false,
 		"validate archive then delete packed loose blobs")
+	flagSet.BoolVar(&cmd.SkipMissingBlobs, "skip-missing-blobs", false,
+		"skip unreadable loose blobs instead of aborting")
 	flagSet.Func("max-pack-size", "override max pack size in bytes (0 = unlimited)", func(v string) error {
 		n, err := strconv.ParseUint(v, 10, 64)
 		if err != nil {
@@ -74,6 +77,7 @@ func (cmd Pack) Run(req command.Request) {
 			DeleteLoose:          cmd.DeleteLoose,
 			DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
 			MaxPackSize:          cmd.MaxPackSize,
+			SkipMissingBlobs:     cmd.SkipMissingBlobs,
 			TapWriter:            tw,
 		}); err != nil {
 			tw.NotOk(
