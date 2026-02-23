@@ -27,6 +27,8 @@ const (
 	CompressionByteGzip byte = 1
 	CompressionByteZlib byte = 2
 	CompressionByteZstd byte = 3
+
+	FlagHasEncryption uint16 = 1 << 0
 )
 
 const (
@@ -43,6 +45,7 @@ const (
 
 	FlagHasDeltas         uint16 = 1 << 0
 	FlagReservedCrossArch uint16 = 1 << 1
+	FlagHasEncryptionV1   uint16 = 1 << 2
 )
 
 type DataEntry struct {
