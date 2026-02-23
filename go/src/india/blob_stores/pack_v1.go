@@ -332,14 +332,14 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 	}
 
 	// Phase 3: Write data file to a temp file, then rename after checksum.
-	if err = os.MkdirAll(store.basePath, 0o755); err != nil {
-		err = errors.Wrapf(err, "creating archive directory %s", store.basePath)
+	if err = os.MkdirAll(store.archivesPath(), 0o755); err != nil {
+		err = errors.Wrapf(err, "creating archive directory %s", store.archivesPath())
 		return dataPath, 0, 0, err
 	}
 
-	tmpFile, err := os.CreateTemp(store.basePath, "pack-*.tmp")
+	tmpFile, err := os.CreateTemp(store.archivesPath(), "pack-*.tmp")
 	if err != nil {
-		err = errors.Wrapf(err, "creating temp file in %s", store.basePath)
+		err = errors.Wrapf(err, "creating temp file in %s", store.archivesPath())
 		return dataPath, 0, 0, err
 	}
 
@@ -461,7 +461,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 	archiveChecksum := hex.EncodeToString(checksum)
 
 	dataPath = filepath.Join(
-		store.basePath,
+		store.archivesPath(),
 		archiveChecksum+inventory_archive.DataFileExtensionV1,
 	)
 
@@ -513,7 +513,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 	}
 
 	indexPath := filepath.Join(
-		store.basePath,
+		store.archivesPath(),
 		archiveChecksum+inventory_archive.IndexFileExtensionV1,
 	)
 

@@ -146,8 +146,10 @@ func TestPackV1WithDelta(t *testing.T) {
 	}
 
 	// Verify v1 data file was written.
+	archivesPath := filepath.Join(basePath, "archives")
+
 	dataMatches, err := filepath.Glob(
-		filepath.Join(basePath, "*"+inventory_archive.DataFileExtensionV1),
+		filepath.Join(archivesPath, "*"+inventory_archive.DataFileExtensionV1),
 	)
 	if err != nil {
 		t.Fatalf("globbing data files: %v", err)
@@ -159,7 +161,7 @@ func TestPackV1WithDelta(t *testing.T) {
 
 	// Verify v1 index file was written.
 	indexMatches, err := filepath.Glob(
-		filepath.Join(basePath, "*"+inventory_archive.IndexFileExtensionV1),
+		filepath.Join(archivesPath, "*"+inventory_archive.IndexFileExtensionV1),
 	)
 	if err != nil {
 		t.Fatalf("globbing index files: %v", err)
@@ -478,8 +480,10 @@ func TestPackV1SplitsWhenExceedingMaxPackSize(t *testing.T) {
 	}
 
 	// Verify multiple data files were created (split happened).
+	archivesPath := filepath.Join(basePath, "archives")
+
 	dataMatches, err := filepath.Glob(
-		filepath.Join(basePath, "*"+inventory_archive.DataFileExtensionV1),
+		filepath.Join(archivesPath, "*"+inventory_archive.DataFileExtensionV1),
 	)
 	if err != nil {
 		t.Fatalf("globbing data files: %v", err)

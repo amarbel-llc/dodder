@@ -59,7 +59,13 @@ func TestMakeBlobReaderFromArchive(t *testing.T) {
 	// Write the archive file to disk
 	archiveChecksum := hex.EncodeToString(checksum)
 	archiveFileName := archiveChecksum + inventory_archive.DataFileExtension
-	archivePath := filepath.Join(tmpDir, archiveFileName)
+	archivesDir := filepath.Join(tmpDir, "archives")
+
+	if err := os.MkdirAll(archivesDir, 0o755); err != nil {
+		t.Fatalf("creating archives dir: %v", err)
+	}
+
+	archivePath := filepath.Join(archivesDir, archiveFileName)
 
 	if err := os.WriteFile(archivePath, archiveBuf.Bytes(), 0o644); err != nil {
 		t.Fatalf("writing archive file: %v", err)
@@ -253,7 +259,13 @@ func TestMakeBlobReaderFromArchiveZstd(t *testing.T) {
 
 	archiveChecksum := hex.EncodeToString(checksum)
 	archiveFileName := archiveChecksum + inventory_archive.DataFileExtension
-	archivePath := filepath.Join(tmpDir, archiveFileName)
+	archivesDir := filepath.Join(tmpDir, "archives")
+
+	if err := os.MkdirAll(archivesDir, 0o755); err != nil {
+		t.Fatalf("creating archives dir: %v", err)
+	}
+
+	archivePath := filepath.Join(archivesDir, archiveFileName)
 
 	if err := os.WriteFile(archivePath, archiveBuf.Bytes(), 0o644); err != nil {
 		t.Fatalf("writing archive file: %v", err)
@@ -328,8 +340,14 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 	}
 
 	archiveChecksum := hex.EncodeToString(checksum)
+	archivesDir := filepath.Join(basePath, "archives")
+
+	if err := os.MkdirAll(archivesDir, 0o755); err != nil {
+		t.Fatalf("creating archives dir: %v", err)
+	}
+
 	archiveDataPath := filepath.Join(
-		basePath,
+		archivesDir,
 		archiveChecksum+inventory_archive.DataFileExtension,
 	)
 
@@ -361,7 +379,7 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 	}
 
 	indexPath := filepath.Join(
-		basePath,
+		archivesDir,
 		archiveChecksum+inventory_archive.IndexFileExtension,
 	)
 
@@ -540,8 +558,10 @@ func TestPack(t *testing.T) {
 	}
 
 	// Verify archive data file was written
+	archivesPath := filepath.Join(basePath, "archives")
+
 	dataMatches, err := filepath.Glob(
-		filepath.Join(basePath, "*"+inventory_archive.DataFileExtension),
+		filepath.Join(archivesPath, "*"+inventory_archive.DataFileExtension),
 	)
 	if err != nil {
 		t.Fatalf("globbing data files: %v", err)
@@ -553,7 +573,7 @@ func TestPack(t *testing.T) {
 
 	// Verify index file was written
 	indexMatches, err := filepath.Glob(
-		filepath.Join(basePath, "*"+inventory_archive.IndexFileExtension),
+		filepath.Join(archivesPath, "*"+inventory_archive.IndexFileExtension),
 	)
 	if err != nil {
 		t.Fatalf("globbing index files: %v", err)
@@ -651,8 +671,10 @@ func TestPackSkipsAlreadyArchivedBlobs(t *testing.T) {
 
 	// No new archive files should have been written since all blobs
 	// were already in the index
+	archivesPath := filepath.Join(basePath, "archives")
+
 	dataMatches, err := filepath.Glob(
-		filepath.Join(basePath, "*"+inventory_archive.DataFileExtension),
+		filepath.Join(archivesPath, "*"+inventory_archive.DataFileExtension),
 	)
 	if err != nil {
 		t.Fatalf("globbing data files: %v", err)

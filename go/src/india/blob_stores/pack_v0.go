@@ -274,14 +274,14 @@ func (store inventoryArchiveV0) packChunkArchive(
 	hashFormatId := store.defaultHash.GetMarklFormatId()
 	ct := store.config.GetCompressionType()
 
-	if mkdirErr := os.MkdirAll(store.basePath, 0o755); mkdirErr != nil {
-		err = errors.Wrapf(mkdirErr, "creating archive directory %s", store.basePath)
+	if mkdirErr := os.MkdirAll(store.archivesPath(), 0o755); mkdirErr != nil {
+		err = errors.Wrapf(mkdirErr, "creating archive directory %s", store.archivesPath())
 		return dataPath, 0, err
 	}
 
-	tmpFile, err := os.CreateTemp(store.basePath, "pack-*.tmp")
+	tmpFile, err := os.CreateTemp(store.archivesPath(), "pack-*.tmp")
 	if err != nil {
-		err = errors.Wrapf(err, "creating temp file in %s", store.basePath)
+		err = errors.Wrapf(err, "creating temp file in %s", store.archivesPath())
 		return dataPath, 0, err
 	}
 
@@ -328,7 +328,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 	archiveChecksum := hex.EncodeToString(checksum)
 
 	dataPath = filepath.Join(
-		store.basePath,
+		store.archivesPath(),
 		archiveChecksum+inventory_archive.DataFileExtension,
 	)
 
@@ -359,7 +359,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 	}
 
 	indexPath := filepath.Join(
-		store.basePath,
+		store.archivesPath(),
 		archiveChecksum+inventory_archive.IndexFileExtension,
 	)
 

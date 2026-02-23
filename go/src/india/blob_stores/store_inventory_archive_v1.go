@@ -39,6 +39,10 @@ type inventoryArchiveV1 struct {
 
 var _ domain_interfaces.BlobStore = inventoryArchiveV1{}
 
+func (store inventoryArchiveV1) archivesPath() string {
+	return filepath.Join(store.basePath, "archives")
+}
+
 func makeInventoryArchiveV1(
 	envDir env_dir.Env,
 	basePath string,
@@ -142,7 +146,7 @@ func (store *inventoryArchiveV1) tryReadCache() (
 
 func (store *inventoryArchiveV1) rebuildIndex() (err error) {
 	pattern := filepath.Join(
-		store.basePath,
+		store.archivesPath(),
 		"*"+inventory_archive.IndexFileExtensionV1,
 	)
 
@@ -322,7 +326,7 @@ func (store inventoryArchiveV1) MakeBlobReader(
 	}
 
 	archivePath := filepath.Join(
-		store.basePath,
+		store.archivesPath(),
 		entry.ArchiveChecksum+inventory_archive.DataFileExtensionV1,
 	)
 

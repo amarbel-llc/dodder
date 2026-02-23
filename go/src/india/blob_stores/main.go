@@ -227,7 +227,7 @@ func MakeBlobStore(
 		var looseBlobStore domain_interfaces.BlobStore
 
 		if config.GetLooseBlobStoreId().IsEmpty() {
-			loosePath := filepath.Join(configNamed.Path.GetBase(), "loose")
+			loosePath := filepath.Join(configNamed.Path.GetBase(), "blobs")
 
 			embeddedConfig := &blob_store_configs.DefaultType{
 				HashTypeId:        blob_store_configs.HashType(config.GetDefaultHashTypeId()),
