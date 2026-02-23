@@ -69,7 +69,7 @@ func (cmd *InitFrom) Run(req command.Request) {
 			configPathFD.String(),
 		); err != nil {
 			tw.NotOk(
-				fmt.Sprintf("init-from %s", configPathFD),
+				fmt.Sprintf("init-from %s", configPathFD.String()),
 				map[string]string{
 					"severity": "fail",
 					"message":  err.Error(),
