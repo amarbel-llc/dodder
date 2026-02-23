@@ -118,13 +118,28 @@ func CopyBlobIfNecessary(
 		return copyResult
 	}
 
-	if err := markl.AssertEqual(expectedDigest, writerDigest); err != nil {
-		copyResult.setErrorAfterCopy(
-			copyResult.bytesWritten,
-			err,
-		)
+	crossHash := expectedDigest.GetMarklFormat().GetMarklFormatId() !=
+		writerDigest.GetMarklFormat().GetMarklFormatId()
 
-		return copyResult
+	if crossHash {
+		if adder, ok := dst.(domain_interfaces.BlobForeignDigestAdder); ok {
+			if err := adder.AddForeignBlobDigestForNativeDigest(
+				expectedDigest,
+				writerDigest,
+			); err != nil {
+				copyResult.setErrorAfterCopy(copyResult.bytesWritten, err)
+				return copyResult
+			}
+		}
+	} else {
+		if err := markl.AssertEqual(expectedDigest, writerDigest); err != nil {
+			copyResult.setErrorAfterCopy(
+				copyResult.bytesWritten,
+				err,
+			)
+
+			return copyResult
+		}
 	}
 
 	return copyResult
