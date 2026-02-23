@@ -340,9 +340,9 @@ func (store inventoryArchiveV0) packChunkArchive(
 	indexEntries := make([]inventory_archive.IndexEntry, len(writtenEntries))
 	for i, de := range writtenEntries {
 		indexEntries[i] = inventory_archive.IndexEntry{
-			Hash:           de.Hash,
-			PackOffset:     de.Offset,
-			CompressedSize: de.CompressedSize,
+			Hash:       de.Hash,
+			PackOffset: de.Offset,
+			StoredSize: de.StoredSize,
 		}
 	}
 
@@ -380,7 +380,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 		store.index[key] = archiveEntry{
 			ArchiveChecksum: archiveChecksum,
 			Offset:          de.Offset,
-			CompressedSize:  de.CompressedSize,
+			StoredSize:      de.StoredSize,
 		}
 	}
 
@@ -412,7 +412,7 @@ func (store inventoryArchiveV0) writeCache() (err error) {
 			Hash:            hashBytes,
 			ArchiveChecksum: archiveBytes,
 			Offset:          entry.Offset,
-			CompressedSize:  entry.CompressedSize,
+			StoredSize:      entry.StoredSize,
 		})
 	}
 

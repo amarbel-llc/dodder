@@ -25,7 +25,7 @@ func makeTestCacheV1Entries(count int) []CacheEntryV1 {
 			Hash:            h[:],
 			ArchiveChecksum: archiveChecksum[:],
 			Offset:          uint64(i * 2000),
-			CompressedSize:  uint64(200 + i),
+			StoredSize:      uint64(200 + i),
 			EntryType:       EntryTypeFull,
 			BaseOffset:      0,
 		}
@@ -120,12 +120,12 @@ func TestCacheV1RoundTrip(t *testing.T) {
 			)
 		}
 
-		if re.CompressedSize != entries[i].CompressedSize {
+		if re.StoredSize != entries[i].StoredSize {
 			t.Errorf(
 				"entry %d: compressed size %d != %d",
 				i,
-				re.CompressedSize,
-				entries[i].CompressedSize,
+				re.StoredSize,
+				entries[i].StoredSize,
 			)
 		}
 
@@ -205,12 +205,12 @@ func TestCacheV1ToMap(t *testing.T) {
 			)
 		}
 
-		if mapEntry.CompressedSize != entry.CompressedSize {
+		if mapEntry.StoredSize != entry.StoredSize {
 			t.Errorf(
 				"hash %s: compressed size %d != %d",
 				hexHash,
-				mapEntry.CompressedSize,
-				entry.CompressedSize,
+				mapEntry.StoredSize,
+				entry.StoredSize,
 			)
 		}
 

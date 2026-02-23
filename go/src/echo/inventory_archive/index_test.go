@@ -17,9 +17,9 @@ func makeTestIndexEntries(count int) []IndexEntry {
 		data := []byte(fmt.Sprintf("test-data-entry-%04d", i))
 		h := sha256.Sum256(data)
 		entries[i] = IndexEntry{
-			Hash:           h[:],
-			PackOffset:     uint64(i * 1000),
-			CompressedSize: uint64(100 + i),
+			Hash:       h[:],
+			PackOffset: uint64(i * 1000),
+			StoredSize: uint64(100 + i),
 		}
 	}
 
@@ -102,12 +102,12 @@ func TestIndexRoundTrip(t *testing.T) {
 			)
 		}
 
-		if re.CompressedSize != entries[i].CompressedSize {
+		if re.StoredSize != entries[i].StoredSize {
 			t.Errorf(
 				"entry %d: compressed size %d != %d",
 				i,
-				re.CompressedSize,
-				entries[i].CompressedSize,
+				re.StoredSize,
+				entries[i].StoredSize,
 			)
 		}
 	}
@@ -135,7 +135,7 @@ func TestIndexLookup(t *testing.T) {
 
 	// Look up each entry
 	for i, entry := range entries {
-		packOffset, compressedSize, found, lookupErr := reader.LookupHash(
+		packOffset, storedSize, found, lookupErr := reader.LookupHash(
 			entry.Hash,
 		)
 		if lookupErr != nil {
@@ -156,12 +156,12 @@ func TestIndexLookup(t *testing.T) {
 			)
 		}
 
-		if compressedSize != entry.CompressedSize {
+		if storedSize != entry.StoredSize {
 			t.Errorf(
 				"entry %d: compressed size %d != %d",
 				i,
-				compressedSize,
-				entry.CompressedSize,
+				storedSize,
+				entry.StoredSize,
 			)
 		}
 	}

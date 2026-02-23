@@ -144,7 +144,7 @@ func (cr *CacheReader) EntryCount() uint64 {
 }
 
 func (cr *CacheReader) entrySize() int64 {
-	// hash + archive_checksum + offset + compressed_size
+	// hash + archive_checksum + offset + stored_size
 	return int64(cr.hashSize) + int64(cr.hashSize) + 8 + 8
 }
 
@@ -175,7 +175,7 @@ func (cr *CacheReader) readEntryAt(index uint64) (
 	)
 	pos += 8
 
-	entry.CompressedSize = binary.BigEndian.Uint64(
+	entry.StoredSize = binary.BigEndian.Uint64(
 		entryBuf[pos : pos+8],
 	)
 

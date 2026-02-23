@@ -79,7 +79,7 @@ func TestMakeBlobReaderFromArchive(t *testing.T) {
 			marklId.String(): {
 				ArchiveChecksum: archiveChecksum,
 				Offset:          writtenEntries[0].Offset,
-				CompressedSize:  writtenEntries[0].CompressedSize,
+				StoredSize:      writtenEntries[0].StoredSize,
 			},
 		},
 	}
@@ -270,7 +270,7 @@ func TestMakeBlobReaderFromArchiveZstd(t *testing.T) {
 			marklId.String(): {
 				ArchiveChecksum: archiveChecksum,
 				Offset:          writtenEntries[0].Offset,
-				CompressedSize:  writtenEntries[0].CompressedSize,
+				StoredSize:      writtenEntries[0].StoredSize,
 			},
 		},
 	}
@@ -341,9 +341,9 @@ func TestLoadIndexRebuildsFromIndexFiles(t *testing.T) {
 	// Write a corresponding index file
 	indexEntries := []inventory_archive.IndexEntry{
 		{
-			Hash:           rawHash[:],
-			PackOffset:     writtenEntries[0].Offset,
-			CompressedSize: writtenEntries[0].CompressedSize,
+			Hash:       rawHash[:],
+			PackOffset: writtenEntries[0].Offset,
+			StoredSize: writtenEntries[0].StoredSize,
 		},
 	}
 
@@ -449,7 +449,7 @@ func TestAllBlobsDeduplication(t *testing.T) {
 			archiveId.String(): {
 				ArchiveChecksum: "deadbeef",
 				Offset:          0,
-				CompressedSize:  100,
+				StoredSize:      100,
 			},
 		},
 	}
@@ -636,7 +636,7 @@ func TestPackSkipsAlreadyArchivedBlobs(t *testing.T) {
 			id.String(): {
 				ArchiveChecksum: "deadbeef00deadbeef00deadbeef00deadbeef00deadbeef00deadbeef00dead",
 				Offset:          0,
-				CompressedSize:  100,
+				StoredSize:      100,
 			},
 		},
 		config: config,

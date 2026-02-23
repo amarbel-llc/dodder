@@ -66,11 +66,11 @@ func TestRoundTripNoCompression(t *testing.T) {
 			t.Errorf("entry %d: hash mismatch", i)
 		}
 
-		if we.UncompressedSize != uint64(len(entries[i].data)) {
+		if we.LogicalSize != uint64(len(entries[i].data)) {
 			t.Errorf(
 				"entry %d: uncompressed size %d != %d",
 				i,
-				we.UncompressedSize,
+				we.LogicalSize,
 				len(entries[i].data),
 			)
 		}
@@ -124,11 +124,11 @@ func TestRoundTripNoCompression(t *testing.T) {
 			)
 		}
 
-		if re.UncompressedSize != uint64(len(entries[i].data)) {
+		if re.LogicalSize != uint64(len(entries[i].data)) {
 			t.Errorf(
 				"entry %d: uncompressed size mismatch: %d != %d",
 				i,
-				re.UncompressedSize,
+				re.LogicalSize,
 				len(entries[i].data),
 			)
 		}
@@ -239,11 +239,11 @@ func TestRoundTripZstd(t *testing.T) {
 			)
 		}
 
-		if re.UncompressedSize != uint64(len(testData[i])) {
+		if re.LogicalSize != uint64(len(testData[i])) {
 			t.Errorf(
 				"entry %d: uncompressed size mismatch: %d != %d",
 				i,
-				re.UncompressedSize,
+				re.LogicalSize,
 				len(testData[i]),
 			)
 		}

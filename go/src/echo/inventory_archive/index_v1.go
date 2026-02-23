@@ -188,13 +188,13 @@ func writeIndexV1Entries(
 			return err
 		}
 
-		// compressed_size: 8 bytes uint64 BigEndian
+		// stored_size: 8 bytes uint64 BigEndian
 		if err = binary.Write(
 			w,
 			binary.BigEndian,
-			entry.CompressedSize,
+			entry.StoredSize,
 		); err != nil {
-			err = errors.Wrapf(err, "writing entry %d compressed size", i)
+			err = errors.Wrapf(err, "writing entry %d stored size", i)
 			return err
 		}
 
@@ -373,7 +373,7 @@ func (ir *IndexReaderV1) headerSize() int64 {
 }
 
 func (ir *IndexReaderV1) entrySize() int64 {
-	return int64(ir.hashSize) + 8 + 8 + 1 + 8 // hash + pack_offset + compressed_size + entry_type + base_offset
+	return int64(ir.hashSize) + 8 + 8 + 1 + 8 // hash + pack_offset + stored_size + entry_type + base_offset
 }
 
 func (ir *IndexReaderV1) HashFormatId() string {
@@ -410,7 +410,7 @@ func (ir *IndexReaderV1) readEntryAt(index uint64) (
 	)
 	pos += 8
 
-	entry.CompressedSize = binary.BigEndian.Uint64(
+	entry.StoredSize = binary.BigEndian.Uint64(
 		entryBuf[pos : pos+8],
 	)
 	pos += 8
@@ -427,7 +427,7 @@ func (ir *IndexReaderV1) readEntryAt(index uint64) (
 
 func (ir *IndexReaderV1) LookupHash(hash []byte) (
 	packOffset uint64,
-	compressedSize uint64,
+	storedSize uint64,
 	entryType byte,
 	baseOffset uint64,
 	found bool,
@@ -465,7 +465,7 @@ func (ir *IndexReaderV1) LookupHash(hash []byte) (
 
 		switch {
 		case cmp == 0:
-			return entry.PackOffset, entry.CompressedSize, entry.EntryType, entry.BaseOffset, true, nil
+			return entry.PackOffset, entry.StoredSize, entry.EntryType, entry.BaseOffset, true, nil
 		case cmp < 0:
 			hi = mid
 		default:

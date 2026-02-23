@@ -46,52 +46,52 @@ const (
 )
 
 type DataEntry struct {
-	Hash             []byte
-	UncompressedSize uint64
-	CompressedSize   uint64
-	Data             []byte
-	Offset           uint64
+	Hash        []byte
+	LogicalSize uint64
+	StoredSize  uint64
+	Data        []byte
+	Offset      uint64
 }
 
 type IndexEntry struct {
-	Hash           []byte
-	PackOffset     uint64
-	CompressedSize uint64
+	Hash       []byte
+	PackOffset uint64
+	StoredSize uint64
 }
 
 type CacheEntry struct {
 	Hash            []byte
 	ArchiveChecksum []byte
 	Offset          uint64
-	CompressedSize  uint64
+	StoredSize      uint64
 }
 
 type DataEntryV1 struct {
-	Hash             []byte
-	EntryType        byte
-	Encoding         byte
-	UncompressedSize uint64
-	CompressedSize   uint64 // For delta entries, this is the compressed delta payload size
-	Data             []byte
-	Offset           uint64
+	Hash        []byte
+	EntryType   byte
+	Encoding    byte
+	LogicalSize uint64
+	StoredSize  uint64 // For delta entries, this is the stored delta payload size
+	Data        []byte
+	Offset      uint64
 	// Delta-specific fields (only set when EntryType == EntryTypeDelta)
 	DeltaAlgorithm byte
 	BaseHash       []byte
 }
 
 type IndexEntryV1 struct {
-	Hash           []byte
-	PackOffset     uint64
-	CompressedSize uint64
-	EntryType      byte
-	BaseOffset     uint64
+	Hash       []byte
+	PackOffset uint64
+	StoredSize uint64
+	EntryType  byte
+	BaseOffset uint64
 }
 
 type CacheEntryV1 struct {
 	Hash            []byte
 	ArchiveChecksum []byte
 	Offset          uint64
-	CompressedSize  uint64
+	StoredSize      uint64
 	EntryType       byte
 	BaseOffset      uint64
 }

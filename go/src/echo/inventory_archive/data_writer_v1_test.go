@@ -67,11 +67,11 @@ func TestV1RoundTripFullEntriesOnly(t *testing.T) {
 			t.Errorf("entry %d: expected EntryTypeFull, got %d", i, we.EntryType)
 		}
 
-		if we.UncompressedSize != uint64(len(entries[i].data)) {
+		if we.LogicalSize != uint64(len(entries[i].data)) {
 			t.Errorf(
 				"entry %d: uncompressed size %d != %d",
 				i,
-				we.UncompressedSize,
+				we.LogicalSize,
 				len(entries[i].data),
 			)
 		}
@@ -121,11 +121,11 @@ func TestV1RoundTripFullEntriesOnly(t *testing.T) {
 			)
 		}
 
-		if re.UncompressedSize != uint64(len(entries[i].data)) {
+		if re.LogicalSize != uint64(len(entries[i].data)) {
 			t.Errorf(
 				"entry %d: uncompressed size mismatch: %d != %d",
 				i,
-				re.UncompressedSize,
+				re.LogicalSize,
 				len(entries[i].data),
 			)
 		}
@@ -173,7 +173,7 @@ func TestV1RoundTripWithDelta(t *testing.T) {
 
 	deltaPayload := []byte("raw delta bytes here")
 	deltaHash := sha256Hash([]byte("reconstructed content"))
-	uncompressedSize := uint64(len("reconstructed content"))
+	logicalSize := uint64(len("reconstructed content"))
 
 	if err := writer.WriteFullEntry(fullHash, fullData); err != nil {
 		t.Fatalf("WriteFullEntry: %v", err)
@@ -183,7 +183,7 @@ func TestV1RoundTripWithDelta(t *testing.T) {
 		deltaHash,
 		DeltaAlgorithmByteBsdiff,
 		fullHash,
-		uncompressedSize,
+		logicalSize,
 		deltaPayload,
 	); err != nil {
 		t.Fatalf("WriteDeltaEntry: %v", err)
@@ -270,11 +270,11 @@ func TestV1RoundTripWithDelta(t *testing.T) {
 		)
 	}
 
-	if readEntries[1].UncompressedSize != uncompressedSize {
+	if readEntries[1].LogicalSize != logicalSize {
 		t.Errorf(
 			"read entry 1: uncompressed size %d != %d",
-			readEntries[1].UncompressedSize,
-			uncompressedSize,
+			readEntries[1].LogicalSize,
+			logicalSize,
 		)
 	}
 

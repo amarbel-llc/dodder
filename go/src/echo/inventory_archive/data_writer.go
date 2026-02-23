@@ -141,13 +141,13 @@ func (dw *DataWriter) WriteEntry(
 		return err
 	}
 
-	// Write uncompressed_size
-	uncompressedSize := uint64(len(data))
+	// Write logical_size
+	logicalSize := uint64(len(data))
 
 	if err = binary.Write(
 		dw.multiWriter,
 		binary.BigEndian,
-		uncompressedSize,
+		logicalSize,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
@@ -173,29 +173,29 @@ func (dw *DataWriter) WriteEntry(
 	}
 
 	compressedData := compressedBuf.Bytes()
-	compressedSize := uint64(len(compressedData))
+	storedSize := uint64(len(compressedData))
 
-	// Write compressed_size
+	// Write stored_size
 	if err = binary.Write(
 		dw.multiWriter,
 		binary.BigEndian,
-		compressedSize,
+		storedSize,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	// Write compressed data
+	// Write payload
 	if _, err = dw.multiWriter.Write(compressedData); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
 	entry := DataEntry{
-		Hash:             make([]byte, len(entryHash)),
-		UncompressedSize: uncompressedSize,
-		CompressedSize:   compressedSize,
-		Offset:           entryOffset,
+		Hash:        make([]byte, len(entryHash)),
+		LogicalSize: logicalSize,
+		StoredSize:  storedSize,
+		Offset:      entryOffset,
 	}
 
 	copy(entry.Hash, entryHash)
@@ -203,9 +203,9 @@ func (dw *DataWriter) WriteEntry(
 	dw.entries = append(dw.entries, entry)
 
 	dw.offset += uint64(len(entryHash)) + // hash
-		8 + // uncompressed_size
-		8 + // compressed_size
-		compressedSize // data
+		8 + // logical_size
+		8 + // stored_size
+		storedSize // payload
 
 	return nil
 }

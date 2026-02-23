@@ -22,7 +22,7 @@ import (
 type archiveEntry struct {
 	ArchiveChecksum string // hex filename stem
 	Offset          uint64
-	CompressedSize  uint64
+	StoredSize      uint64
 }
 
 type inventoryArchiveV0 struct {
@@ -83,7 +83,7 @@ func (store *inventoryArchiveV0) loadIndex() (err error) {
 		store.index[key] = archiveEntry{
 			ArchiveChecksum: hex.EncodeToString(entry.ArchiveChecksum),
 			Offset:          entry.Offset,
-			CompressedSize:  entry.CompressedSize,
+			StoredSize:      entry.StoredSize,
 		}
 	}
 
@@ -198,7 +198,7 @@ func (store *inventoryArchiveV0) rebuildIndex() (err error) {
 			store.index[key] = archiveEntry{
 				ArchiveChecksum: archiveChecksum,
 				Offset:          ie.PackOffset,
-				CompressedSize:  ie.CompressedSize,
+				StoredSize:      ie.StoredSize,
 			}
 
 			allCacheEntries = append(
@@ -207,7 +207,7 @@ func (store *inventoryArchiveV0) rebuildIndex() (err error) {
 					Hash:            ie.Hash,
 					ArchiveChecksum: archiveChecksumBytes,
 					Offset:          ie.PackOffset,
-					CompressedSize:  ie.CompressedSize,
+					StoredSize:      ie.StoredSize,
 				},
 			)
 		}

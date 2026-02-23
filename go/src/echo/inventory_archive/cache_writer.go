@@ -172,13 +172,13 @@ func writeCacheEntries(
 			return err
 		}
 
-		// compressed_size: 8 bytes uint64 BigEndian
+		// stored_size: 8 bytes uint64 BigEndian
 		if err = binary.Write(
 			w,
 			binary.BigEndian,
-			entry.CompressedSize,
+			entry.StoredSize,
 		); err != nil {
-			err = errors.Wrapf(err, "writing entry %d compressed size", i)
+			err = errors.Wrapf(err, "writing entry %d stored size", i)
 			return err
 		}
 	}

@@ -173,13 +173,13 @@ func writeCacheV1Entries(
 			return err
 		}
 
-		// compressed_size: 8 bytes uint64 BigEndian
+		// stored_size: 8 bytes uint64 BigEndian
 		if err = binary.Write(
 			w,
 			binary.BigEndian,
-			entry.CompressedSize,
+			entry.StoredSize,
 		); err != nil {
-			err = errors.Wrapf(err, "writing entry %d compressed size", i)
+			err = errors.Wrapf(err, "writing entry %d stored size", i)
 			return err
 		}
 
@@ -338,7 +338,7 @@ func (cr *CacheReaderV1) EntryCount() uint64 {
 }
 
 func (cr *CacheReaderV1) entrySize() int64 {
-	// hash + archive_checksum + offset + compressed_size + entry_type + base_offset
+	// hash + archive_checksum + offset + stored_size + entry_type + base_offset
 	return int64(cr.hashSize) + int64(cr.hashSize) + 8 + 8 + 1 + 8
 }
 
@@ -369,7 +369,7 @@ func (cr *CacheReaderV1) readEntryAt(index uint64) (
 	)
 	pos += 8
 
-	entry.CompressedSize = binary.BigEndian.Uint64(
+	entry.StoredSize = binary.BigEndian.Uint64(
 		entryBuf[pos : pos+8],
 	)
 	pos += 8

@@ -213,37 +213,37 @@ func (dr *DataReaderV1) readFullEntryBody(
 	entry *DataEntryV1,
 	entryCompression compression_type.CompressionType,
 ) (err error) {
-	// uncompressed_size
+	// logical_size
 	if err = binary.Read(
 		dr.reader,
 		binary.BigEndian,
-		&entry.UncompressedSize,
+		&entry.LogicalSize,
 	); err != nil {
-		err = errors.Wrapf(err, "reading uncompressed size")
+		err = errors.Wrapf(err, "reading logical size")
 		return err
 	}
 
-	// compressed_size
+	// stored_size
 	if err = binary.Read(
 		dr.reader,
 		binary.BigEndian,
-		&entry.CompressedSize,
+		&entry.StoredSize,
 	); err != nil {
-		err = errors.Wrapf(err, "reading compressed size")
+		err = errors.Wrapf(err, "reading stored size")
 		return err
 	}
 
-	// compressed_data
-	compressedData := make([]byte, entry.CompressedSize)
+	// payload
+	storedData := make([]byte, entry.StoredSize)
 
-	if _, err = io.ReadFull(dr.reader, compressedData); err != nil {
-		err = errors.Wrapf(err, "reading compressed data")
+	if _, err = io.ReadFull(dr.reader, storedData); err != nil {
+		err = errors.Wrapf(err, "reading payload")
 		return err
 	}
 
 	// Decompress
 	decompressReader, err := entryCompression.WrapReader(
-		bytes.NewReader(compressedData),
+		bytes.NewReader(storedData),
 	)
 	if err != nil {
 		err = errors.Wrapf(err, "creating decompression reader")
@@ -286,37 +286,37 @@ func (dr *DataReaderV1) readDeltaEntryBody(
 		return err
 	}
 
-	// uncompressed_size
+	// logical_size
 	if err = binary.Read(
 		dr.reader,
 		binary.BigEndian,
-		&entry.UncompressedSize,
+		&entry.LogicalSize,
 	); err != nil {
-		err = errors.Wrapf(err, "reading uncompressed size")
+		err = errors.Wrapf(err, "reading logical size")
 		return err
 	}
 
-	// delta_size
+	// stored_size
 	if err = binary.Read(
 		dr.reader,
 		binary.BigEndian,
-		&entry.CompressedSize,
+		&entry.StoredSize,
 	); err != nil {
-		err = errors.Wrapf(err, "reading delta size")
+		err = errors.Wrapf(err, "reading stored size")
 		return err
 	}
 
-	// delta_data (compressed)
-	compressedDelta := make([]byte, entry.CompressedSize)
+	// payload
+	storedData := make([]byte, entry.StoredSize)
 
-	if _, err = io.ReadFull(dr.reader, compressedDelta); err != nil {
-		err = errors.Wrapf(err, "reading delta data")
+	if _, err = io.ReadFull(dr.reader, storedData); err != nil {
+		err = errors.Wrapf(err, "reading payload")
 		return err
 	}
 
 	// Decompress delta payload
 	decompressReader, err := entryCompression.WrapReader(
-		bytes.NewReader(compressedDelta),
+		bytes.NewReader(storedData),
 	)
 	if err != nil {
 		err = errors.Wrapf(err, "creating decompression reader for delta")

@@ -160,37 +160,37 @@ func (dr *DataReader) ReadEntry() (entry DataEntry, err error) {
 		return entry, err
 	}
 
-	// Read uncompressed_size
+	// Read logical_size
 	if err = binary.Read(
 		dr.reader,
 		binary.BigEndian,
-		&entry.UncompressedSize,
+		&entry.LogicalSize,
 	); err != nil {
-		err = errors.Wrapf(err, "reading uncompressed size")
+		err = errors.Wrapf(err, "reading logical size")
 		return entry, err
 	}
 
-	// Read compressed_size
+	// Read stored_size
 	if err = binary.Read(
 		dr.reader,
 		binary.BigEndian,
-		&entry.CompressedSize,
+		&entry.StoredSize,
 	); err != nil {
-		err = errors.Wrapf(err, "reading compressed size")
+		err = errors.Wrapf(err, "reading stored size")
 		return entry, err
 	}
 
-	// Read compressed data
-	compressedData := make([]byte, entry.CompressedSize)
+	// Read payload
+	storedData := make([]byte, entry.StoredSize)
 
-	if _, err = io.ReadFull(dr.reader, compressedData); err != nil {
-		err = errors.Wrapf(err, "reading compressed data")
+	if _, err = io.ReadFull(dr.reader, storedData); err != nil {
+		err = errors.Wrapf(err, "reading payload")
 		return entry, err
 	}
 
 	// Decompress data
 	decompressReader, err := dr.compressionType.WrapReader(
-		bytes.NewReader(compressedData),
+		bytes.NewReader(storedData),
 	)
 	if err != nil {
 		err = errors.Wrapf(err, "creating decompression reader")
