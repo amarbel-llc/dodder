@@ -1,7 +1,10 @@
 package commands_madder
 
 import (
+	"fmt"
+
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
@@ -22,7 +25,8 @@ type Sync struct {
 	command_components_madder.EnvBlobStore
 	command_components_madder.BlobStore
 
-	Limit int
+	AllowRehashing bool
+	Limit          int
 }
 
 var _ interfaces.CommandComponentWriter = (*Sync)(nil)
@@ -30,6 +34,13 @@ var _ interfaces.CommandComponentWriter = (*Sync)(nil)
 func (cmd *Sync) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
+	flagSet.BoolVar(
+		&cmd.AllowRehashing,
+		"allow-rehashing",
+		false,
+		"allow syncing to stores with a different hash type (source digests not preserved in single-hash destinations)",
+	)
+
 	flagSet.IntVar(
 		&cmd.Limit,
 		"limit",
@@ -69,11 +80,50 @@ func (cmd Sync) runStore(
 		return
 	}
 
+	sourceHashType := source.GetDefaultHashType()
+	useDestinationHashType := false
+
+	for _, dst := range destination {
+		dstHashType := dst.GetDefaultHashType()
+
+		if sourceHashType.GetMarklFormatId() == dstHashType.GetMarklFormatId() {
+			continue
+		}
+
+		_, isAdder := dst.GetBlobStore().(domain_interfaces.BlobForeignDigestAdder)
+
+		if !isAdder && !cmd.AllowRehashing {
+			if !envBlobStore.Confirm(
+				fmt.Sprintf(
+					"Destination %q uses %s but source uses %s. Rehashing will not preserve source digests. Continue?",
+					dst.GetId(),
+					dstHashType.GetMarklFormatId(),
+					sourceHashType.GetMarklFormatId(),
+				),
+				"",
+			) {
+				errors.ContextCancelWithBadRequestf(
+					req,
+					"cross-hash sync refused: destination %q uses %s, source uses %s. Use -allow-rehashing to skip this check",
+					dst.GetId(),
+					dstHashType.GetMarklFormatId(),
+					sourceHashType.GetMarklFormatId(),
+				)
+
+				return
+			}
+		}
+
+		useDestinationHashType = true
+	}
+
 	blobImporter := blob_transfers.MakeBlobImporter(
 		envBlobStore,
 		source,
 		destination,
 	)
+
+	blobImporter.UseDestinationHashType = useDestinationHashType
 
 	blobImporter.CopierDelegate = sku.MakeBlobCopierDelegate(
 		envBlobStore.GetUI(),
