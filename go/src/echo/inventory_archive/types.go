@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	DataFileMagic  = "DIAR"
-	IndexFileMagic = "DIAX"
-	CacheFileMagic = "DIAC"
+	DataFileMagic  = "MIAR"
+	IndexFileMagic = "MIAX"
+	CacheFileMagic = "MIAC"
 
 	DataFileVersion  uint16 = 0
 	IndexFileVersion uint16 = 0
