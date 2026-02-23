@@ -132,6 +132,7 @@ func (cmd PackObjects) Run(req command.Request) {
 	}
 
 	if err := packable.Pack(blob_stores.PackOptions{
+		Context:              req,
 		DeleteLoose:          cmd.DeleteLoose,
 		DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
 		BlobFilter:           blobFilter,
