@@ -7,6 +7,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/src/delta/debug"
 	"code.linenisgreat.com/dodder/go/src/delta/xdg"
 )
@@ -26,6 +27,7 @@ type Env interface {
 
 	GetXDG() xdg.XDG
 	GetXDGForBlobStores() xdg.XDG
+	GetXDGForBlobStoreId(blob_store_id.Id) xdg.XDG
 
 	GetExecPath() string
 	GetTempLocal() TemporaryFS
@@ -100,6 +102,21 @@ func (env env) GetXDG() xdg.XDG {
 func (env env) GetXDGForBlobStores() xdg.XDG {
 	xdg := env.XDG.CloneWithUtilityName("madder")
 	return xdg
+}
+
+func (env env) GetXDGForBlobStoreId(id blob_store_id.Id) xdg.XDG {
+	madderXDG := env.GetXDGForBlobStores()
+
+	switch id.GetLocationType() {
+	default:
+		return madderXDG
+
+	case blob_store_id.LocationTypeXDGUser:
+		return madderXDG.CloneWithoutOverride()
+
+	case blob_store_id.LocationTypeCwd:
+		return madderXDG
+	}
 }
 
 func (env *env) SetXDG(x xdg.XDG) {

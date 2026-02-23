@@ -261,6 +261,7 @@ func MakeBlobStore(
 		return makeInventoryArchiveV1(
 			envDir,
 			configNamed.Path.GetBase(),
+			configNamed.Path.GetId(),
 			config,
 			looseBlobStore,
 		)
@@ -286,6 +287,7 @@ func MakeBlobStore(
 		return makeInventoryArchiveV0(
 			envDir,
 			configNamed.Path.GetBase(),
+			configNamed.Path.GetId(),
 			config,
 			looseBlobStore,
 		)

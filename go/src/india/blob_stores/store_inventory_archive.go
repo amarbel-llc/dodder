@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
 	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
@@ -44,6 +45,7 @@ func (store inventoryArchiveV0) archivesPath() string {
 func makeInventoryArchiveV0(
 	envDir env_dir.Env,
 	basePath string,
+	id blob_store_id.Id,
 	config blob_store_configs.ConfigInventoryArchive,
 	looseBlobStore domain_interfaces.BlobStore,
 ) (store inventoryArchiveV0, err error) {
@@ -58,8 +60,8 @@ func makeInventoryArchiveV0(
 		return store, err
 	}
 
-	store.cachePath = envDir.GetXDGForBlobStores().Cache.MakePath(
-		"inventory-archives",
+	store.cachePath = envDir.GetXDGForBlobStoreId(id).Cache.MakePath(
+		id.GetName(),
 	).String()
 
 	encryptionId := config.GetBlobEncryption()
