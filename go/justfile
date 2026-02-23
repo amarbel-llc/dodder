@@ -175,7 +175,7 @@ check: check-go-vuln check-go-vet check-go-repool
 #
 
 test-go-unit *flags:
-  tap-dancer go-test {{flags}} -count=1 -tags test,debug ./...
+  tap-dancer go-test {{flags}} -skip-empty -count=1 -tags test,debug ./...
 
 test-go: test-go-unit
 
