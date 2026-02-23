@@ -356,7 +356,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 		hashFormatId,
 		ct,
 		flags,
-		nil,
+		store.encryption,
 	)
 	if err != nil {
 		tmpFile.Close()
@@ -634,7 +634,7 @@ func (store inventoryArchiveV1) validateArchiveV1(
 
 	defer errors.DeferredCloser(&err, file)
 
-	dataReader, err := inventory_archive.NewDataReaderV1(file, nil)
+	dataReader, err := inventory_archive.NewDataReaderV1(file, store.encryption)
 	if err != nil {
 		err = errors.Wrapf(
 			err,

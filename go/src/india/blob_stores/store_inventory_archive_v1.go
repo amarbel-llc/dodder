@@ -33,6 +33,7 @@ type inventoryArchiveV1 struct {
 	basePath       string
 	cachePath      string
 	looseBlobStore domain_interfaces.BlobStore
+	encryption     interfaces.IOWrapper
 	index          map[string]archiveEntryV1 // keyed by hex hash
 }
 
@@ -58,6 +59,14 @@ func makeInventoryArchiveV1(
 	store.cachePath = envDir.GetXDGForBlobStores().Cache.MakePath(
 		"inventory-archives",
 	).String()
+
+	encryptionId := config.GetBlobEncryption()
+	if encryptionId != nil && !encryptionId.IsNull() {
+		if store.encryption, err = encryptionId.GetIOWrapper(); err != nil {
+			err = errors.Wrap(err)
+			return store, err
+		}
+	}
 
 	store.index = make(map[string]archiveEntryV1)
 
@@ -327,7 +336,7 @@ func (store inventoryArchiveV1) MakeBlobReader(
 	// into dataEntry.Data before returning, so the file is not needed after.
 	defer errors.DeferredCloser(&err, file)
 
-	dataReader, err := inventory_archive.NewDataReaderV1(file, nil)
+	dataReader, err := inventory_archive.NewDataReaderV1(file, store.encryption)
 	if err != nil {
 		err = errors.Wrapf(err, "reading v1 archive header %s", archivePath)
 		return readCloser, err
