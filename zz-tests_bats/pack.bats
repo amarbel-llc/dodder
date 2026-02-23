@@ -34,6 +34,7 @@ create_inventory_archive_v1_config() {
 		compression-type = 'zstd'
 		loose-blob-store-id = '.default'
 		encryption = ''
+		max-pack-size = 0
 
 		[delta]
 		enabled = ${delta_enabled}
