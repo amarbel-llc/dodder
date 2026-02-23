@@ -7,13 +7,13 @@ import (
 )
 
 func TestSplitBlobChunksUnlimited(t *testing.T) {
-	blobs := []packedBlob{
-		{digest: []byte{0x01}, data: make([]byte, 100)},
-		{digest: []byte{0x02}, data: make([]byte, 200)},
-		{digest: []byte{0x03}, data: make([]byte, 300)},
+	metas := []packedBlobMeta{
+		{digest: []byte{0x01}, size: 100},
+		{digest: []byte{0x02}, size: 200},
+		{digest: []byte{0x03}, size: 300},
 	}
 
-	chunks := splitBlobChunks(blobs, 0)
+	chunks := splitBlobChunks(metas, 0)
 
 	if len(chunks) != 1 {
 		t.Fatalf("expected 1 chunk for unlimited, got %d", len(chunks))
@@ -25,16 +25,16 @@ func TestSplitBlobChunksUnlimited(t *testing.T) {
 }
 
 func TestSplitBlobChunksSplitsAtLimit(t *testing.T) {
-	blobs := []packedBlob{
-		{digest: []byte{0x01}, data: make([]byte, 100)},
-		{digest: []byte{0x02}, data: make([]byte, 100)},
-		{digest: []byte{0x03}, data: make([]byte, 100)},
-		{digest: []byte{0x04}, data: make([]byte, 100)},
+	metas := []packedBlobMeta{
+		{digest: []byte{0x01}, size: 100},
+		{digest: []byte{0x02}, size: 100},
+		{digest: []byte{0x03}, size: 100},
+		{digest: []byte{0x04}, size: 100},
 	}
 
 	// Limit 250 means first chunk gets blobs 1+2 (200 bytes),
 	// blob 3 would push to 300 so it starts a new chunk.
-	chunks := splitBlobChunks(blobs, 250)
+	chunks := splitBlobChunks(metas, 250)
 
 	if len(chunks) != 2 {
 		t.Fatalf("expected 2 chunks, got %d", len(chunks))
@@ -50,13 +50,13 @@ func TestSplitBlobChunksSplitsAtLimit(t *testing.T) {
 }
 
 func TestSplitBlobChunksSingleBlobExceedsLimit(t *testing.T) {
-	blobs := []packedBlob{
-		{digest: []byte{0x01}, data: make([]byte, 500)},
-		{digest: []byte{0x02}, data: make([]byte, 100)},
+	metas := []packedBlobMeta{
+		{digest: []byte{0x01}, size: 500},
+		{digest: []byte{0x02}, size: 100},
 	}
 
 	// Limit 200 but first blob is 500 -- it still gets its own chunk.
-	chunks := splitBlobChunks(blobs, 200)
+	chunks := splitBlobChunks(metas, 200)
 
 	if len(chunks) != 2 {
 		t.Fatalf("expected 2 chunks, got %d", len(chunks))

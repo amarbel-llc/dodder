@@ -20,34 +20,37 @@ type packedBlob struct {
 	data   []byte
 }
 
-// splitBlobChunks partitions sorted blobs into chunks where each chunk's
-// total data size does not exceed maxPackSize. A maxPackSize of 0 means
-// unlimited (all blobs in one chunk). A single blob larger than the limit
-// gets its own chunk.
-func splitBlobChunks(blobs []packedBlob, maxPackSize uint64) [][]packedBlob {
-	if len(blobs) == 0 {
+type packedBlobMeta struct {
+	digest []byte
+	size   uint64
+}
+
+// splitBlobChunks partitions sorted blob metadata into chunks where each
+// chunk's total data size does not exceed maxPackSize. A maxPackSize of 0
+// means unlimited (all blobs in one chunk). A single blob larger than the
+// limit gets its own chunk.
+func splitBlobChunks(metas []packedBlobMeta, maxPackSize uint64) [][]packedBlobMeta {
+	if len(metas) == 0 {
 		return nil
 	}
 
 	if maxPackSize == 0 {
-		return [][]packedBlob{blobs}
+		return [][]packedBlobMeta{metas}
 	}
 
-	var chunks [][]packedBlob
-	var current []packedBlob
+	var chunks [][]packedBlobMeta
+	var current []packedBlobMeta
 	var currentSize uint64
 
-	for _, blob := range blobs {
-		blobSize := uint64(len(blob.data))
-
-		if len(current) > 0 && currentSize+blobSize > maxPackSize {
+	for _, meta := range metas {
+		if len(current) > 0 && currentSize+meta.size > maxPackSize {
 			chunks = append(chunks, current)
 			current = nil
 			currentSize = 0
 		}
 
-		current = append(current, blob)
-		currentSize += blobSize
+		current = append(current, meta)
+		currentSize += meta.size
 	}
 
 	if len(current) > 0 {
@@ -61,10 +64,9 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 	ctx := options.Context
 	tw := options.TapWriter
 
-	// TODO(P2): collect metadata only (hash + size), split into chunks by
-	// MaxPackSize, then load one chunk at a time. This eliminates the
-	// all-blobs-in-RAM requirement that causes OOM on large stores.
-	var blobs []packedBlob
+	// Phase 1: Collect metadata only (digest + size). No blob data is
+	// retained, bounding memory to the metadata slice.
+	var metas []packedBlobMeta
 
 	for looseId, iterErr := range store.looseBlobStore.AllBlobs() {
 		if err = packContextCancelled(ctx); err != nil {
@@ -93,36 +95,27 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 			}
 		}
 
-		reader, readErr := store.looseBlobStore.MakeBlobReader(looseId)
-		if readErr != nil {
-			err = errors.Wrapf(readErr, "reading loose blob %s", looseId)
+		blobSize, sizeErr := store.GetBlobSize(looseId)
+		if sizeErr != nil {
+			err = errors.Wrapf(sizeErr, "getting size of loose blob %s", looseId)
 			tapNotOk(tw, "collect loose blobs", err)
 			return err
 		}
 
-		data, readAllErr := io.ReadAll(reader)
-		reader.Close()
+		digestBytes := make([]byte, len(looseId.GetBytes()))
+		copy(digestBytes, looseId.GetBytes())
 
-		if readAllErr != nil {
-			err = errors.Wrapf(readAllErr, "reading loose blob data %s", looseId)
-			tapNotOk(tw, "collect loose blobs", err)
-			return err
-		}
-
-		hashBytes := make([]byte, len(looseId.GetBytes()))
-		copy(hashBytes, looseId.GetBytes())
-
-		blobs = append(blobs, packedBlob{digest: hashBytes, data: data})
+		metas = append(metas, packedBlobMeta{digest: digestBytes, size: blobSize})
 	}
 
-	if len(blobs) == 0 {
+	if len(metas) == 0 {
 		return nil
 	}
 
-	tapOk(tw, fmt.Sprintf("collect %d loose blobs", len(blobs)))
+	tapOk(tw, fmt.Sprintf("collect %d loose blobs", len(metas)))
 
-	sort.Slice(blobs, func(i, j int) bool {
-		return bytes.Compare(blobs[i].digest, blobs[j].digest) < 0
+	sort.Slice(metas, func(i, j int) bool {
+		return bytes.Compare(metas[i].digest, metas[j].digest) < 0
 	})
 
 	maxPackSize := options.MaxPackSize
@@ -130,23 +123,52 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		maxPackSize = store.config.GetMaxPackSize()
 	}
 
-	chunks := splitBlobChunks(blobs, maxPackSize)
+	chunks := splitBlobChunks(metas, maxPackSize)
 	totalChunks := len(chunks)
 
 	type chunkResult struct {
 		dataPath string
-		blobs    []packedBlob
+		metas    []packedBlobMeta
 	}
 
 	var results []chunkResult
 
-	for chunkIdx, chunk := range chunks {
+	// Phase 2: Load blob data one chunk at a time, write archive, release.
+	for chunkIdx, chunkMetas := range chunks {
 		if err = packContextCancelled(ctx); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		dataPath, entryCount, packErr := store.packChunkArchive(chunk)
+		blobs := make([]packedBlob, len(chunkMetas))
+
+		for i, meta := range chunkMetas {
+			marklId, repool := store.defaultHash.GetBlobIdForHexString(
+				hex.EncodeToString(meta.digest),
+			)
+
+			reader, readErr := store.looseBlobStore.MakeBlobReader(marklId)
+			repool()
+
+			if readErr != nil {
+				err = errors.Wrapf(readErr, "reading loose blob %x", meta.digest)
+				tapNotOk(tw, fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks), err)
+				return err
+			}
+
+			data, readAllErr := io.ReadAll(reader)
+			reader.Close()
+
+			if readAllErr != nil {
+				err = errors.Wrapf(readAllErr, "reading loose blob data %x", meta.digest)
+				tapNotOk(tw, fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks), err)
+				return err
+			}
+
+			blobs[i] = packedBlob{digest: meta.digest, data: data}
+		}
+
+		dataPath, entryCount, packErr := store.packChunkArchive(blobs)
 		if packErr != nil {
 			desc := fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks)
 			tapNotOk(tw, desc, packErr)
@@ -158,7 +180,10 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 			chunkIdx+1, totalChunks, entryCount,
 		))
 
-		results = append(results, chunkResult{dataPath: dataPath, blobs: chunk})
+		// Release blob data — let GC reclaim before next chunk.
+		blobs = nil
+
+		results = append(results, chunkResult{dataPath: dataPath, metas: chunkMetas})
 	}
 
 	if err = store.writeCache(); err != nil {
@@ -178,7 +203,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 			return err
 		}
 
-		if err = store.validateArchive(r.dataPath, r.blobs); err != nil {
+		if err = store.validateArchive(r.dataPath, len(r.metas)); err != nil {
 			desc := fmt.Sprintf("validate chunk %d/%d", chunkIdx+1, totalChunks)
 			tapNotOk(tw, desc, err)
 			return err
@@ -191,9 +216,9 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		blobSeq := func(
 			yield func(domain_interfaces.MarklId, error) bool,
 		) {
-			for _, blob := range blobs {
+			for _, meta := range metas {
 				marklId, repool := store.defaultHash.GetBlobIdForHexString(
-					hex.EncodeToString(blob.digest),
+					hex.EncodeToString(meta.digest),
 				)
 
 				if !yield(marklId, nil) {
@@ -213,12 +238,12 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		}
 	}
 
-	if err = store.deleteLooseBlobs(ctx, blobs); err != nil {
-		tapNotOk(tw, fmt.Sprintf("delete %d loose blobs", len(blobs)), err)
+	if err = store.deleteLooseBlobs(ctx, metas); err != nil {
+		tapNotOk(tw, fmt.Sprintf("delete %d loose blobs", len(metas)), err)
 		return err
 	}
 
-	tapOk(tw, fmt.Sprintf("delete %d loose blobs", len(blobs)))
+	tapOk(tw, fmt.Sprintf("delete %d loose blobs", len(metas)))
 
 	return nil
 }
@@ -410,7 +435,7 @@ func (store inventoryArchiveV0) writeCache() (err error) {
 
 func (store inventoryArchiveV0) validateArchive(
 	dataPath string,
-	blobs []packedBlob,
+	expectedCount int,
 ) (err error) {
 	file, err := os.Open(dataPath)
 	if err != nil {
@@ -440,10 +465,10 @@ func (store inventoryArchiveV0) validateArchive(
 		return err
 	}
 
-	if len(entries) != len(blobs) {
+	if len(entries) != expectedCount {
 		err = errors.Errorf(
 			"archive entry count mismatch: wrote %d, read %d",
-			len(blobs),
+			expectedCount,
 			len(entries),
 		)
 		return err
@@ -472,7 +497,7 @@ func (store inventoryArchiveV0) validateArchive(
 
 func (store inventoryArchiveV0) deleteLooseBlobs(
 	ctx interfaces.ActiveContext,
-	blobs []packedBlob,
+	metas []packedBlobMeta,
 ) (err error) {
 	deleter, ok := store.looseBlobStore.(BlobDeleter)
 	if !ok {
@@ -480,14 +505,14 @@ func (store inventoryArchiveV0) deleteLooseBlobs(
 		return err
 	}
 
-	for _, blob := range blobs {
+	for _, meta := range metas {
 		if err = packContextCancelled(ctx); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
 		marklId, repool := store.defaultHash.GetBlobIdForHexString(
-			hex.EncodeToString(blob.digest),
+			hex.EncodeToString(meta.digest),
 		)
 
 		if deleteErr := deleter.DeleteBlob(marklId); deleteErr != nil {
@@ -500,4 +525,24 @@ func (store inventoryArchiveV0) deleteLooseBlobs(
 	}
 
 	return nil
+}
+
+func (store inventoryArchiveV0) GetBlobSize(
+	id domain_interfaces.MarklId,
+) (size uint64, err error) {
+	reader, err := store.looseBlobStore.MakeBlobReader(id)
+	if err != nil {
+		err = errors.Wrapf(err, "opening blob %s for size", id)
+		return size, err
+	}
+
+	defer errors.DeferredCloser(&err, reader)
+
+	n, err := io.Copy(io.Discard, reader)
+	if err != nil {
+		err = errors.Wrapf(err, "reading blob %s for size", id)
+		return size, err
+	}
+
+	return uint64(n), nil
 }

@@ -98,7 +98,6 @@ func (cmd PackObjects) Run(req command.Request) {
 		}
 
 		blobId, err := cmd.doOne(blobStore, resolved.BlobReader)
-
 		if err != nil {
 			tw.NotOk(arg, tap_diagnostics.FromError(err))
 			continue
