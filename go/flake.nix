@@ -4,20 +4,6 @@
     nixpkgs-master.url = "github:NixOS/nixpkgs/b28c4999ed71543e71552ccfd0d7e68c581ba7e9";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
-    devenv-go = {
-      url = "github:amarbel-llc/purse-first?dir=devenvs/go";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-master.follows = "nixpkgs-master";
-      inputs.utils.follows = "utils";
-    };
-
-    devenv-shell = {
-      url = "github:amarbel-llc/purse-first?dir=devenvs/shell";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-master.follows = "nixpkgs-master";
-      inputs.utils.follows = "utils";
-    };
-
     purse-first = {
       url = "github:amarbel-llc/purse-first";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -31,8 +17,6 @@
     , nixpkgs
     , nixpkgs-master
     , utils
-    , devenv-go
-    , devenv-shell
     , purse-first
     ,
     }:
@@ -44,7 +28,7 @@
           inherit system;
 
           overlays = [
-            devenv-go.overlays.default
+            purse-first.overlays.${system}.go
           ];
         };
 
@@ -97,8 +81,8 @@
           ];
 
           inputsFrom = [
-            devenv-go.devShells.${system}.default
-            devenv-shell.devShells.${system}.default
+            purse-first.devShells.${system}.go
+            purse-first.devShells.${system}.shell
           ];
         };
       })

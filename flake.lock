@@ -1,39 +1,5 @@
 {
   "nodes": {
-    "bats": {
-      "inputs": {
-        "nixpkgs": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "dodder-go",
-          "purse-first",
-          "utils"
-        ]
-      },
-      "locked": {
-        "dir": "devenvs/bats",
-        "lastModified": 1771853504,
-        "narHash": "sha256-3vUT2dcdbYFD8bTMNIciNZaDuR7LN3QxuZITrQGJmw4=",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "rev": "e15da2a6b789603c91e9995441e53784d296eed3",
-        "type": "github"
-      },
-      "original": {
-        "dir": "devenvs/bats",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "type": "github"
-      }
-    },
     "crane": {
       "locked": {
         "lastModified": 1771796463,
@@ -63,73 +29,8 @@
         "url": "https://flakehub.com/f/ipetkov/crane/0"
       }
     },
-    "devenv-go": {
-      "inputs": {
-        "gomod2nix": "gomod2nix",
-        "nixpkgs": [
-          "dodder-go",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "dodder-go",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "dodder-go",
-          "utils"
-        ]
-      },
-      "locked": {
-        "dir": "devenvs/go",
-        "lastModified": 1771727692,
-        "narHash": "sha256-Lx9UFpKxxAtiYHp3h+sl4AmcRuP9WqQD4ytDlCPArqo=",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "rev": "fb0d07534cae4674474d53fd6660aa0102e771ea",
-        "type": "github"
-      },
-      "original": {
-        "dir": "devenvs/go",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "type": "github"
-      }
-    },
-    "devenv-shell": {
-      "inputs": {
-        "nixpkgs": [
-          "dodder-go",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "dodder-go",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "dodder-go",
-          "utils"
-        ]
-      },
-      "locked": {
-        "dir": "devenvs/shell",
-        "lastModified": 1771727692,
-        "narHash": "sha256-Lx9UFpKxxAtiYHp3h+sl4AmcRuP9WqQD4ytDlCPArqo=",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "rev": "fb0d07534cae4674474d53fd6660aa0102e771ea",
-        "type": "github"
-      },
-      "original": {
-        "dir": "devenvs/shell",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "type": "github"
-      }
-    },
     "dodder-go": {
       "inputs": {
-        "devenv-go": "devenv-go",
-        "devenv-shell": "devenv-shell",
         "nixpkgs": [
           "nixpkgs"
         ],
@@ -209,89 +110,12 @@
         "type": "github"
       }
     },
-    "flake-utils_2": {
-      "inputs": {
-        "systems": "systems_2"
-      },
-      "locked": {
-        "lastModified": 1731533236,
-        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "go": {
-      "inputs": {
-        "gomod2nix": "gomod2nix_2",
-        "nixpkgs": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "dodder-go",
-          "purse-first",
-          "utils"
-        ]
-      },
-      "locked": {
-        "dir": "devenvs/go",
-        "lastModified": 1771853504,
-        "narHash": "sha256-3vUT2dcdbYFD8bTMNIciNZaDuR7LN3QxuZITrQGJmw4=",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "rev": "e15da2a6b789603c91e9995441e53784d296eed3",
-        "type": "github"
-      },
-      "original": {
-        "dir": "devenvs/go",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "type": "github"
-      }
-    },
     "gomod2nix": {
       "inputs": {
         "flake-utils": "flake-utils",
         "nixpkgs": [
           "dodder-go",
-          "devenv-go",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1770585520,
-        "narHash": "sha256-yBz9Ozd5Wb56i3e3cHZ8WcbzCQ9RlVaiW18qDYA/AzA=",
-        "owner": "nix-community",
-        "repo": "gomod2nix",
-        "rev": "1201ddd1279c35497754f016ef33d5e060f3da8d",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "gomod2nix",
-        "type": "github"
-      }
-    },
-    "gomod2nix_2": {
-      "inputs": {
-        "flake-utils": "flake-utils_2",
-        "nixpkgs": [
-          "dodder-go",
           "purse-first",
-          "go",
           "nixpkgs"
         ]
       },
@@ -357,10 +181,9 @@
     },
     "purse-first": {
       "inputs": {
-        "bats": "bats",
         "crane": "crane",
         "fh": "fh",
-        "go": "go",
+        "gomod2nix": "gomod2nix",
         "nixpkgs": [
           "dodder-go",
           "nixpkgs"
@@ -369,20 +192,18 @@
           "dodder-go",
           "nixpkgs-master"
         ],
-        "rust": "rust",
-        "rust-overlay": "rust-overlay_2",
-        "shell": "shell",
+        "rust-overlay": "rust-overlay",
         "utils": [
           "dodder-go",
           "utils"
         ]
       },
       "locked": {
-        "lastModified": 1771854030,
-        "narHash": "sha256-dwJXECs3JOpFhFux5U2oXspJzeQh4k6h4993VOU1kQU=",
+        "lastModified": 1771875251,
+        "narHash": "sha256-l6oxM2vxa0T7DJcdz/U30c4eyM1fErDl3OTec5GaMKA=",
         "owner": "amarbel-llc",
         "repo": "purse-first",
-        "rev": "9da331c80448157cfc13a0a9c273601901b5e879",
+        "rev": "005f9d9a46f1a2b184a6ed7c8b78b7fa8b5f8165",
         "type": "github"
       },
       "original": {
@@ -396,41 +217,6 @@
         "dodder-go": "dodder-go",
         "nixpkgs": "nixpkgs_2",
         "utils": "utils"
-      }
-    },
-    "rust": {
-      "inputs": {
-        "nixpkgs": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs-master"
-        ],
-        "rust-overlay": "rust-overlay",
-        "utils": [
-          "dodder-go",
-          "purse-first",
-          "utils"
-        ]
-      },
-      "locked": {
-        "dir": "devenvs/rust",
-        "lastModified": 1771853504,
-        "narHash": "sha256-3vUT2dcdbYFD8bTMNIciNZaDuR7LN3QxuZITrQGJmw4=",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "rev": "e15da2a6b789603c91e9995441e53784d296eed3",
-        "type": "github"
-      },
-      "original": {
-        "dir": "devenvs/rust",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "type": "github"
       }
     },
     "rust-analyzer-src": {
@@ -455,29 +241,6 @@
         "nixpkgs": [
           "dodder-go",
           "purse-first",
-          "rust",
-          "nixpkgs-master"
-        ]
-      },
-      "locked": {
-        "lastModified": 1771816254,
-        "narHash": "sha256-vkp3iTF6QmHMvL+34DI93IiMPjS2lqcMlA1fl7nXVsQ=",
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "rev": "085bdbf5dde5477538e4c87d1684b6c6df56c0ad",
-        "type": "github"
-      },
-      "original": {
-        "owner": "oxalica",
-        "repo": "rust-overlay",
-        "type": "github"
-      }
-    },
-    "rust-overlay_2": {
-      "inputs": {
-        "nixpkgs": [
-          "dodder-go",
-          "purse-first",
           "nixpkgs"
         ]
       },
@@ -492,40 +255,6 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "type": "github"
-      }
-    },
-    "shell": {
-      "inputs": {
-        "nixpkgs": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs"
-        ],
-        "nixpkgs-master": [
-          "dodder-go",
-          "purse-first",
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "dodder-go",
-          "purse-first",
-          "utils"
-        ]
-      },
-      "locked": {
-        "dir": "devenvs/shell",
-        "lastModified": 1771853504,
-        "narHash": "sha256-3vUT2dcdbYFD8bTMNIciNZaDuR7LN3QxuZITrQGJmw4=",
-        "owner": "amarbel-llc",
-        "repo": "eng",
-        "rev": "e15da2a6b789603c91e9995441e53784d296eed3",
-        "type": "github"
-      },
-      "original": {
-        "dir": "devenvs/shell",
-        "owner": "amarbel-llc",
-        "repo": "eng",
         "type": "github"
       }
     },
@@ -559,24 +288,9 @@
         "type": "github"
       }
     },
-    "systems_3": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
-      }
-    },
     "utils": {
       "inputs": {
-        "systems": "systems_3"
+        "systems": "systems_2"
       },
       "locked": {
         "lastModified": 1731533236,
