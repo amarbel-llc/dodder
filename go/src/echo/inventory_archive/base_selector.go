@@ -6,8 +6,9 @@ import (
 
 // BlobMetadata describes a blob candidate for delta packing.
 type BlobMetadata struct {
-	Id   domain_interfaces.MarklId
-	Size uint64
+	Id        domain_interfaces.MarklId
+	Size      uint64
+	Signature []uint32
 }
 
 // BlobSet provides indexed access to blob metadata without requiring all
