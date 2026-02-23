@@ -327,7 +327,7 @@ func (store inventoryArchiveV1) MakeBlobReader(
 	// into dataEntry.Data before returning, so the file is not needed after.
 	defer errors.DeferredCloser(&err, file)
 
-	dataReader, err := inventory_archive.NewDataReaderV1(file)
+	dataReader, err := inventory_archive.NewDataReaderV1(file, nil)
 	if err != nil {
 		err = errors.Wrapf(err, "reading v1 archive header %s", archivePath)
 		return readCloser, err

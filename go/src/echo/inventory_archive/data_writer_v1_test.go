@@ -8,7 +8,9 @@ import (
 	"encoding/binary"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/src/delta/age"
 )
 
 func TestV1RoundTripFullEntriesOnly(t *testing.T) {
@@ -16,7 +18,7 @@ func TestV1RoundTripFullEntriesOnly(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer, err := NewDataWriterV1(&buf, hashFormatId, ct, 0)
+	writer, err := NewDataWriterV1(&buf, hashFormatId, ct, 0, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriterV1: %v", err)
 	}
@@ -77,7 +79,7 @@ func TestV1RoundTripFullEntriesOnly(t *testing.T) {
 		}
 	}
 
-	reader, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()))
+	reader, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReaderV1: %v", err)
 	}
@@ -163,7 +165,7 @@ func TestV1RoundTripWithDelta(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer, err := NewDataWriterV1(&buf, hashFormatId, ct, FlagHasDeltas)
+	writer, err := NewDataWriterV1(&buf, hashFormatId, ct, FlagHasDeltas, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriterV1: %v", err)
 	}
@@ -218,7 +220,7 @@ func TestV1RoundTripWithDelta(t *testing.T) {
 		)
 	}
 
-	reader, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()))
+	reader, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReaderV1: %v", err)
 	}
@@ -289,7 +291,7 @@ func TestV1HeaderFlags(t *testing.T) {
 	hashFormatId := "sha256"
 	ct := compression_type.CompressionTypeNone
 
-	writer1, err := NewDataWriterV1(&buf1, hashFormatId, ct, 0)
+	writer1, err := NewDataWriterV1(&buf1, hashFormatId, ct, 0, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriterV1: %v", err)
 	}
@@ -305,7 +307,7 @@ func TestV1HeaderFlags(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 
-	reader1, err := NewDataReaderV1(bytes.NewReader(buf1.Bytes()))
+	reader1, err := NewDataReaderV1(bytes.NewReader(buf1.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReaderV1: %v", err)
 	}
@@ -317,7 +319,7 @@ func TestV1HeaderFlags(t *testing.T) {
 	// Test 2: flags = FlagHasDeltas => FlagHasDeltas should be set
 	var buf2 bytes.Buffer
 
-	writer2, err := NewDataWriterV1(&buf2, hashFormatId, ct, FlagHasDeltas)
+	writer2, err := NewDataWriterV1(&buf2, hashFormatId, ct, FlagHasDeltas, nil)
 	if err != nil {
 		t.Fatalf("NewDataWriterV1: %v", err)
 	}
@@ -354,12 +356,95 @@ func TestV1HeaderFlags(t *testing.T) {
 		t.Error("expected FlagHasDeltas to be set for archive with deltas")
 	}
 
-	reader2, err := NewDataReaderV1(bytes.NewReader(buf2.Bytes()))
+	reader2, err := NewDataReaderV1(bytes.NewReader(buf2.Bytes()), nil)
 	if err != nil {
 		t.Fatalf("NewDataReaderV1: %v", err)
 	}
 
 	if reader2.Flags()&FlagHasDeltas == 0 {
 		t.Error("expected FlagHasDeltas from reader for archive with deltas")
+	}
+}
+
+func TestV1EncryptedRoundTrip(t *testing.T) {
+	var buf bytes.Buffer
+	hashFormatId := "sha256"
+	ct := compression_type.CompressionTypeZstd
+
+	var ageIdentity age.Identity
+	if err := ageIdentity.GenerateIfNecessary(); err != nil {
+		t.Fatal(err)
+	}
+
+	var encryption interfaces.IOWrapper = &ageIdentity
+
+	entries := []struct {
+		hash []byte
+		data []byte
+	}{
+		{hash: sha256Hash([]byte("blob1")), data: []byte("hello encrypted v1 world")},
+		{hash: sha256Hash([]byte("blob2")), data: []byte("another encrypted v1 blob")},
+	}
+
+	writer, err := NewDataWriterV1(&buf, hashFormatId, ct, 0, encryption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, e := range entries {
+		if err := writer.WriteFullEntry(e.hash, e.data); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, writtenEntries, err := writer.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, we := range writtenEntries {
+		if we.LogicalSize != uint64(len(entries[i].data)) {
+			t.Errorf("entry %d: LogicalSize = %d, want %d",
+				i, we.LogicalSize, len(entries[i].data))
+		}
+	}
+
+	// Read with encryption
+	reader, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()), encryption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify FlagHasEncryptionV1 is set
+	if reader.Flags()&FlagHasEncryptionV1 == 0 {
+		t.Error("expected FlagHasEncryptionV1 to be set")
+	}
+
+	readEntries, err := reader.ReadAllEntries()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(readEntries) != len(entries) {
+		t.Fatalf("got %d entries, want %d", len(readEntries), len(entries))
+	}
+
+	for i, re := range readEntries {
+		if !bytes.Equal(re.Data, entries[i].data) {
+			t.Errorf("entry %d: data mismatch", i)
+		}
+	}
+
+	// Read without encryption — data should not match
+	readerNoKey, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rawEntries, err := readerNoKey.ReadAllEntries()
+	if err == nil && len(rawEntries) > 0 {
+		if bytes.Equal(rawEntries[0].Data, entries[0].data) {
+			t.Error("reading encrypted archive without key should not produce plaintext")
+		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
 )
@@ -13,6 +14,7 @@ type DataReaderV1 struct {
 	reader          io.ReadSeeker
 	hashFormatId    string
 	compressionType compression_type.CompressionType
+	encryption      interfaces.IOWrapper
 	hashSize        int
 	flags           uint16
 	dataStart       int64
@@ -20,9 +22,11 @@ type DataReaderV1 struct {
 
 func NewDataReaderV1(
 	r io.ReadSeeker,
+	encryption interfaces.IOWrapper,
 ) (dr *DataReaderV1, err error) {
 	dr = &DataReaderV1{
-		reader: r,
+		reader:     r,
+		encryption: encryption,
 	}
 
 	if err = dr.readHeader(); err != nil {
@@ -241,9 +245,28 @@ func (dr *DataReaderV1) readFullEntryBody(
 		return err
 	}
 
+	// Decrypt if needed
+	dataToDecompress := storedData
+	if dr.encryption != nil {
+		decryptReader, decErr := dr.encryption.WrapReader(bytes.NewReader(storedData))
+		if decErr != nil {
+			err = errors.Wrapf(decErr, "creating decryption reader")
+			return err
+		}
+		dataToDecompress, err = io.ReadAll(decryptReader)
+		if err != nil {
+			err = errors.Wrapf(err, "decrypting payload")
+			return err
+		}
+		if err = decryptReader.Close(); err != nil {
+			err = errors.Wrapf(err, "closing decryption reader")
+			return err
+		}
+	}
+
 	// Decompress
 	decompressReader, err := entryCompression.WrapReader(
-		bytes.NewReader(storedData),
+		bytes.NewReader(dataToDecompress),
 	)
 	if err != nil {
 		err = errors.Wrapf(err, "creating decompression reader")
@@ -314,9 +337,28 @@ func (dr *DataReaderV1) readDeltaEntryBody(
 		return err
 	}
 
+	// Decrypt if needed
+	dataToDecompress := storedData
+	if dr.encryption != nil {
+		decryptReader, decErr := dr.encryption.WrapReader(bytes.NewReader(storedData))
+		if decErr != nil {
+			err = errors.Wrapf(decErr, "creating decryption reader for delta")
+			return err
+		}
+		dataToDecompress, err = io.ReadAll(decryptReader)
+		if err != nil {
+			err = errors.Wrapf(err, "decrypting delta payload")
+			return err
+		}
+		if err = decryptReader.Close(); err != nil {
+			err = errors.Wrapf(err, "closing decryption reader for delta")
+			return err
+		}
+	}
+
 	// Decompress delta payload
 	decompressReader, err := entryCompression.WrapReader(
-		bytes.NewReader(storedData),
+		bytes.NewReader(dataToDecompress),
 	)
 	if err != nil {
 		err = errors.Wrapf(err, "creating decompression reader for delta")

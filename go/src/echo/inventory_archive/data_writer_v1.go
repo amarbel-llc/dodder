@@ -6,6 +6,7 @@ import (
 	"hash"
 	"io"
 
+	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
 )
@@ -16,6 +17,7 @@ type DataWriterV1 struct {
 	multiWriter     io.Writer
 	hashFormatId    string
 	compressionType compression_type.CompressionType
+	encryption      interfaces.IOWrapper
 	hashSize        int
 	flags           uint16
 	entries         []DataEntryV1
@@ -27,6 +29,7 @@ func NewDataWriterV1(
 	hashFormatId string,
 	ct compression_type.CompressionType,
 	flags uint16,
+	encryption interfaces.IOWrapper,
 ) (dw *DataWriterV1, err error) {
 	hasher, err := newHashForFormat(hashFormatId)
 	if err != nil {
@@ -40,6 +43,10 @@ func NewDataWriterV1(
 		return nil, err
 	}
 
+	if encryption != nil {
+		flags |= FlagHasEncryptionV1
+	}
+
 	multiWriter := io.MultiWriter(w, hasher)
 
 	dw = &DataWriterV1{
@@ -48,6 +55,7 @@ func NewDataWriterV1(
 		multiWriter:     multiWriter,
 		hashFormatId:    hashFormatId,
 		compressionType: ct,
+		encryption:      encryption,
 		hashSize:        hashSize,
 		flags:           flags,
 	}
@@ -187,7 +195,28 @@ func (dw *DataWriterV1) WriteFullEntry(
 	}
 
 	compressedData := compressedBuf.Bytes()
-	storedSize := uint64(len(compressedData))
+
+	// Encrypt if configured
+	storedData := compressedData
+	if dw.encryption != nil {
+		var encryptedBuf bytes.Buffer
+		encryptWriter, encErr := dw.encryption.WrapWriter(&encryptedBuf)
+		if encErr != nil {
+			err = errors.Wrap(encErr)
+			return err
+		}
+		if _, encErr = encryptWriter.Write(compressedData); encErr != nil {
+			err = errors.Wrap(encErr)
+			return err
+		}
+		if encErr = encryptWriter.Close(); encErr != nil {
+			err = errors.Wrap(encErr)
+			return err
+		}
+		storedData = encryptedBuf.Bytes()
+	}
+
+	storedSize := uint64(len(storedData))
 
 	// logical_size
 	if err = binary.Write(
@@ -210,7 +239,7 @@ func (dw *DataWriterV1) WriteFullEntry(
 	}
 
 	// payload
-	if _, err = dw.multiWriter.Write(compressedData); err != nil {
+	if _, err = dw.multiWriter.Write(storedData); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -303,7 +332,28 @@ func (dw *DataWriterV1) WriteDeltaEntry(
 	}
 
 	compressedData := compressedBuf.Bytes()
-	storedSize := uint64(len(compressedData))
+
+	// Encrypt if configured
+	storedData := compressedData
+	if dw.encryption != nil {
+		var encryptedBuf bytes.Buffer
+		encryptWriter, encErr := dw.encryption.WrapWriter(&encryptedBuf)
+		if encErr != nil {
+			err = errors.Wrap(encErr)
+			return err
+		}
+		if _, encErr = encryptWriter.Write(compressedData); encErr != nil {
+			err = errors.Wrap(encErr)
+			return err
+		}
+		if encErr = encryptWriter.Close(); encErr != nil {
+			err = errors.Wrap(encErr)
+			return err
+		}
+		storedData = encryptedBuf.Bytes()
+	}
+
+	storedSize := uint64(len(storedData))
 
 	// logical_size
 	if err = binary.Write(
@@ -326,7 +376,7 @@ func (dw *DataWriterV1) WriteDeltaEntry(
 	}
 
 	// payload
-	if _, err = dw.multiWriter.Write(compressedData); err != nil {
+	if _, err = dw.multiWriter.Write(storedData); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
