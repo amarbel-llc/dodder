@@ -123,8 +123,7 @@ func collectBlobMetasParallel(
 			blobSize, sizeErr := sizeFn(cand.id)
 			if sizeErr != nil {
 				if options.SkipMissingBlobs {
-					tapComment(tw, fmt.Sprintf("blob skipped: %s", cand.id))
-					// Mark as zero-size; filtered out below.
+					// Mark as nil digest; filtered and logged after wg.Wait.
 					metas[idx] = packedBlobMeta{digest: nil, size: 0}
 					return
 				}
@@ -156,10 +155,14 @@ func collectBlobMetasParallel(
 	}
 
 	// Filter out skipped blobs (nil digest from SkipMissingBlobs).
+	// Emit skip messages here rather than from goroutines to avoid
+	// concurrent writes to the TAP writer.
 	filtered := metas[:0]
-	for _, m := range metas {
+	for i, m := range metas {
 		if m.digest != nil {
 			filtered = append(filtered, m)
+		} else if options.SkipMissingBlobs && i < len(candidates) {
+			tapComment(tw, fmt.Sprintf("blob skipped: %s", candidates[i].id))
 		}
 	}
 
@@ -192,4 +195,14 @@ func indexPresenceFromV1(index map[string]archiveEntryV1) map[string]bool {
 		m[k] = true
 	}
 	return m
+}
+
+// deltaResult holds the output of a parallel delta computation.
+// When deltaData is nil, the blob should be stored as a full entry
+// (either because delta computation failed or the delta was larger
+// than the original).
+type deltaResult struct {
+	blobIdx   int
+	baseIdx   int
+	deltaData []byte
 }

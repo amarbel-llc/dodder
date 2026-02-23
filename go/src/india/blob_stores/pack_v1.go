@@ -7,8 +7,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
@@ -368,50 +370,122 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 		}
 	}
 
-	// Second pass: write delta entries.
+	// Second pass: compute deltas in parallel, then write sequentially.
+	type indexedAssignment struct {
+		resultIdx int
+		blobIdx   int
+		baseIdx   int
+	}
+
+	var orderedAssignments []indexedAssignment
 	for blobIdx, baseIdx := range assignments {
+		orderedAssignments = append(orderedAssignments, indexedAssignment{
+			blobIdx: blobIdx,
+			baseIdx: baseIdx,
+		})
+	}
+
+	// Sort by blobIdx for deterministic archive output. blobs is already
+	// digest-sorted, so blobIdx order preserves that ordering.
+	sort.Slice(orderedAssignments, func(i, j int) bool {
+		return orderedAssignments[i].blobIdx < orderedAssignments[j].blobIdx
+	})
+
+	for i := range orderedAssignments {
+		orderedAssignments[i].resultIdx = i
+	}
+
+	results := make([]deltaResult, len(orderedAssignments))
+
+	numWorkers := runtime.NumCPU()
+	if numWorkers > len(orderedAssignments) {
+		numWorkers = len(orderedAssignments)
+	}
+
+	if len(orderedAssignments) > 0 {
+		sem := make(chan struct{}, numWorkers)
+
+		var wg sync.WaitGroup
+
+		for _, assignment := range orderedAssignments {
+			wg.Add(1)
+			sem <- struct{}{}
+
+			go func(a indexedAssignment) {
+				defer wg.Done()
+				defer func() { <-sem }()
+
+				if packContextCancelled(ctx) != nil {
+					return
+				}
+
+				targetBlob := blobs[a.blobIdx]
+				baseBlob := blobs[a.baseIdx]
+
+				baseHash, _ := store.defaultHash.Get() //repool:owned
+				baseReader := markl_io.MakeReadCloser(
+					baseHash,
+					bytes.NewReader(baseBlob.data),
+				)
+
+				var deltaBuf bytes.Buffer
+
+				computeErr := alg.Compute(
+					baseReader,
+					int64(len(baseBlob.data)),
+					bytes.NewReader(targetBlob.data),
+					&deltaBuf,
+				)
+				if computeErr != nil {
+					// Delta computation failed — store as full.
+					results[a.resultIdx] = deltaResult{
+						blobIdx: a.blobIdx,
+						baseIdx: a.baseIdx,
+					}
+					return
+				}
+
+				rawDelta := deltaBuf.Bytes()
+
+				// Trial-and-discard: if delta is not smaller, store as full.
+				if len(rawDelta) >= len(targetBlob.data) {
+					results[a.resultIdx] = deltaResult{
+						blobIdx: a.blobIdx,
+						baseIdx: a.baseIdx,
+					}
+					return
+				}
+
+				results[a.resultIdx] = deltaResult{
+					blobIdx:   a.blobIdx,
+					baseIdx:   a.baseIdx,
+					deltaData: rawDelta,
+				}
+			}(assignment)
+		}
+
+		wg.Wait()
+	}
+
+	if err = packContextCancelled(ctx); err != nil {
+		tmpFile.Close()
+		err = errors.Wrap(err)
+		return dataPath, 0, 0, err
+	}
+
+	// Sequential write pass: write deltas (or full fallbacks) in order.
+	for _, dr := range results {
 		if err = packContextCancelled(ctx); err != nil {
 			tmpFile.Close()
 			err = errors.Wrap(err)
 			return dataPath, 0, 0, err
 		}
 
-		targetBlob := blobs[blobIdx]
-		baseBlob := blobs[baseIdx]
+		targetBlob := blobs[dr.blobIdx]
+		baseBlob := blobs[dr.baseIdx]
 
-		baseHash, _ := store.defaultHash.Get() //repool:owned
-		baseReader := markl_io.MakeReadCloser(
-			baseHash,
-			bytes.NewReader(baseBlob.data),
-		)
-
-		var deltaBuf bytes.Buffer
-
-		computeErr := alg.Compute(
-			baseReader,
-			int64(len(baseBlob.data)),
-			bytes.NewReader(targetBlob.data),
-			&deltaBuf,
-		)
-		if computeErr != nil {
-			// If delta computation fails, write as full entry.
-			if writeErr := dataWriter.WriteFullEntry(
-				targetBlob.digest,
-				targetBlob.data,
-			); writeErr != nil {
-				tmpFile.Close()
-				err = errors.Wrap(writeErr)
-				return dataPath, 0, 0, err
-			}
-
-			continue
-		}
-
-		rawDelta := deltaBuf.Bytes()
-
-		// Trial-and-discard: if the raw delta is not smaller than the
-		// original data, write as a full entry instead.
-		if len(rawDelta) >= len(targetBlob.data) {
+		if dr.deltaData == nil {
+			// Store as full entry (delta failed or was larger).
 			if writeErr := dataWriter.WriteFullEntry(
 				targetBlob.digest,
 				targetBlob.data,
@@ -429,7 +503,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 			algByte,
 			baseBlob.digest,
 			uint64(len(targetBlob.data)),
-			rawDelta,
+			dr.deltaData,
 		); writeErr != nil {
 			tmpFile.Close()
 			err = errors.Wrap(writeErr)
