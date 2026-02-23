@@ -428,6 +428,14 @@ func (store inventoryArchiveV1) MakeBlobReader(
 	return readCloser, err
 }
 
+func (store inventoryArchiveV1) AllArchiveEntryChecksums() map[string][]string {
+	result := make(map[string][]string)
+	for blobId, entry := range store.index {
+		result[entry.ArchiveChecksum] = append(result[entry.ArchiveChecksum], blobId)
+	}
+	return result
+}
+
 func (store inventoryArchiveV1) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
 	return func(yield func(domain_interfaces.MarklId, error) bool) {
 		id, repool := store.defaultHash.GetBlobId()
