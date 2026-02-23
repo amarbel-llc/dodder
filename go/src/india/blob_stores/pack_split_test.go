@@ -8,9 +8,9 @@ import (
 
 func TestSplitBlobChunksUnlimited(t *testing.T) {
 	blobs := []packedBlob{
-		{hash: []byte{0x01}, data: make([]byte, 100)},
-		{hash: []byte{0x02}, data: make([]byte, 200)},
-		{hash: []byte{0x03}, data: make([]byte, 300)},
+		{digest: []byte{0x01}, data: make([]byte, 100)},
+		{digest: []byte{0x02}, data: make([]byte, 200)},
+		{digest: []byte{0x03}, data: make([]byte, 300)},
 	}
 
 	chunks := splitBlobChunks(blobs, 0)
@@ -26,10 +26,10 @@ func TestSplitBlobChunksUnlimited(t *testing.T) {
 
 func TestSplitBlobChunksSplitsAtLimit(t *testing.T) {
 	blobs := []packedBlob{
-		{hash: []byte{0x01}, data: make([]byte, 100)},
-		{hash: []byte{0x02}, data: make([]byte, 100)},
-		{hash: []byte{0x03}, data: make([]byte, 100)},
-		{hash: []byte{0x04}, data: make([]byte, 100)},
+		{digest: []byte{0x01}, data: make([]byte, 100)},
+		{digest: []byte{0x02}, data: make([]byte, 100)},
+		{digest: []byte{0x03}, data: make([]byte, 100)},
+		{digest: []byte{0x04}, data: make([]byte, 100)},
 	}
 
 	// Limit 250 means first chunk gets blobs 1+2 (200 bytes),
@@ -51,8 +51,8 @@ func TestSplitBlobChunksSplitsAtLimit(t *testing.T) {
 
 func TestSplitBlobChunksSingleBlobExceedsLimit(t *testing.T) {
 	blobs := []packedBlob{
-		{hash: []byte{0x01}, data: make([]byte, 500)},
-		{hash: []byte{0x02}, data: make([]byte, 100)},
+		{digest: []byte{0x01}, data: make([]byte, 500)},
+		{digest: []byte{0x02}, data: make([]byte, 100)},
 	}
 
 	// Limit 200 but first blob is 500 -- it still gets its own chunk.

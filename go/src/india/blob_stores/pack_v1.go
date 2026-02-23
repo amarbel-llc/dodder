@@ -102,7 +102,7 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 		hashBytes := make([]byte, len(looseId.GetBytes()))
 		copy(hashBytes, looseId.GetBytes())
 
-		blobs = append(blobs, packedBlob{hash: hashBytes, data: data})
+		blobs = append(blobs, packedBlob{digest: hashBytes, data: data})
 	}
 
 	if len(blobs) == 0 {
@@ -112,7 +112,7 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 	tapOk(tw, fmt.Sprintf("collect %d loose blobs", len(blobs)))
 
 	sort.Slice(blobs, func(i, j int) bool {
-		return bytes.Compare(blobs[i].hash, blobs[j].hash) < 0
+		return bytes.Compare(blobs[i].digest, blobs[j].digest) < 0
 	})
 
 	// Split blobs into chunks based on max pack size.
@@ -186,7 +186,7 @@ func (store inventoryArchiveV1) Pack(options PackOptions) (err error) {
 		) {
 			for _, blob := range blobs {
 				marklId, repool := store.defaultHash.GetBlobIdForHexString(
-					hex.EncodeToString(blob.hash),
+					hex.EncodeToString(blob.digest),
 				)
 
 				if !yield(marklId, nil) {
@@ -254,7 +254,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 
 		for i, blob := range blobs {
 			marklId, repool := store.defaultHash.GetBlobIdForHexString(
-				hex.EncodeToString(blob.hash),
+				hex.EncodeToString(blob.digest),
 			)
 			blobSet.blobs[i] = inventory_archive.BlobMetadata{
 				Id:   marklId,
@@ -331,7 +331,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 			continue
 		}
 
-		if writeErr := dataWriter.WriteFullEntry(blob.hash, blob.data); writeErr != nil {
+		if writeErr := dataWriter.WriteFullEntry(blob.digest, blob.data); writeErr != nil {
 			tmpFile.Close()
 			err = errors.Wrap(writeErr)
 			return dataPath, 0, 0, err
@@ -366,7 +366,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 		if computeErr != nil {
 			// If delta computation fails, write as full entry.
 			if writeErr := dataWriter.WriteFullEntry(
-				targetBlob.hash,
+				targetBlob.digest,
 				targetBlob.data,
 			); writeErr != nil {
 				tmpFile.Close()
@@ -383,7 +383,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 		// original data, write as a full entry instead.
 		if len(rawDelta) >= len(targetBlob.data) {
 			if writeErr := dataWriter.WriteFullEntry(
-				targetBlob.hash,
+				targetBlob.digest,
 				targetBlob.data,
 			); writeErr != nil {
 				tmpFile.Close()
@@ -395,9 +395,9 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 		}
 
 		if writeErr := dataWriter.WriteDeltaEntry(
-			targetBlob.hash,
+			targetBlob.digest,
 			algByte,
-			baseBlob.hash,
+			baseBlob.digest,
 			uint64(len(targetBlob.data)),
 			rawDelta,
 		); writeErr != nil {
@@ -723,7 +723,7 @@ func (store inventoryArchiveV1) deleteLooseBlobsV1(
 		}
 
 		marklId, repool := store.defaultHash.GetBlobIdForHexString(
-			hex.EncodeToString(blob.hash),
+			hex.EncodeToString(blob.digest),
 		)
 
 		if deleteErr := deleter.DeleteBlob(marklId); deleteErr != nil {

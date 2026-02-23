@@ -16,8 +16,8 @@ import (
 )
 
 type packedBlob struct {
-	hash []byte
-	data []byte
+	digest []byte
+	data   []byte
 }
 
 // splitBlobChunks partitions sorted blobs into chunks where each chunk's
@@ -112,7 +112,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		hashBytes := make([]byte, len(looseId.GetBytes()))
 		copy(hashBytes, looseId.GetBytes())
 
-		blobs = append(blobs, packedBlob{hash: hashBytes, data: data})
+		blobs = append(blobs, packedBlob{digest: hashBytes, data: data})
 	}
 
 	if len(blobs) == 0 {
@@ -122,7 +122,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 	tapOk(tw, fmt.Sprintf("collect %d loose blobs", len(blobs)))
 
 	sort.Slice(blobs, func(i, j int) bool {
-		return bytes.Compare(blobs[i].hash, blobs[j].hash) < 0
+		return bytes.Compare(blobs[i].digest, blobs[j].digest) < 0
 	})
 
 	maxPackSize := options.MaxPackSize
@@ -193,7 +193,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		) {
 			for _, blob := range blobs {
 				marklId, repool := store.defaultHash.GetBlobIdForHexString(
-					hex.EncodeToString(blob.hash),
+					hex.EncodeToString(blob.digest),
 				)
 
 				if !yield(marklId, nil) {
@@ -260,7 +260,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 	}
 
 	for _, blob := range blobs {
-		if err = dataWriter.WriteEntry(blob.hash, blob.data); err != nil {
+		if err = dataWriter.WriteEntry(blob.digest, blob.data); err != nil {
 			tmpFile.Close()
 			err = errors.Wrap(err)
 			return dataPath, 0, err
@@ -487,7 +487,7 @@ func (store inventoryArchiveV0) deleteLooseBlobs(
 		}
 
 		marklId, repool := store.defaultHash.GetBlobIdForHexString(
-			hex.EncodeToString(blob.hash),
+			hex.EncodeToString(blob.digest),
 		)
 
 		if deleteErr := deleter.DeleteBlob(marklId); deleteErr != nil {
