@@ -218,6 +218,11 @@ func (utility Utility) MakeCmdAndFlagSet(
 	utility.config.SetFlagDefinitions(flagSet)
 
 	if err := flagSet.Parse(args); err != nil {
+		if errors.Is(err, flags.ErrHelp) {
+			ok = false
+			return
+		}
+
 		ctx.Cancel(err)
 	}
 
