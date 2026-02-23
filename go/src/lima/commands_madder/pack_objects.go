@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"code.linenisgreat.com/dodder/go/src/_/interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
@@ -26,6 +27,7 @@ type PackObjects struct {
 	command_components_madder.BlobStoreLocal
 
 	DeleteLoose bool
+	MaxPackSize uint64
 }
 
 var _ interfaces.CommandComponentWriter = (*PackObjects)(nil)
@@ -48,6 +50,14 @@ func (cmd *PackObjects) SetFlagDefinitions(
 ) {
 	flagSet.BoolVar(&cmd.DeleteLoose, "delete-loose", false,
 		"validate archive then delete packed loose blobs")
+	flagSet.Func("max-pack-size", "override max pack size in bytes (0 = unlimited)", func(v string) error {
+		n, err := strconv.ParseUint(v, 10, 64)
+		if err != nil {
+			return err
+		}
+		cmd.MaxPackSize = n
+		return nil
+	})
 }
 
 func (cmd PackObjects) Run(req command.Request) {
@@ -125,6 +135,8 @@ func (cmd PackObjects) Run(req command.Request) {
 		DeleteLoose:          cmd.DeleteLoose,
 		DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
 		BlobFilter:           blobFilter,
+		MaxPackSize:          cmd.MaxPackSize,
+		TapWriter:            tw,
 	}); err != nil {
 		tw.NotOk(
 			fmt.Sprintf("pack %s", storeIdString),

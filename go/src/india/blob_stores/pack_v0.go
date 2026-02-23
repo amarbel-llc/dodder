@@ -3,6 +3,7 @@ package blob_stores
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -56,11 +57,14 @@ func splitBlobChunks(blobs []packedBlob, maxPackSize uint64) [][]packedBlob {
 }
 
 func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
+	tw := options.TapWriter
+
 	var blobs []packedBlob
 
 	for looseId, iterErr := range store.looseBlobStore.AllBlobs() {
 		if iterErr != nil {
 			err = errors.Wrap(iterErr)
+			tapNotOk(tw, "collect loose blobs", err)
 			return err
 		}
 
@@ -81,6 +85,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		reader, readErr := store.looseBlobStore.MakeBlobReader(looseId)
 		if readErr != nil {
 			err = errors.Wrapf(readErr, "reading loose blob %s", looseId)
+			tapNotOk(tw, "collect loose blobs", err)
 			return err
 		}
 
@@ -89,6 +94,7 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 
 		if readAllErr != nil {
 			err = errors.Wrapf(readAllErr, "reading loose blob data %s", looseId)
+			tapNotOk(tw, "collect loose blobs", err)
 			return err
 		}
 
@@ -102,11 +108,19 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 		return nil
 	}
 
+	tapOk(tw, fmt.Sprintf("collect %d loose blobs", len(blobs)))
+
 	sort.Slice(blobs, func(i, j int) bool {
 		return bytes.Compare(blobs[i].hash, blobs[j].hash) < 0
 	})
 
-	chunks := splitBlobChunks(blobs, store.config.GetMaxPackSize())
+	maxPackSize := options.MaxPackSize
+	if maxPackSize == 0 {
+		maxPackSize = store.config.GetMaxPackSize()
+	}
+
+	chunks := splitBlobChunks(blobs, maxPackSize)
+	totalChunks := len(chunks)
 
 	type chunkResult struct {
 		dataPath string
@@ -115,27 +129,41 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 
 	var results []chunkResult
 
-	for _, chunk := range chunks {
-		dataPath, packErr := store.packChunkArchive(chunk)
+	for chunkIdx, chunk := range chunks {
+		dataPath, entryCount, packErr := store.packChunkArchive(chunk)
 		if packErr != nil {
+			desc := fmt.Sprintf("write chunk %d/%d", chunkIdx+1, totalChunks)
+			tapNotOk(tw, desc, packErr)
 			return packErr
 		}
+
+		tapOk(tw, fmt.Sprintf(
+			"write chunk %d/%d (%d entries, 0 delta)",
+			chunkIdx+1, totalChunks, entryCount,
+		))
 
 		results = append(results, chunkResult{dataPath: dataPath, blobs: chunk})
 	}
 
 	if err = store.writeCache(); err != nil {
+		tapNotOk(tw, "write cache", err)
 		return err
 	}
+
+	tapOk(tw, "write cache")
 
 	if !options.DeleteLoose {
 		return nil
 	}
 
-	for _, r := range results {
+	for chunkIdx, r := range results {
 		if err = store.validateArchive(r.dataPath, r.blobs); err != nil {
+			desc := fmt.Sprintf("validate chunk %d/%d", chunkIdx+1, totalChunks)
+			tapNotOk(tw, desc, err)
 			return err
 		}
+
+		tapOk(tw, fmt.Sprintf("validate chunk %d/%d", chunkIdx+1, totalChunks))
 	}
 
 	if options.DeletionPrecondition != nil {
@@ -165,15 +193,18 @@ func (store inventoryArchiveV0) Pack(options PackOptions) (err error) {
 	}
 
 	if err = store.deleteLooseBlobs(blobs); err != nil {
+		tapNotOk(tw, fmt.Sprintf("delete %d loose blobs", len(blobs)), err)
 		return err
 	}
+
+	tapOk(tw, fmt.Sprintf("delete %d loose blobs", len(blobs)))
 
 	return nil
 }
 
 func (store inventoryArchiveV0) packChunkArchive(
 	blobs []packedBlob,
-) (dataPath string, err error) {
+) (dataPath string, entryCount int, err error) {
 	hashFormatId := store.defaultHash.GetMarklFormatId()
 	ct := store.config.GetCompressionType()
 
@@ -186,27 +217,27 @@ func (store inventoryArchiveV0) packChunkArchive(
 	)
 	if err != nil {
 		err = errors.Wrap(err)
-		return dataPath, err
+		return dataPath, 0, err
 	}
 
 	for _, blob := range blobs {
 		if err = dataWriter.WriteEntry(blob.hash, blob.data); err != nil {
 			err = errors.Wrap(err)
-			return dataPath, err
+			return dataPath, 0, err
 		}
 	}
 
 	checksum, writtenEntries, err := dataWriter.Close()
 	if err != nil {
 		err = errors.Wrap(err)
-		return dataPath, err
+		return dataPath, 0, err
 	}
 
 	archiveChecksum := hex.EncodeToString(checksum)
 
 	if err = os.MkdirAll(store.basePath, 0o755); err != nil {
 		err = errors.Wrapf(err, "creating archive directory %s", store.basePath)
-		return dataPath, err
+		return dataPath, 0, err
 	}
 
 	dataPath = filepath.Join(
@@ -216,7 +247,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 
 	if err = os.WriteFile(dataPath, dataBuf.Bytes(), 0o644); err != nil {
 		err = errors.Wrapf(err, "writing data file %s", dataPath)
-		return dataPath, err
+		return dataPath, 0, err
 	}
 
 	// Build and write index file
@@ -237,7 +268,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 		indexEntries,
 	); err != nil {
 		err = errors.Wrap(err)
-		return dataPath, err
+		return dataPath, 0, err
 	}
 
 	indexPath := filepath.Join(
@@ -247,8 +278,10 @@ func (store inventoryArchiveV0) packChunkArchive(
 
 	if err = os.WriteFile(indexPath, indexBuf.Bytes(), 0o644); err != nil {
 		err = errors.Wrapf(err, "writing index file %s", indexPath)
-		return dataPath, err
+		return dataPath, 0, err
 	}
+
+	entryCount = len(writtenEntries)
 
 	// Update in-memory index
 	for _, de := range writtenEntries {
@@ -265,7 +298,7 @@ func (store inventoryArchiveV0) packChunkArchive(
 		}
 	}
 
-	return dataPath, nil
+	return dataPath, entryCount, nil
 }
 
 func (store inventoryArchiveV0) writeCache() (err error) {

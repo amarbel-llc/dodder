@@ -28,7 +28,7 @@ function pack_objects_file_into_archive { # @test
 	assert_success
 	assert_output --partial 'TAP version 14'
 	assert_output --partial 'ok 1'
-	assert_output --partial 'ok 2 - pack'
+	assert_output --partial 'pack .archive'
 	refute_output --partial 'not ok'
 }
 
@@ -43,7 +43,7 @@ function pack_objects_multiple_files { # @test
 	assert_success
 	assert_output --partial 'ok 1'
 	assert_output --partial 'ok 2'
-	assert_output --partial 'ok 3 - pack'
+	assert_output --partial 'pack .archive'
 	refute_output --partial 'not ok'
 }
 
