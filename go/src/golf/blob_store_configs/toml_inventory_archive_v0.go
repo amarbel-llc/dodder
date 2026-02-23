@@ -10,7 +10,7 @@ import (
 )
 
 type TomlInventoryArchiveV0 struct {
-	HashTypeId       string                           `toml:"hash_type-id"`
+	HashTypeId       HashType                         `toml:"hash_type-id"`
 	CompressionType  compression_type.CompressionType `toml:"compression-type"`
 	LooseBlobStoreId blob_store_id.Id                 `toml:"loose-blob-store-id"`
 	Encryption       markl.Id                         `toml:"encryption"`
@@ -35,10 +35,11 @@ func (config *TomlInventoryArchiveV0) SetFlagDefinitions(
 ) {
 	config.CompressionType.SetFlagDefinitions(flagSet)
 
-	flagSet.StringVar(
+	config.HashTypeId = HashTypeDefault
+
+	flagSet.Var(
 		&config.HashTypeId,
 		"hash_type-id",
-		markl.FormatIdHashBlake2b256,
 		"hash type for archive checksums and blob hashes",
 	)
 
@@ -58,7 +59,7 @@ func (config TomlInventoryArchiveV0) SupportsMultiHash() bool {
 }
 
 func (config TomlInventoryArchiveV0) GetDefaultHashTypeId() string {
-	return config.HashTypeId
+	return string(config.HashTypeId)
 }
 
 func (config TomlInventoryArchiveV0) GetBlobCompression() interfaces.IOWrapper {

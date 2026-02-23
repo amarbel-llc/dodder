@@ -16,7 +16,7 @@ import (
 type TomlV2 struct {
 	HashBuckets values.IntSlice `toml:"hash_buckets"`
 	BasePath    string          `toml:"base_path,omitempty"`
-	HashTypeId  string          `toml:"hash_type-id"`
+	HashTypeId  HashType        `toml:"hash_type-id"`
 
 	// cannot use `omitempty`, as markl.Id's empty value equals its non-empty
 	// value due to unexported fields
@@ -48,10 +48,11 @@ func (blobStoreConfig *TomlV2) SetFlagDefinitions(
 		"determines hash bucketing directory structure",
 	)
 
-	flagSet.StringVar(
+	blobStoreConfig.HashTypeId = HashTypeDefault
+
+	flagSet.Var(
 		&blobStoreConfig.HashTypeId,
 		"hash_type-id",
-		markl.FormatIdHashBlake2b256,
 		"determines the hash type used for new blobs written to the store",
 	)
 
@@ -129,7 +130,7 @@ func (blobStoreConfig TomlV2) SupportsMultiHash() bool {
 }
 
 func (blobStoreConfig TomlV2) GetDefaultHashTypeId() string {
-	return blobStoreConfig.HashTypeId
+	return string(blobStoreConfig.HashTypeId)
 }
 
 func (blobStoreConfig *TomlV2) setBasePath(value string) {

@@ -21,7 +21,7 @@ type DeltaConfig struct {
 // TomlInventoryArchiveV1 is the V1 configuration for the inventory archive
 // blob store. Adds delta compression settings.
 type TomlInventoryArchiveV1 struct {
-	HashTypeId       string                           `toml:"hash_type-id"`
+	HashTypeId       HashType                         `toml:"hash_type-id"`
 	CompressionType  compression_type.CompressionType `toml:"compression-type"`
 	LooseBlobStoreId blob_store_id.Id                 `toml:"loose-blob-store-id"`
 	Encryption       markl.Id                         `toml:"encryption"`
@@ -47,10 +47,11 @@ func (config *TomlInventoryArchiveV1) SetFlagDefinitions(
 ) {
 	config.CompressionType.SetFlagDefinitions(flagSet)
 
-	flagSet.StringVar(
+	config.HashTypeId = HashTypeDefault
+
+	flagSet.Var(
 		&config.HashTypeId,
 		"hash_type-id",
-		markl.FormatIdHashBlake2b256,
 		"hash type for archive checksums and blob hashes",
 	)
 
@@ -70,7 +71,7 @@ func (config TomlInventoryArchiveV1) SupportsMultiHash() bool {
 }
 
 func (config TomlInventoryArchiveV1) GetDefaultHashTypeId() string {
-	return config.HashTypeId
+	return string(config.HashTypeId)
 }
 
 func (config TomlInventoryArchiveV1) GetBlobCompression() interfaces.IOWrapper {

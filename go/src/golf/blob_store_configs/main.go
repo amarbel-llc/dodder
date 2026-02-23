@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
 )
 
-const DefaultHashTypeId = markl.FormatIdHashSha256
+const DefaultHashTypeId = string(HashTypeSha256)
 
 var DefaultHashType markl.FormatHash = markl.FormatHashSha256
 
@@ -125,7 +125,7 @@ func Default() *TypedMutableConfig {
 		Type: ids.GetOrPanic(ids.TypeTomlBlobStoreConfigVCurrent).TypeStruct,
 		Blob: &DefaultType{
 			HashBuckets:       DefaultHashBuckets,
-			HashTypeId:        markl.FormatIdHashBlake2b256,
+			HashTypeId:        HashTypeDefault,
 			CompressionType:   compression_type.CompressionTypeDefault,
 			LockInternalFiles: true,
 		},
