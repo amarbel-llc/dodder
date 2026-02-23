@@ -14,7 +14,8 @@ teardown() {
 # bats file_tags=user_story:blob_store
 
 function blob_store_sync_twice { # @test
-	# TODO once migrated to madder blob stores for bats tests, enable this test again
+	# TODO once migrated to madder blob stores for bats tests, enable this test again.
+	# NOTE: sync now outputs TAP-14 — assertions below need updating when unskipped.
 	skip
 	setup_repo
 	run_dodder blob_store-init test
