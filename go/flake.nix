@@ -91,6 +91,7 @@
             gum
           ]) ++ [
             purse-first.packages.${system}.batman
+            purse-first.packages.${system}.tap-dancer
           ];
 
           inputsFrom = [
