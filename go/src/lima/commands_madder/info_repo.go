@@ -62,6 +62,11 @@ func (cmd InfoRepo) Run(req command.Request) {
 				env.Cancel(err)
 			}
 
+		case "base-path":
+			env.GetUI().Print(
+				directory_layout.GetDefaultBlobStore(env).GetBase(),
+			)
+
 		case "config-path":
 			env.GetUI().Print(
 				directory_layout.GetDefaultBlobStore(env).GetConfig(),
