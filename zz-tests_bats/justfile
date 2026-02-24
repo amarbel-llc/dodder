@@ -1,10 +1,10 @@
 set output-format := "tap"
 
-export DODDER_BIN := env("DODDER_BIN", "dodder")
-export DODDER_XDG_UTILITY_OVERRIDE := ""
-
 bin_dir := env("BATS_BIN_DIR", "")
 _bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
+
+export DODDER_BIN := if bin_dir != "" { "dodder" } else { env("DODDER_BIN", "dodder") }
+export DODDER_XDG_UTILITY_OVERRIDE := ""
 
 default: test
 
