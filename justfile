@@ -47,7 +47,6 @@ test-bats-update-fixtures: build
   #!/usr/bin/env bash
   set -euo pipefail
   export PATH="{{dir_build}}/debug:$PATH"
-  export DODDER_BIN="{{dir_build}}/debug/dodder"
 
   echo "==> Regenerating fixtures..."
   just zz-tests_bats/test-generate_fixtures
@@ -61,10 +60,10 @@ test-bats-update-fixtures: build
 
 # Smart fixture generation: skip if fixtures exist for current store version.
 [private]
-_test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
+_test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
   #!/usr/bin/env bash
   set -euo pipefail
-  current_version="v$("$DODDER_BIN" info store-version)"
+  current_version="v$(dodder info store-version)"
   fixture_dir="zz-tests_bats/migration/$current_version"
 
   if [[ -d "$fixture_dir/.dodder" ]]; then
@@ -77,7 +76,5 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODD
 # Run bats tests (no build, no fixture generation).
 [private]
 _test-bats-run:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  echo "==> Running bats integration tests..."
+  @echo "==> Running bats integration tests..."
   BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test
