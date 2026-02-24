@@ -19,7 +19,6 @@ func init() {
 
 type InfoRepo struct {
 	command_components_madder.EnvBlobStore
-	command_components_madder.BlobStoreConfig
 	command_components_madder.BlobStore
 }
 
@@ -61,11 +60,6 @@ func (cmd InfoRepo) Run(req command.Request) {
 			); err != nil {
 				env.Cancel(err)
 			}
-
-		case "base-path":
-			env.GetUI().Print(
-				directory_layout.GetDefaultBlobStore(env).GetBase(),
-			)
 
 		case "config-path":
 			env.GetUI().Print(

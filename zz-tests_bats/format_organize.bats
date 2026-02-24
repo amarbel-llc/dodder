@@ -8,7 +8,7 @@ setup() {
 }
 
 teardown() {
-  rm_from_version
+  chflags_and_rm
 }
 
 # bats file_tags=user_story:organize

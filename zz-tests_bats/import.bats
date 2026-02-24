@@ -40,10 +40,6 @@ function import { # @test
     popd || exit 1
   )
 
-  run_dodder info-repo pubkey
-  assert_success
-  # old_pubkey="$output"
-
   run_dodder export -print-time=true +z,e,t
   assert_success
   echo "$output" >list
@@ -84,11 +80,6 @@ function import_with_overwrite_sig { # @test
     popd || exit 1
   )
 
-  run_dodder info-repo pubkey
-  assert_success
-  # old_pubkey="$output"
-
-  # run_dodder export -print-time=true +z,e,t
   cat >list <<-EOM
 		---
 		! inventory_list-v2
@@ -187,11 +178,6 @@ function import_with_dupes_in_list { # @test
     run_dodder_init
   )
 
-  run_dodder info-repo pubkey
-  assert_success
-  # old_pubkey="$output"
-
-  # run_dodder export -print-time=true +z,e,t
   cat >list <<-EOM
 		---
 		! inventory_list-v2

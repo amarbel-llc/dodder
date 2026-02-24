@@ -6,7 +6,6 @@ setup() {
 	# for shellcheck SC2154
 	export output
 
-	# copy_from_version "$DIR"
 }
 
 teardown() {

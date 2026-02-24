@@ -112,11 +112,6 @@ function copy_from_version {
   cp -r "$DIR/migration/$DODDER_VERSION/.madder" "$BATS_TEST_TMPDIR/.madder"
 }
 
-# TODO remove
-function rm_from_version {
-  chflags_and_rm
-}
-
 function chflags_and_rm {
   "$BATS_CWD/../bin/chflags.bash" -R nouchg "$BATS_TEST_TMPDIR"
 }
@@ -152,29 +147,6 @@ function run_dodder_stderr_unified {
 }
 
 function run_dodder_init {
-  if [[ $# -eq 0 ]]; then
-    args=("test")
-  else
-    args=("$@")
-  fi
-
-  run_dodder init \
-    -yin <(cat_yin) \
-    -yang <(cat_yang) \
-    -lock-internal-files=false \
-    -override-xdg-with-cwd \
-    "${args[@]}"
-
-  assert_success
-  assert_output - <<-EOM
-[!md @$(get_type_blob_sha) !toml-type-v1]
-[konfig @$(get_konfig_sha) !toml-config-v2]
-EOM
-
-  run_dodder_init_workspace
-}
-
-function run_dodder_init_cwd {
   if [[ $# -eq 0 ]]; then
     args=("test")
   else
