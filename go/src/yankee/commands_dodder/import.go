@@ -60,24 +60,7 @@ func (cmd Import) Run(req command.Request) {
 	cmd.DedupingFormatId = markl.PurposeV5MetadataDigestWithoutTai
 	cmd.CheckedOutPrinter = local.PrinterCheckedOutConflictsForRemoteTransfers()
 
-	if cmd.BlobStoreId.IsEmpty() {
-		blobStoreBasePath := req.PopArg("blob_store-base-path")
-		blobStoreConfigPath := req.PopArg("blob_store-config-path")
-
-		if blobStoreConfigPath != "" {
-			cmd.RemoteBlobStore = cmd.MakeBlobStoreFromConfigPath(
-				local.GetEnvRepo().GetEnvBlobStore(),
-				blobStoreBasePath,
-				blobStoreConfigPath,
-			)
-
-			if cmd.RemoteBlobStore.GetBlobStore() != nil &&
-				cmd.RemoteBlobStore.Path.GetBase() == "" {
-				req.Cancel(errors.Errorf("missing blob store base path"))
-				return
-			}
-		}
-	} else {
+	if !cmd.BlobStoreId.IsEmpty() {
 		cmd.RemoteBlobStore = local.GetEnvRepo().GetEnvBlobStore().GetBlobStore(
 			cmd.BlobStoreId,
 		)

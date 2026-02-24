@@ -30,8 +30,7 @@ function import { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
@@ -40,9 +39,8 @@ function import { # @test
   new_pubkey="$output"
 
   run_dodder import \
-    "$list" \
-    "$blobBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
 
   run_dodder show -format inventory_list +z,e,t
@@ -87,8 +85,7 @@ function import_with_overwrite_sig { # @test
 	EOM
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
@@ -98,9 +95,8 @@ function import_with_overwrite_sig { # @test
 
   run_dodder import \
     -overwrite-signatures=true \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
 
   run_dodder show -format inventory_list +z,e,t
@@ -133,8 +129,7 @@ function import_with_overwrite_sig_different_hash { # @test
   )
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
@@ -144,9 +139,8 @@ function import_with_overwrite_sig_different_hash { # @test
 
   run_dodder import \
     -overwrite-signatures=true \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
 
   run_dodder show -format inventory_list +z,e,t
@@ -198,8 +192,7 @@ function import_with_dupes_in_list { # @test
 	EOM
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
@@ -209,9 +202,8 @@ function import_with_dupes_in_list { # @test
 
   run_dodder import \
     -overwrite-signatures=true \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
   assert_output - <<-EOM
 		copied Blob blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 (27 B)
@@ -253,15 +245,13 @@ function import_one_tai_same { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
   run_dodder import \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
 
   assert_success
   assert_output_unsorted - <<-EOM
@@ -292,16 +282,14 @@ function import_twice_no_dupes_one_zettel { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
   run_dodder \
     import \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
   assert_output_unsorted - <<-EOM
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
@@ -312,9 +300,8 @@ function import_twice_no_dupes_one_zettel { # @test
 
   run_dodder \
     import \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
   assert_output - <<-EOM
 	EOM
@@ -340,8 +327,7 @@ function import_conflict { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
@@ -361,9 +347,8 @@ function import_conflict { # @test
 
   run_dodder import \
     -print-copies=false \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_failure
   assert_output --partial - <<-EOM
 		       conflicted [one/uno]
@@ -387,15 +372,13 @@ function import_twice_no_dupes { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
   run_dodder import \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
   assert_output_unsorted - <<-EOM
 		copied Blob blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd (10 B)
@@ -416,9 +399,8 @@ function import_twice_no_dupes { # @test
 	EOM
 
   run_dodder import \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
   assert_success
   assert_output_unsorted - <<-EOM
 	EOM
@@ -453,17 +435,15 @@ function import_inventory_lists { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
-  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
+  register_source_blob_store inner
 
   pushd inner || exit 1
 
   export BATS_TEST_BODY=true
   run_dodder \
     import \
-    "$list" \
-    "$blobsBasePath" \
-    "$blobsConfigPath"
+    -blob_store-id .source \
+    "$list"
 
   assert_success
 

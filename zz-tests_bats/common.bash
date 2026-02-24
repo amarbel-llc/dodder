@@ -294,6 +294,22 @@ EOM
   run_dodder init-workspace
 }
 
+function register_source_blob_store {
+  local dest_dir="$1"
+  local store_name="${2:-source}"
+
+  # Get the source's default blob store base path (from current directory)
+  local source_store_base
+  source_store_base="$("$DODDER_BIN" blob_store-info-repo base-path)"
+
+  # Get the destination's blob stores parent directory
+  local dest_stores_dir
+  dest_stores_dir="$(cd "$dest_dir" && "$DODDER_BIN" blob_store-info-repo dir-blob_stores)"
+
+  # Symlink source store into destination's stores directory
+  ln -s "$(realpath "$source_store_base")" "${dest_stores_dir}/${store_name}"
+}
+
 function start_server {
   dir="$1"
 
