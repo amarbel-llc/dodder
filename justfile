@@ -36,19 +36,11 @@ test-bats-quick: build _test-bats-run
 
 # Run specific bats test files.
 test-bats-targets *targets: build
-  #!/usr/bin/env bash
-  set -euo pipefail
-  export PATH="{{dir_build}}/debug:$PATH"
-  export DODDER_BIN="{{dir_build}}/debug/dodder"
-  just zz-tests_bats/test-targets {{targets}}
+  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
 
 # Run bats tests filtered by tag.
 test-bats-tags *tags: build
-  #!/usr/bin/env bash
-  set -euo pipefail
-  export PATH="{{dir_build}}/debug:$PATH"
-  export DODDER_BIN="{{dir_build}}/debug/dodder"
-  just zz-tests_bats/test-tags {{tags}}
+  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
 
 # Force-regenerate fixtures. Review diff, then git add + commit.
 test-bats-update-fixtures: build
@@ -84,8 +76,8 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODD
 
 # Run bats tests (no build, no fixture generation).
 [private]
-_test-bats-run $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
+_test-bats-run:
   #!/usr/bin/env bash
   set -euo pipefail
   echo "==> Running bats integration tests..."
-  just zz-tests_bats/test
+  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test

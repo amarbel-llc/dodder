@@ -3,6 +3,9 @@ set output-format := "tap"
 export DODDER_BIN := env("DODDER_BIN", "dodder")
 export DODDER_XDG_UTILITY_OVERRIDE := ""
 
+bin_dir := env("BATS_BIN_DIR", "")
+_bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
+
 default: test
 
 dir_git_root := shell("git rev-parse --show-toplevel")
@@ -95,13 +98,13 @@ bats_timeout := "10"
 [group("test")]
 test-targets *targets="*.bats":
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats --tap --jobs {{num_cpus()}} {{targets}}
+    bats {{_bin_dir_arg}} --jobs {{num_cpus()}} {{targets}}
 
 # runs specific bats test tags
 [group("test")]
 test-tags *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats --tap --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
+    bats {{_bin_dir_arg}} --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
 
 [group("test")]
 test-integration: (test-targets "*.bats")

@@ -92,11 +92,7 @@ cmd_dodder_def=(
 
 export cmd_dodder_def
 
-if [[ -z $DODDER_BIN ]]; then
-  export DODDER_BIN
-  echo 'No $DODDER_BIN set. This is usually set by .envrc or .env' >&2
-  exit 1
-fi
+export DODDER_BIN="${DODDER_BIN:-dodder}"
 
 if [[ -z $DODDER_VERSION ]]; then
   export DODDER_VERSION
