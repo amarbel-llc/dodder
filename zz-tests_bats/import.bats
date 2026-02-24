@@ -6,7 +6,26 @@ setup() {
   # for shellcheck SC2154
   export output
 
-  copy_from_version "$DIR"
+  set_xdg "$BATS_TEST_TMPDIR"
+
+  # Create a user-scoped blob store accessible by all repos
+  run_dodder blob_store-init shared
+  assert_success
+
+  # Init outer repo using the shared user-scoped store
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -lock-internal-files=false \
+    -override-xdg-with-cwd \
+    -encryption none \
+    -blob_store-id shared \
+    test
+  assert_success
+
+  run_dodder init-workspace
+
+  create_test_zettels
 }
 
 teardown() {
@@ -30,8 +49,6 @@ function import { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder info-repo pubkey
@@ -39,7 +56,7 @@ function import { # @test
   new_pubkey="$output"
 
   run_dodder import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
 
@@ -85,8 +102,6 @@ function import_with_overwrite_sig { # @test
 	EOM
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder info-repo pubkey
@@ -95,7 +110,7 @@ function import_with_overwrite_sig { # @test
 
   run_dodder import \
     -overwrite-signatures=true \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
 
@@ -129,8 +144,6 @@ function import_with_overwrite_sig_different_hash { # @test
   )
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder info-repo pubkey
@@ -139,7 +152,7 @@ function import_with_overwrite_sig_different_hash { # @test
 
   run_dodder import \
     -overwrite-signatures=true \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
 
@@ -192,8 +205,6 @@ function import_with_dupes_in_list { # @test
 	EOM
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder info-repo pubkey
@@ -202,7 +213,7 @@ function import_with_dupes_in_list { # @test
 
   run_dodder import \
     -overwrite-signatures=true \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
   assert_output - <<-EOM
@@ -245,12 +256,10 @@ function import_one_tai_same { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
 
   assert_success
@@ -282,13 +291,11 @@ function import_twice_no_dupes_one_zettel { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder \
     import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
   assert_output_unsorted - <<-EOM
@@ -300,7 +307,7 @@ function import_twice_no_dupes_one_zettel { # @test
 
   run_dodder \
     import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
   assert_output - <<-EOM
@@ -327,8 +334,6 @@ function import_conflict { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder new -edit=false - <<-EOM
@@ -347,7 +352,7 @@ function import_conflict { # @test
 
   run_dodder import \
     -print-copies=false \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_failure
   assert_output --partial - <<-EOM
@@ -372,12 +377,10 @@ function import_twice_no_dupes { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   run_dodder import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
   assert_output_unsorted - <<-EOM
@@ -399,7 +402,7 @@ function import_twice_no_dupes { # @test
 	EOM
 
   run_dodder import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
   assert_success
   assert_output_unsorted - <<-EOM
@@ -435,14 +438,12 @@ function import_inventory_lists { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  register_source_blob_store inner
-
   pushd inner || exit 1
 
   export BATS_TEST_BODY=true
   run_dodder \
     import \
-    -blob_store-id .source \
+    -blob_store-id shared \
     "$list"
 
   assert_success

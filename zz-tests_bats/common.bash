@@ -294,20 +294,50 @@ EOM
   run_dodder init-workspace
 }
 
-function register_source_blob_store {
-  local dest_dir="$1"
-  local store_name="${2:-source}"
+function create_test_zettels {
+  export BATS_TEST_BODY=true
+  run_dodder new -edit=false - <<EOM
+---
+# wow ok
+- tag-1
+- tag-2
+! md
+---
 
-  # Get the source's default blob store base path (from current directory)
-  local source_store_base
-  source_store_base="$("$DODDER_BIN" blob_store-info-repo base-path)"
+this is the body aiiiiight
+EOM
 
-  # Get the destination's blob stores parent directory
-  local dest_stores_dir
-  dest_stores_dir="$(cd "$dest_dir" && "$DODDER_BIN" blob_store-info-repo dir-blob_stores)"
+  assert_success
 
-  # Symlink source store into destination's stores directory
-  ln -s "$(realpath "$source_store_base")" "${dest_stores_dir}/${store_name}"
+  run_dodder new -edit=false - <<EOM
+---
+# wow ok again
+- tag-3
+- tag-4
+! md
+---
+
+not another one
+EOM
+
+  assert_success
+
+  run_dodder checkout one/uno
+  assert_success
+
+  cat >one/uno.zettel <<EOM
+---
+# wow the first
+- tag-3
+- tag-4
+! md
+---
+
+last time
+EOM
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
 }
 
 function start_server {

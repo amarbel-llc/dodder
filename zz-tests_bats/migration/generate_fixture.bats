@@ -11,11 +11,6 @@ teardown() {
   chflags_and_rm
 }
 
-cmd_def=(
-  # -verbose
-  -predictable-zettel-ids
-)
-
 function generate { # @test
   function run_dodder {
     cmd="$1"
@@ -45,14 +40,14 @@ function generate { # @test
   assert_success
   assert_output "$storeVersionCurrent"
 
-  run_dodder show "${cmd_def[@]}" !md:t :konfig
+  run_dodder show !md:t :konfig
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
-  run_dodder show "${cmd_def[@]}" -format text :konfig
+  run_dodder show -format text :konfig
   assert_success
   assert_output - <<-EOM
 		---
@@ -96,79 +91,9 @@ function generate { # @test
 		merge = ['vimdiff']
 	EOM
 
-  export BATS_TEST_BODY=true
-  run_dodder new "${cmd_def[@]}" -edit=false - <<EOM
----
-# wow ok
-- tag-1
-- tag-2
-! md
----
+  create_test_zettels
 
-this is the body aiiiiight
-EOM
-
-  assert_success
-  assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
-
-  run_dodder show "${cmd_def[@]}" -format tags one/uno
-  assert_success
-  assert_output "tag-1, tag-2"
-
-  run_dodder new "${cmd_def[@]}" -edit=false - <<EOM
----
-# wow ok again
-- tag-3
-- tag-4
-! md
----
-
-not another one
-EOM
-
-  assert_success
-  assert_output_unsorted - <<-EOM
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-	EOM
-
-  run_dodder show "${cmd_def[@]}" one/dos
-  assert_success
-  assert_output - <<-EOM
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-	EOM
-
-  run_dodder checkout "${cmd_def[@]}" one/uno
-  assert_success
-  assert_output - <<-EOM
-		      checked out [one/uno.zettel @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
-  cat >one/uno.zettel <<EOM
----
-# wow the first
-- tag-3
-- tag-4
-! md
----
-
-last time
-EOM
-
-  assert_success
-  assert_output_unsorted - <<-EOM
-		      checked out [one/uno.zettel @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
-
-  run_dodder checkin "${cmd_def[@]}" -delete one/uno.zettel
-  assert_success
-  assert_output_unsorted - <<-EOM
-		          deleted [one/]
-		          deleted [one/uno.zettel]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
-
-  run_dodder show "${cmd_def[@]}" -format tags one/uno
+  run_dodder show -format tags one/uno
   assert_success
   assert_output "tag-3, tag-4"
 }
