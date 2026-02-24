@@ -3,7 +3,6 @@ set output-format := "tap"
 bin_dir := env("BATS_BIN_DIR", "")
 _bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
 
-export DODDER_BIN := if bin_dir != "" { "dodder" } else { env("DODDER_BIN", "dodder") }
 export DODDER_XDG_UTILITY_OVERRIDE := ""
 
 default: test
@@ -12,7 +11,7 @@ default: test
 clean-fixtures:
   #! /bin/bash -e
 
-  dir="migration/v$({{DODDER_BIN}} info store-version)"
+  dir="migration/v$(dodder info store-version)"
   git reset HEAD "$dir" >/dev/null 2>&1
   ./../bin/chflags.bash -R nouchg "$dir" >/dev/null 2>&1
   git clean -fd "$dir" >/dev/null 2>&1
@@ -23,7 +22,7 @@ clean-fixtures:
 
 
 [group("debug")]
-debug-env store_version=`echo "v$(${DODDER_BIN:-dodder} info store-version)"`:
+debug-env store_version=`echo "v$(dodder info store-version)"`:
   #! /bin/bash -ex
   dir="$(mktemp -d)"
   trap "rm -rf '$dir'" EXIT
@@ -56,8 +55,8 @@ debug-env store_version=`echo "v$(${DODDER_BIN:-dodder} info store-version)"`:
 [group("test")]
 test-generate_fixtures:
   #! /bin/bash -e
-  which {{DODDER_BIN}}
-  export DODDER_VERSION="v$({{DODDER_BIN}} info store-version)"
+  which dodder
+  export DODDER_VERSION="v$(dodder info store-version)"
   ./migration/generate_fixture.bash
 
 bats_timeout := "10"

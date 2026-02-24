@@ -92,7 +92,7 @@ cmd_dodder_def=(
 
 export cmd_dodder_def
 
-export DODDER_BIN="${DODDER_BIN:-dodder}"
+DODDER_BIN=dodder
 
 if [[ -z $DODDER_VERSION ]]; then
   export DODDER_VERSION

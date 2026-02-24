@@ -6,8 +6,7 @@ setup() {
 	# for shellcheck SC2154
 	export output
 
-	# madder binary lives alongside dodder in the same build directory
-	MADDER_BIN="$(dirname "$DODDER_BIN")/madder"
+	MADDER_BIN=madder
 	export MADDER_BIN
 }
 
