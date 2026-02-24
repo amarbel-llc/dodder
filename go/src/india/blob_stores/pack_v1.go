@@ -18,6 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
+	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
 )
 
 // sliceBlobSet implements inventory_archive.BlobSet backed by a slice.
@@ -279,6 +280,38 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 			return dataPath, 0, 0, err
 		}
 
+		// Resolve selector from config.
+		sigConfig, hasSigConfig := store.config.(blob_store_configs.SignatureConfigImmutable)
+		selConfig, hasSelConfig := store.config.(blob_store_configs.SelectorConfigImmutable)
+
+		var selector inventory_archive.BaseSelector
+
+		if hasSelConfig && selConfig.GetSelectorType() != "" && selConfig.GetSelectorType() != "size-based" {
+			var selErr error
+			selector, selErr = inventory_archive.BaseSelectorForName(
+				selConfig.GetSelectorType(),
+				inventory_archive.BaseSelectorParams{
+					Bands:       selConfig.GetSelectorBands(),
+					RowsPerBand: selConfig.GetSelectorRowsPerBand(),
+					MinBlobSize: selConfig.GetSelectorMinBlobSize(),
+					MaxBlobSize: selConfig.GetSelectorMaxBlobSize(),
+				},
+			)
+			if selErr != nil {
+				err = errors.Wrap(selErr)
+				return dataPath, 0, 0, err
+			}
+		}
+
+		if selector == nil {
+			selector = &inventory_archive.SizeBasedSelector{
+				MinBlobSize: store.config.GetDeltaMinBlobSize(),
+				MaxBlobSize: store.config.GetDeltaMaxBlobSize(),
+				SizeRatio:   store.config.GetDeltaSizeRatio(),
+			}
+		}
+
+		// Build BlobSet.
 		blobSet := &sliceBlobSet{
 			blobs: make([]inventory_archive.BlobMetadata, len(blobs)),
 		}
@@ -294,10 +327,35 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 			repool()
 		}
 
-		selector := &inventory_archive.SizeBasedSelector{
-			MinBlobSize: store.config.GetDeltaMinBlobSize(),
-			MaxBlobSize: store.config.GetDeltaMaxBlobSize(),
-			SizeRatio:   store.config.GetDeltaSizeRatio(),
+		// Compute signatures if configured.
+		if hasSigConfig && sigConfig.GetSignatureType() != "" {
+			sigComputer, sigErr := inventory_archive.SignatureComputerForName(
+				sigConfig.GetSignatureType(),
+				inventory_archive.SignatureComputerParams{
+					SignatureLen:  sigConfig.GetSignatureLen(),
+					AvgChunkSize: sigConfig.GetAvgChunkSize(),
+					MinChunkSize: sigConfig.GetMinChunkSize(),
+					MaxChunkSize: sigConfig.GetMaxChunkSize(),
+				},
+			)
+			if sigErr != nil {
+				err = errors.Wrap(sigErr)
+				return dataPath, 0, 0, err
+			}
+
+			if sigComputer != nil {
+				for i, blob := range blobs {
+					sig, compErr := sigComputer.ComputeSignature(
+						bytes.NewReader(blob.data),
+					)
+					if compErr != nil {
+						err = errors.Wrapf(compErr, "computing signature for blob %d", i)
+						return dataPath, 0, 0, err
+					}
+
+					blobSet.blobs[i].Signature = sig
+				}
+			}
 		}
 
 		da := &mapDeltaAssignments{assignments: assignments}
