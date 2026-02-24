@@ -9,13 +9,31 @@ import (
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 )
 
+type SignatureConfig struct {
+	Type         string `toml:"type"`
+	SignatureLen int    `toml:"signature-len"`
+	AvgChunkSize int    `toml:"avg-chunk-size"`
+	MinChunkSize int    `toml:"min-chunk-size"`
+	MaxChunkSize int    `toml:"max-chunk-size"`
+}
+
+type SelectorConfig struct {
+	Type        string `toml:"type"`
+	Bands       int    `toml:"bands"`
+	RowsPerBand int    `toml:"rows-per-band"`
+	MinBlobSize uint64 `toml:"min-blob-size"`
+	MaxBlobSize uint64 `toml:"max-blob-size"`
+}
+
 // DeltaConfig holds configuration for delta compression in inventory archives.
 type DeltaConfig struct {
-	Enabled     bool    `toml:"enabled"`
-	Algorithm   string  `toml:"algorithm"`
-	MinBlobSize uint64  `toml:"min-blob-size"`
-	MaxBlobSize uint64  `toml:"max-blob-size"`
-	SizeRatio   float64 `toml:"size-ratio"`
+	Enabled     bool            `toml:"enabled"`
+	Algorithm   string          `toml:"algorithm"`
+	MinBlobSize uint64          `toml:"min-blob-size"`
+	MaxBlobSize uint64          `toml:"max-blob-size"`
+	SizeRatio   float64         `toml:"size-ratio"`
+	Signature   SignatureConfig `toml:"signature"`
+	Selector    SelectorConfig  `toml:"selector"`
 }
 
 // TomlInventoryArchiveV1 is the V1 configuration for the inventory archive
@@ -33,6 +51,8 @@ var (
 	_ ConfigInventoryArchiveDelta = TomlInventoryArchiveV1{}
 	_ ConfigUpgradeable           = TomlInventoryArchiveV1{}
 	_ ConfigMutable               = &TomlInventoryArchiveV1{}
+	_ SignatureConfigImmutable    = TomlInventoryArchiveV1{}
+	_ SelectorConfigImmutable     = TomlInventoryArchiveV1{}
 	_                             = registerToml[TomlInventoryArchiveV1](
 		Coder.Blob,
 		ids.TypeTomlBlobStoreConfigInventoryArchiveV1,
@@ -120,6 +140,50 @@ func (config TomlInventoryArchiveV1) GetDeltaMaxBlobSize() uint64 {
 
 func (config TomlInventoryArchiveV1) GetDeltaSizeRatio() float64 {
 	return config.Delta.SizeRatio
+}
+
+// SignatureConfigImmutable implementation
+
+func (config TomlInventoryArchiveV1) GetSignatureType() string {
+	return config.Delta.Signature.Type
+}
+
+func (config TomlInventoryArchiveV1) GetSignatureLen() int {
+	return config.Delta.Signature.SignatureLen
+}
+
+func (config TomlInventoryArchiveV1) GetAvgChunkSize() int {
+	return config.Delta.Signature.AvgChunkSize
+}
+
+func (config TomlInventoryArchiveV1) GetMinChunkSize() int {
+	return config.Delta.Signature.MinChunkSize
+}
+
+func (config TomlInventoryArchiveV1) GetMaxChunkSize() int {
+	return config.Delta.Signature.MaxChunkSize
+}
+
+// SelectorConfigImmutable implementation
+
+func (config TomlInventoryArchiveV1) GetSelectorType() string {
+	return config.Delta.Selector.Type
+}
+
+func (config TomlInventoryArchiveV1) GetSelectorBands() int {
+	return config.Delta.Selector.Bands
+}
+
+func (config TomlInventoryArchiveV1) GetSelectorRowsPerBand() int {
+	return config.Delta.Selector.RowsPerBand
+}
+
+func (config TomlInventoryArchiveV1) GetSelectorMinBlobSize() uint64 {
+	return config.Delta.Selector.MinBlobSize
+}
+
+func (config TomlInventoryArchiveV1) GetSelectorMaxBlobSize() uint64 {
+	return config.Delta.Selector.MaxBlobSize
 }
 
 func (config TomlInventoryArchiveV1) GetMaxPackSize() uint64 {

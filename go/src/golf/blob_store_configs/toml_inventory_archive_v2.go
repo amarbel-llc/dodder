@@ -20,6 +20,8 @@ type TomlInventoryArchiveV2 struct {
 var (
 	_ ConfigInventoryArchiveDelta = TomlInventoryArchiveV2{}
 	_ ConfigMutable               = &TomlInventoryArchiveV2{}
+	_ SignatureConfigImmutable    = TomlInventoryArchiveV2{}
+	_ SelectorConfigImmutable     = TomlInventoryArchiveV2{}
 	_                             = registerToml[TomlInventoryArchiveV2](
 		Coder.Blob,
 		ids.TypeTomlBlobStoreConfigInventoryArchiveV2,
@@ -82,6 +84,8 @@ func (config TomlInventoryArchiveV2) GetCompressionType() compression_type.Compr
 	return config.CompressionType
 }
 
+// DeltaConfigImmutable implementation
+
 func (config TomlInventoryArchiveV2) GetDeltaEnabled() bool {
 	return config.Delta.Enabled
 }
@@ -100,6 +104,50 @@ func (config TomlInventoryArchiveV2) GetDeltaMaxBlobSize() uint64 {
 
 func (config TomlInventoryArchiveV2) GetDeltaSizeRatio() float64 {
 	return config.Delta.SizeRatio
+}
+
+// SignatureConfigImmutable implementation
+
+func (config TomlInventoryArchiveV2) GetSignatureType() string {
+	return config.Delta.Signature.Type
+}
+
+func (config TomlInventoryArchiveV2) GetSignatureLen() int {
+	return config.Delta.Signature.SignatureLen
+}
+
+func (config TomlInventoryArchiveV2) GetAvgChunkSize() int {
+	return config.Delta.Signature.AvgChunkSize
+}
+
+func (config TomlInventoryArchiveV2) GetMinChunkSize() int {
+	return config.Delta.Signature.MinChunkSize
+}
+
+func (config TomlInventoryArchiveV2) GetMaxChunkSize() int {
+	return config.Delta.Signature.MaxChunkSize
+}
+
+// SelectorConfigImmutable implementation
+
+func (config TomlInventoryArchiveV2) GetSelectorType() string {
+	return config.Delta.Selector.Type
+}
+
+func (config TomlInventoryArchiveV2) GetSelectorBands() int {
+	return config.Delta.Selector.Bands
+}
+
+func (config TomlInventoryArchiveV2) GetSelectorRowsPerBand() int {
+	return config.Delta.Selector.RowsPerBand
+}
+
+func (config TomlInventoryArchiveV2) GetSelectorMinBlobSize() uint64 {
+	return config.Delta.Selector.MinBlobSize
+}
+
+func (config TomlInventoryArchiveV2) GetSelectorMaxBlobSize() uint64 {
+	return config.Delta.Selector.MaxBlobSize
 }
 
 func (config TomlInventoryArchiveV2) GetMaxPackSize() uint64 {

@@ -75,6 +75,22 @@ type (
 		GetDeltaSizeRatio() float64
 	}
 
+	SignatureConfigImmutable interface {
+		GetSignatureType() string
+		GetSignatureLen() int
+		GetAvgChunkSize() int
+		GetMinChunkSize() int
+		GetMaxChunkSize() int
+	}
+
+	SelectorConfigImmutable interface {
+		GetSelectorType() string
+		GetSelectorBands() int
+		GetSelectorRowsPerBand() int
+		GetSelectorMinBlobSize() uint64
+		GetSelectorMaxBlobSize() uint64
+	}
+
 	ConfigInventoryArchiveDelta interface {
 		ConfigInventoryArchive
 		DeltaConfigImmutable
