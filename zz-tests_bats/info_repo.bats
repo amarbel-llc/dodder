@@ -68,7 +68,7 @@ function info_store_version { # @test
 # bats test_tags=user_story:age_encryption
 function info_age_none { # @test
 	run_dodder_init_disable_age
-	run_dodder info-repo blob_stores-0-encryption
+	run_dodder info-repo encryption
 	assert_output ''
 }
 
@@ -79,7 +79,7 @@ function info_age_some { # @test
 	key="$output"
 	echo "$key" >age-key
 	run_dodder_init -override-xdg-with-cwd -encryption age-key test-repo-id
-	run_dodder info-repo blob_stores-0-encryption
+	run_dodder info-repo encryption
 	assert_output "$key"
 }
 
@@ -116,4 +116,21 @@ function info_non_xdg { # @test
 		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache
 		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime
 	EOM
+}
+
+function info_repo_unknown_key_fails { # @test
+	run_dodder_init_disable_age
+	assert_success
+
+	run_dodder info-repo nonexistent-key
+	assert_failure
+}
+
+function info_repo_dynamic_config_key { # @test
+	run_dodder_init_disable_age
+	assert_success
+
+	run_dodder info-repo blob-store-type
+	assert_success
+	assert_output --regexp '.+'
 }

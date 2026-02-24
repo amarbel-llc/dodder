@@ -30,8 +30,8 @@ function import { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -87,8 +87,8 @@ function import_with_overwrite_sig { # @test
 	EOM
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -133,8 +133,8 @@ function import_with_overwrite_sig_different_hash { # @test
   )
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -198,8 +198,8 @@ function import_with_dupes_in_list { # @test
 	EOM
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -253,8 +253,8 @@ function import_one_tai_same { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -292,8 +292,8 @@ function import_twice_no_dupes_one_zettel { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -340,8 +340,8 @@ function import_conflict { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -387,8 +387,8 @@ function import_twice_no_dupes { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
@@ -453,8 +453,8 @@ function import_inventory_lists { # @test
   echo "$output" >list
 
   list="$(realpath list)"
-  blobsBasePath="$("$DODDER_BIN" info-repo blob_stores-0-base-path)"
-  blobsConfigPath="$("$DODDER_BIN" info-repo blob_stores-0-config-path)"
+  blobsBasePath="$("$DODDER_BIN" blob_store-info-repo base-path)"
+  blobsConfigPath="$("$DODDER_BIN" blob_store-info-repo config-path)"
 
   pushd inner || exit 1
 
