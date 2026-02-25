@@ -111,7 +111,7 @@ func (layout v3) DirObjectId() string {
 	return layout.MakeDirData("object_ids").String()
 }
 
-func (layout v3) DirObjectIdLog() string {
+func (layout v3) FileObjectIdLog() string {
 	return layout.MakeDirData("object_id_log").String()
 }
 
@@ -127,7 +127,6 @@ func (layout v3) DirsGenesis() []string {
 	return []string{
 		layout.MakeDirConfig().String(),
 		layout.DirObjectId(),
-		layout.DirObjectIdLog(),
 		layout.DirDataIndex(),
 		layout.DirLostAndFound(),
 	}

@@ -54,7 +54,7 @@ func NewFromLog(
 	directoryLayout directory_layout.RepoMutable,
 	resolveBlob BlobResolver,
 ) (f *Provider, err error) {
-	logPath := directoryLayout.DirObjectIdLog()
+	logPath := directoryLayout.FileObjectIdLog()
 
 	var entries []object_id_log.Entry
 

@@ -141,6 +141,7 @@ function complete_subcmd { # @test
 		init-workspace
 		last
 		merge-tool
+		migrate-zettel-ids
 		new
 		organize
 		peek-zettel-ids

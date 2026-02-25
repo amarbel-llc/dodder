@@ -33,7 +33,7 @@ type (
 
 		DirLostAndFound() string
 		DirObjectId() string
-		DirObjectIdLog() string
+		FileObjectIdLog() string
 
 		FileCacheDormant() string
 		FileCacheObjectId() string
