@@ -86,6 +86,8 @@ function complete_subcmd { # @test
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
 		add
+		add-zettel-ids-yang
+		add-zettel-ids-yin
 		blob_store-cat
 		blob_store-cat-ids
 		blob_store-complete.*complete a command-line
