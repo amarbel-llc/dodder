@@ -132,6 +132,7 @@ function complete_subcmd { # @test
 		format-organize
 		fsck
 		gen
+		generate-zettel-id-components
 		import
 		info
 		info-repo
