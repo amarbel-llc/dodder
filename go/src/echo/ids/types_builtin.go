@@ -49,7 +49,6 @@ const (
 	TypeTomlTypeVCurrent                            = TypeTomlTypeV1
 	TypeTomlWorkspaceConfigV0                       = "!toml-workspace_config-v0"
 	TypeTomlWorkspaceConfigVCurrent                 = TypeTomlWorkspaceConfigV0
-	TypeZettelIdListV0                              = "!zettel_id_list-v0" // not used yet
 
 	// Aliases
 	TypeInventoryListVCurrent = TypeInventoryListV2
@@ -128,7 +127,6 @@ func init() {
 	registerBuiltinTypeString(TypeTomlTypeV0, genres.Type, false)
 	registerBuiltinTypeString(TypeTomlTypeV1, genres.Type, true)
 	registerBuiltinTypeString(TypeTomlWorkspaceConfigV0, genres.Unknown, false)
-	registerBuiltinTypeString(TypeZettelIdListV0, genres.Unknown, false)
 }
 
 // TODO switch to isDefault being a StoreVersion
