@@ -43,9 +43,9 @@ function json_init_and_checkin { # @test
   assert_success
 
   # Create one directory and modify a file
-  mkdir -p one
+  mkdir -p alpha
 
-  cat >one/uno.zettel <<-EOM
+  cat >alpha/golf.zettel <<-EOM
 		---
 		# modified with json format
 		- test-tag
@@ -56,10 +56,10 @@ function json_init_and_checkin { # @test
 	EOM
 
   # Checkin the file - this will test signature creation with JSON format
-  run_dodder checkin one/uno.zettel
+  run_dodder checkin alpha/golf.zettel
   assert_success
   # Just verify it succeeded - the actual file name might vary
-  assert_output --regexp '\[one/[^ ]+ @blake2b256-.+ !md "modified with json format" test-tag\]'
+  assert_output --regexp '\[alpha/[^ ]+ @blake2b256-.+ !md "modified with json format" test-tag\]'
 
   # Show the inventory list to verify it's still JSON
   run_dodder show :b
@@ -147,8 +147,8 @@ function json_signature_verification { # @test
   assert_success
 
   # Create directory and file
-  mkdir -p one
-  cat >one/uno.zettel <<-EOM
+  mkdir -p alpha
+  cat >alpha/golf.zettel <<-EOM
 		---
 		# version 1
 		- tag-1
@@ -158,10 +158,10 @@ function json_signature_verification { # @test
 		body 1
 	EOM
 
-  run_dodder checkin one/uno.zettel
+  run_dodder checkin alpha/golf.zettel
   assert_success
 
-  cat >one/uno.zettel <<-EOM
+  cat >alpha/golf.zettel <<-EOM
 		---
 		# version 2
 		- tag-2
@@ -171,7 +171,7 @@ function json_signature_verification { # @test
 		body 2
 	EOM
 
-  run_dodder checkin one/uno.zettel
+  run_dodder checkin alpha/golf.zettel
   assert_success
 
   # Verify fsck passes (includes signature verification)

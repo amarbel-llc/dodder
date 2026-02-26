@@ -17,7 +17,7 @@ function new_empty_no_edit { # @test
   run_dodder new -edit=false
   assert_success
   assert_output - <<-EOM
-		[two/uno !md]
+		[bravo/golf !md]
 	EOM
 }
 
@@ -26,8 +26,8 @@ function new_empty_edit { # @test
   run_dodder new
   assert_success
   assert_output - <<-EOM
-		[two/uno !md]
-		[two/uno @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
+		[bravo/golf !md]
+		[bravo/golf @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
 	EOM
 }
 
@@ -47,17 +47,17 @@ function can_duplicate_zettel_content { # @test
   run_dodder new -edit=false "$expected"
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[bravo/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
   run_dodder new -edit=false "$expected"
   assert_success
   assert_output - <<-EOM
-		[one/tres @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[alpha/india @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
   # when
-  run_dodder show -format text two/uno
+  run_dodder show -format text bravo/golf
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -70,7 +70,7 @@ function can_duplicate_zettel_content { # @test
 the body
 EOM
 
-  run_dodder show -format text one/tres
+  run_dodder show -format text alpha/india
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -94,7 +94,7 @@ function use_blob_digests { # @test
   run_dodder new -edit=false -shas blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0 !md]
+		[bravo/golf @blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0 !md]
 	EOM
 
   the_blob2_digest="blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg"
@@ -108,13 +108,13 @@ function use_blob_digests { # @test
   assert_success
   assert_output - <<-EOM
 		[!txt !toml-type-v1]
-		[one/tres @$the_blob2_digest !txt]
+		[alpha/india @$the_blob2_digest !txt]
 	EOM
 
   run_dodder_stderr_unified new -edit=false -shas "$the_blob2_digest"
   assert_success
   assert_output --partial - <<-EOM
-		blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg appears in object already checked in (["one/tres"]). Ignoring
+		blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg appears in object already checked in (["alpha/india"]). Ignoring
 	EOM
 }
 
@@ -127,7 +127,7 @@ function new_empty_no_edit_workspace { # @test
   run_dodder new -edit=false
   assert_success
   assert_output - <<-EOM
-		[two/uno !md workspace-tags]
+		[bravo/golf !md workspace-tags]
 	EOM
 }
 
@@ -139,15 +139,15 @@ function new_empty_edit_workspace { # @test
   run_dodder new
   assert_success
   assert_output - <<-EOM
-		[two/uno !md workspace-tags]
-		      checked out [two/uno.zettel !md workspace-tags]
-		[two/uno @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
+		[bravo/golf !md workspace-tags]
+		      checked out [bravo/golf.zettel !md workspace-tags]
+		[bravo/golf @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
 	EOM
 
   run_dodder status .
   assert_success
   assert_output - <<-EOM
-		             same [two/uno.zettel @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
+		             same [bravo/golf.zettel @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
 	EOM
 }
 
@@ -164,10 +164,10 @@ function new_zettel_file { # @test
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output - <<-EOM
-		[two/uno !md "wow" ok]
+		[bravo/golf !md "wow" ok]
 	EOM
 
-  run_dodder show -format text two/uno:z
+  run_dodder show -format text bravo/golf:z
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -191,10 +191,10 @@ function new_zettel_stdin { # @test
   run_dodder new -edit=false - <"$to_add"
   assert_success
   assert_output - <<-EOM
-		[two/uno !md "wow" ok]
+		[bravo/golf !md "wow" ok]
 	EOM
 
-  run_dodder show -format text two/uno:z
+  run_dodder show -format text bravo/golf:z
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -218,10 +218,10 @@ function new_zettel { # @test
   run_dodder new -edit=false -description wow -tags ok
   assert_success
   assert_output - <<-EOM
-		[two/uno !md "wow" ok]
+		[bravo/golf !md "wow" ok]
 	EOM
 
-  run_dodder show -format text two/uno:z
+  run_dodder show -format text bravo/golf:z
   assert_success
   assert_output --regexp - <<-EOM
 ---

@@ -30,10 +30,10 @@ function can_update_blob { # @test
   run_dodder new -edit=false "$expected"
   assert_success
   assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[alpha/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
-  run_dodder show -format text one/uno
+  run_dodder show -format text alpha/golf
   assert_success
   assert_output --regexp - <<-EOM
 		---
@@ -52,10 +52,10 @@ EOM
     echo the body but new
   } >"$new_akte"
 
-  run_dodder checkin-blob -new-tags et3 one/uno "$new_akte"
+  run_dodder checkin-blob -new-tags et3 alpha/golf "$new_akte"
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza !md "bez" et3]
+		[alpha/golf @blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza !md "bez" et3]
 	EOM
 
   # then
@@ -69,7 +69,7 @@ EOM
     echo the body but new
   } >"$expected"
 
-  run_dodder show -format text one/uno
+  run_dodder show -format text alpha/golf
   assert_success
   assert_output --regexp - <<-EOM
 		---

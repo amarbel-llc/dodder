@@ -223,9 +223,9 @@ function format_organize_recognized_fs_blob_with_newlines() { # @test
   skip
   run_dodder_init_disable_age
   run_dodder format-organize - <<-EOM
-		- [one/uno !pdf payee-x-heloc zz-inbox
+		- [alpha/golf !pdf payee-x-heloc zz-inbox
 		                   "heloc-board/CO-OP Modified Clarity Comittment - letterhead.pdf"] CO-OP Modified Clarity Comittment - letterhead
-		- [two/dos !pdf area-money-tax
+		- [bravo/hotel !pdf area-money-tax
 		                                  heloc-board/2022 taxes.pdf] us tax return
 	EOM
   assert_success

@@ -14,18 +14,18 @@ setup() {
   assert_success
   assert_output_unsorted - <<-EOM
 		      checked out [md.type @$(get_type_blob_sha) !toml-type-v1]
-		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [alpha/golf.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
   run ls
   assert_success
   assert_output_unsorted - <<-EOM
 		md.type
-		one
+		alpha
 	EOM
 
-  cat >one/uno.zettel <<-EOM
+  cat >alpha/golf.zettel <<-EOM
 		---
 		# wildly different
 		- etikett-one
@@ -35,7 +35,7 @@ setup() {
 		newest body
 	EOM
 
-  cat >one/dos.zettel <<-EOM
+  cat >alpha/hotel.zettel <<-EOM
 		---
 		# dos wildly different
 		- etikett-two
@@ -62,7 +62,7 @@ teardown() {
 }
 
 function dirty_one_virtual() {
-  cat >one/uno.zettel <<-EOM
+  cat >alpha/golf.zettel <<-EOM
 		---
 		# wildly different
 		- etikett-one
@@ -75,10 +75,10 @@ function dirty_one_virtual() {
 }
 
 function checkin_simple_one_zettel { # @test
-  run_dodder checkin one/uno.zettel
+  run_dodder checkin alpha/golf.zettel
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 	EOM
 }
 
@@ -89,23 +89,23 @@ function checkin_two_zettel_hidden { # @test
   run_dodder checkin .z
   assert_success
   assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 	EOM
 }
 
 function checkin_simple_one_zettel_virtual_tag { # @test
   dirty_one_virtual
-  run_dodder checkin one/uno.zettel
+  run_dodder checkin alpha/golf.zettel
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" %virtual etikett-one]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" %virtual etikett-one]
 	EOM
 
-  run_dodder show one/uno
+  run_dodder show alpha/golf
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 	EOM
 }
 
@@ -113,7 +113,7 @@ function checkin_complex_zettel_tag_negation { # @test
   run_dodder checkin ^etikett-two.z
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 	EOM
 }
 
@@ -122,8 +122,8 @@ function checkin_simple_all { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 
@@ -131,8 +131,8 @@ function checkin_simple_all { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 }
@@ -142,8 +142,8 @@ function checkin_simple_all_dry_run { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 
@@ -151,8 +151,8 @@ function checkin_simple_all_dry_run { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -166,15 +166,15 @@ function checkin_simple_typ { # @test
   run_dodder update :z
   assert_success
   assert_output_unsorted - <<-'EOM'
-[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
   run_dodder last -format box-archive
   assert_success
   assert_output_unsorted --regexp - <<-'EOM'
-\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow the first" tag-3 tag-4]
-\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow ok again" tag-3 tag-4]
+\[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow the first" tag-3 tag-4]
+\[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow ok again" tag-3 tag-4]
 	EOM
 
   run_dodder show -format blob !md:t
@@ -194,7 +194,7 @@ function checkin_simple_typ { # @test
   assert_success
   assert_output 'toml'
 
-  run_dodder show -format type.vim-syntax-type one/uno
+  run_dodder show -format type.vim-syntax-type alpha/golf
   assert_success
   assert_output 'test'
 }
@@ -253,25 +253,25 @@ function checkin_zettel_typ_has_commit_hook { # @test
 	EOM
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-hhew85kxn9usmuqxalnupnt2jpwwlje3m68y6v0kyr4yqj9w49vq9w79lk !typ_with_hook "test lua" on_new on_pre_commit]
+		[bravo/golf @blake2b256-hhew85kxn9usmuqxalnupnt2jpwwlje3m68y6v0kyr4yqj9w49vq9w79lk !typ_with_hook "test lua" on_new on_pre_commit]
 	EOM
 }
 
 function checkin_zettel_with_komment { # @test
-  run_dodder checkin -print-inventory_list=true -comment "message" one/uno.zettel
+  run_dodder checkin -print-inventory_list=true -comment "message" alpha/golf.zettel
   assert_success
   assert_output --regexp - <<-'EOM'
-		\[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one\]
+		\[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one\]
 		\[[0-9]+\.[0-9]+ @blake2b256-.* !inventory_list-v2 "message"\]
 	EOM
 }
 
 function checkin_via_organize { # @test
   export EDITOR="true"
-  run_dodder checkin -organize one/uno.zettel
+  run_dodder checkin -organize alpha/golf.zettel
   assert_success
   assert_output - <<-'EOM'
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 	EOM
 }
 
@@ -285,9 +285,9 @@ function checkin_dot_untracked_fs_blob() { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 }
@@ -301,7 +301,7 @@ function checkin_explicit_untracked_fs_blob() { # @test
   run_dodder checkin test.md
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
 	EOM
 }
 
@@ -316,9 +316,9 @@ function checkin_dot_organize_exclude_untracked_fs_blob() { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 }
@@ -333,7 +333,7 @@ function checkin_explicit_organize_include_untracked_fs_blob() { # @test
   run_dodder checkin -organize test.md </dev/null
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
 	EOM
 }
 
@@ -351,7 +351,7 @@ function checkin_explicit_organize_include_untracked_fs_blob_change_description(
   run_dodder checkin -organize test.md </dev/null
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "a different description" some_tag]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "a different description" some_tag]
 	EOM
 }
 
@@ -366,9 +366,9 @@ function checkin_dot_organize_include_untracked_fs_blob() { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
-		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
-		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
+		[alpha/hotel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
+		[alpha/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 }
@@ -383,7 +383,7 @@ function checkin_dot_include_untracked_fs_blob_with_spaces() { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!txt !toml-type-v1]
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !txt "test with spaces"]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !txt "test with spaces"]
 	EOM
 }
 
@@ -398,7 +398,7 @@ function checkin_dot_organize_include_untracked_fs_blob_with_spaces() { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!txt !toml-type-v1]
-		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !txt "test with spaces"]
+		[bravo/golf @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !txt "test with spaces"]
 	EOM
 }
 
@@ -459,8 +459,8 @@ function checkin_explicit_workspace_delete_files { # @test
   run_dodder checkin -organize -delete 1.md 2.md
   assert_success
   assert_output - <<-EOM
-		[two/uno @blake2b256-p7nw3egtdfeacsvdjmcafmf9clmyd44fqdys8myavatteaun9w3sc7yqe7 !md "2" today]
-		[one/tres @blake2b256-v2wlxr328lxnhxtyfz92gsfhfxyqslt5q4gux5hnmqugt7qftntszp3d24 !md "1" today]
+		[bravo/golf @blake2b256-p7nw3egtdfeacsvdjmcafmf9clmyd44fqdys8myavatteaun9w3sc7yqe7 !md "2" today]
+		[alpha/india @blake2b256-v2wlxr328lxnhxtyfz92gsfhfxyqslt5q4gux5hnmqugt7qftntszp3d24 !md "1" today]
 		          deleted [1.md]
 		          deleted [2.md]
 	EOM

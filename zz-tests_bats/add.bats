@@ -23,11 +23,11 @@ function add { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
 		          deleted [to_add.md]
 	EOM
 
-	run_dodder show -format text one/uno
+	run_dodder show -format text alpha/golf
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -62,10 +62,10 @@ function add_with_dupe_added { # @test
 	assert_output_unsorted - <<-EOM
 		          deleted [to_add.md]
 		          deleted [to_add2.md]
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add to_add2" zz-inbox-2022-11-14]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add to_add2" zz-inbox-2022-11-14]
 	EOM
 
-	run_dodder show -format text one/uno
+	run_dodder show -format text alpha/golf
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -95,14 +95,14 @@ function add_not_md { # @test
 	assert_success
 	assert_output - <<-EOM
 		[!pdf !toml-type-v1]
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !pdf "to_add" zz-inbox-2022-11-14]
-		      checked out [one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !pdf "to_add" zz-inbox-2022-11-14
-		                   one/uno.pdf]
-		uno.pdf
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !pdf "to_add" zz-inbox-2022-11-14]
+		      checked out [alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !pdf "to_add" zz-inbox-2022-11-14
+		                   alpha/golf.pdf]
+		golf.pdf
 		          deleted [to_add.pdf]
 	EOM
 
-	run_dodder show -format text one/uno
+	run_dodder show -format text alpha/golf
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -130,7 +130,7 @@ function add_1 { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
 		          deleted [to_add.md]
 	EOM
 }
@@ -161,8 +161,8 @@ function add_2 { # @test
 	assert_output_unsorted - <<-EOM
 		          deleted [to_add.md]
 		          deleted [to_add2.md]
-		[one/dos @blake2b256-exrtq04pdgc72mh7ufctgak45f085u6rzdfwlw0yhxrnxdfmnmqs6du6ya !md "to_add2" zz-inbox-2022-11-14]
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
+		[alpha/hotel @blake2b256-exrtq04pdgc72mh7ufctgak45f085u6rzdfwlw0yhxrnxdfmnmqs6du6ya !md "to_add2" zz-inbox-2022-11-14]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
 	EOM
 }
 
@@ -192,13 +192,13 @@ function add_dot { # @test
 	assert_output_unsorted - <<-EOM
 		          deleted [to_add.md]
 		          deleted [to_add2.md]
-		[one/dos @blake2b256-exrtq04pdgc72mh7ufctgak45f085u6rzdfwlw0yhxrnxdfmnmqs6du6ya !md "to_add2" zz-inbox-2022-11-14]
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
+		[alpha/hotel @blake2b256-exrtq04pdgc72mh7ufctgak45f085u6rzdfwlw0yhxrnxdfmnmqs6du6ya !md "to_add2" zz-inbox-2022-11-14]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to_add" zz-inbox-2022-11-14]
 	EOM
 }
 
 #TODO-P2 add_dedupe: define expected behavior when re-adding a blob that already
-# has a zettel. Current behavior: creates a new zettel (one/dos) inheriting
+# has a zettel. Current behavior: creates a new zettel (alpha/hotel) inheriting
 # metadata from the existing zettel, but -tags flag is silently ignored.
 # Should -tags be merged? Should it reuse the existing zettel ID instead?
 
@@ -225,11 +225,11 @@ function add_several_with_spaces_in_filename { # @test
 	assert_output_unsorted - <<-EOM
 		          deleted [to add.md]
 		          deleted [to add2.md]
-		[one/dos @blake2b256-wg3yq6ymccg8mrm3zrsdym3u9dvyq6pfdt2d463e53nw9vxypxeqttduac !md "to add2" zz-inbox-2022-11-14]
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14]
+		[alpha/hotel @blake2b256-wg3yq6ymccg8mrm3zrsdym3u9dvyq6pfdt2d463e53nw9vxypxeqttduac !md "to add2" zz-inbox-2022-11-14]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14]
 	EOM
 
-	run_dodder show -format text one/uno
+	run_dodder show -format text alpha/golf
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -258,10 +258,10 @@ function add_each_blob { # @test
 
 	assert_success
 	assert_output_unsorted - <<-EOM
-		                   one/uno.md]
+		                   alpha/golf.md]
 		          deleted [to add.md]
-		      checked out [one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14]
+		      checked out [alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14]
 		test file
 	EOM
 }
@@ -293,9 +293,9 @@ function add_organize { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14]
-		      checked out [one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14
-		                   one/uno.md]
+		[alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14]
+		      checked out [alpha/golf @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !md "to add" zz-inbox-2022-11-14
+		                   alpha/golf.md]
 		test file
 		          deleted [to add.md]
 	EOM

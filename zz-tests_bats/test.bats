@@ -33,12 +33,12 @@ function can_checkout_and_checkin { # @test
 	run_dodder new -edit=false "$to_add"
 	assert_success
 	assert_output - <<-EOM
-		[one/uno !md "wow" ok]
+		[alpha/golf !md "wow" ok]
 	EOM
 
-	run_dodder checkout one/uno
+	run_dodder checkout alpha/golf
 	assert_success
-	# assert_output '       (checked out) [one/uno.zettel @9a638e2b183562da6d3c634d5a3841d64bc337c9cf79f8fffa0d0194659bc564 !md "wow"]'
+	# assert_output '       (checked out) [alpha/golf.zettel @9a638e2b183562da6d3c634d5a3841d64bc337c9cf79f8fffa0d0194659bc564 !md "wow"]'
 
 	{
 		echo "---"
@@ -47,12 +47,12 @@ function can_checkout_and_checkin { # @test
 		echo "---"
 		echo
 		echo "content"
-	} >"one/uno.zettel"
+	} >"alpha/golf.zettel"
 
-	run_dodder checkin one/uno.zettel
+	run_dodder checkin alpha/golf.zettel
 	assert_success
 	assert_output - <<-EOM
-		[one/uno @blake2b256-lenzq4f690e7qealpgk53cxl68ym7xcx0vxl9hj6q2kqud8v265sqehvrn "wow" ok]
+		[alpha/golf @blake2b256-lenzq4f690e7qealpgk53cxl68ym7xcx0vxl9hj6q2kqud8v265sqehvrn "wow" ok]
 	EOM
 }
 
@@ -74,13 +74,13 @@ function can_checkout_via_tags { # @test
 	run_dodder new -edit=false "$to_add"
 	assert_success
 	assert_output - <<-EOM
-		[one/uno !md "wow" ok]
+		[alpha/golf !md "wow" ok]
 	EOM
 
 	run_dodder checkout -- ok:z
 	assert_success
 	assert_output - <<-EOM
-		      checked out [one/uno.zettel !md "wow" ok]
+		      checked out [alpha/golf.zettel !md "wow" ok]
 	EOM
 }
 
@@ -104,7 +104,7 @@ function can_new_zettel_with_metadata { # @test
 	run_dodder new -edit=false -description bez -tags et1,et2
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[one/uno !md "bez" et1 et2]
+		[alpha/golf !md "bez" et1 et2]
 	EOM
 }
 
@@ -131,7 +131,7 @@ function indexes_are_implicitly_correct { # @test
 	run_dodder new -edit=false "$expected"
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[alpha/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
 	{
@@ -144,14 +144,14 @@ function indexes_are_implicitly_correct { # @test
 		echo the body
 	} >"$expected"
 
-	mkdir -p one
-	cp "$expected" "one/uno.zettel"
-	run_dodder checkin -delete "one/uno.zettel"
+	mkdir -p alpha
+	cp "$expected" "alpha/golf.zettel"
+	run_dodder checkin -delete "alpha/golf.zettel"
 	assert_success
 	assert_output - <<-EOM
-		[one/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1]
-		          deleted [one/uno.zettel]
-		          deleted [one/]
+		[alpha/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1]
+		          deleted [alpha/golf.zettel]
+		          deleted [alpha/]
 	EOM
 
 	# TODO-P2 fix issue with kennung schwanzen
@@ -161,7 +161,7 @@ function indexes_are_implicitly_correct { # @test
 	# EOM
 
 	{
-		echo one/uno
+		echo alpha/golf
 	} >"$expected"
 
 	#TODO
@@ -191,16 +191,16 @@ function checkouts_dont_overwrite { # @test
 	run_dodder new -edit=false "$expected"
 	assert_success
 	assert_output - <<-EOM
-		[one/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[alpha/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
-	run_dodder checkout one/uno
+	run_dodder checkout alpha/golf
 	assert_success
 	assert_output - <<-EOM
-		      checked out [one/uno.zettel @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		      checked out [alpha/golf.zettel @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
-	run cat one/uno.zettel
+	run cat alpha/golf.zettel
 	assert_success
 	assert_output --regexp - <<-EOM
 ---
@@ -224,15 +224,15 @@ EOM
 		echo the body 2
 	} >"$expected"
 
-	cat "$expected" >"one/uno.zettel"
+	cat "$expected" >"alpha/golf.zettel"
 
-	run_dodder checkout one/uno:z
+	run_dodder checkout alpha/golf:z
 	assert_success
 	assert_output - <<-EOM
-		          changed [one/uno.zettel @blake2b256-7dzz0dhlp77yccl0m2yn983azxuhd28pgsk5h3kplndhf2rg5gds8cqdyf !md "bez" et1 et2]
+		          changed [alpha/golf.zettel @blake2b256-7dzz0dhlp77yccl0m2yn983azxuhd28pgsk5h3kplndhf2rg5gds8cqdyf !md "bez" et1 et2]
 	EOM
 
-	run cat one/uno.zettel
+	run cat alpha/golf.zettel
 	assert_success
 	assert_output "$(cat "$expected")"
 }
