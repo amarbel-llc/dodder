@@ -89,7 +89,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 	req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Lock))
 	defer req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Unlock))
 
-	logPath := envRepo.FileObjectIdLog()
+	log := object_id_log.Log{Path: envRepo.FileObjectIdLog()}
 	flatFilePath := path.Join(dirObjectId, cmd.flatFileName)
 
 	entry := &object_id_log.V1{
@@ -99,7 +99,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 		WordCount: len(filtered),
 	}
 
-	if err := object_id_log.AppendEntry(logPath, entry); err != nil {
+	if err := log.AppendEntry(entry); err != nil {
 		errors.ContextCancelWithErrorf(req, "appending log entry: %s", err)
 		return
 	}

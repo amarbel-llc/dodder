@@ -186,7 +186,7 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		return
 	}
 
-	logPath := env.FileObjectIdLog()
+	log := object_id_log.Log{Path: env.FileObjectIdLog()}
 
 	yinEntry := &object_id_log.V1{
 		Side:      object_id_log.SideYin,
@@ -195,7 +195,7 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		WordCount: len(yinWords),
 	}
 
-	if err := object_id_log.AppendEntry(logPath, yinEntry); err != nil {
+	if err := log.AppendEntry(yinEntry); err != nil {
 		env.Cancel(err)
 		return
 	}
@@ -207,7 +207,7 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		WordCount: len(yangWords),
 	}
 
-	if err := object_id_log.AppendEntry(logPath, yangEntry); err != nil {
+	if err := log.AppendEntry(yangEntry); err != nil {
 		env.Cancel(err)
 		return
 	}

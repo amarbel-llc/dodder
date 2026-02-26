@@ -38,9 +38,9 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 	)
 
 	envRepo := localWorkingCopy.GetEnvRepo()
-	logPath := envRepo.FileObjectIdLog()
+	log := object_id_log.Log{Path: envRepo.FileObjectIdLog()}
 
-	entries, err := object_id_log.ReadAllEntries(logPath)
+	entries, err := log.ReadAllEntries()
 
 	if err != nil {
 		errors.ContextCancelWithErrorf(req, "reading object id log: %s", err)
@@ -84,7 +84,7 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 		WordCount: yinWordCount,
 	}
 
-	if err := object_id_log.AppendEntry(logPath, yinEntry); err != nil {
+	if err := log.AppendEntry(yinEntry); err != nil {
 		errors.ContextCancelWithErrorf(req, "appending yin log entry: %s", err)
 		return
 	}
@@ -96,7 +96,7 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 		WordCount: yangWordCount,
 	}
 
-	if err := object_id_log.AppendEntry(logPath, yangEntry); err != nil {
+	if err := log.AppendEntry(yangEntry); err != nil {
 		errors.ContextCancelWithErrorf(req, "appending yang log entry: %s", err)
 		return
 	}
