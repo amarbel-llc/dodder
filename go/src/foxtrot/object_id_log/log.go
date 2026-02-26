@@ -2,12 +2,12 @@ package object_id_log
 
 import (
 	"bufio"
-	"io"
 	"os"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	pool "code.linenisgreat.com/dodder/go/src/alfa/pool"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
@@ -94,26 +94,10 @@ func segmentEntries(
 	var current strings.Builder
 	boundaryCount := 0
 
-	for {
-		var line string
-
-		line, err = reader.ReadString('\n')
-
-		if err != nil && err != io.EOF {
-			err = errors.Wrap(err)
+	for line, errIter := range ohio.MakeLineSeqFromReader(reader) {
+		if errIter != nil {
+			err = errIter
 			return segments, err
-		}
-
-		isEOF := errors.IsEOF(err)
-
-		if isEOF && line == "" {
-			if current.Len() > 0 {
-				segments = append(segments, current.String())
-			}
-
-			err = nil
-
-			break
 		}
 
 		trimmed := strings.TrimSuffix(line, "\n")
@@ -128,16 +112,10 @@ func segmentEntries(
 		}
 
 		current.WriteString(line)
+	}
 
-		if isEOF {
-			if current.Len() > 0 {
-				segments = append(segments, current.String())
-			}
-
-			err = nil
-
-			break
-		}
+	if current.Len() > 0 {
+		segments = append(segments, current.String())
 	}
 
 	return segments, err
