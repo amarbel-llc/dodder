@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	pool "code.linenisgreat.com/dodder/go/src/alfa/pool"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
@@ -106,22 +107,14 @@ func writeFlatFileAsBlob(
 
 	var wordCount int
 
-	for {
-		line, err := reader.ReadString('\n')
-
-		if len(line) > 0 {
-			if strings.TrimRight(line, "\n") != "" {
-				wordCount++
-			}
-		}
-
+	for line, err := range ohio.MakeLineSeqFromReader(reader) {
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
 			errors.ContextCancelWithError(req, err)
 			return markl.Id{}, 0
+		}
+
+		if strings.TrimRight(line, "\n") != "" {
+			wordCount++
 		}
 	}
 
