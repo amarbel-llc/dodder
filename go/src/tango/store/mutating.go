@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/charlie/store_version"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_provider"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/src/golf/objects"
 	"code.linenisgreat.com/dodder/go/src/hotel/file_lock"
 	"code.linenisgreat.com/dodder/go/src/juliett/sku"
@@ -218,7 +218,7 @@ func (commitFacilitator commitFacilitator) commit(
 
 		if daughter.GetGenre() == genres.Zettel {
 			if err = commitFacilitator.zettelIdIndex.AddZettelId(&daughter.ObjectId); err != nil {
-				if errors.Is(err, object_id_provider.ErrDoesNotExist{}) {
+				if errors.Is(err, zettel_id_provider.ErrDoesNotExist{}) {
 					ui.Log().Printf("object id does not contain value: %s", err)
 					err = nil
 				} else {

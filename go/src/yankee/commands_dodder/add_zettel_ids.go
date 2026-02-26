@@ -15,7 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_log"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_provider"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/src/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/victor/local_working_copy"
@@ -25,12 +25,12 @@ import (
 func init() {
 	utility.AddCmd("add-zettel-ids-yin", &AddZettelIds{
 		side:         object_id_log.SideYin,
-		flatFileName: object_id_provider.FilePathZettelIdYin,
+		flatFileName: zettel_id_provider.FilePathZettelIdYin,
 	})
 
 	utility.AddCmd("add-zettel-ids-yang", &AddZettelIds{
 		side:         object_id_log.SideYang,
-		flatFileName: object_id_provider.FilePathZettelIdYang,
+		flatFileName: zettel_id_provider.FilePathZettelIdYang,
 	})
 }
 
@@ -54,7 +54,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 	envRepo := localWorkingCopy.GetEnvRepo()
 	dirObjectId := envRepo.DirObjectId()
 
-	prov, err := object_id_provider.New(envRepo)
+	prov, err := zettel_id_provider.New(envRepo)
 	if err != nil {
 		errors.ContextCancelWithErrorf(req, "loading zettel id provider: %s", err)
 		return
@@ -65,7 +65,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 	var filtered []string
 
 	for _, word := range candidates {
-		cleaned := object_id_provider.Clean(word)
+		cleaned := zettel_id_provider.Clean(word)
 
 		if cleaned == "" {
 			continue
@@ -149,7 +149,7 @@ func readAndExtractCandidates(req command.Request) []string {
 	return unicorn.ExtractUniqueComponents(lines)
 }
 
-func collectExistingWords(prov *object_id_provider.Provider) map[string]bool {
+func collectExistingWords(prov *zettel_id_provider.Provider) map[string]bool {
 	existing := make(map[string]bool)
 
 	for _, word := range prov.Left() {

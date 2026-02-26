@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_log"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_provider"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
 	"code.linenisgreat.com/dodder/go/src/hotel/genesis_configs"
 )
@@ -209,8 +209,8 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		return
 	}
 
-	yinFlatPath := filepath.Join(env.DirObjectId(), object_id_provider.FilePathZettelIdYin)
-	yangFlatPath := filepath.Join(env.DirObjectId(), object_id_provider.FilePathZettelIdYang)
+	yinFlatPath := filepath.Join(env.DirObjectId(), zettel_id_provider.FilePathZettelIdYin)
+	yangFlatPath := filepath.Join(env.DirObjectId(), zettel_id_provider.FilePathZettelIdYang)
 
 	if err := env.genesisWriteFlatFile(yinFlatPath, yinWords); err != nil {
 		env.Cancel(err)
@@ -242,7 +242,7 @@ func (env *Env) readAndCleanFileLines(path string) (words map[string]bool, err e
 		var line string
 
 		if line, err = reader.ReadString('\n'); len(line) > 0 {
-			cleaned := object_id_provider.Clean(strings.TrimRight(line, "\n"))
+			cleaned := zettel_id_provider.Clean(strings.TrimRight(line, "\n"))
 
 			if cleaned != "" {
 				words[cleaned] = true

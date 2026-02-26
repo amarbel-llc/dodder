@@ -1,4 +1,4 @@
-package object_id_provider
+package zettel_id_provider
 
 import "strings"
 

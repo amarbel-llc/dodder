@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_log"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_provider"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/src/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/victor/local_working_copy"
@@ -64,8 +64,8 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 		side     object_id_log.Side
 		fileName string
 	}{
-		{object_id_log.SideYin, object_id_provider.FilePathZettelIdYin},
-		{object_id_log.SideYang, object_id_provider.FilePathZettelIdYang},
+		{object_id_log.SideYin, zettel_id_provider.FilePathZettelIdYin},
+		{object_id_log.SideYang, zettel_id_provider.FilePathZettelIdYang},
 	}
 
 	for _, s := range sides {
