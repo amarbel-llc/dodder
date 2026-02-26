@@ -111,3 +111,20 @@ func yieldWithNilCheck() {
 		}
 	}
 }
+
+// --- Non-error sequences (no diagnostics expected) ---
+
+func nonErrorSeq2() {
+	seq := func(yield func(string, int) bool) {}
+	for x, i := range seq {
+		_ = x
+		_ = i
+	}
+}
+
+func plainSeq() {
+	seq := func(yield func(string) bool) {}
+	for x := range seq {
+		_ = x
+	}
+}
