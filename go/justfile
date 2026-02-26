@@ -165,7 +165,13 @@ build-analyzer-repool:
 check-go-repool: build-analyzer-repool
   go vet -vettool=build/repool-analyzer ./... || true
 
-check: check-go-vuln check-go-vet check-go-repool
+build-analyzer-seqerror:
+  go build -o build/seqerror-analyzer ./src/alfa/analyzers/seqerror/cmd/
+
+check-go-seqerror: build-analyzer-seqerror
+  go vet -vettool=build/seqerror-analyzer ./... || true
+
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror
 
 #   _____         _
 #  |_   _|__  ___| |_
