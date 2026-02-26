@@ -9,6 +9,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	pool "code.linenisgreat.com/dodder/go/src/alfa/pool"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
@@ -238,25 +239,16 @@ func (env *Env) readAndCleanFileLines(path string) (words map[string]bool, err e
 
 	words = make(map[string]bool)
 
-	for {
-		var line string
-
-		if line, err = reader.ReadString('\n'); len(line) > 0 {
-			cleaned := zettel_id_provider.Clean(strings.TrimRight(line, "\n"))
-
-			if cleaned != "" {
-				words[cleaned] = true
-			}
+	for line, errIter := range ohio.MakeLineSeqFromReader(reader) {
+		if errIter != nil {
+			err = errIter
+			return words, err
 		}
 
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-				break
-			}
+		cleaned := zettel_id_provider.Clean(strings.TrimRight(line, "\n"))
 
-			err = errors.Wrap(err)
-			return words, err
+		if cleaned != "" {
+			words[cleaned] = true
 		}
 	}
 
