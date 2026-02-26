@@ -31,6 +31,12 @@ func (store *Store) runDiff3(
 		remote.Object.GetPath(),
 	)
 
+	cmd.Env = append(
+		os.Environ(),
+		"GIT_CONFIG_GLOBAL=/dev/null",
+		"GIT_CONFIG_NOSYSTEM=1",
+	)
+
 	var out io.ReadCloser
 
 	if out, err = cmd.StdoutPipe(); err != nil {
