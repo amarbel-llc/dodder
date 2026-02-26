@@ -10,7 +10,6 @@ import (
 
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/alfa/unicorn"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
@@ -159,25 +158,19 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		return
 	}
 
-	yinLines, err := readFileLines(bigBang.Yin)
+	yinWords, err := readAndCleanFileLines(bigBang.Yin)
 	if err != nil {
 		env.Cancel(err)
 		return
 	}
 
-	yangLines, err := readFileLines(bigBang.Yang)
+	yangWords, err := readAndCleanFileLines(bigBang.Yang)
 	if err != nil {
 		env.Cancel(err)
 		return
 	}
-
-	yinWords := unicorn.ExtractUniqueComponents(yinLines)
-	yangWords := unicorn.ExtractUniqueComponents(yangLines)
 
 	yinWords, yangWords = enforceCrossSideUniqueness(yinWords, yangWords)
-
-	yinWords = cleanWords(yinWords)
-	yangWords = cleanWords(yangWords)
 
 	blobStore := env.GetDefaultBlobStore()
 
@@ -233,12 +226,12 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 	}
 }
 
-func readFileLines(path string) (lines []string, err error) {
+func readAndCleanFileLines(path string) (words []string, err error) {
 	var file *os.File
 
 	if file, err = files.Open(path); err != nil {
 		err = errors.Wrap(err)
-		return lines, err
+		return words, err
 	}
 
 	defer errors.DeferredCloser(&err, file)
@@ -246,14 +239,18 @@ func readFileLines(path string) (lines []string, err error) {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+		cleaned := object_id_provider.Clean(scanner.Text())
+
+		if cleaned != "" {
+			words = append(words, cleaned)
+		}
 	}
 
 	if err = scanner.Err(); err != nil {
 		err = errors.Wrap(err)
 	}
 
-	return lines, err
+	return words, err
 }
 
 func enforceCrossSideUniqueness(yin, yang []string) ([]string, []string) {
@@ -284,20 +281,6 @@ func enforceCrossSideUniqueness(yin, yang []string) ([]string, []string) {
 	}
 
 	return filteredYin, filteredYang
-}
-
-func cleanWords(words []string) []string {
-	result := make([]string, 0, len(words))
-
-	for _, w := range words {
-		cleaned := object_id_provider.Clean(w)
-
-		if cleaned != "" {
-			result = append(result, cleaned)
-		}
-	}
-
-	return result
 }
 
 func genesisWriteWordsAsBlob(
