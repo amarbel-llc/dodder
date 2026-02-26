@@ -86,16 +86,8 @@ func (cmd AddZettelIds) Run(req command.Request) {
 
 	lockSmith := envRepo.GetLockSmith()
 
-	if err := lockSmith.Lock(); err != nil {
-		errors.ContextCancelWithErrorf(req, "acquiring lock: %s", err)
-		return
-	}
-
-	defer func() {
-		if err := lockSmith.Unlock(); err != nil {
-			errors.ContextCancelWithErrorf(req, "releasing lock: %s", err)
-		}
-	}()
+	req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Lock))
+	defer req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Unlock))
 
 	logPath := envRepo.FileObjectIdLog()
 	flatFilePath := path.Join(dirObjectId, cmd.flatFileName)
@@ -145,6 +137,7 @@ func readAndExtractCandidates(req command.Request) []string {
 
 		if err != nil && err != io.EOF {
 			errors.ContextCancelWithError(req, err)
+			return nil
 		}
 
 		if len(line) > 0 {

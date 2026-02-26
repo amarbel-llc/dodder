@@ -70,6 +70,11 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 		return
 	}
 
+	lockSmith := envRepo.GetLockSmith()
+
+	req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Lock))
+	defer req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Unlock))
+
 	tai := ids.NowTai()
 
 	yinEntry := &object_id_log.V1{
