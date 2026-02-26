@@ -170,7 +170,7 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		return
 	}
 
-	env.enforceCrossSideUniqueness(yinWords, yangWords)
+	yinWords, yangWords = env.enforceCrossSideUniqueness(yinWords, yangWords)
 
 	yinBlobId, err := env.genesisWriteWordsAsBlob(yinWords)
 	if err != nil {
@@ -224,7 +224,7 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 	}
 }
 
-func (env *Env) readAndCleanFileLines(path string) (words map[string]bool, err error) {
+func (env *Env) readAndCleanFileLines(path string) (words []string, err error) {
 	var file *os.File
 
 	if file, err = files.Open(path); err != nil {
@@ -237,7 +237,7 @@ func (env *Env) readAndCleanFileLines(path string) (words map[string]bool, err e
 	reader, repool := pool.GetBufferedReader(file)
 	defer repool()
 
-	words = make(map[string]bool)
+	seen := make(map[string]bool)
 
 	for line, errIter := range ohio.MakeLineSeqFromReader(reader) {
 		if errIter != nil {
@@ -247,24 +247,44 @@ func (env *Env) readAndCleanFileLines(path string) (words map[string]bool, err e
 
 		cleaned := zettel_id_provider.Clean(strings.TrimRight(line, "\n"))
 
-		if cleaned != "" {
-			words[cleaned] = true
+		if cleaned != "" && !seen[cleaned] {
+			seen[cleaned] = true
+			words = append(words, cleaned)
 		}
 	}
 
 	return words, err
 }
 
-func (env *Env) enforceCrossSideUniqueness(yin, yang map[string]bool) {
-	for w := range yin {
-		if yang[w] {
-			delete(yin, w)
-			delete(yang, w)
+func (env *Env) enforceCrossSideUniqueness(
+	yin, yang []string,
+) (filteredYin, filteredYang []string) {
+	yinSet := make(map[string]bool, len(yin))
+	for _, w := range yin {
+		yinSet[w] = true
+	}
+
+	yangSet := make(map[string]bool, len(yang))
+	for _, w := range yang {
+		yangSet[w] = true
+	}
+
+	for _, w := range yin {
+		if !yangSet[w] {
+			filteredYin = append(filteredYin, w)
 		}
 	}
+
+	for _, w := range yang {
+		if !yinSet[w] {
+			filteredYang = append(filteredYang, w)
+		}
+	}
+
+	return filteredYin, filteredYang
 }
 
-func (env *Env) genesisWriteWordsAsBlob(words map[string]bool) (id markl.Id, err error) {
+func (env *Env) genesisWriteWordsAsBlob(words []string) (id markl.Id, err error) {
 	blobWriter, err := env.GetDefaultBlobStore().MakeBlobWriter(nil)
 	if err != nil {
 		err = errors.Wrap(err)
@@ -273,7 +293,7 @@ func (env *Env) genesisWriteWordsAsBlob(words map[string]bool) (id markl.Id, err
 
 	defer errors.DeferredCloser(&err, blobWriter)
 
-	for word := range words {
+	for _, word := range words {
 		if _, err = io.WriteString(blobWriter, word); err != nil {
 			err = errors.Wrap(err)
 			return id, err
@@ -290,7 +310,7 @@ func (env *Env) genesisWriteWordsAsBlob(words map[string]bool) (id markl.Id, err
 	return id, err
 }
 
-func (env *Env) genesisWriteFlatFile(path string, words map[string]bool) (err error) {
+func (env *Env) genesisWriteFlatFile(path string, words []string) (err error) {
 	var file *os.File
 
 	if file, err = files.CreateExclusiveWriteOnly(path); err != nil {
@@ -300,7 +320,7 @@ func (env *Env) genesisWriteFlatFile(path string, words map[string]bool) (err er
 
 	defer errors.DeferredCloser(&err, file)
 
-	for word := range words {
+	for _, word := range words {
 		if _, err = io.WriteString(file, word); err != nil {
 			err = errors.Wrap(err)
 			return err

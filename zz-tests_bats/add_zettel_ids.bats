@@ -2,23 +2,23 @@
 
 cat_yin_nato() {
 	cat <<'EOM'
-the alpha
-the bravo
-the charlie
-the delta
-an echo
-the foxtrot
+alpha
+bravo
+charlie
+delta
+echo
+foxtrot
 EOM
 }
 
 cat_yang_nato() {
 	cat <<'EOM'
-the golf
-the hotel
-the india
-the juliet
-the kilo
-the lima
+golf
+hotel
+india
+juliet
+kilo
+lima
 EOM
 }
 

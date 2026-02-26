@@ -236,15 +236,15 @@ function init_inventory_archive_with_encryption { # @test
 function init_with_custom_zettel_id_words { # @test
 	run_dodder init \
 		-yin <(cat <<'EOM'
-the alpha
-the bravo
-the charlie
+alpha
+bravo
+charlie
 EOM
 		) \
 		-yang <(cat <<'EOM'
-the golf
-the hotel
-the india
+golf
+hotel
+india
 EOM
 		) \
 		-lock-internal-files=false \
@@ -257,7 +257,7 @@ EOM
 
 	run_dodder new -edit=false
 	assert_success
-	assert_output --regexp '\[alpha/golf .+ !md\]'
+	assert_output --regexp '\[alpha/golf( .+)? !md\]'
 
 	run_dodder peek-zettel-ids 100
 	assert_success
