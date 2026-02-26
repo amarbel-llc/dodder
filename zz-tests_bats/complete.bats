@@ -42,8 +42,8 @@ function complete_show_all { # @test
 		.*InventoryList
 		.*InventoryList
 		!md.*Type
-		alpha/hotel.*Zettel: !md wow ok again
-		alpha/golf.*Zettel: !md wow the first
+		one/dos.*Zettel: !md wow ok again
+		one/uno.*Zettel: !md wow the first
 		tag.*Tag
 		tag.1.*Tag
 		tag.2.*Tag
@@ -57,8 +57,8 @@ function complete_show_zettels { # @test
 	run_dodder complete show :z
 	assert_success
 	assert_output_unsorted --regexp - <<-EOM
-		alpha/hotel.*Zettel: !md wow ok again
-		alpha/golf.*Zettel: !md wow the first
+		one/dos.*Zettel: !md wow ok again
+		one/uno.*Zettel: !md wow the first
 	EOM
 }
 

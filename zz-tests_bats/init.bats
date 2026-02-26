@@ -169,29 +169,29 @@ function init_and_init { # @test
 	run_dodder new -edit=false to_add
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
 	run_dodder init -lock-internal-files=false -override-xdg-with-cwd test-repo-id
 	assert_failure
 	assert_output --partial ': file exists'
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
 	run_dodder show :
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 }
 

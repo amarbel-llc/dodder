@@ -29,12 +29,12 @@ function diff_all_same { # @test
 }
 
 function diff_all_diff { # @test
-	echo wowowow >>alpha/golf.zettel
-	run_dodder diff alpha/golf.zettel
+	echo wowowow >>one/uno.zettel
+	run_dodder diff one/uno.zettel
 	assert_success
 	assert_output - <<-EOM
-		--- alpha/golf:zettel
-		+++ alpha/golf.zettel
+		--- one/uno:zettel
+		+++ one/uno.zettel
 		@@ -6,3 +6,4 @@
 		 ---
 		 
