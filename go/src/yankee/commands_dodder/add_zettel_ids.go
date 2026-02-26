@@ -27,6 +27,11 @@ func init() {
 		side:         object_id_log.SideYin,
 		flatFileName: object_id_provider.FilePathZettelIdYin,
 	})
+
+	utility.AddCmd("add-zettel-ids-yang", &AddZettelIds{
+		side:         object_id_log.SideYang,
+		flatFileName: object_id_provider.FilePathZettelIdYang,
+	})
 }
 
 type AddZettelIds struct {
@@ -76,13 +81,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 		return
 	}
 
-	blobStore := envRepo.GetDefaultBlobStore()
-
-	blobId, err := writeWordsAsBlob(blobStore, filtered)
-	if err != nil {
-		errors.ContextCancelWithErrorf(req, "writing blob: %s", err)
-		return
-	}
+	blobId := writeWordsAsBlob(req, envRepo.GetDefaultBlobStore(), filtered)
 
 	lockSmith := envRepo.GetLockSmith()
 
@@ -104,10 +103,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 		return
 	}
 
-	if err := appendWordsToFlatFile(flatFilePath, filtered); err != nil {
-		errors.ContextCancelWithErrorf(req, "updating flat file cache: %s", err)
-		return
-	}
+	appendWordsToFlatFile(req, flatFilePath, filtered)
 
 	yinCount := prov.Left().Len()
 	yangCount := prov.Right().Len()
@@ -168,50 +164,58 @@ func collectExistingWords(prov *object_id_provider.Provider) map[string]bool {
 }
 
 func writeWordsAsBlob(
+	req command.Request,
 	blobStore domain_interfaces.BlobStore,
 	words []string,
-) (id markl.Id, err error) {
-	var blobWriter domain_interfaces.BlobWriter
-
-	if blobWriter, err = blobStore.MakeBlobWriter(nil); err != nil {
-		err = errors.Wrap(err)
-		return id, err
+) markl.Id {
+	blobWriter, err := blobStore.MakeBlobWriter(nil)
+	if err != nil {
+		errors.ContextCancelWithError(req, err)
+		return markl.Id{}
 	}
 
-	defer errors.DeferredCloser(&err, blobWriter)
+	defer errors.ContextMustClose(req, blobWriter)
 
-	content := strings.Join(words, "\n") + "\n"
+	for _, word := range words {
+		if _, err := io.WriteString(blobWriter, word); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return markl.Id{}
+		}
 
-	if _, err = io.WriteString(blobWriter, content); err != nil {
-		err = errors.Wrap(err)
-		return id, err
+		if _, err := io.WriteString(blobWriter, "\n"); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return markl.Id{}
+		}
 	}
 
+	var id markl.Id
 	id.ResetWithMarklId(blobWriter.GetMarklId())
 
-	return id, err
+	return id
 }
 
-func appendWordsToFlatFile(flatFilePath string, words []string) (err error) {
-	var file *os.File
-
-	if file, err = files.OpenFile(
+func appendWordsToFlatFile(req command.Request, flatFilePath string, words []string) {
+	file, err := files.OpenFile(
 		flatFilePath,
 		os.O_WRONLY|os.O_APPEND,
 		0o666,
-	); err != nil {
-		err = errors.Wrap(err)
-		return err
+	)
+	if err != nil {
+		errors.ContextCancelWithError(req, err)
+		return
 	}
 
-	defer errors.DeferredCloser(&err, file)
+	defer errors.ContextMustClose(req, file)
 
-	content := strings.Join(words, "\n") + "\n"
+	for _, word := range words {
+		if _, err := io.WriteString(file, word); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return
+		}
 
-	if _, err = io.WriteString(file, content); err != nil {
-		err = errors.Wrap(err)
-		return err
+		if _, err := io.WriteString(file, "\n"); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return
+		}
 	}
-
-	return err
 }
