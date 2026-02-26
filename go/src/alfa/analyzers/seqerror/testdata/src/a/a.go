@@ -36,3 +36,78 @@ func namedButEmptyCheck() {
 		_ = x
 	}
 }
+
+// --- Valid patterns (no diagnostics expected) ---
+
+func checkedWithReturn() (string, error) {
+	for x, err := range makeSeq() {
+		if err != nil {
+			return "", err
+		}
+		_ = x
+	}
+	return "", nil
+}
+
+func checkedWithContinue() {
+	for x, err := range makeSeq() {
+		if err != nil {
+			continue
+		}
+		_ = x
+	}
+}
+
+func checkedWithBreak() {
+	for x, err := range makeSeq() {
+		if err != nil {
+			break
+		}
+		_ = x
+	}
+}
+
+func checkedWithPanic() {
+	for x, err := range makeSeq() {
+		if err != nil {
+			panic(err)
+		}
+		_ = x
+	}
+}
+
+func checkedWithFuncCall() {
+	for x, err := range makeSeq() {
+		if err != nil {
+			handleErr(err)
+			return
+		}
+		_ = x
+	}
+}
+
+func handleErr(error) {}
+
+func yieldPassThrough() {
+	_ = func(yield func(string, error) bool) {
+		for x, err := range makeSeq() {
+			if !yield(x, err) {
+				return
+			}
+		}
+	}
+}
+
+func yieldWithNilCheck() {
+	_ = func(yield func(string, error) bool) {
+		for x, err := range makeSeq() {
+			if err != nil {
+				yield("", err)
+				return
+			}
+			if !yield(x, nil) {
+				return
+			}
+		}
+	}
+}
