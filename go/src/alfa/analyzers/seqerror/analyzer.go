@@ -45,6 +45,51 @@ func run(pass *analysis.Pass) (any, error) {
 			if !hasErrCheckedComment(pass, rangeStmt) {
 				pass.ReportRangef(id, "error from iter.Seq2 range is discarded; must be checked (or add //seq:err-checked)")
 			}
+		} else if id, ok := rangeStmt.Value.(*ast.Ident); ok {
+			if hasErrCheckedComment(pass, rangeStmt) {
+				return
+			}
+
+			v := resolveErrorVar(id, pass.TypesInfo)
+			if v == nil {
+				return
+			}
+
+			if bodyHasCallPassingVar(rangeStmt.Body.List, v, pass.TypesInfo) {
+				return
+			}
+
+			ifFound := false
+			for _, stmt := range rangeStmt.Body.List {
+				ifStmt, ok := stmt.(*ast.IfStmt)
+				if !ok {
+					continue
+				}
+
+				if !exprReferencesVar(ifStmt.Cond, v, pass.TypesInfo) {
+					continue
+				}
+
+				ifFound = true
+
+				if !ifBodyHasQualifyingUsage(ifStmt.Body, v, pass.TypesInfo) {
+					pass.ReportRangef(
+						id,
+						"error variable %q is checked but not handled; if-body must return, break, continue, or propagate the error",
+						id.Name,
+					)
+				}
+
+				return
+			}
+
+			if !ifFound {
+				pass.ReportRangef(
+					id,
+					"error variable %q from iter.Seq2 range is never checked or propagated",
+					id.Name,
+				)
+			}
 		}
 	})
 
@@ -82,6 +127,112 @@ func hasErrCheckedComment(pass *analysis.Pass, node ast.Node) bool {
 			for _, comment := range cg.List {
 				cpos := pass.Fset.Position(comment.Pos())
 				if cpos.Line == pos.Line && strings.Contains(comment.Text, "//seq:err-checked") {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func resolveErrorVar(id *ast.Ident, info *types.Info) *types.Var {
+	if obj, ok := info.Defs[id]; ok && obj != nil {
+		if v, ok := obj.(*types.Var); ok {
+			return v
+		}
+	}
+
+	if obj, ok := info.Uses[id]; ok {
+		if v, ok := obj.(*types.Var); ok {
+			return v
+		}
+	}
+
+	return nil
+}
+
+func exprReferencesVar(expr ast.Expr, v *types.Var, info *types.Info) bool {
+	found := false
+
+	ast.Inspect(expr, func(n ast.Node) bool {
+		if found {
+			return false
+		}
+
+		ident, ok := n.(*ast.Ident)
+		if !ok {
+			return true
+		}
+
+		if info.Uses[ident] == v {
+			found = true
+			return false
+		}
+
+		return true
+	})
+
+	return found
+}
+
+func bodyHasCallPassingVar(stmts []ast.Stmt, v *types.Var, info *types.Info) bool {
+	found := false
+
+	for _, stmt := range stmts {
+		ast.Inspect(stmt, func(n ast.Node) bool {
+			if found {
+				return false
+			}
+
+			if _, ok := n.(*ast.FuncLit); ok {
+				return false
+			}
+
+			call, ok := n.(*ast.CallExpr)
+			if !ok {
+				return true
+			}
+
+			for _, arg := range call.Args {
+				if exprReferencesVar(arg, v, info) {
+					found = true
+					return false
+				}
+			}
+
+			return true
+		})
+
+		if found {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ifBodyHasQualifyingUsage(body *ast.BlockStmt, v *types.Var, info *types.Info) bool {
+	for _, stmt := range body.List {
+		switch s := stmt.(type) {
+		case *ast.ReturnStmt:
+			return true
+
+		case *ast.BranchStmt:
+			return true
+
+		case *ast.ExprStmt:
+			call, ok := s.X.(*ast.CallExpr)
+			if !ok {
+				continue
+			}
+
+			if ident, ok := call.Fun.(*ast.Ident); ok && ident.Name == "panic" {
+				return true
+			}
+
+			for _, arg := range call.Args {
+				if exprReferencesVar(arg, v, info) {
 					return true
 				}
 			}
