@@ -14,7 +14,6 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/alfa/pool"
 	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/collections_value"
 	"code.linenisgreat.com/dodder/go/src/charlie/delim_io"
 	"code.linenisgreat.com/dodder/go/src/charlie/doddish"
@@ -263,7 +262,6 @@ func (tai *Tai) ReadFrom(r io.Reader) (n int64, err error) {
 }
 
 func (tai Tai) MarshalText() (text []byte, err error) {
-	ui.Err().Printf(tai.String())
 	text = []byte(tai.String())
 
 	return text, err

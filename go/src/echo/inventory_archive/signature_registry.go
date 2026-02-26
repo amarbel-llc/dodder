@@ -5,7 +5,7 @@ import (
 )
 
 type SignatureComputerParams struct {
-	SignatureLen  int
+	SignatureLen int
 	AvgChunkSize int
 	MinChunkSize int
 	MaxChunkSize int

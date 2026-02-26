@@ -23,6 +23,8 @@ const (
 
 	TypeLuaTagV1                                    = "!lua-tag-v1" // Deprecated
 	TypeLuaTagV2                                    = "!lua-tag-v2"
+	TypeObjectIdLogV1                               = "!object_id_log-v1"
+	TypeObjectIdLogVCurrent                         = TypeObjectIdLogV1
 	TypeTomlBlobStoreConfigSftpExplicitV0           = "!toml-blob_store_config_sftp-explicit-v0"
 	TypeTomlBlobStoreConfigSftpViaSSHConfigV0       = "!toml-blob_store_config_sftp-ssh_config-v0"
 	TypeTomlBlobStoreConfigV0                       = "!toml-blob_store_config-v0"
@@ -49,7 +51,6 @@ const (
 	TypeTomlTypeVCurrent                            = TypeTomlTypeV1
 	TypeTomlWorkspaceConfigV0                       = "!toml-workspace_config-v0"
 	TypeTomlWorkspaceConfigVCurrent                 = TypeTomlWorkspaceConfigV0
-	TypeZettelIdListV0                              = "!zettel_id_list-v0" // not used yet
 
 	// Aliases
 	TypeInventoryListVCurrent = TypeInventoryListV2
@@ -82,6 +83,7 @@ func init() {
 	)
 	registerBuiltinTypeString(TypeLuaTagV1, genres.Tag, false)
 	registerBuiltinTypeString(TypeLuaTagV2, genres.Tag, false)
+	registerBuiltinTypeString(TypeObjectIdLogV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV0, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV2, genres.Unknown, false)
@@ -128,7 +130,6 @@ func init() {
 	registerBuiltinTypeString(TypeTomlTypeV0, genres.Type, false)
 	registerBuiltinTypeString(TypeTomlTypeV1, genres.Type, true)
 	registerBuiltinTypeString(TypeTomlWorkspaceConfigV0, genres.Unknown, false)
-	registerBuiltinTypeString(TypeZettelIdListV0, genres.Unknown, false)
 }
 
 // TODO switch to isDefault being a StoreVersion

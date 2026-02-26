@@ -41,14 +41,14 @@ func (cmd *Genesis) SetFlagDefinitions(
 		&cmd.BigBang.Yin,
 		"yin",
 		"",
-		"File containing list of zettel id left parts",
+		"File containing raw text from which zettel id left parts are extracted",
 	)
 
 	flagSet.StringVar(
 		&cmd.BigBang.Yang,
 		"yang",
 		"",
-		"File containing list of zettel id right parts",
+		"File containing raw text from which zettel id right parts are extracted",
 	)
 
 	cmd.BigBang.SetDefaults()
