@@ -19,3 +19,20 @@ func blankErrorSuppressed() {
 		_ = x
 	}
 }
+
+// --- Rule 2: named but unchecked error ---
+
+func namedButUnchecked() {
+	for x, err := range makeSeq() { // want `error variable "err" from iter.Seq2 range is never checked or propagated`
+		_ = err
+		_ = x
+	}
+}
+
+func namedButEmptyCheck() {
+	for x, err := range makeSeq() { // want `error variable "err" is checked but not handled`
+		if err != nil {
+		}
+		_ = x
+	}
+}
