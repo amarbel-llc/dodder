@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/charlie/genres"
 	"code.linenisgreat.com/dodder/go/src/echo/directory_layout"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_provider"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/repo_config_cli"
 )
 
@@ -30,7 +30,7 @@ type index struct {
 
 	encodedIds
 
-	oldZettelIdStore *object_id_provider.Provider
+	oldZettelIdStore *zettel_id_provider.Provider
 
 	didRead    bool
 	hasChanges bool
@@ -52,7 +52,7 @@ func MakeIndex(
 		},
 	}
 
-	if i.oldZettelIdStore, err = object_id_provider.New(directoryLayout); err != nil {
+	if i.oldZettelIdStore, err = zettel_id_provider.New(directoryLayout); err != nil {
 		if errors.IsNotExist(err) {
 			ui.TodoP4("determine which layer handles no-create kasten")
 			err = nil
@@ -232,7 +232,7 @@ func (index *index) CreateZettelId() (h *ids.ZettelId, err error) {
 	}
 
 	if len(index.AvailableIds) == 0 {
-		err = errors.Wrap(object_id_provider.ErrZettelIdsExhausted{})
+		err = errors.Wrap(zettel_id_provider.ErrZettelIdsExhausted{})
 		return h, err
 	}
 

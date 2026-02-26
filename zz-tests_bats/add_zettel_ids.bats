@@ -1,18 +1,43 @@
 #! /usr/bin/env bats
 
+cat_yin_nato() {
+	cat <<'EOM'
+alpha
+bravo
+charlie
+delta
+echo
+foxtrot
+EOM
+}
+
+cat_yang_nato() {
+	cat <<'EOM'
+golf
+hotel
+india
+juliet
+kilo
+lima
+EOM
+}
+
 setup() {
 	load "$(dirname "$BATS_TEST_FILE")/common.bash"
 
 	# for shellcheck SC2154
 	export output
 
-	copy_from_version "$DIR"
+	run_dodder init \
+		-yin <(cat_yin_nato) \
+		-yang <(cat_yang_nato) \
+		-lock-internal-files=false \
+		-override-xdg-with-cwd \
+		test
+
+	assert_success
 
 	run_dodder_init_workspace
-
-	# create the object id log via migration
-	run_dodder migrate-zettel-ids
-	assert_success
 }
 
 teardown() {
@@ -20,100 +45,78 @@ teardown() {
 }
 
 function add_zettel_ids_yin_success { # @test
-	input="$(mktemp)"
-	{
-		echo "a sentence about ceroplastes"
-		echo "another line about midtown"
-		echo "something about harbor"
-	} >"$input"
-
-	run_dodder add-zettel-ids-yin <"$input"
+	run_dodder add-zettel-ids-yin <<'EOM'
+a sentence about ceroplastes
+another line about midtown
+something about harbor
+EOM
 	assert_success
-	assert_output --partial "added 3 words to Yin"
-	assert_output --partial "pool size: 54"
+	assert_output "added 3 words to Yin (pool size: 54)"
 }
 
 function add_zettel_ids_yin_dedup { # @test
 	input="$(mktemp)"
-	{
-		echo "a sentence about ceroplastes"
-		echo "another line about midtown"
-		echo "something about harbor"
-	} >"$input"
+	cat >"$input" <<'EOM'
+a sentence about ceroplastes
+another line about midtown
+something about harbor
+EOM
 
 	run_dodder add-zettel-ids-yin <"$input"
 	assert_success
-	assert_output --partial "added 3 words"
+	assert_output "added 3 words to Yin (pool size: 54)"
 
 	# same input again should be a no-op since words already exist
 	run_dodder add-zettel-ids-yin <"$input"
 	assert_success
-	assert_output --partial "no new words to add"
+	assert_output "no new words to add"
 }
 
 function add_zettel_ids_yin_cross_side_rejection { # @test
-	input="$(mktemp)"
-	{
-		echo "something about golf"
-		echo "another about newword"
-	} >"$input"
-
 	# golf is in Yang, should be rejected; newword is new
-	run_dodder add-zettel-ids-yin <"$input"
+	run_dodder add-zettel-ids-yin <<'EOM'
+something about golf
+another about newword
+EOM
 	assert_success
-	assert_output --partial "added 1 words to Yin"
-	assert_output --partial "pool size: 42"
+	assert_output "added 1 words to Yin (pool size: 42)"
 }
 
 function add_zettel_ids_yin_no_new_words { # @test
-	input="$(mktemp)"
-	{
-		echo "something about alpha"
-		echo "another about bravo"
-	} >"$input"
-
-	run_dodder add-zettel-ids-yin <"$input"
+	run_dodder add-zettel-ids-yin <<'EOM'
+something about alpha
+another about bravo
+EOM
 	assert_success
-	assert_output --partial "no new words to add"
+	assert_output "no new words to add"
 }
 
 function add_zettel_ids_yang_success { # @test
-	input="$(mktemp)"
-	{
-		echo "a sentence about ceroplastes"
-		echo "another line about midtown"
-		echo "something about harbor"
-	} >"$input"
-
-	run_dodder add-zettel-ids-yang <"$input"
+	run_dodder add-zettel-ids-yang <<'EOM'
+a sentence about ceroplastes
+another line about midtown
+something about harbor
+EOM
 	assert_success
-	assert_output --partial "added 3 words to Yang"
-	assert_output --partial "pool size: 54"
+	assert_output "added 3 words to Yang (pool size: 54)"
 }
 
 function add_zettel_ids_yang_cross_side_rejection { # @test
-	input="$(mktemp)"
-	{
-		echo "something about alpha"
-		echo "another about newword"
-	} >"$input"
-
 	# alpha is in Yin, should be rejected; newword is new
-	run_dodder add-zettel-ids-yang <"$input"
+	run_dodder add-zettel-ids-yang <<'EOM'
+something about alpha
+another about newword
+EOM
 	assert_success
-	assert_output --partial "added 1 words to Yang"
-	assert_output --partial "pool size: 42"
+	assert_output "added 1 words to Yang (pool size: 42)"
 }
 
 function add_zettel_ids_peek_shows_larger_pool_after_reindex { # @test
-	input="$(mktemp)"
-	{
-		echo "a sentence about ceroplastes"
-		echo "another line about midtown"
-		echo "something about harbor"
-	} >"$input"
-
-	run_dodder add-zettel-ids-yin <"$input"
+	run_dodder add-zettel-ids-yin <<'EOM'
+a sentence about ceroplastes
+another line about midtown
+something about harbor
+EOM
 	assert_success
 
 	# reindex rebuilds the zettel ID availability index from flat files
@@ -130,14 +133,11 @@ function add_zettel_ids_peek_shows_larger_pool_after_reindex { # @test
 }
 
 function add_zettel_ids_new_still_works { # @test
-	input="$(mktemp)"
-	{
-		echo "a sentence about ceroplastes"
-		echo "another line about midtown"
-		echo "something about harbor"
-	} >"$input"
-
-	run_dodder add-zettel-ids-yin <"$input"
+	run_dodder add-zettel-ids-yin <<'EOM'
+a sentence about ceroplastes
+another line about midtown
+something about harbor
+EOM
 	assert_success
 
 	run_dodder new -edit=false

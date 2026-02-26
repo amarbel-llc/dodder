@@ -16,7 +16,7 @@ teardown() {
 # bats file_tags=user_story:query
 
 function show_simple_one_zettel { # @test
-	run_dodder show -format text alpha/golf
+	run_dodder show -format text one/uno
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -44,10 +44,10 @@ function show_simple_one_zettel_with_description_with_quotes { # @test
 	EOM
 	assert_success
 	assert_output - <<-EOM
-		[bravo/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "see these \"quotes\""]
+		[two/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "see these \"quotes\""]
 	EOM
 
-	run_dodder show -format text bravo/golf:
+	run_dodder show -format text two/uno:
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -60,7 +60,7 @@ function show_simple_one_zettel_with_description_with_quotes { # @test
 }
 
 function show_simple_one_zettel_with_sigil { # @test
-	run_dodder show -format text alpha/golf:
+	run_dodder show -format text one/uno:
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -75,7 +75,7 @@ function show_simple_one_zettel_with_sigil { # @test
 }
 
 function show_simple_one_zettel_with_sigil_and_genre { # @test
-	run_dodder show -format text alpha/golf:zettel
+	run_dodder show -format text one/uno:zettel
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -93,16 +93,16 @@ function show_simple_one_zettel_checked_out { # @test
 	run_dodder init-workspace
 	assert_success
 
-	run_dodder checkout alpha/golf
+	run_dodder checkout one/uno
 	assert_success
 	assert_output - <<-EOM
-		      checked out [alpha/golf.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
-	run_dodder show alpha/golf.zettel
+	run_dodder show one/uno.zettel
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -118,14 +118,14 @@ function show_simple_one_zettel_hidden { # @test
 	run_dodder show :?z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -137,14 +137,14 @@ function show_simple_one_zettel_hidden_past { # @test
 	run_dodder show :?z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -165,7 +165,7 @@ function show_simple_one_zettel_binary { # @test
 	assert_output_unsorted - <<-EOM
 		          deleted [file.bin]
 		[!bin !toml-type-v1]
-		[bravo/golf @blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk !bin "file"]
+		[two/uno @blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk !bin "file"]
 	EOM
 
 	cat >bin.type <<-EOM
@@ -183,7 +183,7 @@ function show_simple_one_zettel_binary { # @test
 		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v1]
 	EOM
 
-	run_dodder show -format text bravo/golf
+	run_dodder show -format text two/uno
 	assert_success
 	assert_output - <<-EOM
 		---
@@ -194,14 +194,14 @@ function show_simple_one_zettel_binary { # @test
 }
 
 function show_history_one_zettel { # @test
-	run_dodder show alpha/golf+z
+	run_dodder show one/uno+z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[alpha/golf @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 
-	run_dodder show -format text alpha/golf+z
+	run_dodder show -format text one/uno+z
 	assert_success
 	assert_output_unsorted --regexp - <<-EOM
 		---
@@ -227,8 +227,8 @@ function show_zettel_tag { # @test
 	run_dodder show tag-3:z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
 	run_dodder show -format blob tag-3:z
@@ -241,8 +241,8 @@ function show_zettel_tag { # @test
 	run_dodder show -format sku-metadata-sans-tai tag-3:z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		Zettel alpha/hotel blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
-		Zettel alpha/golf blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
+		Zettel one/dos blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
+		Zettel one/uno blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
 	EOM
 }
 
@@ -253,8 +253,8 @@ function show_zettels_with_tag_no_workspace_folder { # @test
 	run_dodder show tag
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -262,13 +262,13 @@ function show_zettel_tag_complex { # @test
 	run_dodder init-workspace
 	assert_success
 
-	run_dodder checkout a/g
+	run_dodder checkout o/u
 	assert_success
 	assert_output - <<-EOM
-		      checked out [alpha/golf.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
-	cat >alpha/golf.zettel <<-EOM
+	cat >one/uno.zettel <<-EOM
 		---
 		# wow the first
 		- tag-3
@@ -283,15 +283,15 @@ function show_zettel_tag_complex { # @test
 	# run_dodder show -verbose tag-3.z tag-5.z
 	# assert_success
 	# assert_output_unsorted - <<-EOM
-	# 	[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-5]
+	# 	[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-5]
 	# EOM
 
-	run_dodder checkin -delete alpha/golf.zettel
+	run_dodder checkin -delete one/uno.zettel
 
 	run_dodder show [tag-3 tag-5]:z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-5]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-5]
 	EOM
 
 	run_dodder show -format blob [tag-3 tag-5]:z
@@ -303,7 +303,7 @@ function show_zettel_tag_complex { # @test
 	run_dodder show -format sku-metadata-sans-tai [tag-3 tag-5]:z
 	assert_success
 	assert_output_unsorted --partial - <<-EOM
-		Zettel alpha/golf blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-5 "wow the first"
+		Zettel one/uno blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-5 "wow the first"
 	EOM
 }
 
@@ -311,8 +311,8 @@ function show_complex_zettel_tag_negation { # @test
 	run_dodder show ^-etikett-two:z
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -321,8 +321,8 @@ function show_simple_all { # @test
 	assert_success
 	assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
 	run_dodder show -format blob :z,t
@@ -338,8 +338,8 @@ function show_simple_all { # @test
 	assert_success
 	assert_output_unsorted - <<-EOM
 		Type !md blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1
-		Zettel alpha/hotel blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
-		Zettel alpha/golf blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
+		Zettel one/dos blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
+		Zettel one/uno blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
 	EOM
 }
 
@@ -438,9 +438,9 @@ function show_history_all { # @test
 	assert_output_unsorted - <<-EOM
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 		[!md @$(get_type_blob_sha) !toml-type-v1]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[alpha/golf @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 }
 
@@ -471,8 +471,8 @@ function show_tag_toml { # @test
 	run_dodder show true
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -503,8 +503,8 @@ function show_tag_lua_v1 { # @test
 	run_dodder show true
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		true
 		true
 	EOM
@@ -537,8 +537,8 @@ function show_tag_lua_v2 { # @test
 	run_dodder show true
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		true
 		true
 	EOM
@@ -609,12 +609,12 @@ function show_builtin_type_md { # @test
 # bats file_tags=user_story:workspace
 
 function show_workspace_default { # @test
-	run_dodder organize -mode commit-directly alpha/golf <<-EOM
-		- [alpha/golf !md tag-3 tag-4 tag-5] wow the first
+	run_dodder organize -mode commit-directly one/uno <<-EOM
+		- [one/uno !md tag-3 tag-4 tag-5] wow the first
 	EOM
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
 	EOM
 
 	run_dodder init-workspace -query tag-5
@@ -623,27 +623,27 @@ function show_workspace_default { # @test
 	run_dodder show :
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
 	EOM
 }
 
 function show_workspace_exactly_one_zettel { # @test
 	skip
-	run_dodder organize -mode commit-directly alpha/golf <<-EOM
-		- [alpha/golf !md tag-3 tag-4 tag-5] wow the first
+	run_dodder organize -mode commit-directly one/uno <<-EOM
+		- [one/uno !md tag-3 tag-4 tag-5] wow the first
 	EOM
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
 		[tag-5]
 	EOM
 
 	run_dodder init-workspace -query tag-3
 	assert_success
 
-	run_dodder show alpha/hotel
+	run_dodder show one/dos
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
 	EOM
 }

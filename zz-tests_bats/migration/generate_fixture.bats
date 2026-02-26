@@ -93,7 +93,7 @@ function generate { # @test
 
   create_test_zettels
 
-  run_dodder show -format tags alpha/golf
+  run_dodder show -format tags one/uno
   assert_success
   assert_output "tag-3, tag-4"
 }

@@ -169,29 +169,29 @@ function init_and_init { # @test
 	run_dodder new -edit=false to_add
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
 	run_dodder init -lock-internal-files=false -override-xdg-with-cwd test-repo-id
 	assert_failure
 	assert_output --partial ': file exists'
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
 	run_dodder show :
 	assert_success
 	assert_output - <<-EOM
-		[alpha/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 }
 
@@ -231,6 +231,40 @@ function init_inventory_archive_with_encryption { # @test
 	run_dodder blob_store-info-repo .archive encryption
 	assert_success
 	assert_output --regexp '.+'
+}
+
+function init_with_custom_zettel_id_words { # @test
+	run_dodder init \
+		-yin <(cat <<'EOM'
+alpha
+bravo
+charlie
+EOM
+		) \
+		-yang <(cat <<'EOM'
+golf
+hotel
+india
+EOM
+		) \
+		-lock-internal-files=false \
+		-override-xdg-with-cwd \
+		test-repo-id
+
+	assert_success
+
+	run_dodder_init_workspace
+
+	run_dodder new -edit=false
+	assert_success
+	assert_output --regexp '\[alpha/golf( .+)? !md\]'
+
+	run_dodder peek-zettel-ids 100
+	assert_success
+
+	# 3 yin x 3 yang = 9 possible, minus 1 used = 8
+	peek_count="$(echo "$output" | wc -l)"
+	[[ "$peek_count" -eq 8 ]]
 }
 
 function init_with_json_inventory_list_type { # @test

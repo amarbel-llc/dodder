@@ -23,10 +23,10 @@ the body
 EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[one/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
-  run_dodder show -format text alpha/golf:z
+  run_dodder show -format text one/uno:z
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -45,13 +45,13 @@ EOM
     echo the body but new
   } >"$new_blob"
 
-  run_dodder checkin-blob -new-tags et3 alpha/golf "$new_blob"
+  run_dodder checkin-blob -new-tags et3 one/uno "$new_blob"
   assert_success
   assert_output - <<-EOM
-		[alpha/golf @blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza !md "bez" et3]
+		[one/uno @blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza !md "bez" et3]
 	EOM
 
-  run_dodder show -format text alpha/golf:z
+  run_dodder show -format text one/uno:z
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -77,10 +77,10 @@ the body
 EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[one/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
-  run_dodder show -format text alpha/golf:z
+  run_dodder show -format text one/uno:z
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -98,13 +98,13 @@ EOM
   assert_success
   assert_output --partial 'ok 1 - blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza'
 
-  run_dodder checkin-blob -new-tags et3 alpha/golf blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
+  run_dodder checkin-blob -new-tags et3 one/uno blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
   assert_success
   assert_output - <<-EOM
-		[alpha/golf @blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza !md "bez" et3]
+		[one/uno @blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza !md "bez" et3]
 	EOM
 
-  run_dodder show -format text alpha/golf:z
+  run_dodder show -format text one/uno:z
   assert_success
   assert_output --regexp - <<-EOM
 ---

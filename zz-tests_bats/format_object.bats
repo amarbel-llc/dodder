@@ -36,7 +36,7 @@ function format_simple { # @test
 		          deleted [md.type]
 	EOM
 
-	run_dodder format-object -mode both alpha/golf text
+	run_dodder format-object -mode both one/uno text
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -49,9 +49,9 @@ function format_simple { # @test
 		last time
 	EOM
 
-	run_dodder checkout alpha/golf
+	run_dodder checkout one/uno
 	assert_success
-	cat >alpha/golf.zettel <<-EOM
+	cat >one/uno.zettel <<-EOM
 		---
 		# wow the second
 		- tag-3
@@ -62,7 +62,7 @@ function format_simple { # @test
 		last time but new
 	EOM
 
-	run_dodder format-object -mode both alpha/golf.zettel text
+	run_dodder format-object -mode both one/uno.zettel text
 	assert_success
 	assert_output --regexp - <<-EOM
 		---
@@ -86,7 +86,7 @@ function show_simple_one_zettel_binary { # @test
 	assert_output_unsorted - <<-EOM
 		          deleted [file.bin]
 		[!bin !toml-type-v1]
-		[bravo/golf @blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk !bin "file"]
+		[two/uno @blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk !bin "file"]
 	EOM
 
 	run_dodder checkout !bin:t
@@ -110,7 +110,7 @@ function show_simple_one_zettel_binary { # @test
 		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v1]
 	EOM
 
-	run_dodder format-object -mode both bravo/golf
+	run_dodder format-object -mode both two/uno
 	assert_success
 	assert_output --regexp - <<-EOM
 		---

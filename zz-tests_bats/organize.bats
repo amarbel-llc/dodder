@@ -43,7 +43,7 @@ function organize_empty_commit { # @test
 
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "test"]
+		[two/uno !md "test"]
 	EOM
 }
 
@@ -54,13 +54,13 @@ function organize_simple { # @test
   assert_output_unsorted - <<-EOM
 
 		- [!md !toml-type-v1]
-		- [alpha/hotel !md tag-3 tag-4] wow ok again
-		- [alpha/golf !md tag-3 tag-4] wow the first
+		- [one/dos !md tag-3 tag-4] wow ok again
+		- [one/uno !md tag-3 tag-4] wow the first
 	EOM
 }
 
 function organize_simple_commit { # @test
-  run_dodder checkout alpha/golf
+  run_dodder checkout one/uno
   assert_success
 
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
@@ -71,14 +71,14 @@ function organize_simple_commit { # @test
 		- [   tag-2]
 		- [   tag-3]
 		- [   tag-4]
-		- [alpha/hotel   !md tag-3 tag-4] wow ok again
-		- [alpha/golf   !md tag-3 tag-4] wow the first
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1 %virtual_etikett new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" %virtual_etikett new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" %virtual_etikett new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" %virtual_etikett new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" %virtual_etikett new-etikett-for-all tag-3 tag-4]
 		[tag-1 %virtual_etikett new-etikett-for-all]
 		[tag-2 %virtual_etikett new-etikett-for-all]
 		[tag-3 %virtual_etikett new-etikett-for-all]
@@ -90,8 +90,8 @@ function organize_simple_commit { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1 new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
 		[tag-1 new-etikett-for-all]
 		[tag-2 new-etikett-for-all]
 		[tag-3 new-etikett-for-all]
@@ -101,10 +101,10 @@ function organize_simple_commit { # @test
 }
 
 function organize_simple_checkedout_matchesmutter { # @test
-  run_dodder checkout alpha/hotel
+  run_dodder checkout one/dos
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
@@ -115,8 +115,8 @@ function organize_simple_checkedout_matchesmutter { # @test
 		- [   -tag-2]
 		- [   -tag-3]
 		- [   -tag-4]
-		- [alpha/hotel   !md tag-3 tag-4] wow ok again
-		- [alpha/golf   !md tag-3 tag-4] wow the first
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
@@ -126,8 +126,8 @@ function organize_simple_checkedout_matchesmutter { # @test
 		[-tag-3 new-etikett-for-all]
 		[-tag-4 new-etikett-for-all]
 		[-tag new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
   run_dodder show -format log new-etikett-for-all:z,e,t
@@ -139,25 +139,25 @@ function organize_simple_checkedout_matchesmutter { # @test
 		[-tag-3 new-etikett-for-all]
 		[-tag-4 new-etikett-for-all]
 		[-tag new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
-  run_dodder status alpha/hotel.zettel
+  run_dodder status one/dos.zettel
   assert_success
   assert_output - <<-EOM
-		             same [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
 	EOM
 }
 
 function organize_simple_checkedout_merge_no_conflict { # @test
-  run_dodder checkout alpha/hotel
+  run_dodder checkout one/dos
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
-  cat - >alpha/hotel.zettel <<-EOM
+  cat - >one/dos.zettel <<-EOM
 		---
 		# wow ok again
 		- get_this_shit_merged
@@ -172,31 +172,31 @@ function organize_simple_checkedout_merge_no_conflict { # @test
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		# new-etikett-for-all
 		- [   !md   ]
-		- [alpha/hotel   !md tag-3 tag-4] wow ok again
-		- [alpha/golf   !md tag-3 tag-4] wow the first
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1 new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
   run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v1 new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
-  run_dodder status alpha/hotel.zettel
+  run_dodder status one/dos.zettel
   assert_success
   assert_output - <<-EOM
-		       conflicted [alpha/hotel.zettel]
+		       conflicted [one/dos.zettel]
 	EOM
   # assert_output - <<-EOM
-  # 	          changed [alpha/hotel.zettel @7ac3bdeb0ac8fd96cd7f8700a4bbc7a5d777fe26c50b52c20ecd726b255ec3d0 !md "wow ok again" get_this_shit_merged new-etikett-for-all tag-3 tag-4]
+  # 	          changed [one/dos.zettel @7ac3bdeb0ac8fd96cd7f8700a4bbc7a5d777fe26c50b52c20ecd726b255ec3d0 !md "wow ok again" get_this_shit_merged new-etikett-for-all tag-3 tag-4]
   # EOM
 }
 
@@ -227,13 +227,13 @@ function organize_simple_checkedout_merge_conflict { # @test
 		[!txt @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
 	EOM
 
-  run_dodder checkout alpha/hotel
+  run_dodder checkout one/dos
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
-  cat - >alpha/hotel.zettel <<-EOM
+  cat - >one/dos.zettel <<-EOM
 		---
 		# wow ok again modified
 		- get_this_shit_merged
@@ -256,8 +256,8 @@ function organize_simple_checkedout_merge_conflict { # @test
 		- [   -tag-2]
 		- [   -tag-3]
 		- [   -tag-4]
-		- [alpha/hotel   !txt2 tag-3 tag-4] wow ok again different
-		- [alpha/golf   !txt2 tag-3 tag-4] wow the first
+		- [one/dos   !txt2 tag-3 tag-4] wow ok again different
+		- [one/uno   !txt2 tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
@@ -267,8 +267,8 @@ function organize_simple_checkedout_merge_conflict { # @test
 		[-tag-2 new-etikett-for-all]
 		[-tag-3 new-etikett-for-all]
 		[-tag-4 new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again different" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt2 "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again different" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt2 "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
   run_dodder show -format log new-etikett-for-all:z,e,t
@@ -280,14 +280,14 @@ function organize_simple_checkedout_merge_conflict { # @test
 		[-tag-3 new-etikett-for-all]
 		[-tag-4 new-etikett-for-all]
 		[-tag new-etikett-for-all]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again different" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt2 "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again different" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt2 "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
-  run_dodder status alpha/hotel.zettel
+  run_dodder status one/dos.zettel
   assert_success
   assert_output - <<-EOM
-		       conflicted [alpha/hotel.zettel]
+		       conflicted [one/dos.zettel]
 	EOM
 }
 
@@ -309,13 +309,13 @@ function organize_hides_hidden_tags_from_organize { # @test
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "split hinweis for usability" project-2021-dodder zz-archive-task-done]
+		[two/uno !md "split hinweis for usability" project-2021-dodder zz-archive-task-done]
 	EOM
 
-  run_dodder show bravo/golf
+  run_dodder show two/uno
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "split hinweis for usability" project-2021-dodder zz-archive-task-done]
+		[two/uno !md "split hinweis for usability" project-2021-dodder zz-archive-task-done]
 	EOM
 
   run_dodder organize -mode output-only project-2021-dodder:z
@@ -341,8 +341,8 @@ function organize_dry_run { # @test
 		- [   -tag-2]
 		- [   -tag-3]
 		- [   -tag-4]
-		- [alpha/hotel  ] wow ok again
-		- [alpha/golf  ] wow the first
+		- [one/dos  ] wow ok again
+		- [one/uno  ] wow the first
 	EOM
   assert_success
 
@@ -359,8 +359,8 @@ function organize_with_type_output { # @test
 		! md
 		---
 
-		- [alpha/golf tag-3 tag-4] wow the first
-		- [alpha/hotel tag-3 tag-4] wow ok again
+		- [one/dos tag-3 tag-4] wow ok again
+		- [one/uno tag-3 tag-4] wow the first
 	EOM
 }
 
@@ -370,15 +370,15 @@ function organize_with_type_commit { # @test
 		! txt
 		---
 
-		- [alpha/hotel tag-3 tag-4] wow ok again
-		- [alpha/golf tag-3 tag-4] wow the first
+		- [one/dos tag-3 tag-4] wow ok again
+		- [one/uno tag-3 tag-4] wow the first
 	EOM
 
   assert_success
   assert_output_unsorted - <<-EOM
 		[!txt !toml-type-v1]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt "wow the first" tag-3 tag-4]
 	EOM
 }
 
@@ -391,13 +391,13 @@ function modify_description { # @test
 		- [   tag-2]
 		- [   tag-3]
 		- [   tag-4]
-		- [alpha/hotel   !md tag-3 tag-4] wow ok again was modified
-		- [alpha/golf   !md tag-3 tag-4] wow the first was modified too
+		- [one/dos   !md tag-3 tag-4] wow ok again was modified
+		- [one/uno   !md tag-3 tag-4] wow the first was modified too
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again was modified" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first was modified too" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again was modified" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first was modified too" tag-3 tag-4]
 		[tag]
 		[tag-1]
 		[tag-2]
@@ -431,12 +431,12 @@ function organize_v5_outputs_organize_one_tag { # @test
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "wow" ok]
+		[two/uno !md "wow" ok]
 	EOM
 
-  run_dodder show -format object-id a/g
+  run_dodder show -format object-id o/u
   assert_success
-  assert_output 'alpha/golf'
+  assert_output 'one/uno'
 
   run_dodder organize "${cmd_def_organize[@]}" -mode output-only ok
   assert_success
@@ -445,7 +445,7 @@ function organize_v5_outputs_organize_one_tag { # @test
 		- ok
 		---
 
-		- [bravo/golf !md] wow
+		- [two/uno !md] wow
 	EOM
 }
 
@@ -463,7 +463,7 @@ function organize_v5_outputs_organize_two_tags { # @test
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output_unsorted - <<-EOM
-		[bravo/golf !md "wow" brown ok]
+		[two/uno !md "wow" brown ok]
 	EOM
 
   run_dodder organize "${cmd_def_organize[@]}" -mode output-only ok brown
@@ -474,7 +474,7 @@ function organize_v5_outputs_organize_two_tags { # @test
 		- ok
 		---
 
-		- [bravo/golf !md] wow
+		- [two/uno !md] wow
 	EOM
 
   run_dodder organize "${cmd_def_organize[@]}" \
@@ -482,15 +482,15 @@ function organize_v5_outputs_organize_two_tags { # @test
     ok brown <<-EOM
 			      # ok
 
-			- [bravo/golf !md] wow
+			- [two/uno !md] wow
 		EOM
 
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "wow" ok]
+		[two/uno !md "wow" ok]
 	EOM
 
-  run_dodder show -format text bravo/golf
+  run_dodder show -format text two/uno
   assert_success
   assert_output --regexp - <<-EOM
 		---
@@ -516,7 +516,7 @@ function organize_v5_outputs_organize_one_tags_group_by_one { # @test
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "wow" priority-1 priority-2 task]
+		[two/uno !md "wow" priority-1 priority-2 task]
 	EOM
 
   run_dodder organize "${cmd_def_organize[@]}" \
@@ -530,11 +530,11 @@ function organize_v5_outputs_organize_one_tags_group_by_one { # @test
 
 		    # priority-1
 
-		- [bravo/golf !md priority-2] wow
+		- [two/uno !md priority-2] wow
 
 		    # priority-2
 
-		- [bravo/golf !md priority-1] wow
+		- [two/uno !md priority-1] wow
 	EOM
 
   return
@@ -556,11 +556,11 @@ function organize_v5_outputs_organize_one_tags_group_by_one { # @test
 
 		         ##         -1
 
-		- [bravo/golf  !md] wow
+		- [two/uno  !md] wow
 
 		         ##         -2
 
-		- [bravo/golf  !md] wow
+		- [two/uno  !md] wow
 	EOM
 }
 
@@ -568,7 +568,7 @@ function organize_v5_outputs_organize_two_zettels_one_tags_group_by_one { # @tes
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# alpha/golf"
+    echo "# one/uno"
     echo "- task"
     echo "- priority-1"
     echo "! md"
@@ -578,13 +578,13 @@ function organize_v5_outputs_organize_two_zettels_one_tags_group_by_one { # @tes
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output_unsorted - <<-EOM
-		[bravo/golf !md "alpha/golf" priority-1 task]
+		[two/uno !md "one/uno" priority-1 task]
 	EOM
 
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# bravo/hotel"
+    echo "# two/dos"
     echo "- task"
     echo "- priority-2"
     echo "! md"
@@ -594,7 +594,7 @@ function organize_v5_outputs_organize_two_zettels_one_tags_group_by_one { # @tes
   run_dodder new -edit=false "$to_add"
   assert_success
   assert_output - <<-EOM
-		[alpha/india !md "bravo/hotel" priority-2 task]
+		[one/tres !md "two/dos" priority-2 task]
 	EOM
 
   # add prefix joints
@@ -607,11 +607,11 @@ function organize_v5_outputs_organize_two_zettels_one_tags_group_by_one { # @tes
 
 		    # priority-1
 
-		- [bravo/golf !md] alpha/golf
+		- [two/uno !md] one/uno
 
 		    # priority-2
 
-		- [alpha/india !md] bravo/hotel
+		- [one/tres !md] two/dos
 	EOM
 }
 
@@ -619,7 +619,7 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# alpha/golf"
+    echo "# one/uno"
     echo "- task"
     echo "- priority-1"
     echo "- w-2022-07-07"
@@ -633,7 +633,7 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# bravo/hotel"
+    echo "# two/dos"
     echo "- task"
     echo "- priority-1"
     echo "- w-2022-07-06"
@@ -666,17 +666,17 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
     echo
     echo "### w-2022-07-06"
     echo
-    echo "- [alpha/hotel !md] bravo/hotel"
+    echo "- [one/dos !md] two/dos"
     echo
     echo "## priority-2"
     echo
     echo "### w-2022-07-07"
     echo
-    echo "- [alpha/golf !md] alpha/golf"
+    echo "- [one/uno !md] one/uno"
     echo
     echo "###"
     echo
-    echo "- [bravo/golf !md] 3"
+    echo "- [two/uno !md] 3"
   } >"$expected_organize"
 
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly -group-by priority,w task <"$expected_organize"
@@ -685,7 +685,7 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# alpha/golf"
+    echo "# one/uno"
     echo "- priority-2"
     echo "- task"
     echo "- w-2022-07-07"
@@ -693,11 +693,11 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
     echo "---"
   } >"$to_add"
 
-  run_dodder show -format text alpha/golf
+  run_dodder show -format text one/uno
   assert_success
   assert_output --regexp - <<-EOM
 ---
-# alpha/golf
+# one/uno
 - priority-2
 - task
 - w-2022-07-07
@@ -705,7 +705,7 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
 ---
 EOM
 
-  run_dodder show -format text bravo/golf
+  run_dodder show -format text two/uno
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -721,7 +721,7 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# alpha/golf"
+    echo "# one/uno"
     echo "- task"
     echo "- priority-1"
     echo "- w-2022-07-07"
@@ -745,7 +745,7 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
   to_add="$(mktemp)"
   {
     echo "---"
-    echo "# bravo/hotel"
+    echo "# two/dos"
     echo "- task"
     echo "- priority-1"
     echo "- w-2022-07-06"
@@ -784,13 +784,13 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
     echo "## priority-1"
     echo "- new zettel two"
     echo "### w-2022-07-06"
-    echo "- [alpha/hotel !md] bravo/hotel"
+    echo "- [one/dos !md] two/dos"
     echo "## priority-2"
     echo "### w-2022-07-07"
-    echo "- [alpha/golf !md] alpha/golf"
+    echo "- [one/uno !md] one/uno"
     echo "###"
     echo "- new zettel three"
-    echo "- [bravo/golf !md] 3"
+    echo "- [two/uno !md] 3"
   } >"$expected_organize"
 
   run_dodder organize \
@@ -800,11 +800,11 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
     task <"$expected_organize"
   assert_success
 
-  run_dodder show -format text alpha/golf
+  run_dodder show -format text one/uno
   assert_success
   assert_output --regexp - <<-EOM
 ---
-# alpha/golf
+# one/uno
 - priority-2
 - task
 - w-2022-07-07
@@ -812,7 +812,7 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
 ---
 EOM
 
-  run_dodder show -format text bravo/golf
+  run_dodder show -format text two/uno
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -823,13 +823,13 @@ EOM
 ---
 EOM
 
-  run_dodder show -format text alpha/india
+  run_dodder show -format text one/tres
   assert_success
 
-  run_dodder show -format text bravo/hotel
+  run_dodder show -format text two/dos
   assert_success
 
-  run_dodder show -format text charlie/golf
+  run_dodder show -format text three/uno
   assert_success
 
   {
@@ -849,7 +849,7 @@ function organize_v5_commits_no_changes { # @test
   one="$(mktemp)"
   {
     echo "---"
-    echo "# alpha/golf"
+    echo "# one/uno"
     echo "- priority-1"
     echo "- task"
     echo "- w-2022-07-07"
@@ -860,13 +860,13 @@ function organize_v5_commits_no_changes { # @test
   run_dodder new -edit=false "$one"
   assert_success
   assert_output_unsorted - <<-EOM
-		[bravo/golf !md "alpha/golf" priority-1 task w-2022-07-07]
+		[two/uno !md "one/uno" priority-1 task w-2022-07-07]
 	EOM
 
   two="$(mktemp)"
   {
     echo "---"
-    echo "# bravo/hotel"
+    echo "# two/dos"
     echo "- priority-1"
     echo "- task"
     echo "- w-2022-07-06"
@@ -877,7 +877,7 @@ function organize_v5_commits_no_changes { # @test
   run_dodder new -edit=false "$two"
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/india !md "bravo/hotel" priority-1 task w-2022-07-06]
+		[one/tres !md "two/dos" priority-1 task w-2022-07-06]
 	EOM
 
   three="$(mktemp)"
@@ -894,7 +894,7 @@ function organize_v5_commits_no_changes { # @test
   run_dodder new -edit=false "$three"
   assert_success
   assert_output_unsorted - <<-EOM
-		[bravo/hotel !md "3" priority-1 task w-2022-07-06]
+		[two/dos !md "3" priority-1 task w-2022-07-06]
 	EOM
 
   # TODO add prefix joints
@@ -911,12 +911,12 @@ function organize_v5_commits_no_changes { # @test
 
 		   ## w-2022-07-06
 
-		- [alpha/india !md] bravo/hotel
-		- [bravo/hotel !md] 3
+		- [one/tres !md] two/dos
+		- [two/dos !md] 3
 
 		   ## w-2022-07-07
 
-		- [bravo/golf !md] alpha/golf
+		- [two/uno !md] one/uno
 
 	EOM
 
@@ -938,19 +938,19 @@ function organize_v5_commits_no_changes { # @test
 
 			       #####          -06
 
-			- [bravo/golf   !md] alpha/golf
+			- [two/uno   !md] one/uno
 
 			       #####          -07
 
-			- [alpha/india  !md] bravo/hotel
-			- [bravo/hotel   !md] 3
+			- [one/tres  !md] two/dos
+			- [two/dos   !md] 3
 
 		EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/india !md "bravo/hotel" priority-1 task w-2022-07-07]
-		[bravo/hotel !md "3" priority-1 task w-2022-07-07]
-		[bravo/golf !md "alpha/golf" priority-1 task w-2022-07-06]
+		[one/tres !md "two/dos" priority-1 task w-2022-07-07]
+		[two/dos !md "3" priority-1 task w-2022-07-07]
+		[two/uno !md "one/uno" priority-1 task w-2022-07-06]
 	EOM
 }
 
@@ -958,7 +958,7 @@ function organize_v5_commits_dependent_leaf { # @test
   one="$(mktemp)"
   {
     echo "---"
-    echo "# alpha/golf"
+    echo "# one/uno"
     echo "- priority-1"
     echo "- task"
     echo "- w-2022-07-07"
@@ -972,7 +972,7 @@ function organize_v5_commits_dependent_leaf { # @test
   two="$(mktemp)"
   {
     echo "---"
-    echo "# bravo/hotel"
+    echo "# two/dos"
     echo "- priority-1"
     echo "- task"
     echo "- w-2022-07-06"
@@ -1003,10 +1003,10 @@ function organize_v5_commits_dependent_leaf { # @test
     echo "## priority-2"
     echo "### w-2022-07"
     echo "#### -07"
-    echo "- [alpha/hotel !md] bravo/hotel"
-    echo "- [bravo/golf !md] 3"
+    echo "- [one/dos !md] two/dos"
+    echo "- [two/uno !md] 3"
     echo "#### -08"
-    echo "- [alpha/golf !md] alpha/golf"
+    echo "- [one/uno !md] one/uno"
     echo "###"
   } >"$expected_organize"
 
@@ -1036,7 +1036,7 @@ function organize_v5_zettels_in_correct_places { # @test
 		- inventory-pipe_shelves-atheist_shoes_box-jabra_yellow_box_2
 		---
 
-		- [bravo/golf !md] jabra coral usb_a-to-usb_c cable
+		- [two/uno !md] jabra coral usb_a-to-usb_c cable
 	EOM
 }
 
@@ -1051,21 +1051,21 @@ function organize_v5_tags_correct { # @test
   assert_success
 
   assert_output - <<-EOM
-		[bravo/golf !md "zettel bez" test1-wow]
+		[two/uno !md "zettel bez" test1-wow]
 	EOM
 
-  mkdir -p alpha
+  mkdir -p one
   {
     echo "---"
     echo "- test4"
     echo "! md"
     echo "---"
-  } >"alpha/golf.zettel"
+  } >"one/uno.zettel"
 
-  run_dodder checkin alpha/golf.zettel
+  run_dodder checkin one/uno.zettel
   assert_success
   assert_output - <<-EOM
-		[alpha/golf !md test4]
+		[one/uno !md test4]
 	EOM
 
   # TODO-P2 fix issue with kennung schwanzen
@@ -1073,18 +1073,18 @@ function organize_v5_tags_correct { # @test
   # assert_output - <<-EOM
   # EOM
 
-  mkdir -p alpha
+  mkdir -p one
   {
     echo "---"
     echo "- test4"
     echo "- test1-ok"
     echo "! md"
     echo "---"
-  } >"alpha/golf.zettel"
+  } >"one/uno.zettel"
 
-  run_dodder checkin alpha/golf.zettel
+  run_dodder checkin one/uno.zettel
   assert_output - <<-EOM
-		[alpha/golf !md test1-ok test4]
+		[one/uno !md test1-ok test4]
 	EOM
 }
 
@@ -1092,8 +1092,8 @@ function organize_remove_anchored_metadata { # @test
   run_dodder show tag-3:z
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly tag-3 <<-EOM
 		---
@@ -1103,8 +1103,8 @@ function organize_remove_anchored_metadata { # @test
 
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-4]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-4]
 	EOM
 
   run_dodder show tag-3:z
@@ -1114,10 +1114,10 @@ function organize_remove_anchored_metadata { # @test
 }
 
 function organize_update_checkout { # @test
-  run_dodder checkout alpha/hotel
+  run_dodder checkout one/dos
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly :z <<-EOM
@@ -1125,43 +1125,43 @@ function organize_update_checkout { # @test
 		- test
 		---
 
-		- [alpha/hotel  !md tag-3 tag-4] wow ok again
-		- [alpha/golf  !md tag-3 tag-4] wow the first
+		- [one/dos  !md tag-3 tag-4] wow ok again
+		- [one/uno  !md tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4 test]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 test]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4 test]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 test]
 	EOM
 
   run_dodder status
   assert_success
   assert_output_unsorted - <<-EOM
-		             same [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4 test]
+		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4 test]
 	EOM
 }
 
 function organize_update_checkout_remove_tags { # @test
-  run_dodder checkout alpha/hotel
+  run_dodder checkout one/dos
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly :z <<-EOM
-		- [alpha/hotel  !md] wow ok again
-		- [alpha/golf  !md] wow the first
+		- [one/dos  !md] wow ok again
+		- [one/uno  !md] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again"]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first"]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again"]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first"]
 	EOM
 
   run_dodder status
   assert_success
   assert_output_unsorted - <<-EOM
-		             same [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again"]
+		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again"]
 	EOM
 }
 
@@ -1177,8 +1177,8 @@ function create_structured_zettels { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!task !toml-type-v1]
-		[alpha/india !task "second" tag-3 test]
-		[bravo/golf !md "first" test]
+		[one/tres !task "second" tag-3 test]
+		[two/uno !md "first" test]
 	EOM
 }
 
@@ -1196,19 +1196,19 @@ function description_with_literal_characters { # @test
 function tags_with_extended_tags_noop { # @test
   run_dodder organize -mode commit-directly :z <<-EOM
 		# new-etikett-for-all
-		- [alpha/hotel   !md tag-3 tag-4] wow ok again
-		- [alpha/golf   !md tag-3 tag-4] wow the first
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
 	EOM
 
   run_dodder organize -mode output-only new:z <<-EOM
 		# new-etikett-for-all
-		- [alpha/hotel   !md tag-3 tag-4] wow ok again
-		- [alpha/golf   !md tag-3 tag-4] wow the first
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output - <<-EOM
@@ -1216,15 +1216,15 @@ function tags_with_extended_tags_noop { # @test
 		- new
 		---
 
-		- [alpha/golf !md new-etikett-for-all tag-3 tag-4] wow the first
-		- [alpha/hotel !md new-etikett-for-all tag-3 tag-4] wow ok again
+		- [one/dos !md new-etikett-for-all tag-3 tag-4] wow ok again
+		- [one/uno !md new-etikett-for-all tag-3 tag-4] wow the first
 	EOM
 
   run_dodder organize -mode commit-directly new:z <<-EOM
 		# new
 
-		- [alpha/golf !md new-etikett-for-all tag-3 tag-4] wow the first
-		- [alpha/hotel !md new-etikett-for-all tag-3 tag-4] wow ok again
+		- [one/dos !md new-etikett-for-all tag-3 tag-4] wow ok again
+		- [one/uno !md new-etikett-for-all tag-3 tag-4] wow the first
 	EOM
   assert_success
   assert_output ''
@@ -1263,7 +1263,7 @@ function organize_new_objects_default_tags { # @test
   run_dodder organize
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md "new zettel object"]
+		[two/uno !md "new zettel object"]
 	EOM
 
   # shellcheck disable=SC2317
@@ -1274,7 +1274,7 @@ function organize_new_objects_default_tags { # @test
   run_dodder organize
   assert_success
   assert_output - <<-EOM
-		[alpha/india !md "new zettel object" zz-inbox]
+		[one/tres !md "new zettel object" zz-inbox]
 	EOM
 }
 
@@ -1288,7 +1288,7 @@ function object_with_newline_in_description { # @test
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[bravo/golf !md "description that has newline"]
+		[two/uno !md "description that has newline"]
 	EOM
 }
 
@@ -1297,8 +1297,8 @@ function organize_checked_out { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		      checked out [md.type @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [alpha/golf.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
   run_dodder organize -mode output-only .
@@ -1306,8 +1306,8 @@ function organize_checked_out { # @test
   assert_output - <<-EOM
 
 		- [md.type !toml-type-v1]
-		- [alpha/golf.zettel !md tag-3 tag-4] wow the first
-		- [alpha/hotel.zettel !md tag-3 tag-4] wow ok again
+		- [one/dos.zettel !md tag-3 tag-4] wow ok again
+		- [one/uno.zettel !md tag-3 tag-4] wow the first
 	EOM
 }
 
@@ -1381,7 +1381,7 @@ function organize_default_tags_workspace { # @test
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[bravo/golf @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "test default tags" tag-3 today zz-inbox]
+		[two/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "test default tags" tag-3 today zz-inbox]
 	EOM
 
   actual="$(mktemp)"
@@ -1394,7 +1394,7 @@ function organize_default_tags_workspace { # @test
 
 		    # tag-3
 
-		- [bravo/golf !md zz-inbox] test default tags
+		- [two/uno !md zz-inbox] test default tags
 	EOM
 }
 
@@ -1451,8 +1451,8 @@ function organize_dot_operator_workspace_delete_files { # @test
   run_dodder organize .
   assert_success
   assert_output - <<-EOM
-		[bravo/golf @blake2b256-5hwedpxxtvucp2wnhcwafgt6y0a93qca3x0522x2j6kmlw0zzp9qvmvt2s !md "1" tag-3 tag-two]
-		[alpha/india @blake2b256-ax76uj5gxlkxj0za603p78t3fzyl23tzd977js8qkzv3j5lx8v9smrj5ch !md "2" tag-3 tag-one]
+		[two/uno @blake2b256-5hwedpxxtvucp2wnhcwafgt6y0a93qca3x0522x2j6kmlw0zzp9qvmvt2s !md "1" tag-3 tag-two]
+		[one/tres @blake2b256-ax76uj5gxlkxj0za603p78t3fzyl23tzd977js8qkzv3j5lx8v9smrj5ch !md "2" tag-3 tag-one]
 		          deleted [1.md]
 		          deleted [2.md]
 	EOM

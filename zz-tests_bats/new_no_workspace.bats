@@ -19,7 +19,7 @@ function new_empty_no_edit { # @test
   run_dodder new -edit=false
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md]
+		[two/uno !md]
 	EOM
 }
 
@@ -28,8 +28,8 @@ function new_empty_edit { # @test
   run_dodder new
   assert_success
   assert_output - <<-EOM
-		[bravo/golf !md]
-		[bravo/golf @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
+		[two/uno !md]
+		[two/uno @blake2b256-w2uv3ams8736hqllgvzgf7563m34ycem40nf8sg3mkefnrd9m75s083p85]
 	EOM
 
   run_dodder status .
@@ -52,17 +52,17 @@ function can_duplicate_zettel_content { # @test
   run_dodder new -edit=false "$expected"
   assert_success
   assert_output - <<-EOM
-		[bravo/golf @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[two/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
   run_dodder new -edit=false "$expected"
   assert_success
   assert_output - <<-EOM
-		[alpha/india @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
+		[one/tres @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md "bez" et1 et2]
 	EOM
 
   # when
-  run_dodder show -format text bravo/golf
+  run_dodder show -format text two/uno
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -75,7 +75,7 @@ function can_duplicate_zettel_content { # @test
 the body
 EOM
 
-  run_dodder show -format text alpha/india
+  run_dodder show -format text one/tres
   assert_success
   assert_output --regexp - <<-EOM
 ---
@@ -99,7 +99,7 @@ function use_blob_digest { # @test
   run_dodder new -edit=false -shas blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0
   assert_success
   assert_output - <<-EOM
-		[bravo/golf @blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0 !md]
+		[two/uno @blake2b256-t9kaw07x3c89sft5axwjhe8z76p6d2642qr5xc62j5a4zq49pmvqypsla0 !md]
 	EOM
 
   the_blob2_digest="blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg"
@@ -113,12 +113,12 @@ function use_blob_digest { # @test
   assert_success
   assert_output - <<-EOM
 		[!txt !toml-type-v1]
-		[alpha/india @$the_blob2_digest !txt]
+		[one/tres @$the_blob2_digest !txt]
 	EOM
 
   run_dodder_stderr_unified new -edit=false -shas "$the_blob2_digest"
   assert_success
   assert_output --partial - <<-EOM
-		blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg appears in object already checked in (["alpha/india"]). Ignoring
+		blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg appears in object already checked in (["one/tres"]). Ignoring
 	EOM
 }

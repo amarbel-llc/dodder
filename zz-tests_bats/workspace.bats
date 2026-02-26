@@ -22,8 +22,8 @@ function workspace_show { # @test
 	run_dodder show
 	assert_success
 	assert_output_unsorted - <<-eom
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[alpha/hotel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	eom
 
 	run_dodder show :e
@@ -31,10 +31,10 @@ function workspace_show { # @test
 	assert_output_unsorted - <<-eom
 	eom
 
-	run_dodder show alpha/golf
+	run_dodder show one/uno
 	assert_success
 	assert_output - <<-eom
-		[alpha/golf @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	eom
 }
 
@@ -46,11 +46,11 @@ function workspace_edit { # @test
 	run_dodder edit
 	assert_success
 	assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [alpha/golf.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
-	run_dodder show -format blob alpha/golf
+	run_dodder show -format blob one/uno
 	assert_success
 	assert_output - <<-EOM
 		last time
@@ -68,11 +68,11 @@ function workspace_checkout { # @test
 	run_dodder checkout :
 	assert_success
 	assert_output_unsorted - <<-EOM
-		      checked out [alpha/hotel.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [alpha/golf.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
-	run_dodder show -format blob alpha/golf.zettel
+	run_dodder show -format blob one/uno.zettel
 	assert_success
 	assert_output - <<-EOM
 		last time
@@ -98,18 +98,18 @@ function workspace_organize { # @test
 		- tag-3
 		---
 
-		- [alpha/golf !md tag-4] wow the first
-		- [alpha/hotel !md tag-4] wow ok again
+		- [one/dos !md tag-4] wow ok again
+		- [one/uno !md tag-4] wow the first
 	EOM
 
-	run_dodder organize -mode output-only alpha/golf
+	run_dodder organize -mode output-only one/uno
 	assert_success
 	assert_output - <<-EOM
 		---
 		- tag-3
 		---
 
-		- [alpha/golf !md tag-4] wow the first
+		- [one/uno !md tag-4] wow the first
 	EOM
 }
 
@@ -122,7 +122,7 @@ function workspace_add_no_organize { # @test
 	run_dodder add -delete -tags new_tags -description "added file" todo.wow.md
 	assert_success
 	assert_output - <<-EOM
-		[bravo/golf @blake2b256-qdflthfeky7ak3up8qgagd4qx2a8ua5lr4kvffynjl2k4063ja0qr65g5r !md "added file" new_tags tag-3]
+		[two/uno @blake2b256-qdflthfeky7ak3up8qgagd4qx2a8ua5lr4kvffynjl2k4063ja0qr65g5r !md "added file" new_tags tag-3]
 		          deleted [todo.wow.md]
 	EOM
 }
@@ -155,8 +155,8 @@ function workspace_add_yes_organize { # @test
 	run_dodder add -organize -delete ./*.md
 	assert_success
 	assert_output - <<-EOM
-		[bravo/golf @blake2b256-5hwedpxxtvucp2wnhcwafgt6y0a93qca3x0522x2j6kmlw0zzp9qvmvt2s !md "2" tag-one]
-		[alpha/india @blake2b256-ax76uj5gxlkxj0za603p78t3fzyl23tzd977js8qkzv3j5lx8v9smrj5ch !md "1" tag-two]
+		[two/uno @blake2b256-5hwedpxxtvucp2wnhcwafgt6y0a93qca3x0522x2j6kmlw0zzp9qvmvt2s !md "2" tag-one]
+		[one/tres @blake2b256-ax76uj5gxlkxj0za603p78t3fzyl23tzd977js8qkzv3j5lx8v9smrj5ch !md "1" tag-two]
 		          deleted [1.md]
 		          deleted [2.md]
 	EOM
@@ -186,7 +186,7 @@ function workspace_add_yes_organize_omit_one { # @test
 	run_dodder add -organize -delete ./*.md
 	assert_success
 	assert_output - <<-EOM
-		[bravo/golf @blake2b256-ax76uj5gxlkxj0za603p78t3fzyl23tzd977js8qkzv3j5lx8v9smrj5ch !md "1" tag-two]
+		[two/uno @blake2b256-ax76uj5gxlkxj0za603p78t3fzyl23tzd977js8qkzv3j5lx8v9smrj5ch !md "1" tag-two]
 		          deleted [1.md]
 	EOM
 }

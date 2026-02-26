@@ -1,4 +1,4 @@
-package object_id_provider
+package zettel_id_provider
 
 import (
 	"path"
@@ -54,11 +54,11 @@ func NewFromLog(
 	directoryLayout directory_layout.RepoMutable,
 	resolveBlob BlobResolver,
 ) (f *Provider, err error) {
-	logPath := directoryLayout.FileObjectIdLog()
+	log := object_id_log.Log{Path: directoryLayout.FileObjectIdLog()}
 
 	var entries []object_id_log.Entry
 
-	if entries, err = object_id_log.ReadAllEntries(logPath); err != nil {
+	if entries, err = log.ReadAllEntries(); err != nil {
 		err = errors.Wrap(err)
 		return f, err
 	}

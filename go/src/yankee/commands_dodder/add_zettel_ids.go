@@ -10,12 +10,13 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/alfa/unicorn"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
 	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_log"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/object_id_provider"
+	"code.linenisgreat.com/dodder/go/src/foxtrot/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/src/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/src/juliett/command"
 	"code.linenisgreat.com/dodder/go/src/victor/local_working_copy"
@@ -25,7 +26,12 @@ import (
 func init() {
 	utility.AddCmd("add-zettel-ids-yin", &AddZettelIds{
 		side:         object_id_log.SideYin,
-		flatFileName: object_id_provider.FilePathZettelIdYin,
+		flatFileName: zettel_id_provider.FilePathZettelIdYin,
+	})
+
+	utility.AddCmd("add-zettel-ids-yang", &AddZettelIds{
+		side:         object_id_log.SideYang,
+		flatFileName: zettel_id_provider.FilePathZettelIdYang,
 	})
 }
 
@@ -49,7 +55,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 	envRepo := localWorkingCopy.GetEnvRepo()
 	dirObjectId := envRepo.DirObjectId()
 
-	prov, err := object_id_provider.New(envRepo)
+	prov, err := zettel_id_provider.New(envRepo)
 	if err != nil {
 		errors.ContextCancelWithErrorf(req, "loading zettel id provider: %s", err)
 		return
@@ -60,7 +66,7 @@ func (cmd AddZettelIds) Run(req command.Request) {
 	var filtered []string
 
 	for _, word := range candidates {
-		cleaned := object_id_provider.Clean(word)
+		cleaned := zettel_id_provider.Clean(word)
 
 		if cleaned == "" {
 			continue
@@ -76,20 +82,14 @@ func (cmd AddZettelIds) Run(req command.Request) {
 		return
 	}
 
-	blobStore := envRepo.GetDefaultBlobStore()
-
-	blobId, err := writeWordsAsBlob(blobStore, filtered)
-	if err != nil {
-		errors.ContextCancelWithErrorf(req, "writing blob: %s", err)
-		return
-	}
+	blobId := writeWordsAsBlob(req, envRepo.GetDefaultBlobStore(), filtered)
 
 	lockSmith := envRepo.GetLockSmith()
 
 	req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Lock))
 	defer req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Unlock))
 
-	logPath := envRepo.FileObjectIdLog()
+	log := object_id_log.Log{Path: envRepo.FileObjectIdLog()}
 	flatFilePath := path.Join(dirObjectId, cmd.flatFileName)
 
 	entry := &object_id_log.V1{
@@ -99,15 +99,12 @@ func (cmd AddZettelIds) Run(req command.Request) {
 		WordCount: len(filtered),
 	}
 
-	if err := object_id_log.AppendEntry(logPath, entry); err != nil {
+	if err := log.AppendEntry(entry); err != nil {
 		errors.ContextCancelWithErrorf(req, "appending log entry: %s", err)
 		return
 	}
 
-	if err := appendWordsToFlatFile(flatFilePath, filtered); err != nil {
-		errors.ContextCancelWithErrorf(req, "updating flat file cache: %s", err)
-		return
-	}
+	appendWordsToFlatFile(req, flatFilePath, filtered)
 
 	yinCount := prov.Left().Len()
 	yangCount := prov.Right().Len()
@@ -132,28 +129,19 @@ func readAndExtractCandidates(req command.Request) []string {
 	reader := bufio.NewReader(os.Stdin)
 	var lines []string
 
-	for {
-		line, err := reader.ReadString('\n')
-
-		if err != nil && err != io.EOF {
+	for line, err := range ohio.MakeLineSeqFromReader(reader) {
+		if err != nil {
 			errors.ContextCancelWithError(req, err)
 			return nil
 		}
 
-		if len(line) > 0 {
-			line = strings.TrimRight(line, "\n")
-			lines = append(lines, line)
-		}
-
-		if err == io.EOF {
-			break
-		}
+		lines = append(lines, strings.TrimRight(line, "\n"))
 	}
 
 	return unicorn.ExtractUniqueComponents(lines)
 }
 
-func collectExistingWords(prov *object_id_provider.Provider) map[string]bool {
+func collectExistingWords(prov *zettel_id_provider.Provider) map[string]bool {
 	existing := make(map[string]bool)
 
 	for _, word := range prov.Left() {
@@ -168,50 +156,58 @@ func collectExistingWords(prov *object_id_provider.Provider) map[string]bool {
 }
 
 func writeWordsAsBlob(
+	req command.Request,
 	blobStore domain_interfaces.BlobStore,
 	words []string,
-) (id markl.Id, err error) {
-	var blobWriter domain_interfaces.BlobWriter
-
-	if blobWriter, err = blobStore.MakeBlobWriter(nil); err != nil {
-		err = errors.Wrap(err)
-		return id, err
+) markl.Id {
+	blobWriter, err := blobStore.MakeBlobWriter(nil)
+	if err != nil {
+		errors.ContextCancelWithError(req, err)
+		return markl.Id{}
 	}
 
-	defer errors.DeferredCloser(&err, blobWriter)
+	defer errors.ContextMustClose(req, blobWriter)
 
-	content := strings.Join(words, "\n") + "\n"
+	for _, word := range words {
+		if _, err := io.WriteString(blobWriter, word); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return markl.Id{}
+		}
 
-	if _, err = io.WriteString(blobWriter, content); err != nil {
-		err = errors.Wrap(err)
-		return id, err
+		if _, err := io.WriteString(blobWriter, "\n"); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return markl.Id{}
+		}
 	}
 
+	var id markl.Id
 	id.ResetWithMarklId(blobWriter.GetMarklId())
 
-	return id, err
+	return id
 }
 
-func appendWordsToFlatFile(flatFilePath string, words []string) (err error) {
-	var file *os.File
-
-	if file, err = files.OpenFile(
+func appendWordsToFlatFile(req command.Request, flatFilePath string, words []string) {
+	file, err := files.OpenFile(
 		flatFilePath,
 		os.O_WRONLY|os.O_APPEND,
 		0o666,
-	); err != nil {
-		err = errors.Wrap(err)
-		return err
+	)
+	if err != nil {
+		errors.ContextCancelWithError(req, err)
+		return
 	}
 
-	defer errors.DeferredCloser(&err, file)
+	defer errors.ContextMustClose(req, file)
 
-	content := strings.Join(words, "\n") + "\n"
+	for _, word := range words {
+		if _, err := io.WriteString(file, word); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return
+		}
 
-	if _, err = io.WriteString(file, content); err != nil {
-		err = errors.Wrap(err)
-		return err
+		if _, err := io.WriteString(file, "\n"); err != nil {
+			errors.ContextCancelWithError(req, err)
+			return
+		}
 	}
-
-	return err
 }
