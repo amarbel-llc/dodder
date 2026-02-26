@@ -1,3 +1,16 @@
+// Package seqerror defines an Analyzer that checks the error value
+// from iter.Seq2[T, error] range statements is not discarded or
+// left unchecked.
+//
+// # Analyzer seqerror
+//
+// seqerror: check error from iter.Seq2 range is not discarded
+//
+// When ranging over an iter.Seq2[T, error], the error must be checked
+// (typically via an if err != nil block with a scope-exiting statement)
+// or propagated (passed to a yield function or other call). Discarding
+// the error with a blank identifier or omitting it entirely is reported
+// unless suppressed with a //seq:err-checked comment.
 package seqerror
 
 import (
@@ -41,59 +54,69 @@ func run(pass *analysis.Pass) (any, error) {
 			return
 		}
 
-		if id, ok := rangeStmt.Value.(*ast.Ident); ok && id.Name == "_" {
+		id, ok := rangeStmt.Value.(*ast.Ident)
+		if !ok {
+			return
+		}
+
+		if id.Name == "_" {
 			if !hasErrCheckedComment(pass, rangeStmt) {
 				pass.ReportRangef(id, "error from iter.Seq2 range is discarded; must be checked (or add //seq:err-checked)")
 			}
-		} else if id, ok := rangeStmt.Value.(*ast.Ident); ok {
-			if hasErrCheckedComment(pass, rangeStmt) {
-				return
-			}
-
-			v := resolveErrorVar(id, pass.TypesInfo)
-			if v == nil {
-				return
-			}
-
-			if bodyHasCallPassingVar(rangeStmt.Body.List, v, pass.TypesInfo) {
-				return
-			}
-
-			ifFound := false
-			for _, stmt := range rangeStmt.Body.List {
-				ifStmt, ok := stmt.(*ast.IfStmt)
-				if !ok {
-					continue
-				}
-
-				if !exprReferencesVar(ifStmt.Cond, v, pass.TypesInfo) {
-					continue
-				}
-
-				ifFound = true
-
-				if !ifBodyHasQualifyingUsage(ifStmt.Body, v, pass.TypesInfo) {
-					pass.ReportRangef(
-						id,
-						"error variable %q is checked but not handled; if-body must return, break, continue, or propagate the error",
-						id.Name,
-					)
-				}
-
-				return
-			}
-
-			if !ifFound {
-				pass.ReportRangef(
-					id,
-					"error variable %q from iter.Seq2 range is never checked or propagated",
-					id.Name,
-				)
-			}
+			return
 		}
+
+		if hasErrCheckedComment(pass, rangeStmt) {
+			return
+		}
+
+		v := resolveErrorVar(id, pass.TypesInfo)
+		if v == nil {
+			return
+		}
+
+		if bodyHasCallPassingVar(rangeStmt.Body.List, v, pass.TypesInfo) {
+			return
+		}
+
+		checkNamedErrorUsage(pass, rangeStmt, id, v)
 	})
 
 	return nil, nil
+}
+
+func checkNamedErrorUsage(
+	pass *analysis.Pass,
+	rangeStmt *ast.RangeStmt,
+	id *ast.Ident,
+	v *types.Var,
+) {
+	for _, stmt := range rangeStmt.Body.List {
+		ifStmt, ok := stmt.(*ast.IfStmt)
+		if !ok {
+			continue
+		}
+
+		if !exprReferencesVar(ifStmt.Cond, v, pass.TypesInfo) {
+			continue
+		}
+
+		if !ifBodyHasQualifyingUsage(ifStmt.Body, v, pass.TypesInfo) {
+			pass.ReportRangef(
+				id,
+				"error variable %q is checked but not handled; if-body must return, break, continue, or propagate the error",
+				id.Name,
+			)
+		}
+
+		return
+	}
+
+	pass.ReportRangef(
+		id,
+		"error variable %q from iter.Seq2 range is never checked or propagated",
+		id.Name,
+	)
 }
 
 func isSeq2Error(t types.Type) bool {
@@ -112,6 +135,10 @@ func isSeq2Error(t types.Type) bool {
 	}
 
 	if innerSig.Params().Len() != 2 || innerSig.Results().Len() != 1 {
+		return false
+	}
+
+	if !types.Identical(innerSig.Results().At(0).Type(), types.Typ[types.Bool]) {
 		return false
 	}
 
