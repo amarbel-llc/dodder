@@ -22,7 +22,7 @@ let
     src = ./.;
     subPackages = [
       "cmd/der"
-      # "cmd/dodder"
+      "cmd/dodder"
       "cmd/mad"
       "cmd/madder"
     ];
