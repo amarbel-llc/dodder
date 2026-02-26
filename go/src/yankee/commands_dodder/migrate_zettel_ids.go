@@ -1,13 +1,13 @@
 package commands_dodder
 
 import (
-	"bufio"
 	"io"
-	"os"
 	"path"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	pool "code.linenisgreat.com/dodder/go/src/alfa/pool"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
@@ -41,7 +41,6 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 	log := object_id_log.Log{Path: envRepo.FileObjectIdLog()}
 
 	entries, err := log.ReadAllEntries()
-
 	if err != nil {
 		errors.ContextCancelWithErrorf(req, "reading object id log: %s", err)
 		return
@@ -52,125 +51,100 @@ func (cmd MigrateZettelIds) Run(req command.Request) {
 		return
 	}
 
-	blobStore := envRepo.GetDefaultBlobStore()
-	dirObjectId := envRepo.DirObjectId()
-
-	yinPath := path.Join(dirObjectId, object_id_provider.FilePathZettelIdYin)
-	yangPath := path.Join(dirObjectId, object_id_provider.FilePathZettelIdYang)
-
-	yinMarklId, yinWordCount, err := writeFlatFileAsBlob(blobStore, yinPath)
-	if err != nil {
-		errors.ContextCancelWithErrorf(req, "writing yin blob: %s", err)
-		return
-	}
-
-	yangMarklId, yangWordCount, err := writeFlatFileAsBlob(blobStore, yangPath)
-	if err != nil {
-		errors.ContextCancelWithErrorf(req, "writing yang blob: %s", err)
-		return
-	}
-
 	lockSmith := envRepo.GetLockSmith()
 
 	req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Lock))
 	defer req.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Unlock))
 
+	blobStore := envRepo.GetDefaultBlobStore()
+	dirObjectId := envRepo.DirObjectId()
 	tai := ids.NowTai()
 
-	yinEntry := &object_id_log.V1{
-		Side:      object_id_log.SideYin,
-		Tai:       tai,
-		MarklId:   yinMarklId,
-		WordCount: yinWordCount,
+	sides := []struct {
+		side     object_id_log.Side
+		fileName string
+	}{
+		{object_id_log.SideYin, object_id_provider.FilePathZettelIdYin},
+		{object_id_log.SideYang, object_id_provider.FilePathZettelIdYang},
 	}
 
-	if err := log.AppendEntry(yinEntry); err != nil {
-		errors.ContextCancelWithErrorf(req, "appending yin log entry: %s", err)
-		return
-	}
+	for _, s := range sides {
+		flatPath := path.Join(dirObjectId, s.fileName)
+		marklId, wordCount := writeFlatFileAsBlob(req, blobStore, flatPath)
 
-	yangEntry := &object_id_log.V1{
-		Side:      object_id_log.SideYang,
-		Tai:       tai,
-		MarklId:   yangMarklId,
-		WordCount: yangWordCount,
-	}
+		entry := &object_id_log.V1{
+			Side:      s.side,
+			Tai:       tai,
+			MarklId:   marklId,
+			WordCount: wordCount,
+		}
 
-	if err := log.AppendEntry(yangEntry); err != nil {
-		errors.ContextCancelWithErrorf(req, "appending yang log entry: %s", err)
-		return
-	}
+		if err := log.AppendEntry(entry); err != nil {
+			errors.ContextCancelWithErrorf(req, "appending %s log entry: %s", s.fileName, err)
+			return
+		}
 
-	ui.Out().Printf(
-		"migrated zettel ids: yin (%d words, %s), yang (%d words, %s)",
-		yinWordCount,
-		yinMarklId,
-		yangWordCount,
-		yangMarklId,
-	)
+		ui.Out().Printf("migrated %s: %d words, %s", s.fileName, wordCount, marklId)
+	}
 }
 
 func writeFlatFileAsBlob(
+	req command.Request,
 	blobStore domain_interfaces.BlobStore,
 	flatFilePath string,
-) (id markl.Id, wordCount int, err error) {
-	var file *os.File
-
-	if file, err = files.Open(flatFilePath); err != nil {
-		err = errors.Wrap(err)
-		return id, wordCount, err
-	}
-
-	defer errors.DeferredCloser(&err, file)
-
-	wordCount, err = countLines(flatFilePath)
+) (markl.Id, int) {
+	file, err := files.Open(flatFilePath)
 	if err != nil {
-		err = errors.Wrap(err)
-		return id, wordCount, err
+		errors.ContextCancelWithError(req, err)
+		return markl.Id{}, 0
 	}
 
-	var blobWriter domain_interfaces.BlobWriter
+	defer errors.ContextMustClose(req, file)
 
-	if blobWriter, err = blobStore.MakeBlobWriter(nil); err != nil {
-		err = errors.Wrap(err)
-		return id, wordCount, err
-	}
+	reader, repool := pool.GetBufferedReader(file)
+	defer repool()
 
-	defer errors.DeferredCloser(&err, blobWriter)
+	var wordCount int
 
-	if _, err = io.Copy(blobWriter, file); err != nil {
-		err = errors.Wrap(err)
-		return id, wordCount, err
-	}
+	for {
+		line, err := reader.ReadString('\n')
 
-	id.ResetWithMarklId(blobWriter.GetMarklId())
+		if len(line) > 0 {
+			if strings.TrimRight(line, "\n") != "" {
+				wordCount++
+			}
+		}
 
-	return id, wordCount, err
-}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
 
-func countLines(path string) (count int, err error) {
-	var file *os.File
-
-	if file, err = files.Open(path); err != nil {
-		err = errors.Wrap(err)
-		return count, err
-	}
-
-	defer errors.DeferredCloser(&err, file)
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line != "" {
-			count++
+			errors.ContextCancelWithError(req, err)
+			return markl.Id{}, 0
 		}
 	}
 
-	if err = scanner.Err(); err != nil {
-		err = errors.Wrap(err)
-		return count, err
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		errors.ContextCancelWithError(req, err)
+		return markl.Id{}, 0
 	}
 
-	return count, err
+	blobWriter, err := blobStore.MakeBlobWriter(nil)
+	if err != nil {
+		errors.ContextCancelWithError(req, err)
+		return markl.Id{}, 0
+	}
+
+	defer errors.ContextMustClose(req, blobWriter)
+
+	if _, err := io.Copy(blobWriter, file); err != nil {
+		errors.ContextCancelWithError(req, err)
+		return markl.Id{}, 0
+	}
+
+	var id markl.Id
+	id.ResetWithMarklId(blobWriter.GetMarklId())
+
+	return id, wordCount
 }
