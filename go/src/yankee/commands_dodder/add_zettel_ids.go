@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/alfa/unicorn"
+	"code.linenisgreat.com/dodder/go/src/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/src/bravo/ui"
 	"code.linenisgreat.com/dodder/go/src/charlie/files"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
@@ -128,22 +129,13 @@ func readAndExtractCandidates(req command.Request) []string {
 	reader := bufio.NewReader(os.Stdin)
 	var lines []string
 
-	for {
-		line, err := reader.ReadString('\n')
-
-		if err != nil && err != io.EOF {
+	for line, err := range ohio.MakeLineSeqFromReader(reader) {
+		if err != nil {
 			errors.ContextCancelWithError(req, err)
 			return nil
 		}
 
-		if len(line) > 0 {
-			line = strings.TrimRight(line, "\n")
-			lines = append(lines, line)
-		}
-
-		if err == io.EOF {
-			break
-		}
+		lines = append(lines, strings.TrimRight(line, "\n"))
 	}
 
 	return unicorn.ExtractUniqueComponents(lines)
