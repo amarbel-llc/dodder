@@ -332,7 +332,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 			sigComputer, sigErr := inventory_archive.SignatureComputerForName(
 				sigConfig.GetSignatureType(),
 				inventory_archive.SignatureComputerParams{
-					SignatureLen:  sigConfig.GetSignatureLen(),
+					SignatureLen: sigConfig.GetSignatureLen(),
 					AvgChunkSize: sigConfig.GetAvgChunkSize(),
 					MinChunkSize: sigConfig.GetMinChunkSize(),
 					MaxChunkSize: sigConfig.GetMaxChunkSize(),

@@ -51,21 +51,21 @@ set_xdg() {
 DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")" >/dev/null 2>&1 && pwd)"
 
 cat_yin() (
-  echo "one"
-  echo "two"
-  echo "three"
-  echo "four"
-  echo "five"
-  echo "six"
+  echo "the alpha"
+  echo "the bravo"
+  echo "the charlie"
+  echo "the delta"
+  echo "an echo"
+  echo "the foxtrot"
 )
 
 cat_yang() (
-  echo "uno"
-  echo "dos"
-  echo "tres"
-  echo "quatro"
-  echo "cinco"
-  echo "seis"
+  echo "the golf"
+  echo "the hotel"
+  echo "the india"
+  echo "the juliet"
+  echo "the kilo"
+  echo "the lima"
 )
 
 cmd_dodder_def_no_debug=(
@@ -290,10 +290,10 @@ EOM
 
   assert_success
 
-  run_dodder checkout one/uno
+  run_dodder checkout alpha/golf
   assert_success
 
-  cat >one/uno.zettel <<EOM
+  cat >alpha/golf.zettel <<EOM
 ---
 # wow the first
 - tag-3
@@ -304,7 +304,7 @@ EOM
 last time
 EOM
 
-  run_dodder checkin -delete one/uno.zettel
+  run_dodder checkin -delete alpha/golf.zettel
   assert_success
 }
 

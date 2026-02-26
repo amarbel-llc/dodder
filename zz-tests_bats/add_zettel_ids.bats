@@ -54,11 +54,11 @@ function add_zettel_ids_yin_dedup { # @test
 function add_zettel_ids_yin_cross_side_rejection { # @test
 	input="$(mktemp)"
 	{
-		echo "something about quatro"
+		echo "something about golf"
 		echo "another about newword"
 	} >"$input"
 
-	# quatro is in Yang, should be rejected; newword is new
+	# golf is in Yang, should be rejected; newword is new
 	run_dodder add-zettel-ids-yin <"$input"
 	assert_success
 	assert_output --partial "added 1 words to Yin"
@@ -68,8 +68,8 @@ function add_zettel_ids_yin_cross_side_rejection { # @test
 function add_zettel_ids_yin_no_new_words { # @test
 	input="$(mktemp)"
 	{
-		echo "something about three"
-		echo "another about four"
+		echo "something about alpha"
+		echo "another about bravo"
 	} >"$input"
 
 	run_dodder add-zettel-ids-yin <"$input"
@@ -94,11 +94,11 @@ function add_zettel_ids_yang_success { # @test
 function add_zettel_ids_yang_cross_side_rejection { # @test
 	input="$(mktemp)"
 	{
-		echo "something about three"
+		echo "something about alpha"
 		echo "another about newword"
 	} >"$input"
 
-	# three is in Yin, should be rejected; newword is new
+	# alpha is in Yin, should be rejected; newword is new
 	run_dodder add-zettel-ids-yang <"$input"
 	assert_success
 	assert_output --partial "added 1 words to Yang"

@@ -1,0 +1,16 @@
+---
+! object_id_log-v1
+---
+
+side = 0
+tai = '2150764887.302635814'
+markl-id = 'blake2b256-etzujmrrss3jkrnm528w6y8ptlr4gc4qdagtgxdaw8vp9l2ntmqqaldnaj'
+word-count = 6
+---
+! object_id_log-v1
+---
+
+side = 1
+tai = '2150764887.302672344'
+markl-id = 'blake2b256-wzv075qgrq704get5zuzh796hnlksw0jfu592svffacz32vw76sql980vc'
+word-count = 6

@@ -15,10 +15,11 @@ teardown() {
 	chflags_and_rm
 }
 
-function migrate_zettel_ids_success { # @test
+function migrate_zettel_ids_skips_when_log_exists { # @test
+	# genesis now creates the object id log, so migration is a no-op
 	run_dodder migrate-zettel-ids
 	assert_success
-	assert_output --partial "migrated zettel ids"
+	assert_output --partial "already contains entries"
 }
 
 function migrate_zettel_ids_new_still_works { # @test
@@ -33,7 +34,7 @@ function migrate_zettel_ids_new_still_works { # @test
 function migrate_zettel_ids_idempotent { # @test
 	run_dodder migrate-zettel-ids
 	assert_success
-	assert_output --partial "migrated zettel ids"
+	assert_output --partial "already contains entries"
 
 	run_dodder migrate-zettel-ids
 	assert_success
