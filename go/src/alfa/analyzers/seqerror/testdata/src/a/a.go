@@ -13,3 +13,9 @@ func blankError() {
 		_ = x
 	}
 }
+
+func blankErrorSuppressed() {
+	for x, _ := range makeSeq() { //seq:err-checked
+		_ = x
+	}
+}
