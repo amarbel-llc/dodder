@@ -128,3 +128,11 @@ func plainSeq() {
 		_ = x
 	}
 }
+
+// --- Single-value range (error implicitly dropped) ---
+
+func singleValueRange() {
+	for x := range makeSeq() { // want "error from iter.Seq2 range is discarded"
+		_ = x
+	}
+}
