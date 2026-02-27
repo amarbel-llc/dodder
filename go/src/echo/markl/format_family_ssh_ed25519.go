@@ -1,6 +1,7 @@
 package markl
 
 import (
+	"crypto"
 	"crypto/ed25519"
 	"io"
 	"sync"
@@ -9,19 +10,18 @@ import (
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 )
 
-var pivFormatOnce sync.Once
+var sshFormatOnce sync.Once
 
-func RegisterPIVEd25519Format(signer PIVSigner) {
-	pivFormatOnce.Do(func() {
-		// Replace the stub registered in init() with a live signer-backed format.
-		formats[FormatIdEd25519PIV] = FormatSec{
-			Id:          FormatIdEd25519PIV,
-			Size:        PIVReferenceSize,
+func RegisterSSHEd25519Format(signer crypto.Signer) {
+	sshFormatOnce.Do(func() {
+		formats[FormatIdEd25519SSH] = FormatSec{
+			Id:          FormatIdEd25519SSH,
+			Size:        ed25519.PublicKeySize,
 			PubFormatId: FormatIdEd25519Pub,
 			GetPublicKey: func(_ domain_interfaces.MarklId) ([]byte, error) {
 				pub, ok := signer.Public().(ed25519.PublicKey)
 				if !ok {
-					return nil, errors.Errorf("PIV signer public key is not Ed25519")
+					return nil, errors.Errorf("SSH agent signer public key is not Ed25519")
 				}
 				return []byte(pub), nil
 			},
@@ -36,27 +36,25 @@ func RegisterPIVEd25519Format(signer PIVSigner) {
 	})
 }
 
-func resetPIVFormatForTesting() {
-	// Restore the stub format so the next RegisterPIVEd25519Format call
-	// can replace it with a new signer.
-	makeStubPIVFormat()
-	pivFormatOnce = sync.Once{}
+func resetSSHFormatForTesting() {
+	makeStubSSHFormat()
+	sshFormatOnce = sync.Once{}
 }
 
-func makeStubPIVFormat() {
-	formats[FormatIdEd25519PIV] = FormatSec{
-		Id:          FormatIdEd25519PIV,
-		Size:        PIVReferenceSize,
+func makeStubSSHFormat() {
+	formats[FormatIdEd25519SSH] = FormatSec{
+		Id:          FormatIdEd25519SSH,
+		Size:        ed25519.PublicKeySize,
 		PubFormatId: FormatIdEd25519Pub,
 		GetPublicKey: func(_ domain_interfaces.MarklId) ([]byte, error) {
-			return nil, errors.Wrap(ErrEd25519PIVSignerConnectionNotEstablished)
+			return nil, errors.Wrap(ErrEd25519SSHAgentNotConnected)
 		},
 		SigFormatId: FormatIdEd25519Sig,
 		Sign: func(
 			_, _ domain_interfaces.MarklId,
 			_ io.Reader,
 		) ([]byte, error) {
-			return nil, errors.Wrap(ErrEd25519PIVSignerConnectionNotEstablished)
+			return nil, errors.Wrap(ErrEd25519SSHAgentNotConnected)
 		},
 	}
 }

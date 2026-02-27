@@ -60,7 +60,7 @@ func (cmd *Genesis) SetFlagDefinitions(
 	flagSet.Var(
 		&cmd.BigBang.PrivateKey,
 		"private_key",
-		"pre-existing private key markl.Id (use info-piv to discover PIV tokens)",
+		"pre-existing private key markl.Id (use info-ssh_agent to list keys)",
 	)
 
 	flagSet.Var(

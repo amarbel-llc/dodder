@@ -11,7 +11,6 @@ require (
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/gabstv/go-bsdiff v1.0.5
-	github.com/go-piv/piv-go/v2 v2.5.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/gorilla/mux v1.8.1

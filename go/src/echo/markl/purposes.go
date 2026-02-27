@@ -106,7 +106,7 @@ func init() {
 		PurposeRepoPrivateKeyV1,
 		PurposeTypePrivateKey,
 		FormatIdEd25519Sec,
-		FormatIdEd25519PIV,
+		FormatIdEd25519SSH,
 	)
 
 	makePurpose(
