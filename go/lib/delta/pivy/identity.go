@@ -84,7 +84,7 @@ func (id *Identity) tryUnwrap(s *age.Stanza) ([]byte, error) {
 
 func softwareECDH(privKey *ecdh.PrivateKey) ECDHFunc {
 	return func(ephPubBytes []byte) ([]byte, error) {
-		ephPub, err := decompressP256Point(ephPubBytes)
+		ephPub, err := DecompressP256Point(ephPubBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func SoftwareECDHForTesting(privKey *ecdh.PrivateKey) ECDHFunc {
 	return softwareECDH(privKey)
 }
 
-func decompressP256Point(compressed []byte) (*ecdh.PublicKey, error) {
+func DecompressP256Point(compressed []byte) (*ecdh.PublicKey, error) {
 	if len(compressed) != 33 {
 		return nil, errors.Errorf(
 			"invalid compressed point length: %d",

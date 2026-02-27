@@ -136,6 +136,7 @@ func init() {
 		PurposeTypePrivateKey,
 		FormatIdEd25519Sec,
 		FormatIdAgeX25519Sec,
+		FormatIdPivyEcdhP256Pub,
 	)
 }
 

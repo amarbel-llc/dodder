@@ -20,6 +20,8 @@ const (
 	FormatIdAgeX25519Pub = "age_x25519_pub"
 	FormatIdAgeX25519Sec = "age_x25519_sec"
 
+	FormatIdPivyEcdhP256Pub = "pivy_ecdh_p256_pub"
+
 	FormatIdHashSha256     = "sha256"
 	FormatIdHashBlake2b256 = "blake2b256"
 
@@ -74,6 +76,15 @@ func init() {
 			Size:         curve25519.ScalarSize,
 			Generate:     AgeX25519Generate,
 			GetIOWrapper: AgeX25519GetIOWrapper,
+		},
+	)
+
+	// PivyEcdhP256
+	makeFormat(
+		FormatSec{
+			Id:           FormatIdPivyEcdhP256Pub,
+			Size:         33,
+			GetIOWrapper: PivyEcdhP256GetIOWrapper,
 		},
 	)
 
