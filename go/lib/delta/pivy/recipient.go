@@ -52,7 +52,7 @@ func (r *Recipient) Wrap(fileKey []byte) ([]*age.Stanza, error) {
 
 	wrappedKey := aead.Seal(nil, make([]byte, chacha20poly1305.NonceSize), fileKey, nil)
 
-	ephPubBytes := compressP256Point(ephemeralPriv.PublicKey())
+	ephPubBytes := CompressP256Point(ephemeralPriv.PublicKey())
 
 	stanza := &age.Stanza{
 		Type: StanzaTypePivyEcdhP256,
@@ -74,7 +74,7 @@ func deriveWrappingKey(sharedSecret, nonce []byte) []byte {
 	return sum[:32]
 }
 
-func compressP256Point(pub *ecdh.PublicKey) []byte {
+func CompressP256Point(pub *ecdh.PublicKey) []byte {
 	// ecdh.PublicKey.Bytes() returns uncompressed point (0x04 || x || y)
 	raw := pub.Bytes()
 	// Compressed: 0x02 or 0x03 prefix (based on y parity) || x
