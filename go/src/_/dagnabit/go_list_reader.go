@@ -81,7 +81,21 @@ func (r GoListReader) ReadDependencies() ([]Edge, error) {
 		}
 	}
 
-	return edges, scanner.Err()
+	// Deduplicate edges — go list produces duplicates when multiple files
+	// in the same package import the same dependency.
+	seen := make(map[Edge]struct{})
+	deduped := make([]Edge, 0, len(edges))
+
+	for _, e := range edges {
+		if _, ok := seen[e]; ok {
+			continue
+		}
+
+		seen[e] = struct{}{}
+		deduped = append(deduped, e)
+	}
+
+	return deduped, scanner.Err()
 }
 
 // trimToTwoComponents returns the first two path components (e.g.,
