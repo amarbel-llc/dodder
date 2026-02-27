@@ -1,0 +1,223 @@
+package commands_dodder
+
+import (
+	"fmt"
+	"io"
+	"os"
+	"strings"
+	"sync/atomic"
+	"time"
+
+	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
+	"code.linenisgreat.com/dodder/go/internal/echo/ids"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/hotel/object_fmt_digest"
+	"code.linenisgreat.com/dodder/go/internal/hotel/tap_diagnostics"
+	"code.linenisgreat.com/dodder/go/internal/india/blob_stores"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/kilo/object_finalizer"
+	"code.linenisgreat.com/dodder/go/internal/november/queries"
+	"code.linenisgreat.com/dodder/go/internal/victor/local_working_copy"
+	"code.linenisgreat.com/dodder/go/internal/xray/command_components_dodder"
+	tap "github.com/amarbel-llc/tap-dancer/go"
+)
+
+func init() {
+	utility.AddCmd(
+		"fsck",
+		&Fsck{
+			VerifyOptions: object_finalizer.DefaultVerifyOptions(),
+		},
+	)
+}
+
+// TODO add options to verify type formats, tags
+// TODO add option to count duplicate objects according to a list of object
+// digest formats
+type Fsck struct {
+	command_components_dodder.LocalWorkingCopy
+	command_components_dodder.InventoryLists
+	command_components_dodder.Query
+
+	InventoryListPath string
+
+	VerifyOptions object_finalizer.VerifyOptions
+	Duplicates    object_fmt_digest.CLIFlag
+	SkipProbes    bool
+	SkipBlobs     bool
+}
+
+var _ interfaces.CommandComponentWriter = (*Fsck)(nil)
+
+func (cmd *Fsck) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
+	cmd.LocalWorkingCopy.SetFlagDefinitions(flagSet)
+
+	flagSet.StringVar(
+		&cmd.InventoryListPath,
+		"inventory_list-path",
+		"",
+		"instead of using the store's object, verify the objects at the inventory list at the given path",
+	)
+
+	flagSet.BoolVar(
+		&cmd.VerifyOptions.ObjectSigPresent,
+		"object-sig-required",
+		true,
+		"require the object signature when validating",
+	)
+
+	flagSet.BoolVar(
+		&cmd.SkipProbes,
+		"skip-probes",
+		false,
+		"skip verification of probe index entries",
+	)
+
+	flagSet.BoolVar(
+		&cmd.SkipBlobs,
+		"skip-blobs",
+		false,
+		"skip verification of blob contents",
+	)
+
+	cmd.Duplicates.SetFlagDefinitions(flagSet)
+}
+
+func (cmd Fsck) Run(req command.Request) {
+	repo := cmd.MakeLocalWorkingCopy(req)
+
+	tw := tap.NewWriter(os.Stdout)
+
+	var seq interfaces.SeqError[*sku.Transacted]
+
+	if cmd.InventoryListPath == "" {
+		query := cmd.MakeQuery(
+			req,
+			queries.BuilderOptions(
+				queries.BuilderOptionDefaultGenres(genres.All()...),
+				queries.BuilderOptionDefaultSigil(
+					ids.SigilLatest,
+					ids.SigilHistory,
+					ids.SigilHidden,
+				),
+			),
+			repo,
+			req.PopArgs(),
+		)
+
+		seq = repo.GetStore().All(query)
+
+		tw.Comment(fmt.Sprintf("verification for %q objects in progress...", query))
+	} else {
+		seq = cmd.MakeSeqFromPath(
+			repo,
+			repo.GetInventoryListCoderCloset(),
+			cmd.InventoryListPath,
+			nil,
+		)
+	}
+
+	cmd.runVerification(repo, tw, seq)
+}
+
+func (cmd Fsck) runVerification(
+	repo *local_working_copy.Repo,
+	tw *tap.Writer,
+	seq interfaces.SeqError[*sku.Transacted],
+) {
+	var count atomic.Uint32
+	var errorCount atomic.Uint32
+
+	finalizer := object_finalizer.Builder().
+		WithVerifyOptions(cmd.VerifyOptions).
+		Build()
+
+	if err := errors.RunChildContextWithPrintTicker(
+		repo,
+		func(ctx errors.Context) {
+			for object, errIter := range seq {
+				if errIter != nil {
+					desc := "iteration error"
+					if object != nil {
+						desc = sku.StringMetadataTaiMerkle(object)
+					}
+
+					tw.NotOk(desc, tap_diagnostics.FromError(errIter))
+					errorCount.Add(1)
+					count.Add(1)
+
+					continue
+				}
+
+				desc := sku.StringMetadataTaiMerkle(object)
+				var objectErrors []error
+
+				if err := markl.AssertIdIsNotNull(
+					object.GetObjectDigest(),
+				); err != nil {
+					objectErrors = append(objectErrors, err)
+				}
+
+				if err := finalizer.Verify(object); err != nil {
+					objectErrors = append(objectErrors, err)
+				}
+
+				if !cmd.SkipProbes {
+					if err := repo.GetStore().GetStreamIndex().VerifyObjectProbes(
+						object,
+					); err != nil {
+						objectErrors = append(objectErrors, err)
+					}
+				}
+
+				if !cmd.SkipBlobs {
+					blobDigest := object.GetBlobDigest()
+					if !blobDigest.IsNull() {
+						if err := blob_stores.VerifyBlob(
+							repo,
+							repo.GetEnvRepo().GetDefaultBlobStore(),
+							blobDigest,
+							io.Discard,
+						); err != nil {
+							objectErrors = append(objectErrors, errors.Wrapf(err, "blob verification failed"))
+						}
+					}
+				}
+
+				if len(objectErrors) == 0 {
+					tw.Ok(desc)
+				} else {
+					diag := tap_diagnostics.FromError(objectErrors[0])
+					if len(objectErrors) > 1 {
+						msgs := make([]string, len(objectErrors))
+						for i, e := range objectErrors {
+							msgs[i] = e.Error()
+						}
+						diag["message"] = strings.Join(msgs, "; ")
+					}
+					tw.NotOk(desc, diag)
+					errorCount.Add(1)
+				}
+
+				count.Add(1)
+			}
+		},
+		func(time time.Time) {
+			tw.Comment(fmt.Sprintf(
+				"(in progress) %d verified, %d errors",
+				count.Load(),
+				errorCount.Load(),
+			))
+		},
+		3*time.Second,
+	); err != nil {
+		tw.BailOut(err.Error())
+		repo.Cancel(err)
+		return
+	}
+
+	tw.Plan()
+}

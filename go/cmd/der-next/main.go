@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/src/charlie/store_version"
-	"code.linenisgreat.com/dodder/go/src/yankee/commands_dodder"
+	"code.linenisgreat.com/dodder/go/internal/charlie/store_version"
+	"code.linenisgreat.com/dodder/go/internal/yankee/commands_dodder"
 )
 
 func main() {

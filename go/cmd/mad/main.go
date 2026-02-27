@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/src/lima/commands_madder"
+	"code.linenisgreat.com/dodder/go/internal/lima/commands_madder"
 )
 
 func main() {
