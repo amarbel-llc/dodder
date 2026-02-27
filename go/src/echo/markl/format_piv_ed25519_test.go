@@ -187,3 +187,38 @@ func TestPIVMarklIdTextRoundTrip(t1 *testing.T) {
 		}
 	})
 }
+
+func TestPIVGetPublicKey(t1 *testing.T) {
+	ui.RunTestContext(t1, func(t *ui.TestContext) {
+		mock := makeMockPIVSigner()
+		// Remove any previously registered PIV format so this test's mock
+		// signer is the one captured by the closure.
+		delete(formats, FormatIdEd25519PIV)
+		RegisterPIVEd25519Format(mock)
+
+		var pivKey Id
+		ref := EncodePIVReference(mock.GUID(), mock.SlotId())
+		err := pivKey.SetPurposeId(PurposeRepoPrivateKeyV1)
+		t.AssertNoError(err)
+		err = pivKey.SetMarklId(FormatIdEd25519PIV, ref[:])
+		t.AssertNoError(err)
+
+		// GetPublicKey should return the signer's public key
+		pubKey, err := pivKey.GetPublicKey(PurposeRepoPrivateKeyV1)
+		t.AssertNoError(err)
+		t.AssertNoError(AssertIdIsNotNull(pubKey))
+
+		expectedPub := mock.privateKey.Public().(ed25519.PublicKey)
+
+		err = MakeErrNotEqualBytes(expectedPub, pubKey.GetBytes())
+		t.AssertNoError(err)
+
+		if pubKey.GetMarklFormat().GetMarklFormatId() != FormatIdEd25519Pub {
+			t.Fatalf(
+				"expected format %q but got %q",
+				FormatIdEd25519Pub,
+				pubKey.GetMarklFormat().GetMarklFormatId(),
+			)
+		}
+	})
+}
