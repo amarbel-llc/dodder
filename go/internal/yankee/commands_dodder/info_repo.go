@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/delta/xdg"
 	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/hotel/genesis_configs"

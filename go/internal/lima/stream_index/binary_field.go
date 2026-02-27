@@ -6,8 +6,8 @@ import (
 	"io"
 	"math"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/internal/charlie/key_bytes"
 )
 

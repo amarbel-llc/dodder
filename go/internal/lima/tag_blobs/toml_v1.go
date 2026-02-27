@@ -1,8 +1,8 @@
 package tag_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/bravo/lua"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/lua"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/sku_lua"
 )

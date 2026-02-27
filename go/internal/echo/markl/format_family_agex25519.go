@@ -4,11 +4,11 @@ import (
 	"crypto/ed25519"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/bech32"
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/bech32"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/delta/age"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/delta/age"
 )
 
 func AgeX25519Generate(_ io.Reader) (bites []byte, err error) {

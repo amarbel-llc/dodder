@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/pool"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
 )
 
 func TestLineReaderOneReaderHappy(t1 *testing.T) {

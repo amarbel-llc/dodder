@@ -1,8 +1,8 @@
 package store
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/delta/thyme"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/delta/thyme"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/india/zettel_id_index"

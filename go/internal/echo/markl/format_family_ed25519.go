@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 func Ed25519GeneratePrivateKey(rand io.Reader) (bites []byte, err error) {

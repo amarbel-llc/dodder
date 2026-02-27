@@ -3,7 +3,7 @@ package xdg
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 const EnvXDGUtilityNameOverride = "DODDER_XDG_UTILITY_OVERRIDE"

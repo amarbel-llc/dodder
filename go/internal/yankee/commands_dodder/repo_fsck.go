@@ -3,7 +3,7 @@ package commands_dodder
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/hotel/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/hotel/tap_diagnostics"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 
 type Seq collections_slice.Slice[Token]

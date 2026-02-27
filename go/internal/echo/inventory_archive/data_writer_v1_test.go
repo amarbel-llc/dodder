@@ -8,9 +8,9 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/internal/delta/age"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/lib/delta/age"
 )
 
 func TestV1RoundTripFullEntriesOnly(t *testing.T) {

@@ -1,11 +1,11 @@
 package typed_blob_store
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/lua"
-	"code.linenisgreat.com/dodder/go/internal/charlie/toml"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/lua"
+	"code.linenisgreat.com/dodder/go/lib/charlie/toml"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

@@ -5,8 +5,8 @@ import (
 	"testing"
 	tyme "time"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
-	"code.linenisgreat.com/dodder/go/internal/delta/thyme"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/delta/thyme"
 )
 
 func TestTaiSet(t1 *testing.T) {

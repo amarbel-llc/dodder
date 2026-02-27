@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 	"code.linenisgreat.com/dodder/go/internal/victor/local_working_copy"

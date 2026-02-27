@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 )
 

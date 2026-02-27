@@ -1,9 +1,9 @@
 package commands_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/india/env_local"

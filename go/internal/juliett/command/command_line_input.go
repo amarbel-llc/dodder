@@ -3,7 +3,7 @@ package command
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 
 // TODO complete merging Args, consumed and FlagsOrArgs for use by Run/Complete

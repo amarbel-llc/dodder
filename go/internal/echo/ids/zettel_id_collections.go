@@ -1,8 +1,8 @@
 package ids
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/collections_value"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/charlie/collections_value"
 )
 
 func init() {

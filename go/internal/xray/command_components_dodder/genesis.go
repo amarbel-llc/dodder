@@ -1,7 +1,7 @@
 package command_components_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"

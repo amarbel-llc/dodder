@@ -4,8 +4,8 @@ import (
 	"sort"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/expansion"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 	"code.linenisgreat.com/dodder/go/internal/delta/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"

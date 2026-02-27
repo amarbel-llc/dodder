@@ -3,7 +3,7 @@ package commands_madder
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/delta/xdg"
 	"code.linenisgreat.com/dodder/go/internal/echo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"

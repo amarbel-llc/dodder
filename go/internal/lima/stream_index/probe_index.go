@@ -1,9 +1,9 @@
 package stream_index
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/collections_map"
+	"code.linenisgreat.com/dodder/go/lib/alfa/collections_map"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"

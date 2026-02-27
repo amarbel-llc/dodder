@@ -3,11 +3,11 @@ package ids
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/quiter_collection"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
-	"code.linenisgreat.com/dodder/go/internal/charlie/expansion"
+	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_collection"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
 )
 
 func stringSliceEquals(a, b []string) bool {

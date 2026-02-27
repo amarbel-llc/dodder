@@ -3,7 +3,7 @@ package repo
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 //go:generate stringer -type=RemoteConnection

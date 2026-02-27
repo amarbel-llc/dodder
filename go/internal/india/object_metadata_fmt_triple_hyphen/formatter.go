@@ -3,7 +3,7 @@ package object_metadata_fmt_triple_hyphen
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
 )
 
 type formatter []funcWrite

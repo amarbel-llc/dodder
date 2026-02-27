@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter_set"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/objects"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

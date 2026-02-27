@@ -3,7 +3,7 @@ package env_ui
 import (
 	"sync/atomic"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 type ProgressWriter struct {

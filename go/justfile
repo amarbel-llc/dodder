@@ -47,13 +47,13 @@ show-go-package_deps package:
 codemod-go-fix_redundant_import_aliases:
   ./bin/fix_redundant_import_alisas.bash
 
-files_go := "src/ cmd/"
+files_go := "internal/ lib/ cmd/"
 
 codemod-go-fmt: codemod-go-fix_redundant_import_aliases
   goimports -w {{files_go}}
-  gofumpt -l -w src
+  gofumpt -l -w internal lib
 
-# moves a go package from one src/<root>/<leaf> to another src/<root>/<leaf>
+# moves a go package from one <root>/<leaf> to another <root>/<leaf>
 codemod-go-move_package src dst: && codemod-go-fmt
   #! /bin/bash -e
 
@@ -72,7 +72,7 @@ codemod-go-move_package src dst: && codemod-go-fmt
   mkdir -p "$renamed"
 
   git mv $original/* "$renamed" || mv $original/* "$renamed"
-  find src -type d -empty -delete
+  find internal lib -type d -empty -delete
 
   # https://unix.stackexchange.com/questions/190334/sed-word-boundaries-on-macos
   declare -r sed_script="
@@ -160,13 +160,13 @@ check-go-vet:
   go vet ./... || true
 
 build-analyzer-repool:
-  go build -o build/repool-analyzer ./src/alfa/analyzers/repool/cmd/
+  go build -o build/repool-analyzer ./lib/alfa/analyzers/repool/cmd/
 
 check-go-repool: build-analyzer-repool
   go vet -vettool=build/repool-analyzer ./... || true
 
 build-analyzer-seqerror:
-  go build -o build/seqerror-analyzer ./src/alfa/analyzers/seqerror/cmd/
+  go build -o build/seqerror-analyzer ./lib/alfa/analyzers/seqerror/cmd/
 
 check-go-seqerror: build-analyzer-seqerror
   go vet -vettool=build/seqerror-analyzer ./... || true
@@ -219,7 +219,7 @@ test: test-go test-bats
 @stats-todos:
   #! /usr/bin/env -S fish
   echo "todos: "
-  count-pattern '(//|#)\s*todo[-\w]*' src | sort -n -r
+  count-pattern '(//|#)\s*todo[-\w]*' internal lib | sort -n -r
 
 stats-loc: stats-loc-go
 

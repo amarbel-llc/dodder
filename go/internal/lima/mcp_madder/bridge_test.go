@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/lib/echo/config_cli"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 )
 

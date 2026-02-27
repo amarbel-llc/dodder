@@ -3,8 +3,8 @@ package organize_text
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/tag_paths"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

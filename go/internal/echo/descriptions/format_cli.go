@@ -1,7 +1,7 @@
 package descriptions
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
 )
 

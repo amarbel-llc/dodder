@@ -1,8 +1,8 @@
 package local_working_copy
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/fd"
 	"code.linenisgreat.com/dodder/go/internal/papa/store_fs"
 )

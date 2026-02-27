@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/delta/debug"
-	"code.linenisgreat.com/dodder/go/internal/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/lib/delta/debug"
+	"code.linenisgreat.com/dodder/go/lib/echo/config_cli"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/hotel/env_dir"

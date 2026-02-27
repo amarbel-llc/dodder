@@ -4,9 +4,9 @@ import (
 	"slices"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 	"code.linenisgreat.com/dodder/go/internal/november/queries"
 )

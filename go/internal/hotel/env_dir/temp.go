@@ -3,8 +3,8 @@ package env_dir
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 // TODO only call reset temp when actually not resetting temp

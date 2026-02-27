@@ -1,12 +1,12 @@
 package store_config
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/cmp"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter_set"
-	"code.linenisgreat.com/dodder/go/internal/charlie/collections_value"
-	"code.linenisgreat.com/dodder/go/internal/charlie/expansion"
+	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/charlie/collections_value"
+	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 )

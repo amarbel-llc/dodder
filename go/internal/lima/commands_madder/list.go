@@ -1,7 +1,7 @@
 package commands_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/kilo/command_components_madder"
 )

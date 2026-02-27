@@ -7,7 +7,7 @@ import (
 	"crypto/rand"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 func makeTestEd25519Signer() ed25519.PrivateKey {

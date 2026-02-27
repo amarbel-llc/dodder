@@ -3,12 +3,12 @@ package organize_text
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/alfa/pool"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter_set"
 	"code.linenisgreat.com/dodder/go/internal/echo/format"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"

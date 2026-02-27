@@ -3,8 +3,8 @@ package local_working_copy
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 	"code.linenisgreat.com/dodder/go/internal/echo/format"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

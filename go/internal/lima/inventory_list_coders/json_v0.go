@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/hotel/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/sku_json_fmt"

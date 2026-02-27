@@ -1,7 +1,7 @@
 package queries
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 type exp struct {

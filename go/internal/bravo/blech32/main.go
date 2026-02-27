@@ -30,7 +30,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/unicorn"
+	"code.linenisgreat.com/dodder/go/lib/alfa/unicorn"
 )
 
 const separator = '-'

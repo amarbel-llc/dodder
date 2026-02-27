@@ -3,10 +3,10 @@ package blob_transfers
 import (
 	"time"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"

@@ -1,6 +1,6 @@
 package key_bytes
 
-import "code.linenisgreat.com/dodder/go/internal/alfa/errors"
+import "code.linenisgreat.com/dodder/go/lib/alfa/errors"
 
 type (
 	pkgErrDisamb struct{}

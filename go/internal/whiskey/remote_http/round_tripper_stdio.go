@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
-	"code.linenisgreat.com/dodder/go/internal/charlie/delim_io"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/charlie/delim_io"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/store_config"

@@ -1,7 +1,7 @@
 package stream_index
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 )

@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/alfa/pool"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/india/env_local"
 )
 

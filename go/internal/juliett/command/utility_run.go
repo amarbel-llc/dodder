@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"syscall"
 
-	"code.linenisgreat.com/dodder/go/internal/_/stack_frame"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 func extendNameIfNecessary(name string) string {

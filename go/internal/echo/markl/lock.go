@@ -1,9 +1,9 @@
 package markl
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
 )
 
 type Lock[

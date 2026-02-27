@@ -3,7 +3,7 @@ package organize_text
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/echo/format"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
 )

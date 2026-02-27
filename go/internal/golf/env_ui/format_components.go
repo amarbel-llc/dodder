@@ -1,7 +1,7 @@
 package env_ui
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/options_print"
 	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/fd"

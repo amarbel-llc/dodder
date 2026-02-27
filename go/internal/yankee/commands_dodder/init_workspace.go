@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
-	"code.linenisgreat.com/dodder/go/internal/charlie/files"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/charlie/files"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/hotel/workspace_config_blobs"

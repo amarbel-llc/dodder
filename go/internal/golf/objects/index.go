@@ -1,11 +1,11 @@
 package objects
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
 	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/tag_paths"

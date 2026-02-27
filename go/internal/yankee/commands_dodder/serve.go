@@ -3,9 +3,9 @@ package commands_dodder
 import (
 	"net"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/flags"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/flags"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/kilo/command_components"

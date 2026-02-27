@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/lib/charlie/compression_type"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"

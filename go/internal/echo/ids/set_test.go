@@ -3,11 +3,11 @@ package ids
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter_set"
-	"code.linenisgreat.com/dodder/go/internal/charlie/expansion"
-	"code.linenisgreat.com/dodder/go/internal/delta/collections_delta"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
+	"code.linenisgreat.com/dodder/go/lib/delta/collections_delta"
 )
 
 func TestExpandedRight(t *testing.T) {

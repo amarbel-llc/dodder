@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_vars"
-	"code.linenisgreat.com/dodder/go/internal/charlie/files"
-	"code.linenisgreat.com/dodder/go/internal/charlie/xdg_defaults"
+	"code.linenisgreat.com/dodder/go/lib/bravo/env_vars"
+	"code.linenisgreat.com/dodder/go/lib/charlie/files"
+	"code.linenisgreat.com/dodder/go/lib/charlie/xdg_defaults"
 )
 
 type XDG struct {

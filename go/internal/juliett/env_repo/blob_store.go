@@ -6,7 +6,7 @@ import (
 	"slices"
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/store_version"
 	"code.linenisgreat.com/dodder/go/internal/echo/directory_layout"

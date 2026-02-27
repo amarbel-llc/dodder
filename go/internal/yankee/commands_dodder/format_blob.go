@@ -3,12 +3,12 @@ package commands_dodder
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/charlie/script_config"
+	"code.linenisgreat.com/dodder/go/lib/charlie/script_config"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	"code.linenisgreat.com/dodder/go/internal/india/env_local"

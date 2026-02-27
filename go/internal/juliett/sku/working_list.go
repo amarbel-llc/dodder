@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/collections_map"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/collections_map"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/alfa/pool"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/internal/charlie/heap"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/charlie/heap"
 	"code.linenisgreat.com/dodder/go/internal/echo/descriptions"
 )
 

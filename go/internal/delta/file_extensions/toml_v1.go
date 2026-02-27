@@ -1,6 +1,6 @@
 package file_extensions
 
-import "code.linenisgreat.com/dodder/go/internal/alfa/equals"
+import "code.linenisgreat.com/dodder/go/lib/alfa/equals"
 
 type TOMLV1 struct {
 	Config   *string `toml:"config"`

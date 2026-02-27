@@ -1,8 +1,8 @@
 package tag_paths
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/cmp"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 
 type (

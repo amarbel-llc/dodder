@@ -2,7 +2,7 @@ package object_metadata_fmt_triple_hyphen
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/script_config"
+	"code.linenisgreat.com/dodder/go/lib/charlie/script_config"
 	"code.linenisgreat.com/dodder/go/internal/hotel/env_dir"
 )
 

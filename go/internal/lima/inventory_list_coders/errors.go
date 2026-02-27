@@ -3,7 +3,7 @@ package inventory_list_coders
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 )
 

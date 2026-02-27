@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/delim_reader"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/delim_reader"
 	"code.linenisgreat.com/dodder/go/internal/charlie/doddish"
-	"code.linenisgreat.com/dodder/go/internal/charlie/files"
+	"code.linenisgreat.com/dodder/go/lib/charlie/files"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/fd"

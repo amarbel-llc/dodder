@@ -1,6 +1,6 @@
 package local_working_copy
 
-import "code.linenisgreat.com/dodder/go/internal/alfa/errors"
+import "code.linenisgreat.com/dodder/go/lib/alfa/errors"
 
 func (local *Repo) Reindex() {
 	local.Must(errors.MakeFuncContextFromFuncErr(local.Lock))

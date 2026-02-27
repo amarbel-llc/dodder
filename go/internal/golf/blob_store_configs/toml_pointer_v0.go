@@ -1,7 +1,7 @@
 package blob_store_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/echo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"

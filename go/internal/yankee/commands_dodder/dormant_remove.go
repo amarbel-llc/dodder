@@ -1,8 +1,8 @@
 package commands_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/catgut"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/xray/command_components_dodder"
 )

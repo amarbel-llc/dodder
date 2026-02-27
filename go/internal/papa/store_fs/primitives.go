@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/charlie/files"
+	"code.linenisgreat.com/dodder/go/lib/charlie/files"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/objects"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

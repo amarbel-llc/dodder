@@ -3,11 +3,11 @@ package store_config
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/comments"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/comments"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 	"code.linenisgreat.com/dodder/go/internal/charlie/options_print"
 	"code.linenisgreat.com/dodder/go/internal/delta/file_extensions"

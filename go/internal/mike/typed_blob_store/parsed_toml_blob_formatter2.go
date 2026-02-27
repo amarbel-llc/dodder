@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/toml"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/toml"
 )
 
 type ParsedBlobTomlFormatter2[O any] struct{}

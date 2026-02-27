@@ -1,6 +1,6 @@
 package blob_store_id
 
-import "code.linenisgreat.com/dodder/go/internal/alfa/errors"
+import "code.linenisgreat.com/dodder/go/lib/alfa/errors"
 
 type (
 	LocationType interface {

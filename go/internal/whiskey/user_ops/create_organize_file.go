@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/oscar/organize_text"
 	"code.linenisgreat.com/dodder/go/internal/victor/local_working_copy"
 )

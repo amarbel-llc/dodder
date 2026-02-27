@@ -1,7 +1,7 @@
 package objects
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/cmp"
+	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )

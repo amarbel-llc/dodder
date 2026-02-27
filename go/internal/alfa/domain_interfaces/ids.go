@@ -1,7 +1,7 @@
 package domain_interfaces
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
 type (

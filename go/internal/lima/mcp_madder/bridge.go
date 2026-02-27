@@ -3,8 +3,8 @@ package mcp_madder
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/echo/config_cli"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 )
 

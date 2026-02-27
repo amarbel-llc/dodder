@@ -2,7 +2,7 @@ package repo_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/internal/bravo/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 	"code.linenisgreat.com/dodder/go/internal/charlie/options_print"

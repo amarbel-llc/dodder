@@ -1,7 +1,7 @@
 package type_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/charlie/script_config"
+	"code.linenisgreat.com/dodder/go/lib/charlie/script_config"
 )
 
 func Default() TomlV1 {

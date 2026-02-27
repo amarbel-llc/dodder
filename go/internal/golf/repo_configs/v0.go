@@ -1,10 +1,10 @@
 package repo_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/internal/bravo/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/charlie/options_print"
-	"code.linenisgreat.com/dodder/go/internal/charlie/script_config"
+	"code.linenisgreat.com/dodder/go/lib/charlie/script_config"
 	"code.linenisgreat.com/dodder/go/internal/delta/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 )

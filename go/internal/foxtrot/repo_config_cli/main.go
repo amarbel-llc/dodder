@@ -1,10 +1,10 @@
 package repo_config_cli
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/charlie/options_print"
-	"code.linenisgreat.com/dodder/go/internal/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/lib/echo/config_cli"
 	"code.linenisgreat.com/dodder/go/internal/echo/descriptions"
 )
 

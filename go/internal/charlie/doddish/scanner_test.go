@@ -3,8 +3,8 @@ package doddish
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/pool"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 type scannerTestCase struct {

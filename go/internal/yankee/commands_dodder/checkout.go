@@ -1,7 +1,7 @@
 package commands_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"

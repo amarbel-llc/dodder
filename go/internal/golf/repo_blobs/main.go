@@ -1,11 +1,11 @@
 package repo_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/remote_connection_types"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
-	"code.linenisgreat.com/dodder/go/internal/charlie/collections_value"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/charlie/collections_value"
 	"code.linenisgreat.com/dodder/go/internal/delta/xdg"
 )
 

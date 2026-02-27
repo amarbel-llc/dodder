@@ -3,7 +3,7 @@ package organize_text_mode
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 type Mode int

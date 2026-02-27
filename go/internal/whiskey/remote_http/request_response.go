@@ -9,10 +9,10 @@ import (
 	"slices"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/_/mcp"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/_/mcp"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"github.com/gorilla/mux"
 )
 

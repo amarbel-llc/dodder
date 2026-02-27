@@ -5,9 +5,9 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/vim_cli_options_builder"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/delta/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

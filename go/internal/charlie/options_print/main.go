@@ -1,9 +1,9 @@
 package options_print
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/equals"
-	"code.linenisgreat.com/dodder/go/internal/bravo/values"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/equals"
+	"code.linenisgreat.com/dodder/go/lib/bravo/values"
 )
 
 type (

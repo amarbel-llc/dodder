@@ -1,7 +1,7 @@
 package command_components_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 	pkg_query "code.linenisgreat.com/dodder/go/internal/november/queries"

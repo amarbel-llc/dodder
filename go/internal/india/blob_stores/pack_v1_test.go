@@ -14,7 +14,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/lib/charlie/compression_type"
 	"code.linenisgreat.com/dodder/go/internal/echo/inventory_archive"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"

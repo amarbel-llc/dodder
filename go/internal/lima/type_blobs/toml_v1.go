@@ -1,8 +1,8 @@
 package type_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/reset"
-	"code.linenisgreat.com/dodder/go/internal/charlie/script_config"
+	"code.linenisgreat.com/dodder/go/lib/_/reset"
+	"code.linenisgreat.com/dodder/go/lib/charlie/script_config"
 )
 
 type TomlV1 struct {

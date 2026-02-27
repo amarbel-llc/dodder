@@ -3,8 +3,8 @@ package string_format_writer
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 type quoted_streeng[T ~string] struct{}

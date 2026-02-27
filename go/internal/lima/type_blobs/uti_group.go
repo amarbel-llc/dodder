@@ -1,6 +1,6 @@
 package type_blobs
 
-import "code.linenisgreat.com/dodder/go/internal/_/equality"
+import "code.linenisgreat.com/dodder/go/lib/_/equality"
 
 type UTIGroup map[string]string
 

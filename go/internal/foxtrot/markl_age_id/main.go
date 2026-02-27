@@ -3,12 +3,12 @@ package markl_age_id
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/_/bech32"
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/bech32"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/internal/delta/age"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/delta/age"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	age_upstream "filippo.io/age"
 )

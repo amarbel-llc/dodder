@@ -3,7 +3,7 @@ package markl
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 func NonceGenerate(rand io.Reader, size int) (bites []byte, err error) {

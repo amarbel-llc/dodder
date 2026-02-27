@@ -3,7 +3,7 @@ package object_metadata_fmt_triple_hyphen
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/golf/objects"
 )

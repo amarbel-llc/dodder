@@ -3,7 +3,7 @@ package queries
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 )

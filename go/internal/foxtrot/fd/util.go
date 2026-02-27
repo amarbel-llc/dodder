@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 func Base(p string) string {

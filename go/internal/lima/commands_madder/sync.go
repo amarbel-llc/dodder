@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/hotel/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/hotel/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/india/blob_stores"

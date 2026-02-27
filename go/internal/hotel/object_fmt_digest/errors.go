@@ -3,7 +3,7 @@ package object_fmt_digest
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 type (

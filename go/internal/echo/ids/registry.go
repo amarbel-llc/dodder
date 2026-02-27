@@ -4,9 +4,9 @@ import (
 	"encoding/gob"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/collections_ptr"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/collections_ptr"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 )
 

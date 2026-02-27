@@ -3,7 +3,7 @@ package object_metadata_fmt
 import (
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/golf/objects"
 )

@@ -1,11 +1,11 @@
 package store_fs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/_/vim_cli_options_builder"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/delta/editor"
+	"code.linenisgreat.com/dodder/go/lib/delta/editor"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 )
 

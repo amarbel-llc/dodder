@@ -5,8 +5,8 @@ import (
 	"crypto/sha512"
 	"hash"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/compression_type"
 	"golang.org/x/crypto/blake2b"
 )
 

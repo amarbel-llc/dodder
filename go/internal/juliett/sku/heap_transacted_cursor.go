@@ -1,10 +1,10 @@
 package sku
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/reset"
-	"code.linenisgreat.com/dodder/go/internal/alfa/cmp"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ohio"
-	"code.linenisgreat.com/dodder/go/internal/charlie/heap"
+	"code.linenisgreat.com/dodder/go/lib/_/reset"
+	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/charlie/heap"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 )
 

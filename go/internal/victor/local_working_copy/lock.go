@@ -1,8 +1,8 @@
 package local_working_copy
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 func (local *Repo) Lock() (err error) {

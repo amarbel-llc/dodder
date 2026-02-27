@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 )
 
 type Std struct {

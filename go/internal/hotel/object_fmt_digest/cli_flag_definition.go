@@ -1,7 +1,7 @@
 package object_fmt_digest
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
 type UniqueObject struct {

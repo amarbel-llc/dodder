@@ -1,8 +1,8 @@
 package id_fmts
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/fd"
 )

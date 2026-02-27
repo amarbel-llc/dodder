@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 
 	"code.linenisgreat.com/chrest/go/src/bravo/client"
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/sku_json_fmt"
 )

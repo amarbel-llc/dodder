@@ -1,9 +1,9 @@
 package user_ops
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/delta/script_value"
+	"code.linenisgreat.com/dodder/go/lib/delta/script_value"
 	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/fd"
 	"code.linenisgreat.com/dodder/go/internal/india/object_metadata_fmt_triple_hyphen"

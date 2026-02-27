@@ -2,7 +2,7 @@ package file_extensions
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/equals"
+	"code.linenisgreat.com/dodder/go/lib/alfa/equals"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
 )
 

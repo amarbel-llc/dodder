@@ -4,7 +4,7 @@ import (
 	"io"
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 type SeqRuneScanner struct {

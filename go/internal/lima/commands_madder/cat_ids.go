@@ -1,8 +1,8 @@
 package commands_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/internal/india/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/india/env_local"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"

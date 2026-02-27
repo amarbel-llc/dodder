@@ -3,7 +3,7 @@ package doddish
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"github.com/google/go-cmp/cmp"
 )
 

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/_/coordinates"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/files"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/files"
 )
 
 type provider []string

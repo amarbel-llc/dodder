@@ -3,10 +3,10 @@ package objects
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/_/flag_policy"
-	"code.linenisgreat.com/dodder/go/internal/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/flags"
+	"code.linenisgreat.com/dodder/go/lib/_/flag_policy"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/flags"
 )
 
 // TODO replace with command_components.ObjectMetadata

@@ -3,7 +3,7 @@ package commands_dodder
 import (
 	"encoding/json"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/xray/command_components_dodder"
 )

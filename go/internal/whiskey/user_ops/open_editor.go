@@ -1,8 +1,8 @@
 package user_ops
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/delta/editor"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/delta/editor"
 	"code.linenisgreat.com/dodder/go/internal/victor/local_working_copy"
 )
 

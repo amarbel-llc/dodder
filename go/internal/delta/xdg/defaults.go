@@ -1,6 +1,6 @@
 package xdg
 
-import "code.linenisgreat.com/dodder/go/internal/bravo/env_vars"
+import "code.linenisgreat.com/dodder/go/lib/bravo/env_vars"
 
 type DefaultEnvVar struct {
 	Name                 string

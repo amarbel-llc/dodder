@@ -1,8 +1,8 @@
 package xdg
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_vars"
-	"code.linenisgreat.com/dodder/go/internal/charlie/xdg_defaults"
+	"code.linenisgreat.com/dodder/go/lib/bravo/env_vars"
+	"code.linenisgreat.com/dodder/go/lib/charlie/xdg_defaults"
 )
 
 type initElement struct {

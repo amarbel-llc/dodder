@@ -4,9 +4,9 @@ import (
 	"io"
 	"unicode"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/alfa/unicorn"
-	"code.linenisgreat.com/dodder/go/internal/charlie/catgut"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/unicorn"
+	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 	"code.linenisgreat.com/dodder/go/internal/echo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/echo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/tag_paths"

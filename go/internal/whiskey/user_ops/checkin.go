@@ -3,10 +3,10 @@ package user_ops
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/bravo/quiter_set"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/golf/objects"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
