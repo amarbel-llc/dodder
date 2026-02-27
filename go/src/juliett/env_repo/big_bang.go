@@ -3,6 +3,7 @@ package env_repo
 import (
 	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/src/echo/ids"
+	"code.linenisgreat.com/dodder/go/src/echo/markl"
 	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/src/hotel/genesis_configs"
 )
@@ -13,6 +14,8 @@ type BigBang struct {
 	TypedBlobStoreConfig *blob_store_configs.TypedMutableConfig
 
 	InventoryListType ids.TypeStruct
+
+	PrivateKey markl.Id
 
 	Yin                  string
 	Yang                 string

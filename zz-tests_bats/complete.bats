@@ -135,6 +135,7 @@ function complete_subcmd { # @test
 		generate-zettel-id-components
 		import
 		info
+		info-piv
 		info-repo
 		info-workspace
 		init

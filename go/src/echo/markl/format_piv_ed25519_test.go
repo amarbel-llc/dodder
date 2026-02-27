@@ -94,6 +94,78 @@ func makeMockPIVSigner() *mockPIVSigner {
 	}
 }
 
+func TestPIVStubParseWithoutSigner(t1 *testing.T) {
+	ui.RunTestContext(t1, func(t *ui.TestContext) {
+		resetPIVFormatForTesting()
+
+		// Parsing a PIV markl.Id should succeed via the stub format
+		var pivKey Id
+		var guid [16]byte
+		for i := range guid {
+			guid[i] = byte(i)
+		}
+		ref := EncodePIVReference(guid, 0x9c)
+		err := pivKey.SetPurposeId(PurposeRepoPrivateKeyV1)
+		t.AssertNoError(err)
+		err = pivKey.SetMarklId(FormatIdEd25519PIV, ref[:])
+		t.AssertNoError(err)
+
+		if pivKey.GetMarklFormat().GetMarklFormatId() != FormatIdEd25519PIV {
+			t.Fatalf("expected format %q", FormatIdEd25519PIV)
+		}
+	})
+}
+
+func TestPIVStubSignReturnsConnectionError(t1 *testing.T) {
+	ui.RunTestContext(t1, func(t *ui.TestContext) {
+		resetPIVFormatForTesting()
+
+		var pivKey Id
+		var guid [16]byte
+		ref := EncodePIVReference(guid, 0x9c)
+		err := pivKey.SetPurposeId(PurposeRepoPrivateKeyV1)
+		t.AssertNoError(err)
+		err = pivKey.SetMarklId(FormatIdEd25519PIV, ref[:])
+		t.AssertNoError(err)
+
+		message, repool := FormatHashSha256.GetMarklIdForString("test")
+		defer repool()
+
+		var sig Id
+		err = pivKey.Sign(message, &sig, PurposeObjectSigV2)
+		if err == nil {
+			t.Fatal("expected error from stub Sign")
+		}
+
+		if !IsErrEd25519PIVSignerConnectionNotEstablished(err) {
+			t.Fatalf("expected PIV connection error, got: %s", err)
+		}
+	})
+}
+
+func TestPIVStubGetPublicKeyReturnsConnectionError(t1 *testing.T) {
+	ui.RunTestContext(t1, func(t *ui.TestContext) {
+		resetPIVFormatForTesting()
+
+		var pivKey Id
+		var guid [16]byte
+		ref := EncodePIVReference(guid, 0x9c)
+		err := pivKey.SetPurposeId(PurposeRepoPrivateKeyV1)
+		t.AssertNoError(err)
+		err = pivKey.SetMarklId(FormatIdEd25519PIV, ref[:])
+		t.AssertNoError(err)
+
+		_, err = pivKey.GetPublicKey(PurposeRepoPrivateKeyV1)
+		if err == nil {
+			t.Fatal("expected error from stub GetPublicKey")
+		}
+
+		if !IsErrEd25519PIVSignerConnectionNotEstablished(err) {
+			t.Fatalf("expected PIV connection error, got: %s", err)
+		}
+	})
+}
+
 func TestRegisterPIVEd25519FormatAndSign(t1 *testing.T) {
 	ui.RunTestContext(t1, func(t *ui.TestContext) {
 		mock := makeMockPIVSigner()

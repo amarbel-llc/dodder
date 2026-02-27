@@ -58,6 +58,8 @@ func init() {
 		},
 	)
 
+	makeStubPIVFormat()
+
 	// AgeX25519
 	makeFormat(
 		Format{

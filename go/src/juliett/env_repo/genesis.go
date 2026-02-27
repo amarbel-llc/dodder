@@ -34,13 +34,30 @@ func (env *Env) Genesis(bigBang BigBang) {
 	{
 		privateKeyMutable := bigBang.GenesisConfig.Blob.GetPrivateKeyMutable()
 
-		if err := privateKeyMutable.GeneratePrivateKey(
-			nil,
-			markl.FormatIdEd25519Sec,
-			markl.PurposeRepoPrivateKeyV1,
-		); err != nil {
-			env.Cancel(err)
-			return
+		if bigBang.PrivateKey.IsNull() {
+			if err := privateKeyMutable.GeneratePrivateKey(
+				nil,
+				markl.FormatIdEd25519Sec,
+				markl.PurposeRepoPrivateKeyV1,
+			); err != nil {
+				env.Cancel(err)
+				return
+			}
+		} else {
+			if err := privateKeyMutable.SetPurposeId(
+				markl.PurposeRepoPrivateKeyV1,
+			); err != nil {
+				env.Cancel(err)
+				return
+			}
+
+			if err := privateKeyMutable.SetMarklId(
+				bigBang.PrivateKey.GetMarklFormat().GetMarklFormatId(),
+				bigBang.PrivateKey.GetBytes(),
+			); err != nil {
+				env.Cancel(err)
+				return
+			}
 		}
 	}
 

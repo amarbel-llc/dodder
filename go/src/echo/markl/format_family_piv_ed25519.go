@@ -13,7 +13,8 @@ var pivFormatOnce sync.Once
 
 func RegisterPIVEd25519Format(signer PIVSigner) {
 	pivFormatOnce.Do(func() {
-		makeFormat(FormatSec{
+		// Replace the stub registered in init() with a live signer-backed format.
+		formats[FormatIdEd25519PIV] = FormatSec{
 			Id:          FormatIdEd25519PIV,
 			Size:        PIVReferenceSize,
 			PubFormatId: FormatIdEd25519Pub,
@@ -31,11 +32,31 @@ func RegisterPIVEd25519Format(signer PIVSigner) {
 			) ([]byte, error) {
 				return signer.Sign(readerRand, mes.GetBytes(), &ed25519.Options{})
 			},
-		})
+		}
 	})
 }
 
 func resetPIVFormatForTesting() {
-	delete(formats, FormatIdEd25519PIV)
+	// Restore the stub format so the next RegisterPIVEd25519Format call
+	// can replace it with a new signer.
+	makeStubPIVFormat()
 	pivFormatOnce = sync.Once{}
+}
+
+func makeStubPIVFormat() {
+	formats[FormatIdEd25519PIV] = FormatSec{
+		Id:          FormatIdEd25519PIV,
+		Size:        PIVReferenceSize,
+		PubFormatId: FormatIdEd25519Pub,
+		GetPublicKey: func(_ domain_interfaces.MarklId) ([]byte, error) {
+			return nil, errors.Wrap(ErrEd25519PIVSignerConnectionNotEstablished)
+		},
+		SigFormatId: FormatIdEd25519Sig,
+		Sign: func(
+			_, _ domain_interfaces.MarklId,
+			_ io.Reader,
+		) ([]byte, error) {
+			return nil, errors.Wrap(ErrEd25519PIVSignerConnectionNotEstablished)
+		},
+	}
 }

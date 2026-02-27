@@ -58,6 +58,12 @@ func (cmd *Genesis) SetFlagDefinitions(
 	cmd.BigBang.TypedBlobStoreConfig.Blob.SetFlagDefinitions(flagSet)
 
 	flagSet.Var(
+		&cmd.BigBang.PrivateKey,
+		"private_key",
+		"pre-existing private key markl.Id (use info-piv to discover PIV tokens)",
+	)
+
+	flagSet.Var(
 		cmd.Complete.GetFlagValueBlobIds(&cmd.BlobStoreId),
 		"blob_store-id",
 		"The name of the existing madder blob store to use",
