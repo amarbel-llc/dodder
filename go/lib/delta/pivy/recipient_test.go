@@ -116,3 +116,40 @@ func TestUnwrapWrongKeyFails(t *testing.T) {
 		t.Fatal("expected error unwrapping with wrong key")
 	}
 }
+
+func TestResolveAgentSocketPathFromEnv(t *testing.T) {
+	t.Setenv("PIVY_AUTH_SOCK", "/tmp/test-pivy-agent.sock")
+
+	path, err := ResolveAgentSocketPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if path != "/tmp/test-pivy-agent.sock" {
+		t.Fatalf("got %q, want /tmp/test-pivy-agent.sock", path)
+	}
+}
+
+func TestResolveAgentSocketPathUnset(t *testing.T) {
+	t.Setenv("PIVY_AUTH_SOCK", "")
+
+	_, err := ResolveAgentSocketPath()
+	if err == nil {
+		t.Fatal("expected error when PIVY_AUTH_SOCK is unset")
+	}
+}
+
+func TestNewAgentIdentity(t *testing.T) {
+	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// NewAgentIdentity constructs an Identity that would call the agent.
+	// We can't test the actual agent call without pivy-agent running,
+	// but we verify the constructor works.
+	identity := NewAgentIdentity(privKey.PublicKey())
+	if identity == nil {
+		t.Fatal("expected non-nil identity")
+	}
+}
