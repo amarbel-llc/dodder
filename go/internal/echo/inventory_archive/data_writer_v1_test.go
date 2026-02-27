@@ -4,6 +4,8 @@ package inventory_archive
 
 import (
 	"bytes"
+	"crypto/ecdh"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
@@ -11,6 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/compression_type"
 	"code.linenisgreat.com/dodder/go/lib/delta/age"
+	"code.linenisgreat.com/dodder/go/lib/delta/pivy"
 )
 
 func TestV1RoundTripFullEntriesOnly(t *testing.T) {
@@ -445,6 +448,70 @@ func TestV1EncryptedRoundTrip(t *testing.T) {
 	if err == nil && len(rawEntries) > 0 {
 		if bytes.Equal(rawEntries[0].Data, entries[0].data) {
 			t.Error("reading encrypted archive without key should not produce plaintext")
+		}
+	}
+}
+
+func TestV1PivyEncryptedRoundTrip(t *testing.T) {
+	var buf bytes.Buffer
+	hashFormatId := "sha256"
+	ct := compression_type.CompressionTypeZstd
+
+	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var encryption interfaces.IOWrapper = &pivy.IOWrapper{
+		RecipientPubkey: privKey.PublicKey(),
+		DecryptECDH:     pivy.SoftwareECDHForTesting(privKey),
+	}
+
+	entries := []struct {
+		hash []byte
+		data []byte
+	}{
+		{hash: sha256Hash([]byte("pivy1")), data: []byte("pivy encrypted v1 blob")},
+		{hash: sha256Hash([]byte("pivy2")), data: []byte("another pivy encrypted v1 blob")},
+	}
+
+	writer, err := NewDataWriterV1(&buf, hashFormatId, ct, 0, encryption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, e := range entries {
+		if err := writer.WriteFullEntry(e.hash, e.data); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	_, _, err = writer.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reader, err := NewDataReaderV1(bytes.NewReader(buf.Bytes()), encryption)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if reader.Flags()&FlagHasEncryptionV1 == 0 {
+		t.Error("expected FlagHasEncryptionV1 to be set")
+	}
+
+	readEntries, err := reader.ReadAllEntries()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(readEntries) != len(entries) {
+		t.Fatalf("expected %d entries, got %d", len(entries), len(readEntries))
+	}
+
+	for i, re := range readEntries {
+		if !bytes.Equal(re.Data, entries[i].data) {
+			t.Errorf("entry %d: data mismatch", i)
 		}
 	}
 }
