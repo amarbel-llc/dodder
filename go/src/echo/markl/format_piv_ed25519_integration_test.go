@@ -12,7 +12,7 @@ import (
 func TestPIVSignThenVerifyWithSoftwareKey(t1 *testing.T) {
 	ui.RunTestContext(t1, func(t *ui.TestContext) {
 		mock := makeMockPIVSigner()
-		delete(formats, FormatIdEd25519PIV)
+		resetPIVFormatForTesting()
 		RegisterPIVEd25519Format(mock)
 
 		// Create the PIV-backed private key markl.Id
@@ -57,7 +57,7 @@ func TestPIVSignThenVerifyWithSoftwareKey(t1 *testing.T) {
 func TestPIVSignatureMatchesSoftwareSignature(t1 *testing.T) {
 	ui.RunTestContext(t1, func(t *ui.TestContext) {
 		mock := makeMockPIVSigner()
-		delete(formats, FormatIdEd25519PIV)
+		resetPIVFormatForTesting()
 		RegisterPIVEd25519Format(mock)
 
 		message, repool := FormatHashSha256.GetMarklIdForString("deterministic test")
