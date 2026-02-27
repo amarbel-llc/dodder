@@ -128,3 +128,62 @@ func TestRegisterPIVEd25519FormatAndSign(t1 *testing.T) {
 		t.AssertNoError(err)
 	})
 }
+
+func TestPIVMarklIdTextRoundTrip(t1 *testing.T) {
+	ui.RunTestContext(t1, func(t *ui.TestContext) {
+		mock := makeMockPIVSigner()
+
+		// Ensure format is registered (idempotent)
+		RegisterPIVEd25519Format(mock)
+
+		var original Id
+		ref := EncodePIVReference(mock.GUID(), mock.SlotId())
+		err := original.SetPurposeId(PurposeRepoPrivateKeyV1)
+		t.AssertNoError(err)
+		err = original.SetMarklId(FormatIdEd25519PIV, ref[:])
+		t.AssertNoError(err)
+
+		// Marshal to text
+		text, err := original.MarshalText()
+		t.AssertNoError(err)
+		t.Log("serialized:", string(text))
+
+		if len(text) == 0 {
+			t.Fatal("marshaled text is empty")
+		}
+
+		// Unmarshal from text
+		var decoded Id
+		err = decoded.UnmarshalText(text)
+		t.AssertNoError(err)
+
+		// Verify round-trip
+		t.AssertNoError(AssertEqual(original, decoded))
+
+		if decoded.GetPurposeId() != PurposeRepoPrivateKeyV1 {
+			t.Fatalf(
+				"purpose mismatch: %q != %q",
+				decoded.GetPurposeId(),
+				PurposeRepoPrivateKeyV1,
+			)
+		}
+
+		if decoded.GetMarklFormat().GetMarklFormatId() != FormatIdEd25519PIV {
+			t.Fatalf(
+				"format mismatch: %q != %q",
+				decoded.GetMarklFormat().GetMarklFormatId(),
+				FormatIdEd25519PIV,
+			)
+		}
+
+		// Verify reference bytes survived
+		decodedGUID, decodedSlot, err := DecodePIVReference(decoded.GetBytes())
+		t.AssertNoError(err)
+		if decodedGUID != mock.GUID() {
+			t.Fatalf("GUID mismatch after round-trip")
+		}
+		if decodedSlot != mock.SlotId() {
+			t.Fatalf("slot mismatch after round-trip")
+		}
+	})
+}
