@@ -3,7 +3,9 @@ package dagnabit
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,13 +23,17 @@ type GoListReader struct {
 }
 
 func (r GoListReader) ReadDependencies() ([]Edge, error) {
-	pattern := fmt.Sprintf("./%s/...", r.PackagePrefix)
+	patterns, err := r.listPatterns()
+	if err != nil {
+		return nil, err
+	}
 
-	cmd := exec.Command(
-		"go", "list",
-		"-f", `{{.ImportPath}}{{"\t"}}{{range .Imports}}{{.}} {{end}}`,
-		pattern,
+	args := append(
+		[]string{"list", "-f", `{{.ImportPath}}{{"\t"}}{{range .Imports}}{{.}} {{end}}`},
+		patterns...,
 	)
+
+	cmd := exec.Command("go", args...)
 	cmd.Dir = r.Dir
 
 	out, err := cmd.Output()
@@ -96,6 +102,49 @@ func (r GoListReader) ReadDependencies() ([]Edge, error) {
 	}
 
 	return deduped, scanner.Err()
+}
+
+// listPatterns returns go list patterns that cover all packages under
+// PackagePrefix, including _-prefixed directories that go list's ...
+// wildcard skips by convention. Since go list ignores _-prefixed dirs
+// even with explicit ./_/... patterns, each sub-package must be listed
+// individually.
+func (r GoListReader) listPatterns() ([]string, error) {
+	patterns := []string{fmt.Sprintf("./%s/...", r.PackagePrefix)}
+
+	srcDir := filepath.Join(r.Dir, r.PackagePrefix)
+
+	topEntries, err := os.ReadDir(srcDir)
+	if err != nil {
+		return nil, fmt.Errorf("reading %s: %w", srcDir, err)
+	}
+
+	for _, topEntry := range topEntries {
+		name := topEntry.Name()
+		if !topEntry.IsDir() || !strings.HasPrefix(name, "_") {
+			continue
+		}
+
+		underscoreDir := filepath.Join(srcDir, name)
+
+		subEntries, err := os.ReadDir(underscoreDir)
+		if err != nil {
+			return nil, fmt.Errorf("reading %s: %w", underscoreDir, err)
+		}
+
+		for _, subEntry := range subEntries {
+			if !subEntry.IsDir() {
+				continue
+			}
+
+			patterns = append(
+				patterns,
+				fmt.Sprintf("./%s/%s/%s", r.PackagePrefix, name, subEntry.Name()),
+			)
+		}
+	}
+
+	return patterns, nil
 }
 
 // trimToTwoComponents returns the first two path components (e.g.,
