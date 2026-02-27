@@ -1,0 +1,96 @@
+package dagnabit
+
+import (
+	"bufio"
+	"fmt"
+	"os/exec"
+	"strings"
+)
+
+// TODO: refactor to use golang.org/x/tools/go/packages for direct
+// programmatic access to the import graph instead of shelling out.
+
+// GoListReader reads Go package dependencies by shelling out to `go list`.
+// ModulePath is the Go module path (e.g., "code.linenisgreat.com/dodder/go").
+// Dir is the working directory to run `go list` from.
+// PackagePrefix is the directory prefix for internal packages (e.g., "src").
+type GoListReader struct {
+	ModulePath    string
+	Dir           string
+	PackagePrefix string
+}
+
+func (r GoListReader) ReadDependencies() ([]Edge, error) {
+	pattern := fmt.Sprintf("./%s/...", r.PackagePrefix)
+
+	cmd := exec.Command(
+		"go", "list",
+		"-f", `{{.ImportPath}}{{"\t"}}{{range .Imports}}{{.}} {{end}}`,
+		pattern,
+	)
+	cmd.Dir = r.Dir
+
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("go list: %w", err)
+	}
+
+	internalPrefix := r.ModulePath + "/" + r.PackagePrefix + "/"
+	var edges []Edge
+
+	scanner := bufio.NewScanner(strings.NewReader(string(out)))
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		parts := strings.SplitN(line, "\t", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		sourceFull := parts[0]
+
+		if !strings.HasPrefix(sourceFull, internalPrefix) {
+			continue
+		}
+
+		source := trimToTwoComponents(
+			strings.TrimPrefix(sourceFull, internalPrefix),
+		)
+
+		if source == "" {
+			continue
+		}
+
+		imports := strings.Fields(parts[1])
+
+		for _, imp := range imports {
+			if !strings.HasPrefix(imp, internalPrefix) {
+				continue
+			}
+
+			target := trimToTwoComponents(
+				strings.TrimPrefix(imp, internalPrefix),
+			)
+
+			if target == "" || target == source {
+				continue
+			}
+
+			edges = append(edges, Edge{Source: source, Target: target})
+		}
+	}
+
+	return edges, scanner.Err()
+}
+
+// trimToTwoComponents returns the first two path components (e.g.,
+// "alfa/errors/context" -> "alfa/errors"). Returns "" if fewer than 2.
+func trimToTwoComponents(path string) string {
+	parts := strings.SplitN(path, "/", 3)
+	if len(parts) < 2 {
+		return ""
+	}
+
+	return parts[0] + "/" + parts[1]
+}
