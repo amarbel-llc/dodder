@@ -12,6 +12,7 @@ import (
 // actual formats
 const (
 	// keep sorted
+	FormatIdEd25519PIV = "ed25519_piv"
 	FormatIdEd25519Pub = "ed25519_pub"
 	FormatIdEd25519Sec = "ed25519_sec"
 	FormatIdEd25519Sig = "ed25519_sig"
