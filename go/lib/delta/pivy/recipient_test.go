@@ -45,3 +45,74 @@ func TestRecipientWrapProducesValidStanza(t *testing.T) {
 		t.Fatalf("body length: got %d, want 32", len(s.Body))
 	}
 }
+
+func TestWrapUnwrapRoundTrip(t *testing.T) {
+	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recipient := &Recipient{Pubkey: privKey.PublicKey()}
+
+	fileKey := make([]byte, 16)
+	if _, err := rand.Read(fileKey); err != nil {
+		t.Fatal(err)
+	}
+
+	stanzas, err := recipient.Wrap(fileKey)
+	if err != nil {
+		t.Fatalf("Wrap: %v", err)
+	}
+
+	identity := &Identity{
+		ecdhFunc: softwareECDH(privKey),
+	}
+
+	decryptedKey, err := identity.Unwrap(stanzas)
+	if err != nil {
+		t.Fatalf("Unwrap: %v", err)
+	}
+
+	if len(decryptedKey) != len(fileKey) {
+		t.Fatalf("key length: got %d, want %d", len(decryptedKey), len(fileKey))
+	}
+
+	for i := range fileKey {
+		if decryptedKey[i] != fileKey[i] {
+			t.Fatalf("key mismatch at byte %d", i)
+		}
+	}
+}
+
+func TestUnwrapWrongKeyFails(t *testing.T) {
+	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	wrongKey, err := ecdh.P256().GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	recipient := &Recipient{Pubkey: privKey.PublicKey()}
+
+	fileKey := make([]byte, 16)
+	if _, err := rand.Read(fileKey); err != nil {
+		t.Fatal(err)
+	}
+
+	stanzas, err := recipient.Wrap(fileKey)
+	if err != nil {
+		t.Fatalf("Wrap: %v", err)
+	}
+
+	identity := &Identity{
+		ecdhFunc: softwareECDH(wrongKey),
+	}
+
+	_, err = identity.Unwrap(stanzas)
+	if err == nil {
+		t.Fatal("expected error unwrapping with wrong key")
+	}
+}
