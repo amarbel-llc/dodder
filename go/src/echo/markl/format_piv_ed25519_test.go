@@ -97,6 +97,9 @@ func makeMockPIVSigner() *mockPIVSigner {
 func TestRegisterPIVEd25519FormatAndSign(t1 *testing.T) {
 	ui.RunTestContext(t1, func(t *ui.TestContext) {
 		mock := makeMockPIVSigner()
+		// Remove any previously registered PIV format so this test's mock
+		// signer is the one captured by the closure.
+		delete(formats, FormatIdEd25519PIV)
 		RegisterPIVEd25519Format(mock)
 
 		// Create a markl.Id with the PIV format
