@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 )
 
@@ -14,7 +14,7 @@ type (
 )
 
 type ErrFutureStoreVersion struct {
-	interfaces.StoreVersion
+	domain_interfaces.StoreVersion
 }
 
 func (err ErrFutureStoreVersion) Error() string {

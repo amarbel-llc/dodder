@@ -3,7 +3,7 @@ package store_version
 import (
 	"strconv"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/src/alfa/errors"
 	"code.linenisgreat.com/dodder/go/src/bravo/values"
 )
@@ -31,8 +31,8 @@ type Getter interface {
 }
 
 func Equals(
-	a interfaces.StoreVersion,
-	others ...interfaces.StoreVersion,
+	a domain_interfaces.StoreVersion,
+	others ...domain_interfaces.StoreVersion,
 ) bool {
 	for _, other := range others {
 		if a.GetInt() == other.GetInt() {
@@ -43,27 +43,27 @@ func Equals(
 	return false
 }
 
-func Less(a, b interfaces.StoreVersion) bool {
+func Less(a, b domain_interfaces.StoreVersion) bool {
 	return a.GetInt() < b.GetInt()
 }
 
-func LessOrEqual(a, b interfaces.StoreVersion) bool {
+func LessOrEqual(a, b domain_interfaces.StoreVersion) bool {
 	return a.GetInt() <= b.GetInt()
 }
 
-func Greater(a, b interfaces.StoreVersion) bool {
+func Greater(a, b domain_interfaces.StoreVersion) bool {
 	return a.GetInt() > b.GetInt()
 }
 
-func GreaterOrEqual(a, b interfaces.StoreVersion) bool {
+func GreaterOrEqual(a, b domain_interfaces.StoreVersion) bool {
 	return a.GetInt() >= b.GetInt()
 }
 
-func (version Version) Less(b interfaces.StoreVersion) bool {
+func (version Version) Less(b domain_interfaces.StoreVersion) bool {
 	return Less(version, b)
 }
 
-func (version Version) LessOrEqual(b interfaces.StoreVersion) bool {
+func (version Version) LessOrEqual(b domain_interfaces.StoreVersion) bool {
 	return LessOrEqual(version, b)
 }
 
@@ -93,6 +93,6 @@ func (version *Version) Set(p string) (err error) {
 	return err
 }
 
-func IsVersionLessOrEqualToV11(other interfaces.StoreVersion) bool {
+func IsVersionLessOrEqualToV11(other domain_interfaces.StoreVersion) bool {
 	return LessOrEqual(other, V10)
 }

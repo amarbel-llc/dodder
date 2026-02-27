@@ -29,7 +29,7 @@ type Store struct {
 
 	envRepo      env_repo.Env
 	lockSmith    interfaces.LockSmith
-	storeVersion interfaces.StoreVersion
+	storeVersion domain_interfaces.StoreVersion
 	clock        ids.Clock
 
 	inventoryListBlobStore
@@ -107,7 +107,7 @@ func (store *Store) Flush() (err error) {
 
 // TODO pass errors.Context
 func (store *Store) FormatForVersion(
-	storeVersion interfaces.StoreVersion,
+	storeVersion domain_interfaces.StoreVersion,
 ) sku.ListCoder {
 	tipe := ids.GetOrPanic(
 		store.envRepo.GetConfigPublic().Blob.GetInventoryListTypeId(),
