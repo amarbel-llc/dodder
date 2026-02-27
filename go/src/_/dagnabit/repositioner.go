@@ -2,6 +2,7 @@ package dagnabit
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -23,10 +24,29 @@ func (r *Repositioner) Run() error {
 
 	heights, err := TopologicalSort(edges)
 	if err != nil {
-		return err
+		return fmt.Errorf("topological sort: %w", err)
 	}
 
+	type nodeHeight struct {
+		node   string
+		height int
+	}
+
+	sorted := make([]nodeHeight, 0, len(heights))
 	for node, height := range heights {
+		sorted = append(sorted, nodeHeight{node: node, height: height})
+	}
+
+	sort.Slice(sorted, func(i, j int) bool {
+		if sorted[i].height != sorted[j].height {
+			return sorted[i].height < sorted[j].height
+		}
+		return sorted[i].node < sorted[j].node
+	})
+
+	for _, nh := range sorted {
+		node := nh.node
+		height := nh.height
 		requiredLevel, err := r.Mapper.LevelName(height)
 		if err != nil {
 			return fmt.Errorf("mapping height %d for %s: %w", height, node, err)

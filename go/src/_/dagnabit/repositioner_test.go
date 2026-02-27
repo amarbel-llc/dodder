@@ -146,3 +146,57 @@ type errorReader struct {
 func (r errorReader) ReadDependencies() ([]Edge, error) {
 	return nil, r.err
 }
+
+func TestRepositionerCycleError(t *testing.T) {
+	reader := stubReader{
+		edges: []Edge{
+			{Source: "level0/pkg_a", Target: "level0/pkg_b"},
+			{Source: "level0/pkg_b", Target: "level0/pkg_a"},
+		},
+	}
+
+	mapper := sliceLevelMapper{levels: []string{"level0", "level1"}}
+	mover := &recordingMover{}
+
+	r := Repositioner{
+		Reader: reader,
+		Mapper: mapper,
+		Mover:  mover,
+	}
+
+	err := r.Run()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "cycle") {
+		t.Errorf("expected error to mention cycle, got %q", err.Error())
+	}
+}
+
+func TestRepositionerMapperError(t *testing.T) {
+	// With only 1 level defined, height 1 is out of range
+	reader := stubReader{
+		edges: []Edge{
+			{Source: "level0/pkg_a", Target: "level0/pkg_b"},
+		},
+	}
+
+	mapper := sliceLevelMapper{levels: []string{"level0"}}
+	mover := &recordingMover{}
+
+	r := Repositioner{
+		Reader: reader,
+		Mapper: mapper,
+		Mover:  mover,
+	}
+
+	err := r.Run()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "mapping height") {
+		t.Errorf("expected error to contain %q, got %q", "mapping height", err.Error())
+	}
+}
