@@ -27,16 +27,7 @@ func (cmd InfoSSHAgent) Run(req command.Request) {
 	}
 
 	for _, key := range keys {
-		var sshId markl.Id
-		if err := sshId.SetMarklId(
-			markl.FormatIdEd25519SSH,
-			[]byte(key),
-		); err != nil {
-			errors.ContextCancelWithError(req, err)
-			return
-		}
-
-		text, err := sshId.MarshalText()
+		text, err := key.MarshalText()
 		if err != nil {
 			errors.ContextCancelWithError(req, err)
 			return

@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func DiscoverSSHAgentEd25519Keys() ([]ed25519.PublicKey, error) {
+func DiscoverSSHAgentEd25519Keys() ([]Id, error) {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	if socket == "" {
 		return nil, errors.Errorf("SSH_AUTH_SOCK not set")
@@ -28,7 +28,7 @@ func DiscoverSSHAgentEd25519Keys() ([]ed25519.PublicKey, error) {
 		return nil, errors.Wrapf(err, "failed to list SSH agent keys")
 	}
 
-	var ed25519Keys []ed25519.PublicKey
+	var ids []Id
 
 	for _, key := range keys {
 		if key.Type() != ssh.KeyAlgoED25519 {
@@ -50,8 +50,13 @@ func DiscoverSSHAgentEd25519Keys() ([]ed25519.PublicKey, error) {
 			continue
 		}
 
-		ed25519Keys = append(ed25519Keys, pubKey)
+		var id Id
+		if err := id.SetMarklId(FormatIdEd25519SSH, []byte(pubKey)); err != nil {
+			continue
+		}
+
+		ids = append(ids, id)
 	}
 
-	return ed25519Keys, nil
+	return ids, nil
 }
