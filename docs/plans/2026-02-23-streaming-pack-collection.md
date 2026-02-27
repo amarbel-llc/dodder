@@ -13,10 +13,10 @@
 ### Task 1: Rename `hash` to `digest` in `packedBlob`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v0.go:18-21` (struct definition)
-- Modify: `go/src/india/blob_stores/pack_v0.go` (all `blob.hash` → `blob.digest`, `blobs[i].hash` → `blobs[i].digest`)
-- Modify: `go/src/india/blob_stores/pack_v1.go` (all `blob.hash` → `blob.digest`, `targetBlob.hash` → `targetBlob.digest`, `baseBlob.hash` → `baseBlob.digest`)
-- Modify: `go/src/india/blob_stores/pack_split_test.go` (all `hash:` → `digest:`)
+- Modify: `go/internal/india/blob_stores/pack_v0.go:18-21` (struct definition)
+- Modify: `go/internal/india/blob_stores/pack_v0.go` (all `blob.hash` → `blob.digest`, `blobs[i].hash` → `blobs[i].digest`)
+- Modify: `go/internal/india/blob_stores/pack_v1.go` (all `blob.hash` → `blob.digest`, `targetBlob.hash` → `targetBlob.digest`, `baseBlob.hash` → `baseBlob.digest`)
+- Modify: `go/internal/india/blob_stores/pack_split_test.go` (all `hash:` → `digest:`)
 
 **Step 1: Rename the struct field**
 
@@ -69,7 +69,7 @@ Expected: All tests pass
 **Step 7: Commit**
 
 ```bash
-git add go/src/india/blob_stores/pack_v0.go go/src/india/blob_stores/pack_v1.go go/src/india/blob_stores/pack_split_test.go
+git add go/internal/india/blob_stores/pack_v0.go go/internal/india/blob_stores/pack_v1.go go/internal/india/blob_stores/pack_split_test.go
 git commit -m "refactor: rename packedBlob.hash to packedBlob.digest"
 ```
 
@@ -78,8 +78,8 @@ git commit -m "refactor: rename packedBlob.hash to packedBlob.digest"
 ### Task 2: Add `packedBlobMeta` struct and refactor `splitBlobChunks`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v0.go` (add struct, change `splitBlobChunks` signature)
-- Modify: `go/src/india/blob_stores/pack_split_test.go` (update tests for new type)
+- Modify: `go/internal/india/blob_stores/pack_v0.go` (add struct, change `splitBlobChunks` signature)
+- Modify: `go/internal/india/blob_stores/pack_split_test.go` (update tests for new type)
 
 **Step 1: Add `packedBlobMeta` struct**
 
@@ -188,7 +188,7 @@ Do NOT commit yet. Proceed to Task 3 which makes the callers compile.
 ### Task 3: Add `GetBlobSize` and refactor V0 `Pack()` to two-phase collection
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v0.go` (add `GetBlobSize`, rewrite `Pack()` collection + chunking)
+- Modify: `go/internal/india/blob_stores/pack_v0.go` (add `GetBlobSize`, rewrite `Pack()` collection + chunking)
 
 **Step 1: Add `GetBlobSize` method on `inventoryArchiveV0`**
 
@@ -455,7 +455,7 @@ Expected: This may fail to compile because V1 Pack() is broken. If so, defer tes
 ### Task 4: Refactor V1 `Pack()` to two-phase collection
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v1.go` (rewrite collection + chunking, update helpers)
+- Modify: `go/internal/india/blob_stores/pack_v1.go` (rewrite collection + chunking, update helpers)
 
 **Step 1: Add `GetBlobSize` method on `inventoryArchiveV1`**
 
@@ -583,7 +583,7 @@ Expected: All tests pass
 **Step 9: Commit Tasks 2-4 together**
 
 ```bash
-git add go/src/india/blob_stores/pack_v0.go go/src/india/blob_stores/pack_v1.go go/src/india/blob_stores/pack_split_test.go
+git add go/internal/india/blob_stores/pack_v0.go go/internal/india/blob_stores/pack_v1.go go/internal/india/blob_stores/pack_split_test.go
 git commit -m "feat: stream pack collection to bound memory to one chunk at a time
 
 Collect only digest + size metadata in the first pass, split into

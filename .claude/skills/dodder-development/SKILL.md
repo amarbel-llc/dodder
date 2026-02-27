@@ -83,10 +83,11 @@ fixture lifecycle and how to write new integration tests.
 
 ## NATO Phonetic Module Hierarchy
 
-The source tree in `go/src/` uses NATO phonetic alphabet names to enforce a strict
-dependency DAG. Each layer may only import from layers below it alphabetically.
-This prevents circular dependencies and makes the dependency direction visible in
-the directory name alone.
+The source tree is split into two directories — `go/lib/` for domain-agnostic
+utility packages and `go/internal/` for dodder-specific packages. Both use NATO
+phonetic alphabet names to enforce a strict dependency DAG. Each layer may only
+import from layers below it alphabetically. This prevents circular dependencies
+and makes the dependency direction visible in the directory name alone.
 
 | Layer | Key Packages | Purpose |
 |-------|-------------|---------|
@@ -158,7 +159,7 @@ defer sku.GetTransactedPool().Put(cloned)
 once when the caller is done with the element. Three enforcement layers exist:
 
 1. **Static analyzer** (`just check-go-repool`): A CFG-based `go vet` checker in
-   `src/alfa/analyzers/repool/`. It detects discarded repool functions (blank `_`
+   `lib/alfa/analyzers/repool/`. It detects discarded repool functions (blank `_`
    without `//repool:owned`) and repool variables not called on all code paths.
 
 2. **Runtime debug poisoning** (build tag `debug`): Wraps every repool function
@@ -205,17 +206,19 @@ code formatted by these tools.
 
 ### Source Tree
 
-All Go source lives under `go/src/`, organized by NATO layer:
+Go source lives under two directories, organized by NATO layer:
 
-- `go/src/alfa/` through `go/src/yankee/` contain the module packages.
-- Each NATO directory holds one or more Go packages (e.g., `go/src/echo/ids/`,
-  `go/src/echo/format/`).
+- `go/lib/` contains domain-agnostic utility packages (`_` through echo tiers).
+- `go/internal/` contains dodder-specific packages (`_` through yankee tiers).
+- Each NATO directory holds one or more Go packages (e.g., `go/internal/echo/ids/`,
+  `go/lib/alfa/errors/`).
 - Import paths follow the form
-  `code.linenisgreat.com/dodder/go/src/{layer}/{package}`.
+  `code.linenisgreat.com/dodder/go/lib/{tier}/{package}` for lib packages and
+  `code.linenisgreat.com/dodder/go/internal/{tier}/{package}` for internal packages.
 
 ### Tests
 
-- **Unit tests:** `*_test.go` files alongside source throughout `go/src/`.
+- **Unit tests:** `*_test.go` files alongside source throughout `go/lib/` and `go/internal/`.
 - **Integration tests:** `zz-tests_bats/` contains 40+ `.bats` files using the
   BATS framework.
 - **Versioned fixtures:** `zz-tests_bats/migration/` holds committed test data
@@ -231,11 +234,11 @@ All Go source lives under `go/src/`, organized by NATO layer:
 
 ## Adding a New Command
 
-Commands live in `go/src/yankee/commands_dodder/`. Each command is a Go struct
-implementing the command interface defined in `go/src/juliett/command/`. Follow
+Commands live in `go/internal/yankee/commands_dodder/`. Each command is a Go struct
+implementing the command interface defined in `go/internal/juliett/command/`. Follow
 these steps:
 
-1. Create a new file in `go/src/yankee/commands_dodder/` following the naming
+1. Create a new file in `go/internal/yankee/commands_dodder/` following the naming
    pattern of existing commands.
 2. Implement the `command.Command` interface: define flags via `flag.FlagSet`,
    implement the `Run` method with request context and configuration.
@@ -251,13 +254,13 @@ these steps:
 
 When adding blob store types or registering new coders:
 
-1. **Type constant:** Add the type constant to `go/src/echo/ids/types_builtin.go`.
+1. **Type constant:** Add the type constant to `go/internal/echo/ids/types_builtin.go`.
 2. **Init registration:** Register the type in the `init()` function of the same
    file.
 3. **Coder registration:** Add the type-to-coder mapping in the appropriate IO
-   file (e.g., `go/src/echo/blob_store_configs/io.go`).
+   file (e.g., `go/internal/echo/blob_store_configs/io.go`).
 4. **Interface implementation:** Implement the relevant interface from
-   `go/src/alfa/interfaces/` or `go/src/alfa/domain_interfaces/`. Use existing
+   `go/lib/alfa/interfaces/` or `go/internal/alfa/domain_interfaces/`. Use existing
    implementations as templates.
 5. **Triple-hyphen format:** If the type is serialized through the triple-hyphen
    IO system (`foxtrot/triple_hyphen_io`), add the format version mapping.
@@ -293,7 +296,7 @@ issues, start by examining inventory lists.
 The system uses generic typed blob stores (`typed_blob_store.BlobStore[T, TPtr]`)
 for compile-time type safety. Multiple struct versions implement the same
 interface, enabling backward-compatible format evolution. Common interfaces live in
-`go/src/alfa/interfaces/` (e.g., `BlobStoreConfigImmutable`), with versioned
+`go/lib/alfa/interfaces/` (e.g., `BlobStoreConfigImmutable`), with versioned
 implementations in the appropriate NATO layer.
 
 ## Reference Documents

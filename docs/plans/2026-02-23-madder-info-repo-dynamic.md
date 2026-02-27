@@ -13,7 +13,7 @@
 ### Task 1: Add `ConfigKeyValues` function with base Config support
 
 **Files:**
-- Create: `go/src/golf/blob_store_configs/key_values.go`
+- Create: `go/internal/golf/blob_store_configs/key_values.go`
 
 **Step 1: Write the function**
 
@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 )
 
 // ConfigKeyValues returns a map of TOML-tag-named keys to string-formatted
@@ -246,7 +246,7 @@ test: add BATS tests for dynamic blob_store-info-repo keys
 ### Task 3: Rewrite madder info-repo to use ConfigKeyValues
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/info_repo.go`
+- Modify: `go/internal/lima/commands_madder/info_repo.go`
 
 **Step 1: Rewrite the command handler**
 
@@ -262,13 +262,13 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/delta/xdg"
-	"code.linenisgreat.com/dodder/go/src/echo/directory_layout"
-	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
-	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
-	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/delta/xdg"
+	"code.linenisgreat.com/dodder/go/internal/echo/directory_layout"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
+	"code.linenisgreat.com/dodder/go/internal/india/blob_stores"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/kilo/command_components_madder"
 )
 
 func init() {
@@ -415,7 +415,7 @@ refactor: use blob_store-info-repo in archive encryption init test
 ### Task 5: Backward-compat for dodder info-repo legacy key names
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/info_repo.go`
+- Modify: `go/internal/lima/commands_madder/info_repo.go`
 
 The existing dodder `info-repo` tests use `blob_stores-0-encryption`, `blob_stores-0-config-path`, and `compression-type`. The new system uses bare names (`encryption`, `config-path`). The legacy `blob_stores-0-*` prefix keys are used through dodder's own info-repo command (different code path in `yankee/commands_dodder/info_repo.go`), so no backward compat needed in madder's handler. Just verify existing tests still pass.
 
@@ -448,8 +448,8 @@ Expected: `complete_subcmd` test PASS
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `go/src/golf/blob_store_configs/key_values.go` | Create | `ConfigKeyValues` + `ConfigKeyNames` functions |
-| `go/src/lima/commands_madder/info_repo.go` | Rewrite | Dynamic key lookup via `ConfigKeyValues` |
+| `go/internal/golf/blob_store_configs/key_values.go` | Create | `ConfigKeyValues` + `ConfigKeyNames` functions |
+| `go/internal/lima/commands_madder/info_repo.go` | Rewrite | Dynamic key lookup via `ConfigKeyValues` |
 | `zz-tests_bats/blob_store_info_repo.bats` | Create | BATS tests for all dynamic keys |
 | `zz-tests_bats/init.bats` | Modify | Use `blob_store-info-repo` instead of grep |
 

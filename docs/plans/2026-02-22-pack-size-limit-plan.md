@@ -13,13 +13,13 @@
 ### Task 1: Add `MaxPackSize` to config interface and V2 struct
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/main.go:69-80` (add to `ConfigInventoryArchiveDelta`)
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v2.go:12-17` (add field)
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v2.go` (add getter)
+- Modify: `go/internal/golf/blob_store_configs/main.go:69-80` (add to `ConfigInventoryArchiveDelta`)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v2.go:12-17` (add field)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v2.go` (add getter)
 
 **Step 1: Add `GetMaxPackSize()` to `ConfigInventoryArchiveDelta` interface**
 
-In `go/src/golf/blob_store_configs/main.go`, add to the `ConfigInventoryArchiveDelta` interface:
+In `go/internal/golf/blob_store_configs/main.go`, add to the `ConfigInventoryArchiveDelta` interface:
 
 ```go
 ConfigInventoryArchiveDelta interface {
@@ -31,7 +31,7 @@ ConfigInventoryArchiveDelta interface {
 
 **Step 2: Add field to `TomlInventoryArchiveV2`**
 
-In `go/src/golf/blob_store_configs/toml_inventory_archive_v2.go`, add to the struct:
+In `go/internal/golf/blob_store_configs/toml_inventory_archive_v2.go`, add to the struct:
 
 ```go
 type TomlInventoryArchiveV2 struct {
@@ -60,13 +60,13 @@ Expected: compile errors in V1 (missing `GetMaxPackSize`) -- that's expected, Ta
 ### Task 2: Add `MaxPackSize` to V1 struct, getter, and upgrade paths
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go:23-29` (add field)
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go:114-126` (upgrade path)
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v0.go:80-99` (upgrade path)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go:23-29` (add field)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go:114-126` (upgrade path)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go:80-99` (upgrade path)
 
 **Step 1: Add field and getter to V1**
 
-In `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go`, add `MaxPackSize` field:
+In `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go`, add `MaxPackSize` field:
 
 ```go
 type TomlInventoryArchiveV1 struct {
@@ -89,7 +89,7 @@ func (config TomlInventoryArchiveV1) GetMaxPackSize() uint64 {
 
 **Step 2: Update V0 -> V1 upgrade to set default**
 
-In `go/src/golf/blob_store_configs/toml_inventory_archive_v0.go`, the `Upgrade()` method:
+In `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go`, the `Upgrade()` method:
 
 ```go
 upgraded := &TomlInventoryArchiveV1{
@@ -109,7 +109,7 @@ upgraded := &TomlInventoryArchiveV1{
 
 **Step 3: Update V1 -> V2 upgrade to carry field forward**
 
-In `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go`, the `Upgrade()` method:
+In `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go`, the `Upgrade()` method:
 
 ```go
 upgraded := &TomlInventoryArchiveV2{
@@ -137,12 +137,12 @@ Default 512 MiB. Carried through V0->V1->V2 upgrade paths.
 ### Task 3: Add `splitBlobChunks` helper with unit test
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v0.go` (add helper after `packedBlob` type)
-- Create: `go/src/india/blob_stores/pack_split_test.go`
+- Modify: `go/internal/india/blob_stores/pack_v0.go` (add helper after `packedBlob` type)
+- Create: `go/internal/india/blob_stores/pack_split_test.go`
 
 **Step 1: Write failing test**
 
-Create `go/src/india/blob_stores/pack_split_test.go`:
+Create `go/internal/india/blob_stores/pack_split_test.go`:
 
 ```go
 //go:build test && debug
@@ -235,7 +235,7 @@ Expected: FAIL with "undefined: splitBlobChunks"
 
 **Step 3: Write implementation**
 
-In `go/src/india/blob_stores/pack_v0.go`, after the `packedBlob` struct (line 19):
+In `go/internal/india/blob_stores/pack_v0.go`, after the `packedBlob` struct (line 19):
 
 ```go
 // splitBlobChunks partitions sorted blobs into chunks where each chunk's
@@ -291,11 +291,11 @@ feat: add splitBlobChunks helper for pack size limiting
 ### Task 4: Integrate splitting into V1 `Pack()`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v1.go:44-461`
+- Modify: `go/internal/india/blob_stores/pack_v1.go:44-461`
 
 **Step 1: Write failing test**
 
-Add to `go/src/india/blob_stores/pack_v1_test.go`:
+Add to `go/internal/india/blob_stores/pack_v1_test.go`:
 
 ```go
 func TestPackV1SplitsWhenExceedingMaxPackSize(t *testing.T) {
@@ -403,7 +403,7 @@ Expected: FAIL -- only 1 data file created (no splitting yet).
 
 **Step 3: Refactor V1 `Pack()` to use chunk loop**
 
-In `go/src/india/blob_stores/pack_v1.go`, after the Phase 1 sort (line 100), replace the rest of the method body. Extract the archive-writing logic (Phases 2-7) into a `packChunk` method on `inventoryArchiveV1`, then loop:
+In `go/internal/india/blob_stores/pack_v1.go`, after the Phase 1 sort (line 100), replace the rest of the method body. Extract the archive-writing logic (Phases 2-7) into a `packChunk` method on `inventoryArchiveV1`, then loop:
 
 ```go
 // After sort and empty check...
@@ -436,8 +436,8 @@ feat: V1 pack splits into multiple archives when exceeding MaxPackSize
 ### Task 5: Integrate splitting into V0 `Pack()`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v0.go:21-267`
-- Modify: `go/src/india/blob_stores/main.go` or `store_inventory_archive.go` (add `GetMaxPackSize` to V0 config path)
+- Modify: `go/internal/india/blob_stores/pack_v0.go:21-267`
+- Modify: `go/internal/india/blob_stores/main.go` or `store_inventory_archive.go` (add `GetMaxPackSize` to V0 config path)
 
 **Step 1: Handle V0's config type**
 

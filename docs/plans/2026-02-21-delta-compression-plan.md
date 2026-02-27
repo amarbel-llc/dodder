@@ -15,9 +15,9 @@
 ### Task 1: Add disambiguation comments to local hash-bucketed config files
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/toml_v0.go`
-- Modify: `go/src/golf/blob_store_configs/toml_v1.go`
-- Modify: `go/src/golf/blob_store_configs/toml_v2.go`
+- Modify: `go/internal/golf/blob_store_configs/toml_v0.go`
+- Modify: `go/internal/golf/blob_store_configs/toml_v1.go`
+- Modify: `go/internal/golf/blob_store_configs/toml_v2.go`
 
 **Step 1: Add comments to each file**
 
@@ -60,7 +60,7 @@ chore(golf/blob_store_configs): add disambiguation comments to local hash-bucket
 ### Task 2: Add v1 type constants and entry types to `echo/inventory_archive`
 
 **Files:**
-- Modify: `go/src/echo/inventory_archive/types.go`
+- Modify: `go/internal/echo/inventory_archive/types.go`
 
 **Step 1: Add v1 constants**
 
@@ -136,11 +136,11 @@ feat(echo/inventory_archive): add v1 constants and entry types for delta compres
 ### Task 3: Add delta algorithm interface and registry
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/delta_algorithm.go`
+- Create: `go/internal/echo/inventory_archive/delta_algorithm.go`
 
 **Step 1: Write the failing test**
 
-Create `go/src/echo/inventory_archive/delta_algorithm_test.go`:
+Create `go/internal/echo/inventory_archive/delta_algorithm_test.go`:
 
 ```go
 //go:build test && debug
@@ -195,7 +195,7 @@ Expected: FAIL — types not defined.
 
 **Step 3: Write the interface and registry**
 
-Create `go/src/echo/inventory_archive/delta_algorithm.go`:
+Create `go/internal/echo/inventory_archive/delta_algorithm.go`:
 
 ```go
 package inventory_archive
@@ -203,8 +203,8 @@ package inventory_archive
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 // DeltaAlgorithm computes and applies binary deltas between blobs.
@@ -288,8 +288,8 @@ feat(echo/inventory_archive): add DeltaAlgorithm interface and registry
 ### Task 4: Implement xdelta delta algorithm
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/delta_xdelta.go`
-- Create: `go/src/echo/inventory_archive/delta_xdelta_test.go`
+- Create: `go/internal/echo/inventory_archive/delta_xdelta.go`
+- Create: `go/internal/echo/inventory_archive/delta_xdelta_test.go`
 
 **Step 1: Add xdelta Go dependency**
 
@@ -302,7 +302,7 @@ Run: `cd go && go get <chosen-library>`
 
 **Step 2: Write the failing test**
 
-Create `go/src/echo/inventory_archive/delta_xdelta_test.go`:
+Create `go/internal/echo/inventory_archive/delta_xdelta_test.go`:
 
 ```go
 //go:build test && debug
@@ -314,8 +314,8 @@ import (
 	"io"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl_io"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 func makeMockBlobReader(data []byte) domain_interfaces.BlobReader {
@@ -446,7 +446,7 @@ Expected: FAIL — `Xdelta` type not defined.
 
 **Step 4: Implement the xdelta algorithm**
 
-Create `go/src/echo/inventory_archive/delta_xdelta.go`:
+Create `go/internal/echo/inventory_archive/delta_xdelta.go`:
 
 ```go
 package inventory_archive
@@ -454,8 +454,8 @@ package inventory_archive
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	// Import chosen xdelta library
 )
 
@@ -555,17 +555,17 @@ feat(echo/inventory_archive): implement xdelta DeltaAlgorithm
 ### Task 5: Add base selection interfaces
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/base_selector.go`
+- Create: `go/internal/echo/inventory_archive/base_selector.go`
 
 **Step 1: Write the interface file**
 
-Create `go/src/echo/inventory_archive/base_selector.go`:
+Create `go/internal/echo/inventory_archive/base_selector.go`:
 
 ```go
 package inventory_archive
 
 import (
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 )
 
 // BlobMetadata describes a blob candidate for delta packing.
@@ -618,12 +618,12 @@ feat(echo/inventory_archive): add BaseSelector, BlobSet, DeltaAssignments interf
 ### Task 6: Implement size-based base selection strategy
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/base_selector_size.go`
-- Create: `go/src/echo/inventory_archive/base_selector_size_test.go`
+- Create: `go/internal/echo/inventory_archive/base_selector_size.go`
+- Create: `go/internal/echo/inventory_archive/base_selector_size_test.go`
 
 **Step 1: Write the failing test**
 
-Create `go/src/echo/inventory_archive/base_selector_size_test.go`:
+Create `go/internal/echo/inventory_archive/base_selector_size_test.go`:
 
 ```go
 //go:build test && debug
@@ -807,7 +807,7 @@ Expected: FAIL — `SizeBasedSelector` not defined.
 
 **Step 3: Implement the size-based selector**
 
-Create `go/src/echo/inventory_archive/base_selector_size.go`:
+Create `go/internal/echo/inventory_archive/base_selector_size.go`:
 
 ```go
 package inventory_archive
@@ -912,7 +912,7 @@ feat(echo/inventory_archive): implement size-based BaseSelector strategy
 ### Task 7: Register v1 type constants
 
 **Files:**
-- Modify: `go/src/echo/ids/types_builtin.go`
+- Modify: `go/internal/echo/ids/types_builtin.go`
 
 **Step 1: Add type constants**
 
@@ -951,13 +951,13 @@ feat(echo/ids): register inventory archive v1 config type constant
 ### Task 8: Add delta config interface and `TomlInventoryArchiveV1`
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/main.go`
-- Create: `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go`
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v0.go`
+- Modify: `go/internal/golf/blob_store_configs/main.go`
+- Create: `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go`
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go`
 
 **Step 1: Add `DeltaConfigImmutable` and `ConfigInventoryArchiveDelta` interfaces**
 
-In `go/src/golf/blob_store_configs/main.go`, add after the
+In `go/internal/golf/blob_store_configs/main.go`, add after the
 `ConfigInventoryArchive` interface block:
 
 ```go
@@ -977,18 +977,18 @@ ConfigInventoryArchiveDelta interface {
 
 **Step 2: Create `TomlInventoryArchiveV1`**
 
-Create `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go`:
+Create `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go`:
 
 ```go
 package blob_store_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/src/echo/ids"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/internal/echo/ids"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 type DeltaConfig struct {
@@ -1092,7 +1092,7 @@ func (config TomlInventoryArchiveV1) GetDeltaSizeRatio() float64 {
 
 **Step 3: Add `Upgrade()` to `TomlInventoryArchiveV0`**
 
-In `go/src/golf/blob_store_configs/toml_inventory_archive_v0.go`, add the
+In `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go`, add the
 `ConfigUpgradeable` interface assertion and method:
 
 ```go
@@ -1138,12 +1138,12 @@ feat(golf/blob_store_configs): add TomlInventoryArchiveV1 with delta config
 ### Task 9: Implement v1 data writer
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/data_writer_v1.go`
-- Create: `go/src/echo/inventory_archive/data_writer_v1_test.go`
+- Create: `go/internal/echo/inventory_archive/data_writer_v1.go`
+- Create: `go/internal/echo/inventory_archive/data_writer_v1_test.go`
 
 **Step 1: Write the failing test**
 
-Create `go/src/echo/inventory_archive/data_writer_v1_test.go`:
+Create `go/internal/echo/inventory_archive/data_writer_v1_test.go`:
 
 ```go
 //go:build test && debug
@@ -1155,7 +1155,7 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
 )
 
 func TestV1RoundTripFullEntriesOnly(t *testing.T) {
@@ -1341,7 +1341,7 @@ Expected: FAIL — `NewDataWriterV1` not defined.
 
 **Step 3: Implement v1 data writer and reader**
 
-Create `go/src/echo/inventory_archive/data_writer_v1.go`. Follow the same
+Create `go/internal/echo/inventory_archive/data_writer_v1.go`. Follow the same
 structure as `data_writer.go` but:
 
 - Version is `DataFileVersionV1`
@@ -1356,7 +1356,7 @@ structure as `data_writer.go` but:
 - `Close()` returns `[]DataEntryV1` with populated `EntryType`, `DeltaAlgorithm`,
   `BaseHash` fields
 
-Create `go/src/echo/inventory_archive/data_reader_v1.go` with corresponding
+Create `go/internal/echo/inventory_archive/data_reader_v1.go` with corresponding
 reader that parses both full and delta entries.
 
 **Step 4: Run test to verify it passes**
@@ -1375,12 +1375,12 @@ feat(echo/inventory_archive): implement v1 data writer and reader with delta ent
 ### Task 10: Implement v1 index writer and reader
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/index_v1.go`
-- Create: `go/src/echo/inventory_archive/index_v1_test.go`
+- Create: `go/internal/echo/inventory_archive/index_v1.go`
+- Create: `go/internal/echo/inventory_archive/index_v1_test.go`
 
 **Step 1: Write the failing test**
 
-Create `go/src/echo/inventory_archive/index_v1_test.go` following the pattern
+Create `go/internal/echo/inventory_archive/index_v1_test.go` following the pattern
 in `index_test.go`, but using `IndexEntryV1` with `EntryType` and `BaseOffset`
 fields. Test round-trip, lookup, fan-out, empty index, checksum validation, and
 unsorted rejection.
@@ -1392,7 +1392,7 @@ Expected: FAIL.
 
 **Step 3: Implement v1 index writer and reader**
 
-Create `go/src/echo/inventory_archive/index_v1.go` following the `index_writer.go`
+Create `go/internal/echo/inventory_archive/index_v1.go` following the `index_writer.go`
 and `index_reader.go` patterns. Each index entry adds:
 - `entry_type`: 1 byte
 - `base_offset`: 8 bytes uint64 (0 for full entries)
@@ -1415,8 +1415,8 @@ feat(echo/inventory_archive): implement v1 index writer and reader
 ### Task 11: Implement v1 cache writer and reader
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/cache_v1.go`
-- Create: `go/src/echo/inventory_archive/cache_v1_test.go`
+- Create: `go/internal/echo/inventory_archive/cache_v1.go`
+- Create: `go/internal/echo/inventory_archive/cache_v1_test.go`
 
 Follow the same pattern as Task 10 but for cache entries. `CacheEntryV1` adds
 `EntryType` and `BaseOffset` fields.
@@ -1436,10 +1436,10 @@ feat(echo/inventory_archive): implement v1 cache writer and reader
 ### Task 12: Extract v0 inventory archive store to horizontal implementation
 
 **Files:**
-- Rename: `go/src/india/blob_stores/store_inventory_archive.go` -> keep as shared/common code
-- Create: `go/src/india/blob_stores/store_inventory_archive_v0.go`
-- Rename: `go/src/india/blob_stores/pack.go` -> keep `PackableArchive` interface
-- Create: `go/src/india/blob_stores/pack_v0.go`
+- Rename: `go/internal/india/blob_stores/store_inventory_archive.go` -> keep as shared/common code
+- Create: `go/internal/india/blob_stores/store_inventory_archive_v0.go`
+- Rename: `go/internal/india/blob_stores/pack.go` -> keep `PackableArchive` interface
+- Create: `go/internal/india/blob_stores/pack_v0.go`
 
 This is a refactoring task. Extract the current `inventoryArchive` struct into
 `inventoryArchiveV0`. Move the `Pack` method into `pack_v0.go`. Keep shared
@@ -1479,10 +1479,10 @@ refactor(india/blob_stores): extract v0 inventory archive as horizontal implemen
 ### Task 13: Implement v1 inventory archive store with delta packing
 
 **Files:**
-- Create: `go/src/india/blob_stores/store_inventory_archive_v1.go`
-- Create: `go/src/india/blob_stores/pack_v1.go`
-- Create: `go/src/india/blob_stores/pack_v1_test.go`
-- Modify: `go/src/india/blob_stores/main.go`
+- Create: `go/internal/india/blob_stores/store_inventory_archive_v1.go`
+- Create: `go/internal/india/blob_stores/pack_v1.go`
+- Create: `go/internal/india/blob_stores/pack_v1_test.go`
+- Modify: `go/internal/india/blob_stores/main.go`
 
 **Step 1: Create `store_inventory_archive_v1.go`**
 
@@ -1534,7 +1534,7 @@ because `ConfigInventoryArchiveDelta` embeds `ConfigInventoryArchive`.
 
 **Step 4: Write integration test**
 
-Create `go/src/india/blob_stores/pack_v1_test.go` that:
+Create `go/internal/india/blob_stores/pack_v1_test.go` that:
 - Creates a loose blob store with several similar blobs
 - Creates a v1 inventory archive store with delta enabled
 - Calls `Pack`

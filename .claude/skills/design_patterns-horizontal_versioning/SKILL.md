@@ -70,7 +70,7 @@ upgraded forward.
 Defined once per data structure. All versions implement it.
 
 ```go
-// go/src/lima/type_blobs/main.go
+// go/internal/lima/type_blobs/main.go
 type Blob interface {
     GetFileExtension() string
     GetBinary() bool
@@ -88,7 +88,7 @@ Each version is a separate struct with its own fields. No embedding between
 versions. Shared utility types are fine; shared struct definitions are not.
 
 ```go
-// go/src/golf/blob_store_configs/toml_v0.go
+// go/internal/golf/blob_store_configs/toml_v0.go
 type TomlV0 struct {
     BasePath          string                           `toml:"base-path,omitempty"`
     AgeEncryption     markl_age_id.Id                  `toml:"age-encryption,omitempty"`
@@ -96,7 +96,7 @@ type TomlV0 struct {
     LockInternalFiles bool                             `toml:"lock-internal-files"`
 }
 
-// go/src/golf/blob_store_configs/toml_v2.go
+// go/internal/golf/blob_store_configs/toml_v2.go
 type TomlV2 struct {
     HashBuckets       values.IntSlice                  `toml:"hash_buckets"`
     BasePath          string                           `toml:"base_path,omitempty"`
@@ -117,7 +117,7 @@ Each version gets a unique type string registered in `echo/ids/types_builtin.go`
 A `VCurrent` alias tracks the latest version.
 
 ```go
-// go/src/echo/ids/types_builtin.go
+// go/internal/echo/ids/types_builtin.go
 const (
     TypeTomlBlobStoreConfigV0       = "!toml-blob_store_config-v0"
     TypeTomlBlobStoreConfigV1       = "!toml-blob_store_config-v1"
@@ -138,7 +138,7 @@ A coder map associates each type string with a deserializer that produces the
 correct concrete struct behind the shared interface.
 
 ```go
-// go/src/golf/blob_store_configs/coding.go
+// go/internal/golf/blob_store_configs/coding.go
 var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
     Blob: triple_hyphen_io.CoderTypeMapWithoutType[Config](
         map[string]interfaces.CoderBufferedReadWriter[*Config]{
@@ -163,7 +163,7 @@ on disk use `---` delimiters to separate a type header from the body. On read,
 the type string from the header selects the correct coder:
 
 ```go
-// go/src/foxtrot/triple_hyphen_io/coder_type_map.go
+// go/internal/foxtrot/triple_hyphen_io/coder_type_map.go
 type TypedBlob[BLOB any] struct {
     Type ids.TypeStruct
     Blob BLOB
@@ -193,13 +193,13 @@ The `Upgrade()` method constructs the next version's struct directly, mapping
 and transforming fields:
 
 ```go
-// go/src/golf/blob_store_configs/main.go
+// go/internal/golf/blob_store_configs/main.go
 type ConfigUpgradeable interface {
     Config
     Upgrade() (Config, ids.TypeStruct)
 }
 
-// go/src/golf/blob_store_configs/toml_v1.go
+// go/internal/golf/blob_store_configs/toml_v1.go
 func (blobStoreConfig TomlV1) Upgrade() (Config, ids.TypeStruct) {
     upgraded := &TomlV2{
         HashBuckets:       blobStoreConfig.HashBuckets,

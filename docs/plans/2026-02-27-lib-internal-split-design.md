@@ -2,14 +2,14 @@
 
 ## Problem
 
-All Go packages live under `go/src/` regardless of whether they are
+All Go packages live under `go/internal/` regardless of whether they are
 domain-agnostic utilities or dodder/madder-specific code. This makes it hard to
 identify reusable infrastructure and creates no structural boundary between
 generic libraries and application logic.
 
 ## Goal
 
-Split `go/src/` into two trees:
+Split `go/internal/` into two trees:
 
 - `go/lib/` — domain-agnostic packages with no dodder/madder concepts. Maintains
   the same NATO phonetic hierarchy (`_`, alfa, bravo, ...).
@@ -47,9 +47,9 @@ Update all importers that reference the moved interfaces.
 2. Create `go/lib/{_,alfa,bravo,charlie,delta,echo}`
 3. `git mv` each lib-bound package from `go/internal/` to `go/lib/`
 4. Update all import paths:
-   - `code.linenisgreat.com/dodder/go/src/` →
+   - `code.linenisgreat.com/dodder/go/internal/` →
      `code.linenisgreat.com/dodder/go/lib/` (for lib packages)
-   - `code.linenisgreat.com/dodder/go/src/` →
+   - `code.linenisgreat.com/dodder/go/internal/` →
      `code.linenisgreat.com/dodder/go/internal/` (for internal packages)
 5. Fix compilation, run tests
 
@@ -169,7 +169,7 @@ dependencies that could be extracted:
 
 ```
 # Before
-code.linenisgreat.com/dodder/go/src/alfa/errors
+code.linenisgreat.com/dodder/go/lib/alfa/errors
 
 # After (lib package)
 code.linenisgreat.com/dodder/go/lib/alfa/errors

@@ -23,7 +23,7 @@ The `printer` struct currently stores `*os.File` and writes to it directly.
 Refactor to store `io.Writer` so MCP handlers can use buffer-backed printers.
 
 **Files:**
-- Modify: `go/src/bravo/ui/printer.go`
+- Modify: `go/internal/bravo/ui/printer.go`
 
 **Step 1: Refactor printer struct to use io.Writer**
 
@@ -40,8 +40,8 @@ import (
 	"os"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/_/primordial"
-	"code.linenisgreat.com/dodder/go/src/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/internal/_/primordial"
+	"code.linenisgreat.com/dodder/go/internal/_/stack_frame"
 )
 
 func MakePrinter(file *os.File) printer {
@@ -200,7 +200,7 @@ Add MakePrinterFromWriter constructor and change internal storage from
 ### Task 2: Add MakeStdFromWriter to fd
 
 **Files:**
-- Modify: `go/src/foxtrot/fd/std.go`
+- Modify: `go/internal/foxtrot/fd/std.go`
 
 **Step 1: Add the new constructor**
 
@@ -211,7 +211,7 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
 )
 
 type Std struct {
@@ -250,7 +250,7 @@ Supports creating fd.Std from an io.Writer for MCP output capture.
 ### Task 3: Add CustomOut/CustomErr to config_cli.Config
 
 **Files:**
-- Modify: `go/src/echo/config_cli/main.go`
+- Modify: `go/internal/echo/config_cli/main.go`
 
 **Step 1: Add writer fields**
 
@@ -264,9 +264,9 @@ package config_cli
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/charlie/cli"
-	"code.linenisgreat.com/dodder/go/src/delta/debug"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/charlie/cli"
+	"code.linenisgreat.com/dodder/go/internal/delta/debug"
 )
 
 type Config struct {
@@ -304,7 +304,7 @@ Used by MCP handlers to redirect command output to buffers.
 ### Task 4: Wire custom writers in env_ui.Make
 
 **Files:**
-- Modify: `go/src/kilo/command_components_madder/env_blob_store.go`
+- Modify: `go/internal/kilo/command_components_madder/env_blob_store.go`
 
 **Step 1: Pass custom writers through to env_ui**
 
@@ -314,7 +314,7 @@ pass them as `env_ui.Options`.
 
 First, add writer fields to `env_ui.Options`:
 
-Modify `go/src/golf/env_ui/options.go`:
+Modify `go/internal/golf/env_ui/options.go`:
 
 ```go
 package env_ui
@@ -334,7 +334,7 @@ type Options struct {
 }
 ```
 
-Then modify `go/src/golf/env_ui/main.go` in `Make()` to use custom writers when
+Then modify `go/internal/golf/env_ui/main.go` in `Make()` to use custom writers when
 set:
 
 In the `Make` function, after the existing `env` construction, replace the
@@ -394,7 +394,7 @@ func Make(
 }
 ```
 
-Then modify `go/src/kilo/command_components_madder/env_blob_store.go` to thread
+Then modify `go/internal/kilo/command_components_madder/env_blob_store.go` to thread
 the custom writers from config into env_ui options:
 
 ```go
@@ -463,8 +463,8 @@ Several madder commands use `ui.Out()` and `ui.Err()` (global printers) instead
 of the env-based `env.GetUI()` and `env.GetErr()`. These bypass output capture.
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/list.go`
-- Modify: `go/src/lima/commands_madder/info_repo.go`
+- Modify: `go/internal/lima/commands_madder/list.go`
+- Modify: `go/internal/lima/commands_madder/info_repo.go`
 
 **Step 1: Fix list.go**
 
@@ -485,7 +485,7 @@ func (cmd List) Run(req command.Request) {
 }
 ```
 
-Remove the `"code.linenisgreat.com/dodder/go/src/bravo/ui"` import if it
+Remove the `"code.linenisgreat.com/dodder/go/internal/bravo/ui"` import if it
 becomes unused.
 
 **Step 2: Fix info_repo.go line 107**
@@ -565,8 +565,8 @@ A writer that enforces byte limits during writes. Silently discards data past
 the limit so commands don't error.
 
 **Files:**
-- Create: `go/src/lima/mcp_madder/limiting_writer.go`
-- Create: `go/src/lima/mcp_madder/limiting_writer_test.go`
+- Create: `go/internal/lima/mcp_madder/limiting_writer.go`
+- Create: `go/internal/lima/mcp_madder/limiting_writer_test.go`
 
 **Step 1: Write the test**
 
@@ -733,8 +733,8 @@ The bridge translates MCP tool calls into synthetic `command.Request` executions
 with output capture.
 
 **Files:**
-- Create: `go/src/lima/mcp_madder/bridge.go`
-- Create: `go/src/lima/mcp_madder/bridge_test.go`
+- Create: `go/internal/lima/mcp_madder/bridge.go`
+- Create: `go/internal/lima/mcp_madder/bridge_test.go`
 
 **Step 1: Write a test that runs `list` through the bridge**
 
@@ -779,10 +779,10 @@ package mcp_madder
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/echo/config_cli"
-	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/lima/commands_madder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/echo/config_cli"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/lima/commands_madder"
 )
 
 type BridgeResult struct {
@@ -874,8 +874,8 @@ with output captured via LimitingWriter.
 Register the simplest command as an MCP tool and wire the server entry point.
 
 **Files:**
-- Create: `go/src/lima/mcp_madder/server.go`
-- Create: `go/src/lima/commands_madder/mcp.go`
+- Create: `go/internal/lima/mcp_madder/server.go`
+- Create: `go/internal/lima/commands_madder/mcp.go`
 
 **Step 1: Create the MCP server with tool registration**
 
@@ -982,8 +982,8 @@ func makeBridgeHandler(
 package commands_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/lima/mcp_madder"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/lima/mcp_madder"
 )
 
 func init() {
@@ -1029,7 +1029,7 @@ Starts an MCP server over stdio exposing madder_list as the first tool.
 Add `cat`, `cat-ids`, `info-repo`, and `fsck` tools with parameter translation.
 
 **Files:**
-- Modify: `go/src/lima/mcp_madder/server.go`
+- Modify: `go/internal/lima/mcp_madder/server.go`
 
 **Step 1: Add param translators and tool registrations**
 
@@ -1189,7 +1189,7 @@ Add `write`, `sync`, `init`, `init-from`, `init-inventory-archive`,
 `init-pointer`, and `pack` tools.
 
 **Files:**
-- Modify: `go/src/lima/mcp_madder/server.go`
+- Modify: `go/internal/lima/mcp_madder/server.go`
 
 **Step 1: Add registrations**
 

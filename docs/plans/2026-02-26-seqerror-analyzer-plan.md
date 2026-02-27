@@ -15,7 +15,7 @@ pass-through). Mirrors the existing repool analyzer's structure and test harness
 
 **Design doc:** `docs/plans/2026-02-26-seqerror-analyzer-design.md`
 
-**Reference implementation:** `go/src/alfa/analyzers/repool/` — same directory
+**Reference implementation:** `go/lib/alfa/analyzers/repool/` — same directory
 layout, test harness, build/invocation pattern.
 
 ---
@@ -23,10 +23,10 @@ layout, test harness, build/invocation pattern.
 ### Task 1: Scaffold and test harness with first failing test case
 
 **Files:**
-- Create: `go/src/alfa/analyzers/seqerror/analyzer.go`
-- Create: `go/src/alfa/analyzers/seqerror/analyzer_test.go`
-- Create: `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`
-- Create: `go/src/alfa/analyzers/seqerror/cmd/main.go`
+- Create: `go/lib/alfa/analyzers/seqerror/analyzer.go`
+- Create: `go/lib/alfa/analyzers/seqerror/analyzer_test.go`
+- Create: `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`
+- Create: `go/lib/alfa/analyzers/seqerror/cmd/main.go`
 
 **Step 1: Create testdata with a single blank-error test case**
 
@@ -34,7 +34,7 @@ The `analysistest` framework uses `// want "..."` comments to assert diagnostics
 The testdata package needs a helper that returns an `iter.Seq2[T, error]` so the
 analyzer has something to detect.
 
-Create `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`:
+Create `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`:
 
 ```go
 package a
@@ -56,7 +56,7 @@ func blankError() {
 
 **Step 2: Create the test file**
 
-Create `go/src/alfa/analyzers/seqerror/analyzer_test.go`:
+Create `go/lib/alfa/analyzers/seqerror/analyzer_test.go`:
 
 ```go
 package seqerror_test
@@ -64,7 +64,7 @@ package seqerror_test
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/analyzers/seqerror"
+	"code.linenisgreat.com/dodder/go/lib/alfa/analyzers/seqerror"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
@@ -76,7 +76,7 @@ func Test(t *testing.T) {
 
 **Step 3: Create minimal analyzer stub**
 
-Create `go/src/alfa/analyzers/seqerror/analyzer.go` with a stub `Analyzer` var
+Create `go/lib/alfa/analyzers/seqerror/analyzer.go` with a stub `Analyzer` var
 and empty `run` function that returns `(nil, nil)`:
 
 ```go
@@ -101,13 +101,13 @@ func run(pass *analysis.Pass) (any, error) {
 
 **Step 4: Create cmd entry point**
 
-Create `go/src/alfa/analyzers/seqerror/cmd/main.go`:
+Create `go/lib/alfa/analyzers/seqerror/cmd/main.go`:
 
 ```go
 package main
 
 import (
-	"code.linenisgreat.com/dodder/go/src/alfa/analyzers/seqerror"
+	"code.linenisgreat.com/dodder/go/lib/alfa/analyzers/seqerror"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
@@ -129,7 +129,7 @@ produces none.
 **Step 6: Commit scaffold**
 
 ```
-git add go/src/alfa/analyzers/seqerror/
+git add go/lib/alfa/analyzers/seqerror/
 git commit -m "test: scaffold seqerror analyzer with blank-error test case"
 ```
 
@@ -138,7 +138,7 @@ git commit -m "test: scaffold seqerror analyzer with blank-error test case"
 ### Task 2: Implement Rule 1 — blank error variable detection
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/analyzer.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/analyzer.go`
 
 **Step 1: Implement `isSeq2Error` type checker**
 
@@ -185,7 +185,7 @@ Expected: PASS — the blank-error case is now detected.
 **Step 4: Commit**
 
 ```
-git add go/src/alfa/analyzers/seqerror/analyzer.go
+git add go/lib/alfa/analyzers/seqerror/analyzer.go
 git commit -m "feat(seqerror): detect blank error variable in Seq2 range"
 ```
 
@@ -194,7 +194,7 @@ git commit -m "feat(seqerror): detect blank error variable in Seq2 range"
 ### Task 3: Add blank-error suppression test case
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`
 
 **Step 1: Add suppression test case to testdata**
 
@@ -221,7 +221,7 @@ Expected: PASS.
 **Step 3: Commit**
 
 ```
-git add go/src/alfa/analyzers/seqerror/testdata/
+git add go/lib/alfa/analyzers/seqerror/testdata/
 git commit -m "test(seqerror): add blank-error suppression case"
 ```
 
@@ -230,7 +230,7 @@ git commit -m "test(seqerror): add blank-error suppression case"
 ### Task 4: Add test cases for Rule 2 — unchecked named error (failing)
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`
 
 **Step 1: Add failing test cases for named-but-unchecked errors**
 
@@ -266,7 +266,7 @@ Expected: FAIL — analyzer doesn't detect these yet.
 **Step 3: Commit failing tests**
 
 ```
-git add go/src/alfa/analyzers/seqerror/testdata/
+git add go/lib/alfa/analyzers/seqerror/testdata/
 git commit -m "test(seqerror): add unchecked-error and empty-check test cases"
 ```
 
@@ -275,7 +275,7 @@ git commit -m "test(seqerror): add unchecked-error and empty-check test cases"
 ### Task 5: Implement Rule 2 — unchecked named error detection
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/analyzer.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/analyzer.go`
 
 **Step 1: Implement body analysis**
 
@@ -318,7 +318,7 @@ Expected: PASS.
 **Step 3: Commit**
 
 ```
-git add go/src/alfa/analyzers/seqerror/analyzer.go
+git add go/lib/alfa/analyzers/seqerror/analyzer.go
 git commit -m "feat(seqerror): detect unchecked and unhandled error variables"
 ```
 
@@ -327,7 +327,7 @@ git commit -m "feat(seqerror): detect unchecked and unhandled error variables"
 ### Task 6: Add test cases for valid patterns (OK cases)
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`
 
 **Step 1: Add all valid-pattern test cases**
 
@@ -422,7 +422,7 @@ Expected: PASS — none of the valid patterns trigger a diagnostic.
 **Step 3: Commit**
 
 ```
-git add go/src/alfa/analyzers/seqerror/testdata/
+git add go/lib/alfa/analyzers/seqerror/testdata/
 git commit -m "test(seqerror): add valid-pattern test cases"
 ```
 
@@ -431,7 +431,7 @@ git commit -m "test(seqerror): add valid-pattern test cases"
 ### Task 7: Add test case for ranging over non-error Seq2 (no false positive)
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`
 
 **Step 1: Add non-error Seq2 test case**
 
@@ -468,7 +468,7 @@ Expected: PASS.
 **Step 3: Commit**
 
 ```
-git add go/src/alfa/analyzers/seqerror/testdata/
+git add go/lib/alfa/analyzers/seqerror/testdata/
 git commit -m "test(seqerror): add non-error sequence false-positive guards"
 ```
 
@@ -477,7 +477,7 @@ git commit -m "test(seqerror): add non-error sequence false-positive guards"
 ### Task 8: Add test case for single-value range (no Value node)
 
 **Files:**
-- Modify: `go/src/alfa/analyzers/seqerror/testdata/src/a/a.go`
+- Modify: `go/lib/alfa/analyzers/seqerror/testdata/src/a/a.go`
 
 **Step 1: Add single-value range test**
 
@@ -518,7 +518,7 @@ Expected: PASS.
 **Step 5: Commit**
 
 ```
-git add go/src/alfa/analyzers/seqerror/
+git add go/lib/alfa/analyzers/seqerror/
 git commit -m "feat(seqerror): flag single-value range over Seq2 error"
 ```
 

@@ -20,7 +20,7 @@ A blob store ID has an optional location prefix followed by a name. The prefix d
 
 **Key behavior:** Unprefixed IDs default to `LocationTypeXDGUser`. The `.` prefix creates CWD-scoped stores that live inside the repo directory. Two IDs with the same name but different prefixes (e.g., `default` vs `.default`) are **different stores** at different filesystem paths.
 
-**Source:** `go/src/bravo/blob_store_id/` -- `Id` struct with `location` + `id` fields, `Set()` parses prefix, `String()` omits prefix for XDG user.
+**Source:** `go/internal/bravo/blob_store_id/` -- `Id` struct with `location` + `id` fields, `Set()` parses prefix, `String()` omits prefix for XDG user.
 
 ### CWD-Override and User-Scoped Stores Together
 
@@ -32,7 +32,7 @@ When `-override-xdg-with-cwd` is active (which remaps XDG dirs under `.dodder/` 
 
 This is how cross-repo blob sharing works: a user-scoped store (e.g., `shared`) is visible to any repo that shares the same XDG environment, regardless of whether those repos use `-override-xdg-with-cwd`.
 
-**Source:** `go/src/india/blob_stores/main.go:75-95`
+**Source:** `go/internal/india/blob_stores/main.go:75-95`
 
 ## Blob Store Types
 
@@ -67,7 +67,7 @@ Packs loose blobs into archive files with an index for fast lookup. Requires a l
 
 `ConfigKeyNames(config)` returns sorted key names. Both are used by `info-repo` for dynamic key lookup.
 
-**Source:** `go/src/golf/blob_store_configs/key_values.go`
+**Source:** `go/internal/golf/blob_store_configs/key_values.go`
 
 ## CLI Commands (madder / dodder blob_store-)
 
@@ -156,10 +156,10 @@ run_dodder blob_store-pack .archive
 
 | Concern | Package |
 |---------|---------|
-| Blob store ID parsing | `go/src/bravo/blob_store_id/` |
-| Config interfaces & key-value system | `go/src/golf/blob_store_configs/` |
-| Store factory & initialization | `go/src/india/blob_stores/` |
-| Directory layout & paths | `go/src/echo/directory_layout/` |
-| CLI commands | `go/src/lima/commands_madder/` |
-| Command components (flags, env) | `go/src/kilo/command_components_madder/` |
+| Blob store ID parsing | `go/internal/bravo/blob_store_id/` |
+| Config interfaces & key-value system | `go/internal/golf/blob_store_configs/` |
+| Store factory & initialization | `go/internal/india/blob_stores/` |
+| Directory layout & paths | `go/internal/echo/directory_layout/` |
+| CLI commands | `go/internal/lima/commands_madder/` |
+| Command components (flags, env) | `go/internal/kilo/command_components_madder/` |
 | BATS tests | `zz-tests_bats/blob_store_*.bats`, `zz-tests_bats/info_repo.bats` |

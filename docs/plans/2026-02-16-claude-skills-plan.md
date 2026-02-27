@@ -97,7 +97,7 @@ The SKILL.md must cover (~1,800 words):
 
 6. **Codebase navigation** — where to find things:
    - `go/cmd/` — binary entry points
-   - `go/src/alfa/` through `go/src/yankee/` — NATO layers
+   - `go/internal/alfa/` through `go/internal/yankee/` — NATO layers
    - `zz-tests_bats/` — integration tests
    - `docs/plans/` — design and implementation docs
 

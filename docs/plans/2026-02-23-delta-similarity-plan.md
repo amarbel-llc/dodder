@@ -13,8 +13,8 @@
 ### Task 1: Gear Hash CDC Chunking Primitives
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/gear_hash.go`
-- Test: `go/src/echo/inventory_archive/gear_hash_test.go`
+- Create: `go/internal/echo/inventory_archive/gear_hash.go`
+- Test: `go/internal/echo/inventory_archive/gear_hash_test.go`
 
 **Step 1: Write the failing tests**
 
@@ -260,8 +260,8 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ### Task 2: MinHash One-Permutation Hashing
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/minhash.go`
-- Test: `go/src/echo/inventory_archive/minhash_test.go`
+- Create: `go/internal/echo/inventory_archive/minhash.go`
+- Test: `go/internal/echo/inventory_archive/minhash_test.go`
 
 **Step 1: Write the failing tests**
 
@@ -477,10 +477,10 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ### Task 3: SignatureComputer Interface + GearCDCMinHash Implementation
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/signature_computer.go`
-- Create: `go/src/echo/inventory_archive/signature_gear_cdc_minhash.go`
-- Test: `go/src/echo/inventory_archive/signature_gear_cdc_minhash_test.go`
-- Modify: `go/src/echo/inventory_archive/base_selector.go` (add Signature field to BlobMetadata)
+- Create: `go/internal/echo/inventory_archive/signature_computer.go`
+- Create: `go/internal/echo/inventory_archive/signature_gear_cdc_minhash.go`
+- Test: `go/internal/echo/inventory_archive/signature_gear_cdc_minhash_test.go`
+- Modify: `go/internal/echo/inventory_archive/base_selector.go` (add Signature field to BlobMetadata)
 
 **Step 1: Write the failing tests**
 
@@ -642,7 +642,7 @@ Expected: compilation error — types undefined
 
 **Step 3: Add Signature field to BlobMetadata and create interfaces**
 
-Modify `go/src/echo/inventory_archive/base_selector.go` — add `Signature []uint32` field to `BlobMetadata`:
+Modify `go/internal/echo/inventory_archive/base_selector.go` — add `Signature []uint32` field to `BlobMetadata`:
 
 ```go
 type BlobMetadata struct {
@@ -652,7 +652,7 @@ type BlobMetadata struct {
 }
 ```
 
-Create `go/src/echo/inventory_archive/signature_computer.go`:
+Create `go/internal/echo/inventory_archive/signature_computer.go`:
 
 ```go
 package inventory_archive
@@ -668,7 +668,7 @@ type SignatureComputer interface {
 }
 ```
 
-Create `go/src/echo/inventory_archive/signature_gear_cdc_minhash.go`:
+Create `go/internal/echo/inventory_archive/signature_gear_cdc_minhash.go`:
 
 ```go
 package inventory_archive
@@ -677,7 +677,7 @@ import (
 	"hash/fnv"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 )
 
 // GearCDCMinHashComputer splits blob content into variable-length
@@ -746,8 +746,8 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ### Task 4: LSH Banding Selector
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/base_selector_lsh.go`
-- Test: `go/src/echo/inventory_archive/base_selector_lsh_test.go`
+- Create: `go/internal/echo/inventory_archive/base_selector_lsh.go`
+- Test: `go/internal/echo/inventory_archive/base_selector_lsh_test.go`
 
 **Step 1: Write the failing tests**
 
@@ -1020,7 +1020,7 @@ Expected: compilation error — `LSHBandingSelector` undefined
 
 **Step 3: Implement LSH banding selector**
 
-Create `go/src/echo/inventory_archive/base_selector_lsh.go`:
+Create `go/internal/echo/inventory_archive/base_selector_lsh.go`:
 
 ```go
 package inventory_archive
@@ -1206,9 +1206,9 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ### Task 5: Config Extensions
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/main.go` (add new config interfaces)
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go` (add signature + selector config)
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v2.go` (add signature + selector config)
+- Modify: `go/internal/golf/blob_store_configs/main.go` (add new config interfaces)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go` (add signature + selector config)
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v2.go` (add signature + selector config)
 
 **Step 1: Add config interfaces to `main.go`**
 
@@ -1305,19 +1305,19 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ### Task 6: Signature + Selector Registries
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/signature_registry.go`
-- Create: `go/src/echo/inventory_archive/selector_registry.go`
+- Create: `go/internal/echo/inventory_archive/signature_registry.go`
+- Create: `go/internal/echo/inventory_archive/selector_registry.go`
 
 **Step 1: Create signature registry**
 
-Create `go/src/echo/inventory_archive/signature_registry.go`:
+Create `go/internal/echo/inventory_archive/signature_registry.go`:
 
 ```go
 package inventory_archive
 
 import (
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
 )
 
 var signatureComputers = map[string]func(
@@ -1364,14 +1364,14 @@ func init() {
 
 **Step 2: Create selector registry**
 
-Create `go/src/echo/inventory_archive/selector_registry.go`:
+Create `go/internal/echo/inventory_archive/selector_registry.go`:
 
 ```go
 package inventory_archive
 
 import (
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
 )
 
 var baseSelectors = map[string]func(
@@ -1444,7 +1444,7 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ### Task 7: Wire Packer to Use Config-Driven Selector
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v1.go:257-312` (signature phase + config-driven selector)
+- Modify: `go/internal/india/blob_stores/pack_v1.go:257-312` (signature phase + config-driven selector)
 
 **Step 1: Update `packChunkArchiveV1` to use registries**
 

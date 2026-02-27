@@ -3,7 +3,7 @@
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
 > implement this plan task-by-task.
 
-**Goal:** Split `go/src/` into `go/lib/` (62 domain-agnostic packages) and
+**Goal:** Split `go/internal/` into `go/lib/` (62 domain-agnostic packages) and
 `go/internal/` (remaining domain-specific packages), preserving the NATO
 phonetic hierarchy in both trees.
 
@@ -23,19 +23,19 @@ creates `lib/`, moves packages, and rewrites all import paths.
 ### Task 1: Move StoreVersion interface to domain\_interfaces
 
 **Files:**
-- Modify: `go/src/_/interfaces/store_version.go` (delete)
-- Modify: `go/src/alfa/domain_interfaces/` (add StoreVersion)
+- Modify: `go/lib/_/interfaces/store_version.go` (delete)
+- Modify: `go/internal/alfa/domain_interfaces/` (add StoreVersion)
 - Modify: all files importing `interfaces.StoreVersion` (14 files)
 
 **Step 1: Copy StoreVersion to domain\_interfaces**
 
-Add to `go/src/alfa/domain_interfaces/store_version.go`:
+Add to `go/internal/alfa/domain_interfaces/store_version.go`:
 
 ```go
 package domain_interfaces
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
 // TODO combine with config_immutable.StoreVersion and make a sealed struct
@@ -48,7 +48,7 @@ type StoreVersion interface {
 **Step 2: Delete the old file**
 
 ```bash
-rm go/src/_/interfaces/store_version.go
+rm go/lib/_/interfaces/store_version.go
 ```
 
 **Step 3: Update importers**
@@ -57,19 +57,19 @@ For each of the 14 files that reference `interfaces.StoreVersion`, update them
 to import `alfa/domain_interfaces` and use `domain_interfaces.StoreVersion`
 instead. The files are:
 
-- `go/src/charlie/store_version/main.go`
-- `go/src/charlie/store_version/errors.go`
-- `go/src/echo/ids/types_builtin.go`
-- `go/src/hotel/genesis_configs/main.go`
-- `go/src/hotel/genesis_configs/toml_v0.go`
-- `go/src/hotel/genesis_configs/toml_v1.go`
-- `go/src/hotel/genesis_configs/toml_v2.go`
-- `go/src/juliett/env_repo/main.go`
-- `go/src/mike/inventory_list_store/main.go`
-- `go/src/tango/store/mutating.go`
-- `go/src/victor/local_working_copy/main.go`
-- `go/src/yankee/commands_dodder/info.go`
-- `go/src/yankee/commands_dodder/info_repo.go`
+- `go/internal/charlie/store_version/main.go`
+- `go/internal/charlie/store_version/errors.go`
+- `go/internal/echo/ids/types_builtin.go`
+- `go/internal/hotel/genesis_configs/main.go`
+- `go/internal/hotel/genesis_configs/toml_v0.go`
+- `go/internal/hotel/genesis_configs/toml_v1.go`
+- `go/internal/hotel/genesis_configs/toml_v2.go`
+- `go/internal/juliett/env_repo/main.go`
+- `go/internal/mike/inventory_list_store/main.go`
+- `go/internal/tango/store/mutating.go`
+- `go/internal/victor/local_working_copy/main.go`
+- `go/internal/yankee/commands_dodder/info.go`
+- `go/internal/yankee/commands_dodder/info_repo.go`
 
 For each file: add `domain_interfaces` import, replace
 `interfaces.StoreVersion` with `domain_interfaces.StoreVersion`.
@@ -113,12 +113,12 @@ git mv go/src go/internal
 **Step 2: Rewrite all import paths**
 
 Use find+sed to replace every occurrence of
-`code.linenisgreat.com/dodder/go/src/` with
+`code.linenisgreat.com/dodder/go/internal/` with
 `code.linenisgreat.com/dodder/go/internal/` in all `.go` files under `go/`:
 
 ```bash
 find go/ -name '*.go' -exec sed -i '' \
-  's|code.linenisgreat.com/dodder/go/src/|code.linenisgreat.com/dodder/go/internal/|g' \
+  's|code.linenisgreat.com/dodder/go/internal/|code.linenisgreat.com/dodder/go/internal/|g' \
   {} +
 ```
 
@@ -388,7 +388,7 @@ git commit -m "refactor: rewrite import paths for lib/ packages"
 
 **Files:**
 - `go/CLAUDE.md`
-- `go/src/alfa/errors/SENTINEL_GUIDE.md` (now `go/internal/alfa/errors/`)
+- `go/lib/alfa/errors/SENTINEL_GUIDE.md` (now `go/internal/alfa/errors/`)
 - `.claude/skills/design_patterns-hamster_style/SKILL.md`
 - `.claude/skills/dodder-development/SKILL.md`
 - `.claude/skills/dodder-development/references/nato-hierarchy.md`
@@ -396,7 +396,7 @@ git commit -m "refactor: rewrite import paths for lib/ packages"
 
 **Step 1: Update CLAUDE.md files**
 
-Update import path references from `go/src/` to `go/lib/` or `go/internal/` as
+Update import path references from `go/internal/` to `go/lib/` or `go/internal/` as
 appropriate. Update the module organization section to describe the lib/internal
 split.
 
@@ -438,13 +438,13 @@ Expected: all unit tests and integration tests pass.
 **Step 3: Verify no stale src/ references remain**
 
 ```bash
-grep -r 'go/src/' go/ --include='*.go' | head -20
+grep -r 'go/internal/' go/ --include='*.go' | head -20
 ```
 
 Expected: no matches.
 
 ```bash
-grep -r 'dodder/go/src/' . --include='*.md' | head -20
+grep -r 'dodder/go/internal/' . --include='*.md' | head -20
 ```
 
 Expected: no matches (or only in historical plan docs).

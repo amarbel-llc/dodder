@@ -13,9 +13,9 @@
 ### Task 1: Extract `collectBlobMetasParallel` with serial fallback
 
 **Files:**
-- Create: `go/src/india/blob_stores/pack_parallel.go`
-- Modify: `go/src/india/blob_stores/pack_v0.go:63-114` (replace Phase 1 collection loop)
-- Modify: `go/src/india/blob_stores/pack_v1.go:46-97` (replace Phase 1 collection loop)
+- Create: `go/internal/india/blob_stores/pack_parallel.go`
+- Modify: `go/internal/india/blob_stores/pack_v0.go:63-114` (replace Phase 1 collection loop)
+- Modify: `go/internal/india/blob_stores/pack_v1.go:46-97` (replace Phase 1 collection loop)
 
 **Step 1: Create `pack_parallel.go` with the shared collection function**
 
@@ -31,10 +31,10 @@ import (
 	"sort"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 
@@ -301,7 +301,7 @@ Both V0 and V1 Pack() now use the shared function.
 ### Task 2: Add unit test for parallel size collection
 
 **Files:**
-- Create: `go/src/india/blob_stores/pack_parallel_test.go`
+- Create: `go/internal/india/blob_stores/pack_parallel_test.go`
 
 **Step 1: Write the test file**
 
@@ -316,8 +316,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 func TestCollectBlobMetasParallelBasic(t *testing.T) {
@@ -493,7 +493,7 @@ test: add unit tests for parallel blob size collection
 ### Task 3: Parallelize delta computation in `packChunkArchiveV1`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v1.go:257-447` (`packChunkArchiveV1` method)
+- Modify: `go/internal/india/blob_stores/pack_v1.go:257-447` (`packChunkArchiveV1` method)
 
 **Step 1: Add `deltaResult` type to `pack_parallel.go`**
 
@@ -698,9 +698,9 @@ for future pipeline evolution (channel-based, ring buffer, etc).
 ### Task 4: Add TODO markers for fast blob size
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_parallel.go` (add TODO comment)
-- Modify: `go/src/india/blob_stores/pack_v0.go` (add TODO on `GetBlobSize`)
-- Modify: `go/src/india/blob_stores/pack_v1.go` (add TODO on `GetBlobSize`)
+- Modify: `go/internal/india/blob_stores/pack_parallel.go` (add TODO comment)
+- Modify: `go/internal/india/blob_stores/pack_v0.go` (add TODO on `GetBlobSize`)
+- Modify: `go/internal/india/blob_stores/pack_v1.go` (add TODO on `GetBlobSize`)
 
 **Step 1: Add TODO to `pack_parallel.go`**
 

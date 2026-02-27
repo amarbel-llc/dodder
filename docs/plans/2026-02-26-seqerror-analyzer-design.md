@@ -61,7 +61,7 @@ statement.
 
 ## Location
 
-`go/src/alfa/analyzers/seqerror/` — same structure as repool:
+`go/lib/alfa/analyzers/seqerror/` — same structure as repool:
 
 - `analyzer.go` — the analysis pass
 - `cmd/main.go` — `singlechecker.Main(Analyzer)`

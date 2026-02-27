@@ -13,11 +13,11 @@
 ### Task 1: Add `BlobForeignDigestAdder` interface
 
 **Files:**
-- Modify: `go/src/alfa/domain_interfaces/blob_store.go:91`
+- Modify: `go/internal/alfa/domain_interfaces/blob_store.go:91`
 
 **Step 1: Add the interface**
 
-Add to the end of `go/src/alfa/domain_interfaces/blob_store.go`, before the closing `)` or after the last type block:
+Add to the end of `go/internal/alfa/domain_interfaces/blob_store.go`, before the closing `)` or after the last type block:
 
 ```go
 type BlobForeignDigestAdder interface {
@@ -27,7 +27,7 @@ type BlobForeignDigestAdder interface {
 
 **Step 2: Verify build**
 
-Run: `go build ./go/src/alfa/...`
+Run: `go build ./go/internal/alfa/...`
 Expected: success (interface is unused so far)
 
 **Step 3: Commit**
@@ -41,12 +41,12 @@ feat: add BlobForeignDigestAdder interface for cross-hash blob mapping
 ### Task 2: Fix `blobReaderFrom` to use digest's hash format
 
 **Files:**
-- Modify: `go/src/india/blob_stores/store_local_hash_bucketed.go:186-240`
-- Test: `go/src/india/blob_stores/` (existing tests)
+- Modify: `go/internal/india/blob_stores/store_local_hash_bucketed.go:186-240`
+- Test: `go/internal/india/blob_stores/` (existing tests)
 
 **Step 1: Write the failing test**
 
-Create `go/src/india/blob_stores/local_hash_bucketed_test.go`:
+Create `go/internal/india/blob_stores/local_hash_bucketed_test.go`:
 
 ```go
 package blob_stores_test
@@ -54,8 +54,8 @@ package blob_stores_test
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 func TestMakeBlobReaderUsesDigestHashFormat(t1 *testing.T) {
@@ -78,13 +78,13 @@ func TestMakeBlobReaderUsesDigestHashFormat(t1 *testing.T) {
 
 Note: This test needs access to unexported `makeLocalHashBucketed`. The real test
 may need to go through the public `MakeBlobStores` factory or use an exported
-test helper. Check existing test patterns in `go/src/india/blob_stores/` and
+test helper. Check existing test patterns in `go/internal/india/blob_stores/` and
 adapt. The key assertion is: writing a blob with sha256 to a multi-hash store,
 then reading it back, yields a sha256 digest from `GetMarklId()`.
 
 **Step 2: Implement the fix**
 
-In `go/src/india/blob_stores/store_local_hash_bucketed.go`, modify `blobReaderFrom`
+In `go/internal/india/blob_stores/store_local_hash_bucketed.go`, modify `blobReaderFrom`
 (lines 186-240). Change the `NewFileReaderOrErrNotExist` call to use the digest's
 hash format:
 
@@ -113,7 +113,7 @@ if readCloser, err = env_dir.NewFileReaderOrErrNotExist(
 ); err != nil {
 ```
 
-This requires adding `"code.linenisgreat.com/dodder/go/src/echo/markl"` to the
+This requires adding `"code.linenisgreat.com/dodder/go/internal/echo/markl"` to the
 imports if not already present (it already is — line 14).
 
 **Step 3: Verify build and tests**
@@ -132,11 +132,11 @@ fix: use digest's hash format in blobReaderFrom instead of store default
 ### Task 3: Implement `AddForeignBlobDigestForNativeDigest` on `localHashBucketed`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/store_local_hash_bucketed.go`
+- Modify: `go/internal/india/blob_stores/store_local_hash_bucketed.go`
 
 **Step 1: Write the failing test**
 
-Add to `go/src/india/blob_stores/local_hash_bucketed_test.go`:
+Add to `go/internal/india/blob_stores/local_hash_bucketed_test.go`:
 
 ```go
 func TestAddForeignBlobDigestCreatesSymlink(t1 *testing.T) {
@@ -167,7 +167,7 @@ func TestAddForeignBlobDigestErrorsOnSingleHash(t1 *testing.T) {
 
 **Step 2: Implement `AddForeignBlobDigestForNativeDigest`**
 
-Add to `go/src/india/blob_stores/store_local_hash_bucketed.go`:
+Add to `go/internal/india/blob_stores/store_local_hash_bucketed.go`:
 
 ```go
 var _ domain_interfaces.BlobForeignDigestAdder = localHashBucketed{}
@@ -220,7 +220,7 @@ func (blobStore localHashBucketed) AddForeignBlobDigestForNativeDigest(
 ```
 
 Add `"os"` to imports (already present — line 5). Add
-`"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"` if needed (check
+`"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"` if needed (check
 existing imports).
 
 **Step 3: Verify build and tests**
@@ -239,7 +239,7 @@ feat: implement BlobForeignDigestAdder for localHashBucketed via symlinks
 ### Task 4: Modify `CopyBlobIfNecessary` for cross-hash support
 
 **Files:**
-- Modify: `go/src/india/blob_stores/copy.go:104-128`
+- Modify: `go/internal/india/blob_stores/copy.go:104-128`
 
 **Step 1: Write the failing test**
 
@@ -249,7 +249,7 @@ or temp-dir blob stores. Otherwise, rely on the BATS test in Task 6.
 
 **Step 2: Implement cross-hash verification**
 
-Modify `go/src/india/blob_stores/copy.go` lines 104-128. Replace the verification
+Modify `go/internal/india/blob_stores/copy.go` lines 104-128. Replace the verification
 block:
 
 ```go
@@ -294,7 +294,7 @@ if crossHash {
 }
 ```
 
-Add `"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"` to imports.
+Add `"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"` to imports.
 
 **Step 3: Verify build and tests**
 
@@ -312,12 +312,12 @@ feat: support cross-hash blob copy with foreign digest mapping
 ### Task 5: Add `-allow-rehashing` flag and cross-hash gating to sync command
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/sync.go`
-- Modify: `go/src/kilo/blob_transfers/main.go`
+- Modify: `go/internal/lima/commands_madder/sync.go`
+- Modify: `go/internal/kilo/blob_transfers/main.go`
 
 **Step 1: Add `AllowRehashing` field to `Sync` struct and flag definition**
 
-In `go/src/lima/commands_madder/sync.go`:
+In `go/internal/lima/commands_madder/sync.go`:
 
 ```go
 type Sync struct {
@@ -408,7 +408,7 @@ func (cmd Sync) runStore(
 	// ... rest of existing runStore code (CopierDelegate, defer, loop)
 ```
 
-Add imports: `"fmt"`, `"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"`.
+Add imports: `"fmt"`, `"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"`.
 
 **Step 3: Verify build and tests**
 
@@ -475,7 +475,7 @@ test: add BATS integration test for cross-hash blob sync
 ### Task 7: Convert sync command to TAP-14 output
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/sync.go`
+- Modify: `go/internal/lima/commands_madder/sync.go`
 
 **Step 1: Write the failing test**
 
@@ -496,7 +496,7 @@ function blob_store_sync_outputs_tap { # @test
 
 **Step 2: Convert sync output to TAP-14**
 
-In `go/src/lima/commands_madder/sync.go`, replace `ui.Out().Print` and
+In `go/internal/lima/commands_madder/sync.go`, replace `ui.Out().Print` and
 `ui.Err().Printf` with TAP writer calls:
 
 ```go

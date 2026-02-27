@@ -13,11 +13,11 @@
 ### Task 1: Simplify pool interfaces
 
 **Files:**
-- Modify: `go/src/_/interfaces/pools.go`
+- Modify: `go/lib/_/interfaces/pools.go`
 
 **Step 1: Read the current file**
 
-Read `go/src/_/interfaces/pools.go` to confirm current state.
+Read `go/lib/_/interfaces/pools.go` to confirm current state.
 
 **Step 2: Replace interface definitions**
 
@@ -62,10 +62,10 @@ Simplify pool interfaces to Pool[T] and PoolPtr[T, TPtr]
 ### Task 2: Unexport Get/Put on concrete pool types
 
 **Files:**
-- Modify: `go/src/alfa/pool/main.go`
-- Modify: `go/src/alfa/pool/value.go`
-- Modify: `go/src/alfa/pool/bespoke.go`
-- Modify: `go/src/alfa/pool/fake_pool.go`
+- Modify: `go/lib/alfa/pool/main.go`
+- Modify: `go/lib/alfa/pool/value.go`
+- Modify: `go/lib/alfa/pool/bespoke.go`
+- Modify: `go/lib/alfa/pool/fake_pool.go`
 
 **Step 1: Modify `main.go`**
 
@@ -192,13 +192,13 @@ Unexport Get/Put on concrete pool types
 ### Task 3: Add Slice pool and delete `_/pool_value/`
 
 **Files:**
-- Create: `go/src/alfa/pool/slice.go`
-- Modify: `go/src/alfa/pool/common.go` (remove `_/pool_value` import)
-- Modify: `go/src/alfa/errors/group.go` (switch to `alfa/pool`)
-- Delete: `go/src/_/pool_value/main.go`
-- Delete: `go/src/_/pool_value/slice.go`
+- Create: `go/lib/alfa/pool/slice.go`
+- Modify: `go/lib/alfa/pool/common.go` (remove `_/pool_value` import)
+- Modify: `go/lib/alfa/errors/group.go` (switch to `alfa/pool`)
+- Delete: `go/internal/_/pool_value/main.go`
+- Delete: `go/internal/_/pool_value/slice.go`
 
-**Step 1: Create `go/src/alfa/pool/slice.go`**
+**Step 1: Create `go/lib/alfa/pool/slice.go`**
 
 ```go
 package pool
@@ -206,7 +206,7 @@ package pool
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
 type Slice[SWIMMER any, SWIMMER_SLICE ~[]SWIMMER] struct {
@@ -241,7 +241,7 @@ func (pool Slice[_, SWIMMER_SLICE]) put(swimmer SWIMMER_SLICE) {
 }
 ```
 
-**Step 2: Update `go/src/alfa/pool/common.go`**
+**Step 2: Update `go/lib/alfa/pool/common.go`**
 
 Replace `pool_value.Make(...)` for `sha256Hash` with `MakeValue(...)`. Remove
 the `_/pool_value` import. Also update all helper functions to use
@@ -258,7 +258,7 @@ import (
 	"io"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
 var (
@@ -314,7 +314,7 @@ func GetBufferedReader(
 }
 ```
 
-**Step 3: Update `go/src/alfa/errors/group.go`**
+**Step 3: Update `go/lib/alfa/errors/group.go`**
 
 Change import from `_/pool_value` to `alfa/pool` and update the pool
 construction:
@@ -325,7 +325,7 @@ package errors
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 )
 
 type Group []error
@@ -347,7 +347,7 @@ var groupPool = pool.MakeSlice[error, Group]()
 
 **Step 4: Delete `_/pool_value/` package**
 
-Delete `go/src/_/pool_value/main.go` and `go/src/_/pool_value/slice.go`.
+Delete `go/internal/_/pool_value/main.go` and `go/internal/_/pool_value/slice.go`.
 
 **Step 5: Build**
 
@@ -366,12 +366,12 @@ Move slice pool to alfa/pool, delete _/pool_value package
 ### Task 4: Delete poolWithError and migrate Lua VM pool
 
 **Files:**
-- Delete: `go/src/alfa/pool/with_error.go`
-- Modify: `go/src/bravo/lua/vm.go`
-- Modify: `go/src/bravo/lua/vm_pool.go`
-- Modify: `go/src/bravo/lua/vm_pool_builder.go`
-- Modify: `go/src/kilo/sku_lua/lua_transacted_v1_pool.go`
-- Modify: `go/src/kilo/sku_lua/lua_transacted_v2_pool.go`
+- Delete: `go/lib/alfa/pool/with_error.go`
+- Modify: `go/internal/bravo/lua/vm.go`
+- Modify: `go/internal/bravo/lua/vm_pool.go`
+- Modify: `go/internal/bravo/lua/vm_pool_builder.go`
+- Modify: `go/internal/kilo/sku_lua/lua_transacted_v1_pool.go`
+- Modify: `go/internal/kilo/sku_lua/lua_transacted_v2_pool.go`
 
 **Step 1: Modify `bravo/lua/vm_pool.go`**
 
@@ -518,10 +518,10 @@ Mirror the V1 changes for V2.
 
 **Step 5: Check `vm_pool_builder.go` for references**
 
-Read `go/src/bravo/lua/vm_pool_builder.go` and update any `PoolWithErrorsPtr`
+Read `go/internal/bravo/lua/vm_pool_builder.go` and update any `PoolWithErrorsPtr`
 references or `.Get()` calls that return errors.
 
-**Step 6: Delete `go/src/alfa/pool/with_error.go`**
+**Step 6: Delete `go/lib/alfa/pool/with_error.go`**
 
 **Step 7: Build**
 
@@ -540,7 +540,7 @@ Remove PoolWithErrors, migrate Lua VM pools to panic semantics
 ### Task 5: Migrate Alfred ItemPool to alfa/pool
 
 **Files:**
-- Modify: `go/src/delta/alfred/item_pool.go`
+- Modify: `go/internal/delta/alfred/item_pool.go`
 
 **Step 1: Read current callers of ItemPool**
 
@@ -552,9 +552,9 @@ Search for `ItemPool` usage to understand callers.
 package alfred
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/pool"
-	"code.linenisgreat.com/dodder/go/src/charlie/catgut"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 )
 
 type ItemPool struct {
@@ -572,9 +572,9 @@ public interface:
 package alfred
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/pool"
-	"code.linenisgreat.com/dodder/go/src/charlie/catgut"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 )
 
 var itemPool = pool.Make(
@@ -627,9 +627,9 @@ Migrate Alfred ItemPool to alfa/pool
 ### Task 6: Consolidate store pools with proper resetters
 
 **Files:**
-- Modify: `go/src/papa/store_fs/pools.go`
-- Modify: `go/src/sierra/store_browser/pools.go`
-- Modify: `go/src/tango/store/pools.go`
+- Modify: `go/internal/papa/store_fs/pools.go`
+- Modify: `go/internal/sierra/store_browser/pools.go`
+- Modify: `go/internal/tango/store/pools.go`
 
 **Step 1: Fix `papa/store_fs/pools.go`**
 
@@ -639,9 +639,9 @@ Add proper resetters and update interface types:
 package store_fs
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/pool"
-	"code.linenisgreat.com/dodder/go/src/juliett/sku"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 )
 
 var (
@@ -697,10 +697,10 @@ Consolidate store pools with proper resetters
 ### Task 7: Update juliett/sku pool accessors and types
 
 **Files:**
-- Modify: `go/src/juliett/sku/pools.go`
-- Modify: `go/src/juliett/sku/transacted.go` (CloneTransacted)
-- Modify: `go/src/juliett/sku/checked_out.go` (Clone)
-- Modify: `go/src/juliett/sku/type_checked_out.go` (objectFactoryCheckedOut)
+- Modify: `go/internal/juliett/sku/pools.go`
+- Modify: `go/internal/juliett/sku/transacted.go` (CloneTransacted)
+- Modify: `go/internal/juliett/sku/checked_out.go` (Clone)
+- Modify: `go/internal/juliett/sku/type_checked_out.go` (objectFactoryCheckedOut)
 
 **Step 1: Update `pools.go` return types**
 
@@ -802,8 +802,8 @@ Update juliett/sku pool accessors to PoolPtr interface
 ### Task 8: Update heap to use unexported get/put
 
 **Files:**
-- Modify: `go/src/charlie/heap/private.go`
-- Modify: `go/src/charlie/heap/main.go`
+- Modify: `go/internal/charlie/heap/private.go`
+- Modify: `go/internal/charlie/heap/main.go`
 
 **Step 1: Understand the constraint**
 
@@ -957,11 +957,11 @@ Update heap to use GetWithRepool pattern
 ### Task 9: Migrate catgut String pool
 
 **Files:**
-- Modify: `go/src/charlie/catgut/pool.go`
+- Modify: `go/lib/charlie/catgut/pool.go`
 
 **Step 1: Read current file**
 
-Read `go/src/charlie/catgut/pool.go`.
+Read `go/lib/charlie/catgut/pool.go`.
 
 **Step 2: Update return type**
 
@@ -991,11 +991,11 @@ Update catgut String pool to PoolPtr interface
 ### Task 10: Mechanical caller migration — tango/store
 
 **Files:**
-- Modify: `go/src/tango/store/create.go`
-- Modify: `go/src/tango/store/reader.go`
-- Modify: `go/src/tango/store/mutating.go`
-- Modify: `go/src/tango/store/flush.go`
-- Modify: `go/src/tango/store/dormancy_and_tags.go`
+- Modify: `go/internal/tango/store/create.go`
+- Modify: `go/internal/tango/store/reader.go`
+- Modify: `go/internal/tango/store/mutating.go`
+- Modify: `go/internal/tango/store/flush.go`
+- Modify: `go/internal/tango/store/dormancy_and_tags.go`
 
 For each file, apply the mechanical transformation:
 
@@ -1026,14 +1026,14 @@ Migrate tango/store pool callers to GetWithRepool
 ### Task 11: Mechanical caller migration — papa/store_fs
 
 **Files:**
-- Modify: `go/src/papa/store_fs/checkout.go`
-- Modify: `go/src/papa/store_fs/checkout2.go`
-- Modify: `go/src/papa/store_fs/dir_info.go`
-- Modify: `go/src/papa/store_fs/merge.go`
-- Modify: `go/src/papa/store_fs/query.go`
-- Modify: `go/src/papa/store_fs/read_checked_out.go`
-- Modify: `go/src/papa/store_fs/read_external.go`
-- Modify: `go/src/papa/store_fs/reading.go`
+- Modify: `go/internal/papa/store_fs/checkout.go`
+- Modify: `go/internal/papa/store_fs/checkout2.go`
+- Modify: `go/internal/papa/store_fs/dir_info.go`
+- Modify: `go/internal/papa/store_fs/merge.go`
+- Modify: `go/internal/papa/store_fs/query.go`
+- Modify: `go/internal/papa/store_fs/read_checked_out.go`
+- Modify: `go/internal/papa/store_fs/read_external.go`
+- Modify: `go/internal/papa/store_fs/reading.go`
 
 Same mechanical transformation. Pay attention to files where Get() returns
 ownership (checkout2.go, read_checked_out.go, read_external.go) — these return
@@ -1050,38 +1050,38 @@ Migrate papa/store_fs pool callers to GetWithRepool
 ### Task 12: Mechanical caller migration — remaining modules
 
 **Files:**
-- Modify: `go/src/november/queries/executor.go`
-- Modify: `go/src/november/queries/build_state.go`
-- Modify: `go/src/lima/stream_index/probe_index.go`
-- Modify: `go/src/lima/stream_index/page_reader_stream.go`
-- Modify: `go/src/lima/stream_index/page_additions_file.go`
-- Modify: `go/src/lima/stream_index/probes.go`
-- Modify: `go/src/lima/stream_index/binary_test.go`
-- Modify: `go/src/lima/inventory_list_coders/main.go`
-- Modify: `go/src/lima/env_lua/main.go`
-- Modify: `go/src/mike/inventory_list_store/main.go`
-- Modify: `go/src/victor/local_working_copy/format.go`
-- Modify: `go/src/victor/local_working_copy/genesis.go`
-- Modify: `go/src/sierra/store_browser/main.go`
-- Modify: `go/src/sierra/store_browser/index.go`
-- Modify: `go/src/uniform/remote_transfer/import.go`
-- Modify: `go/src/uniform/remote_transfer/main.go`
-- Modify: `go/src/whiskey/user_ops/create_from_shas.go`
-- Modify: `go/src/whiskey/remote_http/server.go`
-- Modify: `go/src/whiskey/remote_http/server_mcp.go`
-- Modify: `go/src/xray/command_components_dodder/remote.go`
-- Modify: `go/src/yankee/commands_dodder/clean.go`
-- Modify: `go/src/yankee/commands_dodder/cat_alfred.go`
-- Modify: `go/src/yankee/commands_dodder/edit_config.go`
-- Modify: `go/src/yankee/commands_dodder/revert.go`
-- Modify: `go/src/yankee/commands_dodder/last.go`
-- Modify: `go/src/foxtrot/tag_paths/main.go`
-- Modify: `go/src/foxtrot/tag_paths/tags_with_parents_and_types.go`
-- Modify: `go/src/echo/ids/main.go`
-- Modify: `go/src/echo/ids/object_id3.go`
-- Modify: `go/src/romeo/store_config/accessors.go`
-- Modify: `go/src/romeo/store_config/main_test.go`
-- Modify: `go/src/romeo/store_config/compiled.go`
+- Modify: `go/internal/november/queries/executor.go`
+- Modify: `go/internal/november/queries/build_state.go`
+- Modify: `go/internal/lima/stream_index/probe_index.go`
+- Modify: `go/internal/lima/stream_index/page_reader_stream.go`
+- Modify: `go/internal/lima/stream_index/page_additions_file.go`
+- Modify: `go/internal/lima/stream_index/probes.go`
+- Modify: `go/internal/lima/stream_index/binary_test.go`
+- Modify: `go/internal/lima/inventory_list_coders/main.go`
+- Modify: `go/internal/lima/env_lua/main.go`
+- Modify: `go/internal/mike/inventory_list_store/main.go`
+- Modify: `go/internal/victor/local_working_copy/format.go`
+- Modify: `go/internal/victor/local_working_copy/genesis.go`
+- Modify: `go/internal/sierra/store_browser/main.go`
+- Modify: `go/internal/sierra/store_browser/index.go`
+- Modify: `go/internal/uniform/remote_transfer/import.go`
+- Modify: `go/internal/uniform/remote_transfer/main.go`
+- Modify: `go/internal/whiskey/user_ops/create_from_shas.go`
+- Modify: `go/internal/whiskey/remote_http/server.go`
+- Modify: `go/internal/whiskey/remote_http/server_mcp.go`
+- Modify: `go/internal/xray/command_components_dodder/remote.go`
+- Modify: `go/internal/yankee/commands_dodder/clean.go`
+- Modify: `go/internal/yankee/commands_dodder/cat_alfred.go`
+- Modify: `go/internal/yankee/commands_dodder/edit_config.go`
+- Modify: `go/internal/yankee/commands_dodder/revert.go`
+- Modify: `go/internal/yankee/commands_dodder/last.go`
+- Modify: `go/internal/foxtrot/tag_paths/main.go`
+- Modify: `go/internal/foxtrot/tag_paths/tags_with_parents_and_types.go`
+- Modify: `go/internal/echo/ids/main.go`
+- Modify: `go/internal/echo/ids/object_id3.go`
+- Modify: `go/internal/romeo/store_config/accessors.go`
+- Modify: `go/internal/romeo/store_config/main_test.go`
+- Modify: `go/internal/romeo/store_config/compiled.go`
 
 Same mechanical transformation. This is the largest task — can be split across
 multiple parallel subagents by NATO module grouping.
@@ -1151,9 +1151,9 @@ Format code after pool cleanup
 ### Task 15: Clean up CLAUDE.md files
 
 **Files:**
-- Modify: `go/src/alfa/pool/CLAUDE.md`
-- Modify: `go/src/_/interfaces/CLAUDE.md`
-- Delete: `go/src/_/pool_value/CLAUDE.md`
+- Modify: `go/lib/alfa/pool/CLAUDE.md`
+- Modify: `go/lib/_/interfaces/CLAUDE.md`
+- Delete: `go/internal/_/pool_value/CLAUDE.md`
 
 Update the CLAUDE.md files to reflect the new simplified pool API.
 

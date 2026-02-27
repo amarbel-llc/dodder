@@ -15,12 +15,12 @@
 The `registerToml` function already exists. Two types already use it (`TomlPointerV0`, `TomlInventoryArchiveV0`). Migrate the five types still in the map literal.
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/coding.go:43-89` (delete map literal entries)
-- Modify: `go/src/golf/blob_store_configs/toml_v0.go` (add register call)
-- Modify: `go/src/golf/blob_store_configs/toml_v1.go` (add register call)
-- Modify: `go/src/golf/blob_store_configs/toml_v2.go` (add register call)
-- Modify: `go/src/golf/blob_store_configs/toml_sftp_v0.go` (add register call)
-- Modify: `go/src/golf/blob_store_configs/toml_sftp_via_ssh_config_v0.go` (add register call)
+- Modify: `go/internal/golf/blob_store_configs/coding.go:43-89` (delete map literal entries)
+- Modify: `go/internal/golf/blob_store_configs/toml_v0.go` (add register call)
+- Modify: `go/internal/golf/blob_store_configs/toml_v1.go` (add register call)
+- Modify: `go/internal/golf/blob_store_configs/toml_v2.go` (add register call)
+- Modify: `go/internal/golf/blob_store_configs/toml_sftp_v0.go` (add register call)
+- Modify: `go/internal/golf/blob_store_configs/toml_sftp_via_ssh_config_v0.go` (add register call)
 
 **Step 1: Add `registerToml` calls to each struct file**
 
@@ -77,10 +77,10 @@ feat(blob_store_configs): migrate all types to registerToml self-registration
 ### Task 2: Add `register` function to `golf/repo_blobs`
 
 **Files:**
-- Modify: `go/src/golf/repo_blobs/coding.go` (replace map literal with register pattern)
-- Modify: `go/src/golf/repo_blobs/toml_uri_v0.go` (add register call)
-- Modify: `go/src/golf/repo_blobs/toml_local_override_path_v0.go` (add register call)
-- Modify: `go/src/golf/repo_blobs/toml_xdg_v0.go` (add register call)
+- Modify: `go/internal/golf/repo_blobs/coding.go` (replace map literal with register pattern)
+- Modify: `go/internal/golf/repo_blobs/toml_uri_v0.go` (add register call)
+- Modify: `go/internal/golf/repo_blobs/toml_local_override_path_v0.go` (add register call)
+- Modify: `go/internal/golf/repo_blobs/toml_xdg_v0.go` (add register call)
 
 **Step 1: Rewrite `coding.go`**
 
@@ -92,8 +92,8 @@ package repo_blobs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
 )
 
 var coderMap = make(map[string]interfaces.CoderBufferedReadWriter[*Blob])
@@ -138,7 +138,7 @@ var _ = register[TomlLocalOverridePathV0](ids.TypeTomlRepoLocalOverridePath)
 var _ = register[TomlXDGV0](ids.TypeTomlRepoDotenvXdgV0)
 ```
 
-Each file needs to add `"code.linenisgreat.com/dodder/go/src/echo/ids"` to its imports if not already present.
+Each file needs to add `"code.linenisgreat.com/dodder/go/internal/echo/ids"` to its imports if not already present.
 
 **Step 3: Verify compilation**
 
@@ -159,10 +159,10 @@ feat(repo_blobs): add coder self-registration via register generic
 ### Task 3: Add `register` function to `golf/repo_configs`
 
 **Files:**
-- Modify: `go/src/golf/repo_configs/coding.go` (replace map literal with register pattern)
-- Modify: `go/src/golf/repo_configs/v0.go` (add register call)
-- Modify: `go/src/golf/repo_configs/v1.go` (add register call)
-- Modify: `go/src/golf/repo_configs/v2.go` (add register call)
+- Modify: `go/internal/golf/repo_configs/coding.go` (replace map literal with register pattern)
+- Modify: `go/internal/golf/repo_configs/v0.go` (add register call)
+- Modify: `go/internal/golf/repo_configs/v1.go` (add register call)
+- Modify: `go/internal/golf/repo_configs/v2.go` (add register call)
 
 **Step 1: Rewrite `coding.go`**
 
@@ -172,8 +172,8 @@ package repo_configs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
 )
 
 var coderMap = make(map[string]interfaces.CoderBufferedReadWriter[*ConfigOverlay])
@@ -218,7 +218,7 @@ var _ = register[V1](ids.TypeTomlConfigV1)
 var _ = register[V2](ids.TypeTomlConfigV2)
 ```
 
-Each file needs `"code.linenisgreat.com/dodder/go/src/echo/ids"` in imports.
+Each file needs `"code.linenisgreat.com/dodder/go/internal/echo/ids"` in imports.
 
 **Step 3: Verify compilation**
 
@@ -241,9 +241,9 @@ feat(repo_configs): add coder self-registration via register generic
 This is the special case with two coder maps (Private and Public). Each version registers both variants.
 
 **Files:**
-- Modify: `go/src/hotel/genesis_configs/coder.go` (replace map literals with register pattern)
-- Modify: `go/src/hotel/genesis_configs/toml_v1.go` (add register call)
-- Modify: `go/src/hotel/genesis_configs/toml_v2.go` (add register call)
+- Modify: `go/internal/hotel/genesis_configs/coder.go` (replace map literals with register pattern)
+- Modify: `go/internal/hotel/genesis_configs/toml_v1.go` (add register call)
+- Modify: `go/internal/hotel/genesis_configs/toml_v2.go` (add register call)
 
 **Step 1: Rewrite `coder.go`**
 
@@ -253,8 +253,8 @@ package genesis_configs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
 )
 
 var (
@@ -342,8 +342,8 @@ feat(genesis_configs): add dual coder self-registration for private/public
 ### Task 5: Add `register` function to `hotel/workspace_config_blobs`
 
 **Files:**
-- Modify: `go/src/hotel/workspace_config_blobs/io.go` (replace map literal with register pattern)
-- Modify: `go/src/hotel/workspace_config_blobs/v0.go` (add register call)
+- Modify: `go/internal/hotel/workspace_config_blobs/io.go` (replace map literal with register pattern)
+- Modify: `go/internal/hotel/workspace_config_blobs/v0.go` (add register call)
 
 **Step 1: Rewrite `io.go`**
 
@@ -353,8 +353,8 @@ package workspace_config_blobs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
 )
 
 var coderMap = make(map[string]interfaces.CoderBufferedReadWriter[*Config])
@@ -392,7 +392,7 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 var _ = register[V0](ids.TypeTomlWorkspaceConfigV0)
 ```
 
-Add `"code.linenisgreat.com/dodder/go/src/echo/ids"` to imports.
+Add `"code.linenisgreat.com/dodder/go/internal/echo/ids"` to imports.
 
 **Step 3: Verify compilation**
 
@@ -415,10 +415,10 @@ feat(workspace_config_blobs): add coder self-registration
 This is the special case that uses `blob_library.MakeBlobStore` with `envRepo` context rather than `CoderTypeMapWithoutType`.
 
 **Files:**
-- Create: `go/src/lima/type_blobs/register.go` (factory registration infrastructure)
-- Modify: `go/src/lima/type_blobs/coder.go` (build from registered factories)
-- Modify: `go/src/lima/type_blobs/toml_v0.go` (add register call)
-- Modify: `go/src/lima/type_blobs/toml_v1.go` (add register call)
+- Create: `go/internal/lima/type_blobs/register.go` (factory registration infrastructure)
+- Modify: `go/internal/lima/type_blobs/coder.go` (build from registered factories)
+- Modify: `go/internal/lima/type_blobs/toml_v0.go` (add register call)
+- Modify: `go/internal/lima/type_blobs/toml_v1.go` (add register call)
 
 **Step 1: Create `register.go`**
 
@@ -428,10 +428,10 @@ package type_blobs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/charlie/toml"
-	"code.linenisgreat.com/dodder/go/src/juliett/env_repo"
-	"code.linenisgreat.com/dodder/go/src/kilo/blob_library"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/charlie/toml"
+	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"
+	"code.linenisgreat.com/dodder/go/internal/kilo/blob_library"
 )
 
 type blobStoreFactory struct {
@@ -514,7 +514,7 @@ var _ = register[TomlV0](ids.TypeTomlTypeV0, func(a *TomlV0) { a.Reset() })
 var _ = register[TomlV1](ids.TypeTomlTypeV1, func(a *TomlV1) { a.Reset() })
 ```
 
-Each needs `"code.linenisgreat.com/dodder/go/src/echo/ids"` in imports.
+Each needs `"code.linenisgreat.com/dodder/go/internal/echo/ids"` in imports.
 
 **Step 3: Rewrite `coder.go` to use registered factories**
 
@@ -524,12 +524,12 @@ Replace the struct with hardcoded stores with a map-based approach built from `s
 package type_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/charlie/genres"
-	"code.linenisgreat.com/dodder/go/src/echo/ids"
-	"code.linenisgreat.com/dodder/go/src/juliett/env_repo"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
+	"code.linenisgreat.com/dodder/go/internal/echo/ids"
+	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"
 )
 
 type Coder struct {
@@ -623,15 +623,15 @@ feat(type_blobs): convert to factory-based coder self-registration
 ### Task 7: Build the `builtin_coders` static analyzer
 
 **Files:**
-- Create: `go/src/alfa/analyzers/builtin_coders/analyzer.go`
-- Create: `go/src/alfa/analyzers/builtin_coders/analyzer_test.go`
-- Create: `go/src/alfa/analyzers/builtin_coders/cmd/main.go`
-- Create: `go/src/alfa/analyzers/builtin_coders/testdata/` (test fixtures)
+- Create: `go/lib/alfa/analyzers/builtin_coders/analyzer.go`
+- Create: `go/lib/alfa/analyzers/builtin_coders/analyzer_test.go`
+- Create: `go/lib/alfa/analyzers/builtin_coders/cmd/main.go`
+- Create: `go/lib/alfa/analyzers/builtin_coders/testdata/` (test fixtures)
 - Modify: `go/justfile:161-167` (add build and check targets)
 
 **Step 1: Create the analyzer**
 
-`go/src/alfa/analyzers/builtin_coders/analyzer.go`:
+`go/lib/alfa/analyzers/builtin_coders/analyzer.go`:
 
 The analyzer inspects packages for:
 1. Calls to `register[...]()` or `registerToml[...]()` — extracts the type string argument
@@ -671,7 +671,7 @@ The full implementation details will be determined during implementation based o
 package main
 
 import (
-	"code.linenisgreat.com/dodder/go/src/alfa/analyzers/builtin_coders"
+	"code.linenisgreat.com/dodder/go/lib/alfa/analyzers/builtin_coders"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
@@ -692,7 +692,7 @@ package builtin_coders_test
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/analyzers/builtin_coders"
+	"code.linenisgreat.com/dodder/go/lib/alfa/analyzers/builtin_coders"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 

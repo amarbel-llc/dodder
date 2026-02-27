@@ -173,11 +173,11 @@ TAP writer must be accessible from the ticker closure.
 
 | File | Change |
 |---|---|
-| `go/src/yankee/commands_dodder/fsck.go` | Rewrite `runVerification` to emit TAP |
-| `go/src/yankee/commands_dodder/repo_fsck.go` | Rewrite `Run` to emit TAP |
-| `go/src/lima/commands_madder/fsck.go` | Rewrite `Run` to emit TAP |
-| `go/src/bravo/ui/main.go` | Remove `// TODO add a TAP printer` comment |
-| `go/src/lima/commands_madder/sync.go` | Remove `// TODO output TAP` comment (separate task) |
+| `go/internal/yankee/commands_dodder/fsck.go` | Rewrite `runVerification` to emit TAP |
+| `go/internal/yankee/commands_dodder/repo_fsck.go` | Rewrite `Run` to emit TAP |
+| `go/internal/lima/commands_madder/fsck.go` | Rewrite `Run` to emit TAP |
+| `go/internal/bravo/ui/main.go` | Remove `// TODO add a TAP printer` comment |
+| `go/internal/lima/commands_madder/sync.go` | Remove `// TODO output TAP` comment (separate task) |
 | `zz-tests_bats/fsck.bats` | Update assertions for TAP output |
 | `go.mod` / `go.sum` | Add `tap-dancer/go` dependency |
 

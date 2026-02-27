@@ -56,7 +56,7 @@ small parts of Dodder in Rust.
 Besides the entrypoints (e.g., main.go, main.rs), each edition uses a strategy
 for forcing modularity and unidirectional dependencies like so:
 
--   dodder/go/src/
+-   dodder/go/internal/
     -   alfa
         -   errors
     -   bravo

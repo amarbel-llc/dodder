@@ -35,7 +35,7 @@ consumer or store it alongside the element for later invocation.
 
 ### 1. Static Analyzer (`just check-go-repool`)
 
-A CFG-based `go vet` checker located in `go/src/alfa/analyzers/repool/analyzer.go`.
+A CFG-based `go vet` checker located in `go/lib/alfa/analyzers/repool/analyzer.go`.
 Built on `golang.org/x/tools/go/analysis` with `inspect.Analyzer` and
 `ctrlflow.Analyzer` passes.
 
@@ -67,7 +67,7 @@ hash, _ := config.hashFormat.GetHash() //repool:owned
 
 ### 2. Runtime Debug Poisoning (build tag `debug`)
 
-Located in `go/src/alfa/pool/repool_debug.go`. Activated by compiling with
+Located in `go/lib/alfa/pool/repool_debug.go`. Activated by compiling with
 `-tags debug` (the default for `just build` debug binaries and `just test-go`).
 
 **How it works:**
@@ -80,7 +80,7 @@ Located in `go/src/alfa/pool/repool_debug.go`. Activated by compiling with
 - An `atomic.Int64` counter (`outstandingBorrows`) increments on borrow and
   decrements on repool. Query via `pool.OutstandingBorrows()`.
 
-**Zero overhead in release builds:** `go/src/alfa/pool/repool_release.go`
+**Zero overhead in release builds:** `go/lib/alfa/pool/repool_release.go`
 compiles when the `debug` tag is absent. It passes through the repool function
 unchanged and returns `0` from `OutstandingBorrows()`.
 

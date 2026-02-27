@@ -7,7 +7,7 @@ upstream.
 ## What Was Attempted
 
 The goal: flip `type ObjectId = objectId2` to `type ObjectId = objectId3` in
-`go/src/echo/ids/main.go:51`.
+`go/internal/echo/ids/main.go:51`.
 
 ### What objectId2 looks like
 

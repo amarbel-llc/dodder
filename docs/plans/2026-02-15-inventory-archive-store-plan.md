@@ -15,7 +15,7 @@
 ### Task 1: Register the type constant
 
 **Files:**
-- Modify: `go/src/echo/ids/types_builtin.go`
+- Modify: `go/internal/echo/ids/types_builtin.go`
 
 **Step 1: Add the type constant**
 
@@ -53,12 +53,12 @@ feat(echo/ids): register inventory archive blob store config type
 ### Task 2: Add the config interface and struct
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/main.go`
-- Create: `go/src/golf/blob_store_configs/toml_inventory_archive_v0.go`
+- Modify: `go/internal/golf/blob_store_configs/main.go`
+- Create: `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go`
 
 **Step 1: Add the `ConfigInventoryArchive` interface**
 
-In `go/src/golf/blob_store_configs/main.go`, add after the `ConfigPointer` interface block (after line 63):
+In `go/internal/golf/blob_store_configs/main.go`, add after the `ConfigPointer` interface block (after line 63):
 
 ```go
 ConfigInventoryArchive interface {
@@ -73,18 +73,18 @@ This requires `blob_store_id` to be imported — it's already imported transitiv
 
 **Step 2: Create `toml_inventory_archive_v0.go`**
 
-Create `go/src/golf/blob_store_configs/toml_inventory_archive_v0.go`. Follow the `TomlV2` pattern for hash/compression and `TomlPointerV0` pattern for referencing another store:
+Create `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go`. Follow the `TomlV2` pattern for hash/compression and `TomlPointerV0` pattern for referencing another store:
 
 ```go
 package blob_store_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/src/echo/ids"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/internal/echo/ids"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 type TomlInventoryArchiveV0 struct {
@@ -171,12 +171,12 @@ Note: The `registerToml` call in the `var` block auto-registers with the Coder, 
 This is a refactor-only task — no new behavior, just threading the parameter through.
 
 **Files:**
-- Modify: `go/src/india/blob_stores/main.go`
-- Modify: `go/src/kilo/command_components_madder/blob_store.go`
+- Modify: `go/internal/india/blob_stores/main.go`
+- Modify: `go/internal/kilo/command_components_madder/blob_store.go`
 
 **Step 1: Change `MakeBlobStore` signature**
 
-In `go/src/india/blob_stores/main.go`, change the signature at line 136:
+In `go/internal/india/blob_stores/main.go`, change the signature at line 136:
 
 From:
 ```go
@@ -274,24 +274,24 @@ loose blob store by ID during construction.
 This task creates a new package for the binary archive format at a layer low enough for both the store and the pack command to use.
 
 **Files:**
-- Create: `go/src/charlie/inventory_archive/data_writer.go`
-- Create: `go/src/charlie/inventory_archive/data_reader.go`
-- Create: `go/src/charlie/inventory_archive/types.go`
-- Create: `go/src/charlie/inventory_archive/data_writer_test.go`
+- Create: `go/internal/charlie/inventory_archive/data_writer.go`
+- Create: `go/internal/charlie/inventory_archive/data_reader.go`
+- Create: `go/internal/charlie/inventory_archive/types.go`
+- Create: `go/internal/charlie/inventory_archive/data_writer_test.go`
 
 `charlie` is appropriate because it depends on `compression_type` (also in `charlie`) and basic types. The `echo/markl` dependency for hash format puts it at `echo` minimum, but the format types themselves can use raw byte slices and string IDs for the hash format, keeping the binary codec in `charlie` and letting higher layers convert to/from `markl` types.
 
 Actually, because we need `markl.FormatHash` and `markl.GetFormatHashOrError`, place this package in `echo/inventory_archive` instead.
 
 **Files (revised):**
-- Create: `go/src/echo/inventory_archive/types.go`
-- Create: `go/src/echo/inventory_archive/data_writer.go`
-- Create: `go/src/echo/inventory_archive/data_reader.go`
-- Create: `go/src/echo/inventory_archive/data_writer_test.go`
+- Create: `go/internal/echo/inventory_archive/types.go`
+- Create: `go/internal/echo/inventory_archive/data_writer.go`
+- Create: `go/internal/echo/inventory_archive/data_reader.go`
+- Create: `go/internal/echo/inventory_archive/data_writer_test.go`
 
 **Step 1: Write the test for round-tripping a data file**
 
-Create `go/src/echo/inventory_archive/data_writer_test.go`:
+Create `go/internal/echo/inventory_archive/data_writer_test.go`:
 
 ```go
 package inventory_archive
@@ -300,7 +300,7 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
 )
 
 func TestDataFileRoundTrip(t *testing.T) {
@@ -385,7 +385,7 @@ Expected: compilation failure — types don't exist yet.
 
 **Step 3: Implement types.go**
 
-Create `go/src/echo/inventory_archive/types.go`:
+Create `go/internal/echo/inventory_archive/types.go`:
 
 ```go
 package inventory_archive
@@ -435,8 +435,8 @@ Add compression byte mapping functions:
 
 ```go
 import (
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
 )
 
 func CompressionToByte(ct compression_type.CompressionType) byte {
@@ -470,7 +470,7 @@ func ByteToCompression(b byte) (compression_type.CompressionType, error) {
 
 **Step 4: Implement data_writer.go**
 
-Create `go/src/echo/inventory_archive/data_writer.go`. The writer:
+Create `go/internal/echo/inventory_archive/data_writer.go`. The writer:
 - Writes header (magic, version, hash_format_id_len, hash_format_id, compression byte, 2 reserved bytes)
 - For each entry: writes hash, uncompressed_size, compressed_size, then compressed data
 - On Close: writes entry_count (uint64), computes checksum of everything written so far, writes checksum, returns checksum bytes
@@ -485,9 +485,9 @@ import (
 	"encoding/binary"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 type DataWriter struct {
@@ -505,7 +505,7 @@ The writer hashes every byte written via `io.MultiWriter(underlying, hashWriter)
 
 **Step 5: Implement data_reader.go**
 
-Create `go/src/echo/inventory_archive/data_reader.go`. The reader:
+Create `go/internal/echo/inventory_archive/data_reader.go`. The reader:
 - Reads and validates header (magic, version, hash format, compression)
 - Provides `ReadEntry()` iterator and `ReadAllEntries()` convenience
 - Validates footer checksum
@@ -531,13 +531,13 @@ Includes round-trip test.
 ### Task 5: Binary format — index file writer/reader
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/index_writer.go`
-- Create: `go/src/echo/inventory_archive/index_reader.go`
-- Create: `go/src/echo/inventory_archive/index_test.go`
+- Create: `go/internal/echo/inventory_archive/index_writer.go`
+- Create: `go/internal/echo/inventory_archive/index_reader.go`
+- Create: `go/internal/echo/inventory_archive/index_test.go`
 
 **Step 1: Write the test**
 
-Create `go/src/echo/inventory_archive/index_test.go`:
+Create `go/internal/echo/inventory_archive/index_test.go`:
 
 Test that:
 - Given a set of `IndexEntry` values, write an index file
@@ -587,9 +587,9 @@ Fan-out table with binary search for O(1) hash lookups.
 ### Task 6: Binary format — cache file writer/reader
 
 **Files:**
-- Create: `go/src/echo/inventory_archive/cache_writer.go`
-- Create: `go/src/echo/inventory_archive/cache_reader.go`
-- Create: `go/src/echo/inventory_archive/cache_test.go`
+- Create: `go/internal/echo/inventory_archive/cache_writer.go`
+- Create: `go/internal/echo/inventory_archive/cache_reader.go`
+- Create: `go/internal/echo/inventory_archive/cache_test.go`
 
 **Step 1: Write the test**
 
@@ -617,24 +617,24 @@ feat(echo/inventory_archive): implement cache file writer and reader
 ### Task 7: Implement `inventoryArchive` BlobStore — construction and delegation
 
 **Files:**
-- Create: `go/src/india/blob_stores/store_inventory_archive.go`
-- Modify: `go/src/india/blob_stores/main.go`
+- Create: `go/internal/india/blob_stores/store_inventory_archive.go`
+- Modify: `go/internal/india/blob_stores/main.go`
 
 **Step 1: Create the store struct and constructor**
 
-Create `go/src/india/blob_stores/store_inventory_archive.go`:
+Create `go/internal/india/blob_stores/store_inventory_archive.go`:
 
 ```go
 package blob_stores
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/echo/inventory_archive"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
-	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
-	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/echo/inventory_archive"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
+	"code.linenisgreat.com/dodder/go/internal/hotel/env_dir"
 )
 
 type archiveEntry struct {
@@ -740,7 +740,7 @@ func (store inventoryArchive) MakeBlobReader(
 
 **Step 3: Wire into `MakeBlobStore` factory**
 
-In `go/src/india/blob_stores/main.go`, add a new case before `default` in the switch (before line 204):
+In `go/internal/india/blob_stores/main.go`, add a new case before `default` in the switch (before line 204):
 
 ```go
 case blob_store_configs.ConfigInventoryArchive:
@@ -785,11 +785,11 @@ Archive reading is stubbed for now.
 ### Task 8: Implement archive reading in `MakeBlobReader`
 
 **Files:**
-- Modify: `go/src/india/blob_stores/store_inventory_archive.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive.go`
 
 **Step 1: Write a test for reading a blob from an archive**
 
-Create `go/src/india/blob_stores/store_inventory_archive_test.go` (or put the test in the `inventory_archive` package). The test should:
+Create `go/internal/india/blob_stores/store_inventory_archive_test.go` (or put the test in the `inventory_archive` package). The test should:
 - Create a temporary directory
 - Write a small archive data file using `inventory_archive.DataWriter`
 - Write the corresponding index file
@@ -818,7 +818,7 @@ feat(india/blob_stores): implement archive blob reading
 ### Task 9: Index loading — cache file and rebuild
 
 **Files:**
-- Modify: `go/src/india/blob_stores/store_inventory_archive.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive.go`
 
 **Step 1: Implement `loadIndex` method**
 
@@ -862,7 +862,7 @@ feat(india/blob_stores): implement index loading with cache rebuild
 ### Task 10: Implement `AllBlobs` with deduplication
 
 **Files:**
-- Modify: `go/src/india/blob_stores/store_inventory_archive.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive.go`
 
 **Step 1: Implement `AllBlobs`**
 
@@ -886,7 +886,7 @@ feat(india/blob_stores): implement AllBlobs with archive+loose dedup
 ### Task 11: `DeletionPrecondition` interface and no-op implementation
 
 **Files:**
-- Create: `go/src/india/blob_stores/deletion_precondition.go`
+- Create: `go/internal/india/blob_stores/deletion_precondition.go`
 
 **Step 1: Create the interface and no-op**
 
@@ -894,8 +894,8 @@ feat(india/blob_stores): implement AllBlobs with archive+loose dedup
 package blob_stores
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 )
 
 // DeletionPrecondition checks whether blobs are safe to delete from the
@@ -939,12 +939,12 @@ off-host replication before allowing loose blob deletion.
 ### Task 12: `madder pack` command — basic packing
 
 **Files:**
-- Create: `go/src/kilo/command_components_madder/pack.go`
-- Create: `go/src/lima/commands_madder/pack.go`
+- Create: `go/internal/kilo/command_components_madder/pack.go`
+- Create: `go/internal/lima/commands_madder/pack.go`
 
 **Step 1: Create the command component**
 
-Create `go/src/kilo/command_components_madder/pack.go` with:
+Create `go/internal/kilo/command_components_madder/pack.go` with:
 - A `Pack` struct with fields for the archive store ID and delete-loose flag
 - A `RunPack` method containing the core pack algorithm:
   1. Iterate loose blobs not in archive index
@@ -956,16 +956,16 @@ Create `go/src/kilo/command_components_madder/pack.go` with:
 
 **Step 2: Create the command**
 
-Create `go/src/lima/commands_madder/pack.go`:
+Create `go/internal/lima/commands_madder/pack.go`:
 
 ```go
 package commands_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/kilo/command_components_madder"
 )
 
 func init() {
@@ -1012,8 +1012,8 @@ feat(lima/commands_madder): add madder pack command skeleton
 ### Task 13: `madder pack` — implement core pack logic
 
 **Files:**
-- Modify: `go/src/kilo/command_components_madder/pack.go`
-- Modify: `go/src/lima/commands_madder/pack.go`
+- Modify: `go/internal/kilo/command_components_madder/pack.go`
+- Modify: `go/internal/lima/commands_madder/pack.go`
 
 **Step 1: Implement the pack algorithm**
 
@@ -1049,7 +1049,7 @@ feat(madder pack): implement core packing algorithm
 ### Task 14: `madder pack -delete-loose` — validation and deletion
 
 **Files:**
-- Modify: `go/src/kilo/command_components_madder/pack.go`
+- Modify: `go/internal/kilo/command_components_madder/pack.go`
 
 **Step 1: Implement archive validation**
 

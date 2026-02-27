@@ -1,6 +1,6 @@
 # NATO Phonetic Module Hierarchy
 
-The source tree under `go/src/` enforces a strict dependency DAG using NATO
+The source tree under `go/internal/` enforces a strict dependency DAG using NATO
 phonetic alphabet names. Each layer may only import from layers below it. The
 directory name alone makes the dependency direction visible.
 
@@ -347,8 +347,8 @@ import from layer N (sibling) or any layer above N.
 
 ```go
 import (
-    "code.linenisgreat.com/dodder/go/src/alfa/errors"
-    "code.linenisgreat.com/dodder/go/src/charlie/catgut"
+    "code.linenisgreat.com/dodder/go/lib/alfa/errors"
+    "code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 )
 ```
 
@@ -360,7 +360,7 @@ This is valid because layer 5 may import from layers 1 through 4.
 
 ```go
 import (
-    "code.linenisgreat.com/dodder/go/src/echo/ids" // WRONG: layer 3 cannot import layer 5
+    "code.linenisgreat.com/dodder/go/internal/echo/ids" // WRONG: layer 3 cannot import layer 5
 )
 ```
 

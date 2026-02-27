@@ -19,7 +19,7 @@ All commands should be run from the `go/` directory.
 -   **Build**: `just build` (builds debug and release binaries to `build/`)
 -   **Test**: `just test` (runs Go unit tests + BATS integration tests)
 -   **Unit Tests Only**: `just test-go-unit` or `go test -v -tags test,debug ./...`
--   **Single Package Test**: `go test -v -tags test,debug ./src/path/to/package`
+-   **Single Package Test**: `go test -v -tags test,debug ./internal/path/to/package` (or `./lib/path/to/package`)
 -   **Clean**: `just clean` (clears Go caches)
 -   **Check**: `just check` (vulnerability scan + vet)
 -   **Generate**: `just build-go-generate` (runs `go generate ./...`)
@@ -53,8 +53,16 @@ how to regenerate and commit fixtures after store format changes.
 
 ### Module Organization
 
-The codebase uses NATO phonetic alphabet naming (alfa, bravo, charlie, etc.) to
-enforce a DAG dependency structure - each layer can only depend on previous
+The codebase is split into two directory trees:
+
+-   `go/lib/` — Domain-agnostic utility packages (62 packages across `_`, alfa,
+    bravo, charlie, delta, echo tiers). These have no dodder-specific concepts
+    and are reusable infrastructure.
+-   `go/internal/` — Dodder/madder-specific packages (everything else, from `_`
+    through yankee). These contain domain types, commands, and application logic.
+
+Both trees use NATO phonetic alphabet naming (alfa, bravo, charlie, etc.) to
+enforce a DAG dependency structure — each layer can only depend on previous
 layers alphabetically. This prevents circular dependencies and encourages
 modularity.
 
@@ -73,10 +81,10 @@ modularity.
 
 #### Critical Types and Interfaces
 
--   `sku.Transacted`: Core versioned object type (src/juliett/sku/)
--   `interfaces.ObjectId`: Universal identifier interface (src/alfa/interfaces/)
--   `store.Store`: Main storage engine (src/mike/store/)
--   `command.Command`: CLI command interface (src/golf/command/)
+-   `sku.Transacted`: Core versioned object type (internal/juliett/sku/)
+-   `interfaces.ObjectId`: Universal identifier interface (internal/alfa/domain_interfaces/)
+-   `store.Store`: Main storage engine (internal/mike/store/)
+-   `command.Command`: CLI command interface (internal/golf/command/)
 
 ### Storage Architecture
 
@@ -98,7 +106,7 @@ Commands follow a consistent pattern:
 
 ### Error Handling
 
-Uses custom error system in `src/alfa/errors/` with: - Context-aware error
+Uses custom error system in `lib/alfa/errors/` with: - Context-aware error
 wrapping - Stack trace support - Signal handling for graceful shutdown - Helpful
 error formatting
 
@@ -169,7 +177,7 @@ The system uses a sophisticated pattern for type-safe, versioned data structures
 
 #### Interface-First Design
 
-- **Common Interfaces**: Define stable contracts in `src/alfa/interfaces/` (e.g., `BlobStoreConfigImmutable`)
+- **Common Interfaces**: Define stable contracts in `internal/alfa/domain_interfaces/` (e.g., `BlobStoreConfigImmutable`)
 - **Versioned Implementations**: Multiple struct versions implement the same interface (e.g., `TomlV1Common`, `TomlV2Common`)
 - **Backward Compatibility**: Old versions remain functional while new versions add features
 
@@ -215,7 +223,7 @@ called exactly once when the caller is done with the element. Three tools enforc
 this:
 
 1.  **Static analyzer** (`just check-go-repool`): CFG-based `go vet` checker in
-    `src/alfa/analyzers/repool/`. Detects discarded repool functions (blank `_`
+    `lib/alfa/analyzers/repool/`. Detects discarded repool functions (blank `_`
     without `//repool:owned`) and repool variables not called on all code paths.
 
 2.  **Runtime debug poisoning** (`repool_debug.go`, build tag `debug`): Wraps
@@ -261,7 +269,9 @@ the dodder completion test.
 
 ## Module Import Patterns
 
--   Import paths follow `code.linenisgreat.com/dodder/go/src/{module}/{package}`
+-   Import paths follow `code.linenisgreat.com/dodder/go/lib/{tier}/{package}` for
+    domain-agnostic packages and `code.linenisgreat.com/dodder/go/internal/{tier}/{package}`
+    for dodder-specific packages
 -   Respect the NATO alphabet dependency hierarchy (earlier letters cannot import later letters)
 -   Use existing interfaces rather than concrete types where possible
 -   Follow established patterns in similar modules
@@ -271,9 +281,9 @@ the dodder completion test.
 ### When Adding New Blob Stores
 
 1. **Type Registration**: New blob store configs need THREE registrations:
-   - Add type constant to `src/echo/ids/types_builtin.go` (e.g., `TypeTomlBlobStoreConfigSftpV0`)
+   - Add type constant to `internal/echo/ids/types_builtin.go` (e.g., `TypeTomlBlobStoreConfigSftpV0`)
    - Register in init() function of the same file
-   - Add to type map in `src/echo/blob_store_configs/io.go`
+   - Add to type map in `internal/echo/blob_store_configs/io.go`
 
 2. **Interface Implementation Gotchas**:
    - `TemporaryFS` uses `FileTempWithTemplate()` not `TempFile()`

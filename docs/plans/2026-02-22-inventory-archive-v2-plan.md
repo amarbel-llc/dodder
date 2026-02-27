@@ -13,7 +13,7 @@
 ### Task 1: Register the V2 type constant
 
 **Files:**
-- Modify: `go/src/echo/ids/types_builtin.go:32-34` (constants) and `:97-101` (init registration)
+- Modify: `go/internal/echo/ids/types_builtin.go:32-34` (constants) and `:97-101` (init registration)
 
 **Step 1: Add the V2 constant and update VCurrent**
 
@@ -55,7 +55,7 @@ feat: register inventory archive V2 type constant
 ### Task 2: Create the V2 config struct
 
 **Files:**
-- Create: `go/src/golf/blob_store_configs/toml_inventory_archive_v2.go`
+- Create: `go/internal/golf/blob_store_configs/toml_inventory_archive_v2.go`
 
 **Step 1: Write the config struct**
 
@@ -67,12 +67,12 @@ Implements `ConfigInventoryArchiveDelta` (which embeds `ConfigInventoryArchive`)
 package blob_store_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/src/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/src/echo/ids"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
+	"code.linenisgreat.com/dodder/go/internal/echo/ids"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 type TomlInventoryArchiveV2 struct {
@@ -174,7 +174,7 @@ feat: add TomlInventoryArchiveV2 config struct with no external loose store
 ### Task 3: Add V1 upgrade path to V2
 
 **Files:**
-- Modify: `go/src/golf/blob_store_configs/toml_inventory_archive_v1.go`
+- Modify: `go/internal/golf/blob_store_configs/toml_inventory_archive_v1.go`
 
 **Step 1: Add Upgrade() method to V1**
 
@@ -224,7 +224,7 @@ feat: add V1 -> V2 upgrade path for inventory archive config
 ### Task 4: Update factory to construct embedded loose store
 
 **Files:**
-- Modify: `go/src/india/blob_stores/main.go:225-248` (the `ConfigInventoryArchiveDelta` case)
+- Modify: `go/internal/india/blob_stores/main.go:225-248` (the `ConfigInventoryArchiveDelta` case)
 
 **Step 1: Add embedded store construction**
 
@@ -296,7 +296,7 @@ feat: construct embedded hash-bucketed store for inventory archive V2
 ### Task 5: Add init command
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/init.go:44-64`
+- Modify: `go/internal/lima/commands_madder/init.go:44-64`
 
 **Step 1: Add init-inventory-archive-embedded command**
 

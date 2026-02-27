@@ -17,7 +17,7 @@
 ### Task 1: Rename struct fields in types.go
 
 **Files:**
-- Modify: `go/src/echo/inventory_archive/types.go`
+- Modify: `go/internal/echo/inventory_archive/types.go`
 
 **Step 1: Rename all struct fields**
 
@@ -144,12 +144,12 @@ git add -A && git commit -m "refactor: rename CompressedSize->StoredSize, Uncomp
 ### Task 2: Rename local variables and function parameters
 
 **Files:**
-- Modify: `go/src/echo/inventory_archive/data_writer.go`
-- Modify: `go/src/echo/inventory_archive/data_reader.go`
-- Modify: `go/src/echo/inventory_archive/data_writer_v1.go`
-- Modify: `go/src/echo/inventory_archive/data_reader_v1.go`
-- Modify: `go/src/echo/inventory_archive/index_reader.go`
-- Modify: `go/src/echo/inventory_archive/index_v1.go`
+- Modify: `go/internal/echo/inventory_archive/data_writer.go`
+- Modify: `go/internal/echo/inventory_archive/data_reader.go`
+- Modify: `go/internal/echo/inventory_archive/data_writer_v1.go`
+- Modify: `go/internal/echo/inventory_archive/data_reader_v1.go`
+- Modify: `go/internal/echo/inventory_archive/index_reader.go`
+- Modify: `go/internal/echo/inventory_archive/index_v1.go`
 
 **Step 1: Rename local variables in data writers and readers**
 
@@ -241,8 +241,8 @@ git add -A && git commit -m "refactor: rename local vars and comments to stored_
 ### Task 3: Rename in blob_stores layer
 
 **Files:**
-- Modify: `go/src/india/blob_stores/store_inventory_archive.go`
-- Modify: `go/src/india/blob_stores/store_inventory_archive_v1.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive_v1.go`
 
 **Step 1: Rename archiveEntry and archiveEntryV1 fields**
 
@@ -306,7 +306,7 @@ If formatter changed anything, amend the previous commit or make a new commit.
 ### Task 5: Add FlagHasEncryption constant and IOWrapper import
 
 **Files:**
-- Modify: `go/src/echo/inventory_archive/types.go`
+- Modify: `go/internal/echo/inventory_archive/types.go`
 
 **Step 1: Add constant**
 
@@ -342,8 +342,8 @@ git add -A && git commit -m "feat: add FlagHasEncryption constants for archive f
 ### Task 6: Add encryption to V0 DataWriter
 
 **Files:**
-- Modify: `go/src/echo/inventory_archive/data_writer.go`
-- Modify: `go/src/echo/inventory_archive/data_writer_test.go`
+- Modify: `go/internal/echo/inventory_archive/data_writer.go`
+- Modify: `go/internal/echo/inventory_archive/data_writer_test.go`
 
 **Step 1: Write the failing test**
 
@@ -449,7 +449,7 @@ In `data_writer.go`:
 
 Add `interfaces` import:
 ```go
-"code.linenisgreat.com/dodder/go/src/_/interfaces"
+"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 ```
 
 Add field to `DataWriter`:
@@ -648,9 +648,9 @@ git add -A && git commit -m "feat: add encryption support to V0 archive data wri
 ### Task 7: Add encryption to V1 DataWriter and DataReader
 
 **Files:**
-- Modify: `go/src/echo/inventory_archive/data_writer_v1.go`
-- Modify: `go/src/echo/inventory_archive/data_reader_v1.go`
-- Modify: `go/src/echo/inventory_archive/data_writer_v1_test.go`
+- Modify: `go/internal/echo/inventory_archive/data_writer_v1.go`
+- Modify: `go/internal/echo/inventory_archive/data_reader_v1.go`
+- Modify: `go/internal/echo/inventory_archive/data_writer_v1_test.go`
 
 **Step 1: Write the failing test**
 
@@ -701,10 +701,10 @@ git add -A && git commit -m "feat: add encryption support to V1 archive data wri
 ### Task 8: Wire encryption through pack and read paths
 
 **Files:**
-- Modify: `go/src/india/blob_stores/pack_v0.go`
-- Modify: `go/src/india/blob_stores/pack_v1.go`
-- Modify: `go/src/india/blob_stores/store_inventory_archive.go`
-- Modify: `go/src/india/blob_stores/store_inventory_archive_v1.go`
+- Modify: `go/internal/india/blob_stores/pack_v0.go`
+- Modify: `go/internal/india/blob_stores/pack_v1.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive.go`
+- Modify: `go/internal/india/blob_stores/store_inventory_archive_v1.go`
 
 **Step 1: Add helper to resolve IOWrapper from config**
 

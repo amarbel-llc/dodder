@@ -11,7 +11,7 @@ Dodder assigns each zettel a unique two-part string identifier (e.g., `ceroplast
 
 A `ZettelId` is a struct with `left` and `right` string fields, rendered as `left/right`. Both parts must be non-empty identifiers. Parsed via the doddish tokenizer (identifier `/` identifier).
 
-**Source:** `go/src/echo/ids/zettel_id.go` -- `ZettelId` struct, `Set()`, `String()`
+**Source:** `go/internal/echo/ids/zettel_id.go` -- `ZettelId` struct, `Set()`, `String()`
 
 ## Provider Files (Yin/Yang)
 
@@ -24,9 +24,9 @@ Each repo stores two newline-delimited word lists created at `dodder init` time:
 
 Total ID space = `len(Yin) * len(Yang)` combinations. The provider lists are immutable after creation.
 
-**Source:** `go/src/foxtrot/object_id_provider/factory.go` -- `Provider` struct with `yin`/`yang` fields, `New()` reads from `DirObjectId()`
+**Source:** `go/internal/foxtrot/object_id_provider/factory.go` -- `Provider` struct with `yin`/`yang` fields, `New()` reads from `DirObjectId()`
 
-**Provider type:** `go/src/foxtrot/object_id_provider/main.go` -- `provider` is a `[]string`. Forward lookup via `MakeZettelIdFromCoordinates(i)` returns `provider[i]`. Reverse lookup via `ZettelId(v)` is a linear scan.
+**Provider type:** `go/internal/foxtrot/object_id_provider/main.go` -- `provider` is a `[]string`. Forward lookup via `MakeZettelIdFromCoordinates(i)` returns `provider[i]`. Reverse lookup via `ZettelId(v)` is a linear scan.
 
 ## Coordinate System
 
@@ -36,11 +36,11 @@ A triangular-number mapping converts each 2D `(Left, Right)` pair to a single 1D
 - **1D to 2D:** `n = round(sqrt(id * 2)); ext = Extrema(n); Left = id - ext.Left; Right = ext.Right - id`
 - **Extrema(n):** `Left = (n-1)*n/2 + 1`, `Right = n*(n+1)/2`
 
-**Source:** `go/src/_/coordinates/kennung.go` -- `ZettelIdCoordinate{Left, Right uint32}`, `Id()`, `SetInt()`
+**Source:** `go/internal/_/coordinates/kennung.go` -- `ZettelIdCoordinate{Left, Right uint32}`, `Id()`, `SetInt()`
 
 ## ZettelId Index
 
-The `Index` interface (`go/src/india/zettel_id_index/main.go:16-22`) tracks which IDs are available:
+The `Index` interface (`go/internal/india/zettel_id_index/main.go:16-22`) tracks which IDs are available:
 
 ```go
 type Index interface {
@@ -65,13 +65,13 @@ Uses `map[int]bool` where each key is a 1D coordinate integer. Presence in the m
 
 **Thread safety:** `sync.Mutex` protects all map operations.
 
-**Source:** `go/src/india/zettel_id_index/v0/main.go`
+**Source:** `go/internal/india/zettel_id_index/v0/main.go`
 
 ### v1 Implementation (disabled)
 
-Uses `collections.Bitset` instead of a map. Currently gated behind `if false` in the factory (`go/src/india/zettel_id_index/main.go:30`).
+Uses `collections.Bitset` instead of a map. Currently gated behind `if false` in the factory (`go/internal/india/zettel_id_index/main.go:30`).
 
-**Source:** `go/src/india/zettel_id_index/v1/main.go`
+**Source:** `go/internal/india/zettel_id_index/v1/main.go`
 
 ## Allocation Modes
 
@@ -84,23 +84,23 @@ Controlled by `configCli.UsePredictableZettelIds()`:
 
 When `len(AvailableIds) == 0`, `CreateZettelId()` returns `ErrZettelIdsExhausted`.
 
-**Source:** `go/src/foxtrot/object_id_provider/errors.go:33-60`
+**Source:** `go/internal/foxtrot/object_id_provider/errors.go:33-60`
 
 ## Store Integration
 
-The `Store` (`go/src/tango/store/`) holds a `zettelIdIndex` field. When a zettel is written, `AddZettelId()` is called to mark it consumed. `CreateZettelId()` is called when minting new zettels. The index is flushed as part of `Store.Flush()`.
+The `Store` (`go/internal/tango/store/`) holds a `zettelIdIndex` field. When a zettel is written, `AddZettelId()` is called to mark it consumed. `CreateZettelId()` is called when minting new zettels. The index is flushed as part of `Store.Flush()`.
 
 ## Key Source Locations
 
 | Concern | Package |
 |---------|---------|
-| ZettelId type & parsing | `go/src/echo/ids/zettel_id.go` |
-| Coordinate mapping | `go/src/_/coordinates/kennung.go` |
-| Yin/Yang provider files | `go/src/foxtrot/object_id_provider/` |
-| Index interface | `go/src/india/zettel_id_index/main.go` |
-| v0 index (map-based, active) | `go/src/india/zettel_id_index/v0/main.go` |
-| v1 index (bitset, disabled) | `go/src/india/zettel_id_index/v1/main.go` |
-| Genesis (Yin/Yang copy) | `go/src/juliett/env_repo/genesis.go` -- `CopyFileLines` calls |
-| Directory layout paths | `go/src/echo/directory_layout/v3.go` -- `DirObjectId()`, `FileCacheObjectId()` |
-| Exhaustion error | `go/src/foxtrot/object_id_provider/errors.go` |
-| Store integration | `go/src/tango/store/` |
+| ZettelId type & parsing | `go/internal/echo/ids/zettel_id.go` |
+| Coordinate mapping | `go/internal/_/coordinates/kennung.go` |
+| Yin/Yang provider files | `go/internal/foxtrot/object_id_provider/` |
+| Index interface | `go/internal/india/zettel_id_index/main.go` |
+| v0 index (map-based, active) | `go/internal/india/zettel_id_index/v0/main.go` |
+| v1 index (bitset, disabled) | `go/internal/india/zettel_id_index/v1/main.go` |
+| Genesis (Yin/Yang copy) | `go/internal/juliett/env_repo/genesis.go` -- `CopyFileLines` calls |
+| Directory layout paths | `go/internal/echo/directory_layout/v3.go` -- `DirObjectId()`, `FileCacheObjectId()` |
+| Exhaustion error | `go/internal/foxtrot/object_id_provider/errors.go` |
+| Store integration | `go/internal/tango/store/` |

@@ -141,8 +141,8 @@ import (
     "io"
     "os"
 
-    "code.linenisgreat.com/dodder/go/src/_/interfaces"
-    "code.linenisgreat.com/dodder/go/src/alfa/errors"
+    "code.linenisgreat.com/dodder/go/lib/_/interfaces"
+    "code.linenisgreat.com/dodder/go/lib/alfa/errors"
     "golang.org/x/xerrors"
 )
 ```

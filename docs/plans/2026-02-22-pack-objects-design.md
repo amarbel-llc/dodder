@@ -13,7 +13,7 @@
 ### Task 1: Create pack_objects.go command file
 
 **Files:**
-- Create: `go/src/lima/commands_madder/pack_objects.go`
+- Create: `go/internal/lima/commands_madder/pack_objects.go`
 
 **Step 1: Write the command file**
 
@@ -25,17 +25,17 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/src/_/interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/bravo/blob_store_id"
-	"code.linenisgreat.com/dodder/go/src/bravo/markl_io"
-	"code.linenisgreat.com/dodder/go/src/hotel/env_dir"
-	"code.linenisgreat.com/dodder/go/src/hotel/tap_diagnostics"
-	"code.linenisgreat.com/dodder/go/src/india/blob_stores"
-	"code.linenisgreat.com/dodder/go/src/india/env_local"
-	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/kilo/command_components_madder"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl_io"
+	"code.linenisgreat.com/dodder/go/internal/hotel/env_dir"
+	"code.linenisgreat.com/dodder/go/internal/hotel/tap_diagnostics"
+	"code.linenisgreat.com/dodder/go/internal/india/blob_stores"
+	"code.linenisgreat.com/dodder/go/internal/india/env_local"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/kilo/command_components_madder"
 	tap "github.com/amarbel-llc/tap-dancer/go"
 )
 

@@ -13,7 +13,7 @@
 ### Task 1: Rewrite dodder info-repo with dynamic key lookup and completion
 
 **Files:**
-- Modify: `go/src/yankee/commands_dodder/info_repo.go`
+- Modify: `go/internal/yankee/commands_dodder/info_repo.go`
 
 **Step 1: Replace the file contents**
 
@@ -24,13 +24,13 @@ import (
 	"sort"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/src/alfa/errors"
-	"code.linenisgreat.com/dodder/go/src/delta/xdg"
-	"code.linenisgreat.com/dodder/go/src/golf/blob_store_configs"
-	"code.linenisgreat.com/dodder/go/src/hotel/genesis_configs"
-	"code.linenisgreat.com/dodder/go/src/india/env_local"
-	"code.linenisgreat.com/dodder/go/src/juliett/command"
-	"code.linenisgreat.com/dodder/go/src/xray/command_components_dodder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/delta/xdg"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_store_configs"
+	"code.linenisgreat.com/dodder/go/internal/hotel/genesis_configs"
+	"code.linenisgreat.com/dodder/go/internal/india/env_local"
+	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/xray/command_components_dodder"
 )
 
 func init() {
@@ -283,5 +283,5 @@ chore: regenerate migration fixtures
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `go/src/yankee/commands_dodder/info_repo.go` | Rewrite | Dynamic key lookup via `ConfigKeyValues`, drop legacy keys, add `Complete` |
+| `go/internal/yankee/commands_dodder/info_repo.go` | Rewrite | Dynamic key lookup via `ConfigKeyValues`, drop legacy keys, add `Complete` |
 | `zz-tests_bats/info_repo.bats` | Modify | Update `blob_stores-0-encryption` → `encryption`, add error + dynamic key tests |

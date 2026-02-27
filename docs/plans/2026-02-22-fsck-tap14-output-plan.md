@@ -52,11 +52,11 @@ The `errIsNull` type is unexported. Export it so fsck can extract the `Purpose`
 field for YAML diagnostics. Follow the existing `ErrNotEqual` pattern.
 
 **Files:**
-- Modify: `go/src/echo/markl/errors.go:77-92`
+- Modify: `go/internal/echo/markl/errors.go:77-92`
 
 **Step 1: Write the failing test**
 
-Create `go/src/echo/markl/errors_test.go`:
+Create `go/internal/echo/markl/errors_test.go`:
 
 ```go
 package markl_test
@@ -65,7 +65,7 @@ import (
 	"errors"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 func TestErrIsNullPurposeExtractable(t *testing.T) {
@@ -90,7 +90,7 @@ Expected: FAIL — `ErrIsNull` not defined
 
 **Step 3: Export the type**
 
-In `go/src/echo/markl/errors.go`, rename `errIsNull` to `ErrIsNull` and export
+In `go/internal/echo/markl/errors.go`, rename `errIsNull` to `ErrIsNull` and export
 the `purpose` field to `Purpose`:
 
 ```go
@@ -130,7 +130,7 @@ Expected: builds clean
 **Step 6: Commit**
 
 ```bash
-git add go/src/echo/markl/errors.go go/src/echo/markl/errors_test.go
+git add go/internal/echo/markl/errors.go go/internal/echo/markl/errors_test.go
 git commit -m "refactor: export ErrIsNull for structured TAP-14 diagnostics"
 ```
 
@@ -143,12 +143,12 @@ into `map[string]string` for `tap.NotOk()`. This avoids duplicating
 type-assertion logic across three commands.
 
 **Files:**
-- Create: `go/src/bravo/ui/tap_diagnostics.go`
-- Create: `go/src/bravo/ui/tap_diagnostics_test.go`
+- Create: `go/internal/bravo/ui/tap_diagnostics.go`
+- Create: `go/internal/bravo/ui/tap_diagnostics_test.go`
 
 **Step 1: Write the failing test**
 
-Create `go/src/bravo/ui/tap_diagnostics_test.go`:
+Create `go/internal/bravo/ui/tap_diagnostics_test.go`:
 
 ```go
 package ui_test
@@ -157,8 +157,8 @@ import (
 	"fmt"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/src/bravo/ui"
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ui"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 func TestTapDiagnosticsFromErrNotEqual(t *testing.T) {
@@ -213,7 +213,7 @@ Expected: FAIL — `TapDiagnosticsFromError` not defined
 
 **Step 3: Implement the helper**
 
-Create `go/src/bravo/ui/tap_diagnostics.go`:
+Create `go/internal/bravo/ui/tap_diagnostics.go`:
 
 ```go
 package ui
@@ -222,7 +222,7 @@ import (
 	"errors"
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/src/echo/markl"
+	"code.linenisgreat.com/dodder/go/internal/echo/markl"
 )
 
 func TapDiagnosticsFromError(err error) map[string]string {
@@ -253,8 +253,8 @@ echo). Verify this is acceptable — if not, move the helper to a package at
 `echo` level or higher. Check existing imports in `bravo/ui` first.
 
 **Important:** If `bravo/ui` cannot import `echo/markl` due to the NATO
-hierarchy, move this helper to `go/src/echo/fsck_diagnostics/` or
-`go/src/hotel/tap_diagnostics/` instead and adjust all references below.
+hierarchy, move this helper to `go/internal/echo/fsck_diagnostics/` or
+`go/internal/hotel/tap_diagnostics/` instead and adjust all references below.
 
 **Step 4: Run test to verify it passes**
 
@@ -264,7 +264,7 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add go/src/bravo/ui/tap_diagnostics.go go/src/bravo/ui/tap_diagnostics_test.go
+git add go/internal/bravo/ui/tap_diagnostics.go go/internal/bravo/ui/tap_diagnostics_test.go
 git commit -m "feat: add TapDiagnosticsFromError for structured TAP-14 YAML"
 ```
 
@@ -276,7 +276,7 @@ This is the largest change. Restructure `runVerification` to emit one TAP test
 point per object inline, with YAML diagnostics on failure.
 
 **Files:**
-- Modify: `go/src/yankee/commands_dodder/fsck.go:86-235`
+- Modify: `go/internal/yankee/commands_dodder/fsck.go:86-235`
 
 **Step 1: Write the failing BATS test**
 
@@ -466,7 +466,7 @@ Add to imports:
 tap "github.com/amarbel-llc/tap-dancer/go"
 ```
 
-Remove unused imports: `"code.linenisgreat.com/dodder/go/src/bravo/collections_slice"`
+Remove unused imports: `"code.linenisgreat.com/dodder/go/internal/bravo/collections_slice"`
 
 **Step 4: Build and run the test**
 
@@ -476,7 +476,7 @@ Expected: `fsck_basic_tap14` passes
 **Step 5: Commit**
 
 ```bash
-git add go/src/yankee/commands_dodder/fsck.go zz-tests_bats/fsck.bats
+git add go/internal/yankee/commands_dodder/fsck.go zz-tests_bats/fsck.bats
 git commit -m "feat: dodder fsck emits TAP-14 output"
 ```
 
@@ -524,7 +524,7 @@ git commit -m "test: update fsck.bats assertions for TAP-14 output"
 ### Task 6: Rewrite `dodder repo-fsck` to emit TAP-14
 
 **Files:**
-- Modify: `go/src/yankee/commands_dodder/repo_fsck.go`
+- Modify: `go/internal/yankee/commands_dodder/repo_fsck.go`
 
 **Step 1: Write a BATS test for repo-fsck TAP output**
 
@@ -585,9 +585,9 @@ func (cmd RepoFsck) Run(req command.Request) {
 ```
 
 Add imports: `"os"`, `tap "github.com/amarbel-llc/tap-dancer/go"`.
-Remove unused imports: `"code.linenisgreat.com/dodder/go/src/juliett/sku"` if
+Remove unused imports: `"code.linenisgreat.com/dodder/go/internal/juliett/sku"` if
 `sku.String` is still needed (it is). Remove
-`"code.linenisgreat.com/dodder/go/src/bravo/ui"` if no longer used.
+`"code.linenisgreat.com/dodder/go/internal/bravo/ui"` if no longer used.
 
 **Step 4: Build and run**
 
@@ -597,7 +597,7 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add go/src/yankee/commands_dodder/repo_fsck.go zz-tests_bats/fsck.bats
+git add go/internal/yankee/commands_dodder/repo_fsck.go zz-tests_bats/fsck.bats
 git commit -m "feat: dodder repo-fsck emits TAP-14 output"
 ```
 
@@ -606,7 +606,7 @@ git commit -m "feat: dodder repo-fsck emits TAP-14 output"
 ### Task 7: Rewrite `madder fsck` to emit TAP-14
 
 **Files:**
-- Modify: `go/src/lima/commands_madder/fsck.go`
+- Modify: `go/internal/lima/commands_madder/fsck.go`
 
 **Step 1: Write a BATS test**
 
@@ -732,7 +732,7 @@ Expected: PASS
 **Step 5: Commit**
 
 ```bash
-git add go/src/lima/commands_madder/fsck.go zz-tests_bats/fsck.bats
+git add go/internal/lima/commands_madder/fsck.go zz-tests_bats/fsck.bats
 git commit -m "feat: madder fsck emits TAP-14 output"
 ```
 
@@ -741,12 +741,12 @@ git commit -m "feat: madder fsck emits TAP-14 output"
 ### Task 8: Clean up TODO comments
 
 **Files:**
-- Modify: `go/src/bravo/ui/main.go:85`
-- Modify: `go/src/lima/commands_madder/sync.go:60` (leave as-is — sync is separate scope)
+- Modify: `go/internal/bravo/ui/main.go:85`
+- Modify: `go/internal/lima/commands_madder/sync.go:60` (leave as-is — sync is separate scope)
 
 **Step 1: Remove the resolved TODO**
 
-In `go/src/bravo/ui/main.go`, remove line 85: `// TODO add a TAP printer`
+In `go/internal/bravo/ui/main.go`, remove line 85: `// TODO add a TAP printer`
 
 **Step 2: Build**
 
@@ -756,7 +756,7 @@ Expected: clean
 **Step 3: Commit**
 
 ```bash
-git add go/src/bravo/ui/main.go
+git add go/internal/bravo/ui/main.go
 git commit -m "chore: remove resolved TAP printer TODO"
 ```
 
