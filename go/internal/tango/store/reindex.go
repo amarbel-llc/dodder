@@ -1,11 +1,11 @@
 package store
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/india/file_lock"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
-	"code.linenisgreat.com/dodder/go/internal/hotel/file_lock"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 // TODO-P2 add support for quiet reindexing

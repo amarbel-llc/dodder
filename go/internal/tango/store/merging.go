@@ -1,10 +1,10 @@
 package store
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_options"
-	"code.linenisgreat.com/dodder/go/internal/golf/objects"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/delta/checkout_options"
+	"code.linenisgreat.com/dodder/go/internal/hotel/objects"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func (store *Store) ReadExternalAndMergeIfNecessary(

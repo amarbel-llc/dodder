@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/src/_/dagnabit"
+	"code.linenisgreat.com/dodder/go/lib/_/dagnabit"
 )
 
 func main() {
@@ -33,9 +33,9 @@ func main() {
 
 	r := dagnabit.Repositioner{
 		Reader: dagnabit.GoListReader{
-			ModulePath:    "code.linenisgreat.com/dodder/go",
-			Dir:           dir,
-			PackagePrefix: "src",
+			ModulePath:      "code.linenisgreat.com/dodder/go",
+			Dir:             dir,
+			PackagePrefixes: []string{"lib", "internal"},
 		},
 		Mapper:  dagnabit.MakeNATOLevelMapper(),
 		Mover:   dagnabit.JustMover{Dir: dir},

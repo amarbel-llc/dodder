@@ -3,8 +3,8 @@
 package store_browser
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func (store *Store) DeleteCheckedOut(co *sku.CheckedOut) (err error) {

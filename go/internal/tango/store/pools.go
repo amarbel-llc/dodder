@@ -1,7 +1,7 @@
 package store
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 )
 
 // TODO remove entirely — callers should use repool from GetWithRepool

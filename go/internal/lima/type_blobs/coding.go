@@ -1,9 +1,9 @@
 package type_blobs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/golf/triple_hyphen_io"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
 )
 
 type TypedBlob = triple_hyphen_io.TypedBlob[Blob]

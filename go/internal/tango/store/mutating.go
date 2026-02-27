@@ -1,18 +1,18 @@
 package store
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/delta/genres"
+	"code.linenisgreat.com/dodder/go/internal/delta/store_version"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/markl"
+	"code.linenisgreat.com/dodder/go/internal/golf/object_id_provider"
+	"code.linenisgreat.com/dodder/go/internal/hotel/objects"
+	"code.linenisgreat.com/dodder/go/internal/india/file_lock"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
-	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/charlie/store_version"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/echo/markl"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_id_provider"
-	"code.linenisgreat.com/dodder/go/internal/golf/objects"
-	"code.linenisgreat.com/dodder/go/internal/hotel/file_lock"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 func (store *Store) Commit(

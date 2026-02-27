@@ -1,10 +1,10 @@
 package store
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/delta/genres"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func (store *Store) validateAndFinalize(

@@ -1,11 +1,11 @@
 package sku_fmt
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/delta/genres"
+	"code.linenisgreat.com/dodder/go/internal/juliett/env_local"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
-	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/india/env_local"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type GenreObjectIdCollectionMap = map[genres.Genre]interfaces.Collection[string]

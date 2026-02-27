@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // TODO abstract and regenerate on commit / reindex

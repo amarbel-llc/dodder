@@ -4,11 +4,11 @@ import (
 	"slices"
 	"sync"
 
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/internal/oscar/queries"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
-	"code.linenisgreat.com/dodder/go/internal/november/queries"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 )
 
 func (store *Store) All(

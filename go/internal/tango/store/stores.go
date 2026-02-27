@@ -1,15 +1,15 @@
 package store
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_mode"
+	"code.linenisgreat.com/dodder/go/internal/delta/checkout_options"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	pkg_query "code.linenisgreat.com/dodder/go/internal/oscar/queries"
+	"code.linenisgreat.com/dodder/go/internal/romeo/env_workspace"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/bravo/checkout_mode"
-	"code.linenisgreat.com/dodder/go/lib/bravo/comments"
-	"code.linenisgreat.com/dodder/go/internal/charlie/checkout_options"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
-	pkg_query "code.linenisgreat.com/dodder/go/internal/november/queries"
-	"code.linenisgreat.com/dodder/go/internal/quebec/env_workspace"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 )
 
 func (store *Store) SaveBlob(el sku.ExternalLike) (err error) {

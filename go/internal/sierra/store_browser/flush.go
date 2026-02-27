@@ -7,8 +7,8 @@ import (
 	"syscall"
 
 	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"golang.org/x/exp/maps"
 )
 

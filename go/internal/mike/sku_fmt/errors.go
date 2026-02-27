@@ -1,6 +1,6 @@
 package sku_fmt
 
-import "code.linenisgreat.com/dodder/go/lib/alfa/errors"
+import "code.linenisgreat.com/dodder/go/lib/bravo/errors"
 
 type (
 	pkgErrDisamb struct{}

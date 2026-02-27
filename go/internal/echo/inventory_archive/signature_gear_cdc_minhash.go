@@ -4,7 +4,7 @@ import (
 	"hash/fnv"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // GearCDCMinHashComputer splits blob content into variable-length

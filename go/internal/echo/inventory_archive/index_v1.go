@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func WriteIndexV1(

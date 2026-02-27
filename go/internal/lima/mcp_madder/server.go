@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/kilo/command"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/transport"

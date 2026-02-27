@@ -4,8 +4,8 @@ import (
 	"crypto/ecdh"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"filippo.io/age"
 )
 

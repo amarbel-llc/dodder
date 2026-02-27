@@ -3,9 +3,9 @@ package sku_fmt
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 )
 
 func StringMetadataSansTai(object *sku.Transacted) (str string) {

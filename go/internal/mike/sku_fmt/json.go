@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/echo/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/markl"
+	"code.linenisgreat.com/dodder/go/internal/hotel/objects"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
-	"code.linenisgreat.com/dodder/go/lib/bravo/quiter_set"
-	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/echo/markl"
-	"code.linenisgreat.com/dodder/go/internal/golf/objects"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
 )
 
 type JSONMCP struct {

@@ -1,17 +1,17 @@
 package store
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/hotel/repo_configs"
+	"code.linenisgreat.com/dodder/go/internal/juliett/zettel_id_index"
+	"code.linenisgreat.com/dodder/go/internal/kilo/env_repo"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/internal/mike/stream_index"
+	"code.linenisgreat.com/dodder/go/internal/november/inventory_list_store"
+	"code.linenisgreat.com/dodder/go/internal/november/typed_blob_store"
+	"code.linenisgreat.com/dodder/go/internal/sierra/store_config"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/delta/thyme"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/golf/repo_configs"
-	"code.linenisgreat.com/dodder/go/internal/india/zettel_id_index"
-	"code.linenisgreat.com/dodder/go/internal/juliett/env_repo"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/stream_index"
-	"code.linenisgreat.com/dodder/go/internal/mike/inventory_list_store"
-	"code.linenisgreat.com/dodder/go/internal/mike/typed_blob_store"
-	"code.linenisgreat.com/dodder/go/internal/romeo/store_config"
+	"code.linenisgreat.com/dodder/go/lib/echo/thyme"
 )
 
 func (store *Store) GetTypedBlobStore() typed_blob_store.Stores {

@@ -3,11 +3,11 @@ package sku_fmt
 import (
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/delta/string_format_writer"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/echo/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type itemDeletedStringFormatWriter struct {

@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
-	"code.linenisgreat.com/dodder/go/internal/oscar/store_workspace"
+	"code.linenisgreat.com/dodder/go/internal/papa/store_workspace"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 func (store *Store) Initialize(esi store_workspace.Supplies) (err error) {

@@ -9,11 +9,11 @@ import (
 	"path"
 
 	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
-	"code.linenisgreat.com/dodder/go/lib/charlie/files"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 type cache struct {

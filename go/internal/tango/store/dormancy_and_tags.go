@@ -1,16 +1,16 @@
 package store
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/internal/delta/genres"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
+	"code.linenisgreat.com/dodder/go/internal/golf/tag_paths"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/lib/bravo/quiter"
-	"code.linenisgreat.com/dodder/go/lib/bravo/ui"
-	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
-	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/echo/ids"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/tag_paths"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
 )
 
 // TODO extract into store_tags

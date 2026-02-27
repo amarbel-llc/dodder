@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/charlie/compression_type"
-	"code.linenisgreat.com/dodder/go/lib/delta/age"
+	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 	"code.linenisgreat.com/dodder/go/lib/delta/pivy"
+	"code.linenisgreat.com/dodder/go/lib/echo/age"
 )
 
 func TestV1RoundTripFullEntriesOnly(t *testing.T) {

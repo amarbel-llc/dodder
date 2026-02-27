@@ -6,12 +6,12 @@ import (
 	"net/url"
 
 	"code.linenisgreat.com/dodder/go/internal/_/external_state"
+	"code.linenisgreat.com/dodder/go/internal/delta/genres"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/checked_out_state"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/internal/oscar/queries"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/internal/charlie/genres"
-	"code.linenisgreat.com/dodder/go/internal/echo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
-	"code.linenisgreat.com/dodder/go/internal/november/queries"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type executor struct {

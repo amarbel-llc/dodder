@@ -3,9 +3,9 @@ package mcp_madder
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
-	"code.linenisgreat.com/dodder/go/lib/echo/config_cli"
-	"code.linenisgreat.com/dodder/go/internal/juliett/command"
+	"code.linenisgreat.com/dodder/go/internal/kilo/command"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/foxtrot/config_cli"
 )
 
 type BridgeResult struct {
