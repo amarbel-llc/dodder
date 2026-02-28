@@ -28,7 +28,14 @@ func (id *Identity) Unwrap(stanzas []*age.Stanza) ([]byte, error) {
 
 		fileKey, err := id.tryUnwrap(s)
 		if err != nil {
-			continue // trial decryption: AEAD failure means wrong recipient
+			// Agent communication errors should be surfaced immediately.
+			// Only AEAD failures (wrong recipient) should continue to the
+			// next stanza for trial decryption.
+			if IsErrAgent(err) {
+				return nil, err
+			}
+
+			continue
 		}
 
 		return fileKey, nil
