@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/internal/charlie/blob_store_id"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/env_vars"
@@ -114,14 +113,6 @@ func (xdg XDG) CloneWithoutOverride() XDG {
 	errors.PanicIfError(xdg.InitializeStandardFromEnv(initArgs))
 
 	return xdg
-}
-
-func (xdg XDG) GetLocationType() blob_store_id.LocationType {
-	if xdg.overridePath == "" {
-		return blob_store_id.LocationTypeXDGUser
-	} else {
-		return blob_store_id.LocationTypeCwd
-	}
 }
 
 func (xdg XDG) IsOverridden() bool {
