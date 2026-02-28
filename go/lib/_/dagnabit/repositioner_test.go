@@ -210,3 +210,72 @@ func TestRepositionerMapperError(t *testing.T) {
 		t.Errorf("expected error to contain %q, got %q", "mapping height", err.Error())
 	}
 }
+
+func TestRepositionerCrossPrefixEdgesIgnored(t *testing.T) {
+	reader := stubReader{
+		edgesByPrefix: map[string][]Edge{
+			"treeA": {},
+			"treeB": {},
+		},
+	}
+
+	mapper := sliceLevelMapper{levels: []string{"level0", "level1"}}
+	mover := &recordingMover{}
+
+	r := Repositioner{
+		Reader: reader,
+		Mapper: mapper,
+		Mover:  mover,
+	}
+
+	if err := r.Run(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(mover.moves) != 0 {
+		t.Fatalf("expected 0 moves, got %d: %v", len(mover.moves), mover.moves)
+	}
+}
+
+func TestRepositionerMultiplePrefixesSortedIndependently(t *testing.T) {
+	reader := stubReader{
+		edgesByPrefix: map[string][]Edge{
+			"lib": {
+				{Source: "lib/level0/pkg_a", Target: "lib/level0/pkg_b"},
+			},
+			"internal": {
+				{Source: "internal/level0/pkg_c", Target: "internal/level0/pkg_d"},
+			},
+		},
+	}
+
+	mapper := sliceLevelMapper{levels: []string{"level0", "level1"}}
+	mover := &recordingMover{}
+
+	r := Repositioner{
+		Reader: reader,
+		Mapper: mapper,
+		Mover:  mover,
+	}
+
+	if err := r.Run(); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Both pkg_a and pkg_c should move from level0 to level1
+	if len(mover.moves) != 2 {
+		t.Fatalf("expected 2 moves, got %d: %v", len(mover.moves), mover.moves)
+	}
+
+	// Sorted by prefix: internal first, then lib
+	expected0 := "internal/level0/pkg_c -> internal/level1/pkg_c"
+	expected1 := "lib/level0/pkg_a -> lib/level1/pkg_a"
+
+	if mover.moves[0] != expected0 {
+		t.Errorf("move[0]: expected %q, got %q", expected0, mover.moves[0])
+	}
+
+	if mover.moves[1] != expected1 {
+		t.Errorf("move[1]: expected %q, got %q", expected1, mover.moves[1])
+	}
+}
