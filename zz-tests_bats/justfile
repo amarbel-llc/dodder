@@ -1,6 +1,8 @@
 set output-format := "tap"
 
 bin_dir := env("BATS_BIN_DIR", "")
+# Exclude af_unix-tagged files; they need --no-sandbox (see test-tags-no-sandbox).
+_non_af_unix_bats := `grep -L 'file_tags=.*af_unix' *.bats | tr '\n' ' '`
 _bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
 
 export DODDER_XDG_UTILITY_OVERRIDE := ""
@@ -86,7 +88,7 @@ test-integration: (test-targets "*.bats")
 test-migration: (test-targets "migration/*.bats")
 
 [group("test")]
-test *flags: (test-targets flags "--filter-tags '!af_unix'" "*.bats" "migration/*.bats")
+test *flags: (test-targets flags _non_af_unix_bats "migration/*.bats")
 
 #   ____  _        _
 #  / ___|| |_ __ _| |_ ___
