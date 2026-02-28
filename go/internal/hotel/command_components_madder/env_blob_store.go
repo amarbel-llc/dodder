@@ -1,0 +1,57 @@
+package command_components_madder
+
+import (
+	"fmt"
+
+	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
+	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
+	"code.linenisgreat.com/dodder/go/internal/golf/command"
+	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
+	"code.linenisgreat.com/dodder/go/lib/echo/debug"
+	"code.linenisgreat.com/dodder/go/lib/foxtrot/config_cli"
+)
+
+type EnvBlobStore struct{}
+
+func (cmd EnvBlobStore) MakeEnvBlobStore(
+	req command.Request,
+) env_repo.BlobStoreEnv {
+	configAny := req.Utility.GetConfigAny()
+
+	var debugOptions debug.Options
+	var cliConfig domain_interfaces.CLIConfigProvider
+	var envOptions env_ui.Options
+
+	switch c := configAny.(type) {
+	case *config_cli.Config:
+		debugOptions = c.Debug
+		cliConfig = c
+		envOptions.CustomOut = c.CustomOut
+		envOptions.CustomErr = c.CustomErr
+	case *repo_config_cli.Config:
+		debugOptions = c.Debug
+		cliConfig = c
+	default:
+		panic(fmt.Sprintf("unsupported config type: %T", configAny))
+	}
+
+	dir := env_dir.MakeDefault(
+		req,
+		req.Utility.GetName(),
+		debugOptions,
+	)
+
+	envUI := env_ui.Make(
+		req,
+		cliConfig,
+		debugOptions,
+		envOptions,
+	)
+
+	envLocal := env_local.Make(envUI, dir)
+
+	return env_repo.MakeBlobStoreEnv(envLocal)
+}

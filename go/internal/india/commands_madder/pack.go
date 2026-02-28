@@ -1,0 +1,94 @@
+package commands_madder
+
+import (
+	"fmt"
+	"os"
+
+	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
+	"code.linenisgreat.com/dodder/go/internal/golf/command"
+	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	tap "github.com/amarbel-llc/tap-dancer/go"
+)
+
+func init() {
+	utility.AddCmd("pack", &Pack{})
+}
+
+type Pack struct {
+	command_components_madder.EnvBlobStore
+	command_components_madder.BlobStore
+
+	DeleteLoose      bool
+	MaxPackSize      ui.HumanReadableBytes
+	SkipMissingBlobs bool
+	Delta            bool
+}
+
+var _ interfaces.CommandComponentWriter = (*Pack)(nil)
+
+func (cmd Pack) Complete(
+	req command.Request,
+	envLocal env_local.Env,
+	commandLine command.CommandLineInput,
+) {
+	envBlobStore := cmd.MakeEnvBlobStore(req)
+	blobStores := envBlobStore.GetBlobStores()
+
+	for id, blobStore := range blobStores {
+		envLocal.GetOut().Printf("%s\t%s", id, blobStore.GetBlobStoreDescription())
+	}
+}
+
+func (cmd *Pack) SetFlagDefinitions(
+	flagSet interfaces.CLIFlagDefinitions,
+) {
+	flagSet.BoolVar(&cmd.DeleteLoose, "delete-loose", false,
+		"validate archive then delete packed loose blobs")
+	flagSet.BoolVar(&cmd.SkipMissingBlobs, "skip-missing-blobs", false,
+		"skip unreadable loose blobs instead of aborting")
+	flagSet.BoolVar(&cmd.Delta, "delta", false,
+		"enable delta compression during packing")
+	flagSet.Var(&cmd.MaxPackSize, "max-pack-size",
+		"override max pack size (e.g. 100M, 1G, 0 = unlimited)",
+	)
+}
+
+func (cmd Pack) Run(req command.Request) {
+	envBlobStore := cmd.MakeEnvBlobStore(req)
+	blobStoreMap := cmd.MakeBlobStoresFromIdsOrAll(req, envBlobStore)
+
+	tw := tap.NewWriter(os.Stdout)
+
+	for storeId, blobStore := range blobStoreMap {
+		packable, ok := blobStore.BlobStore.(blob_stores.PackableArchive)
+		if !ok {
+			tw.Skip(storeId, "not packable")
+			continue
+		}
+
+		if err := packable.Pack(blob_stores.PackOptions{
+			Context:              req,
+			DeleteLoose:          cmd.DeleteLoose,
+			DeletionPrecondition: blob_stores.NopDeletionPrecondition(),
+			MaxPackSize:          cmd.MaxPackSize.GetByteCount(),
+			SkipMissingBlobs:     cmd.SkipMissingBlobs,
+			Delta:                cmd.Delta,
+			TapWriter:            tw,
+		}); err != nil {
+			tw.NotOk(
+				fmt.Sprintf("pack %s", storeId),
+				tap_diagnostics.FromError(err),
+			)
+			req.Cancel(err)
+			return
+		}
+
+		tw.Ok(fmt.Sprintf("pack %s", storeId))
+	}
+
+	tw.Plan()
+}

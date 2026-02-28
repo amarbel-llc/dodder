@@ -6,10 +6,10 @@ import (
 	"net/url"
 
 	"code.linenisgreat.com/dodder/go/internal/_/external_state"
-	"code.linenisgreat.com/dodder/go/internal/delta/genres"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
-	"code.linenisgreat.com/dodder/go/internal/oscar/queries"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
+	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

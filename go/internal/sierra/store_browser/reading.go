@@ -5,8 +5,8 @@ package store_browser
 import (
 	"net/url"
 
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
-	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

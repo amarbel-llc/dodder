@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/delta/doddish"
+	"code.linenisgreat.com/dodder/go/internal/_/doddish"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 )
