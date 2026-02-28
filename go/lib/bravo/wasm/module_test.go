@@ -9,6 +9,9 @@ import (
 //go:embed testdata/always_true.wasm
 var alwaysTrueWasm []byte
 
+//go:embed testdata/genre_filter.wasm
+var genreFilterWasm []byte
+
 func TestModulePoolBuilderRoundTrip(t *testing.T) {
 	ctx := context.Background()
 
@@ -68,5 +71,74 @@ func TestModulePoolReuse(t *testing.T) {
 		}
 
 		repool()
+	}
+}
+
+func TestGenreFilterAcceptsZettel(t *testing.T) {
+	ctx := context.Background()
+
+	rt, err := MakeRuntime(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rt.Close(ctx)
+
+	pool, err := MakeModulePoolBuilder(rt).WithBytes(genreFilterWasm).Build(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mod, repool := pool.GetWithRepool()
+	defer repool()
+
+	recordPtr, err := MarshalSkuToModule(ctx, mod,
+		"zettel", "test/object", "!text",
+		[]string{"project"}, nil,
+		"abc123", "a test zettel")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := mod.CallContainsSku(ctx, recordPtr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !result {
+		t.Fatal("expected genre_filter to accept genre=zettel")
+	}
+}
+
+func TestGenreFilterRejectsNonZettel(t *testing.T) {
+	ctx := context.Background()
+
+	rt, err := MakeRuntime(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rt.Close(ctx)
+
+	pool, err := MakeModulePoolBuilder(rt).WithBytes(genreFilterWasm).Build(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mod, repool := pool.GetWithRepool()
+	defer repool()
+
+	recordPtr, err := MarshalSkuToModule(ctx, mod,
+		"tag", "some-tag", "!toml-tag-v1",
+		nil, nil, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := mod.CallContainsSku(ctx, recordPtr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if result {
+		t.Fatal("expected genre_filter to reject genre=tag")
 	}
 }
