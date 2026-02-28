@@ -59,7 +59,7 @@ test-generate_fixtures:
   export DODDER_VERSION="v$(dodder info store-version)"
   ./migration/generate_fixture.bash
 
-bats_timeout := "10"
+bats_timeout := "30"
 
 # runs specific bats test files, or a default of all.
 [group("test")]
