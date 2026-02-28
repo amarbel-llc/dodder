@@ -8,6 +8,9 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
+// TODO-P2 consolidate info-ssh_agent and info-pivy_agent into
+// info-available_keys, exposing all keys on ssh/pivy agents in formats
+// accepted by `dodder init -private_key` and `madder init -private_key`.
 func init() {
 	utility.AddCmd("info-ssh_agent", &InfoSSHAgent{})
 }

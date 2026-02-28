@@ -42,6 +42,10 @@ test-bats-targets *targets: build
 test-bats-tags *tags: build
   BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
 
+# Run bats tests requiring Unix sockets (no sandbox).
+test-bats-no-sandbox: build
+  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
+
 # Force-regenerate fixtures. Review diff, then git add + commit.
 test-bats-update-fixtures: build
   #!/usr/bin/env bash

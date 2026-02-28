@@ -73,6 +73,12 @@ test-tags *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
     bats {{_bin_dir_arg}} --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
 
+# runs specific bats test tags without sandbox
+[group("test")]
+test-tags-no-sandbox *tags:
+  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
+    bats {{_bin_dir_arg}} --no-sandbox --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
+
 [group("test")]
 test-integration: (test-targets "*.bats")
 
@@ -80,7 +86,7 @@ test-integration: (test-targets "*.bats")
 test-migration: (test-targets "migration/*.bats")
 
 [group("test")]
-test *flags: (test-targets flags "*.bats" "migration/*.bats")
+test *flags: (test-targets flags "--filter-tags '!af_unix'" "*.bats" "migration/*.bats")
 
 #   ____  _        _
 #  / ___|| |_ __ _| |_ ___
