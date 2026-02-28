@@ -6,9 +6,10 @@ type Edge struct {
 	Target string
 }
 
-// DependencyReader produces directed edges from a codebase.
+// DependencyReader produces directed edges from a codebase,
+// grouped by tree prefix (e.g., "lib", "internal").
 type DependencyReader interface {
-	ReadDependencies() ([]Edge, error)
+	ReadDependencies() (map[string][]Edge, error)
 }
 
 // LevelMapper assigns names to topological heights.

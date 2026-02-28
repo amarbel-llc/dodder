@@ -7,11 +7,11 @@ import (
 )
 
 type stubReader struct {
-	edges []Edge
+	edgesByPrefix map[string][]Edge
 }
 
-func (r stubReader) ReadDependencies() ([]Edge, error) {
-	return r.edges, nil
+func (stubReader stubReader) ReadDependencies() (map[string][]Edge, error) {
+	return stubReader.edgesByPrefix, nil
 }
 
 type sliceLevelMapper struct {
@@ -37,8 +37,10 @@ func (m *recordingMover) MovePackage(src, dst string) error {
 
 func TestRepositionerMovesPackageToCorrectLevel(t *testing.T) {
 	reader := stubReader{
-		edges: []Edge{
-			{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+		edgesByPrefix: map[string][]Edge{
+			"tree": {
+				{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+			},
 		},
 	}
 
@@ -69,8 +71,10 @@ func TestRepositionerMovesPackageToCorrectLevel(t *testing.T) {
 
 func TestRepositionerSkipsCorrectlyPlacedPackages(t *testing.T) {
 	reader := stubReader{
-		edges: []Edge{
-			{Source: "tree/level1/pkg_a", Target: "tree/level0/pkg_b"},
+		edgesByPrefix: map[string][]Edge{
+			"tree": {
+				{Source: "tree/level1/pkg_a", Target: "tree/level0/pkg_b"},
+			},
 		},
 	}
 
@@ -94,8 +98,10 @@ func TestRepositionerSkipsCorrectlyPlacedPackages(t *testing.T) {
 
 func TestRepositionerDryRunDoesNotMove(t *testing.T) {
 	reader := stubReader{
-		edges: []Edge{
-			{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+		edgesByPrefix: map[string][]Edge{
+			"tree": {
+				{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+			},
 		},
 	}
 
@@ -143,15 +149,17 @@ type errorReader struct {
 	err error
 }
 
-func (r errorReader) ReadDependencies() ([]Edge, error) {
-	return nil, r.err
+func (errorReader errorReader) ReadDependencies() (map[string][]Edge, error) {
+	return nil, errorReader.err
 }
 
 func TestRepositionerCycleError(t *testing.T) {
 	reader := stubReader{
-		edges: []Edge{
-			{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
-			{Source: "tree/level0/pkg_b", Target: "tree/level0/pkg_a"},
+		edgesByPrefix: map[string][]Edge{
+			"tree": {
+				{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+				{Source: "tree/level0/pkg_b", Target: "tree/level0/pkg_a"},
+			},
 		},
 	}
 
@@ -177,8 +185,10 @@ func TestRepositionerCycleError(t *testing.T) {
 func TestRepositionerMapperError(t *testing.T) {
 	// With only 1 level defined, height 1 is out of range
 	reader := stubReader{
-		edges: []Edge{
-			{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+		edgesByPrefix: map[string][]Edge{
+			"tree": {
+				{Source: "tree/level0/pkg_a", Target: "tree/level0/pkg_b"},
+			},
 		},
 	}
 

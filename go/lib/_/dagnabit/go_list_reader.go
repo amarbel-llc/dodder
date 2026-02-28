@@ -23,37 +23,23 @@ type GoListReader struct {
 	PackagePrefixes []string
 }
 
-func (r GoListReader) ReadDependencies() ([]Edge, error) {
-	var allEdges []Edge
+func (goListReader GoListReader) ReadDependencies() (map[string][]Edge, error) {
+	edgesByPrefix := make(map[string][]Edge)
 
-	for _, prefix := range r.PackagePrefixes {
-		edges, err := r.readPrefix(prefix)
+	for _, prefix := range goListReader.PackagePrefixes {
+		edges, err := goListReader.readPrefix(prefix)
 		if err != nil {
 			return nil, err
 		}
 
-		allEdges = append(allEdges, edges...)
+		edgesByPrefix[prefix] = edges
 	}
 
-	// Deduplicate edges — go list produces duplicates when multiple files
-	// in the same package import the same dependency.
-	seen := make(map[Edge]struct{})
-	deduped := make([]Edge, 0, len(allEdges))
-
-	for _, e := range allEdges {
-		if _, ok := seen[e]; ok {
-			continue
-		}
-
-		seen[e] = struct{}{}
-		deduped = append(deduped, e)
-	}
-
-	return deduped, nil
+	return edgesByPrefix, nil
 }
 
-func (r GoListReader) readPrefix(prefix string) ([]Edge, error) {
-	patterns, err := listPatternsForPrefix(r.Dir, prefix)
+func (goListReader GoListReader) readPrefix(prefix string) ([]Edge, error) {
+	patterns, err := listPatternsForPrefix(goListReader.Dir, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -64,14 +50,15 @@ func (r GoListReader) readPrefix(prefix string) ([]Edge, error) {
 	)
 
 	cmd := exec.Command("go", args...)
-	cmd.Dir = r.Dir
+	cmd.Dir = goListReader.Dir
 
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("go list %s: %w", prefix, err)
 	}
 
-	modulePrefix := r.ModulePath + "/"
+	prefixFilter := goListReader.ModulePath + "/" + prefix + "/"
+	seen := make(map[Edge]struct{})
 	var edges []Edge
 
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -86,12 +73,12 @@ func (r GoListReader) readPrefix(prefix string) ([]Edge, error) {
 
 		sourceFull := parts[0]
 
-		if !strings.HasPrefix(sourceFull, modulePrefix) {
+		if !strings.HasPrefix(sourceFull, prefixFilter) {
 			continue
 		}
 
 		source := trimToThreeComponents(
-			strings.TrimPrefix(sourceFull, modulePrefix),
+			strings.TrimPrefix(sourceFull, goListReader.ModulePath+"/"),
 		)
 
 		if source == "" {
@@ -101,19 +88,26 @@ func (r GoListReader) readPrefix(prefix string) ([]Edge, error) {
 		imports := strings.Fields(parts[1])
 
 		for _, imp := range imports {
-			if !strings.HasPrefix(imp, modulePrefix) {
+			if !strings.HasPrefix(imp, prefixFilter) {
 				continue
 			}
 
 			target := trimToThreeComponents(
-				strings.TrimPrefix(imp, modulePrefix),
+				strings.TrimPrefix(imp, goListReader.ModulePath+"/"),
 			)
 
 			if target == "" || target == source {
 				continue
 			}
 
-			edges = append(edges, Edge{Source: source, Target: target})
+			edge := Edge{Source: source, Target: target}
+
+			if _, ok := seen[edge]; ok {
+				continue
+			}
+
+			seen[edge] = struct{}{}
+			edges = append(edges, edge)
 		}
 	}
 

@@ -16,15 +16,32 @@ type Repositioner struct {
 	Verbose bool
 }
 
-func (r *Repositioner) Run() error {
-	edges, err := r.Reader.ReadDependencies()
+func (repositioner *Repositioner) Run() error {
+	edgesByPrefix, err := repositioner.Reader.ReadDependencies()
 	if err != nil {
 		return fmt.Errorf("reading dependencies: %w", err)
 	}
 
+	prefixes := make([]string, 0, len(edgesByPrefix))
+	for prefix := range edgesByPrefix {
+		prefixes = append(prefixes, prefix)
+	}
+
+	sort.Strings(prefixes)
+
+	for _, prefix := range prefixes {
+		if err := repositioner.runPrefix(prefix, edgesByPrefix[prefix]); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (repositioner *Repositioner) runPrefix(prefix string, edges []Edge) error {
 	heights, err := TopologicalSort(edges)
 	if err != nil {
-		return fmt.Errorf("topological sort: %w", err)
+		return fmt.Errorf("topological sort for %s: %w", prefix, err)
 	}
 
 	type nodeHeight struct {
@@ -47,7 +64,7 @@ func (r *Repositioner) Run() error {
 	for _, nh := range sorted {
 		node := nh.node
 		height := nh.height
-		requiredLevel, err := r.Mapper.LevelName(height)
+		requiredLevel, err := repositioner.Mapper.LevelName(height)
 		if err != nil {
 			return fmt.Errorf("mapping height %d for %s: %w", height, node, err)
 		}
@@ -63,12 +80,12 @@ func (r *Repositioner) Run() error {
 		srcPath := node
 		dstPath := treePrefix + "/" + requiredLevel + "/" + packageName
 
-		if r.DryRun {
+		if repositioner.DryRun {
 			fmt.Printf("would move: %s -> %s\n", srcPath, dstPath)
 			continue
 		}
 
-		if err := r.Mover.MovePackage(srcPath, dstPath); err != nil {
+		if err := repositioner.Mover.MovePackage(srcPath, dstPath); err != nil {
 			return fmt.Errorf("moving %s to %s: %w", srcPath, dstPath, err)
 		}
 	}
