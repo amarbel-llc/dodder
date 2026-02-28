@@ -3,7 +3,7 @@ package wasm
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/tetratelabs/wazero"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // BumpAllocator is a simple arena allocator over a byte slice. Mirrors the

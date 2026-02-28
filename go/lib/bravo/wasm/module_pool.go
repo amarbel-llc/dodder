@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"github.com/tetratelabs/wazero"
 )
