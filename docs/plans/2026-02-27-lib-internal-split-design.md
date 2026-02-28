@@ -149,8 +149,7 @@ lower-tier packages:
   `bravo/remote_connection_types`
 - `charlie/checkout_options`, `charlie/doddish`, `charlie/genres`,
   `charlie/key_bytes`, `charlie/options_print`, `charlie/store_version`
-- `delta/file_extensions`, `delta/key_strings`, `delta/string_format_writer`,
-  `delta/xdg`
+- `delta/file_extensions`, `delta/key_strings`, `delta/string_format_writer`
 - All of echo through yankee (except `echo/config_cli`)
 
 ### Refactoring Candidates (internal/ now, lib/ later)
@@ -158,8 +157,6 @@ lower-tier packages:
 These packages are mostly domain-agnostic but have small domain-specific
 dependencies that could be extracted:
 
-- `delta/xdg` — remove `blob_store_id.LocationType` return from
-  `GetLocationType()`
 - `echo/format` — remove `bravo/ohio` error wrapping dependency
 - `echo/directory_layout` — extract generic path generation from
   `blob_store_id.Id` dependency
