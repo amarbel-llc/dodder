@@ -3,7 +3,7 @@ package sku_wasm
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/wasm"
