@@ -67,6 +67,50 @@ func callAgentECDH(
 		)
 	}
 
+	payload, err := buildECDHPayload(recipientPubkey, ephemeralPubkey)
+	if err != nil {
+		return nil, err
+	}
+
+	// Force token re-enumeration before ECDH. This handles the case where
+	// a card was removed and re-inserted — pivy-agent's token state may be
+	// stale, and List() triggers piv_enumerate() via agent_piv_open().
+	client.List() // best-effort, ignore error
+
+	secret, err = doECDHExtension(extClient, payload)
+	if err == nil {
+		return secret, nil
+	}
+
+	firstErr := err
+
+	// Retry once. The List() above may have triggered re-enumeration that
+	// takes effect on the next call, or pivy-agent may prompt for PIN via
+	// SSH_ASKPASS on this attempt.
+	secret, err = doECDHExtension(extClient, payload)
+	if err == nil {
+		return secret, nil
+	}
+
+	return nil, errors.WrapWithType[errAgentDisamb](firstErr)
+}
+
+func doECDHExtension(
+	extClient agent.ExtendedAgent,
+	payload []byte,
+) ([]byte, error) {
+	response, err := extClient.Extension("ecdh@joyent.com", payload)
+	if err != nil {
+		return nil, errors.Wrapf(err, "ecdh@joyent.com extension call")
+	}
+
+	return parseECDHResponse(response)
+}
+
+func buildECDHPayload(
+	recipientPubkey *ecdh.PublicKey,
+	ephemeralPubkey []byte,
+) ([]byte, error) {
 	// The ephemeral pubkey from the age stanza is in compressed form (33 bytes).
 	// Decompress to get an ecdh.PublicKey for SSH wire format conversion.
 	ephPub, err := DecompressP256Point(ephemeralPubkey)
@@ -107,21 +151,7 @@ func callAgentECDH(
 	binary.BigEndian.PutUint32(payload[:4], uint32(len(innerPayload)))
 	copy(payload[4:], innerPayload)
 
-	response, err := extClient.Extension("ecdh@joyent.com", payload)
-	if err != nil {
-		return nil, errors.WrapWithType[errAgentDisamb](
-			errors.Wrapf(err, "ecdh@joyent.com extension call"),
-		)
-	}
-
-	// The response includes the SSH_AGENT_SUCCESS type byte followed by the
-	// shared secret as a length-prefixed string: [u8 type] [u32 len] [secret]
-	secret, err = parseECDHResponse(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return secret, nil
+	return payload, nil
 }
 
 func parseECDHResponse(response []byte) ([]byte, error) {
