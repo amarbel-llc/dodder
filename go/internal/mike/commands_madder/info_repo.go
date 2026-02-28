@@ -3,7 +3,7 @@ package commands_madder
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/echo/xdg"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/hotel/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/juliett/blob_stores"

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/echo/xdg"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 	"code.linenisgreat.com/dodder/go/internal/hotel/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/india/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/juliett/env_local"

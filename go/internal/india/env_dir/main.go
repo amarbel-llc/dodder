@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/blob_store_id"
-	"code.linenisgreat.com/dodder/go/internal/echo/xdg"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/debug"

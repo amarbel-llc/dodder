@@ -3,7 +3,7 @@ package directory_layout
 import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/delta/store_version"
-	"code.linenisgreat.com/dodder/go/internal/echo/xdg"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

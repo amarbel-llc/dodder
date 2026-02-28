@@ -2,7 +2,7 @@ package repo_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/echo/xdg"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/markl"
 	"code.linenisgreat.com/dodder/go/lib/delta/xdg_defaults"
 )

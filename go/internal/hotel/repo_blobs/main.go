@@ -3,7 +3,7 @@ package repo_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/remote_connection_types"
-	"code.linenisgreat.com/dodder/go/internal/echo/xdg"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
