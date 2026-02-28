@@ -23,6 +23,7 @@ const (
 
 	TypeLuaTagV1                                    = "!lua-tag-v1" // Deprecated
 	TypeLuaTagV2                                    = "!lua-tag-v2"
+	TypeWasmTagV1                                   = "!wasm-tag-v1"
 	TypeTomlBlobStoreConfigSftpExplicitV0           = "!toml-blob_store_config_sftp-explicit-v0"
 	TypeTomlBlobStoreConfigSftpViaSSHConfigV0       = "!toml-blob_store_config_sftp-ssh_config-v0"
 	TypeTomlBlobStoreConfigV0                       = "!toml-blob_store_config-v0"
@@ -82,6 +83,7 @@ func init() {
 	)
 	registerBuiltinTypeString(TypeLuaTagV1, genres.Tag, false)
 	registerBuiltinTypeString(TypeLuaTagV2, genres.Tag, false)
+	registerBuiltinTypeString(TypeWasmTagV1, genres.Tag, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV0, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV2, genres.Unknown, false)
