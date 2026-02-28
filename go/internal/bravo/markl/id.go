@@ -181,6 +181,21 @@ func (id *Id) SetDigest(digest domain_interfaces.MarklId) (err error) {
 	return err
 }
 
+func (id *Id) ReloadFormat() error {
+	if id.format == nil {
+		return nil
+	}
+
+	format, err := GetFormatOrError(id.format.GetMarklFormatId())
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	id.format = format
+
+	return nil
+}
+
 func (id *Id) setFormatId(formatId string) (err error) {
 	if id.format, err = GetFormatOrError(formatId); err != nil {
 		err = errors.Wrap(err)

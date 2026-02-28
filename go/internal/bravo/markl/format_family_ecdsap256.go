@@ -3,6 +3,7 @@ package markl
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
+	"crypto/sha256"
 	"io"
 	"math/big"
 	"net"
@@ -43,7 +44,9 @@ func EcdsaP256Verify(pub, message, sig domain_interfaces.MarklId) (err error) {
 	r := new(big.Int).SetBytes(sigBytes[:32])
 	s := new(big.Int).SetBytes(sigBytes[32:64])
 
-	if !ecdsa.Verify(pubKey, message.GetBytes(), r, s) {
+	digest := sha256.Sum256(message.GetBytes())
+
+	if !ecdsa.Verify(pubKey, digest[:], r, s) {
 		return errors.Err422UnprocessableEntity.Errorf(
 			"invalid ECDSA P256 signature: %q",
 			sig.StringWithFormat(),

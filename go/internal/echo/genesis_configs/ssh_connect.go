@@ -15,7 +15,7 @@ var (
 	sshConn        io.Closer
 )
 
-func connectSSHSignerIfNecessary(privateKey markl.Id) error {
+func connectSSHSignerIfNecessary(privateKey *markl.Id) error {
 	format := privateKey.GetMarklFormat()
 	if format == nil {
 		return nil
@@ -35,6 +35,7 @@ func connectSSHSignerIfNecessary(privateKey markl.Id) error {
 
 		sshConn = closer
 		markl.RegisterSSHEd25519Format(signer)
+		sshConnectErr = privateKey.ReloadFormat()
 	})
 
 	return sshConnectErr
@@ -46,7 +47,7 @@ var (
 	ecdsaP256Conn       io.Closer
 )
 
-func connectEcdsaP256SignerIfNecessary(privateKey markl.Id) error {
+func connectEcdsaP256SignerIfNecessary(privateKey *markl.Id) error {
 	format := privateKey.GetMarklFormat()
 	if format == nil {
 		return nil
@@ -66,6 +67,7 @@ func connectEcdsaP256SignerIfNecessary(privateKey markl.Id) error {
 
 		ecdsaP256Conn = closer
 		markl.RegisterEcdsaP256SSHFormat(signer)
+		ecdsaP256ConnectErr = privateKey.ReloadFormat()
 	})
 
 	return ecdsaP256ConnectErr

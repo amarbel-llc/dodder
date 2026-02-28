@@ -57,8 +57,8 @@ func (config *TomlV2Private) GetGenesisConfig() ConfigPrivate {
 }
 
 func (config *TomlV2Private) GetGenesisConfigPublic() ConfigPublic {
-	errors.PanicIfError(connectSSHSignerIfNecessary(config.PrivateKey))
-	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(config.PrivateKey))
+	errors.PanicIfError(connectSSHSignerIfNecessary(&config.PrivateKey))
+	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(&config.PrivateKey))
 	public, err := config.PrivateKey.GetPublicKey(markl.PurposeRepoPrivateKeyV1)
 	errors.PanicIfError(err)
 
@@ -69,8 +69,8 @@ func (config *TomlV2Private) GetGenesisConfigPublic() ConfigPublic {
 }
 
 func (config *TomlV2Private) GetPrivateKey() domain_interfaces.MarklId {
-	errors.PanicIfError(connectSSHSignerIfNecessary(config.PrivateKey))
-	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(config.PrivateKey))
+	errors.PanicIfError(connectSSHSignerIfNecessary(&config.PrivateKey))
+	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(&config.PrivateKey))
 	return config.PrivateKey
 }
 
@@ -79,8 +79,8 @@ func (config *TomlV2Private) GetPrivateKeyMutable() domain_interfaces.MarklIdMut
 }
 
 func (config *TomlV2Private) GetPublicKey() domain_interfaces.MarklId {
-	errors.PanicIfError(connectSSHSignerIfNecessary(config.PrivateKey))
-	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(config.PrivateKey))
+	errors.PanicIfError(connectSSHSignerIfNecessary(&config.PrivateKey))
+	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(&config.PrivateKey))
 	public, err := config.PrivateKey.GetPublicKey(markl.PurposeRepoPrivateKeyV1)
 	errors.PanicIfError(err)
 	return public
