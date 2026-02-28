@@ -16,3 +16,7 @@ build/
 build_options/
 .direnv/
 .worktrees/
+
+# Rust
+target/
+Cargo.lock
