@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/format"
+	"code.linenisgreat.com/dodder/go/lib/delta/format"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/format"
+	"code.linenisgreat.com/dodder/go/lib/delta/format"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
 	"code.linenisgreat.com/dodder/go/internal/hotel/objects"
 	"code.linenisgreat.com/dodder/go/internal/kilo/sku"

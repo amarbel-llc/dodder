@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/format"
+	"code.linenisgreat.com/dodder/go/lib/delta/format"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/triple_hyphen_io"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"

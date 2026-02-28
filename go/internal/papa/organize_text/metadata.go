@@ -3,7 +3,7 @@ package organize_text
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/format"
+	"code.linenisgreat.com/dodder/go/lib/delta/format"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/triple_hyphen_io"
 	"code.linenisgreat.com/dodder/go/internal/hotel/objects"

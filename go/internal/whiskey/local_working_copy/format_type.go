@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/genres"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/format"
+	"code.linenisgreat.com/dodder/go/lib/delta/format"
 	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/lima/type_blobs"
