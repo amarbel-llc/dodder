@@ -121,20 +121,33 @@ to parse from this mangled buffer and fails → `send_extfail` → Go sees
 
 **Fix:** Prepend `u32(len(payload))` before passing to `Extension()`.
 
-## Status: fix applied, needs YubiKey testing
+## Status: wire format fixed, unlock flow improved
 
-All four fixes are now in `callAgentECDH`. The wire format should now match the
-C reference client. Remaining verification:
+All four wire-format fixes are in `callAgentECDH` and decryption is working.
+Additional improvements in the `madder-pivy` branch:
 
-1. **Test with YubiKey** — write and read back a blob to confirm end-to-end
-   decryption works.
-2. **If still failing**, add debug instrumentation to dump the raw response from
-   the extension call (secret length should be 32 bytes for P-256 x-coordinate).
+1. **Typed agent error** (`go/lib/delta/pivy/errors.go`): `ErrAgent`/`IsErrAgent`
+   sentinel distinguishes agent communication failures from AEAD trial-decryption
+   mismatches.
+2. **Retry with List() pre-enumeration** (`agent.go`): `callAgentECDH` calls
+   `client.List()` before ECDH to force pivy-agent to re-enumerate tokens after
+   card reinsertion, then retries once on failure.
+3. **Error propagation in Unwrap** (`identity.go`): Agent errors surface
+   immediately instead of being masked as `age.ErrIncorrectIdentity`.
+4. **Fallback guard** (`blob_reader.go`): The unencrypted-read fallback now
+   skips when the error is an agent error, preventing the misleading "Unknown
+   frame descriptor" message.
+
+Remaining verification:
+
+1. **Test with YubiKey** — remove card, try `madder cat` (should fail with clear
+   agent error), re-insert card, try again (should succeed after retry/PIN prompt).
 
 ## Key files
 
-- `go/lib/delta/pivy/agent.go` -- agent ECDH client (the buggy code)
-- `go/lib/delta/pivy/identity.go` -- age identity unwrap using ECDHFunc
+- `go/lib/delta/pivy/agent.go` -- agent ECDH client with retry logic
+- `go/lib/delta/pivy/errors.go` -- typed ErrAgent sentinel
+- `go/lib/delta/pivy/identity.go` -- age identity unwrap with agent error propagation
 - `go/lib/delta/pivy/recipient.go` -- age recipient wrap (encryption, works)
 - `go/lib/delta/pivy/io_wrapper.go` -- IOWrapper bridging age and pivy
 - `go/internal/echo/env_dir/blob_reader.go` -- blob reader with fallback chain
