@@ -166,13 +166,3 @@ func trimToThreeComponents(path string) string {
 	return parts[0] + "/" + parts[1] + "/" + parts[2]
 }
 
-// trimToTwoComponents returns the first two path components (e.g.,
-// "alfa/errors/context" -> "alfa/errors"). Returns "" if fewer than 2.
-func trimToTwoComponents(path string) string {
-	parts := strings.SplitN(path, "/", 3)
-	if len(parts) < 2 {
-		return ""
-	}
-
-	return parts[0] + "/" + parts[1]
-}
