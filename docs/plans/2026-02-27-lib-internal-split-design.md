@@ -157,10 +157,18 @@ lower-tier packages:
 These packages are mostly domain-agnostic but have small domain-specific
 dependencies that could be extracted:
 
-- `echo/format` — remove `bravo/ohio` error wrapping dependency
 - `echo/directory_layout` — extract generic path generation from
   `blob_store_id.Id` dependency
 - `delta/string_format_writer` — evaluate for future extraction
+
+### Already Extracted
+
+- `echo/xdg` — moved to `lib/echo/xdg` (extracted `GetLocationType`, made
+  override env var configurable)
+- `india/env_dir` TemporaryFS + hash bucket utils — moved to `lib/delta/files`
+  (aliases left in `env_dir`)
+- `foxtrot/format` — moved to `lib/delta/format` (replaced
+  `string_format_writer.LenStringMax` with local constant)
 
 ## Import Path Schema
 
