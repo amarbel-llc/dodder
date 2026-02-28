@@ -1,0 +1,18 @@
+package dodder:query@0.1.0;
+
+interface types {
+    record sku {
+        genre: string,
+        object-id: string,
+        %type: string,
+        tags: list<string>,
+        tags-implicit: list<string>,
+        blob-digest: string,
+        description: string,
+    }
+}
+
+world query-filter {
+    use types.{sku};
+    export contains-sku: func(object: sku) -> bool;
+}
