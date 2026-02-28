@@ -1,10 +1,6 @@
 schema = 3
 
 [mod]
-  [mod.'code.linenisgreat.com/chrest/go']
-    version = 'v0.0.0-20260208164612-16fbf91fdcef'
-    hash = 'sha256-/zcn0D70DDAsFJgI7Izi8+8Wd9SEZo7npNoORT3WUT8='
-
   [mod.'filippo.io/age']
     version = 'v1.3.1'
     hash = 'sha256-Qs/q3zQYV0PukABBPf/aU5V1oOhw95NG6K301VYJk8A='
@@ -212,6 +208,10 @@ schema = 3
   [mod.'github.com/tailscale/go-winio']
     version = 'v0.0.0-20231025203758-c4f33415bf55'
     hash = 'sha256-WFW20c02gIk2MhafeVVNydmSfszPZegshDd2Y5abGgY='
+
+  [mod.'github.com/tetratelabs/wazero']
+    version = 'v1.11.0'
+    hash = 'sha256-bXmvMmQLsfyEa3C1kjE0AAVhGzj2tIiO67MxI3otMo8='
 
   [mod.'github.com/x448/float16']
     version = 'v0.8.4'
