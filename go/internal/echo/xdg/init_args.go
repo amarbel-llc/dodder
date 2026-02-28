@@ -6,14 +6,14 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
-const EnvXDGUtilityNameOverride = "DODDER_XDG_UTILITY_OVERRIDE"
-
 type InitArgs struct {
 	Home        string
 	Cwd         string
 	UtilityName string
 	ExecPath    string
 	Pid         int
+
+	OverrideEnvVarName string
 }
 
 func (initArgs *InitArgs) Initialize(utilityName string) (err error) {
@@ -31,9 +31,10 @@ func (initArgs *InitArgs) Initialize(utilityName string) (err error) {
 		}
 	}
 
-	// TODO accept EnvVarName from args instead of hardcoding
-	if utilityNameOverride := os.Getenv(EnvXDGUtilityNameOverride); utilityNameOverride != "" {
-		utilityName = utilityNameOverride
+	if initArgs.OverrideEnvVarName != "" {
+		if utilityNameOverride := os.Getenv(initArgs.OverrideEnvVarName); utilityNameOverride != "" {
+			utilityName = utilityNameOverride
+		}
 	}
 
 	if initArgs.ExecPath, err = os.Executable(); err != nil {

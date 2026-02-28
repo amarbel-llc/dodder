@@ -20,6 +20,7 @@ func (env *beforeXDG) initialize(
 	utilityName string,
 ) (err error) {
 	env.debugOptions = debugOptions
+	env.xdgInitArgs.OverrideEnvVarName = "DODDER_XDG_UTILITY_OVERRIDE"
 
 	if err = env.xdgInitArgs.Initialize(utilityName); err != nil {
 		err = errors.Wrap(err)
