@@ -3,51 +3,59 @@ package markl
 import (
 	"crypto/ecdh"
 	"crypto/ecdsa"
-	"net"
 	"os"
 
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/pivy"
 
-	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 )
 
 func DiscoverPivyAgentECDHKeys() ([]Id, error) {
-	socket := os.Getenv("PIVY_AUTH_SOCK")
-	if socket == "" {
-		return nil, errors.Errorf("PIVY_AUTH_SOCK not set")
-	}
-
-	conn, err := net.Dial("unix", socket)
+	discovered, err := DiscoverPivyAgentECDHKeysVerbose()
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to connect to pivy-agent")
+		return nil, err
 	}
-	defer conn.Close()
 
-	keys, err := agent.NewClient(conn).List()
+	ids := make([]Id, len(discovered))
+	for i, dk := range discovered {
+		ids[i] = dk.Id
+	}
+
+	return ids, nil
+}
+
+func DiscoverPivyAgentECDHKeysVerbose() ([]DiscoveredKey, error) {
+	var keys []*agent.Key
+	var err error
+
+	if os.Getenv("PIVY_AUTH_SOCK") != "" {
+		keys, err = listAgentKeys("PIVY_AUTH_SOCK")
+	} else {
+		keys, err = listAgentKeys("SSH_AUTH_SOCK")
+	}
+
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to list pivy-agent keys")
+		return nil, err
 	}
 
-	var ids []Id
+	return discoverECDHKeysFromAgentKeys(keys)
+}
+
+func discoverECDHKeysFromAgentKeys(keys []*agent.Key) ([]DiscoveredKey, error) {
+	var discovered []DiscoveredKey
 
 	for _, key := range keys {
 		if key.Type() != "ecdsa-sha2-nistp256" {
 			continue
 		}
 
-		parsed, err := ssh.ParsePublicKey(key.Marshal())
+		parsed, err := parseSSHPublicKey(key)
 		if err != nil {
 			continue
 		}
 
-		cryptoPub, ok := parsed.(ssh.CryptoPublicKey)
-		if !ok {
-			continue
-		}
-
-		ecdhPub, err := ecdhPubFromCryptoKey(cryptoPub.CryptoPublicKey())
+		ecdhPub, err := ecdhPubFromCryptoKey(parsed.CryptoPublicKey())
 		if err != nil {
 			continue
 		}
@@ -59,10 +67,14 @@ func DiscoverPivyAgentECDHKeys() ([]Id, error) {
 			continue
 		}
 
-		ids = append(ids, id)
+		discovered = append(discovered, DiscoveredKey{
+			Id:      id,
+			KeyType: key.Type(),
+			Comment: key.Comment,
+		})
 	}
 
-	return ids, nil
+	return discovered, nil
 }
 
 func ecdhPubFromCryptoKey(pub interface{}) (*ecdh.PublicKey, error) {
