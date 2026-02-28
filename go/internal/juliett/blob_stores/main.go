@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/golf/fd"
 	"code.linenisgreat.com/dodder/go/internal/golf/triple_hyphen_io"
@@ -81,7 +80,7 @@ func MakeBlobStores(
 	blobStores = makeBlobStoreConfigs(ctx, directoryLayout)
 
 	// If we're in an override directory, add the User blob stores
-	if envDir.GetXDG().GetLocationType() == blob_store_id.LocationTypeCwd {
+	if envDir.GetXDG().IsOverridden() {
 		if directoryLayoutForUser, err := directory_layout.CloneBlobStoreWithXDG(
 			directoryLayout,
 			envDir.GetXDGForBlobStores().CloneWithoutOverride(),

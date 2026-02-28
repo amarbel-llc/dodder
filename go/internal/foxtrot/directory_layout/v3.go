@@ -141,7 +141,11 @@ func (layout v3) DirFirstBlobStoreBlobs() string {
 }
 
 func (layout v3) GetLocationType() blob_store_id.LocationType {
-	return layout.xdg.GetLocationType()
+	if layout.xdg.IsOverridden() {
+		return blob_store_id.LocationTypeCwd
+	}
+
+	return blob_store_id.LocationTypeXDGUser
 }
 
 func (layout v3) cloneUninitialized() uninitializedXDG {
