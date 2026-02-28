@@ -92,46 +92,44 @@ type byte. The code was treating the entire response as the bare shared secret.
 2. Convert ephemeral pubkey to SSH wire format via `pubkeyToSSHWireFormat()`
 3. Parse the response to extract the shared secret from the SSH wire envelope
 
-## Status: still failing
+### 4. Missing outer string wrapper (the actual root cause of extension failure)
 
-After applying fixes 1-3, the extension call no longer returns "generic
-extension failure", but decryption still fails. The remaining issue may be:
+The previous status said "the extension call no longer returns generic extension
+failure" but this was **not verified by testing** (commit message: "have not yet
+been verified working with a YubiKey").
 
-- The response secret format from the agent may need further investigation.
-  `piv_ecdh()` returns the raw ECDH x-coordinate, but Go's `ecdh.ECDH()` also
-  returns the x-coordinate (32 bytes for P-256). Need to verify the agent
-  returns the same representation and length.
-- The `ssh.Marshal` struct encoding may add extra framing that doesn't match
-  what pivy-agent expects. The Go SSH marshal uses length-prefixed strings,
-  which should match `sshbuf_get_string`/`sshkey_froms`, but the nesting may
-  differ.
+Analysis of the pivy-agent dispatch code revealed the real problem:
 
-## Remaining debugging steps
+**pivy-agent's `exthandlers` table** (`pivy-agent.c:2324`) registers
+`ecdh@joyent.com` with `eh_string = B_TRUE`. The `process_extension` dispatcher
+(`pivy-agent.c:2362`) calls `sshbuf_froms(se_request, &inner)` for `eh_string`
+extensions, which reads the remaining request bytes as a **length-prefixed
+string** (`u32(len) + bytes`) before passing the unwrapped inner bytes to the
+handler.
 
-1. **Re-add debug instrumentation** to `callAgentECDH` and `tryUnwrap` to
-   confirm the extension call now succeeds (no more "generic extension failure")
-   and inspect the response length and content.
+The **C reference client** (`piv.c:7485`) does `sshbuf_put_stringb(req, buf)`,
+wrapping the entire payload in a length-prefixed string.
 
-2. **Verify payload wire format** matches what pivy-agent expects. Dump the
-   payload bytes and compare against what `piv_box_open_agent` in
-   `pivy/src/piv.c:7454` produces. Key concern: Go's `ssh.Marshal` with
-   `[]byte` fields produces `[u32 len][bytes]` which is the same as
-   `sshbuf_put_string` -- but `sshkey_froms` wraps `sshkey_from_blob` which
-   first reads a `sshbuf_get_string` then parses the key. So the payload needs
-   the SSH key bytes as a `string` field, which `ssh.Marshal` with `[]byte`
-   should produce correctly.
+**Go's `agent.Extension()`** (`x/crypto/ssh/agent/client.go:834`) uses
+`ssh:"rest"` for Contents, which appends raw bytes — **no outer string wrapper**.
 
-3. **Compare against piv.c reference implementation** in
-   `pivy/src/piv.c:7454-7512` (`piv_box_open_agent`). This is the canonical
-   client-side code that successfully calls the same extension.
+Without the wrapper, pivy-agent's `sshbuf_froms` reads the first `u32` of the
+payload (which is `len(recipientSSHKey)` ≈ 104) as the string length, consuming
+only the recipient key blob. Then `sshkey_froms` inside `process_ext_ecdh` tries
+to parse from this mangled buffer and fails → `send_extfail` → Go sees
+`"agent: generic extension failure"`.
 
-4. **Check shared secret format**: After a successful ECDH call, verify the
-   secret length (should be 32 bytes for P-256 x-coordinate). The
-   `deriveWrappingKey` function hashes the secret with SHA-512, so it's
-   format-sensitive.
+**Fix:** Prepend `u32(len(payload))` before passing to `Extension()`.
 
-5. **Consider testing with a standalone Go program** that just does the ECDH
-   extension call and prints the result, to isolate from the age/blob machinery.
+## Status: fix applied, needs YubiKey testing
+
+All four fixes are now in `callAgentECDH`. The wire format should now match the
+C reference client. Remaining verification:
+
+1. **Test with YubiKey** — write and read back a blob to confirm end-to-end
+   decryption works.
+2. **If still failing**, add debug instrumentation to dump the raw response from
+   the extension call (secret length should be 32 bytes for P-256 x-coordinate).
 
 ## Key files
 

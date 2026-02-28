@@ -84,7 +84,7 @@ func callAgentECDH(
 		return nil, errors.Wrap(err)
 	}
 
-	payload := ssh.Marshal(struct {
+	innerPayload := ssh.Marshal(struct {
 		RecipientKey []byte
 		EphemeralKey []byte
 		Flags        uint32
@@ -93,6 +93,15 @@ func callAgentECDH(
 		EphemeralKey: ephemeralSSHKey,
 		Flags:        0,
 	})
+
+	// pivy-agent's extension dispatch uses eh_string=B_TRUE for ecdh@joyent.com,
+	// which means it calls sshbuf_froms() to unwrap a length-prefixed string
+	// before passing the buffer to the handler. Go's agent.Extension() sends
+	// contents as raw bytes (ssh:"rest"), so we must add the outer string
+	// wrapper that pivy-agent expects.
+	payload := make([]byte, 4+len(innerPayload))
+	binary.BigEndian.PutUint32(payload[:4], uint32(len(innerPayload)))
+	copy(payload[4:], innerPayload)
 
 	response, err := extClient.Extension("ecdh@joyent.com", payload)
 	if err != nil {
