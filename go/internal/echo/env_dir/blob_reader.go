@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
+	"code.linenisgreat.com/dodder/go/lib/delta/pivy"
 )
 
 // TODO move into own package
@@ -107,6 +108,13 @@ func newFileReaderFromReadSeeker(
 		config,
 		readSeeker,
 	); err != nil {
+		// Agent communication errors (card not found, PIN needed, socket
+		// error) should not be masked by falling back to unencrypted read.
+		if pivy.IsErrAgent(err) {
+			err = errors.Wrap(err)
+			return blobReader, err
+		}
+
 		if _, err = readSeeker.Seek(0, io.SeekStart); err != nil {
 			err = errors.Wrap(err)
 			return blobReader, err
