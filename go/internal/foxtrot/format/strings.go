@@ -6,10 +6,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/internal/echo/string_format_writer"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
+
+const lenRightAlignMax = 17
 
 func MakeFormatStringRightAligned(
 	f string,
@@ -18,7 +19,7 @@ func MakeFormatStringRightAligned(
 	return func(w io.Writer) (n int64, err error) {
 		f = fmt.Sprintf(f+" ", args...)
 
-		diff := string_format_writer.LenStringMax + 1 - utf8.RuneCountInString(
+		diff := lenRightAlignMax + 1 - utf8.RuneCountInString(
 			f,
 		)
 
