@@ -5,7 +5,6 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
@@ -13,17 +12,7 @@ func init() {
 	utility.AddCmd("info-ssh_agent", &InfoSSHAgent{})
 }
 
-type InfoSSHAgent struct {
-	Verbose bool
-}
-
-var _ interfaces.CommandComponentWriter = (*InfoSSHAgent)(nil)
-
-func (cmd *InfoSSHAgent) SetFlagDefinitions(
-	f interfaces.CLIFlagDefinitions,
-) {
-	f.BoolVar(&cmd.Verbose, "verbose", false, "show key type and comment")
-}
+type InfoSSHAgent struct{}
 
 func (cmd InfoSSHAgent) Run(req command.Request) {
 	ed25519Keys, err := markl.DiscoverSSHAgentEd25519KeysVerbose()
@@ -52,7 +41,7 @@ func (cmd InfoSSHAgent) Run(req command.Request) {
 			return
 		}
 
-		if cmd.Verbose {
+		if req.Utility.GetConfig().GetVerbose() {
 			fmt.Printf("%s\t%s\t%s\n", dk.KeyType, dk.Comment, string(text))
 		} else {
 			fmt.Printf("%s\n", string(text))

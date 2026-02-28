@@ -5,7 +5,6 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
@@ -13,17 +12,7 @@ func init() {
 	utility.AddCmd("info-pivy_agent", &InfoPivyAgent{})
 }
 
-type InfoPivyAgent struct {
-	Verbose bool
-}
-
-var _ interfaces.CommandComponentWriter = (*InfoPivyAgent)(nil)
-
-func (cmd *InfoPivyAgent) SetFlagDefinitions(
-	f interfaces.CLIFlagDefinitions,
-) {
-	f.BoolVar(&cmd.Verbose, "verbose", false, "show key type and comment")
-}
+type InfoPivyAgent struct{}
 
 func (cmd InfoPivyAgent) Run(req command.Request) {
 	keys, err := markl.DiscoverPivyAgentECDHKeysVerbose()
@@ -44,7 +33,7 @@ func (cmd InfoPivyAgent) Run(req command.Request) {
 			return
 		}
 
-		if cmd.Verbose {
+		if req.Utility.GetConfig().GetVerbose() {
 			fmt.Printf("%s\t%s\t%s\n", dk.KeyType, dk.Comment, string(text))
 		} else {
 			fmt.Printf("%s\n", string(text))
