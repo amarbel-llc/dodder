@@ -49,18 +49,22 @@ func callAgentECDH(
 	socketPath string,
 	recipientPubkey *ecdh.PublicKey,
 	ephemeralPubkey []byte,
-) ([]byte, error) {
+) (secret []byte, err error) {
 	conn, err := net.Dial("unix", socketPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "connecting to pivy-agent at %s", socketPath)
+		return nil, errors.WrapWithType[errAgentDisamb](
+			errors.Wrapf(err, "connecting to pivy-agent at %s", socketPath),
+		)
 	}
-	defer conn.Close()
+	defer errors.DeferredCloser(&err, conn)
 
 	client := agent.NewClient(conn)
 
 	extClient, ok := client.(agent.ExtendedAgent)
 	if !ok {
-		return nil, errors.Errorf("SSH agent client does not support extensions")
+		return nil, errors.WrapWithType[errAgentDisamb](
+			errors.Errorf("SSH agent client does not support extensions"),
+		)
 	}
 
 	// The ephemeral pubkey from the age stanza is in compressed form (33 bytes).
@@ -105,12 +109,14 @@ func callAgentECDH(
 
 	response, err := extClient.Extension("ecdh@joyent.com", payload)
 	if err != nil {
-		return nil, errors.Wrapf(err, "ecdh@joyent.com extension call")
+		return nil, errors.WrapWithType[errAgentDisamb](
+			errors.Wrapf(err, "ecdh@joyent.com extension call"),
+		)
 	}
 
 	// The response includes the SSH_AGENT_SUCCESS type byte followed by the
 	// shared secret as a length-prefixed string: [u8 type] [u32 len] [secret]
-	secret, err := parseECDHResponse(response)
+	secret, err = parseECDHResponse(response)
 	if err != nil {
 		return nil, err
 	}
