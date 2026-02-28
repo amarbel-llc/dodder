@@ -2,6 +2,7 @@ package pivy
 
 import (
 	"crypto/ecdh"
+	"encoding/binary"
 	"net"
 	"os"
 
@@ -62,10 +63,23 @@ func callAgentECDH(
 		return nil, errors.Errorf("SSH agent client does not support extensions")
 	}
 
+	// The ephemeral pubkey from the age stanza is in compressed form (33 bytes).
+	// Decompress to get an ecdh.PublicKey for SSH wire format conversion.
+	ephPub, err := DecompressP256Point(ephemeralPubkey)
+	if err != nil {
+		return nil, errors.Wrapf(err, "decompressing ephemeral pubkey for agent")
+	}
+
 	// Build the extension request payload.
-	// The ecdh@joyent.com extension expects:
-	//   [recipient_pubkey as ssh wire format] [ephemeral_pubkey bytes] [flags uint32]
+	// The ecdh@joyent.com extension parses both keys with sshkey_froms(),
+	// so both must be in SSH wire format:
+	//   string(ssh_key) string(ssh_key) uint32(flags)
 	recipientSSHKey, err := pubkeyToSSHWireFormat(recipientPubkey)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	ephemeralSSHKey, err := pubkeyToSSHWireFormat(ephPub)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -76,7 +90,7 @@ func callAgentECDH(
 		Flags        uint32
 	}{
 		RecipientKey: recipientSSHKey,
-		EphemeralKey: ephemeralPubkey,
+		EphemeralKey: ephemeralSSHKey,
 		Flags:        0,
 	})
 
@@ -85,11 +99,39 @@ func callAgentECDH(
 		return nil, errors.Wrapf(err, "ecdh@joyent.com extension call")
 	}
 
-	if len(response) == 0 {
-		return nil, errors.Errorf("empty response from ecdh@joyent.com")
+	// The response includes the SSH_AGENT_SUCCESS type byte followed by the
+	// shared secret as a length-prefixed string: [u8 type] [u32 len] [secret]
+	secret, err := parseECDHResponse(response)
+	if err != nil {
+		return nil, err
 	}
 
-	return response, nil
+	return secret, nil
+}
+
+func parseECDHResponse(response []byte) ([]byte, error) {
+	if len(response) < 5 {
+		return nil, errors.Errorf(
+			"ecdh response too short: %d bytes",
+			len(response),
+		)
+	}
+
+	// First byte is SSH_AGENT_SUCCESS (0x06), skip it
+	rest := response[1:]
+
+	// Remaining bytes are the shared secret as a length-prefixed SSH string
+	secretLen := binary.BigEndian.Uint32(rest[:4])
+
+	if uint32(len(rest)-4) < secretLen {
+		return nil, errors.Errorf(
+			"ecdh response secret truncated: expected %d bytes, got %d",
+			secretLen,
+			len(rest)-4,
+		)
+	}
+
+	return rest[4 : 4+secretLen], nil
 }
 
 func pubkeyToSSHWireFormat(pub *ecdh.PublicKey) ([]byte, error) {
