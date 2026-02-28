@@ -124,6 +124,10 @@ func (xdg XDG) GetLocationType() blob_store_id.LocationType {
 	}
 }
 
+func (xdg XDG) IsOverridden() bool {
+	return xdg.overridePath != ""
+}
+
 func (xdg *XDG) setInitArgs(initArgs InitArgs) (err error) {
 	xdg.Home = xdg_defaults.Home.MakeBaseEnvVar(initArgs.Home)
 	xdg.Cwd = xdg_defaults.Cwd.MakeBaseEnvVar(initArgs.Cwd)
