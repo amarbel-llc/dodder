@@ -1,16 +1,20 @@
 package typed_blob_store
 
 import (
+	"context"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/ids"
 	"code.linenisgreat.com/dodder/go/internal/kilo/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/kilo/sku"
+	"code.linenisgreat.com/dodder/go/internal/kilo/sku_wasm"
 	"code.linenisgreat.com/dodder/go/internal/lima/blob_library"
 	"code.linenisgreat.com/dodder/go/internal/lima/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/mike/env_lua"
 	"code.linenisgreat.com/dodder/go/internal/mike/tag_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/bravo/wasm"
 	"code.linenisgreat.com/dodder/go/lib/charlie/lua"
 	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
@@ -18,19 +22,23 @@ import (
 type Tag struct {
 	envRepo env_repo.Env
 	envLua  env_lua.Env
+	wasmRt  *wasm.Runtime
 	toml_v0 domain_interfaces.TypedStore[tag_blobs.V0, *tag_blobs.V0]
 	toml_v1 domain_interfaces.TypedStore[tag_blobs.TomlV1, *tag_blobs.TomlV1]
 	lua_v1  domain_interfaces.TypedStore[tag_blobs.LuaV1, *tag_blobs.LuaV1]
 	lua_v2  domain_interfaces.TypedStore[tag_blobs.LuaV2, *tag_blobs.LuaV2]
+	wasm_v1 domain_interfaces.TypedStore[tag_blobs.WasmV1, *tag_blobs.WasmV1]
 }
 
 func MakeTagStore(
 	envRepo env_repo.Env,
 	envLua env_lua.Env,
+	wasmRt *wasm.Runtime,
 ) Tag {
 	return Tag{
 		envRepo: envRepo,
 		envLua:  envLua,
+		wasmRt:  wasmRt,
 		toml_v0: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
@@ -75,6 +83,16 @@ func MakeTagStore(
 				envRepo.GetDefaultBlobStore(),
 			),
 			func(a *tag_blobs.LuaV2) {
+			},
+		),
+		wasm_v1: blob_library.MakeBlobStore(
+			envRepo,
+			blob_library.MakeBlobFormat[tag_blobs.WasmV1](
+				nil,
+				nil,
+				envRepo.GetDefaultBlobStore(),
+			),
+			func(a *tag_blobs.WasmV1) {
 			},
 		),
 	}
@@ -176,6 +194,39 @@ func (store Tag) GetBlob(
 
 		blobGeneric = &tag_blobs.LuaV2{
 			LuaVMPoolV2: sku_lua.MakeLuaVMPoolV2(luaVMPool, nil),
+		}
+
+	case ids.TypeWasmTagV1:
+		if store.wasmRt == nil {
+			err = errors.ErrorWithStackf("WASM runtime not initialized")
+			return blobGeneric, repool, err
+		}
+
+		var readCloser domain_interfaces.BlobReader
+
+		if readCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(
+			blobId,
+		); err != nil {
+			err = errors.Wrap(err)
+			return blobGeneric, repool, err
+		}
+
+		defer errors.DeferredCloser(&err, readCloser)
+
+		ctx := context.Background()
+
+		modulePool, buildErr := wasm.MakeModulePoolBuilder(store.wasmRt).
+			WithReader(readCloser).
+			Build(ctx)
+
+		if buildErr != nil {
+			err = errors.Wrap(buildErr)
+			return blobGeneric, repool, err
+		}
+
+		blobGeneric = &tag_blobs.WasmV1{
+			WasmVMPoolV1: sku_wasm.MakeWasmVMPoolV1(modulePool),
+			Ctx:          ctx,
 		}
 	}
 

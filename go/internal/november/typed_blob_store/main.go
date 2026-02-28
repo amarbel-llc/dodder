@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/mike/env_lua"
 	"code.linenisgreat.com/dodder/go/internal/mike/inventory_list_coders"
+	"code.linenisgreat.com/dodder/go/lib/bravo/wasm"
 )
 
 type Stores struct {
@@ -18,6 +19,7 @@ type Stores struct {
 func MakeStores(
 	envRepo env_repo.Env,
 	envLua env_lua.Env,
+	wasmRt *wasm.Runtime,
 	boxFormat *box_format.BoxTransacted,
 ) Stores {
 	return Stores{
@@ -25,7 +27,7 @@ func MakeStores(
 			envRepo,
 			boxFormat,
 		),
-		Tag:  MakeTagStore(envRepo, envLua),
+		Tag:  MakeTagStore(envRepo, envLua, wasmRt),
 		Repo: MakeRepoStore(envRepo),
 		Type: type_blobs.MakeTypeStore(envRepo),
 	}
