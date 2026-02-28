@@ -39,3 +39,34 @@ func connectSSHSignerIfNecessary(privateKey markl.Id) error {
 
 	return sshConnectErr
 }
+
+var (
+	ecdsaP256ConnectOnce sync.Once
+	ecdsaP256ConnectErr  error
+	ecdsaP256Conn       io.Closer
+)
+
+func connectEcdsaP256SignerIfNecessary(privateKey markl.Id) error {
+	format := privateKey.GetMarklFormat()
+	if format == nil {
+		return nil
+	}
+
+	if format.GetMarklFormatId() != markl.FormatIdEcdsaP256SSH {
+		return nil
+	}
+
+	ecdsaP256ConnectOnce.Do(func() {
+		compressed := privateKey.GetBytes()
+		signer, closer, err := markl.ConnectEcdsaP256AgentSigner(compressed)
+		if err != nil {
+			ecdsaP256ConnectErr = errors.Wrap(err)
+			return
+		}
+
+		ecdsaP256Conn = closer
+		markl.RegisterEcdsaP256SSHFormat(signer)
+	})
+
+	return ecdsaP256ConnectErr
+}

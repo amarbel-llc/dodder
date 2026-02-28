@@ -42,7 +42,10 @@ func DiscoverPivyAgentECDHKeysVerbose() ([]DiscoveredKey, error) {
 	return discoverECDHKeysFromAgentKeys(keys)
 }
 
-func discoverECDHKeysFromAgentKeys(keys []*agent.Key) ([]DiscoveredKey, error) {
+func discoverP256KeysFromAgentKeysWithFormat(
+	keys []*agent.Key,
+	formatId string,
+) ([]DiscoveredKey, error) {
 	var discovered []DiscoveredKey
 
 	for _, key := range keys {
@@ -63,7 +66,7 @@ func discoverECDHKeysFromAgentKeys(keys []*agent.Key) ([]DiscoveredKey, error) {
 		compressed := pivy.CompressP256Point(ecdhPub)
 
 		var id Id
-		if err := id.SetMarklId(FormatIdPivyEcdhP256Pub, compressed); err != nil {
+		if err := id.SetMarklId(formatId, compressed); err != nil {
 			continue
 		}
 
@@ -75,6 +78,14 @@ func discoverECDHKeysFromAgentKeys(keys []*agent.Key) ([]DiscoveredKey, error) {
 	}
 
 	return discovered, nil
+}
+
+func discoverECDHKeysFromAgentKeys(keys []*agent.Key) ([]DiscoveredKey, error) {
+	return discoverP256KeysFromAgentKeysWithFormat(keys, FormatIdPivyEcdhP256Pub)
+}
+
+func discoverEcdsaP256KeysFromAgentKeys(keys []*agent.Key) ([]DiscoveredKey, error) {
+	return discoverP256KeysFromAgentKeysWithFormat(keys, FormatIdEcdsaP256SSH)
 }
 
 func ecdhPubFromCryptoKey(pub interface{}) (*ecdh.PublicKey, error) {

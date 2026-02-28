@@ -117,5 +117,5 @@ func DiscoverSSHAgentECDHKeysVerbose() ([]DiscoveredKey, error) {
 		return nil, err
 	}
 
-	return discoverECDHKeysFromAgentKeys(keys)
+	return discoverEcdsaP256KeysFromAgentKeys(keys)
 }

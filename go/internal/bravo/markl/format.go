@@ -20,6 +20,10 @@ const (
 	FormatIdAgeX25519Pub = "age_x25519_pub"
 	FormatIdAgeX25519Sec = "age_x25519_sec"
 
+	FormatIdEcdsaP256SSH = "ecdsa_p256_ssh"
+	FormatIdEcdsaP256Pub = "ecdsa_p256_pub"
+	FormatIdEcdsaP256Sig = "ecdsa_p256_sig"
+
 	FormatIdPivyEcdhP256Pub = "pivy_ecdh_p256_pub"
 
 	FormatIdHashSha256     = "sha256"
@@ -78,6 +82,24 @@ func init() {
 			GetIOWrapper: AgeX25519GetIOWrapper,
 		},
 	)
+
+	// ECDSA P256
+	makeFormat(
+		FormatPub{
+			Id:     FormatIdEcdsaP256Pub,
+			Size:   33,
+			Verify: EcdsaP256Verify,
+		},
+	)
+
+	makeFormat(
+		Format{
+			Id:   FormatIdEcdsaP256Sig,
+			Size: 64,
+		},
+	)
+
+	makeStubEcdsaP256SSHFormat()
 
 	// PivyEcdhP256
 	makeFormat(

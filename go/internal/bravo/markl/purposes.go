@@ -94,12 +94,14 @@ func init() {
 		PurposeObjectSigV1,
 		PurposeTypeObjectSig,
 		FormatIdEd25519Sig,
+		FormatIdEcdsaP256Sig,
 	)
 
 	makePurpose(
 		PurposeObjectSigV2,
 		PurposeTypeObjectSig,
 		FormatIdEd25519Sig,
+		FormatIdEcdsaP256Sig,
 	)
 
 	makePurpose(
@@ -107,12 +109,14 @@ func init() {
 		PurposeTypePrivateKey,
 		FormatIdEd25519Sec,
 		FormatIdEd25519SSH,
+		FormatIdEcdsaP256SSH,
 	)
 
 	makePurpose(
 		PurposeRepoPubKeyV1,
 		PurposeTypeRepoPubKey,
 		FormatIdEd25519Pub,
+		FormatIdEcdsaP256Pub,
 	)
 
 	makePurpose(PurposeRequestAuthChallengeV1, PurposeTypeRequestAuth)
@@ -122,6 +126,7 @@ func init() {
 		PurposeMadderPubKeyV1,
 		PurposeTypePubKey,
 		FormatIdEd25519Pub,
+		FormatIdEcdsaP256Pub,
 	)
 
 	makePurpose(
