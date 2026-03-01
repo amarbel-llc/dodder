@@ -1,5 +1,22 @@
 # TODO
 
+- [ ] fix rebase / merge issues caused by `sc merge`:
+  $ sc merge smart-rowan 
+  TAP version 14
+  not ok 1 - rebase smart-rowan
+    ---
+    message: git rebase master -i: exit status 1
+    output: |
+  Auto-merging TODO.md
+      CONFLICT (content): Merge conflict in TODO.md
+      error: could not apply 2709d1572... refactor: migrate to bats-island shared library for test isolation
+      hint: Resolve all conflicts manually, mark them as resolved with
+      hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+      hint: You can instead skip this commit: run "git rebase --skip".
+      hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+      hint: Disable this message with "git config set advice.mergeConflict false"
+      Could not apply 2709d1572... # refactor: migrate to bats-island shared library for test isolation
+    severity: fail
 - [ ] confirm usage of modern nix monorepo
 - [ ] use latest tap output
 - [ ] explore using sigil as continuation operator in v14 fixed stream index
