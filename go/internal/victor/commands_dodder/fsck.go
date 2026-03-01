@@ -17,6 +17,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/object_finalizer"
+	"code.linenisgreat.com/dodder/go/internal/india/stream_index_fixed"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
@@ -48,6 +49,7 @@ type Fsck struct {
 	Duplicates    object_fmt_digest.CLIFlag
 	SkipProbes    bool
 	SkipBlobs     bool
+	TryV14Index   bool
 }
 
 var _ interfaces.CommandComponentWriter = (*Fsck)(nil)
@@ -81,6 +83,13 @@ func (cmd *Fsck) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 		"skip-blobs",
 		false,
 		"skip verification of blob contents",
+	)
+
+	flagSet.BoolVar(
+		&cmd.TryV14Index,
+		"try-v14-index",
+		false,
+		"after verification, build a V14 fixed-length index in a temp directory and validate round-trip",
 	)
 
 	cmd.Duplicates.SetFlagDefinitions(flagSet)
@@ -121,6 +130,10 @@ func (cmd Fsck) Run(req command.Request) {
 	}
 
 	cmd.runVerification(repo, tw, seq)
+
+	if cmd.TryV14Index {
+		cmd.runV14IndexTrial(repo, tw)
+	}
 }
 
 func (cmd Fsck) runVerification(
@@ -220,4 +233,222 @@ func (cmd Fsck) runVerification(
 	}
 
 	tw.Plan()
+}
+
+func (cmd Fsck) runV14IndexTrial(
+	repo *local_working_copy.Repo,
+	tw *tap.Writer,
+) {
+	tw.Comment("starting V14 fixed-length index trial...")
+
+	tempDir, err := os.MkdirTemp("", "dodder-v14-trial-*")
+	if err != nil {
+		tw.BailOut(fmt.Sprintf("failed to create temp dir: %s", err))
+		return
+	}
+
+	defer os.RemoveAll(tempDir)
+
+	// Build V14 index in temp directory.
+	v14Index, err := stream_index_fixed.MakeIndex(
+		repo.GetEnvRepo(),
+		func(_ *sku.Transacted) error { return nil },
+		tempDir,
+		ids.Tai{},
+		0,
+	)
+
+	if err != nil {
+		tw.BailOut(fmt.Sprintf("failed to create V14 index: %s", err))
+		return
+	}
+
+	// Iterate all objects from the current store and add to V14 index.
+	query := cmd.MakeQuery(
+		command.Request{},
+		queries.BuilderOptions(
+			queries.BuilderOptionDefaultGenres(genres.All()...),
+			queries.BuilderOptionDefaultSigil(
+				ids.SigilLatest,
+				ids.SigilHistory,
+				ids.SigilHidden,
+			),
+		),
+		repo,
+		nil,
+	)
+
+	var addCount atomic.Uint32
+	var addErrorCount atomic.Uint32
+
+	if err := errors.RunChildContextWithPrintTicker(
+		repo,
+		func(ctx errors.Context) {
+			seq := repo.GetStore().All(query)
+
+			for object, errIter := range seq {
+				if errIter != nil {
+					tw.NotOk(
+						"v14-add iteration error",
+						tap_diagnostics.FromError(errIter),
+					)
+					addErrorCount.Add(1)
+					addCount.Add(1)
+
+					continue
+				}
+
+				if err := v14Index.Add(object, sku.CommitOptions{
+					StoreOptions: sku.StoreOptions{
+						StreamIndexOptions: sku.StreamIndexOptions{
+							AddToStreamIndex: true,
+							ForceLatest:      true,
+						},
+					},
+				}); err != nil {
+					tw.NotOk(
+						fmt.Sprintf("v14-add %s", sku.StringMetadataTaiMerkle(object)),
+						tap_diagnostics.FromError(err),
+					)
+					addErrorCount.Add(1)
+				} else {
+					addCount.Add(1)
+				}
+			}
+		},
+		func(time time.Time) {
+			tw.Comment(fmt.Sprintf(
+				"(v14 adding) %d added, %d errors",
+				addCount.Load(),
+				addErrorCount.Load(),
+			))
+		},
+		3*time.Second,
+	); err != nil {
+		tw.BailOut(fmt.Sprintf("v14 add phase failed: %s", err))
+		return
+	}
+
+	tw.Comment(fmt.Sprintf(
+		"v14 add phase complete: %d objects, %d errors",
+		addCount.Load(),
+		addErrorCount.Load(),
+	))
+
+	// Flush the V14 index.
+	if err := v14Index.Flush(func(msg string) error {
+		tw.Comment(fmt.Sprintf("v14 flush: %s", msg))
+		return nil
+	}); err != nil {
+		tw.BailOut(fmt.Sprintf("v14 flush failed: %s", err))
+		return
+	}
+
+	tw.Comment("v14 flush complete, starting read-back verification...")
+
+	// Read back every object and compare against originals.
+	var verifyCount atomic.Uint32
+	var verifyErrorCount atomic.Uint32
+	var overflowCount atomic.Uint32
+	var inlineCount atomic.Uint32
+
+	if err := errors.RunChildContextWithPrintTicker(
+		repo,
+		func(ctx errors.Context) {
+			seq := repo.GetStore().All(query)
+
+			for object, errIter := range seq {
+				if errIter != nil {
+					tw.NotOk(
+						"v14-verify iteration error",
+						tap_diagnostics.FromError(errIter),
+					)
+					verifyErrorCount.Add(1)
+					verifyCount.Add(1)
+
+					continue
+				}
+
+				desc := fmt.Sprintf(
+					"v14-verify %s",
+					sku.StringMetadataTaiMerkle(object),
+				)
+
+				readBack, _ := sku.GetTransactedPool().GetWithRepool()
+
+				if err := v14Index.ReadOneObjectId(
+					object.GetObjectId(),
+					readBack,
+				); err != nil {
+					tw.NotOk(desc, tap_diagnostics.FromError(err))
+					verifyErrorCount.Add(1)
+				} else {
+					var mismatches []string
+
+					if readBack.GetObjectId().String() != object.GetObjectId().String() {
+						mismatches = append(mismatches, fmt.Sprintf(
+							"ObjectId: expected %s, got %s",
+							object.GetObjectId(),
+							readBack.GetObjectId(),
+						))
+					}
+
+					if readBack.GetTai().String() != object.GetTai().String() {
+						mismatches = append(mismatches, fmt.Sprintf(
+							"Tai: expected %s, got %s",
+							object.GetTai(),
+							readBack.GetTai(),
+						))
+					}
+
+					if readBack.GetType().String() != object.GetType().String() {
+						mismatches = append(mismatches, fmt.Sprintf(
+							"Type: expected %s, got %s",
+							object.GetType(),
+							readBack.GetType(),
+						))
+					}
+
+					if readBack.GetBlobDigest().String() != object.GetBlobDigest().String() {
+						mismatches = append(mismatches, fmt.Sprintf(
+							"Blob: expected %s, got %s",
+							object.GetBlobDigest(),
+							readBack.GetBlobDigest(),
+						))
+					}
+
+					if len(mismatches) == 0 {
+						tw.Ok(desc)
+						inlineCount.Add(1)
+					} else {
+						tw.NotOk(desc, map[string]string{
+							"message": strings.Join(mismatches, "; "),
+						})
+						verifyErrorCount.Add(1)
+					}
+				}
+
+				verifyCount.Add(1)
+			}
+		},
+		func(time time.Time) {
+			tw.Comment(fmt.Sprintf(
+				"(v14 verifying) %d verified, %d errors",
+				verifyCount.Load(),
+				verifyErrorCount.Load(),
+			))
+		},
+		3*time.Second,
+	); err != nil {
+		tw.BailOut(fmt.Sprintf("v14 verify phase failed: %s", err))
+		return
+	}
+
+	tw.Comment(fmt.Sprintf(
+		"v14 trial complete: %d verified, %d errors, %d inline, %d overflow",
+		verifyCount.Load(),
+		verifyErrorCount.Load(),
+		inlineCount.Load(),
+		overflowCount.Load(),
+	))
 }
