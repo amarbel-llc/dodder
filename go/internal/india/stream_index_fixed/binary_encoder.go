@@ -126,6 +126,9 @@ func (encoder *binaryEncoder) writeFieldKey(
 	metadata := object.GetMetadata()
 
 	switch encoder.field.Key {
+	default:
+		panic(fmt.Sprintf("unsupported key: %s", encoder.field.Key))
+
 	case key_bytes.Sigil:
 		sigil := object.Sigil
 		sigil.Add(encoder.Sigil)
@@ -289,8 +292,6 @@ func (encoder *binaryEncoder) writeFieldKey(
 			}
 		}
 
-	default:
-		panic(fmt.Sprintf("unsupported key: %s", encoder.field.Key))
 	}
 
 	return n, err

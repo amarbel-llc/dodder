@@ -17,7 +17,7 @@ type overflowWriter struct {
 	offset int32
 }
 
-func makeOverflowWriter(pageId page_id.PageId) (ow *overflowWriter, err error) {
+func makeOverflowWriter(pageId page_id.PageId) (result *overflowWriter, err error) {
 	ovId := overflowPageId(pageId)
 	path := ovId.Path()
 
@@ -46,12 +46,12 @@ func makeOverflowWriter(pageId page_id.PageId) (ow *overflowWriter, err error) {
 		return nil, err
 	}
 
-	ow = &overflowWriter{
+	result = &overflowWriter{
 		file:   file,
 		offset: int32(info.Size()),
 	}
 
-	return ow, err
+	return result, err
 }
 
 func makeOverflowWriterForTempFile(
@@ -63,51 +63,51 @@ func makeOverflowWriterForTempFile(
 	}
 }
 
-func (ow *overflowWriter) Write(data []byte) (offset int32, length uint16, err error) {
+func (overflowWriter *overflowWriter) Write(data []byte) (offset int32, length uint16, err error) {
 	if len(data) > math.MaxUint16 {
 		err = errOverflowTooLarge
 		return offset, length, err
 	}
 
-	ow.mu.Lock()
-	defer ow.mu.Unlock()
+	overflowWriter.mu.Lock()
+	defer overflowWriter.mu.Unlock()
 
-	offset = ow.offset
+	offset = overflowWriter.offset
 	length = uint16(len(data))
 
-	if _, err = ohio.WriteAllOrDieTrying(ow.file, data); err != nil {
+	if _, err = ohio.WriteAllOrDieTrying(overflowWriter.file, data); err != nil {
 		err = errors.Wrap(err)
 		return offset, length, err
 	}
 
-	ow.offset += int32(len(data))
+	overflowWriter.offset += int32(len(data))
 
 	return offset, length, err
 }
 
-func (ow *overflowWriter) Close() error {
-	if ow.file == nil {
+func (overflowWriter *overflowWriter) Close() error {
+	if overflowWriter.file == nil {
 		return nil
 	}
 
-	return ow.file.Close()
+	return overflowWriter.file.Close()
 }
 
-func (ow *overflowWriter) ReaderAt() io.ReaderAt {
-	return ow.file
+func (overflowWriter *overflowWriter) ReaderAt() io.ReaderAt {
+	return overflowWriter.file
 }
 
 type overflowReaderAt struct {
 	readerAt io.ReaderAt
 }
 
-func (or *overflowReaderAt) ReadAt(
+func (overflowReaderAt *overflowReaderAt) ReadAt(
 	offset int32,
 	length uint16,
 ) (data []byte, err error) {
 	data = make([]byte, length)
 
-	if _, err = or.readerAt.ReadAt(data, int64(offset)); err != nil {
+	if _, err = overflowReaderAt.readerAt.ReadAt(data, int64(offset)); err != nil {
 		if err == io.EOF {
 			err = nil
 		} else {

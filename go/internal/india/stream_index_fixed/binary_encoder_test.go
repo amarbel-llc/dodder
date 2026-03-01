@@ -126,7 +126,7 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 		entryData := make([]byte, EntryWidth)
 		copy(entryData, entryBytes)
 
-		writerAt := newBytesWriterAt(entryData)
+		writerAt := makeBytesWriterAt(entryData)
 
 		var updateSigil ids.Sigil
 		updateSigil.Add(ids.SigilHistory)
@@ -274,7 +274,7 @@ type bytesWriterAt struct {
 	data []byte
 }
 
-func newBytesWriterAt(data []byte) *bytesWriterAt {
+func makeBytesWriterAt(data []byte) *bytesWriterAt {
 	return &bytesWriterAt{data: data}
 }
 

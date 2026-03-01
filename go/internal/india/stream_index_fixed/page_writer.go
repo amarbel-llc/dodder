@@ -66,7 +66,7 @@ func (index *Index) makePageFlush(
 		pageReader, pageReaderClose := index.makeStreamPageReader(pageIndex)
 		defer errors.Deferred(&err, pageReaderClose)
 
-		pw := &pageWriter{
+		pageWriter := &pageWriter{
 			tempFS:      index.envRepo.GetTempLocal(),
 			pageId:      page.pageId,
 			writtenPage: page,
@@ -77,11 +77,11 @@ func (index *Index) makePageFlush(
 		}
 
 		if changesAreHistorical {
-			pw.changesAreHistorical = true
-			pw.writtenPage.forceFullWrite = true
+			pageWriter.changesAreHistorical = true
+			pageWriter.writtenPage.forceFullWrite = true
 		}
 
-		if err = pw.Flush(); err != nil {
+		if err = pageWriter.Flush(); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -92,81 +92,81 @@ func (index *Index) makePageFlush(
 	}
 }
 
-func (pw *pageWriter) Flush() (err error) {
-	if !pw.writtenPage.hasChanges() {
+func (pageWriter *pageWriter) Flush() (err error) {
+	if !pageWriter.writtenPage.hasChanges() {
 		ui.Log().Print("not flushing, no changes")
 		return err
 	}
 
-	defer pw.writtenPage.additionsHistory.Reset()
-	defer pw.writtenPage.additionsLatest.Reset()
+	defer pageWriter.writtenPage.additionsHistory.Reset()
+	defer pageWriter.writtenPage.additionsLatest.Reset()
 
-	pw.latestObjects = make(ObjectIdToObject)
+	pageWriter.latestObjects = make(ObjectIdToObject)
 
-	if !files.Exists(pw.path) &&
-		pw.writtenPage.lenAdded() == 0 {
+	if !files.Exists(pageWriter.path) &&
+		pageWriter.writtenPage.lenAdded() == 0 {
 		return err
 	}
 
-	ui.Log().Print("changesAreHistorical", pw.changesAreHistorical)
-	ui.Log().Print("added", pw.writtenPage.lenAdded())
+	ui.Log().Print("changesAreHistorical", pageWriter.changesAreHistorical)
+	ui.Log().Print("added", pageWriter.writtenPage.lenAdded())
 	ui.Log().Print(
 		"addedtail",
-		pw.writtenPage.additionsLatest.Len(),
+		pageWriter.writtenPage.additionsLatest.Len(),
 	)
 
-	if pw.writtenPage.additionsHistory.Len() == 0 &&
-		!pw.changesAreHistorical {
-		if pw.file, err = files.OpenReadWrite(pw.path); err != nil {
+	if pageWriter.writtenPage.additionsHistory.Len() == 0 &&
+		!pageWriter.changesAreHistorical {
+		if pageWriter.file, err = files.OpenReadWrite(pageWriter.path); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		defer errors.DeferredCloser(&err, pw.file)
+		defer errors.DeferredCloser(&err, pageWriter.file)
 
-		if pw.overflow, err = makeOverflowWriter(pw.pageId); err != nil {
+		if pageWriter.overflow, err = makeOverflowWriter(pageWriter.pageId); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		defer errors.DeferredCloser(&err, pw.overflow)
+		defer errors.DeferredCloser(&err, pageWriter.overflow)
 
 		bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(
-			pw.file,
+			pageWriter.file,
 		)
 		defer repoolBufferedWriter()
 
 		bufferedReader, repoolBufferedReader := pool.GetBufferedReader(
-			pw.file,
+			pageWriter.file,
 		)
 		defer repoolBufferedReader()
 
-		if err = pw.flushJustLatest(bufferedReader, bufferedWriter); err != nil {
+		if err = pageWriter.flushJustLatest(bufferedReader, bufferedWriter); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 	} else {
-		if pw.file, err = pw.tempFS.FileTemp(); err != nil {
+		if pageWriter.file, err = pageWriter.tempFS.FileTemp(); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
 		defer errors.DeferredCloseAndRename(
 			&err,
-			pw.file,
-			pw.file.Name(),
-			pw.path,
+			pageWriter.file,
+			pageWriter.file.Name(),
+			pageWriter.path,
 		)
 
 		// For full rewrite, create overflow sidecar as temp file too.
 		var overflowTempFile *os.File
 
-		if overflowTempFile, err = pw.tempFS.FileTemp(); err != nil {
+		if overflowTempFile, err = pageWriter.tempFS.FileTemp(); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		ovId := overflowPageId(pw.pageId)
+		ovId := overflowPageId(pageWriter.pageId)
 		overflowPath := ovId.Path()
 
 		defer errors.DeferredCloseAndRename(
@@ -176,12 +176,12 @@ func (pw *pageWriter) Flush() (err error) {
 			overflowPath,
 		)
 
-		pw.overflow = makeOverflowWriterForTempFile(overflowTempFile)
+		pageWriter.overflow = makeOverflowWriterForTempFile(overflowTempFile)
 
-		bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(pw.file)
+		bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(pageWriter.file)
 		defer repoolBufferedWriter()
 
-		if err = pw.flushBoth(bufferedWriter); err != nil {
+		if err = pageWriter.flushBoth(bufferedWriter); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -190,17 +190,17 @@ func (pw *pageWriter) Flush() (err error) {
 	return err
 }
 
-func (pw *pageWriter) flushBoth(
+func (pageWriter *pageWriter) flushBoth(
 	bufferedWriter *bufio.Writer,
 ) (err error) {
-	ui.Log().Printf("flushing both: %s", pw.path)
+	ui.Log().Printf("flushing both: %s", pageWriter.path)
 
 	chain := quiter.MakeChain(
-		pw.preWrite,
-		pw.makeWriteOne(bufferedWriter),
+		pageWriter.preWrite,
+		pageWriter.makeWriteOne(bufferedWriter),
 	)
 
-	seq := pw.pageReader.makeSeq(
+	seq := pageWriter.pageReader.makeSeq(
 		sku.MakePrimitiveQueryGroup(),
 		pageReadOptions{
 			includeAddedHistory: true,
@@ -225,8 +225,8 @@ func (pw *pageWriter) flushBoth(
 		return err
 	}
 
-	for _, object := range pw.latestObjects {
-		if err = pw.updateSigilWithLatest(object); err != nil {
+	for _, object := range pageWriter.latestObjects {
+		if err = pageWriter.updateSigilWithLatest(object); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -235,13 +235,13 @@ func (pw *pageWriter) flushBoth(
 	return err
 }
 
-func (pw *pageWriter) updateSigilWithLatest(
+func (pageWriter *pageWriter) updateSigilWithLatest(
 	objectMeta objectMetaWithCursorAndSigil,
 ) (err error) {
 	objectMeta.Add(ids.SigilLatest)
 
-	if err = pw.binaryEncoder.updateSigil(
-		pw.file,
+	if err = pageWriter.binaryEncoder.updateSigil(
+		pageWriter.file,
 		objectMeta.Sigil,
 		objectMeta.Offset,
 	); err != nil {
@@ -252,14 +252,14 @@ func (pw *pageWriter) updateSigilWithLatest(
 	return err
 }
 
-func (pw *pageWriter) flushJustLatest(
+func (pageWriter *pageWriter) flushJustLatest(
 	bufferedReader *bufio.Reader,
 	bufferedWriter *bufio.Writer,
 ) (err error) {
-	ui.Log().Printf("flushing just tail: %s", pw.path)
+	ui.Log().Printf("flushing just tail: %s", pageWriter.path)
 
 	{
-		seq := pw.pageReader.readFrom(
+		seq := pageWriter.pageReader.readFrom(
 			bufferedReader,
 			sku.MakePrimitiveQueryGroup(),
 		)
@@ -270,19 +270,19 @@ func (pw *pageWriter) flushJustLatest(
 				return err
 			}
 
-			pw.cursor = object.Cursor
-			pw.saveToLatestMap(object.Transacted, object.Sigil)
+			pageWriter.cursor = object.Cursor
+			pageWriter.saveToLatestMap(object.Transacted, object.Sigil)
 		}
 	}
 
 	chain := quiter.MakeChain(
-		pw.preWrite,
-		pw.removeOldLatest,
-		pw.makeWriteOne(bufferedWriter),
+		pageWriter.preWrite,
+		pageWriter.removeOldLatest,
+		pageWriter.makeWriteOne(bufferedWriter),
 	)
 
 	{
-		seq := pw.writtenPage.additionsLatest.All()
+		seq := pageWriter.writtenPage.additionsLatest.All()
 
 		for popped := range seq {
 			if err = chain(popped); err != nil {
@@ -297,8 +297,8 @@ func (pw *pageWriter) flushJustLatest(
 		return err
 	}
 
-	for _, object := range pw.latestObjects {
-		if err = pw.updateSigilWithLatest(object); err != nil {
+	for _, object := range pageWriter.latestObjects {
+		if err = pageWriter.updateSigilWithLatest(object); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -307,33 +307,33 @@ func (pw *pageWriter) flushJustLatest(
 	return err
 }
 
-func (pw *pageWriter) makeWriteOne(
+func (pageWriter *pageWriter) makeWriteOne(
 	bufferedWriter *bufio.Writer,
 ) interfaces.FuncIter[*sku.Transacted] {
 	return func(object *sku.Transacted) (err error) {
-		pw.cursor.Offset += pw.cursor.ContentLength
+		pageWriter.cursor.Offset += pageWriter.cursor.ContentLength
 
-		if err = pw.binaryEncoder.writeFixedEntry(
+		if err = pageWriter.binaryEncoder.writeFixedEntry(
 			bufferedWriter,
 			objectWithSigil{Transacted: object},
-			pw.overflow,
+			pageWriter.overflow,
 		); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		pw.cursor.ContentLength = int64(EntryWidth)
+		pageWriter.cursor.ContentLength = int64(EntryWidth)
 
-		if err = pw.saveToLatestMap(object, ids.SigilHistory); err != nil {
+		if err = pageWriter.saveToLatestMap(object, ids.SigilHistory); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		if err = pw.probeIndex.saveOneObjectLoc(
+		if err = pageWriter.probeIndex.saveOneObjectLoc(
 			object,
 			object_probe_index.Loc{
-				Page:   pw.pageId.Index,
-				Cursor: pw.cursor,
+				Page:   pageWriter.pageId.Index,
+				Cursor: pageWriter.cursor,
 			},
 		); err != nil {
 			err = errors.Wrap(err)
@@ -344,15 +344,15 @@ func (pw *pageWriter) makeWriteOne(
 	}
 }
 
-func (pw *pageWriter) saveToLatestMap(
+func (pageWriter *pageWriter) saveToLatestMap(
 	object *sku.Transacted,
 	sigil ids.Sigil,
 ) (err error) {
 	objectId := object.GetObjectId()
 	objectIdString := objectId.String()
 
-	objectOld := pw.latestObjects[objectIdString]
-	objectOld.Cursor = pw.cursor
+	objectOld := pageWriter.latestObjects[objectIdString]
+	objectOld.Cursor = pageWriter.cursor
 	objectOld.Tai = object.GetTai()
 	objectOld.Sigil = sigil
 
@@ -362,16 +362,16 @@ func (pw *pageWriter) saveToLatestMap(
 		objectOld.Del(ids.SigilHidden)
 	}
 
-	pw.latestObjects[objectIdString] = objectOld
+	pageWriter.latestObjects[objectIdString] = objectOld
 
 	return err
 }
 
-func (pw *pageWriter) removeOldLatest(
+func (pageWriter *pageWriter) removeOldLatest(
 	objectLatest *sku.Transacted,
 ) (err error) {
 	objectIdString := objectLatest.GetObjectId().String()
-	objectOld, ok := pw.latestObjects[objectIdString]
+	objectOld, ok := pageWriter.latestObjects[objectIdString]
 
 	if !ok {
 		return err
@@ -379,8 +379,8 @@ func (pw *pageWriter) removeOldLatest(
 
 	objectOld.Del(ids.SigilLatest)
 
-	if err = pw.binaryEncoder.updateSigil(
-		pw.file,
+	if err = pageWriter.binaryEncoder.updateSigil(
+		pageWriter.file,
 		objectOld.Sigil,
 		objectOld.Offset,
 	); err != nil {

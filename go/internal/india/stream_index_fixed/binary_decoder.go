@@ -129,12 +129,6 @@ func (decoder *binaryDecoder) readFixedEntryMatchSigil(
 			return n, err
 		}
 
-		// Quick sigil check at byte 3 (key(1) + length(2) = offset 3)
-		// before resolving overflow.
-		sigilByte := entry[3]
-		var entrySigil ids.Sigil
-		entrySigil.SetByte(sigilByte)
-
 		fieldData, err1 := decoder.resolveFieldData(entry[:], overflowReaderAt)
 		if err1 != nil {
 			err = errors.Wrap(err1)
@@ -313,6 +307,9 @@ func (decoder *binaryDecoder) readFieldKey(
 	metadata := object.GetMetadataMutable()
 
 	switch decoder.field.Key {
+	default:
+		ui.Log().Printf("skipping unknown key: %s", decoder.field.Key)
+
 	case key_bytes.ObjectId:
 		if _, err = object.GetObjectIdMutable().ReadFrom(&decoder.field.Content); err != nil {
 			err = errors.Wrap(err)
@@ -428,8 +425,6 @@ func (decoder *binaryDecoder) readFieldKey(
 
 		metadata.GetIndexMutable().GetTagPaths().AddPath(&tag)
 
-	default:
-		ui.Log().Printf("skipping unknown key: %s", decoder.field.Key)
 	}
 
 	return err

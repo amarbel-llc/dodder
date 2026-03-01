@@ -238,16 +238,17 @@ func (cmd Fsck) runVerification(
 func (cmd Fsck) runV14IndexTrial(
 	repo *local_working_copy.Repo,
 	tw *tap.Writer,
-) {
+) (err error) {
 	tw.Comment("starting V14 fixed-length index trial...")
 
 	tempDir, err := os.MkdirTemp("", "dodder-v14-trial-*")
 	if err != nil {
 		tw.BailOut(fmt.Sprintf("failed to create temp dir: %s", err))
+		repo.Cancel(err)
 		return
 	}
 
-	defer os.RemoveAll(tempDir)
+	defer errors.Deferred(&err, func() error { return os.RemoveAll(tempDir) })
 
 	// Build V14 index in temp directory.
 	v14Index, err := stream_index_fixed.MakeIndex(
@@ -260,6 +261,7 @@ func (cmd Fsck) runV14IndexTrial(
 
 	if err != nil {
 		tw.BailOut(fmt.Sprintf("failed to create V14 index: %s", err))
+		repo.Cancel(err)
 		return
 	}
 
@@ -281,7 +283,7 @@ func (cmd Fsck) runV14IndexTrial(
 	var addCount atomic.Uint32
 	var addErrorCount atomic.Uint32
 
-	if err := errors.RunChildContextWithPrintTicker(
+	if err = errors.RunChildContextWithPrintTicker(
 		repo,
 		func(ctx errors.Context) {
 			seq := repo.GetStore().All(query)
@@ -326,6 +328,7 @@ func (cmd Fsck) runV14IndexTrial(
 		3*time.Second,
 	); err != nil {
 		tw.BailOut(fmt.Sprintf("v14 add phase failed: %s", err))
+		repo.Cancel(err)
 		return
 	}
 
@@ -336,11 +339,12 @@ func (cmd Fsck) runV14IndexTrial(
 	))
 
 	// Flush the V14 index.
-	if err := v14Index.Flush(func(msg string) error {
+	if err = v14Index.Flush(func(msg string) error {
 		tw.Comment(fmt.Sprintf("v14 flush: %s", msg))
 		return nil
 	}); err != nil {
 		tw.BailOut(fmt.Sprintf("v14 flush failed: %s", err))
+		repo.Cancel(err)
 		return
 	}
 
@@ -352,7 +356,7 @@ func (cmd Fsck) runV14IndexTrial(
 	var overflowCount atomic.Uint32
 	var inlineCount atomic.Uint32
 
-	if err := errors.RunChildContextWithPrintTicker(
+	if err = errors.RunChildContextWithPrintTicker(
 		repo,
 		func(ctx errors.Context) {
 			seq := repo.GetStore().All(query)
@@ -441,6 +445,7 @@ func (cmd Fsck) runV14IndexTrial(
 		3*time.Second,
 	); err != nil {
 		tw.BailOut(fmt.Sprintf("v14 verify phase failed: %s", err))
+		repo.Cancel(err)
 		return
 	}
 
@@ -451,4 +456,6 @@ func (cmd Fsck) runV14IndexTrial(
 		inlineCount.Load(),
 		overflowCount.Load(),
 	))
+
+	return
 }
