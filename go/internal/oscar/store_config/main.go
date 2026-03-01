@@ -160,7 +160,7 @@ func (store *store) AddTransacted(
 ) (err error) {
 	didChange := false
 
-	genre := daughter.ObjectId.GetGenre()
+	genre := daughter.GetObjectId().GetGenre()
 
 	// if strings.Contains(daughter.GetObjectId().String(), "dodder") {
 	// 	err = errors.Errorf(

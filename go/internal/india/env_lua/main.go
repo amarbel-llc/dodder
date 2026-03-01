@@ -71,7 +71,7 @@ func (s *env) GetSkuFromString(lv string) (object *sku.Transacted, err error) {
 		}
 	}()
 
-	if err = ids.SetOnlyNotUnknownGenre(&object.ObjectId, lv); err == nil {
+	if err = ids.SetOnlyNotUnknownGenre(object.GetObjectIdMutable(), lv); err == nil {
 		return object, err
 	}
 

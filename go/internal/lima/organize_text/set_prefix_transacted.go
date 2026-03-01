@@ -122,7 +122,7 @@ func (prefixSet *PrefixSet) addPair(
 	tagString string,
 	object *obj,
 ) {
-	if tagString == object.GetSkuExternal().ObjectId.String() {
+	if tagString == object.GetSkuExternal().GetObjectId().String() {
 		tagString = ""
 	}
 

@@ -44,7 +44,7 @@ func (data *fsItemData) ConsolidateDuplicateBlobs() (err error) {
 		sorted := quiter.ElementsSorted(
 			fds,
 			func(a, b *sku.FSItem) bool {
-				return a.ExternalObjectId.String() < b.ExternalObjectId.String()
+				return a.GetExternalObjectId().String() < b.GetExternalObjectId().String()
 			},
 		)
 

@@ -66,7 +66,7 @@ var typeFormatters = map[string]FormatTypeFuncConstructorEntry{
 					}
 				}
 
-				if typeObject == nil || typeObject.ObjectId.IsEmpty() ||
+				if typeObject == nil || typeObject.GetObjectId().IsEmpty() ||
 					typeObject.GetBlobDigest().IsNull() {
 					ty := ""
 

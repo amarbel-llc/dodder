@@ -63,7 +63,7 @@ func makeObjWithZettelIdAndDescription(
 		),
 	)
 
-	object.GetSkuExternal().ObjectId.SetWithId(makeZettelId(t, zettelId))
+	object.GetSkuExternal().GetObjectIdMutable().SetWithId(makeZettelId(t, zettelId))
 
 	// TODO add pubkeys to assignment reader
 	// {

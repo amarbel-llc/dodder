@@ -53,7 +53,7 @@ func (fb *pageAdditionsFileBacked) initialize(index *Index) (err error) {
 func (fb *pageAdditionsFileBacked) add(object *sku.Transacted) {
 	objectClone, _ := object.CloneTransacted()
 
-	fb.objectIds[object.ObjectId.String()] = struct{}{}
+	fb.objectIds[object.GetObjectId().String()] = struct{}{}
 
 	var cursor ohio.Cursor
 	cursor.Offset = fb.offset
@@ -71,7 +71,7 @@ func (fb *pageAdditionsFileBacked) add(object *sku.Transacted) {
 
 	fb.objectCursors = append(fb.objectCursors, reindexCursor{
 		tai:            object.GetTai(),
-		objectIdString: object.ObjectId.String(),
+		objectIdString: object.GetObjectId().String(),
 		cursor:         cursor,
 	})
 

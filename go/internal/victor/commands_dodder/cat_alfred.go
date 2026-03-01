@@ -120,7 +120,7 @@ func (cmd CatAlfred) Run(dep command.Request) {
 							tagObject, tagObjectRepool := sku.GetTransactedPool().GetWithRepool()
 							defer tagObjectRepool()
 
-							if err = tagObject.ObjectId.Set(tag.String()); err != nil {
+							if err = tagObject.GetObjectIdMutable().Set(tag.String()); err != nil {
 								err = errors.Wrap(err)
 								return err
 							}

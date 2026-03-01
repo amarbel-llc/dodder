@@ -37,7 +37,7 @@ func (json *WithDormant) FromTransacted(
 	blobStore domain_interfaces.BlobStore,
 ) (err error) {
 	return json.FromStringAndMetadata(
-		object.ObjectId.String(),
+		object.GetObjectId().String(),
 		object.GetMetadataMutable(),
 		blobStore,
 	)

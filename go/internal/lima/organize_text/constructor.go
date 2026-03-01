@@ -27,7 +27,7 @@ func (c *constructor) collectExplicitAndImplicitFor(
 		object := checkedOut.GetSkuExternal()
 
 		for _, tag := range object.GetMetadata().GetIndex().GetTagPaths().All {
-			if tag.Tag.String() == object.ObjectId.String() {
+			if tag.Tag.String() == object.GetObjectId().String() {
 				continue
 			}
 

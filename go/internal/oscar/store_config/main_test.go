@@ -15,7 +15,7 @@ func TestGob(t1 *testing.T) {
 
 	ta, _ := sku.GetTransactedPool().GetWithRepool()
 
-	if err := ta.ObjectId.Set("test-tag"); err != nil {
+	if err := ta.GetObjectIdMutable().Set("test-tag"); err != nil {
 		t.Fatalf("failed to set object id: %w", err)
 	}
 
@@ -35,5 +35,5 @@ func TestGob(t1 *testing.T) {
 		t.Fatalf("failed to decode config: %w", err)
 	}
 
-	t.AssertEqual(ta.ObjectId.String(), actual.ObjectId.String())
+	t.AssertEqual(ta.GetObjectId().String(), actual.GetObjectId().String())
 }

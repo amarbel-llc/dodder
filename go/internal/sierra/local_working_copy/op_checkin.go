@@ -55,7 +55,7 @@ func (local *Repo) Checkin(
 				}
 			}
 
-			external.ObjectId.Reset()
+			external.GetObjectIdMutable().Reset()
 
 			proto.Apply(external, genres.Zettel)
 

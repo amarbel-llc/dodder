@@ -118,8 +118,8 @@ func (store *Store) makeFuncIterHydrateCheckedOutProbablyCheckedOut(
 			if sku.IsErrMergeConflict(err) {
 				checkedOut.SetState(checked_out_state.Conflicted)
 
-				if err = checkedOut.GetSkuExternal().ObjectId.SetWithId(
-					&checkedOut.GetSku().ObjectId,
+				if err = checkedOut.GetSkuExternal().GetObjectIdMutable().SetWithId(
+					checkedOut.GetSku().GetObjectId(),
 				); err != nil {
 					err = errors.Wrap(err)
 					return err
@@ -260,7 +260,7 @@ func (store *Store) hydrateDefinitelyNotCheckedOutRecognizedItem(
 			return err
 		}
 
-		co.GetSkuExternal().ObjectId.SetGenre(genres.Blob)
+		co.GetSkuExternal().GetObjectIdMutable().SetGenre(genres.Blob)
 
 		if err = store.WriteFSItemToExternal(item, co.GetSkuExternal()); err != nil {
 			err = errors.Wrap(err)
@@ -400,7 +400,7 @@ func (store *Store) queryUntracked(
 		sort.Slice(
 			blobs,
 			func(i, j int) bool {
-				return blobs[i].ExternalObjectId.String() < blobs[j].ExternalObjectId.String()
+				return blobs[i].GetExternalObjectId().String() < blobs[j].GetExternalObjectId().String()
 			},
 		)
 

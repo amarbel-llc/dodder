@@ -61,11 +61,11 @@ func FromLuaTableV1(
 		luaState.GetField(transacted, "Gattung").String(),
 	)
 
-	object.ObjectId.SetGenre(genre)
+	object.GetObjectIdMutable().SetGenre(genre)
 	id := luaState.GetField(transacted, "Kennung").String()
 
 	if id != "" {
-		if err = object.ObjectId.Set(id); err != nil {
+		if err = object.GetObjectIdMutable().Set(id); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

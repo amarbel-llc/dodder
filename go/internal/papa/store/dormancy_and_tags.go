@@ -38,7 +38,7 @@ func (store *Store) applyDormantAndRealizeTags(
 	}
 
 	if isTag {
-		objectIdString := object.ObjectId.String()
+		objectIdString := object.GetObjectId().String()
 
 		if err = tag.Set(objectIdString); err != nil {
 			err = errors.Wrap(err)
@@ -76,7 +76,7 @@ func (store *Store) addSuperTags(
 
 	switch genre {
 	case genres.Tag, genres.Type, genres.Repo:
-		objectIdString = object.ObjectId.String()
+		objectIdString = object.GetObjectId().String()
 
 		quiter.AppendSeq(
 			&expanded,

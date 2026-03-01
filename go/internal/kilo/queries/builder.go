@@ -131,7 +131,7 @@ func (builder *Builder) WithTransacted(
 	sigil ids.Sigil,
 ) *Builder {
 	for t := range zts.All() {
-		clonedId, _ := t.ObjectId.Clone()
+		clonedId, _ := t.GetObjectId().Clone()
 		builder.pinnedObjectIds = append(
 			builder.pinnedObjectIds,
 			pinnedObjectId{

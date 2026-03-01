@@ -176,7 +176,7 @@ func (store *Store) MakeBlobDigestObjectIdsMap() (blobDigestObjectIds map[string
 
 			digestBytes := object.GetMetadata().GetBlobDigest().GetBytes()
 			objectIds := blobDigestObjectIds[string(digestBytes)]
-			oid := object.ObjectId.String()
+			oid := object.GetObjectId().String()
 			loc, found := slices.BinarySearch(objectIds, oid)
 
 			if found {

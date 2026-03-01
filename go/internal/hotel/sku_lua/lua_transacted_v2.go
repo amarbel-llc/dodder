@@ -62,11 +62,11 @@ func FromLuaTableV2(
 
 	genre := genres.MakeOrUnknown(luaState.GetField(t, "Genre").String())
 
-	object.ObjectId.SetGenre(genre)
+	object.GetObjectIdMutable().SetGenre(genre)
 	id := luaState.GetField(t, "ObjectId").String()
 
 	if id != "" {
-		if err = object.ObjectId.Set(id); err != nil {
+		if err = object.GetObjectIdMutable().Set(id); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

@@ -297,7 +297,7 @@ func (expSigilAndGenre *expSigilAndGenre) ContainsSku(
 ) (ok bool) {
 	object := objectGetter.GetSku()
 
-	objectIdString := object.ObjectId.String()
+	objectIdString := object.GetObjectId().String()
 
 	genre := genres.Must(object)
 
@@ -336,7 +336,7 @@ func (expSigilAndGenre *expSigilAndGenre) ContainsExternalSku(
 		return ok
 	}
 
-	objectIdString := object.ObjectId.String()
+	objectIdString := object.GetObjectId().String()
 
 	if expSigilAndGenre.ShouldHide(el, objectIdString) {
 		return ok

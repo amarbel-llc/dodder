@@ -34,8 +34,8 @@ func (store *Store) RefreshCheckedOut(
 		if sku.IsErrMergeConflict(err) {
 			checkedOut.SetState(checked_out_state.Conflicted)
 
-			if err = checkedOut.GetSkuExternal().ObjectId.SetWithId(
-				&checkedOut.GetSku().ObjectId,
+			if err = checkedOut.GetSkuExternal().GetObjectIdMutable().SetWithId(
+				checkedOut.GetSku().GetObjectId(),
 			); err != nil {
 				err = errors.Wrap(err)
 				return err
@@ -77,7 +77,7 @@ func (store *Store) readIntoCheckedOutFromTransacted(
 
 	var fsItem *sku.FSItem
 
-	if fsItem, ok = store.Get(&object.ObjectId); !ok {
+	if fsItem, ok = store.Get(object.GetObjectId()); !ok {
 		err = errors.MakeErrNotFound(object.GetObjectId())
 		return err
 	}
@@ -101,8 +101,8 @@ func (store *Store) readIntoCheckedOutFromTransacted(
 		} else if sku.IsErrMergeConflict(err) {
 			checkedOut.SetState(checked_out_state.Conflicted)
 
-			if err = checkedOut.GetSkuExternal().ObjectId.SetWithId(
-				&object.ObjectId,
+			if err = checkedOut.GetSkuExternal().GetObjectIdMutable().SetWithId(
+				object.GetObjectId(),
 			); err != nil {
 				err = errors.Wrap(err)
 				return err

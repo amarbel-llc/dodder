@@ -55,7 +55,7 @@ func (cmd RemoteAdd) Run(req command.Request) {
 
 	req.AssertNoMoreArgs()
 
-	if err := remoteObject.ObjectId.SetWithSeq(id.ToSeq()); err != nil {
+	if err := remoteObject.GetObjectIdMutable().SetWithSeq(id.ToSeq()); err != nil {
 		req.Cancel(err)
 	}
 

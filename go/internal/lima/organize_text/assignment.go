@@ -88,7 +88,7 @@ func (assignment Assignment) AlignmentSpacing() int {
 
 func (assignment Assignment) MaxLen() (maxLength int) {
 	for _, object := range assignment.Objects.All() {
-		objectIdLength := object.sku.GetSkuExternal().ObjectId.Len()
+		objectIdLength := object.sku.GetSkuExternal().GetObjectId().Len()
 
 		if objectIdLength > maxLength {
 			maxLength = objectIdLength

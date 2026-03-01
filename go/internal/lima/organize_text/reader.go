@@ -300,18 +300,18 @@ func (assignmentReader *reader) readOneObj(
 	// 	return
 	// }
 
-	if z.GetSkuExternal().ObjectId.IsEmpty() {
+	if z.GetSkuExternal().GetObjectId().IsEmpty() {
 		z.sku.SetState(checked_out_state.Untracked)
 
 		// set empty zettel id to ensure middle is '/'
-		if err = z.GetSkuExternal().ObjectId.SetWithId(ids.ZettelId{}); err != nil {
+		if err = z.GetSkuExternal().GetObjectIdMutable().SetWithId(ids.ZettelId{}); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 	} else {
 		z.sku.SetState(checked_out_state.CheckedOut)
 
-		if err = assignmentReader.options.Abbr.ExpandZettelIdOnly(&z.GetSkuExternal().ObjectId); err != nil {
+		if err = assignmentReader.options.Abbr.ExpandZettelIdOnly(z.GetSkuExternal().GetObjectIdMutable()); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

@@ -54,7 +54,7 @@ func (writer *Writer) PrintOne(object *sku.Transacted) (err error) {
 	case genres.Tag:
 		var tag ids.TagStruct
 
-		if err = tag.Set(object.ObjectId.String()); err != nil {
+		if err = tag.Set(object.GetObjectId().String()); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -106,7 +106,7 @@ func (writer *Writer) addCommonMatches(
 	object *sku.Transacted,
 	item *alfred.Item,
 ) {
-	id := &object.ObjectId
+	id := object.GetObjectId()
 
 	matchBuilder, matchBuilderRepool := alfred.GetPoolMatchBuilder().GetWithRepool()
 	defer matchBuilderRepool()
@@ -161,7 +161,7 @@ func (writer *Writer) zettelToItem(
 		object.GetMetadata().GetTags(),
 	)
 
-	k := &object.ObjectId
+	k := object.GetObjectId()
 	ks := k.String()
 
 	if item.Title == "" {

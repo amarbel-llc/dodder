@@ -90,7 +90,7 @@ func (json *Transacted) FromTransacted(
 	blobStore domain_interfaces.BlobStore,
 ) (err error) {
 	return json.FromObjectIdStringAndMetadata(
-		object.ObjectId.String(),
+		object.GetObjectId().String(),
 		object.GetMetadataMutable(),
 		blobStore,
 	)
@@ -138,7 +138,7 @@ func (json *Transacted) ToTransacted(
 		}
 	}
 
-	if err = object.ObjectId.Set(json.ObjectId); err != nil {
+	if err = object.GetObjectIdMutable().Set(json.ObjectId); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

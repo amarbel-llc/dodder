@@ -26,7 +26,7 @@ func TestBinaryOne(t1 *testing.T) {
 
 	{
 		t.AssertNoError(
-			expected.ObjectId.SetWithId(ids.MustZettelId("one/uno")),
+			expected.GetObjectIdMutable().SetWithId(ids.MustZettelId("one/uno")),
 		)
 		expected.SetTai(ids.NowTai())
 		t.AssertNoError(markl.SetHexBytes(

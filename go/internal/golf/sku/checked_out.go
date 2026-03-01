@@ -34,7 +34,7 @@ var (
 )
 
 func (checkedOut *CheckedOut) GetRepoId() ids.RepoId {
-	return checkedOut.GetSkuExternal().RepoId
+	return checkedOut.GetSkuExternal().GetRepoId()
 }
 
 func (checkedOut *CheckedOut) GetSkuExternal() *Transacted {

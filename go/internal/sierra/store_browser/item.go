@@ -96,7 +96,7 @@ func (item Item) GetDescription() (b descriptions.Description, err error) {
 
 func (item *Item) WriteToExternal(object *sku.Transacted) (err error) {
 	if !item.Id.IsEmpty() {
-		if err = object.ExternalObjectId.Set(item.Id.String()); err != nil {
+		if err = object.GetExternalObjectIdMutable().Set(item.Id.String()); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -115,9 +115,11 @@ func (item *Item) WriteToExternal(object *sku.Transacted) (err error) {
 
 	metadata.GetTaiMutable().ResetWith(tai)
 
-	if object.ExternalType, err = item.GetType(); err != nil {
-		err = errors.Wrap(err)
+	if externalType, typeErr := item.GetType(); typeErr != nil {
+		err = errors.Wrap(typeErr)
 		return err
+	} else {
+		object.SetExternalType(externalType)
 	}
 
 	if object.GetMetadata().GetDescription().IsEmpty() {
@@ -161,7 +163,7 @@ func (item *Item) WriteToExternal(object *sku.Transacted) (err error) {
 func (item *Item) ReadFromExternal(object *sku.Transacted) (err error) {
 	if err = item.Id.Set(
 		strings.TrimSuffix(
-			object.ExternalObjectId.String(),
+			object.GetExternalObjectId().String(),
 			"/",
 		),
 	); err != nil {
@@ -176,7 +178,7 @@ func (item *Item) ReadFromExternal(object *sku.Transacted) (err error) {
 				continue
 			}
 
-			if err = item.Id.Set(object.ExternalObjectId.String()); err != nil {
+			if err = item.Id.Set(object.GetExternalObjectId().String()); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}

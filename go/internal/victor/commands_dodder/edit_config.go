@@ -149,7 +149,7 @@ func (cmd EditConfig) readTempConfigFile(
 ) (object *sku.Transacted, err error) {
 	object, _ = sku.GetTransactedPool().GetWithRepool()
 
-	if object.ObjectId.Set("konfig"); err != nil {
+	if object.GetObjectIdMutable().Set("konfig"); err != nil {
 		err = errors.Wrap(err)
 		return object, err
 	}

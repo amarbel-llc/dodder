@@ -106,13 +106,13 @@ func (objectId ObjectId) ContainsSku(
 		}
 
 		if transacted, isExternal := objectGetter.(*sku.Transacted); isExternal {
-			if method(transacted.ExternalType, objectId.GetObjectId()) {
+			if method(transacted.GetExternalType(), objectId.GetObjectId()) {
 				return true
 			}
 		}
 	}
 
-	return method(&object.ObjectId, objectId.GetObjectId())
+	return method(object.GetObjectIdMutable(), objectId.GetObjectId())
 }
 
 func (objectId ObjectId) String() string {

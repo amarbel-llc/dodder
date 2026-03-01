@@ -8,7 +8,7 @@ import (
 )
 
 func (store *Store) UpdateTransacted(internal *sku.Transacted) (err error) {
-	item, ok := store.Get(&internal.ObjectId)
+	item, ok := store.Get(internal.GetObjectId())
 
 	if !ok {
 		return err

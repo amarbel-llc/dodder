@@ -72,17 +72,17 @@ func (objects Objects) Sort() {
 		jObject := objects[j].GetSkuExternal()
 
 		switch {
-		case iObject.ObjectId.IsEmpty() && jObject.ObjectId.IsEmpty():
+		case iObject.GetObjectId().IsEmpty() && jObject.GetObjectId().IsEmpty():
 			return iObject.GetMetadata().GetDescription().String() < jObject.GetMetadata().GetDescription().String()
 
-		case iObject.ObjectId.IsEmpty():
+		case iObject.GetObjectId().IsEmpty():
 			return true
 
-		case jObject.ObjectId.IsEmpty():
+		case jObject.GetObjectId().IsEmpty():
 			return false
 
 		default:
-			return iObject.ObjectId.String() < jObject.ObjectId.String()
+			return iObject.GetObjectId().String() < jObject.GetObjectId().String()
 		}
 	})
 }

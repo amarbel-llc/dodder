@@ -407,16 +407,16 @@ func (dirInfo *dirInfo) processFDsOnItem(
 
 		switch ext {
 		case dirInfo.fileExtensions.Zettel:
-			item.ExternalObjectId.SetGenre(genres.Zettel)
+			item.GetExternalObjectId().SetGenre(genres.Zettel)
 
 		case dirInfo.fileExtensions.Type:
-			item.ExternalObjectId.SetGenre(genres.Type)
+			item.GetExternalObjectId().SetGenre(genres.Type)
 
 		case dirInfo.fileExtensions.Tag:
-			item.ExternalObjectId.SetGenre(genres.Tag)
+			item.GetExternalObjectId().SetGenre(genres.Tag)
 
 		case dirInfo.fileExtensions.Repo:
-			item.ExternalObjectId.SetGenre(genres.Repo)
+			item.GetExternalObjectId().SetGenre(genres.Repo)
 
 		case dirInfo.fileExtensions.Lockfile:
 			item.Lockfile.ResetWith(fd)
@@ -477,7 +477,7 @@ func (dirInfo *dirInfo) processFDSet(
 		return results, err
 	}
 
-	if item.ExternalObjectId.GetGenre() != genres.Unknown {
+	if item.GetExternalObjectId().GetGenre() != genres.Unknown {
 		if blobCount > 1 {
 			err = errors.ErrorWithStackf(
 				"several blobs matching object id %q: %q",
@@ -499,11 +499,11 @@ func (dirInfo *dirInfo) processFDSet(
 		}
 	}
 
-	if item.ExternalObjectId.GetGenre() == genres.Unknown {
-		item.ExternalObjectId.SetGenre(recognizedGenre)
+	if item.GetExternalObjectId().GetGenre() == genres.Unknown {
+		item.GetExternalObjectId().SetGenre(recognizedGenre)
 	}
 
-	if item.ExternalObjectId.GetGenre() == genres.Unknown {
+	if item.GetExternalObjectId().GetGenre() == genres.Unknown {
 		if results, err = dirInfo.addOneOrMoreBlobs(
 			item,
 		); err != nil {
@@ -539,7 +539,7 @@ func (dirInfo *dirInfo) addOneUntracked(
 		return result, err
 	}
 
-	if err = result.ExternalObjectId.SetBlob(
+	if err = result.GetExternalObjectId().SetBlob(
 		dirInfo.envRepo.Rel(fdee.GetPath()),
 	); err != nil {
 		err = errors.Wrap(err)
@@ -590,7 +590,7 @@ func (dirInfo *dirInfo) addOneOrMoreBlobs(
 			return results, err
 		}
 
-		fdsOne.ExternalObjectId.SetGenre(genres.Blob)
+		fdsOne.GetExternalObjectId().SetGenre(genres.Blob)
 		results = []*sku.FSItem{fdsOne}
 
 		return results, err
@@ -616,7 +616,7 @@ func (dirInfo *dirInfo) addOneObject(
 	objectIdString string,
 	item *sku.FSItem,
 ) (err error) {
-	if err = item.ExternalObjectId.Set(objectIdString); err != nil {
+	if err = item.GetExternalObjectId().Set(objectIdString); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

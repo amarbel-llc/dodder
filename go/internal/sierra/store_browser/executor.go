@@ -25,7 +25,7 @@ func (executor *executor) tryToEmitOneExplicitlyCheckedOut(
 	internal *sku.Transacted,
 	item Item,
 ) (err error) {
-	executor.checkedOut.GetSkuExternal().ObjectId.Reset()
+	executor.checkedOut.GetSkuExternal().GetObjectIdMutable().Reset()
 
 	var uSku *url.URL
 
@@ -43,7 +43,7 @@ func (executor *executor) tryToEmitOneExplicitlyCheckedOut(
 		// c.co.SetState(checked_out_state.Changed)
 	}
 
-	executor.checkedOut.GetSkuExternal().State = external_state.Tracked
+	executor.checkedOut.GetSkuExternal().SetExternalState(external_state.Tracked)
 
 	if err = executor.tryToEmitOneCommon(item); err != nil {
 		err = errors.Wrap(err)
@@ -72,7 +72,7 @@ func (executor *executor) tryToEmitOneRecognized(
 	// }
 
 	executor.checkedOut.SetState(checked_out_state.Recognized)
-	executor.checkedOut.GetSkuExternal().State = external_state.Recognized
+	executor.checkedOut.GetSkuExternal().SetExternalState(external_state.Recognized)
 
 	if err = executor.tryToEmitOneCommon(item); err != nil {
 		err = errors.Wrap(err)
@@ -119,14 +119,14 @@ func (executor *executor) tryToEmitOneCommon(
 		return err
 	}
 
-	external.ObjectId.SetGenre(genres.Zettel)
-	external.ExternalObjectId.SetGenre(genres.Zettel)
+	external.GetObjectIdMutable().SetGenre(genres.Zettel)
+	external.GetExternalObjectIdMutable().SetGenre(genres.Zettel)
 
 	if !queries.ContainsExternalSku(executor.query, external, executor.checkedOut.GetState()) {
 		return err
 	}
 
-	executor.checkedOut.GetSkuExternal().RepoId = executor.store.externalStoreInfo.RepoId
+	executor.checkedOut.GetSkuExternal().SetRepoId(executor.store.externalStoreInfo.RepoId)
 
 	if err = executor.out(&executor.checkedOut); err != nil {
 		err = errors.Wrap(err)

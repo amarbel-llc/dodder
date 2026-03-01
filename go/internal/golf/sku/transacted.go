@@ -46,8 +46,28 @@ func (transacted *Transacted) GetExternalObjectId() domain_interfaces.ExternalOb
 	return &transacted.ExternalObjectId
 }
 
+func (transacted *Transacted) GetExternalObjectIdMutable() *ids.ExternalObjectId {
+	return &transacted.ExternalObjectId
+}
+
+func (transacted *Transacted) GetExternalType() ids.TypeStruct {
+	return transacted.ExternalType
+}
+
+func (transacted *Transacted) SetExternalType(t ids.TypeStruct) {
+	transacted.ExternalType = t
+}
+
 func (transacted *Transacted) GetExternalState() external_state.State {
 	return transacted.State
+}
+
+func (transacted *Transacted) SetExternalState(s external_state.State) {
+	transacted.State = s
+}
+
+func (transacted *Transacted) SetRepoId(r ids.RepoId) {
+	transacted.RepoId = r
 }
 
 func (transacted *Transacted) CloneTransacted() (cloned *Transacted, repool interfaces.FuncRepool) {
@@ -122,6 +142,10 @@ func (transacted *Transacted) SetTai(tai ids.Tai) {
 }
 
 func (transacted *Transacted) GetObjectId() *ids.ObjectId {
+	return &transacted.ObjectId
+}
+
+func (transacted *Transacted) GetObjectIdMutable() *ids.ObjectId {
 	return &transacted.ObjectId
 }
 

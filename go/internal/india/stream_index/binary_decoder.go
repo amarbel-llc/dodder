@@ -196,7 +196,7 @@ func (decoder *binaryDecoder) readFormatAndMatchSigil(
 				break
 			}
 
-			if query.ContainsObjectId(&object.ObjectId) &&
+			if query.ContainsObjectId(object.GetObjectId()) &&
 				(sigil.ContainsOneOf(ids.SigilHistory) ||
 					object.ContainsOneOf(ids.SigilLatest)) {
 				break
@@ -313,7 +313,7 @@ func (decoder *binaryDecoder) readFieldKey(
 		}
 
 	case key_bytes.ObjectId:
-		if _, err = object.ObjectId.ReadFrom(&decoder.Content); err != nil {
+		if _, err = object.GetObjectIdMutable().ReadFrom(&decoder.Content); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

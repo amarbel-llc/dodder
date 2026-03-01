@@ -67,7 +67,7 @@ func (store *Store) CreateOrUpdateBlobDigest(
 	var objectRepool interfaces.FuncRepool
 	object, objectRepool = sku.GetTransactedPool().GetWithRepool()
 
-	if err = object.ObjectId.Set(objectId.String()); err != nil {
+	if err = object.GetObjectIdMutable().Set(objectId.String()); err != nil {
 		objectRepool()
 		object = nil
 

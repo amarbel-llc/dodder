@@ -471,7 +471,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				if _, err = fmt.Fprintf(
 					writer,
 					"%s@%s\n",
-					&object.ObjectId,
+					object.GetObjectId(),
 					object.GetObjectDigest().StringWithFormat(),
 				); err != nil {
 					err = errors.Wrap(err)
@@ -499,7 +499,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				if _, err = fmt.Fprintf(
 					writer,
 					"%s %s\n",
-					&object.ObjectId,
+					object.GetObjectId(),
 					digest.StringWithFormat(),
 				); err != nil {
 					err = errors.Wrap(err)
@@ -518,7 +518,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				if _, err = fmt.Fprintln(
 					writer,
-					&object.ObjectId,
+					object.GetObjectId(),
 				); err != nil {
 					err = errors.Wrap(err)
 					return err
@@ -536,7 +536,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				if _, err = fmt.Fprintln(
 					writer,
-					&object.ObjectId,
+					object.GetObjectId(),
 				); err != nil {
 					err = errors.Wrap(err)
 					return err
@@ -1093,7 +1093,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				}
 
 				a["description"] = object.GetMetadata().GetDescription().String()
-				a["identifier"] = object.ObjectId.String()
+				a["identifier"] = object.GetObjectId().String()
 
 				if err = e.Encode(&a); err != nil {
 					err = errors.Wrap(err)
@@ -1133,7 +1133,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				}
 
 				a["description"] = object.GetMetadata().GetDescription().String()
-				a["identifier"] = object.ObjectId.String()
+				a["identifier"] = object.GetObjectId().String()
 
 				e := toml.NewEncoder(writer)
 

@@ -114,7 +114,7 @@ func (store *store) recompileTypes(
 
 		isBinary := commonBlob.GetBinary()
 		if !isBinary {
-			inlineTypes.Add(values.MakeString(tagObject.ObjectId.String()))
+			inlineTypes.Add(values.MakeString(tagObject.GetObjectId().String()))
 		}
 
 	}

@@ -72,7 +72,7 @@ func (tag *tag) Equals(b *tag) bool {
 }
 
 func (tag *tag) Set(v string) (err error) {
-	if err = tag.Transacted.ObjectId.Set(v); err != nil {
+	if err = tag.Transacted.GetObjectIdMutable().Set(v); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

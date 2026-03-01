@@ -150,8 +150,8 @@ func (format *BoxTransacted) makeFieldExternalObjectIdsIfNecessary(
 		ColorType: string_format_writer.ColorTypeId,
 	}
 
-	if !object.ExternalObjectId.IsEmpty() {
-		objectId := &object.ExternalObjectId
+	if !object.GetExternalObjectId().IsEmpty() {
+		objectId := object.GetExternalObjectIdMutable()
 		// TODO quote as necessary
 		field.Value = (&ids.StringerSansRepo{Id: objectId}).String()
 	}
@@ -162,7 +162,7 @@ func (format *BoxTransacted) makeFieldExternalObjectIdsIfNecessary(
 func (format *BoxTransacted) makeFieldObjectId(
 	object *sku.Transacted,
 ) (field string_format_writer.Field, empty bool, err error) {
-	objectId := &object.ObjectId
+	objectId := object.GetObjectId()
 
 	empty = objectId.IsEmpty()
 

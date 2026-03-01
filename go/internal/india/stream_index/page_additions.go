@@ -35,7 +35,7 @@ func (pa *pageAdditions) add(object *sku.Transacted) {
 	objectClone, _ := object.CloneTransacted()
 
 	pa.objects.Add(objectClone)
-	pa.objectIdLookup[object.ObjectId.String()] = struct{}{}
+	pa.objectIdLookup[object.GetObjectId().String()] = struct{}{}
 
 	seqProbeIds := object.AllProbeIds(
 		pa.index.index.GetHashType(),

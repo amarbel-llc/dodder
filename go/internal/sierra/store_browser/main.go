@@ -189,20 +189,20 @@ func (store *Store) CheckoutOne(
 		return checkedOut, err
 	}
 
-	item.ExternalId = object.ObjectId.String()
+	item.ExternalId = object.GetObjectId().String()
 	item.Id.Type = "tab"
 
 	sku.TransactedResetter.ResetWith(checkedOut.GetSku(), object)
 	sku.TransactedResetter.ResetWith(checkedOut.GetSkuExternal().GetSku(), object)
 	checkedOut.SetState(checked_out_state.JustCheckedOut)
-	checkedOut.GetSkuExternal().ExternalType = ids.MustTypeStruct("!browser-tab")
+	checkedOut.GetSkuExternal().SetExternalType(ids.MustTypeStruct("!browser-tab"))
 
 	if err = item.WriteToExternal(checkedOut.GetSkuExternal()); err != nil {
 		err = errors.Wrap(err)
 		return checkedOut, err
 	}
 
-	checkedOut.GetSkuExternal().RepoId = store.externalStoreInfo.RepoId
+	checkedOut.GetSkuExternal().SetRepoId(store.externalStoreInfo.RepoId)
 
 	store.lock.Lock()
 	defer store.lock.Unlock()

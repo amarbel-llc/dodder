@@ -178,7 +178,7 @@ func (encoder *binaryEncoder) writeFieldKey(
 		}
 
 	case key_bytes.ObjectId:
-		if n, err = encoder.writeFieldWriterTo(&object.ObjectId); err != nil {
+		if n, err = encoder.writeFieldWriterTo(object.GetObjectId()); err != nil {
 			err = errors.Wrap(err)
 			return n, err
 		}

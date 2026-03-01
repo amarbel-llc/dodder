@@ -33,7 +33,7 @@ func (item *FSItem) WriteToSku(
 	dirLayout env_dir.Env,
 ) (err error) {
 	if err = item.WriteToExternalObjectId(
-		&external.ExternalObjectId,
+		external.GetExternalObjectIdMutable(),
 		dirLayout,
 	); err != nil {
 		err = errors.Wrap(err)

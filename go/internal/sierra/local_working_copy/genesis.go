@@ -92,7 +92,7 @@ func (local *Repo) initDefaultTypeIfNecessaryAfterLock(
 	object, objectRepool := sku.GetTransactedPool().GetWithRepool()
 	defer objectRepool()
 
-	if err = object.ObjectId.SetWithId(objectIdType); err != nil {
+	if err = object.GetObjectIdMutable().SetWithId(objectIdType); err != nil {
 		err = errors.Wrap(err)
 		return objectIdType, err
 	}
@@ -151,7 +151,7 @@ func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 
 	newConfig, _ := sku.GetTransactedPool().GetWithRepool()
 
-	if err = newConfig.ObjectId.SetWithId(
+	if err = newConfig.GetObjectIdMutable().SetWithId(
 		ids.Config,
 	); err != nil {
 		err = errors.Wrap(err)

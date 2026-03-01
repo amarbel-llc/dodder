@@ -55,7 +55,7 @@ func (store *Store) initializeIndex() (err error) {
 			}
 
 			{
-				existing, ok := store.tabCache.Rows[object.ObjectId.String()]
+				existing, ok := store.tabCache.Rows[object.GetObjectId().String()]
 
 				if ok {
 					store.transactedItemIndex[existing] = cl

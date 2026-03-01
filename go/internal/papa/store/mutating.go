@@ -126,7 +126,7 @@ func (commitFacilitator commitFacilitator) commit(
 		daughter.SetTai(tai)
 	}
 
-	if options.AddToInventoryList && (daughter.ObjectId.IsEmpty() ||
+	if options.AddToInventoryList && (daughter.GetObjectId().IsEmpty() ||
 		daughter.GetGenre() == genres.Unknown ||
 		daughter.GetGenre() == genres.Blob) {
 		var zettelId *ids.ZettelId
@@ -136,7 +136,7 @@ func (commitFacilitator commitFacilitator) commit(
 			return err
 		}
 
-		if err = daughter.ObjectId.SetWithSeq(zettelId.ToSeq()); err != nil {
+		if err = daughter.GetObjectIdMutable().SetWithSeq(zettelId.ToSeq()); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -217,7 +217,7 @@ func (commitFacilitator commitFacilitator) commit(
 		}
 
 		if daughter.GetGenre() == genres.Zettel {
-			if err = commitFacilitator.zettelIdIndex.AddZettelId(&daughter.ObjectId); err != nil {
+			if err = commitFacilitator.zettelIdIndex.AddZettelId(daughter.GetObjectIdMutable()); err != nil {
 				if errors.Is(err, object_id_provider.ErrDoesNotExist{}) {
 					ui.Log().Printf("object id does not contain value: %s", err)
 					err = nil
@@ -384,7 +384,7 @@ func (commitFacilitator commitFacilitator) createType(
 		)
 	}
 
-	if err = typeObject.ObjectId.SetWithId(typeId); err != nil {
+	if err = typeObject.GetObjectIdMutable().SetWithId(typeId); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

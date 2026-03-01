@@ -39,7 +39,7 @@ func (op CreateFromPaths) Run(
 
 		fsItem.Reset()
 
-		fsItem.ExternalObjectId.SetGenre(genres.Zettel)
+		fsItem.GetExternalObjectId().SetGenre(genres.Zettel)
 
 		if err = fsItem.Object.Set(arg); err != nil {
 			err = errors.Wrap(err)

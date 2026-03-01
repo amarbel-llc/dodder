@@ -391,8 +391,8 @@ func (store *Store) ReadFSItemFromExternal(
 		}
 	}
 
-	if err = item.ExternalObjectId.SetObjectIdLike(
-		&object.ObjectId,
+	if err = item.GetExternalObjectId().SetObjectIdLike(
+		object.GetObjectId(),
 	); err != nil {
 		err = errors.Wrap(err)
 		return item, err
@@ -400,9 +400,9 @@ func (store *Store) ReadFSItemFromExternal(
 
 	// external.ObjectId.ResetWith(conflicted.GetSkuExternal().GetObjectId())
 	// TODO populate FD
-	if !object.ExternalObjectId.IsEmpty() {
-		if err = item.ExternalObjectId.SetObjectIdLike(
-			&item.ExternalObjectId,
+	if !object.GetExternalObjectId().IsEmpty() {
+		if err = item.GetExternalObjectId().SetObjectIdLike(
+			item.GetExternalObjectId(),
 		); err != nil {
 			err = errors.Wrap(err)
 			return item, err
@@ -438,16 +438,16 @@ func (store *Store) WriteFSItemToExternal(
 		before := item.Blob.String()
 		after := store.envRepo.Rel(before)
 
-		if err = object.ExternalObjectId.SetBlob(after); err != nil {
+		if err = object.GetExternalObjectIdMutable().SetBlob(after); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
 	default:
-		externalObjectId := &item.ExternalObjectId
+		externalObjectId := item.GetExternalObjectId()
 
 		if err = ids.SetObjectIdOrBlob(
-			&object.ObjectId,
+			object.GetObjectIdMutable(),
 			externalObjectId,
 		); err != nil {
 			if doddish.IsErrEmptySeq(err) {
@@ -458,18 +458,18 @@ func (store *Store) WriteFSItemToExternal(
 			}
 		}
 
-		if err = object.ExternalObjectId.SetObjectIdLike(
-			&item.ExternalObjectId,
+		if err = object.GetExternalObjectIdMutable().SetObjectIdLike(
+			item.GetExternalObjectId(),
 		); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		if object.ExternalObjectId.String() != externalObjectId.String() {
+		if object.GetExternalObjectId().String() != externalObjectId.String() {
 			err = errors.ErrorWithStackf(
 				"expected %q but got %q. %s",
 				externalObjectId,
-				&object.ExternalObjectId,
+				object.GetExternalObjectIdMutable(),
 				item.Debug(),
 			)
 

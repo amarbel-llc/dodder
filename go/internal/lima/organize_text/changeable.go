@@ -61,7 +61,7 @@ func (assignment *Assignment) addToSet(
 				)
 			}
 
-			outputObject.GetSkuExternal().RepoId.ResetWith(ot.Metadata.RepoId)
+			outputObject.GetSkuExternal().SetRepoId(ot.Metadata.RepoId)
 
 			output.Add(outputObject)
 
@@ -120,7 +120,7 @@ func (assignment *Assignment) addToSet(
 			outputObject = previouslyProcessedObject.sku
 		}
 
-		if organizeObject.GetSkuExternal().ObjectId.String() == "" {
+		if organizeObject.GetSkuExternal().GetObjectId().String() == "" {
 			panic(fmt.Sprintf("%s: object id is nil", organizeObject))
 		}
 

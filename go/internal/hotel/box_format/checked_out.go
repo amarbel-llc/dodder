@@ -69,7 +69,7 @@ func (format *BoxCheckedOut) EncodeStringTo(
 	}
 
 	if format.fsItemReadWriter == nil || errFS != nil ||
-		!external.RepoId.IsEmpty() {
+		!external.GetRepoId().IsEmpty() {
 		if err = format.addFieldsExternalWithFSItem(
 			external,
 			builder,
@@ -163,7 +163,7 @@ func (format *BoxCheckedOut) addFieldsExternalWithFSItem(
 func (format *BoxCheckedOut) makeFieldObjectId(
 	object *sku.Transacted,
 ) (field string_format_writer.Field, empty bool, err error) {
-	objectId := &object.ObjectId
+	objectId := object.GetObjectId()
 
 	empty = objectId.IsEmpty()
 

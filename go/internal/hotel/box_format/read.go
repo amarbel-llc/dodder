@@ -112,13 +112,13 @@ func (format *BoxTransacted) readStringFormatBox(
 
 		seq := scanner.GetSeq()
 
-		if err = object.ObjectId.SetWithSeq(seq); err != nil {
+		if err = object.GetObjectIdMutable().SetWithSeq(seq); err != nil {
 			err = nil
-			object.ObjectId.Reset()
+			object.GetObjectIdMutable().Reset()
 
 			// "some_file.ext"
 			if seq.MatchAll(doddish.TokenTypeLiteral) {
-				if err = object.ExternalObjectId.Set(seq.String()); err != nil {
+				if err = object.GetExternalObjectIdMutable().Set(seq.String()); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -127,7 +127,7 @@ func (format *BoxTransacted) readStringFormatBox(
 			} else if ok, left, _, _ := seq.PartitionFavoringLeft(
 				doddish.TokenMatcherOp(doddish.OpPathSeparator),
 			); ok && left.Len() == 0 {
-				if err = object.ExternalObjectId.Set(seq.String()); err != nil {
+				if err = object.GetExternalObjectIdMutable().Set(seq.String()); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -142,18 +142,18 @@ func (format *BoxTransacted) readStringFormatBox(
 				// left: one/uno, right: .zettel
 				if err = genre.Set(right.At(1).String()); err == nil {
 					if err = ids.SetWithGenre(
-						&object.ObjectId,
+						object.GetObjectIdMutable(),
 						left.String(),
 						genre,
 					); err != nil {
-						object.ObjectId.Reset()
+						object.GetObjectIdMutable().Reset()
 						err = errors.Wrap(err)
 						return err
 					}
 
 					// left: some_dir/some_name, right: .ext
 				} else {
-					if err = object.ExternalObjectId.Set(seq.String()); err != nil {
+					if err = object.GetExternalObjectIdMutable().Set(seq.String()); err != nil {
 						err = errors.Wrap(err)
 						return err
 					}
@@ -165,9 +165,9 @@ func (format *BoxTransacted) readStringFormatBox(
 			}
 		}
 
-		if object.ObjectId.GetGenre() == genres.InventoryList {
+		if object.GetObjectId().GetGenre() == genres.InventoryList {
 			if err = object.GetMetadataMutable().GetTaiMutable().Set(
-				object.ObjectId.String(),
+				object.GetObjectId().String(),
 			); err != nil {
 				err = errors.Wrap(err)
 				return err

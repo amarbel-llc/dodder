@@ -350,7 +350,7 @@ func (pageWriter *pageWriter) saveToLatestMap(
 func (pageWriter *pageWriter) removeOldLatest(
 	objectLatest *sku.Transacted,
 ) (err error) {
-	objectIdString := objectLatest.ObjectId.String()
+	objectIdString := objectLatest.GetObjectId().String()
 	objectOld, ok := pageWriter.latestObjects[objectIdString]
 
 	if !ok {
