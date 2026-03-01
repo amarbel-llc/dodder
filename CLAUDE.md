@@ -26,3 +26,13 @@ Fixtures in `zz-tests_bats/migration/` are committed test data that integration 
 
 - **"dodder: command not found"** — run `just build` first, or ensure you're in the nix devshell
 - **BATS tests fail with stale fixtures** — run `just test-bats-update-fixtures`, review diff, commit
+
+## External Integrations (verify before committing)
+
+| Integration | How to verify |
+|-------------|---------------|
+| pivy-agent ECDH | Round-trip: encrypt blob, decrypt with real token |
+| ECDSA P256 signing | Sign + verify with real key, not just one direction |
+| SSH agent protocol | Connect to real agent, list + sign + verify |
+| age encryption | Encrypt + decrypt round-trip |
+| WASM guest filters | Build guest, load in host, execute filter |
