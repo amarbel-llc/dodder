@@ -1,7 +1,7 @@
 c2sp.org/CCTV/age v0.0.0-20251208015420-e9274a7bdbfd h1:ZLsPO6WdZ5zatV4UfVpr7oAwLGRZ+sebTUruuM4Ra3M=
 c2sp.org/CCTV/age v0.0.0-20251208015420-e9274a7bdbfd/go.mod h1:SrHC2C7r5GkDk8R+NFVzYy/sdj0Ypg9htaPXQq5Cqeo=
-code.linenisgreat.com/chrest/go v0.0.0-20260208164612-16fbf91fdcef h1:3lNkJSIgIhJFPyg+6doS3NCaRjP+Y6nabOi3JRhMuFs=
-code.linenisgreat.com/chrest/go v0.0.0-20260208164612-16fbf91fdcef/go.mod h1:LOfTTOsEBfkEGv9F4ouDLFMaUEqr/TPwQV+zFKY6PLg=
+code.linenisgreat.com/chrest/go v0.0.0-20260222021305-89bab2b9c2ed h1:YqQsWFcowLU51F8mybhrhAlTcPrG3ehv05oudZL+Nxk=
+code.linenisgreat.com/chrest/go v0.0.0-20260222021305-89bab2b9c2ed/go.mod h1:LOfTTOsEBfkEGv9F4ouDLFMaUEqr/TPwQV+zFKY6PLg=
 filippo.io/age v1.3.1 h1:hbzdQOJkuaMEpRCLSN1/C5DX74RPcNCk6oqhKMXmZi0=
 filippo.io/age v1.3.1/go.mod h1:EZorDTYUxt836i3zdori5IJX/v2Lj6kWFU0cfh6C0D4=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
@@ -14,10 +14,8 @@ github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/akutz/memconn v0.1.0 h1:NawI0TORU4hcOMsMr11g7vwlCdkYeLKXBcxWu2W/P8A=
 github.com/akutz/memconn v0.1.0/go.mod h1:Jo8rI7m0NieZyLI5e2CDlRdRqRRB4S7Xp77ukDjH+Fw=
-github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.2 h1:tIHcjGZ0BS/0RvC2rzcphPpXJUN4FeR/G16lirTZ9Rw=
-github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.2/go.mod h1:fAw7kOeIN6/UCW2/+am8xaLk74dQHSl89smVVZZnv/4=
-github.com/amarbel-llc/tap-dancer/go v0.0.0-20260222022802-be680fd2b4ac h1:TiUtZRNiOz5Dazrh8hX9tpAmtLU+OC9WBSwwr3o7HP0=
-github.com/amarbel-llc/tap-dancer/go v0.0.0-20260222022802-be680fd2b4ac/go.mod h1:TEfWGD1ubQbbCCdmrQN1rEJgSmqRUA7IO+uvd9kUQM4=
+github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.3-0.20260223142938-fd723e615485 h1:QyYBBQ+IJ4mVPfZPa7Nx//gl8GlRtvtftTWBlTY55Vo=
+github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.3-0.20260223142938-fd723e615485/go.mod h1:fAw7kOeIN6/UCW2/+am8xaLk74dQHSl89smVVZZnv/4=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=

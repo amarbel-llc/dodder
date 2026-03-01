@@ -3,9 +3,10 @@ module code.linenisgreat.com/dodder/go
 go 1.25.5
 
 require (
+	code.linenisgreat.com/chrest/go v0.0.0-20260222021305-89bab2b9c2ed
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
-	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.2
+	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.3-0.20260223142938-fd723e615485
 	github.com/amarbel-llc/tap-dancer/go v0.0.0-20260222022802-be680fd2b4ac
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v0.8.0
@@ -15,6 +16,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/pkg/sftp v1.13.10
+	github.com/tetratelabs/wazero v1.11.0
 	github.com/yuin/gopher-lua v1.1.1
 	golang.org/x/crypto v0.48.0
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
@@ -66,7 +68,6 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/tailscale/go-winio v0.0.0-20231025203758-c4f33415bf55 // indirect
-	github.com/tetratelabs/wazero v1.11.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
@@ -77,3 +78,5 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
 )
+
+replace github.com/amarbel-llc/tap-dancer/go => /home/sasha/eng/repos/purse-first/packages/tap-dancer/go
