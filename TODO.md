@@ -1,5 +1,14 @@
 # TODO
 
+- [ ] confirm usage of modern nix monorepo
+- [ ] use latest tap output
+- [ ] explore using sigil as continuation operator in v14 fixed stream index
+- [ ] expore using content offsets instead of signatures in v14 fixed stream
+  index
+- [ ] run performance tests on packfiles
+- [ ] run performance v14 fixed stream index
+- [ ] verify encryption support in packfiles
+- [ ] add support for n / m sapir recovery for piv encryption
 - [ ] migrate to `bats_load_library bats-island` (replace inline set_xdg/setup_test_home/chflags_and_rm)
 
 - [ ] Debug `just test-bats-update-fixtures` failure: bats succeeds when run directly from `zz-tests_bats/` but fails when invoked through the justfile recipe chain. Likely a working directory or environment variable propagation issue. The `cp` command can't find `.dodder` in the bats temp dir, suggesting the fixture generation test silently fails or the temp dir path extraction breaks.
