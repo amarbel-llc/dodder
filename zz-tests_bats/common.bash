@@ -24,26 +24,7 @@ pushd "$BATS_TEST_TMPDIR" >/dev/null || exit 1
 bats_load_library "bats-support"
 bats_load_library "bats-assert"
 bats_load_library "bats-assert-additions"
-
-set_xdg() {
-  if [[ -z $1 ]]; then
-    echo "trying to set empty XDG override. aborting." >&2
-    exit 1
-  fi
-
-  loc="$(realpath "$1" 2>/dev/null)"
-
-  if [[ -z $loc ]]; then
-    echo "realpath for xdg is empty. aborting." >&2
-    exit 1
-  fi
-
-  export XDG_DATA_HOME="$loc/.xdg/data"
-  export XDG_CONFIG_HOME="$loc/.xdg/config"
-  export XDG_STATE_HOME="$loc/.xdg/state"
-  export XDG_CACHE_HOME="$loc/.xdg/cache"
-  export XDG_RUNTIME_HOME="$loc/.xdg/runtime"
-}
+bats_load_library "bats-island"
 
 # get the containing directory of this file
 # use $BATS_TEST_FILENAME instead of ${BASH_SOURCE[0]} or $0,
@@ -106,10 +87,6 @@ function copy_from_version {
   rm -rf "$BATS_TEST_TMPDIR/.madder"
   cp -r "$DIR/migration/$DODDER_VERSION/.dodder" "$BATS_TEST_TMPDIR/.dodder"
   cp -r "$DIR/migration/$DODDER_VERSION/.madder" "$BATS_TEST_TMPDIR/.madder"
-}
-
-function chflags_and_rm {
-  "$BATS_CWD/../bin/chflags.bash" -R nouchg "$BATS_TEST_TMPDIR"
 }
 
 function setup_repo {
