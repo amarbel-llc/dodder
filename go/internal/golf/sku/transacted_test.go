@@ -16,7 +16,7 @@ func TestGob(t1 *testing.T) {
 	var expected testType
 
 	if err := expected.ObjectId.Set("test-tag"); err != nil {
-		t.Fatalf("failed to set object id: %w", err)
+		t.Fatalf("failed to set object id: %s", err)
 	}
 
 	var b bytes.Buffer
@@ -24,7 +24,7 @@ func TestGob(t1 *testing.T) {
 	enc := gob.NewEncoder(&b)
 
 	if err := enc.Encode(&expected); err != nil {
-		t.Fatalf("failed to encode config: %w", err)
+		t.Fatalf("failed to encode config: %s", err)
 	}
 
 	dec := gob.NewDecoder(&b)
@@ -32,7 +32,7 @@ func TestGob(t1 *testing.T) {
 	var actual testType
 
 	if err := dec.Decode(&actual); err != nil {
-		t.Fatalf("failed to decode config: %w", err)
+		t.Fatalf("failed to decode config: %s", err)
 	}
 
 	t.AssertEqual(expected.ObjectId.String(), actual.ObjectId.String())

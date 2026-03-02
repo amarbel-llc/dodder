@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/alfa/test_ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
@@ -42,7 +43,9 @@ func makeTestContext(
 ) *TestContext {
 	testContext := &TestContext{
 		t: T{
-			T: t,
+			T:            t,
+			Printer:      Err(),
+			ErrorEncoder: CLIErrorTreeEncoder,
 		},
 		Context: ctx,
 	}
@@ -61,12 +64,12 @@ func (testContext *TestContext) Run(
 	testCaseInfo TestCaseInfo,
 	funk func(*TestContext),
 ) {
-	description := getTestCaseDescription(testCaseInfo)
+	description := test_ui.GetTestCaseDescription(testCaseInfo)
 
 	testContext.T.Run(
 		description,
 		func(t1 *testing.T) {
-			printTestCaseInfo(testCaseInfo, description)
+			test_ui.PrintTestCaseInfo(testCaseInfo, description)
 			childContext := errors.MakeContext(testContext.Context)
 			childTestContext := makeTestContext(t1, childContext)
 			funk(childTestContext)
