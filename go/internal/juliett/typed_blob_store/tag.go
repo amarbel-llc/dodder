@@ -42,9 +42,7 @@ func MakeTagStore(
 		toml_v0: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[tag_blobs.V0](
-					envRepo.GetDefaultBlobStore(),
-				),
+				toml.MakeTomlDecoderIgnoreTomlErrors[tag_blobs.V0](),
 				toml.TomlBlobEncoder[tag_blobs.V0, *tag_blobs.V0]{},
 				envRepo.GetDefaultBlobStore(),
 			),
@@ -55,9 +53,7 @@ func MakeTagStore(
 		toml_v1: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[tag_blobs.TomlV1](
-					envRepo.GetDefaultBlobStore(),
-				),
+				toml.MakeTomlDecoderIgnoreTomlErrors[tag_blobs.TomlV1](),
 				toml.TomlBlobEncoder[tag_blobs.TomlV1, *tag_blobs.TomlV1]{},
 				envRepo.GetDefaultBlobStore(),
 			),

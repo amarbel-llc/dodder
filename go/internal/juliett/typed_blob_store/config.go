@@ -26,9 +26,7 @@ func MakeConfigStore(
 		toml_v0: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[repo_configs.V0](
-					envRepo.GetDefaultBlobStore(),
-				),
+				toml.MakeTomlDecoderIgnoreTomlErrors[repo_configs.V0](),
 				toml.TomlBlobEncoder[repo_configs.V0, *repo_configs.V0]{},
 				envRepo.GetDefaultBlobStore(),
 			),
@@ -39,9 +37,7 @@ func MakeConfigStore(
 		toml_v1: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[repo_configs.V1](
-					envRepo.GetDefaultBlobStore(),
-				),
+				toml.MakeTomlDecoderIgnoreTomlErrors[repo_configs.V1](),
 				toml.TomlBlobEncoder[repo_configs.V1, *repo_configs.V1]{},
 				envRepo.GetDefaultBlobStore(),
 			),

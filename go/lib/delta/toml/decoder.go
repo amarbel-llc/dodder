@@ -3,7 +3,6 @@ package toml
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -13,30 +12,15 @@ type tomlBlobDecoder[
 	BLOB any,
 	BLOB_PTR interfaces.Ptr[BLOB],
 ] struct {
-	blobWriterFactory domain_interfaces.BlobWriterFactory
-	ignoreTomlErrors  bool
-}
-
-func MakeTomlBlobDecoderSaver[
-	BLOB any,
-	BLOB_PTR interfaces.Ptr[BLOB],
-](
-	blobWriter domain_interfaces.BlobWriterFactory,
-) tomlBlobDecoder[BLOB, BLOB_PTR] {
-	return tomlBlobDecoder[BLOB, BLOB_PTR]{
-		blobWriterFactory: blobWriter,
-	}
+	ignoreTomlErrors bool
 }
 
 func MakeTomlDecoderIgnoreTomlErrors[
 	BLOB any,
 	BLOB_PTR interfaces.Ptr[BLOB],
-](
-	blobWriterFactory domain_interfaces.BlobWriterFactory,
-) tomlBlobDecoder[BLOB, BLOB_PTR] {
+]() tomlBlobDecoder[BLOB, BLOB_PTR] {
 	return tomlBlobDecoder[BLOB, BLOB_PTR]{
-		blobWriterFactory: blobWriterFactory,
-		ignoreTomlErrors:  true,
+		ignoreTomlErrors: true,
 	}
 }
 

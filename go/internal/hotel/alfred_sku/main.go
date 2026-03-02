@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/_/doddish"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -118,7 +119,7 @@ func (writer *Writer) addCommonMatches(
 
 	{
 		seq := id.ToSeq()
-		matchBuilder.AddMatchSeq(seq)
+		addMatchSeq(matchBuilder, seq)
 	}
 
 	errors.PanicIfError(writer.abbr.AbbreviateZettelIdOnly(id))
@@ -126,7 +127,7 @@ func (writer *Writer) addCommonMatches(
 
 	{
 		seq := id.ToSeq()
-		matchBuilder.AddMatchSeq(seq)
+		addMatchSeq(matchBuilder, seq)
 	}
 
 	matchBuilder.AddMatches(object.GetMetadataMutable().GetDescription().String())
@@ -220,6 +221,13 @@ func (writer *Writer) errorToItem(err error) (a *alfred.Item) {
 	a.Title = errors.Unwrap(err).Error()
 
 	return a
+}
+
+func addMatchSeq(matchBuilder *alfred.MatchBuilder, seq doddish.Seq) {
+	for _, token := range seq {
+		matchBuilder.Write(token.Contents)
+		matchBuilder.WriteString(" ")
+	}
 }
 
 func (writer *Writer) zettelIdToItem(e ids.ZettelId) (a *alfred.Item) {
