@@ -42,35 +42,48 @@ func (state *cliTreeState) encode(
 	return err
 }
 
-// TODO write instead of return string
+func (state *cliTreeState) buildAncestorPrefix() string {
+	depth := state.stack.getDepth()
+
+	if depth <= 1 {
+		return ""
+	}
+
+	var sb strings.Builder
+
+	for i := 1; i < depth; i++ {
+		if state.stack[i].isLastChild() {
+			sb.WriteString("    ")
+		} else {
+			sb.WriteString(box_chars.PipeVertical)
+			sb.WriteString("   ")
+		}
+	}
+
+	return sb.String()
+}
+
 func (state *cliTreeState) prefixWithPipesForDepthChild() string {
 	depth := state.stack.getDepth()
 
 	if depth == 0 {
 		return ""
-		// return fmt.Sprintf("%T ", err)
 	}
 
-	var count int
+	ancestor := state.buildAncestorPrefix()
 
-	if depth > 0 {
-		count = (depth - 1) * 4
-	}
-
-	leftPadding := strings.Repeat(" ", count)
-
-	var pipe string
+	var connector string
 
 	if state.stack.getLast().isLastChild() {
-		pipe = box_chars.ElbowTopRight
+		connector = box_chars.ElbowTopRight
 	} else {
-		pipe = box_chars.TeeRight
+		connector = box_chars.TeeRight
 	}
 
 	return fmt.Sprintf(
 		"%s%s%s%s ",
-		leftPadding,
-		pipe,
+		ancestor,
+		connector,
 		box_chars.PipeHorizontal,
 		box_chars.PipeHorizontal,
 	)
@@ -83,19 +96,17 @@ func (state *cliTreeState) prefixWithoutPipesForDepthChild() string {
 		return ""
 	}
 
-	var count int
+	ancestor := state.buildAncestorPrefix()
 
-	if depth > 0 {
-		count = (depth - 1) * 4
+	var continuation string
+
+	if state.stack.getLast().isLastChild() {
+		continuation = "    "
+	} else {
+		continuation = box_chars.PipeVertical + "   "
 	}
 
-	leftPadding := strings.Repeat(" ", count)
-
-	return fmt.Sprintf(
-		"%s%s     ",
-		leftPadding,
-		box_chars.PipeVertical,
-	)
+	return ancestor + continuation
 }
 
 func (state *cliTreeState) writeStrings(values ...string) {
@@ -193,15 +204,17 @@ func (state *cliTreeState) encodeStack() {
 
 		children := inputTyped.GetErrorsAndFrames()
 
-		childStackItem := state.stack.push(input, nil)
-		childStackItem.childCount = len(children)
+		state.stack.push(input, nil)
+		childDepth := state.stack.getDepth()
+		state.stack[childDepth].childCount = len(children)
 
-		var child stack_frame.ErrorAndFrame
-
-		for childStackItem.childIdx, child = range children {
-			childStackItem.child = child
+		for i, child := range children {
+			state.stack[childDepth].childIdx = i
+			state.stack[childDepth].child = child
 			state.writeOneChildErrorAndFrame(child)
 		}
+
+		state.stack.pop()
 
 	case errors.UnwrapOne:
 		state.printErrorOneUnwrapper(inputTyped)
@@ -221,12 +234,17 @@ func (state *cliTreeState) encodeStack() {
 			fmt.Sprintf("%s", input.Error()),
 		)
 
-		childStackItem := state.stack.push(input, nil)
-		childStackItem.childCount = len(children)
+		state.stack.push(input, nil)
+		childDepth := state.stack.getDepth()
+		state.stack[childDepth].childCount = len(children)
 
-		for childStackItem.childIdx, childStackItem.child = range children {
+		for i, child := range children {
+			state.stack[childDepth].childIdx = i
+			state.stack[childDepth].child = child
 			state.encodeStack()
 		}
+
+		state.stack.pop()
 
 	case nil:
 		state.writeOneErrorMessage(
@@ -244,11 +262,11 @@ func (state *cliTreeState) encodeStack() {
 	}
 }
 
-func (state cliTreeState) printErrorOneUnwrapper(err errors.UnwrapOne) {
+func (state *cliTreeState) printErrorOneUnwrapper(err errors.UnwrapOne) {
 	state.printErrorOneUnwrapperWithChild(err, err.Unwrap())
 }
 
-func (state cliTreeState) printErrorOneUnwrapperWithChild(
+func (state *cliTreeState) printErrorOneUnwrapperWithChild(
 	err error,
 	child error,
 ) {
@@ -263,8 +281,9 @@ func (state cliTreeState) printErrorOneUnwrapperWithChild(
 		fmt.Sprintf("%s", err.Error()),
 	)
 
-	childStackItem := state.stack.push(err, child)
-	childStackItem.childCount = 1
+	state.stack.push(err, child)
+	childDepth := state.stack.getDepth()
+	state.stack[childDepth].childCount = 1
 	state.encodeStack()
 	state.stack.pop()
 }

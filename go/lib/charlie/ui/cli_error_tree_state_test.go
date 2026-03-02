@@ -90,6 +90,75 @@ func testCLITreeForwards(t *TestContext) {
 			),
 			expected: "one\n",
 		},
+		{
+			TestCaseInfo: MakeTestCaseInfo(
+				"nested group followed by sibling",
+			),
+			input: errors.Group{
+				errors.Group{
+					newPkgError("a"),
+					newPkgError("b"),
+				},
+				newPkgError("c"),
+			},
+			expected: `error group: 2 errors
+├── error group: 2 errors
+│   ├── a
+│   └── b
+└── c
+`,
+		},
+		{
+			TestCaseInfo: MakeTestCaseInfo(
+				"nested group as first child with trailing siblings",
+			),
+			input: errors.Group{
+				errors.Group{
+					newPkgError("a"),
+					newPkgError("b"),
+				},
+				newPkgError("c"),
+				newPkgError("d"),
+			},
+			expected: `error group: 3 errors
+├── error group: 2 errors
+│   ├── a
+│   └── b
+├── c
+└── d
+`,
+		},
+		{
+			TestCaseInfo: MakeTestCaseInfo(
+				"wrapper in middle of group",
+			),
+			input: errors.Group{
+				errors.Err501NotImplemented.WrapIncludingHTTP(
+					newPkgError("inner"),
+				),
+				newPkgError("two"),
+				newPkgError("three"),
+			},
+			expected: `error group: 3 errors
+├── errors.HTTP: 501 Not Implemented
+│   └── inner
+├── two
+└── three
+`,
+		},
+		{
+			TestCaseInfo: MakeTestCaseInfo(
+				"deeply nested single-child groups collapse",
+			),
+			input: errors.Group{
+				errors.Group{
+					errors.Group{
+						newPkgError("only"),
+					},
+				},
+			},
+			expected: "only\n",
+		},
 		// TODO figure out how to include stack info stabley
 		// {
 		// 	TestCaseInfo: MakeTestCaseInfo(
