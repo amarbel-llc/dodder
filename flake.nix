@@ -4,6 +4,11 @@
     nixpkgs-master.url = "github:NixOS/nixpkgs/b28c4999ed71543e71552ccfd0d7e68c581ba7e9";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
+    gomod2nix = {
+      url = "github:nix-community/gomod2nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     purse-first = {
       url = "github:amarbel-llc/purse-first";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -18,6 +23,7 @@
       nixpkgs,
       nixpkgs-master,
       utils,
+      gomod2nix,
       purse-first,
     }:
     (utils.lib.eachDefaultSystem (
@@ -27,6 +33,7 @@
           inherit
             nixpkgs
             nixpkgs-master
+            gomod2nix
             purse-first
             system
             ;
