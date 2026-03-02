@@ -91,7 +91,6 @@ func (t *Time) UnmarshalBinary(text []byte) (err error) {
 }
 
 func (t Time) MarshalText() (text []byte, err error) {
-	ui.Err().Printf(t.String())
 	text = []byte(t.String())
 
 	return text, err
