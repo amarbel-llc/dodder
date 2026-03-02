@@ -171,6 +171,10 @@ func (env *Env) writeFile(path string, contents any) {
 }
 
 func (env *Env) genesisObjectIds(bigBang BigBang) {
+	if bigBang.Yin == "" && bigBang.Yang == "" {
+		return
+	}
+
 	yinWords := readAndCleanFileLines(env, bigBang.Yin)
 	yangWords := readAndCleanFileLines(env, bigBang.Yang)
 
