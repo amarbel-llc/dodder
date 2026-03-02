@@ -37,7 +37,7 @@ func (tb *WasmV1) ContainsSku(tg sku.TransactedGetter) bool {
 		return false
 	}
 
-	result, err := vm.Module.CallContainsSku(tb.Ctx, recordPtr)
+	result, err := vm.CallContainsSku(tb.Ctx, recordPtr)
 	if err != nil {
 		ui.Err().Print(err)
 		return false

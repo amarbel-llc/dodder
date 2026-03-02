@@ -41,13 +41,8 @@ func makeModulePool(
 			mod = &Module{
 				mod:         m,
 				memory:      m.Memory(),
-				containsSku: m.ExportedFunction("contains-sku"),
 				cabiRealloc: m.ExportedFunction("cabi_realloc"),
 				resetFn:     m.ExportedFunction("reset"),
-			}
-
-			if mod.containsSku == nil {
-				panic("WASM module missing export: contains-sku")
 			}
 
 			if mod.cabiRealloc == nil {

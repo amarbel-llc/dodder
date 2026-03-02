@@ -10,21 +10,12 @@ import (
 type Module struct {
 	mod         api.Module
 	memory      api.Memory
-	containsSku api.Function
 	cabiRealloc api.Function
 	resetFn     api.Function
 }
 
-func (m *Module) CallContainsSku(
-	ctx context.Context,
-	recordPtr uint32,
-) (bool, error) {
-	results, err := m.containsSku.Call(ctx, uint64(recordPtr))
-	if err != nil {
-		return false, errors.Wrap(err)
-	}
-
-	return results[0] != 0, nil
+func (m *Module) Inner() api.Module {
+	return m.mod
 }
 
 func (m *Module) CallCabiRealloc(
