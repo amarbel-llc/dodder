@@ -40,6 +40,7 @@ type (
 		FileLock() string
 		FileTags() string
 		FileInventoryListLog() string
+		FileZettelIdLog() string
 
 		DirsGenesis() []string
 	}
