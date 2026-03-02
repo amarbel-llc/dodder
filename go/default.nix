@@ -2,13 +2,14 @@
   nixpkgs,
   nixpkgs-master,
   purse-first,
+  gomod2nix,
   system,
 }:
 let
   pkgs = import nixpkgs {
     inherit system;
     overlays = [
-      purse-first.overlays.${system}.go
+      gomod2nix.overlays.default
     ];
   };
 

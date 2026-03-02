@@ -17,6 +17,7 @@
       hint: Disable this message with "git config set advice.mergeConflict false"
       Could not apply 2709d1572... # refactor: migrate to bats-island shared library for test isolation
     severity: fail
+- [ ] migrate to purse-first's tap-dancer (drop local go.mod replace directive)
 - [ ] confirm usage of modern nix monorepo
 - [ ] use latest tap output
 - [ ] explore using sigil as continuation operator in v14 fixed stream index
