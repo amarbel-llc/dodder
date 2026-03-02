@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/object_id_provider"
+	"code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -27,7 +27,7 @@ type index struct {
 
 	bitset collections.Bitset
 
-	oldHinweisenStore *object_id_provider.Provider
+	oldHinweisenStore *zettel_id_provider.Provider
 
 	didRead    bool
 	hasChanges bool
@@ -48,7 +48,7 @@ func MakeIndex(
 		bitset:             collections.MakeBitset(0),
 	}
 
-	if i.oldHinweisenStore, err = object_id_provider.New(directoryLayout); err != nil {
+	if i.oldHinweisenStore, err = zettel_id_provider.New(directoryLayout); err != nil {
 		if errors.IsNotExist(err) {
 			ui.TodoP4("determine which layer handles no-create kasten")
 			err = nil
@@ -223,7 +223,7 @@ func (index *index) CreateZettelId() (h *ids.ZettelId, err error) {
 	rand.Seed(time.Now().UnixNano())
 
 	if index.bitset.CountOn() == 0 {
-		err = errors.Wrap(object_id_provider.ErrZettelIdsExhausted{})
+		err = errors.Wrap(zettel_id_provider.ErrZettelIdsExhausted{})
 		return h, err
 	}
 

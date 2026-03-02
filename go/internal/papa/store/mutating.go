@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/object_id_provider"
+	"code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -218,7 +218,7 @@ func (commitFacilitator commitFacilitator) commit(
 
 		if daughter.GetGenre() == genres.Zettel {
 			if err = commitFacilitator.zettelIdIndex.AddZettelId(daughter.GetObjectIdMutable()); err != nil {
-				if errors.Is(err, object_id_provider.ErrDoesNotExist{}) {
+				if errors.Is(err, zettel_id_provider.ErrDoesNotExist{}) {
 					ui.Log().Printf("object id does not contain value: %s", err)
 					err = nil
 				} else {

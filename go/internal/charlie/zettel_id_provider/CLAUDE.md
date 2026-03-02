@@ -1,4 +1,4 @@
-# object_id_provider
+# zettel_id_provider
 
 Bidirectional mapping between zettel IDs and integer coordinates for indexing.
 
