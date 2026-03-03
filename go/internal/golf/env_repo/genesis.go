@@ -5,8 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
-
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
@@ -175,13 +173,8 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 		return
 	}
 
-	yinWords := readAndCleanFileLines(env, bigBang.Yin)
-	yangWords := readAndCleanFileLines(env, bigBang.Yang)
-
-	enforceCrossSideUniqueness(yinWords, yangWords)
-
-	yinSlice := orderedKeys(yinWords)
-	yangSlice := orderedKeys(yangWords)
+	yinSlice := readAndCleanFileLines(env, bigBang.Yin)
+	yangSlice := enforceCrossSideUniqueness(yinSlice, readAndCleanFileLines(env, bigBang.Yang))
 
 	yinBlobId := genesisWriteWordsAsBlob(env, yinSlice)
 	yangBlobId := genesisWriteWordsAsBlob(env, yangSlice)
@@ -217,7 +210,7 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 	genesisWriteFlatFile(env, filepath.Join(env.DirObjectId(), zettel_id_provider.FilePathZettelIdYang), yangSlice)
 }
 
-func readAndCleanFileLines(env *Env, filePath string) map[string]struct{} {
+func readAndCleanFileLines(env *Env, filePath string) []string {
 	file, err := files.Open(filePath)
 	if err != nil {
 		env.Cancel(err)
@@ -229,7 +222,8 @@ func readAndCleanFileLines(env *Env, filePath string) map[string]struct{} {
 	reader, repool := pool.GetBufferedReader(file)
 	defer repool()
 
-	words := make(map[string]struct{})
+	seen := make(map[string]struct{})
+	var words []string
 
 	for line, errIter := range ohio.MakeLineSeqFromReader(reader) {
 		if errIter != nil {
@@ -243,26 +237,30 @@ func readAndCleanFileLines(env *Env, filePath string) map[string]struct{} {
 			continue
 		}
 
-		words[cleaned] = struct{}{}
+		if _, ok := seen[cleaned]; ok {
+			continue
+		}
+
+		seen[cleaned] = struct{}{}
+		words = append(words, cleaned)
 	}
 
 	return words
 }
 
-func enforceCrossSideUniqueness(yin, yang map[string]struct{}) {
-	for word := range yin {
-		delete(yang, word)
-	}
-}
-
-func orderedKeys(m map[string]struct{}) []string {
-	result := make([]string, 0, len(m))
-
-	for k := range m {
-		result = append(result, k)
+func enforceCrossSideUniqueness(yin, yang []string) []string {
+	yinSet := make(map[string]struct{}, len(yin))
+	for _, word := range yin {
+		yinSet[word] = struct{}{}
 	}
 
-	sort.Strings(result)
+	result := make([]string, 0, len(yang))
+
+	for _, word := range yang {
+		if _, ok := yinSet[word]; !ok {
+			result = append(result, word)
+		}
+	}
 
 	return result
 }
