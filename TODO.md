@@ -55,6 +55,10 @@
 
 - [ ] `go mod tidy` fails resolving `code.linenisgreat.com/dodder/go/src/bravo/ohio` and `code.linenisgreat.com/dodder/go/src/bravo/ui` — imported transitively via `chrest/go/src/bravo/server`. The `src/` path prefix doesn't exist in the current dodder module. Likely a stale import path in chrest that needs updating.
 
+## WASM workspace modules
+
+- [ ] WASM interface for repo/domain ops (blob store, config) — store_fs currently gets these from env_repo.Env
+
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.
