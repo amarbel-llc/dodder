@@ -58,6 +58,9 @@
 ## WASM workspace modules
 
 - [ ] WASM interface for repo/domain ops (blob store, config) — store_fs currently gets these from env_repo.Env
+- [ ] WASM-compatible replacement for `exec.Command` in `RunMergeTool` (`store_fs/merge.go`) — interactive merge tool invocation
+- [ ] WASM-compatible replacement for `files.OpenFiles` in `OpenFiles.Run` (`store_fs/open_files.go`) — opens files in user's editor
+- [ ] WASM-compatible replacement for `os.Stdin/Stdout/Stderr` in `RunMergeTool` (`store_fs/merge.go`) — terminal I/O for interactive merge
 
 ## Archive store foreign digest support
 
