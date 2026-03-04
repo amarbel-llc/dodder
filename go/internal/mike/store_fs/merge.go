@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -19,7 +20,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 // TODO combine with other method in this file
@@ -168,7 +168,7 @@ func (store *Store) Merge(conflicted sku.Conflicted) (err error) {
 	}
 
 	if !original.Object.IsEmpty() && !replacement.Object.IsEmpty() {
-		if err = files.Rename(
+		if err = store.fsOps.Rename(
 			replacement.Object.GetPath(),
 			original.Object.GetPath(),
 		); err != nil {
@@ -178,7 +178,7 @@ func (store *Store) Merge(conflicted sku.Conflicted) (err error) {
 	}
 
 	if !original.Blob.IsEmpty() && !replacement.Blob.IsEmpty() {
-		if err = files.Rename(
+		if err = store.fsOps.Rename(
 			replacement.Blob.GetPath(),
 			original.Blob.GetPath(),
 		); err != nil {
@@ -502,9 +502,12 @@ func (store *Store) RunMergeTool(
 		return checkedOut, err
 	}
 
-	var file *os.File
+	var file io.ReadCloser
 
-	if file, err = files.Open(replacementItem.Object.GetPath()); err != nil {
+	if file, err = store.fsOps.Open(
+		replacementItem.Object.GetPath(),
+		filesystem_ops.OpenModeDefault,
+	); err != nil {
 		err = errors.Wrap(err)
 		return checkedOut, err
 	}
