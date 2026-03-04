@@ -2,7 +2,7 @@ package store_fs
 
 import (
 	"fmt"
-	"os"
+	"io"
 	"path"
 	"strings"
 
@@ -250,14 +250,16 @@ func (store *Store) SetFilenameForTransacted(
 	object *sku.Transacted,
 	info *checkoutFileNameInfo,
 ) (err error) {
-	cwd := store.envRepo.GetCwd()
+	cwd := store.fsOps.GetCwd()
 
 	fsOptions := GetCheckoutOptionsFromOptions(options)
 
 	if fsOptions.Path == PathOptionTempLocal {
-		var file *os.File
+		var tempPath string
+		var w io.WriteCloser
 
-		if file, err = store.envRepo.GetTempLocal().FileTempWithTemplate(
+		if tempPath, w, err = store.fsOps.CreateTemp(
+			"",
 			fmt.Sprintf(
 				"*.%s",
 				store.FileExtensionForObject(object),
@@ -267,10 +269,10 @@ func (store *Store) SetFilenameForTransacted(
 			return err
 		}
 
-		defer errors.DeferredCloser(&err, file)
+		defer errors.DeferredCloser(&err, w)
 
-		info.basename = file.Name()
-		info.objectName = file.Name()
+		info.basename = tempPath
+		info.objectName = tempPath
 
 		return err
 	}
@@ -404,7 +406,7 @@ func (store *Store) UpdateCheckoutFromCheckedOut(
 	if !oldFDs.Object.IsEmpty() &&
 		!newFDs.Object.IsEmpty() &&
 		!store.config.IsDryRun() {
-		if err = os.Rename(
+		if err = store.fsOps.Rename(
 			newFDs.Object.GetPath(),
 			oldFDs.Object.GetPath(),
 		); err != nil {
@@ -416,7 +418,7 @@ func (store *Store) UpdateCheckoutFromCheckedOut(
 	if !oldFDs.Blob.IsEmpty() &&
 		!newFDs.Blob.IsEmpty() &&
 		!store.config.IsDryRun() {
-		if err = os.Rename(
+		if err = store.fsOps.Rename(
 			newFDs.Blob.GetPath(),
 			oldFDs.Blob.GetPath(),
 		); err != nil {
