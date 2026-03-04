@@ -7,10 +7,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 // Internal may be nil, which means that the external is hydrated without an
@@ -107,9 +107,9 @@ func (store *Store) readOneExternalObject(
 		)
 	}
 
-	var f *os.File
+	var f io.ReadCloser
 
-	if f, err = files.Open(item.Object.GetPath()); err != nil {
+	if f, err = store.fsOps.Open(item.Object.GetPath(), filesystem_ops.OpenModeDefault); err != nil {
 		err = errors.Wrapf(err, "Item: %s", item.Debug())
 		return err
 	}
@@ -145,10 +145,11 @@ func (store *Store) readOneExternalBlob(
 
 		defer errors.DeferredCloser(&err, writeCloser)
 
-		var file *os.File
+		var file io.ReadCloser
 
-		if file, err = files.OpenExclusiveReadOnly(
+		if file, err = store.fsOps.Open(
 			item.Blob.GetPath(),
+			filesystem_ops.OpenModeExclusive,
 		); err != nil {
 			err = errors.Wrap(err)
 			return err

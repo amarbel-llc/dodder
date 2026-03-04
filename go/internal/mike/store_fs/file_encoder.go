@@ -2,7 +2,6 @@ package store_fs
 
 import (
 	"io"
-	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
@@ -12,7 +11,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 type FileEncoder interface {
@@ -24,8 +22,6 @@ type FileEncoder interface {
 }
 
 type fileEncoder struct {
-	mode              int
-	perm              os.FileMode
 	fsOps             filesystem_ops.V0
 	envRepo           env_repo.Env
 	inlineTypeChecker ids.InlineTypeChecker
@@ -41,8 +37,6 @@ func MakeFileEncoder(
 	blobStore := envRepo.GetDefaultBlobStore()
 
 	return &fileEncoder{
-		mode:              os.O_WRONLY | os.O_CREATE | os.O_TRUNC,
-		perm:              0o666,
 		fsOps:             fsOps,
 		envRepo:           envRepo,
 		inlineTypeChecker: inlineTypeChecker,
@@ -53,21 +47,9 @@ func MakeFileEncoder(
 	}
 }
 
-func (encoder *fileEncoder) openOrCreate(path string) (file *os.File, err error) {
-	if file, err = files.OpenFile(path, encoder.mode, encoder.perm); err != nil {
+func (encoder *fileEncoder) openOrCreate(path string) (file io.WriteCloser, err error) {
+	if file, err = encoder.fsOps.Create(path, filesystem_ops.CreateModeTruncate); err != nil {
 		err = errors.Wrap(err)
-
-		if errors.IsExist(err) {
-			// err = nil
-			var err2 error
-
-			if file, err2 = files.OpenExclusiveReadOnly(path); err2 != nil {
-				err = errors.Wrap(err2)
-			}
-		} else {
-			err = errors.Wrap(err)
-		}
-
 		return file, err
 	}
 
@@ -101,7 +83,7 @@ func (encoder *fileEncoder) EncodeObject(
 
 	switch {
 	case blobPath != "" && objectPath != "":
-		var fileBlob, fileObject *os.File
+		var fileBlob, fileObject io.WriteCloser
 
 		{
 			if fileBlob, err = encoder.openOrCreate(
@@ -117,7 +99,19 @@ func (encoder *fileEncoder) EncodeObject(
 
 					defer errors.DeferredCloser(&err, blobWriter)
 
-					if _, err = io.Copy(blobWriter, fileBlob); err != nil {
+					var existingBlob io.ReadCloser
+
+					if existingBlob, err = encoder.fsOps.Open(
+						blobPath,
+						filesystem_ops.OpenModeExclusive,
+					); err != nil {
+						err = errors.Wrap(err)
+						return err
+					}
+
+					defer errors.DeferredCloser(&err, existingBlob)
+
+					if _, err = io.Copy(blobWriter, existingBlob); err != nil {
 						err = errors.Wrap(err)
 						return err
 					}
@@ -128,11 +122,13 @@ func (encoder *fileEncoder) EncodeObject(
 				}
 			}
 
-			defer errors.DeferredCloser(&err, fileBlob)
+			if fileBlob != nil {
+				defer errors.DeferredCloser(&err, fileBlob)
 
-			if _, err = io.Copy(fileBlob, blobReader); err != nil {
-				err = errors.Wrap(err)
-				return err
+				if _, err = io.Copy(fileBlob, blobReader); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
 			}
 		}
 
@@ -151,7 +147,7 @@ func (encoder *fileEncoder) EncodeObject(
 		}
 
 	case blobPath != "":
-		var fileBlob *os.File
+		var fileBlob io.WriteCloser
 
 		if fileBlob, err = encoder.openOrCreate(
 			blobPath,
@@ -176,7 +172,7 @@ func (encoder *fileEncoder) EncodeObject(
 			metadataFormatter = encoder.MetadataOnly
 		}
 
-		var fileMetadata *os.File
+		var fileMetadata io.WriteCloser
 
 		if fileMetadata, err = encoder.openOrCreate(
 			objectPath,
