@@ -3,7 +3,6 @@ package store_fs
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -76,7 +75,7 @@ func (dirInfo *dirInfo) walkDir(
 	dir string,
 	pattern string,
 ) (err error) {
-	if err = filepath.WalkDir(
+	if err = dirInfo.fsOps.WalkDir(
 		dir,
 		func(path string, dirEntry fs.DirEntry, in error) (err error) {
 			if in != nil {
@@ -89,7 +88,7 @@ func (dirInfo *dirInfo) walkDir(
 			}
 
 			if dirEntry.Type()&fs.ModeSymlink != 0 {
-				if path, err = filepath.EvalSymlinks(path); err != nil {
+				if path, err = dirInfo.fsOps.EvalSymlinks(path); err != nil {
 					err = nil
 					return err
 					// err = errors.Wrap(err)
@@ -98,7 +97,7 @@ func (dirInfo *dirInfo) walkDir(
 
 				var fi fs.FileInfo
 
-				if fi, err = os.Lstat(path); err != nil {
+				if fi, err = dirInfo.fsOps.Lstat(path); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -543,8 +542,15 @@ func (dirInfo *dirInfo) addOneUntracked(
 		return result, err
 	}
 
+	var rel string
+
+	if rel, err = dirInfo.fsOps.Rel(fdee.GetPath()); err != nil {
+		err = errors.Wrap(err)
+		return result, err
+	}
+
 	if err = result.GetExternalObjectId().SetBlob(
-		dirInfo.envRepo.Rel(fdee.GetPath()),
+		rel,
 	); err != nil {
 		err = errors.Wrap(err)
 		return result, err
