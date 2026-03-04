@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
@@ -126,11 +127,14 @@ func Make(
 		outputEnv.dir = outputEnv.GetCwd()
 	}
 
+	fsOps := filesystem_ops.MakeOsFilesystemOps(envRepo.GetCwd())
+
 	if outputEnv.storeFS, err = store_fs.Make(
 		config,
 		deletedPrinter,
 		config.GetFileExtensions(),
 		envRepo,
+		fsOps,
 	); err != nil {
 		err = errors.Wrap(err)
 		return outputEnv, err

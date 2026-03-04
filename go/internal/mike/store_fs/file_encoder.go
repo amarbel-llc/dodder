@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -25,6 +26,7 @@ type FileEncoder interface {
 type fileEncoder struct {
 	mode              int
 	perm              os.FileMode
+	fsOps             filesystem_ops.V0
 	envRepo           env_repo.Env
 	inlineTypeChecker ids.InlineTypeChecker
 
@@ -32,6 +34,7 @@ type fileEncoder struct {
 }
 
 func MakeFileEncoder(
+	fsOps filesystem_ops.V0,
 	envRepo env_repo.Env,
 	inlineTypeChecker ids.InlineTypeChecker,
 ) *fileEncoder {
@@ -40,6 +43,7 @@ func MakeFileEncoder(
 	return &fileEncoder{
 		mode:              os.O_WRONLY | os.O_CREATE | os.O_TRUNC,
 		perm:              0o666,
+		fsOps:             fsOps,
 		envRepo:           envRepo,
 		inlineTypeChecker: inlineTypeChecker,
 		FormatterFamily: object_metadata_fmt_triple_hyphen.Factory{

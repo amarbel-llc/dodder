@@ -13,6 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
@@ -33,6 +34,7 @@ func Make(
 	deletedPrinter interfaces.FuncIter[*fd.FD],
 	fileExtensions file_extensions.Config,
 	envRepo env_repo.Env,
+	fsOps filesystem_ops.V0,
 ) (store *Store, err error) {
 	blobStore := envRepo.GetDefaultBlobStore()
 
@@ -40,10 +42,12 @@ func Make(
 		config:         config,
 		deletedPrinter: deletedPrinter,
 		envRepo:        envRepo,
-		fileEncoder:    MakeFileEncoder(envRepo, config),
+		fsOps:          fsOps,
+		fileEncoder:    MakeFileEncoder(fsOps, envRepo, config),
 		fileExtensions: fileExtensions,
 		dir:            envRepo.GetCwd(),
 		dirInfo: makeObjectsWithDir(
+			fsOps,
 			fileExtensions,
 			envRepo,
 		),
@@ -67,6 +71,7 @@ type Store struct {
 	deletedPrinter     interfaces.FuncIter[*fd.FD]
 	metadataTextParser object_metadata_fmt_triple_hyphen.Parser
 	envRepo            env_repo.Env
+	fsOps              filesystem_ops.V0
 	fileEncoder        FileEncoder
 	inlineTypeChecker  ids.InlineTypeChecker
 	fileExtensions     file_extensions.Config

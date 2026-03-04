@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
@@ -32,6 +33,7 @@ type dirInfo struct {
 	root          string
 	rootProcessed bool
 
+	fsOps          filesystem_ops.V0
 	fileExtensions file_extensions.Config
 	envRepo        env_repo.Env
 	storeSupplies  store_workspace.Supplies
@@ -48,9 +50,11 @@ type (
 )
 
 func makeObjectsWithDir(
+	fsOps filesystem_ops.V0,
 	fileExtensions file_extensions.Config,
 	envRepo env_repo.Env,
 ) (info dirInfo) {
+	info.fsOps = fsOps
 	info.fileExtensions = fileExtensions
 	info.envRepo = envRepo
 	info.probablyCheckedOut = makeFSItemData()
