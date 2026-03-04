@@ -2,9 +2,9 @@ package store_fs
 
 import (
 	"io"
-	"os"
-	"os/exec"
+	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
@@ -13,54 +13,80 @@ import (
 func (store *Store) runDiff3(
 	local, base, remote *sku.FSItem,
 ) (merged *sku.FSItem, err error) {
-	baseObjectPath := "/dev/null"
+	var baseReader io.Reader
 
 	if base.FDs.Len() > 0 {
-		baseObjectPath = base.Object.GetPath()
+		var baseCloser io.ReadCloser
+
+		if baseCloser, err = store.fsOps.Open(
+			base.Object.GetPath(),
+			filesystem_ops.OpenModeDefault,
+		); err != nil {
+			err = errors.Wrap(err)
+			return merged, err
+		}
+
+		defer errors.DeferredCloser(&err, baseCloser)
+
+		baseReader = baseCloser
+	} else {
+		baseReader = strings.NewReader("")
 	}
 
-	cmd := exec.Command(
-		"git",
-		"merge-file",
-		"-p",
-		"-L=local",
-		"-L=base",
-		"-L=remote",
+	var currentReader io.ReadCloser
+
+	if currentReader, err = store.fsOps.Open(
 		local.Object.GetPath(),
-		baseObjectPath,
+		filesystem_ops.OpenModeDefault,
+	); err != nil {
+		err = errors.Wrap(err)
+		return merged, err
+	}
+
+	defer errors.DeferredCloser(&err, currentReader)
+
+	var otherReader io.ReadCloser
+
+	if otherReader, err = store.fsOps.Open(
 		remote.Object.GetPath(),
-	)
-
-	cmd.Env = append(
-		os.Environ(),
-		"GIT_CONFIG_GLOBAL=/dev/null",
-		"GIT_CONFIG_NOSYSTEM=1",
-	)
-
-	var out io.ReadCloser
-
-	if out, err = cmd.StdoutPipe(); err != nil {
+		filesystem_ops.OpenModeDefault,
+	); err != nil {
 		err = errors.Wrap(err)
 		return merged, err
 	}
 
-	cmd.Stderr = os.Stderr
+	defer errors.DeferredCloser(&err, otherReader)
 
-	var f *os.File
+	var mergedReader io.ReadCloser
+	hasConflict := false
 
-	if f, err = store.envRepo.GetTempLocal().FileTemp(); err != nil {
+	if mergedReader, err = store.fsOps.Merge(
+		baseReader,
+		currentReader,
+		otherReader,
+	); err != nil {
+		if errors.Is(err, filesystem_ops.ErrMergeConflict) {
+			hasConflict = true
+			err = nil
+		} else {
+			err = errors.Wrap(err)
+			return merged, err
+		}
+	}
+
+	defer errors.DeferredCloser(&err, mergedReader)
+
+	var tempPath string
+	var tempWriter io.WriteCloser
+
+	if tempPath, tempWriter, err = store.fsOps.CreateTemp("", "merge-*"); err != nil {
 		err = errors.Wrap(err)
 		return merged, err
 	}
 
-	defer errors.DeferredCloser(&err, f)
+	defer errors.DeferredCloser(&err, tempWriter)
 
-	if err = cmd.Start(); err != nil {
-		err = errors.Wrap(err)
-		return merged, err
-	}
-
-	if _, err = io.Copy(f, out); err != nil {
+	if _, err = io.Copy(tempWriter, mergedReader); err != nil {
 		err = errors.Wrap(err)
 		return merged, err
 	}
@@ -71,20 +97,7 @@ func (store *Store) runDiff3(
 	merged.Blob.Reset()
 	merged.FDs.Reset()
 
-	hasConflict := false
-
-	if err = cmd.Wait(); err != nil {
-		var errExit *exec.ExitError
-
-		if !errors.As(err, &errExit) {
-			err = errors.Wrap(err)
-			return merged, err
-		}
-
-		hasConflict = true
-	}
-
-	if err = merged.Object.SetPath(f.Name()); err != nil {
+	if err = merged.Object.SetPath(tempPath); err != nil {
 		err = errors.Wrap(err)
 		return merged, err
 	}
