@@ -1,22 +1,20 @@
 package store_fs
 
 import (
-	"os"
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
+	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
-	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 type DeleteCheckout struct{}
 
 func (c DeleteCheckout) Run(
 	dryRun bool,
-	s env_repo.Env,
+	fsOps filesystem_ops.V0,
 	p interfaces.FuncIter[*fd.FD],
 	fs interfaces.Collection[*fd.FD],
 ) (err error) {
@@ -47,22 +45,21 @@ func (c DeleteCheckout) Run(
 			continue
 		}
 
-		if pRel, pErr := filepath.Rel(
-			s.GetCwd(),
+		if pRel, pErr := fsOps.Rel(
 			fd.String(),
 		); pErr == nil {
 			path = pRel
 		}
 
 		func() {
-			if fd.IsDir() && fd.GetPath() != s.GetCwd() {
+			if fd.IsDir() && fd.GetPath() != fsOps.GetCwd() {
 				dirs = append(dirs, fd.GetPath())
 				return
 			}
 
 			dir := filepath.Dir(path)
 
-			if dir == s.GetCwd() {
+			if dir == fsOps.GetCwd() {
 				return
 			}
 
@@ -75,7 +72,7 @@ func (c DeleteCheckout) Run(
 			dirs = append(dirs, dir)
 		}()
 
-		if err = s.Delete(path); err != nil {
+		if err = fsOps.Remove(path); err != nil {
 			if errors.IsNotExist(err) {
 				err = nil
 			} else {
@@ -93,9 +90,9 @@ func (c DeleteCheckout) Run(
 	}
 
 	for _, d := range dirs {
-		var contents []os.DirEntry
-
-		if contents, err = files.ReadDir(d); err != nil {
+		contents, readErr := fsOps.ReadDir(d)
+		if readErr != nil {
+			err = readErr
 			if errors.IsNotExist(err) {
 				err = nil
 			} else {
@@ -109,7 +106,7 @@ func (c DeleteCheckout) Run(
 			continue
 		}
 
-		if err = s.Delete(d); err != nil {
+		if err = fsOps.Remove(d); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

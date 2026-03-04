@@ -136,7 +136,7 @@ func (store *Store) Flush() (err error) {
 
 	if err = deleteOp.Run(
 		store.config.IsDryRun(),
-		store.envRepo,
+		store.fsOps,
 		store.deletedPrinter,
 		store.deleted,
 	); err != nil {
@@ -146,7 +146,7 @@ func (store *Store) Flush() (err error) {
 
 	if err = deleteOp.Run(
 		store.config.IsDryRun(),
-		store.envRepo,
+		store.fsOps,
 		nil,
 		store.deletedInternal,
 	); err != nil {
