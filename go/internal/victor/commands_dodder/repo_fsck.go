@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	tap "github.com/amarbel-llc/tap-dancer/go"
+	tap "github.com/amarbel-llc/purse-first/packages/tap-dancer/go"
 )
 
 func init() {

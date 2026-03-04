@@ -7,7 +7,7 @@ require (
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.3-0.20260223142938-fd723e615485
-	github.com/amarbel-llc/tap-dancer/go v0.0.0-20260222022802-be680fd2b4ac
+	github.com/amarbel-llc/purse-first/packages/tap-dancer/go v0.0.0-20260304183015-8efa59083a38
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/gabstv/go-bsdiff v1.0.5
@@ -78,5 +78,3 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
 )
-
-replace github.com/amarbel-llc/tap-dancer/go => /home/sasha/eng/repos/purse-first/packages/tap-dancer/go

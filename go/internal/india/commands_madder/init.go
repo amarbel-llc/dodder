@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
-	tap "github.com/amarbel-llc/tap-dancer/go"
+	tap "github.com/amarbel-llc/purse-first/packages/tap-dancer/go"
 )
 
 func init() {

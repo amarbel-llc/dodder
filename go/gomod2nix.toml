@@ -1,6 +1,10 @@
 schema = 3
 
 [mod]
+  [mod.'code.linenisgreat.com/chrest/go']
+    version = 'v0.0.0-20260222021305-89bab2b9c2ed'
+    hash = 'sha256-RdAb+ZMUj/8P42yj8/IXf6ApV1VddQj03Pv7hPhDMGo='
+
   [mod.'filippo.io/age']
     version = 'v1.3.1'
     hash = 'sha256-Qs/q3zQYV0PukABBPf/aU5V1oOhw95NG6K301VYJk8A='
@@ -22,12 +26,12 @@ schema = 3
     hash = 'sha256-WOs/RQYjQbn41ui8ztHgWSd4jxydE+fvIrl/0dmHD9Y='
 
   [mod.'github.com/amarbel-llc/purse-first/libs/go-mcp']
-    version = 'v0.0.2'
-    hash = 'sha256-0Cc+9Z95rA/Epf+ecfwkRac3Uswcvq3D+ZSdqUOF0PM='
+    version = 'v0.0.3-0.20260223142938-fd723e615485'
+    hash = 'sha256-n9OxCuFx/ZlL1rGWQ+JF9YnLcDDN4cZhWzfL2fD9JDI='
 
-  [mod.'github.com/amarbel-llc/tap-dancer/go']
-    version = 'v0.0.0-20260222022802-be680fd2b4ac'
-    hash = 'sha256-SSsw5kX5t2hYq8jCwqKo+qjqiWNwu+yHpIBb+AC5evA='
+  [mod.'github.com/amarbel-llc/purse-first/packages/tap-dancer/go']
+    version = 'v0.0.0-20260304183015-8efa59083a38'
+    hash = 'sha256-EwXwv245r4Gzjcd2N0zX8w4cah9v6qN41WHR1NH5WAI='
 
   [mod.'github.com/atotto/clipboard']
     version = 'v0.1.4'
