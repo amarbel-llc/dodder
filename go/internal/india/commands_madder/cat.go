@@ -124,13 +124,24 @@ func (cmd Cat) Run(req command.Request) {
 	blobWriter := cmd.makeBlobWriter(envBlobStore, blobStore)
 
 	var blobStoreId blob_store_id.Id
+	explicitStore := false
 
 	for _, arg := range req.PopArgs() {
 		var blobId markl.Id
 
 		if err := blobId.Set(arg); err == nil {
 			if err := cmd.blob(blobStore, &blobId, blobWriter); err != nil {
-				ui.Err().Print(err)
+				if explicitStore {
+					ui.Err().Print(err)
+					continue
+				}
+
+				if err := cmd.blobFromRemainingStores(
+					envBlobStore,
+					&blobId,
+				); err != nil {
+					ui.Err().Print(err)
+				}
 			}
 
 			continue
@@ -139,6 +150,7 @@ func (cmd Cat) Run(req command.Request) {
 		if err := blobStoreId.Set(arg); err == nil {
 			blobStore = envBlobStore.GetBlobStore(blobStoreId)
 			blobWriter = cmd.makeBlobWriter(envBlobStore, blobStore)
+			explicitStore = true
 			ui.Err().Printf("switched to blob store: %s", blobStoreId)
 			continue
 		}
@@ -176,6 +188,31 @@ func (cmd Cat) copy(
 			return err
 		}
 	}
+
+	return err
+}
+
+func (cmd Cat) blobFromRemainingStores(
+	envBlobStore env_repo.BlobStoreEnv,
+	blobId domain_interfaces.MarklId,
+) (err error) {
+	_, remaining := envBlobStore.GetDefaultBlobStoreAndRemaining()
+
+	for _, blobStore := range remaining {
+		if !blobStore.HasBlob(blobId) {
+			continue
+		}
+
+		blobWriter := cmd.makeBlobWriter(envBlobStore, blobStore)
+
+		if err = cmd.blob(blobStore, blobId, blobWriter); err != nil {
+			continue
+		}
+
+		return nil
+	}
+
+	err = errors.Errorf("blob not found in any blob store: %s", blobId)
 
 	return err
 }
