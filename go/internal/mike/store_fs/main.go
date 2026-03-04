@@ -45,7 +45,7 @@ func Make(
 		fsOps:          fsOps,
 		fileEncoder:    MakeFileEncoder(fsOps, envRepo, config),
 		fileExtensions: fileExtensions,
-		dir:            envRepo.GetCwd(),
+		dir:            fsOps.GetCwd(),
 		dirInfo: makeObjectsWithDir(
 			fsOps,
 			fileExtensions,
@@ -441,7 +441,13 @@ func (store *Store) WriteFSItemToExternal(
 	switch {
 	case mode.IsBlobOnly():
 		before := item.Blob.String()
-		after := store.envRepo.Rel(before)
+
+		var after string
+
+		if after, err = store.fsOps.Rel(before); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
 
 		if err = object.GetExternalObjectIdMutable().SetBlob(after); err != nil {
 			err = errors.Wrap(err)

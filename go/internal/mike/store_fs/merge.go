@@ -1,6 +1,7 @@
 package store_fs
 
 import (
+	"io"
 	"os"
 	"os/exec"
 
@@ -335,16 +336,17 @@ func (store *Store) GenerateConflictMarker(
 	conflicted sku.Conflicted,
 	checkedOut *sku.CheckedOut,
 ) (err error) {
-	var file *os.File
+	var tempPath string
+	var tempWriter io.WriteCloser
 
-	if file, err = store.envRepo.GetTempLocal().FileTemp(); err != nil {
+	if tempPath, tempWriter, err = store.fsOps.CreateTemp("", ""); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	defer errors.DeferredCloser(&err, file)
+	defer errors.DeferredCloser(&err, tempWriter)
 
-	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(file)
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(tempWriter)
 	defer repoolBufferedWriter()
 	defer errors.DeferredFlusher(&err, bufferedWriter)
 
@@ -383,7 +385,7 @@ func (store *Store) GenerateConflictMarker(
 
 	// TODO make this section less fragile around cwd
 	{
-		if err = item.GenerateConflictFD(store.envRepo.GetCwd()); err != nil {
+		if err = item.GenerateConflictFD(store.fsOps.GetCwd()); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -398,15 +400,15 @@ func (store *Store) GenerateConflictMarker(
 
 			if _, err = env_dir.MakeDirIfNecessaryForStringerWithHeadAndTail(
 				zettelId,
-				store.envRepo.GetCwd(),
+				store.fsOps.GetCwd(),
 			); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}
 		}
 
-		if err = os.Rename(
-			file.Name(),
+		if err = store.fsOps.Rename(
+			tempPath,
 			item.Conflict.GetPath(),
 		); err != nil {
 			err = errors.Wrap(err)

@@ -23,7 +23,7 @@ func (store *Store) ReadExternalLikeFromObjectIdLike(
 	}
 
 	if items, err = store.GetFSItemsForString(
-		store.envRepo.GetCwd(),
+		store.fsOps.GetCwd(),
 		oidString,
 		true,
 	); err != nil {
