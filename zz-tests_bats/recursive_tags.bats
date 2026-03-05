@@ -12,7 +12,7 @@ setup() {
 }
 
 teardown() {
-	chflags_and_rm
+	chflags_nouchg
 }
 
 function recursive_tags_add_one { # @test

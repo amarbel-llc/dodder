@@ -10,7 +10,7 @@ setup() {
 }
 
 teardown() {
-  chflags_and_rm
+  chflags_nouchg
 }
 
 function revert_one_zettel { # @test

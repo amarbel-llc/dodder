@@ -18,7 +18,7 @@ setup() {
 }
 
 teardown() {
-	chflags_and_rm
+	chflags_nouchg
 }
 
 function diff_all_same { # @test

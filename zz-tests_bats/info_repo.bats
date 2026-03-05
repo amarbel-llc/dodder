@@ -9,7 +9,7 @@ setup() {
 }
 
 teardown() {
-	chflags_and_rm
+	chflags_nouchg
 }
 
 # bats file_tags=user_story:repo_info

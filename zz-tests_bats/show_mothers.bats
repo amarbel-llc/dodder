@@ -10,7 +10,7 @@ setup() {
 }
 
 teardown() {
-	chflags_and_rm
+	chflags_nouchg
 }
 
 function format_mother_sha_one { # @test

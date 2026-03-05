@@ -29,7 +29,7 @@
 - [ ] add support for n / m sapir recovery for piv encryption
 - [x] migrate to `bats_load_library bats-island` (replace inline set_xdg/setup_test_home/chflags_and_rm)
 
-- [ ] Debug `just test-bats-update-fixtures` failure: bats succeeds when run directly from `zz-tests_bats/` but fails when invoked through the justfile recipe chain. Likely a working directory or environment variable propagation issue. The `cp` command can't find `.dodder` in the bats temp dir, suggesting the fixture generation test silently fails or the temp dir path extraction breaks.
+- [x] Debug `just test-bats-update-fixtures` failure: fixed by removing `rm -rf` from bats-island's `chflags_and_rm` (renamed to `chflags_nouchg`) so `--no-tempdir-cleanup` is respected.
 
 ## Temporary backwards-compat: `!` blob path fallback in triple-hyphen parser
 

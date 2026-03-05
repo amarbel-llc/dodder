@@ -58,7 +58,7 @@ setup() {
 }
 
 teardown() {
-  chflags_and_rm
+  chflags_nouchg
 }
 
 function dirty_one_virtual() {

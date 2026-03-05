@@ -38,7 +38,7 @@ setup() {
 }
 
 teardown() {
-  chflags_and_rm
+  chflags_nouchg
 }
 
 function checkout_simple_all { # @test

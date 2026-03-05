@@ -10,7 +10,7 @@ setup() {
 }
 
 teardown() {
-	chflags_and_rm
+	chflags_nouchg
 }
 
 # bats file_tags=user_story:pull,user_story:repo,user_store:xdg,user_story:remote

@@ -31,7 +31,7 @@ teardown() {
 
 	rm -rf "${_agent_dir:-}" 2>/dev/null || true
 
-	chflags_and_rm
+	chflags_nouchg
 }
 
 function init_with_ecdsa_p256_ssh_key { # @test

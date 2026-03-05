@@ -10,7 +10,7 @@ setup() {
 }
 
 teardown() {
-  chflags_and_rm
+  chflags_nouchg
 }
 
 function json_init_and_checkin { # @test

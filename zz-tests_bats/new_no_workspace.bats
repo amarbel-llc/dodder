@@ -12,7 +12,7 @@ setup() {
 }
 
 teardown() {
-  chflags_and_rm
+  chflags_nouchg
 }
 
 function new_empty_no_edit { # @test

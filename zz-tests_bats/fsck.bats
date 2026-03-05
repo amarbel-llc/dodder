@@ -8,7 +8,7 @@ setup() {
 }
 
 teardown() {
-	chflags_and_rm
+	chflags_nouchg
 }
 
 function fsck_basic_tap14 { # @test

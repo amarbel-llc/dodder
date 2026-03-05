@@ -94,7 +94,7 @@ function setup_repo {
 }
 
 function teardown_repo {
-  chflags_and_rm
+  chflags_nouchg
 }
 
 function run_dodder_debug {
