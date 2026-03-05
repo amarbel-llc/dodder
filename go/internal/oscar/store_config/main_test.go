@@ -1,16 +1,16 @@
 package store_config
 
 import (
+	"bufio"
 	"bytes"
-	"encoding/gob"
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/stream_index"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
-// TODO remove
-func TestGob(t1 *testing.T) {
+func TestListCoderRoundTrip(t1 *testing.T) {
 	t := ui.T{T: t1}
 
 	ta, _ := sku.GetTransactedPool().GetWithRepool()
@@ -19,20 +19,25 @@ func TestGob(t1 *testing.T) {
 		t.Fatalf("failed to set object id: %s", err)
 	}
 
-	var b bytes.Buffer
+	var buf bytes.Buffer
+	var coder stream_index.ListCoder
 
-	enc := gob.NewEncoder(&b)
+	writer := bufio.NewWriter(&buf)
 
-	if err := enc.Encode(ta); err != nil {
-		t.Fatalf("failed to encode config: %s", err)
+	if _, err := coder.EncodeTo(ta, writer); err != nil {
+		t.Fatalf("failed to encode: %s", err)
 	}
 
-	dec := gob.NewDecoder(&b)
+	if err := writer.Flush(); err != nil {
+		t.Fatalf("failed to flush: %s", err)
+	}
+
+	reader := bufio.NewReader(&buf)
 
 	var actual sku.Transacted
 
-	if err := dec.Decode(&actual); err != nil {
-		t.Fatalf("failed to decode config: %s", err)
+	if _, err := coder.DecodeFrom(&actual, reader); err != nil {
+		t.Fatalf("failed to decode: %s", err)
 	}
 
 	t.AssertEqual(ta.GetObjectId().String(), actual.GetObjectId().String())

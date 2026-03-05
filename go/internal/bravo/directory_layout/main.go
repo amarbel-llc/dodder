@@ -37,6 +37,9 @@ type (
 		FileCacheDormant() string
 		FileCacheObjectId() string
 		FileConfig() string
+		FileConfigTags() string
+		FileConfigTypes() string
+		FileConfigRepos() string
 		FileLock() string
 		FileTags() string
 		FileInventoryListLog() string

@@ -80,6 +80,18 @@ func (layout v3) FileConfig() string {
 	return layout.MakeDirConfig("config-mutable").String()
 }
 
+func (layout v3) FileConfigTags() string {
+	return layout.MakeDirData("config-tags").String()
+}
+
+func (layout v3) FileConfigTypes() string {
+	return layout.MakeDirData("config-types").String()
+}
+
+func (layout v3) FileConfigRepos() string {
+	return layout.MakeDirData("config-repos").String()
+}
+
 func (layout v3) DirDataIndex(p ...string) string {
 	return layout.MakeDirData(stringSliceJoin("index", p)...).String()
 }
