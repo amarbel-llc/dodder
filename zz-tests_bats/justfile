@@ -2,7 +2,7 @@ set output-format := "tap"
 
 bin_dir := env("BATS_BIN_DIR", "")
 # Exclude af_unix-tagged files; they need --no-sandbox (see test-tags-no-sandbox).
-_non_af_unix_bats := `grep -L 'file_tags=.*af_unix' *.bats | tr '\n' ' '`
+_non_af_unix_bats := `grep -L 'file_tags=.*af_unix' current_version/*.bats | tr '\n' ' '`
 _bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
 
 export DODDER_XDG_UTILITY_OVERRIDE := ""
@@ -13,7 +13,7 @@ default: test
 clean-fixtures:
   #! /bin/bash -e
 
-  dir="migration/v$(dodder info store-version)"
+  dir="previous_versions/v$(dodder info store-version)"
   git reset HEAD "$dir" >/dev/null 2>&1
   ./../bin/chflags.bash -R nouchg "$dir" >/dev/null 2>&1
   git clean -fd "$dir" >/dev/null 2>&1
@@ -29,7 +29,7 @@ debug-env store_version=`echo "v$(dodder info store-version)"`:
   dir="$(mktemp -d)"
   trap "rm -rf '$dir'" EXIT
 
-  cp -r migration/{{store_version}}/.xdg "$dir/.xdg"
+  cp -r previous_versions/{{store_version}}/.xdg "$dir/.xdg"
 
   echo 'source_env "{{invocation_dir()}}/.envrc"' >> "$dir/.envrc"
   echo 'dotenv ./.env' >> "$dir/.envrc"
@@ -59,13 +59,13 @@ test-generate_fixtures:
   #! /bin/bash -e
   which dodder
   export DODDER_VERSION="v$(dodder info store-version)"
-  ./migration/generate_fixture.bash
+  ./previous_versions/generate_fixture.bash
 
 bats_timeout := "30"
 
 # runs specific bats test files, or a default of all.
 [group("test")]
-test-targets *targets="*.bats":
+test-targets *targets="current_version/*.bats":
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
     bats {{_bin_dir_arg}} --jobs {{num_cpus()}} {{targets}}
 
@@ -73,22 +73,22 @@ test-targets *targets="*.bats":
 [group("test")]
 test-tags *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats {{_bin_dir_arg}} --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
+    bats {{_bin_dir_arg}} --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
 
 # runs specific bats test tags without sandbox
 [group("test")]
 test-tags-no-sandbox *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats {{_bin_dir_arg}} --no-sandbox --jobs {{num_cpus()}} --filter-tags {{tags}} *.bats
+    bats {{_bin_dir_arg}} --no-sandbox --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
 
 [group("test")]
-test-integration: (test-targets "*.bats")
+test-integration: (test-targets "current_version/*.bats")
 
 [group("test")]
-test-migration: (test-targets "migration/*.bats")
+test-migration: (test-targets "previous_versions/main.bats")
 
 [group("test")]
-test *flags: (test-targets flags _non_af_unix_bats "migration/*.bats")
+test *flags: (test-targets flags _non_af_unix_bats "previous_versions/main.bats")
 
 #   ____  _        _
 #  / ___|| |_ __ _| |_ ___

@@ -57,10 +57,32 @@ test-bats-update-fixtures: build
 
   echo ""
   echo "==> Fixture changes:"
-  git diff --stat -- zz-tests_bats/migration/
+  git diff --stat -- zz-tests_bats/previous_versions/
   echo ""
-  echo "Review changes with: git diff -- zz-tests_bats/migration/"
-  echo "Then: git add zz-tests_bats/migration/ && git commit -m 'Update test fixtures'"
+  echo "Review changes with: git diff -- zz-tests_bats/previous_versions/"
+  echo "Then: git add zz-tests_bats/previous_versions/ && git commit -m 'Update test fixtures'"
+
+# Snapshot current test suite for future reference.
+# Run BEFORE bumping VCurrent in store_version/main.go.
+test-bats-snapshot-version: build
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export PATH="{{dir_build}}/debug:$PATH"
+  v="v$(dodder info store-version)"
+  dest="zz-tests_bats/previous_versions/$v"
+
+  if [[ -f "$dest/lib/common.bash" ]]; then
+    echo "==> Snapshot already exists for $v, skipping"
+    exit 0
+  fi
+
+  echo "==> Snapshotting test suite as $v..."
+  mkdir -p "$dest/lib"
+  cp zz-tests_bats/lib/common.bash "$dest/lib/common.bash"
+  cp zz-tests_bats/current_version/*.bats "$dest/"
+
+  echo "==> Snapshot complete: $dest"
+  echo "Now bump VCurrent, run 'just test-bats-update-fixtures', and commit."
 
 # Smart fixture generation: skip if fixtures exist for current store version.
 [private]
@@ -68,7 +90,7 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
   #!/usr/bin/env bash
   set -euo pipefail
   current_version="v$(dodder info store-version)"
-  fixture_dir="zz-tests_bats/migration/$current_version"
+  fixture_dir="zz-tests_bats/previous_versions/$current_version"
 
   if [[ -d "$fixture_dir/.dodder" ]]; then
     echo "==> Fixtures up-to-date (store version $current_version), skipping generation"

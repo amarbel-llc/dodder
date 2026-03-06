@@ -1,6 +1,0 @@
----
-! toml-blob_store_config-v0
----
-
-compression-type = 'zstd'
-lock-internal-files = false
