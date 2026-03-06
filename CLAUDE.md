@@ -22,6 +22,20 @@ Fixtures in `zz-tests_bats/migration/` are committed test data that integration 
 3. Regenerated fixtures **must** be `git add`ed and committed before integration tests will pass on a clean checkout
 4. Fixture generation requires a working `dodder` debug binary (built by `just build`)
 
+## Bats Test Assertions
+
+- **Always verify with `just test`**, not bare `bats` — `just test` rebuilds the
+  binary first. The devshell `dodder` may be a different version than the source,
+  which changes `DODDER_VERSION`, fixture selection, and output format.
+- **Fixture-based tests** (`copy_from_version`) have a fixed signing key — use
+  literal `assert_output -` with exact signatures.
+- **Fresh-store tests** (`run_dodder_init_disable_age`) generate a new key each
+  run — use `assert_output --regexp -` with `! type@.*` for signatures.
+- **Trailing whitespace is invisible in TAP output.** If a regex "should" match
+  but doesn't, use `xxd` on the actual command output to check for hidden spaces.
+- **`@.*`** is the safe regex for the blob hash line — matches both `@ ` (no
+  blob, trailing space) and `@ blake2b256-...` (with blob).
+
 ## Common Issues
 
 - **"dodder: command not found"** — run `just build` first, or ensure you're in the nix devshell
