@@ -38,16 +38,15 @@ function format_simple { # @test
 
 	run_dodder format-object -mode both one/uno text
 	assert_success
-	assert_output --regexp - <<-EOM
-		---
-		# wow the first
-		- tag-3
-		- tag-4
-		! md@.*
-		---
-
-		last time
-	EOM
+	assert_output --regexp - <<EOM
+---
+# wow the first
+- tag-3
+- tag-4
+@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+! md@.*
+---
+EOM
 
 	run_dodder checkout one/uno
 	assert_success
@@ -64,16 +63,15 @@ function format_simple { # @test
 
 	run_dodder format-object -mode both one/uno.zettel text
 	assert_success
-	assert_output --regexp - <<-EOM
-		---
-		# wow the second
-		- tag-3
-		- tag-4
-		! md@.*
-		---
-
-		last time but new
-	EOM
+	assert_output --regexp - <<EOM
+---
+# wow the second
+- tag-3
+- tag-4
+@ .*
+! md@.*
+---
+EOM
 }
 
 function show_simple_one_zettel_binary { # @test

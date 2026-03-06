@@ -28,15 +28,14 @@ EOM
 
   run_dodder show -format text one/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # bez
 - et1
 - et2
+@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
 ! md@.*
 ---
-
-the body
 EOM
 
   # when
@@ -53,14 +52,13 @@ EOM
 
   run_dodder show -format text one/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # bez
 - et3
+@ blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
 ! md@.*
 ---
-
-the body but new
 EOM
 }
 
@@ -82,15 +80,14 @@ EOM
 
   run_dodder show -format text one/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # bez
 - et1
 - et2
+@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
 ! md@.*
 ---
-
-the body
 EOM
 
   # when
@@ -106,13 +103,12 @@ EOM
 
   run_dodder show -format text one/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # bez
 - et3
+@ blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
 ! md@.*
 ---
-
-the body but new
 EOM
 }

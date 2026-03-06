@@ -59,29 +59,27 @@ function can_duplicate_zettel_content { # @test
   # when
   run_dodder show -format text two/uno
   assert_success
-  assert_output --regexp - <<-EOM
----
-# bez
-- et1
-- et2
-! md@.*
----
-
-the body
-EOM
+  assert_output - <<-EOM
+		---
+		# bez
+		- et1
+		- et2
+		@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		---
+	EOM
 
   run_dodder show -format text one/tres
   assert_success
-  assert_output --regexp - <<-EOM
----
-# bez
-- et1
-- et2
-! md@.*
----
-
-the body
-EOM
+  assert_output - <<-EOM
+		---
+		# bez
+		- et1
+		- et2
+		@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		---
+	EOM
 }
 
 function use_blob_digests { # @test
@@ -169,10 +167,11 @@ function new_zettel_file { # @test
 
   run_dodder show -format text two/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # wow
 - ok
+@.*
 ! md@.*
 ---
 EOM
@@ -196,10 +195,11 @@ function new_zettel_stdin { # @test
 
   run_dodder show -format text two/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # wow
 - ok
+@.*
 ! md@.*
 ---
 EOM
@@ -223,10 +223,11 @@ function new_zettel { # @test
 
   run_dodder show -format text two/uno:z
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # wow
 - ok
+@.*
 ! md@.*
 ---
 EOM

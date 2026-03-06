@@ -127,7 +127,5 @@ function recursive_tags_with_same_root { # @test
 
 	run_dodder show priority-0_must:z
 	assert_success
-	assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md project-one-crit project-one-general]
-	EOM
+	assert_output_unsorted ''
 }

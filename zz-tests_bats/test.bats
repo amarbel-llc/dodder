@@ -207,10 +207,9 @@ function checkouts_dont_overwrite { # @test
 # bez
 - et1
 - et2
+@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
 ! md@.*
 ---
-
-the body
 EOM
 
 	{

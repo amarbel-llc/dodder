@@ -45,7 +45,9 @@ func (coder *ListCoder) DecodeFrom(
 	n += int64(n1)
 
 	if err != nil {
-		if errors.Is(err, io.ErrUnexpectedEOF) && n == 0 {
+		if errors.IsEOF(err) {
+			// no-op
+		} else if err == io.ErrUnexpectedEOF && n == 0 {
 			err = io.EOF
 		}
 

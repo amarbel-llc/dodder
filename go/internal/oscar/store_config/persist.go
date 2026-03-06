@@ -267,6 +267,10 @@ func (store *store) loadMutableConfigStreamIndex(
 		return err
 	}
 
+	if store.config.Sku.GetType().IsEmpty() {
+		return err
+	}
+
 	if err = store.loadMutableConfigBlob(
 		store.config.Sku.GetType().ToType(),
 		store.config.Sku.GetBlobDigest(),

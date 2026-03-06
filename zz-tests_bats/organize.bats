@@ -492,13 +492,14 @@ function organize_v5_outputs_organize_two_tags { # @test
 
   run_dodder show -format text two/uno
   assert_success
-  assert_output --regexp - <<-EOM
-		---
-		# wow
-		- ok
-		! md@.*
-		---
-	EOM
+  assert_output --regexp - <<EOM
+---
+# wow
+- ok
+@.*
+! md@.*
+---
+EOM
 }
 
 function organize_v5_outputs_organize_one_tags_group_by_one { # @test
@@ -695,23 +696,25 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
 
   run_dodder show -format text one/uno
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # one/uno
 - priority-2
 - task
 - w-2022-07-07
+@.*
 ! md@.*
 ---
 EOM
 
   run_dodder show -format text two/uno
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # 3
 - priority-2
 - task
+@.*
 ! md@.*
 ---
 EOM
@@ -802,23 +805,25 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
 
   run_dodder show -format text one/uno
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # one/uno
 - priority-2
 - task
 - w-2022-07-07
+@.*
 ! md@.*
 ---
 EOM
 
   run_dodder show -format text two/uno
   assert_success
-  assert_output --regexp - <<-EOM
+  assert_output --regexp - <<EOM
 ---
 # 3
 - priority-2
 - task
+@.*
 ! md@.*
 ---
 EOM

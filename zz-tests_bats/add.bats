@@ -29,15 +29,14 @@ function add { # @test
 
 	run_dodder show -format text one/uno
 	assert_success
-	assert_output --regexp - <<-EOM
-		---
-		# to_add
-		- zz-inbox-2022-11-14
-		! md@.*
-		---
-
-		test file
-	EOM
+	assert_output --regexp - <<EOM
+---
+# to_add
+- zz-inbox-2022-11-14
+@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
+! md@.*
+---
+EOM
 }
 
 function add_with_dupe_added { # @test
@@ -67,15 +66,14 @@ function add_with_dupe_added { # @test
 
 	run_dodder show -format text one/uno
 	assert_success
-	assert_output --regexp - <<-EOM
-		---
-		# to_add to_add2
-		- zz-inbox-2022-11-14
-		! md@.*
-		---
-
-		test file
-	EOM
+	assert_output --regexp - <<EOM
+---
+# to_add to_add2
+- zz-inbox-2022-11-14
+@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
+! md@.*
+---
+EOM
 }
 
 function add_not_md { # @test
@@ -104,15 +102,14 @@ function add_not_md { # @test
 
 	run_dodder show -format text one/uno
 	assert_success
-	assert_output --regexp - <<-EOM
-		---
-		# to_add
-		- zz-inbox-2022-11-14
-		! pdf@.*
-		---
-
-		test file
-	EOM
+	assert_output --regexp - <<EOM
+---
+# to_add
+- zz-inbox-2022-11-14
+@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
+! pdf@.*
+---
+EOM
 }
 
 function add_1 { # @test
@@ -231,15 +228,14 @@ function add_several_with_spaces_in_filename { # @test
 
 	run_dodder show -format text one/uno
 	assert_success
-	assert_output --regexp - <<-EOM
-		---
-		# to add
-		- zz-inbox-2022-11-14
-		! md@.*
-		---
-
-		test file
-	EOM
+	assert_output --regexp - <<EOM
+---
+# to add
+- zz-inbox-2022-11-14
+@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
+! md@.*
+---
+EOM
 }
 
 function add_each_blob { # @test

@@ -18,15 +18,14 @@ teardown() {
 function show_simple_one_zettel { # @test
 	run_dodder show -format text one/uno
 	assert_success
-	assert_output --regexp - <<-EOM
+	assert_output - <<-EOM
 		---
 		# wow the first
 		- tag-3
 		- tag-4
-		! md@.*
+		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
 		---
-
-		last time
 	EOM
 }
 
@@ -49,43 +48,40 @@ function show_simple_one_zettel_with_description_with_quotes { # @test
 
 	run_dodder show -format text two/uno:
 	assert_success
-	assert_output --regexp - <<-EOM
+	assert_output - <<-EOM
 		---
 		# see these "quotes"
-		! md@.*
+		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
 		---
-
-		last time
 	EOM
 }
 
 function show_simple_one_zettel_with_sigil { # @test
 	run_dodder show -format text one/uno:
 	assert_success
-	assert_output --regexp - <<-EOM
+	assert_output - <<-EOM
 		---
 		# wow the first
 		- tag-3
 		- tag-4
-		! md@.*
+		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
 		---
-
-		last time
 	EOM
 }
 
 function show_simple_one_zettel_with_sigil_and_genre { # @test
 	run_dodder show -format text one/uno:zettel
 	assert_success
-	assert_output --regexp - <<-EOM
+	assert_output - <<-EOM
 		---
 		# wow the first
 		- tag-3
 		- tag-4
-		! md@.*
+		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
 		---
-
-		last time
 	EOM
 }
 
@@ -203,23 +199,21 @@ function show_history_one_zettel { # @test
 
 	run_dodder show -format text one/uno+z
 	assert_success
-	assert_output_unsorted --regexp - <<-EOM
+	assert_output_unsorted - <<-EOM
 		---
 		# wow ok
 		- tag-1
 		- tag-2
-		! md@.*
+		@ blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
 		---
-
-		this is the body aiiiiight
 		---
 		# wow the first
 		- tag-3
 		- tag-4
-		! md@.*
+		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
 		---
-
-		last time
 	EOM
 }
 

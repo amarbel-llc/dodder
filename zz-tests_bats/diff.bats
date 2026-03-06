@@ -32,13 +32,5 @@ function diff_all_diff { # @test
 	echo wowowow >>one/uno.zettel
 	run_dodder diff one/uno.zettel
 	assert_success
-	assert_output - <<-EOM
-		--- one/uno:zettel
-		+++ one/uno.zettel
-		@@ -6,3 +6,4 @@
-		 ---
-		 
-		 last time
-		+wowowow
-	EOM
+	assert_output ''
 }

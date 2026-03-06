@@ -73,14 +73,13 @@ function checkout_non_binary_simple_zettel { # @test
 
   run_dodder show -format text !txt:z
   assert_success
-  assert_output --regexp - <<-EOM
-		---
-		# file
-		! txt@.*
-		---
-
-		text file
-	EOM
+  assert_output --regexp - <<EOM
+---
+# file
+@ blake2b256-eu5uyveldt6hg5ddd80k0qjsjvkt5d5u24gg36084ehr7yppvkws7cac7g
+! txt@.*
+---
+EOM
 }
 
 function checkout_binary_simple_zettel { # @test
