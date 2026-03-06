@@ -1015,6 +1015,23 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			}
 		},
 	},
+	"type-sig": {
+		FormatFuncConstructor: func(
+			repo *Repo,
+			writer interfaces.WriterAndStringWriter,
+		) interfaces.FuncIter[*sku.Transacted] {
+			return func(object *sku.Transacted) (err error) {
+				typeSig := object.GetMetadata().GetTypeLock().GetValue()
+
+				if _, err = fmt.Fprintln(writer, typeSig); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				return err
+			}
+		},
+	},
 	"object_id-date": {
 		FormatFuncConstructor: func(
 			repo *Repo,

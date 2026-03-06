@@ -37,11 +37,7 @@ cp -r "$bats_dir/test/1/.madder" "$d/.madder"
 # Extract the type signature from the fixture for use in test assertions.
 # The signature is fixture-specific (tied to the signing key generated during
 # init) and changes each time fixtures are regenerated.
-# Query the type object (:t), not a zettel — the ! md@<sig> line in text format
-# uses the type's object signature. Strip the purpose prefix (dodder-object-sig-v2@)
-# since the text format omits it.
-type_sig=$(cd "$d" && dodder show -format sig :t 2>/dev/null)
-type_sig="${type_sig#*@}"
+type_sig=$(cd "$d" && dodder show -format type-sig one/uno 2>/dev/null)
 
 if [[ -n "$type_sig" ]]; then
   echo "FIXTURE_TYPE_SIG=$type_sig" > "$d/.signature.env"
