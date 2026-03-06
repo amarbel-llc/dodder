@@ -2,6 +2,7 @@ package blob_store_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
@@ -26,6 +27,7 @@ type TomlV2 struct {
 
 var (
 	_ ConfigLocalHashBucketed = TomlV2{}
+	_ ConfigUpgradeable       = TomlV2{}
 	_ ConfigLocalMutable      = &TomlV2{}
 )
 
@@ -94,4 +96,20 @@ func (blobStoreConfig TomlV2) GetDefaultHashTypeId() string {
 
 func (blobStoreConfig *TomlV2) setBasePath(value string) {
 	blobStoreConfig.BasePath = value
+}
+
+func (blobStoreConfig TomlV2) Upgrade() (Config, ids.TypeStruct) {
+	upgraded := &TomlV3{
+		HashBuckets:       blobStoreConfig.HashBuckets,
+		BasePath:          blobStoreConfig.BasePath,
+		HashTypeId:        blobStoreConfig.HashTypeId,
+		CompressionType:   blobStoreConfig.CompressionType,
+		LockInternalFiles: blobStoreConfig.LockInternalFiles,
+	}
+
+	if !blobStoreConfig.Encryption.IsNull() {
+		upgraded.Encryption = []markl.Id{blobStoreConfig.Encryption}
+	}
+
+	return upgraded, ids.GetOrPanic(ids.TypeTomlBlobStoreConfigV3).TypeStruct
 }

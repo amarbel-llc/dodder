@@ -24,7 +24,7 @@ function show_simple_one_zettel { # @test
 		- tag-3
 		- tag-4
 		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 }
@@ -52,7 +52,7 @@ function show_simple_one_zettel_with_description_with_quotes { # @test
 		---
 		# see these "quotes"
 		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 }
@@ -66,7 +66,7 @@ function show_simple_one_zettel_with_sigil { # @test
 		- tag-3
 		- tag-4
 		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 }
@@ -80,7 +80,7 @@ function show_simple_one_zettel_with_sigil_and_genre { # @test
 		- tag-3
 		- tag-4
 		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 }
@@ -205,14 +205,14 @@ function show_history_one_zettel { # @test
 		- tag-1
 		- tag-2
 		@ blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 		---
 		# wow the first
 		- tag-3
 		- tag-4
 		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 }

@@ -176,6 +176,16 @@ function get_type_blob_sha() {
   echo -n "blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m"
 }
 
+function get_fixture_type_sig() {
+  local env_file="$DIR/migration/$DODDER_VERSION/.signature.env"
+
+  if [[ -f "$env_file" ]]; then
+    # shellcheck disable=SC1090
+    source "$env_file"
+    echo -n "$FIXTURE_TYPE_SIG"
+  fi
+}
+
 run_find() {
   run find . \
     -maxdepth 2 \

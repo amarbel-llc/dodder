@@ -31,12 +31,13 @@ const (
 	TypeTomlBlobStoreConfigV0                       = "!toml-blob_store_config-v0"
 	TypeTomlBlobStoreConfigV1                       = "!toml-blob_store_config-v1"
 	TypeTomlBlobStoreConfigV2                       = "!toml-blob_store_config-v2"
+	TypeTomlBlobStoreConfigV3                       = "!toml-blob_store_config-v3"
 	TypeTomlBlobStoreConfigPointerV0                = "!toml-blob_store_config-pointer-v0"
 	TypeTomlBlobStoreConfigInventoryArchiveV0       = "!toml-blob_store_config-inventory_archive-v0"
 	TypeTomlBlobStoreConfigInventoryArchiveV1       = "!toml-blob_store_config-inventory_archive-v1"
 	TypeTomlBlobStoreConfigInventoryArchiveV2       = "!toml-blob_store_config-inventory_archive-v2"
 	TypeTomlBlobStoreConfigInventoryArchiveVCurrent = TypeTomlBlobStoreConfigInventoryArchiveV2
-	TypeTomlBlobStoreConfigVCurrent                 = TypeTomlBlobStoreConfigV2
+	TypeTomlBlobStoreConfigVCurrent                 = TypeTomlBlobStoreConfigV3
 	TypeTomlConfigImmutableV1                       = "!toml-config-immutable-v1" // Deprecated
 	TypeTomlConfigImmutableV2                       = "!toml-config-immutable-v2"
 	TypeTomlConfigV0                                = "!toml-config-v0" // Deprecated
@@ -88,6 +89,7 @@ func init() {
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV0, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV2, genres.Unknown, false)
+	registerBuiltinTypeString(TypeTomlBlobStoreConfigV3, genres.Unknown, false)
 	registerBuiltinTypeString(
 		TypeTomlBlobStoreConfigPointerV0,
 		genres.Unknown,

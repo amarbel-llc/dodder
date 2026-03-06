@@ -135,7 +135,7 @@ var (
 
 var DefaultHashBuckets []int = []int{2}
 
-type DefaultType = TomlV2
+type DefaultType = TomlV3
 
 func Default() *TypedMutableConfig {
 	return &TypedMutableConfig{

@@ -68,6 +68,14 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 					return &TomlV2{}
 				},
 			},
+			ids.TypeTomlBlobStoreConfigV3: triple_hyphen_io.CoderToml[
+				Config,
+				*Config,
+			]{
+				Progenitor: func() Config {
+					return &TomlV3{}
+				},
+			},
 			ids.TypeTomlBlobStoreConfigSftpExplicitV0: triple_hyphen_io.CoderToml[
 				Config,
 				*Config,

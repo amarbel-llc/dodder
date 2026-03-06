@@ -70,7 +70,7 @@ function can_duplicate_zettel_content { # @test
 		- et1
 		- et2
 		@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 
@@ -82,7 +82,7 @@ function can_duplicate_zettel_content { # @test
 		- et1
 		- et2
 		@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
-		! md@ed25519_sig-mnve5k0fuxdnuxrj8g492tdtnvn6cdm7me2wmtzzua7u8988ykejv4vm76fn4yduvwp876vp3khz9sslyny9pqnaq4vcnn528rq8urgyl6pds
+		! md@$(get_fixture_type_sig)
 		---
 	EOM
 }
