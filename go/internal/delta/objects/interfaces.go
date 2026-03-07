@@ -41,6 +41,9 @@ type (
 
 		GetTagLock(Tag) TagLock
 
+		AllReferencedObjects() interfaces.Seq[SeqId]
+		GetReferencedObjectLock(SeqId) IdLock
+
 		GetBlobDigest() domain_interfaces.MarklId
 		GetObjectDigest() domain_interfaces.MarklId
 		GetMotherObjectSig() domain_interfaces.MarklId
@@ -73,6 +76,7 @@ type (
 		GetTypeMutable() TypeMutable
 		GetTypeLockMutable() TypeLockMutable
 		GetTagLockMutable(Tag) TagLockMutable
+		GetReferencedObjectLockMutable(SeqId) IdLockMutable
 	}
 
 	Getter interface {

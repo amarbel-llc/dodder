@@ -235,6 +235,26 @@ func (metadata *metadata) GetTagLockMutable(tag Tag) TagLockMutable {
 	return lock
 }
 
+func (metadata *metadata) AllReferencedObjects() interfaces.Seq[SeqId] {
+	return func(yield func(SeqId) bool) {
+		for ref := range metadata.References.All() {
+			if !yield(ref) {
+				return
+			}
+		}
+	}
+}
+
+func (metadata *metadata) GetReferencedObjectLock(ref SeqId) IdLock {
+	lock, _ := metadata.References.getLock(ref.String())
+	return lock
+}
+
+func (metadata *metadata) GetReferencedObjectLockMutable(ref SeqId) IdLockMutable {
+	lock, _ := metadata.References.getLockMutable(ref.String())
+	return lock
+}
+
 func (metadata *metadata) Subtract(otherMetadata Metadata) {
 	if metadata.GetType().String() == otherMetadata.GetType().String() {
 		metadata.GetTypeMutable().Reset()
