@@ -4,21 +4,11 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	lib_fd "code.linenisgreat.com/dodder/go/lib/charlie/fd"
 )
 
-type Std struct {
-	ui.Printer
-}
+type Std = lib_fd.Std
 
-func MakeStd(f *os.File) Std {
-	return Std{
-		Printer: ui.MakePrinter(f),
-	}
-}
+func MakeStd(f *os.File) Std { return lib_fd.MakeStd(f) }
 
-func MakeStdFromWriter(w io.Writer) Std {
-	return Std{
-		Printer: ui.MakePrinterFromWriter(w),
-	}
-}
+func MakeStdFromWriter(w io.Writer) Std { return lib_fd.MakeStdFromWriter(w) }
