@@ -21,6 +21,7 @@ func _() {
 	_ = x[Comment-107]
 	_ = x[Tai-84]
 	_ = x[Type-116]
+	_ = x[References-82]
 	_ = x[SigParentMetadataParentObjectId-77]
 	_ = x[DigestMetadataParentObjectId-115]
 	_ = x[DigestMetadataWithoutTai-110]
@@ -31,7 +32,7 @@ func _() {
 	_ = x[CacheTags2-121]
 }
 
-const _Binary_name = "UnknownBlobDescriptionContentLengthTagGenreCacheTagImplicitObjectIdSigParentMetadataParentObjectIdRepoPubKeySigilTaiCacheDormantCommentDigestMetadataDigestMetadataWithoutTaiRepoSigDigestMetadataParentObjectIdTypeCacheTagsCacheTags2"
+const _Binary_name = "UnknownBlobDescriptionContentLengthTagGenreCacheTagImplicitObjectIdSigParentMetadataParentObjectIdRepoPubKeyReferencesSigilTaiCacheDormantCommentDigestMetadataDigestMetadataWithoutTaiRepoSigDigestMetadataParentObjectIdTypeCacheTagsCacheTags2"
 
 var _Binary_map = map[Binary]string{
 	0:   _Binary_name[0:7],
@@ -44,17 +45,18 @@ var _Binary_map = map[Binary]string{
 	75:  _Binary_name[59:67],
 	77:  _Binary_name[67:98],
 	80:  _Binary_name[98:108],
-	83:  _Binary_name[108:113],
-	84:  _Binary_name[113:116],
-	97:  _Binary_name[116:128],
-	107: _Binary_name[128:135],
-	109: _Binary_name[135:149],
-	110: _Binary_name[149:173],
-	113: _Binary_name[173:180],
-	115: _Binary_name[180:208],
-	116: _Binary_name[208:212],
-	120: _Binary_name[212:221],
-	121: _Binary_name[221:231],
+	82:  _Binary_name[108:118],
+	83:  _Binary_name[118:123],
+	84:  _Binary_name[123:126],
+	97:  _Binary_name[126:138],
+	107: _Binary_name[138:145],
+	109: _Binary_name[145:159],
+	110: _Binary_name[159:183],
+	113: _Binary_name[183:190],
+	115: _Binary_name[190:218],
+	116: _Binary_name[218:222],
+	120: _Binary_name[222:231],
+	121: _Binary_name[231:241],
 }
 
 func (i Binary) String() string {

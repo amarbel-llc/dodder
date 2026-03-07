@@ -25,6 +25,7 @@ const (
 	Comment       = Binary('k')
 	Tai           = Binary('T')
 	Type          = Binary('t')
+	References    = Binary('R')
 
 	// TODO rename to match purposes
 	SigParentMetadataParentObjectId = Binary('M')

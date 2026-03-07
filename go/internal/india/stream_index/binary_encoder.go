@@ -208,6 +208,26 @@ func (encoder *binaryEncoder) writeFieldKey(
 			return n, err
 		}
 
+	case key_bytes.References:
+		metadataMutable := object.GetMetadataMutable()
+
+		for refId := range metadata.AllReferencedObjects() {
+			refLock := metadataMutable.GetReferencedObjectLockMutable(refId)
+
+			if refLock.GetValue().IsNull() {
+				continue
+			}
+
+			binaryMarshaler := markl.MakeMutableLockCoderValueRequired(refLock)
+
+			var n1 int64
+			if n1, err = encoder.writeFieldBinaryMarshaler(binaryMarshaler); err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+			n += n1
+		}
+
 	case key_bytes.SigParentMetadataParentObjectId:
 		if n, err = encoder.writeFieldMerkleId(
 			metadata.GetMotherObjectSig(),
