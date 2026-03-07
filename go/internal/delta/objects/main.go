@@ -22,6 +22,7 @@ type metadata struct {
 
 	Description descriptions.Description
 	Tags        ContainedObjects
+	References  ContainedObjects
 	Type        markl.Lock[Type, TypeMutable]
 
 	DigBlob   markl.Id

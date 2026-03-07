@@ -11,4 +11,5 @@ func (containedObjectType) containedObjectType() {}
 const (
 	containedObjectTypeMetadataExplicit = iota
 	containedObjectTypeBlobReferences
+	containedObjectTypeReferencedObject
 )
