@@ -59,6 +59,7 @@ const (
 	OpMarklId       = Op('@')
 	OpTagSeparator  = Op('-')
 	OpDescription   = Op('#') // not really an operator?
+	OpReference     = Op('<')
 )
 
 func MakeOp(char rune) (Op, operatorType) {
@@ -102,6 +103,7 @@ func (op Op) GetType() operatorType {
 	case
 		OpMarklId,
 		OpPathSeparator,
+		OpReference,
 		OpType,
 		OpVirtual:
 		return operatorTypeMixedSeq

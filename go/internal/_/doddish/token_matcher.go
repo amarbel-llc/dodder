@@ -52,6 +52,24 @@ var (
 		TokenMatcherOp('.'),
 		TokenTypeIdentifier,
 	}
+
+	// <ref@sig
+	TokenMatcherReferencedObject = TokensMatcher{
+		TokenMatcherOp('<'),
+		TokenTypeIdentifier,
+		TokenMatcherOp('@'),
+		TokenTypeIdentifier,
+	}
+
+	// <alias=ref@sig
+	TokenMatcherReferencedObjectAlias = TokensMatcher{
+		TokenMatcherOp('<'),
+		TokenTypeIdentifier,
+		TokenMatcherOp('='),
+		TokenTypeIdentifier,
+		TokenMatcherOp('@'),
+		TokenTypeIdentifier,
+	}
 )
 
 type TokenMatcherOp byte
