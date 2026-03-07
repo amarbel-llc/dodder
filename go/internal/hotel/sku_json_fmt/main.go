@@ -80,6 +80,16 @@ func (json *Transacted) FromObjectIdStringAndMetadata(
 		Type: metadata.GetTypeLock().GetValue().String(),
 	}
 
+	for ref := range metadata.AllReferencedObjects() {
+		lock := metadata.GetReferencedObjectLock(ref)
+		if lock != nil && !lock.GetValue().IsEmpty() {
+			if json.Lock.References == nil {
+				json.Lock.References = make(map[string]string)
+			}
+			json.Lock.References[ref.String()] = lock.GetValue().String()
+		}
+	}
+
 	// TODO add support for "preview"
 
 	return err
@@ -186,6 +196,26 @@ func (json *Transacted) ToTransacted(
 		if err = metadata.GetTypeLockMutable().GetValueMutable().Set(
 			json.Lock.Type,
 		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	for refIdStr, sigStr := range json.Lock.References {
+		var refId ids.SeqId
+		if err = refId.Set(refIdStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		metadataStruct := metadata.(*objects.MetadataStruct)
+		if err = metadataStruct.References.Add(refId); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		refLock := metadata.GetReferencedObjectLockMutable(refId)
+		if err = refLock.GetValueMutable().Set(sigStr); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
