@@ -235,6 +235,66 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
+			// <alias=ref@sig (referenced object with alias — check FIRST, longer match)
+		case seq.MatchAll(doddish.TokenMatcherReferencedObjectAlias...):
+			var refId ids.SeqId
+			if err = refId.Set(seq.At(3).String()); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			metadataStruct := object.GetMetadataMutable().(*objects.MetadataStruct)
+			if err = metadataStruct.References.Add(refId); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			refLock := object.GetMetadataMutable().GetReferencedObjectLockMutable(refId)
+			if err = markl.SetMarklIdWithFormatBlech32(
+				refLock.GetValueMutable(),
+				"",
+				seq[4:].String(),
+			); err != nil {
+				err = errors.Wrapf(err, "Seq: %q", seq)
+				return err
+			}
+
+			alias := seq.At(1).String()
+			for index := range metadataStruct.References {
+				entry := &metadataStruct.References[index]
+				if entry.GetKey().String() == refId.String() {
+					if err = entry.Alias.Set(alias); err != nil {
+						err = errors.Wrap(err)
+						return err
+					}
+					break
+				}
+			}
+
+			// <ref@sig (referenced object without alias)
+		case seq.MatchAll(doddish.TokenMatcherReferencedObject...):
+			var refId ids.SeqId
+			if err = refId.Set(seq.At(1).String()); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			metadataStruct := object.GetMetadataMutable().(*objects.MetadataStruct)
+			if err = metadataStruct.References.Add(refId); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			refLock := object.GetMetadataMutable().GetReferencedObjectLockMutable(refId)
+			if err = markl.SetMarklIdWithFormatBlech32(
+				refLock.GetValueMutable(),
+				"",
+				seq[2:].String(),
+			); err != nil {
+				err = errors.Wrapf(err, "Seq: %q", seq)
+				return err
+			}
+
 			// key@abcd
 		case seq.MatchAll(doddish.TokenMatcherDodderTag...):
 			if err = format.parseMarklIdTag(object, seq); err != nil {
