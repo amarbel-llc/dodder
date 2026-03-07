@@ -67,6 +67,9 @@ func (parser *textParser2) ReadFrom(r io.Reader) (n int64, err error) {
 		case doddish.OpMarklId:
 			err = parser.readBlobDigest(metadata, remainder)
 
+		case doddish.OpReference:
+			err = parser.readReference(metadata, remainder)
+
 		case doddish.OpExact:
 			// TODO read object id
 			err = parser.readObjectId(remainder)
@@ -108,6 +111,73 @@ func (parser *textParser2) readType(
 	if err = marshaler.Set(ids.MakeTypeString(typeString)); err != nil {
 		err = errors.Wrap(err)
 		return err
+	}
+
+	return err
+}
+
+func (parser *textParser2) readReference(
+	metadata objects.MetadataMutable,
+	refString string,
+) (err error) {
+	if refString == "" {
+		return err
+	}
+
+	var alias string
+	objectRefString := refString
+
+	if idx := strings.Index(refString, " = "); idx != -1 {
+		alias = strings.TrimSpace(refString[:idx])
+		objectRefString = strings.TrimSpace(refString[idx+3:])
+
+		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
+			alias = alias[1 : len(alias)-1]
+		}
+	}
+
+	var refId ids.SeqId
+
+	objectIdStr := objectRefString
+	if atIdx := strings.Index(objectRefString, "@"); atIdx != -1 {
+		objectIdStr = objectRefString[:atIdx]
+	}
+
+	if err = refId.Set(objectIdStr); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	metadataStruct := metadata.(*objects.MetadataStruct)
+
+	if err = metadataStruct.References.Add(refId); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if strings.Contains(objectRefString, "@") {
+		refLock := metadata.GetReferencedObjectLockMutable(refId)
+		marshaler := markl.MakeMutableLockCoderValueNotRequired(refLock)
+
+		if err = marshaler.Set(objectRefString); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	if alias != "" {
+		for index := range metadataStruct.References {
+			entry := &metadataStruct.References[index]
+
+			if entry.GetKey().String() == refId.String() {
+				if err = entry.Alias.Set(alias); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				break
+			}
+		}
 	}
 
 	return err
