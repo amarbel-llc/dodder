@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tag_paths"
+	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
@@ -334,6 +335,37 @@ func (decoder *binaryDecoder) readFieldKey(
 		if err = marshaler.UnmarshalBinary(
 			decoder.Content.Bytes(),
 		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.References:
+		contentBytes := decoder.Content.Bytes()
+		nullIdx := bytes.IndexByte(contentBytes, 0)
+
+		var keyStr string
+		if nullIdx == -1 {
+			keyStr = string(contentBytes)
+		} else {
+			keyStr = string(contentBytes[:nullIdx])
+		}
+
+		var refId ids.SeqId
+		if err = refId.Set(keyStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		metadataStruct := metadata.(*objects.MetadataStruct)
+		if err = metadataStruct.References.Add(refId); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		refLock := metadata.GetReferencedObjectLockMutable(refId)
+		marshaler := markl.MakeMutableLockCoderValueRequired(refLock)
+
+		if err = marshaler.UnmarshalBinary(contentBytes); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
