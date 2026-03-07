@@ -21,17 +21,22 @@ Adding referenced-object locks closes this gap.
 
 ## Interface
 
-### Current lock kinds
+### Lock kinds
 
 Each object's metadata carries:
 
 - **Type lock** (`! type@signature`) -- pins the object's type to the signature
-  of the type-object at commit time.
+  of the type-object at commit time. `!` prefix inspired by shebangs.
 - **Tag locks** (`tag@signature`) -- one per tag, pins each tag to its
   tag-object signature at commit time.
+- **Referenced object locks** (`< object-ref@signature`) -- one per referenced
+  object, pins each reference to the referenced object's signature at commit
+  time. Optional alias maps a blob-local name to the fully qualified object ID.
+  `<` prefix inspired by shell input redirection.
 
-Locks are written during `WriteLockfile()` in the object finalizer, called as
-part of `validateAndFinalize()` before digest calculation.
+Referenced objects are discovered by the object's type (which defines how to
+extract references from blob content). The metadata stores the result: a map of
+fully qualified object IDs (with optional aliases) to their pinned signatures.
 
 ### Lock data model
 
@@ -42,17 +47,49 @@ part of `validateAndFinalize()` before digest calculation.
 Lock { Key KEY, Value markl.Id }
 ```
 
+Referenced object locks reuse the existing `containedObject` struct:
+
+- `ContainedObjectType`: `containedObjectTypeReferencedObject` (new value)
+- `Lock.Key`: fully qualified object ID (e.g. `one/uno`)
+- `Lock.Value`: object signature at commit time
+- `Alias`: optional blob-local alias (e.g. `blog-template`)
+
+Stored in a new `References ContainedObjects` field on metadata, separate from
+`Tags`.
+
 Lock values are required in all persistent formats (binary, inventory list) and
 optional only in user-facing text input.
 
 ### Serialization
 
-| Format         | Type lock             | Tag lock           |
-|----------------|-----------------------|--------------------|
-| Triple-hyphen  | `! type@signature`    | (in tag lines)     |
-| Inventory list | `!type@signature`     | `tag@signature`    |
-| Binary index   | key + null + fmt + id | same               |
-| JSON           | `{ "Lock": { "Type": "signature" } }` | --  |
+| Format         | Type lock             | Tag lock           | Referenced object lock                     |
+|----------------|-----------------------|--------------------|--------------------------------------------|
+| Triple-hyphen  | `! type@signature`    | (in tag lines)     | `< ref@sig` or `< alias = ref@sig`         |
+| Inventory list | `!type@signature`     | `tag@signature`    | `<ref@sig` or `<alias=ref@sig`             |
+| Binary index   | key + null + fmt + id | same               | same, with ContainedObjectType byte        |
+| JSON           | `{ "Lock": { "Type": "sig" } }` | --      | `{ "References": { ... } }`               |
+
+Triple-hyphen examples:
+
+    < one/uno@blake2b256-abc...
+    < blog-template = one/uno@blake2b256-abc...
+    < "unsafe alias with spaces" = one/uno@blake2b256-abc...
+
+Inventory list box examples:
+
+    [one/dos @digest !md <one/uno@sig <blog-template=one/uno@sig]
+
+Aliases with unsafe characters are quoted using the same escaping rules as
+object descriptions.
+
+### Metadata interface
+
+New methods on `Metadata` / `MetadataMutable`:
+
+- `GetReferencedObjects() ContainedObjects`
+- `GetReferencedObjectLock(SeqId) IdLock`
+- `GetReferencedObjectLockMutable(SeqId) IdLockMutable`
+- `AllReferencedObjects()` iterator (like `AllTags()`)
 
 ### Commit options
 
@@ -60,22 +97,41 @@ optional only in user-facing text input.
 
 - `AllowTypeFailure` -- if the type object can't be read, skip its lock
 - `AllowTagFailure` -- same for tags
+- `AllowReferencedObjectFailure` -- same for referenced objects
+
+### Doddish tokenizer
+
+`<` is registered as a new mixed-sequence operator in `doddish/op.go` (like `!`,
+`@`, `%`).
+
+New token matchers:
+
+- `TokenMatcherReferencedObject`: `< identifier @ identifier`
+- `TokenMatcherReferencedObjectAlias`: `< identifier = identifier @ identifier`
+
+### Sigil design etymology
+
+- `!` (type) -- inspired by shebangs (`#!/bin/sh`)
+- `#` (description) -- inspired by shebangs / comment syntax
+- `<` (referenced object) -- inspired by shell input redirection (`< file`)
 
 ## Examples
 
-A zettel with type `doc` and tag `project` committed when `doc` has signature
-`blake2b256-abc...` and `project` has signature `blake2b256-def...`:
+A zettel with type `doc`, tag `project`, and a reference to `one/uno` aliased as
+`blog-template`:
 
 Triple-hyphen output:
 
+    # my blog post
+    - project
     ! doc@blake2b256-abc...
-    project
+    < blog-template = one/uno@blake2b256-def...
     ---
-    blob content
+    See [blog-template] for the layout.
 
 Inventory list output:
 
-    [ceroplastes/midtown !doc@blake2b256-abc... project@blake2b256-def...]
+    [ceroplastes/midtown @digest !doc@blake2b256-abc... project@blake2b256-ghi... <blog-template=one/uno@blake2b256-def...]
 
 ## Limitations
 
@@ -84,3 +140,10 @@ Inventory list output:
   already exists, the finalizer skips it. This means re-committing an object
   does not update its locks to the latest type/tag signatures unless the lock
   is explicitly cleared first.
+- **Reference discovery is out of scope.** Types define how to discover object
+  references in blob content, but the discovery mechanism itself is not part of
+  this FDR. Types are dynamic and user-defined, so the implementation must
+  afford flexibility. Possible approaches include WASM guest modules,
+  shelling out to external programs, regexes, Lua scripts, or built-in parsers
+  for structured formats (JSON, TOML, etc.). A separate FDR should cover the
+  discovery interface.
