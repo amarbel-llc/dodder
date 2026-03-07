@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -174,6 +175,51 @@ func (factory formatterComponents) writeTypeAndSig(
 			typeTuple.GetValue(),
 		),
 	)
+}
+
+func (factory formatterComponents) writeReferencedObjects(
+	writer interfaces.WriterAndStringWriter,
+	formatterContext FormatterContext,
+) (n int64, err error) {
+	metadata := formatterContext.GetMetadata()
+	metadataStruct := metadata.(*objects.MetadataStruct)
+
+	for index := range metadataStruct.References {
+		entry := &metadataStruct.References[index]
+
+		ref := entry.GetKey()
+		lockValue := entry.Lock.GetValue()
+
+		var line string
+
+		alias := entry.Alias.String()
+
+		if alias != "" {
+			if strings.ContainsAny(alias, " \t\"") {
+				alias = fmt.Sprintf("%q", alias)
+			}
+
+			if lockValue.IsEmpty() {
+				line = fmt.Sprintf("< %s = %s", alias, ref)
+			} else {
+				line = fmt.Sprintf("< %s = %s@%s", alias, ref, lockValue)
+			}
+		} else {
+			if lockValue.IsEmpty() {
+				line = fmt.Sprintf("< %s", ref)
+			} else {
+				line = fmt.Sprintf("< %s@%s", ref, lockValue)
+			}
+		}
+
+		var n1 int64
+		if n1, err = ohio.WriteLine(writer, line); err != nil {
+			return n, err
+		}
+		n += n1
+	}
+
+	return n, err
 }
 
 func (factory formatterComponents) writeBlobDigest(

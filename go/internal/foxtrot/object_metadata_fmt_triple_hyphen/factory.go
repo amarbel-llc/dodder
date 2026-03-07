@@ -60,6 +60,7 @@ func (factory Factory) makeFormatterMetadataBlobPath() formatter {
 		formatterComponents.writeCommonMetadataFormat,
 		formatterComponents.writeBlobPath,
 		formatterComponents.getWriteTypeAndSigFunc(),
+		formatterComponents.writeReferencedObjects,
 		formatterComponents.writeComments,
 		formatterComponents.writeBoundary,
 	}
@@ -73,6 +74,7 @@ func (factory Factory) makeFormatterMetadataOnly() formatter {
 		formatterComponents.writeCommonMetadataFormat,
 		formatterComponents.writeBlobDigest,
 		formatterComponents.getWriteTypeAndSigFunc(),
+		formatterComponents.writeReferencedObjects,
 		formatterComponents.writeComments,
 		formatterComponents.writeBoundary,
 	}
@@ -85,6 +87,7 @@ func (factory Factory) makeFormatterMetadataInlineBlob() formatter {
 		formatterComponents.writeBoundary,
 		formatterComponents.writeCommonMetadataFormat,
 		formatterComponents.getWriteTypeAndSigFunc(),
+		formatterComponents.writeReferencedObjects,
 		formatterComponents.writeComments,
 		formatterComponents.writeBoundary,
 		formatterComponents.writeNewLine,
