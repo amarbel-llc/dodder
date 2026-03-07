@@ -272,6 +272,7 @@ func (format *BoxTransacted) addFieldsMetadata(
 	}
 
 	builder.AddTags(metadata)
+	builder.AddReferencedObjectsAndLocks(metadata)
 
 	if !options.BoxExcludeFields && !format.isArchive {
 		quiter.AppendSeq(&builder.Contents, metadata.GetIndex().GetFields())

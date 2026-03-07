@@ -178,6 +178,38 @@ func (builder *Builder) AddTagsAndLocks(metadata objects.MetadataMutable) {
 	panic(errors.Err405MethodNotAllowed)
 }
 
+func (builder *Builder) AddReferencedObjectsAndLocks(metadata objects.MetadataMutable) {
+	metadataStruct := metadata.(*objects.MetadataStruct)
+
+	for index := range metadataStruct.References {
+		entry := &metadataStruct.References[index]
+
+		ref := entry.GetKey()
+		lockValue := entry.Lock.GetValue()
+		alias := entry.Alias.String()
+
+		var key string
+		if alias != "" {
+			key = "<" + alias + "=" + ref.String()
+		} else {
+			key = "<" + ref.String()
+		}
+
+		if lockValue.IsEmpty() {
+			builder.Contents.Append(string_format_writer.Field{
+				Value:     key,
+				ColorType: string_format_writer.ColorTypeId,
+			})
+		} else {
+			builder.addMarklIdLockWithColorType(
+				key,
+				lockValue,
+				string_format_writer.ColorTypeId,
+			)
+		}
+	}
+}
+
 func (builder *Builder) AddDescription(metadata objects.MetadataMutable) {
 	builder.Contents.Append(string_format_writer.Field{
 		Value:     metadata.GetDescription().StringWithoutNewlines(),
