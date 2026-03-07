@@ -71,3 +71,32 @@ func (finalizer finalizer) writeTagLockIfNecessary(
 
 	return err
 }
+
+func (finalizer finalizer) writeReferencedObjectLockIfNecessary(
+	metadata objects.MetadataMutable,
+	ref ids.SeqId,
+	funcs ...sku.FuncReadOne,
+) (err error) {
+	if ref.IsEmpty() {
+		err = ErrEmptyLockKey
+		return err
+	}
+
+	refLock := metadata.GetReferencedObjectLockMutable(ref)
+
+	if !refLock.GetValue().IsNull() {
+		return err
+	}
+
+	refObject, repool := sku.GetTransactedPool().GetWithRepool()
+	defer repool()
+
+	if ok := sku.ReadOneObjectIdBespoke(ref, refObject, funcs...); ok {
+		refLock.GetValueMutable().ResetWithMarklId(refObject.GetMetadataMutable().GetObjectSig())
+	} else {
+		err = ErrFailedToReadCurrentLockObject
+		return err
+	}
+
+	return err
+}

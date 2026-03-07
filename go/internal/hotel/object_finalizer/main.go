@@ -190,6 +190,31 @@ func (finalizer finalizer) WriteLockfile(
 		}
 	}
 
+	for ref := range metadata.AllReferencedObjects() {
+		if err = finalizer.writeReferencedObjectLockIfNecessary(
+			metadata,
+			ref,
+			funcs...,
+		); err != nil {
+			switch err {
+			case ErrEmptyLockKey:
+				err = nil
+
+			case ErrFailedToReadCurrentLockObject:
+				if options.AllowReferencedObjectFailure {
+					err = nil
+					break
+				}
+
+				fallthrough
+
+			default:
+				err = errors.Wrapf(err, "failed to write referenced object lock for: %q", ref)
+				return err
+			}
+		}
+	}
+
 	return err
 }
 
