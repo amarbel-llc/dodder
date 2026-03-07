@@ -88,6 +88,19 @@ func (equaler equaler) Equals(a, b Metadata) bool {
 			return false
 		}
 
+		aRefs := a.References
+		bRefs := b.References
+
+		if aRefs.Len() != bRefs.Len() {
+			return false
+		}
+
+		for aRef := range aRefs.All() {
+			if _, ok := bRefs.getLock(aRef.String()); !ok {
+				return false
+			}
+		}
+
 		if !a.Description.Equals(b.Description) {
 			if debug {
 				ui.Debug().Print(a.Description, "->", b.Description)
