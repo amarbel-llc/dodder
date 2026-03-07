@@ -53,7 +53,7 @@
 
 ## `go mod tidy` resolution errors
 
-- [ ] `go mod tidy` fails resolving `code.linenisgreat.com/dodder/go/src/bravo/ohio` and `code.linenisgreat.com/dodder/go/src/bravo/ui` — imported transitively via `chrest/go/src/bravo/server`. The `src/` path prefix doesn't exist in the current dodder module. Likely a stale import path in chrest that needs updating.
+- [x] `go mod tidy` fails resolving `code.linenisgreat.com/dodder/go/src/bravo/ohio` and `code.linenisgreat.com/dodder/go/src/bravo/ui` — fixed by updating chrest upstream
 
 ## WASM workspace modules
 
