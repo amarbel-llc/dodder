@@ -140,10 +140,9 @@ Inventory list output:
   already exists, the finalizer skips it. This means re-committing an object
   does not update its locks to the latest type/tag signatures unless the lock
   is explicitly cleared first.
-- **Reference discovery is out of scope.** Types define how to discover object
-  references in blob content, but the discovery mechanism itself is not part of
-  this FDR. Types are dynamic and user-defined, so the implementation must
-  afford flexibility. Possible approaches include WASM guest modules,
-  shelling out to external programs, regexes, Lua scripts, or built-in parsers
-  for structured formats (JSON, TOML, etc.). A separate FDR should cover the
-  discovery interface.
+- **Reference discovery is out of scope for this FDR.** Types define how to
+  discover object references in blob content, but the discovery mechanism is
+  covered by a separate design:
+  `docs/plans/2026-03-07-object-reference-discovery-design.md`. First
+  implementation uses external commands (blob piped to stdin, references on
+  stdout), with Lua hooks as future work.
