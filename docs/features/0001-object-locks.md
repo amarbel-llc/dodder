@@ -263,6 +263,41 @@ All tests in `zz-tests_bats/current_version/show.bats`, tags `format_stdin` and
 All formatter tests use pandoc (not cat/sed) to exercise the real pipeline.
 Pandoc is a devshell dependency in `go/default.nix`.
 
+### Future: blob references
+
+Referenced object locks pin object-to-object relationships. A parallel need
+exists for object-to-blob relationships: an object's content may embed or refer
+to a specific blob by its `markl.Id` digest (e.g., an image, a code snippet, an
+attachment). Today there is no metadata-level record of these blob dependencies.
+
+Blob references would reuse the same alias mechanism as object references but
+with `markl.Id` as the key instead of `SeqId`:
+
+- **Literal:** `- @blake2b256-abc...` — pins a blob by digest
+- **Aliased:** `- hero-image < @blake2b256-abc...` — blob-local name for a digest
+
+This would let types define blob discovery scripts (analogous to
+`[object-references]`) that extract embedded blob digests from content. Use cases
+include markdown images referencing blob-store assets, config files embedding
+other configs by digest, and ensuring blob garbage collection doesn't delete
+blobs still referenced by live objects.
+
+A key use case is type-defined actions that generate blobs for an object to
+reference. Types could offer methods that produce blobs and wire them into the
+object's metadata automatically. Examples:
+
+- A `!bookmark` type with an action that snapshots the URL, storing each snapshot
+  as a blob keyed by date: `- 2026-03-08 < @blake2b256-...`
+- A `!music-album` type where each track is a blob reference:
+  `- 01-overture < @blake2b256-...`
+- The `!md` type itself referencing a pre-packaged pandoc binary as a blob,
+  making the type fully self-contained rather than depending on `pandoc` being in
+  the host environment
+
+The alias mechanism already supports arbitrary key types via
+`containedObject.Alias`. Extending it to `markl.Id` keys requires a new
+`ContainedObjectType` value and corresponding serialization in all formats.
+
 ### Open questions
 
 - Should the stdin path's default formatId be `""` (triggering the `text-edit` →
