@@ -21,6 +21,7 @@ type BlobStoreEnv struct {
 	env_local.Env
 
 	defaultBlobStoreIdString string
+	orderedBlobStoreIds      []string // nil = alphabetical (discovery mode)
 
 	// TODO switch to implementing LocalBlobStore directly and writing to all of
 	// the defined blob stores instead of having a default
@@ -29,26 +30,60 @@ type BlobStoreEnv struct {
 	blobStores map[string]blob_stores.BlobStoreInitialized
 }
 
-func MakeBlobStoreEnv(
+func makeBlobStoreEnvBase(
 	envLocal env_local.Env,
-) BlobStoreEnv {
+) (BlobStoreEnv, bool) {
 	env := BlobStoreEnv{
 		Env: envLocal,
 	}
 
-	{
-		var err error
+	var err error
 
-		if env.BlobStore, err = directory_layout.MakeBlobStore(
-			store_version.VCurrent,
-			envLocal.GetXDGForBlobStores(),
-		); err != nil {
-			envLocal.Cancel(err)
-			return env
-		}
+	if env.BlobStore, err = directory_layout.MakeBlobStore(
+		store_version.VCurrent,
+		envLocal.GetXDGForBlobStores(),
+	); err != nil {
+		envLocal.Cancel(err)
+		return env, false
+	}
+
+	return env, true
+}
+
+func MakeBlobStoreEnv(
+	envLocal env_local.Env,
+) BlobStoreEnv {
+	env, ok := makeBlobStoreEnvBase(envLocal)
+	if !ok {
+		return env
 	}
 
 	env.setupStores()
+
+	return env
+}
+
+func MakeBlobStoreEnvWithOrder(
+	envLocal env_local.Env,
+	blobStoreIds []blob_store_id.Id,
+) BlobStoreEnv {
+	env, ok := makeBlobStoreEnvBase(envLocal)
+	if !ok {
+		return env
+	}
+
+	env.setupStores()
+
+	if len(blobStoreIds) > 0 {
+		ids := make([]string, len(blobStoreIds))
+
+		for i, id := range blobStoreIds {
+			ids[i] = id.String()
+		}
+
+		env.orderedBlobStoreIds = ids
+		env.defaultBlobStoreIdString = ids[0]
+	}
 
 	return env
 }
@@ -89,6 +124,18 @@ func (env BlobStoreEnv) GetBlobStores() blob_stores.BlobStoreMap {
 }
 
 func (env BlobStoreEnv) GetBlobStoresSorted() []blob_stores.BlobStoreInitialized {
+	if env.orderedBlobStoreIds != nil {
+		blobStores := make([]blob_stores.BlobStoreInitialized, 0, len(env.orderedBlobStoreIds))
+
+		for _, id := range env.orderedBlobStoreIds {
+			if bs, ok := env.blobStores[id]; ok {
+				blobStores = append(blobStores, bs)
+			}
+		}
+
+		return blobStores
+	}
+
 	blobStores := slices.Collect(maps.Values(env.blobStores))
 	sort.Slice(blobStores, func(i, j int) bool {
 		return blobStores[i].Path.GetId().Less(blobStores[j].Path.GetId())
@@ -120,6 +167,19 @@ func (env BlobStoreEnv) GetBlobStore(
 
 func (env BlobStoreEnv) GetDefaultBlobStoreAndRemaining() (blob_stores.BlobStoreInitialized, blob_stores.BlobStoreMap) {
 	defaultBlobStore := env.GetDefaultBlobStore()
+
+	if env.orderedBlobStoreIds != nil {
+		remaining := make(blob_stores.BlobStoreMap, len(env.orderedBlobStoreIds)-1)
+
+		for _, id := range env.orderedBlobStoreIds[1:] {
+			if bs, ok := env.blobStores[id]; ok {
+				remaining[id] = bs
+			}
+		}
+
+		return defaultBlobStore, remaining
+	}
+
 	remaining := env.GetBlobStores()
 
 	maps.DeleteFunc(
