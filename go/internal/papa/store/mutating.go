@@ -68,6 +68,11 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 		}
 	}
 
+	if err = commitFacilitator.discoverReferences(daughter, options); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	// modify pre commit hooks to support import
 	if err = commitFacilitator.tryPreCommitHooks(daughter, mother, options); err != nil {
 		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
