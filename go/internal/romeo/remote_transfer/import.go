@@ -1,6 +1,8 @@
 package remote_transfer
 
 import (
+	"fmt"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
@@ -22,6 +24,7 @@ func (importer importer) ImportSeq(
 	ctx.Must(errors.MakeFuncContextFromFuncErr(local.Lock))
 
 	var hasConflicts bool
+	var dedupCount int
 
 	checkedOutPrinter := importer.GetCheckedOutPrinter()
 
@@ -38,9 +41,20 @@ func (importer importer) ImportSeq(
 	importErrors := errors.MakeGroupBuilder()
 	missingBlobs := sku.MakeListCheckedOut()
 
+	var errorLog *importErrorLog
+
+	if importer.continueOnError {
+		errorLog = &importErrorLog{}
+	}
+
 	for object, iterErr := range seq {
 		if iterErr != nil {
 			err = errors.Wrap(iterErr)
+
+			if errorLog != nil {
+				errorLog.Close()
+			}
+
 			return err
 		}
 
@@ -50,9 +64,20 @@ func (importer importer) ImportSeq(
 			local,
 			object,
 			missingBlobs,
+			&dedupCount,
 		); err != nil {
-			err = errors.Wrapf(err, "Object: %s", sku.String(object))
-			importErrors.Add(err)
+			wrappedErr := errors.Wrapf(err, "Object: %s", sku.String(object))
+
+			if importer.continueOnError {
+				ui.Err().Print(wrappedErr)
+
+				if logErr := errorLog.LogError(object, err); logErr != nil {
+					ui.Err().Printf("failed to write error log: %s", logErr)
+				}
+			} else {
+				importErrors.Add(wrappedErr)
+			}
+
 			err = nil
 		}
 
@@ -72,13 +97,41 @@ func (importer importer) ImportSeq(
 		for missing := range missingBlobs.All() {
 			if err = checkedOutPrinter(missing); err != nil {
 				err = errors.Wrap(err)
+
+				if errorLog != nil {
+					errorLog.Close()
+				}
+
 				return err
 			}
 		}
 	}
 
+	if dedupCount > 0 {
+		ui.Err().Printf("%d objects deduped during import\n", dedupCount)
+	}
+
 	if hasConflicts {
 		importErrors.Add(ErrNeedsMerge)
+	}
+
+	if errorLog != nil {
+		if closeErr := errorLog.Close(); closeErr != nil {
+			ui.Err().Printf("failed to close error log: %s", closeErr)
+		}
+
+		if errorLog.Count() > 0 {
+			importErrors.Add(errors.WithHelp(
+				fmt.Errorf("%d objects failed to import", errorLog.Count()),
+				[]string{"One or more objects encountered errors during import"},
+				[]string{
+					fmt.Sprintf(
+						"Review error log: %s",
+						errorLog.Path(),
+					),
+				},
+			))
+		}
 	}
 
 	if importErrors.Len() > 0 {
@@ -94,6 +147,7 @@ func (importer importer) importOne(
 	repo repo.LocalRepo,
 	object *sku.Transacted,
 	missingBlobs *sku.HeapCheckedOut,
+	dedupCount *int,
 ) (hasConflicts bool, err error) {
 	var checkedOut *sku.CheckedOut
 	checkedOut, err = importer.Import(object)
@@ -114,6 +168,10 @@ func (importer importer) importOne(
 		err = nil
 		return hasConflicts, err
 	} else if genres.IsErrUnsupportedGenre(err) {
+		err = nil
+		return hasConflicts, err
+	} else if IsErrDeduped(err) {
+		*dedupCount++
 		err = nil
 		return hasConflicts, err
 	} else if env_dir.IsErrBlobMissing(err) {

@@ -1,6 +1,7 @@
 package remote_transfer
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
@@ -41,6 +42,7 @@ func Make(
 		envRepo:                     envRepo,
 		blobGenres:                  options.BlobGenres,
 		excludeObjects:              options.ExcludeObjects,
+		continueOnError:             options.ContinueOnError,
 		remoteBlobStore:             options.RemoteBlobStore,
 		blobCopierDelegate:          options.BlobCopierDelegate,
 		allowMergeConflicts:         options.AllowMergeConflicts,
@@ -84,6 +86,7 @@ type importer struct {
 	envRepo                     env_repo.Env
 	blobGenres                  ids.Genre
 	excludeObjects              bool
+	continueOnError             bool
 	remoteBlobStore             blob_stores.BlobStoreInitialized
 	blobCopierDelegate          interfaces.FuncIter[sku.BlobCopyResult]
 	storeOptions                sku.StoreOptions
@@ -149,18 +152,31 @@ func (importer importer) importInventoryList(
 		list,
 	)
 
+	subObjectErrors := errors.MakeGroupBuilder()
+
 	for object, errIter := range seq {
 		if errIter != nil {
 			err = errors.Wrap(errIter)
 			return checkedOut, err
 		}
 
-		if _, err = importer.Import(
+		if _, importErr := importer.Import(
 			object,
-		); err != nil {
-			err = errors.Wrap(err)
-			return checkedOut, err
+		); importErr != nil {
+			if importer.continueOnError {
+				subObjectErrors.Add(
+					errors.Wrapf(importErr, "Object: %s", sku.String(object)),
+				)
+			} else {
+				err = errors.Wrap(importErr)
+				return checkedOut, err
+			}
 		}
+	}
+
+	if subObjectErrors.Len() > 0 {
+		err = subObjectErrors.GetError()
+		return checkedOut, err
 	}
 
 	// TODO decide whether we should rewrite the imported inventory list
@@ -225,13 +241,37 @@ func (importer importer) importLeaf(
 		}
 	}
 
+	if checkedOut.GetSkuExternal().GetMetadata().GetBlobDigest().IsNull() &&
+		checkedOut.GetSkuExternal().GetGenre() == genres.Type {
+		err = ErrBloblessTypeSkipped{
+			ObjectId: checkedOut.GetSkuExternal().GetObjectId().String(),
+			TypeId:   checkedOut.GetSkuExternal().GetType().String(),
+		}
+		return checkedOut, err
+	}
+
 	if importer.index != nil {
-		_, err = importer.index.ReadOneObjectIdTai(
+		var existing *sku.Transacted
+
+		existing, err = importer.index.ReadOneObjectIdTai(
 			checkedOut.GetSkuExternal().GetObjectId(),
 			checkedOut.GetSkuExternal().GetTai(),
 		)
 
 		if err == nil {
+			localBlobDigest := existing.GetBlobDigest().String()
+			remoteBlobDigest := checkedOut.GetSkuExternal().GetBlobDigest().String()
+
+			if localBlobDigest != remoteBlobDigest {
+				err = ErrObjectIdTaiCollision{
+					ObjectId:     checkedOut.GetSkuExternal().GetObjectId().String(),
+					Tai:          checkedOut.GetSkuExternal().GetTai().String(),
+					LocalDigest:  existing.GetObjectDigest().String(),
+					RemoteDigest: checkedOut.GetSkuExternal().GetObjectDigest().String(),
+				}
+				return checkedOut, err
+			}
+
 			err = errors.ErrExists
 			return checkedOut, err
 		} else if errors.IsErrNotFound(err) {
@@ -272,6 +312,15 @@ func (importer importer) importLeaf(
 			importer.parentNegotiator,
 			importer.allowMergeConflicts,
 		); err != nil {
+			if checkout_mode.IsErrInvalidCheckoutMode(err) {
+				err = ErrCrossPubKeyMerge{
+					ObjectId:     checkedOut.GetSkuExternal().GetObjectId().String(),
+					LocalPubKey:  checkedOut.GetSku().GetMetadata().GetRepoPubKey().String(),
+					RemotePubKey: checkedOut.GetSkuExternal().GetMetadata().GetRepoPubKey().String(),
+				}
+				return checkedOut, err
+			}
+
 			err = errors.Wrap(err)
 			return checkedOut, err
 		}

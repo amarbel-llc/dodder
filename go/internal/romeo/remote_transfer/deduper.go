@@ -51,7 +51,10 @@ func (deduper *deduper) shouldCommit(object *sku.Transacted) (err error) {
 	deduper.lookupLock.RLock()
 	if _, exists := deduper.lookup[string(bites)]; exists {
 		deduper.lookupLock.RUnlock()
-		return ErrSkipped
+		return ErrDeduped{
+			ObjectId: object.GetObjectId().String(),
+			Digest:   id.String(),
+		}
 	}
 
 	deduper.lookupLock.RUnlock()

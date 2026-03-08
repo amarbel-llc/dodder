@@ -39,6 +39,7 @@ type (
 		ExcludeBlobs        bool
 		AllowMergeConflicts bool
 		OverwriteSignatures bool
+		ContinueOnError     bool
 
 		DedupingFormatId   string
 		RemoteBlobStore    blob_stores.BlobStoreInitialized
@@ -93,6 +94,13 @@ func (options *ImporterOptions) SetFlagDefinitions(
 		"overwrite-signatures",
 		false,
 		"ignore object pubkeys and signatures and generate new ones (causing this repo to create the objects as new instead of importing them)",
+	)
+
+	flagDefinitions.BoolVar(
+		&options.ContinueOnError,
+		"continue-on-error",
+		false,
+		"continue importing remaining objects when an error occurs and write failures to a log file",
 	)
 }
 
