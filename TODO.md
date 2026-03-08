@@ -25,8 +25,13 @@
 Error reporting for all 4 bugs landed in `420a114d0` (phase 1+2: rich error
 types, `-continue-on-error` flag, error logfile). Root causes remain.
 
-- [x] **Bug 1 — no-checkout merge crash.** `MergeCheckedOut` now returns early
-  when workspace fields are empty, skipping merge for objects with no checkout.
+- [ ] **Bug 1 — cross-pubkey merge crash.** `MergeCheckedOut` assumes a local
+  workspace checkout exists; fails with `errInvalidCheckoutMode` when the
+  local object was created under a different pubkey (never checked out). Now
+  caught as `ErrCrossPubKeyMerge`. **Fix:** `checkoutOneForMerge` needs to
+  create temp checkouts from store data when no workspace checkout exists,
+  rather than failing. Requires discriminating between workspace (PWD) and
+  temp (merge) checkouts — see semantic diffing TODO below.
 
 - [ ] **Bug 2 — batch dedup drops distinct objects.** Deduper uses
   `PurposeV5MetadataDigestWithoutTai` — two objects with different TAIs but
@@ -52,6 +57,10 @@ types, `-continue-on-error` flag, error logfile). Root causes remain.
   FDR for synthetic tai disambiguation — assign incrementing attosecond
   offsets during import, re-sign affected objects. Requires
   `OverwriteSignatures`. Alternative: use mother sig as secondary key.
+
+## Semantic diffing to replace diff3
+
+- [ ] FDR: replace filesystem diff3 merge with semantic diffing using the type system. Current merge in `MakeMergedTransacted` checks out objects to temp files and runs diff3 on text-rendered representations. This requires filesystem checkouts even for objects with no workspace presence, and conflates two checkout concepts: workspace (PWD) and temp (merge resolution). Semantic diffing would operate on the in-memory object model directly, eliminating the filesystem dependency. `store_fs` and `env_workspace` need types to discriminate between workspace and temp checkouts until this lands.
 
 ## Probe index panic on truncated page entries
 

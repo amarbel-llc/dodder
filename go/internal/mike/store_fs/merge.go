@@ -38,10 +38,6 @@ func (store *Store) MergeCheckedOut(
 		return commitOptions, err
 	}
 
-	if checkedOut.GetSku().GetMetadataMutable().GetIndexMutable().GetFieldsMutable().IsEmpty() {
-		return commitOptions, err
-	}
-
 	var conflicts checkout_mode.Mode
 
 	// TODO add checkout_mode.BlobOnly
