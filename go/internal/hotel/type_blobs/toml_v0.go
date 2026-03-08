@@ -59,3 +59,7 @@ func (blob *TomlV0) GetStringLuaHooks() string {
 	hooks, _ := blob.Hooks.(string)
 	return hooks
 }
+
+func (blob *TomlV0) GetObjectReferences() *ObjectReferencesConfig {
+	return nil
+}
