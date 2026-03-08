@@ -68,6 +68,15 @@
 - [ ] FDR: evaluate making `delta/objects` metadata fields private after full gob removal
 - [ ] Evaluate removing `hotel/log_remote_inventory_lists` entirely (has TODO suggesting deprecation)
 
+## CLAUDE.md improvements (from transcript analysis)
+
+- [ ] add instruction: ALWAYS use `just test*` recipes; NEVER run bats/go-test/fixture-generation directly
+- [ ] add instruction: BATS fixture tests use `get_fixture_type_sig` for signatures; fresh-store tests use `--regexp`
+- [ ] add instruction: NEVER call `errors.Is` when err might be EOF; use `errors.IsEOF()` guard first
+- [ ] add instruction: when bumping store version, do NOT remove old version's codec/gob support
+- [ ] add instruction: document "lock" dual meaning — content locks (metadata) vs filesystem mutex (LockSmith)
+- [ ] add instruction: trailing whitespace matters in dodder output; use `xxd` to debug invisible mismatches
+
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.
