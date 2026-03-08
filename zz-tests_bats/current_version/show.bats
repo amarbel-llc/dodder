@@ -715,3 +715,49 @@ function show_zettel_with_discovered_references { # @test
 		---
 	EOM
 }
+
+# bats test_tags=user_story:referenced_objects
+function show_zettel_with_pandoc_discovered_references { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with pandoc-based reference discovery
+	cat >ref-pandoc-md.type <<-TYPEFILE
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[object-references]
+		shell = ['pandoc', '--from', 'markdown+wikilinks_title_after_pipe', '--to']
+		script = '$DIR/../zz-pandoc-refs/discover-refs.lua'
+	TYPEFILE
+
+	run_dodder checkin -delete ref-pandoc-md.type
+	assert_success
+
+	# Create a zettel of type ref-pandoc-md with a wiki-link to one/dos
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with pandoc wiki link
+		! ref-pandoc-md
+		---
+
+		Check out [[one/dos]] for more info.
+	EOM
+	assert_success
+
+	# Show the new zettel and verify the reference was auto-discovered via pandoc
+	run_dodder show -format text two/uno:
+	assert_success
+	assert_output --regexp - <<-'EOM'
+		---
+		# zettel with pandoc wiki link
+		@ blake2b256-.+
+		! ref-pandoc-md@.+
+		- one/dos@ed25519_sig-.+
+		---
+	EOM
+}
