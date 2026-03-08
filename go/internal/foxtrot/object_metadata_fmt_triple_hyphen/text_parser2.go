@@ -59,7 +59,12 @@ func (parser *textParser2) ReadFrom(r io.Reader) (n int64, err error) {
 			metadata.GetIndexMutable().GetCommentsMutable().Append(remainder)
 
 		case doddish.OpTagSeparator:
-			metadata.AddTagString(remainder)
+			if strings.Contains(remainder, "/") {
+				refStr := strings.Replace(remainder, " < ", " = ", 1)
+				err = parser.readReference(metadata, refStr)
+			} else {
+				metadata.AddTagString(remainder)
+			}
 
 		case doddish.OpType:
 			err = parser.readType(metadata, remainder)

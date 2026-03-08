@@ -650,7 +650,7 @@ function show_zettel_with_referenced_object_lock { # @test
 	run_dodder new -edit=false - <<-EOM
 		---
 		# referencing zettel
-		< one/dos
+		- one/dos
 		! md
 		---
 
@@ -665,7 +665,7 @@ function show_zettel_with_referenced_object_lock { # @test
 		# referencing zettel
 		@ blake2b256-.+
 		! md@.+
-		< one/dos@ed25519_sig-.+
+		- one/dos@ed25519_sig-.+
 		---
 	EOM
 }
@@ -711,7 +711,7 @@ function show_zettel_with_discovered_references { # @test
 		# zettel with wiki link
 		@ blake2b256-.+
 		! ref-md@.+
-		< one/dos@ed25519_sig-.+
+		- one/dos@ed25519_sig-.+
 		---
 	EOM
 }

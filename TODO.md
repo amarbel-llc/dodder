@@ -65,6 +65,12 @@
 
 - [ ] Wire blob-stores list from konfig into BlobStoreEnv ordering (replace alphabetical sort in setupStores)
 
+## Tag/Reference unification
+
+- [ ] FDR: Unify Tags and References into single ContainedObjects collection
+- [ ] Use doddish.Scanner to distinguish tags from references in OpTagSeparator parser instead of strings.Contains("/") heuristic
+
+
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.

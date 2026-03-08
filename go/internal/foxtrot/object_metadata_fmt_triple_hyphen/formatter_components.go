@@ -200,15 +200,15 @@ func (factory formatterComponents) writeReferencedObjects(
 			}
 
 			if lockValue.IsEmpty() {
-				line = fmt.Sprintf("< %s = %s", alias, ref)
+				line = fmt.Sprintf("- %s < %s", alias, ref)
 			} else {
-				line = fmt.Sprintf("< %s = %s@%s", alias, ref, lockValue)
+				line = fmt.Sprintf("- %s < %s@%s", alias, ref, lockValue)
 			}
 		} else {
 			if lockValue.IsEmpty() {
-				line = fmt.Sprintf("< %s", ref)
+				line = fmt.Sprintf("- %s", ref)
 			} else {
-				line = fmt.Sprintf("< %s@%s", ref, lockValue)
+				line = fmt.Sprintf("- %s@%s", ref, lockValue)
 			}
 		}
 
