@@ -669,3 +669,49 @@ function show_zettel_with_referenced_object_lock { # @test
 		---
 	EOM
 }
+
+# bats test_tags=user_story:referenced_objects
+function show_zettel_with_discovered_references { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with reference discovery script
+	cat >ref-md.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[object-references]
+		shell = ['bash', '-c']
+		script = "grep -oP '\\[\\[(.+?)\\]\\]' | sed 's/\\[\\[//;s/\\]\\]//'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-md.type
+	assert_success
+
+	# Create a zettel of type ref-md with a wiki-link to one/dos
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with wiki link
+		! ref-md
+		---
+
+		Check out [[one/dos]] for more info.
+	EOM
+	assert_success
+
+	# Show the new zettel and verify the reference lock was auto-discovered
+	run_dodder show -format text two/uno:
+	assert_success
+	assert_output --regexp - <<-'EOM'
+		---
+		# zettel with wiki link
+		@ blake2b256-.+
+		! ref-md@.+
+		< one/dos@ed25519_sig-.+
+		---
+	EOM
+}
