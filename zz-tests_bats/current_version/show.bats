@@ -761,3 +761,104 @@ function show_zettel_with_pandoc_discovered_references { # @test
 		---
 	EOM
 }
+
+# bats test_tags=user_story:referenced_objects
+function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with pandoc-based reference discovery
+	cat >ref-pandoc-cb.type <<-TYPEFILE
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[object-references]
+		shell = ['pandoc', '--from', 'markdown+wikilinks_title_after_pipe', '--to']
+		script = '$DIR/../zz-pandoc-refs/discover-refs.lua'
+	TYPEFILE
+
+	run_dodder checkin -delete ref-pandoc-cb.type
+	assert_success
+
+	# Create a zettel with a fenced code block using a !md type prefix
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with code block type ref
+		! ref-pandoc-cb
+		---
+
+		Some text before.
+
+		\`\`\`!md
+		# Hello World
+		This is embedded markdown.
+		\`\`\`
+
+		Some text after.
+	EOM
+	assert_success
+
+	# Show the new zettel and verify the code block type reference was discovered
+	run_dodder show -format text two/uno:
+	assert_success
+	assert_output --regexp - <<-'EOM'
+		---
+		# zettel with code block type ref
+		@ blake2b256-.+
+		! ref-pandoc-cb@.+
+		- !md@ed25519_sig-.+
+		---
+	EOM
+}
+
+# bats test_tags=user_story:format_stdin
+function format_blob_stdin_resolves_type_with_and_without_lock { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with a pass-through formatter
+	cat >fmt-test.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'txt'
+
+		[formatters.text]
+		shell = ['cat']
+	TYPEFILE
+
+	run_dodder checkin -delete fmt-test.type
+	assert_success
+
+	# Create a zettel with that type to capture the type lock
+	run_dodder new -edit=false - <<-EOM
+		---
+		# test zettel
+		! fmt-test
+		---
+
+		test content
+	EOM
+	assert_success
+
+	# Get the type sig from the zettel text output
+	run_dodder show -format text two/uno:
+	assert_success
+	type_sig=$(echo "$output" | grep '! fmt-test@' | sed 's/.*@//')
+	[[ -n "$type_sig" ]]
+
+	# Test format-blob -stdin with unlocked type (no lock)
+	run_dodder format-blob -stdin !fmt-test <<< "hello world"
+	assert_success
+	assert_output "hello world"
+
+	# Test format-blob -stdin with locked type (pinned version)
+	run_dodder format-blob -stdin "!fmt-test@${type_sig}" <<< "hello world"
+	assert_success
+	assert_output "hello world"
+}

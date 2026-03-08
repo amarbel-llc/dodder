@@ -98,13 +98,23 @@ func (cmd *FormatObject) Run(req command.Request) {
 		}
 	}
 
-	typeLock := object.GetMetadata().GetTypeLock()
+	var typeObject *sku.Transacted
+
+	{
+		var err error
+
+		if typeObject, err = localWorkingCopy.GetStore().ReadObjectTypeAndLockIfNecessary(
+			object,
+		); err != nil {
+			localWorkingCopy.Cancel(err)
+		}
+	}
 
 	{
 		var err error
 
 		if blobFormatter, err = localWorkingCopy.GetBlobFormatter(
-			typeLock,
+			typeObject,
 			formatId,
 			cmd.UTIGroup,
 		); err != nil {
@@ -175,8 +185,22 @@ func (cmd *FormatObject) FormatFromStdin(
 		return err
 	}
 
+	var typeObject *sku.Transacted
+
+	if typeLock.GetValue().IsNull() {
+		if typeObject, err = repo.GetStore().ReadOneObjectId(typeLock.GetKey()); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	} else {
+		if typeObject, err = repo.GetStore().ReadTypeObject(&typeLock); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	if blobFormatter, err = repo.GetBlobFormatter(
-		&typeLock,
+		typeObject,
 		formatId,
 		cmd.UTIGroup,
 	); err != nil {

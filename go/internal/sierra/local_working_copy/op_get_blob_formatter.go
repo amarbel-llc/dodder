@@ -4,7 +4,6 @@ import (
 	"maps"
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -15,21 +14,12 @@ import (
 
 // TODO add support for checked out types
 func (local *Repo) GetBlobFormatter(
-	typeLock objects.TypeLock,
+	typeObject *sku.Transacted,
 	formatId string,
 	utiGroup string,
 ) (blobFormatter script_config.RemoteScript, err error) {
-	if typeLock.GetKey().IsEmpty() {
+	if typeObject.GetType().IsEmpty() {
 		err = errors.ErrorWithStackf("empty type")
-		return blobFormatter, err
-	}
-
-	var typeObject *sku.Transacted
-
-	if typeObject, err = local.GetStore().ReadTypeObject(
-		typeLock,
-	); err != nil {
-		err = errors.Wrap(err)
 		return blobFormatter, err
 	}
 
