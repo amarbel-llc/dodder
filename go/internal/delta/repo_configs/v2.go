@@ -9,16 +9,17 @@ import (
 )
 
 type V2 struct {
-	DefaultBlobStoreId blob_store_id.Id       `toml:"default-blob_store"`
-	Defaults           DefaultsV1             `toml:"defaults"`
-	FileExtensions     file_extensions.TOMLV1 `toml:"file-extensions"`
-	PrintOptions       options_print.V2       `toml:"cli-output"`
-	Tools              options_tools.Options  `toml:"tools"`
+	BlobStores     []blob_store_id.Id     `toml:"blob-stores"`
+	Defaults       DefaultsV1             `toml:"defaults"`
+	FileExtensions file_extensions.TOMLV1 `toml:"file-extensions"`
+	PrintOptions   options_print.V2       `toml:"cli-output"`
+	Tools          options_tools.Options  `toml:"tools"`
 }
 
 var _ ConfigOverlay2 = V2{}
 
 func (config *V2) Reset() {
+	config.BlobStores = make([]blob_store_id.Id, 0)
 	config.FileExtensions.Reset()
 	config.Defaults.Type = ids.TypeStruct{}
 	config.Defaults.Tags = make([]ids.TagStruct, 0)
@@ -26,6 +27,9 @@ func (config *V2) Reset() {
 }
 
 func (config *V2) ResetWith(b *V2) {
+	config.BlobStores = make([]blob_store_id.Id, len(b.BlobStores))
+	copy(config.BlobStores, b.BlobStores)
+
 	config.FileExtensions.Reset()
 
 	config.Defaults.Type = b.Defaults.Type
@@ -52,6 +56,6 @@ func (config V2) GetToolOptions() options_tools.Options {
 	return config.Tools
 }
 
-func (config V2) GetDefaultBlobStoreId() blob_store_id.Id {
-	return config.DefaultBlobStoreId
+func (config V2) GetBlobStores() []blob_store_id.Id {
+	return config.BlobStores
 }

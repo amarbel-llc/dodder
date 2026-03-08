@@ -27,7 +27,7 @@ type (
 
 	ConfigOverlay2 interface {
 		ConfigOverlay
-		GetDefaultBlobStoreId() blob_store_id.Id
+		GetBlobStores() []blob_store_id.Id
 	}
 
 	Defaults interface {
@@ -51,13 +51,13 @@ func Default(defaultType ids.Type) Config {
 }
 
 func DefaultOverlay(
-	defaultBlobStoreId blob_store_id.Id,
+	blobStores []blob_store_id.Id,
 	defaultType ids.TypeStruct,
 ) TypedBlob {
 	return TypedBlob{
 		Type: ids.DefaultOrPanic(genres.Config),
 		Blob: V2{
-			DefaultBlobStoreId: defaultBlobStoreId,
+			BlobStores: blobStores,
 			Defaults: DefaultsV1{
 				Type: defaultType,
 				Tags: make([]ids.TagStruct, 0),
@@ -73,12 +73,12 @@ func DefaultOverlay(
 	}
 }
 
-func GetDefaultBlobStoreId(
+func GetBlobStores(
 	config ConfigOverlay,
-	otherwise blob_store_id.Id,
-) blob_store_id.Id {
+	otherwise []blob_store_id.Id,
+) []blob_store_id.Id {
 	if config, ok := config.(ConfigOverlay2); ok {
-		return config.GetDefaultBlobStoreId()
+		return config.GetBlobStores()
 	} else {
 		return otherwise
 	}

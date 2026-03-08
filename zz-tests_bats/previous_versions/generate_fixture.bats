@@ -1,7 +1,7 @@
 #! /usr/bin/env bats
 
 setup() {
-  load "$(dirname "$BATS_TEST_FILE")/../../lib/common.bash"
+  load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
 
   # for shellcheck SC2154
   export output
@@ -54,7 +54,7 @@ function generate { # @test
 		! toml-config-v2
 		---
 
-		default-blob_store = '.default'
+		blob-stores = ['.default']
 
 		[defaults]
 		type = '!md'

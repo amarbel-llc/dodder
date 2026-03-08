@@ -13,8 +13,10 @@
 - **Specific test files:** `just test-bats-targets show.bats`
 - **Filter by tag:** `just test-bats-tags migration`
 
-**Always use just recipes. Never run bats directly.** The recipes set up
-DODDER_VERSION, inject the binary via `--bin-dir`, and ensure fixtures exist.
+**Always use just recipes from the repo root. Never run bats directly.** The
+root recipes set BATS_BIN_DIR, DODDER_VERSION, inject the binary via `--bin-dir`,
+and ensure fixtures exist. Running from `zz-tests_bats/` uses the system
+`dodder` binary instead of the freshly built one.
 
 **When a test fails**: run ONLY the failing test file with
 `just test-bats-targets <file>.bats`. Do NOT re-run the entire suite.

@@ -77,6 +77,10 @@
 - [ ] add instruction: document "lock" dual meaning — content locks (metadata) vs filesystem mutex (LockSmith)
 - [ ] add instruction: trailing whitespace matters in dodder output; use `xxd` to debug invisible mismatches
 
+## Blob store ordering from config
+
+- [ ] Wire blob-stores list from konfig into BlobStoreEnv ordering (replace alphabetical sort in setupStores)
+
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.

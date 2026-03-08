@@ -66,9 +66,11 @@ func (local *Repo) initDefaultTypeAndConfig(
 		blobStoreId = bigBang.BlobStoreId
 	}
 
+	blobStores := []blob_store_id.Id{blobStoreId}
+
 	if err = local.initDefaultConfigIfNecessaryAfterLock(
 		bigBang,
-		blobStoreId,
+		blobStores,
 		defaultTypeObjectId,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -130,7 +132,7 @@ func (local *Repo) initDefaultTypeIfNecessaryAfterLock(
 
 func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 	bigBang env_repo.BigBang,
-	defaultBlobStoreId blob_store_id.Id,
+	blobStores []blob_store_id.Id,
 	defaultTypeObjectId ids.TypeStruct,
 ) (err error) {
 	if bigBang.ExcludeDefaultConfig {
@@ -142,7 +144,7 @@ func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 
 	if blobId, typedBlob, err = writeDefaultMutableConfig(
 		local,
-		defaultBlobStoreId,
+		blobStores,
 		defaultTypeObjectId,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -178,10 +180,10 @@ func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 
 func writeDefaultMutableConfig(
 	repo *Repo,
-	defaultBlobStoreId blob_store_id.Id,
+	blobStores []blob_store_id.Id,
 	defaultType ids.TypeStruct,
 ) (blobId domain_interfaces.MarklId, typedBlob repo_configs.TypedBlob, err error) {
-	typedBlob = repo_configs.DefaultOverlay(defaultBlobStoreId, defaultType)
+	typedBlob = repo_configs.DefaultOverlay(blobStores, defaultType)
 
 	coder := repo.GetStore().GetConfigBlobCoder()
 
