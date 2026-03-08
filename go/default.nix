@@ -57,6 +57,7 @@ in
         fish
         gnumake
         gum
+        pandoc
       ])
       ++ [
         purse-first.packages.${system}.batman

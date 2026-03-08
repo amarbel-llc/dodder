@@ -1,6 +1,6 @@
 ---
 status: exploring
-date: 2026-03-07
+date: 2026-03-08
 promotion-criteria: all three lock kinds (type, tag, referenced object) round-trip through text, inventory list, binary, and JSON formats; migration tests pass for stores created before referenced object locks existed
 ---
 
@@ -29,10 +29,10 @@ Each object's metadata carries:
   of the type-object at commit time. `!` prefix inspired by shebangs.
 - **Tag locks** (`tag@signature`) -- one per tag, pins each tag to its
   tag-object signature at commit time.
-- **Referenced object locks** (`< object-ref@signature`) -- one per referenced
-  object, pins each reference to the referenced object's signature at commit
-  time. Optional alias maps a blob-local name to the fully qualified object ID.
-  `<` prefix inspired by shell input redirection.
+- **Referenced object locks** (`- ref@signature`) -- one per referenced object,
+  pins each reference to the referenced object's signature at commit time.
+  Optional alias uses `<` as inline separator: `- alias < ref@signature`. Uses
+  the same `-` prefix as tags (unified syntax).
 
 Referenced objects are discovered by the object's type (which defines how to
 extract references from blob content). The metadata stores the result: a map of
@@ -64,16 +64,16 @@ optional only in user-facing text input.
 
 | Format         | Type lock             | Tag lock           | Referenced object lock                     |
 |----------------|-----------------------|--------------------|--------------------------------------------|
-| Triple-hyphen  | `! type@signature`    | (in tag lines)     | `< ref@sig` or `< alias = ref@sig`         |
+| Triple-hyphen  | `! type@signature`    | (in tag lines)     | `- ref@sig` or `- alias < ref@sig`         |
 | Inventory list | `!type@signature`     | `tag@signature`    | `<ref@sig` or `<alias=ref@sig`             |
 | Binary index   | key + null + fmt + id | same               | same, with ContainedObjectType byte        |
 | JSON           | `{ "Lock": { "Type": "sig" } }` | --      | `{ "References": { ... } }`               |
 
 Triple-hyphen examples:
 
-    < one/uno@blake2b256-abc...
-    < blog-template = one/uno@blake2b256-abc...
-    < "unsafe alias with spaces" = one/uno@blake2b256-abc...
+    - one/uno@blake2b256-abc...
+    - blog-template < one/uno@blake2b256-abc...
+    - "unsafe alias with spaces" < one/uno@blake2b256-abc...
 
 Inventory list box examples:
 
@@ -101,19 +101,16 @@ New methods on `Metadata` / `MetadataMutable`:
 
 ### Doddish tokenizer
 
-`<` is registered as a new mixed-sequence operator in `doddish/op.go` (like `!`,
-`@`, `%`).
-
-New token matchers:
-
-- `TokenMatcherReferencedObject`: `< identifier @ identifier`
-- `TokenMatcherReferencedObjectAlias`: `< identifier = identifier @ identifier`
+References share the `-` prefix with tags. `<` is used as an inline alias
+separator within a `-` line. Both are registered as mixed-sequence operators in
+`doddish/op.go`.
 
 ### Sigil design etymology
 
 - `!` (type) -- inspired by shebangs (`#!/bin/sh`)
 - `#` (description) -- inspired by shebangs / comment syntax
-- `<` (referenced object) -- inspired by shell input redirection (`< file`)
+- `-` (tag or reference) -- list item
+- `<` (alias separator) -- inspired by shell input redirection (`< file`)
 
 ## Examples
 
@@ -125,7 +122,7 @@ Triple-hyphen output:
     # my blog post
     - project
     ! doc@blake2b256-abc...
-    < blog-template = one/uno@blake2b256-def...
+    - blog-template < one/uno@blake2b256-def...
     ---
     See [blog-template] for the layout.
 
@@ -140,9 +137,140 @@ Inventory list output:
   already exists, the finalizer skips it. This means re-committing an object
   does not update its locks to the latest type/tag signatures unless the lock
   is explicitly cleared first.
-- **Reference discovery is out of scope for this FDR.** Types define how to
-  discover object references in blob content, but the discovery mechanism is
-  covered by a separate design:
+- **Reference discovery** is covered by a separate design:
   `docs/plans/2026-03-07-object-reference-discovery-design.md`. First
   implementation uses external commands (blob piped to stdin, references on
   stdout), with Lua hooks as future work.
+
+## Exploration Findings: Type Locks and the Formatter Pipeline
+
+This section records what we learned while exploring how type locks interact with
+the formatter and reference discovery systems on the `light-maple` branch.
+
+### Reference discovery works with pandoc
+
+Type-driven reference discovery (`[object-references]` in `toml-type-v1`) is
+implemented and tested with three approaches:
+
+1. **Shell pipeline** -- `grep -oP` + `sed` extracts `[[wiki-link]]` references.
+   Simple but fragile (regex can't handle nested brackets or escaped content).
+2. **Pandoc Lua writer** -- `pandoc --from markdown+wikilinks_title_after_pipe
+   --to discover-refs.lua`. Walks the AST for `Link` elements with `wikilink`
+   class. Structure-aware: handles edge cases that regex misses.
+3. **Pandoc CodeBlock handler** -- Same Lua writer also extracts `!type`
+   references from fenced code block class attributes (e.g., `` ```!md ``).
+
+All three are covered by integration tests in
+`zz-tests_bats/current_version/show.bats` under the `referenced_objects` tag.
+The Lua writer source is at `zz-pandoc-refs/discover-refs.lua`.
+
+### Unlocked types in format-object/format-blob -stdin
+
+Pandoc filters call `format-object -stdin !md` at render time, when the type has
+no lock (locks are added at commit time, not render time). This originally
+panicked in `ReadTypeObject` because the lock value was null.
+
+**Fix (commit 1cb296a):** `GetBlobFormatter` now accepts a resolved
+`*sku.Transacted` instead of a `TypeLock`. Callers resolve the type object
+themselves:
+
+- **Non-stdin callers:** `store.ReadObjectTypeAndLockIfNecessary(object)` handles
+  both locked and unlocked types transparently.
+- **Stdin callers:** Branch on whether `typeLock.GetValue().IsNull()`:
+  - Null → `store.ReadOneObjectId(typeLock.GetKey())` (resolve latest version)
+  - Present → `store.ReadTypeObject(&typeLock)` (use pinned version)
+
+Key files: `sierra/local_working_copy/op_get_blob_formatter.go`,
+`victor/commands_dodder/format_blob.go`, `victor/commands_dodder/format_object.go`.
+
+### Formatter selection has three inconsistent default paths
+
+`GetBlobFormatter` in `op_get_blob_formatter.go` has three selection paths:
+
+| Scenario | formatId | utiGroup | Effective behavior |
+|----------|----------|----------|--------------------|
+| Non-stdin, no args | `""` | `""` | Fallback: try `text-edit`, then `text` |
+| Stdin, 1 arg | `"text"` | `""` | Direct: look up `text` only |
+| UTI group flag | UTI string | group name | Indirection: UTI → formatter name |
+
+The non-stdin path prefers `text-edit` over `text`, but the stdin path hardcodes
+`"text"`. This means `format-blob one/uno` and
+`format-blob -stdin !type <<< content` can silently pick different formatters for
+the same type definition.
+
+### UTI group ergonomics are awkward
+
+Using a UTI group requires both a `-uti-group` flag AND passing the UTI as a
+positional argument:
+
+    format-blob -stdin -uti-group text-edit public.utf8-plain-text !my-type
+
+The positional arg is a UTI identifier (`public.utf8-plain-text`), not a
+formatter name. This isn't obvious from the CLI surface. The pandoc filters
+(`dodder-edit.lua`, `dodder-render.lua`) bypass UTI groups entirely and pass
+formatter names directly.
+
+When a UTI group maps to a non-existent formatter, the code silently returns a
+nil formatter and prints "no matching format id" to stderr. This hides
+configuration bugs.
+
+### The real !md type has a naming mismatch
+
+Inspected via `der show -format json ':t'`:
+
+```toml
+# Real !md type (toml-type-v0 format, uses "formatter-uti-groups")
+[formatter-uti-groups.text-edit]
+"public.utf8-plain-text" = "text-edit"    # maps to formatter "text-edit"
+
+[formatter-uti-groups.text-render]
+"public.utf8-plain-text" = "text-render"  # maps to formatter "text-render"
+
+[formatters.text]                          # ← the ACTUAL edit formatter
+shell = ["pandoc", "-dzit-edit"]
+
+[formatters.text-render]                   # ← render formatter (exists)
+shell = ["pandoc", "-dzit-render", "--to=markdown"]
+```
+
+The `text-edit` UTI group maps `public.utf8-plain-text` to formatter
+`"text-edit"`, but **no `[formatters.text-edit]` exists**. The edit formatter is
+actually named `"text"` (uses `pandoc -dzit-edit`). The `text-render` UTI group
+works correctly because `[formatters.text-render]` does exist.
+
+### Version split between toml-type-v0 and toml-type-v1
+
+- **TomlV0:** UTI groups field is `formatter-uti-groups` (TOML key)
+- **TomlV1:** UTI groups field is `uti-groups` (TOML key)
+- Both expose the same Go interface via `GetFormatterUTIGroups()`
+- The real repo's `!md` type still uses v0 naming; new test types use v1
+
+### Current test coverage
+
+All tests in `zz-tests_bats/current_version/show.bats`, tags `format_stdin` and
+`referenced_objects`:
+
+| Test | What it covers |
+|------|---------------|
+| `show_zettel_with_referenced_object_lock` | Manual `- ref` in metadata gets locked at commit |
+| `show_zettel_with_discovered_references` | Shell-based `[object-references]` discovers `[[wiki-links]]` |
+| `show_zettel_with_pandoc_discovered_references` | Pandoc Lua writer discovers `[[wiki-links]]` via AST |
+| `show_zettel_with_pandoc_discovered_code_block_type_references` | Pandoc discovers `!type` refs in code block classes |
+| `format_blob_stdin_resolves_type_with_and_without_lock` | Pandoc formatter works with both locked and unlocked types |
+| `format_blob_stdin_selects_formatter_via_uti_group` | UTI groups `text-edit`/`text-render` route to different pandoc output formats |
+| `format_blob_prefers_text_edit_over_text` | Default fallback prefers `text-edit` formatter over `text` |
+
+All formatter tests use pandoc (not cat/sed) to exercise the real pipeline.
+Pandoc is a devshell dependency in `go/default.nix`.
+
+### Open questions
+
+- Should the stdin path's default formatId be `""` (triggering the `text-edit` →
+  `text` fallback) instead of hardcoded `"text"`, for consistency with
+  non-stdin?
+- Should UTI group resolution that maps to a non-existent formatter return an
+  error instead of silently returning nil?
+- Is the UTI group abstraction worth its complexity, given that the pandoc
+  filters don't use it?
+- Should the real `!md` type's `text-edit` UTI group map to `"text"` (the
+  formatter that actually exists) instead of `"text-edit"`?
