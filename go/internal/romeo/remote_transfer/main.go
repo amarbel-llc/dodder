@@ -307,6 +307,19 @@ func (importer importer) importLeaf(
 
 	// TODO extra commit option setting into its own function
 	if importer.storeExternal != nil {
+		if importer.parentNegotiator == nil {
+			// Without a parent negotiator, 3-way merge uses an empty base and
+			// always produces false conflicts. Accept the remote version directly.
+			if err = importer.importNewObject(
+				checkedOut.GetSkuExternal(),
+			); err != nil {
+				err = errors.Wrap(err)
+				return checkedOut, err
+			}
+
+			return checkedOut, err
+		}
+
 		if commitOptions, err = importer.storeExternal.MergeCheckedOut(
 			checkedOut,
 			importer.parentNegotiator,

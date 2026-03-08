@@ -337,19 +337,13 @@ function import_conflict { # @test
 		[one/uno @blake2b256-u20x7tfr58tc74p5y76xauwfrz382g96gfeenxvsaxaq6l3fnl2sntvzd5 !md "get out of here!" scary]
 	EOM
 
+  # Import accepts the remote versions directly when there is no parent
+  # negotiator (imports are one-way; use pull for conflict detection).
   run_dodder import \
     -print-copies=false \
     -blob_store-id shared \
     "$list"
-  assert_failure
-  assert_output --partial - <<-EOM
-		       conflicted [one/uno]
-		       conflicted [one/uno]
-	EOM
-
-  assert_output --partial - <<-EOM
-		import failed with conflicts, merging required
-	EOM
+  assert_success
 }
 
 function import_twice_no_dupes { # @test
@@ -411,6 +405,80 @@ function import_twice_no_dupes { # @test
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
+}
+
+function import_reimport_no_local_checkout { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  # Export the latest one/uno from outer
+  run_dodder export -print-time=true one/uno
+  assert_success
+  echo "$output" >list1
+
+  list1="$(realpath list1)"
+  pushd inner || exit 1
+
+  # First import: one/uno doesn't exist in inner, goes through importNewObject
+  run_dodder import \
+    -blob_store-id shared \
+    "$list1"
+  assert_success
+
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+
+  popd || exit 1
+
+  # Modify one/uno in outer to create a new version
+  run_dodder checkout one/uno
+  assert_success
+
+  cat >one/uno.zettel <<EOM
+---
+# updated for reimport
+- tag-5
+- tag-6
+! md
+---
+
+reimported content
+EOM
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+
+  # Export the modified version
+  run_dodder export -print-time=true one/uno
+  assert_success
+  echo "$output" >list2
+
+  list2="$(realpath list2)"
+  pushd inner || exit 1
+
+  # Second import: one/uno exists in inner store but has no workspace checkout.
+  # ReadOneInto finds the local copy, MergeCheckedOut is called on an object
+  # with no workspace files — this triggers errInvalidCheckoutMode if the bug
+  # is present.
+  run_dodder import \
+    -blob_store-id shared \
+    "$list2"
+  assert_success
+
+  run_dodder show one/uno
+  assert_success
+  assert_output --regexp - <<-EOM
+		\\[one/uno @blake2b256-.+ !md "updated for reimport" tag-5 tag-6]
+	EOM
+
+  popd || exit 1
 }
 
 function import_inventory_lists { # @test

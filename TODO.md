@@ -25,13 +25,11 @@
 Error reporting for all 4 bugs landed in `420a114d0` (phase 1+2: rich error
 types, `-continue-on-error` flag, error logfile). Root causes remain.
 
-- [ ] **Bug 1 — cross-pubkey merge crash.** `MergeCheckedOut` assumes a local
-  workspace checkout exists; fails with `errInvalidCheckoutMode` when the
-  local object was created under a different pubkey (never checked out). Now
-  caught as `ErrCrossPubKeyMerge`. **Fix:** `checkoutOneForMerge` needs to
-  create temp checkouts from store data when no workspace checkout exists,
-  rather than failing. Requires discriminating between workspace (PWD) and
-  temp (merge) checkouts — see semantic diffing TODO below.
+- [x] **Bug 1 — cross-pubkey merge crash.** Fixed: `importLeaf` now skips
+  `MergeCheckedOut` when `parentNegotiator` is nil (always for imports). Without
+  a parent negotiator, diff3 uses an empty base and always produces false
+  conflicts. Imports accept the remote version directly; use `pull` for proper
+  conflict detection with parent negotiation.
 
 - [ ] **Bug 2 — batch dedup drops distinct objects.** Deduper uses
   `PurposeV5MetadataDigestWithoutTai` — two objects with different TAIs but
