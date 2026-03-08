@@ -820,7 +820,7 @@ function format_blob_stdin_resolves_type_with_and_without_lock { # @test
 	run_dodder init-workspace
 	assert_success
 
-	# Create a type with a pass-through formatter
+	# Create a type with a pandoc formatter (markdown → plain text)
 	cat >fmt-test.type <<-'TYPEFILE'
 		---
 		! toml-type-v1
@@ -829,7 +829,7 @@ function format_blob_stdin_resolves_type_with_and_without_lock { # @test
 		file-extension = 'txt'
 
 		[formatters.text]
-		shell = ['cat']
+		shell = ['pandoc', '-f', 'markdown', '-t', 'plain', '--wrap=none']
 	TYPEFILE
 
 	run_dodder checkin -delete fmt-test.type
@@ -861,4 +861,95 @@ function format_blob_stdin_resolves_type_with_and_without_lock { # @test
 	run_dodder format-blob -stdin "!fmt-test@${type_sig}" <<< "hello world"
 	assert_success
 	assert_output "hello world"
+}
+
+# bats test_tags=user_story:format_stdin
+function format_blob_stdin_selects_formatter_via_uti_group { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with text-edit and text-render UTI groups pointing to
+	# different pandoc output formats, mirroring the real !md type's pattern.
+	# Using **bold** input, each format produces clearly different output:
+	#   markdown preserves it, html wraps in tags, plain strips formatting
+	cat >uti-test.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'txt'
+
+		[uti-groups.text-edit]
+		"public.utf8-plain-text" = "edit-fmt"
+
+		[uti-groups.text-render]
+		"public.utf8-plain-text" = "render-fmt"
+
+		[formatters.text]
+		shell = ['pandoc', '-f', 'markdown', '-t', 'markdown', '--wrap=none']
+
+		[formatters.edit-fmt]
+		shell = ['pandoc', '-f', 'markdown', '-t', 'html', '--wrap=none']
+
+		[formatters.render-fmt]
+		shell = ['pandoc', '-f', 'markdown', '-t', 'plain', '--wrap=none']
+	TYPEFILE
+
+	run_dodder checkin -delete uti-test.type
+	assert_success
+
+	# Default format (text) preserves markdown formatting
+	run_dodder format-blob -stdin !uti-test <<< "**hello**"
+	assert_success
+	assert_output "**hello**"
+
+	# text-edit UTI group selects the html formatter
+	run_dodder format-blob -stdin -uti-group text-edit public.utf8-plain-text !uti-test <<< "**hello**"
+	assert_success
+	assert_output "<p><strong>hello</strong></p>"
+
+	# text-render UTI group selects the plain text formatter
+	run_dodder format-blob -stdin -uti-group text-render public.utf8-plain-text !uti-test <<< "**hello**"
+	assert_success
+	assert_output "hello"
+}
+
+# bats test_tags=user_story:format_stdin
+function format_blob_prefers_text_edit_over_text { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type where text-edit produces html and text produces plain —
+	# when no format is specified, format-blob should prefer text-edit
+	cat >edit-pref.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'txt'
+
+		[formatters.text]
+		shell = ['pandoc', '-f', 'markdown', '-t', 'plain', '--wrap=none']
+
+		[formatters.text-edit]
+		shell = ['pandoc', '-f', 'markdown', '-t', 'html', '--wrap=none']
+	TYPEFILE
+
+	run_dodder checkin -delete edit-pref.type
+	assert_success
+
+	run_dodder new -edit=false - <<-EOM
+		---
+		# pref test
+		! edit-pref
+		---
+
+		some content
+	EOM
+	assert_success
+
+	# Non-stdin with no explicit format should prefer text-edit over text
+	run_dodder format-blob two/uno
+	assert_success
+	assert_output "<p>some content</p>"
 }
