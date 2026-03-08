@@ -341,14 +341,10 @@ function import_conflict { # @test
     -print-copies=false \
     -blob_store-id shared \
     "$list"
-  assert_failure
-  assert_output --partial - <<-EOM
-		       conflicted [one/uno]
-		       conflicted [one/uno]
-	EOM
-
-  assert_output --partial - <<-EOM
-		import failed with conflicts, merging required
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 

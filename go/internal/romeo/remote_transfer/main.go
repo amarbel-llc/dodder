@@ -1,7 +1,6 @@
 package remote_transfer
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
@@ -312,15 +311,6 @@ func (importer importer) importLeaf(
 			importer.parentNegotiator,
 			importer.allowMergeConflicts,
 		); err != nil {
-			if checkout_mode.IsErrInvalidCheckoutMode(err) {
-				err = ErrCrossPubKeyMerge{
-					ObjectId:     checkedOut.GetSkuExternal().GetObjectId().String(),
-					LocalPubKey:  checkedOut.GetSku().GetMetadata().GetRepoPubKey().String(),
-					RemotePubKey: checkedOut.GetSkuExternal().GetMetadata().GetRepoPubKey().String(),
-				}
-				return checkedOut, err
-			}
-
 			err = errors.Wrap(err)
 			return checkedOut, err
 		}

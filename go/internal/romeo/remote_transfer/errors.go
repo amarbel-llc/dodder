@@ -23,36 +23,6 @@ var (
 	)
 )
 
-// ErrCrossPubKeyMerge occurs when merging an object whose existing copy was
-// created under a different repo public key and has no local workspace checkout.
-type ErrCrossPubKeyMerge struct {
-	ObjectId     string
-	LocalPubKey  string
-	RemotePubKey string
-}
-
-func (err ErrCrossPubKeyMerge) Error() string {
-	return fmt.Sprintf(
-		"cannot merge object %s: local pubkey %s differs from remote pubkey %s (no local checkout exists)",
-		err.ObjectId,
-		err.LocalPubKey,
-		err.RemotePubKey,
-	)
-}
-
-func (err ErrCrossPubKeyMerge) Is(target error) bool {
-	_, ok := target.(ErrCrossPubKeyMerge)
-	return ok
-}
-
-func (err ErrCrossPubKeyMerge) GetErrorType() pkgErrDisamb {
-	return pkgErrDisamb{}
-}
-
-func IsErrCrossPubKeyMerge(err error) bool {
-	return errors.Is(err, ErrCrossPubKeyMerge{})
-}
-
 // ErrDeduped occurs when an object is skipped because its metadata digest
 // (excluding TAI) matches a previously imported object in this batch.
 type ErrDeduped struct {

@@ -20,13 +20,38 @@
 
 - [ ] Remove the `strings.Contains(typeString, "/")` fallback in `text_parser2.readType` (`india/object_metadata_fmt_triple_hyphen/text_parser2.go`). Old checked-out zettel files used `! <path>` for blob references; new format uses `@ <path>`. Once all workspaces have been re-checked-out, this shim can be deleted.
 
-## `der import` bugs (found during migration validation 2026-02-22)
+## `der import` bugs — phase 3: fix root causes
 
-- [ ] `der import` crashes with "all FD's are empty" when importing an object whose ID already exists in the store under a different pubkey. The error originates in `store_fs/merge.go:327` (`checkoutOneForMerge`) and cascades recursively through `Import.Run`. Workaround: exclude already-existing objects from the import file.
+Error reporting for all 4 bugs landed in `420a114d0` (phase 1+2: rich error
+types, `-continue-on-error` flag, error logfile). Root causes remain.
 
-- [ ] `der import` silently skips objects that share a blob hash with another entry in the same batch. Only the first object per unique blob hash is imported; the rest are dropped with no error and exit 0. Workaround: import shared-blob objects individually (one entry per file) or run multiple passes.
+- [x] **Bug 1 — no-checkout merge crash.** `MergeCheckedOut` now returns early
+  when workspace fields are empty, skipping merge for objects with no checkout.
 
-- [ ] `der import` silently skips blobless type definitions (e.g. `[!opml 2097748458.73047 !toml-type-v1]` — no `@sha256-...` blob ref, no pubkey, no sig). These entries produce no output and no error. This causes downstream failures when importing objects that depend on those types ("failed to read current lock object").
+- [ ] **Bug 2 — batch dedup drops distinct objects.** Deduper uses
+  `PurposeV5MetadataDigestWithoutTai` — two objects with different TAIs but
+  identical metadata+blob get the same key, so only the first imports. Now
+  reported as `ErrDeduped` with count. **Fix:** include TAI in the dedup
+  digest (different Purpose constant) or scope key to ObjectId+TAI. Need to
+  check whether TAI-exclusion was intentional for re-timestamped objects.
+
+- [ ] **Bug 3 — blobless type definitions silently dropped.** Type-genre
+  objects with null blob/pubkey/sig enter `importLeaf`, get signed by
+  `FinalizeAndSignOverwrite`, but produce no stored output. Now detected
+  early as `ErrBloblessTypeSkipped`. **Fix:** either (a) import as
+  metadata-only type stubs (skip blob requirement for Type genre), or (b)
+  reject the inventory list as malformed if type blobs are missing. Option
+  (b) is safer since downstream objects need the type blob for lock
+  resolution.
+
+- [ ] **Bug 4 — ObjectId+TAI collisions (10,731 in production).** Different
+  objects share ObjectId+TAI from sub-second writes in source repo. Now
+  detected as `ErrObjectIdTaiCollision` when blob digests differ. Note:
+  collision check compares blob digests (not object digests) because
+  `FinalizeAndSignOverwrite` produces nondeterministic signatures. **Fix:**
+  FDR for synthetic tai disambiguation — assign incrementing attosecond
+  offsets during import, re-sign affected objects. Requires
+  `OverwriteSignatures`. Alternative: use mother sig as secondary key.
 
 ## Probe index panic on truncated page entries
 
