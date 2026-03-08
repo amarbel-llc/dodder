@@ -243,8 +243,7 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			metadataStruct := object.GetMetadataMutable().(*objects.MetadataStruct)
-			if err = metadataStruct.References.Add(refId); err != nil {
+			if err = object.GetMetadataMutable().AddReference(refId); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}
@@ -260,15 +259,9 @@ LOOP_AFTER_OBJECT_ID:
 			}
 
 			alias := seq.At(1).String()
-			for index := range metadataStruct.References {
-				entry := &metadataStruct.References[index]
-				if entry.GetKey().String() == refId.String() {
-					if err = entry.Alias.Set(alias); err != nil {
-						err = errors.Wrap(err)
-						return err
-					}
-					break
-				}
+			if err = object.GetMetadataMutable().SetReferenceAlias(refId, alias); err != nil {
+				err = errors.Wrap(err)
+				return err
 			}
 
 			// <ref@sig (referenced object without alias)
@@ -279,8 +272,7 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			metadataStruct := object.GetMetadataMutable().(*objects.MetadataStruct)
-			if err = metadataStruct.References.Add(refId); err != nil {
+			if err = object.GetMetadataMutable().AddReference(refId); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}

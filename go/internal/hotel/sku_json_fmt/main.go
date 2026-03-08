@@ -208,8 +208,7 @@ func (json *Transacted) ToTransacted(
 			return err
 		}
 
-		metadataStruct := metadata.(*objects.MetadataStruct)
-		if err = metadataStruct.References.Add(refId); err != nil {
+		if err = metadata.AddReference(refId); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

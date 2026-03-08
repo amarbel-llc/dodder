@@ -18,15 +18,15 @@ var (
 )
 
 func (contentsTagSet contentsTagSet) Len() int {
-	return contentsTagSet.GetSlice().Len()
+	return contentsTagSet.ContainedObjects.TagLen()
 }
 
 func (contentsTagSet contentsTagSet) All() interfaces.Seq[TagStruct] {
 	return func(yield func(TagStruct) bool) {
-		for id := range contentsTagSet.GetSlice().All() {
+		for id := range contentsTagSet.ContainedObjects.AllTags() {
 			var tag TagStruct
 
-			errors.PanicIfError(tag.Set(id.GetKey().String()))
+			errors.PanicIfError(tag.Set(id.String()))
 
 			if !yield(tag) {
 				return
@@ -48,9 +48,9 @@ func (contentsTagSet contentsTagSet) ContainsKey(key string) bool {
 
 // TODO switch to binary search
 func (contentsTagSet contentsTagSet) Get(key string) (TagStruct, bool) {
-	for tag := range contentsTagSet.ContainedObjects.GetSlice().All() {
-		if tag.GetKey().String() == key {
-			return ids.MustTag(tag.GetKey().String()), true
+	for tag := range contentsTagSet.ContainedObjects.AllTags() {
+		if tag.String() == key {
+			return ids.MustTag(tag.String()), true
 		}
 	}
 
@@ -78,5 +78,5 @@ func (contentsTagSet *contentsTagSet) DelKey(key string) error {
 }
 
 func (contentsTagSet *contentsTagSet) Reset() {
-	contentsTagSet.ContainedObjects.Reset()
+	contentsTagSet.ContainedObjects.ResetTags()
 }

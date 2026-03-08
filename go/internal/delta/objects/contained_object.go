@@ -12,7 +12,7 @@ type (
 	// required to be exported for Gob's stupid illusions
 	// TODO rename maybe to lock entry?
 	containedObject struct {
-		ContainedObjectType ContainedObjectType
+		ContainedObjectType containedObjectType
 		Alias               SeqId
 		Lock                markl.Lock[SeqId, *SeqId]
 	}

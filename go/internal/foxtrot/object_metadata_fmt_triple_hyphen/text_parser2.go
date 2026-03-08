@@ -153,9 +153,7 @@ func (parser *textParser2) readReference(
 		return err
 	}
 
-	metadataStruct := metadata.(*objects.MetadataStruct)
-
-	if err = metadataStruct.References.Add(refId); err != nil {
+	if err = metadata.AddReference(refId); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -171,17 +169,9 @@ func (parser *textParser2) readReference(
 	}
 
 	if alias != "" {
-		for index := range metadataStruct.References {
-			entry := &metadataStruct.References[index]
-
-			if entry.GetKey().String() == refId.String() {
-				if err = entry.Alias.Set(alias); err != nil {
-					err = errors.Wrap(err)
-					return err
-				}
-
-				break
-			}
+		if err = metadata.SetReferenceAlias(refId, alias); err != nil {
+			err = errors.Wrap(err)
+			return err
 		}
 	}
 

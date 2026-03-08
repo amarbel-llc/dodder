@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -129,7 +128,7 @@ func (store *Store) discoverReferences(
 		return errors.Wrap(err)
 	}
 
-	metadataStruct := daughter.GetMetadataMutable().(*objects.MetadataStruct)
+	metadata := daughter.GetMetadataMutable()
 
 	for _, ref := range refs {
 		var refId ids.SeqId
@@ -142,21 +141,13 @@ func (store *Store) discoverReferences(
 			return errors.Wrapf(err, "invalid reference: %q", ref.ObjectId)
 		}
 
-		if err = metadataStruct.References.Add(refId); err != nil {
+		if err = metadata.AddReference(refId); err != nil {
 			return errors.Wrap(err)
 		}
 
 		if ref.Alias != "" {
-			for index := range metadataStruct.References {
-				entry := &metadataStruct.References[index]
-
-				if entry.GetKey().String() == refId.String() {
-					if err = entry.Alias.Set(ref.Alias); err != nil {
-						return errors.Wrap(err)
-					}
-
-					break
-				}
+			if err = metadata.SetReferenceAlias(refId, ref.Alias); err != nil {
+				return errors.Wrap(err)
 			}
 		}
 	}

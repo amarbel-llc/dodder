@@ -1,15 +1,12 @@
 package objects
 
-type ContainedObjectType interface {
-	containedObjectType()
-}
-
 type containedObjectType byte
 
-func (containedObjectType) containedObjectType() {}
-
 const (
-	containedObjectTypeMetadataExplicit = iota
+	containedObjectTypeTag containedObjectType = iota
 	containedObjectTypeBlobReferences
-	containedObjectTypeReferencedObject
+	containedObjectTypeReference
 )
+
+func (t containedObjectType) IsTag() bool       { return t == containedObjectTypeTag }
+func (t containedObjectType) IsReference() bool  { return t == containedObjectTypeReference }

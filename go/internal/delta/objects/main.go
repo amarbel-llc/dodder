@@ -21,8 +21,7 @@ type metadata struct {
 	// private once moving away from the gob entirely
 
 	Description descriptions.Description
-	Tags        ContainedObjects
-	References  ContainedObjects
+	Contents    ContainedObjects
 	Type        markl.Lock[Type, TypeMutable]
 
 	DigBlob   markl.Id
@@ -86,7 +85,7 @@ func (metadata *metadata) UserInputIsEmpty() bool {
 		return false
 	}
 
-	if metadata.Tags.Len() > 0 {
+	if metadata.Contents.TagLen() > 0 {
 		return false
 	}
 
@@ -115,16 +114,16 @@ func (metadata *metadata) IsEmpty() bool {
 
 // TODO fix issue with GetTags being nil sometimes
 func (metadata *metadata) GetTags() TagSet {
-	return contentsTagSet{ContainedObjects: &metadata.Tags}
+	return contentsTagSet{ContainedObjects: &metadata.Contents}
 }
 
 func (metadata *metadata) GetTagsMutable() TagSetMutable {
-	return &contentsTagSet{ContainedObjects: &metadata.Tags}
+	return &contentsTagSet{ContainedObjects: &metadata.Contents}
 }
 
 func (metadata *metadata) AllTags() interfaces.Seq[Tag] {
 	return func(yield func(Tag) bool) {
-		for tag := range metadata.Tags.All() {
+		for tag := range metadata.Contents.AllTags() {
 			if !yield(tag) {
 				return
 			}
@@ -133,7 +132,7 @@ func (metadata *metadata) AllTags() interfaces.Seq[Tag] {
 }
 
 func (metadata *metadata) ResetTags() {
-	metadata.Tags.Reset()
+	metadata.Contents.ResetTags()
 	metadata.Index.TagPaths.Reset()
 }
 
@@ -166,7 +165,7 @@ func (metadata *metadata) AddTagPtr(tag Tag) (err error) {
 		return err
 	}
 
-	metadata.Tags.addNormalizedTag(tag)
+	metadata.Contents.addNormalizedTag(tag)
 	cs, _ := catgut.MakeFromString(tag.String())
 	metadata.Index.TagPaths.AddTag(cs)
 
@@ -187,7 +186,7 @@ func (metadata *metadata) AddTagPtrFast(tag Tag) (err error) {
 }
 
 func (metadata *metadata) SetTagsFast(tags TagSet) {
-	metadata.Tags.Reset()
+	metadata.Contents.ResetTags()
 
 	if tags == nil {
 		return
@@ -226,18 +225,18 @@ func (metadata *metadata) GetTypeLockMutable() TypeLockMutable {
 }
 
 func (metadata *metadata) GetTagLock(tag Tag) TagLock {
-	lock, _ := metadata.Tags.getLock(tag.String())
+	lock, _ := metadata.Contents.getLock(tag.String())
 	return lock
 }
 
 func (metadata *metadata) GetTagLockMutable(tag Tag) TagLockMutable {
-	lock, _ := metadata.Tags.getLockMutable(tag.String())
+	lock, _ := metadata.Contents.getLockMutable(tag.String())
 	return lock
 }
 
 func (metadata *metadata) AllReferencedObjects() interfaces.Seq[SeqId] {
 	return func(yield func(SeqId) bool) {
-		for ref := range metadata.References.All() {
+		for ref := range metadata.Contents.AllReferences() {
 			if !yield(ref) {
 				return
 			}
@@ -246,13 +245,49 @@ func (metadata *metadata) AllReferencedObjects() interfaces.Seq[SeqId] {
 }
 
 func (metadata *metadata) GetReferencedObjectLock(ref SeqId) IdLock {
-	lock, _ := metadata.References.getLock(ref.String())
+	lock, _ := metadata.Contents.getLock(ref.String())
 	return lock
 }
 
 func (metadata *metadata) GetReferencedObjectLockMutable(ref SeqId) IdLockMutable {
-	lock, _ := metadata.References.getLockMutable(ref.String())
+	lock, _ := metadata.Contents.getLockMutable(ref.String())
 	return lock
+}
+
+func (metadata *metadata) AddReference(ref SeqId) error {
+	return metadata.Contents.AddReference(ref)
+}
+
+func (metadata *metadata) SetReferenceAlias(ref SeqId, alias string) error {
+	for index := range metadata.Contents {
+		entry := &metadata.Contents[index]
+
+		if !entry.ContainedObjectType.IsReference() {
+			continue
+		}
+
+		if entry.GetKey().String() == ref.String() {
+			return entry.Alias.Set(alias)
+		}
+	}
+
+	return errors.Errorf("reference not found: %s", ref)
+}
+
+func (metadata *metadata) GetReferenceAlias(ref SeqId) string {
+	for index := range metadata.Contents {
+		entry := &metadata.Contents[index]
+
+		if !entry.ContainedObjectType.IsReference() {
+			continue
+		}
+
+		if entry.GetKey().String() == ref.String() {
+			return entry.Alias.String()
+		}
+	}
+
+	return ""
 }
 
 func (metadata *metadata) Subtract(otherMetadata Metadata) {
@@ -261,7 +296,7 @@ func (metadata *metadata) Subtract(otherMetadata Metadata) {
 	}
 
 	for tag := range otherMetadata.AllTags() {
-		metadata.Tags.DelKey(tag.String())
+		metadata.Contents.DelKey(tag.String())
 	}
 }
 

@@ -10,7 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
-	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -182,17 +181,13 @@ func (factory formatterComponents) writeReferencedObjects(
 	formatterContext FormatterContext,
 ) (n int64, err error) {
 	metadata := formatterContext.GetMetadata()
-	metadataStruct := metadata.(*objects.MetadataStruct)
 
-	for index := range metadataStruct.References {
-		entry := &metadataStruct.References[index]
-
-		ref := entry.GetKey()
-		lockValue := entry.Lock.GetValue()
+	for ref := range metadata.AllReferencedObjects() {
+		lockValue := metadata.GetReferencedObjectLock(ref).GetValue()
 
 		var line string
 
-		alias := entry.Alias.String()
+		alias := metadata.GetReferenceAlias(ref)
 
 		if alias != "" {
 			if strings.ContainsAny(alias, " \t\"") {

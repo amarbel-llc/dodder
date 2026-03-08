@@ -43,6 +43,7 @@ type (
 
 		AllReferencedObjects() interfaces.Seq[SeqId]
 		GetReferencedObjectLock(SeqId) IdLock
+		GetReferenceAlias(SeqId) string
 
 		GetBlobDigest() domain_interfaces.MarklId
 		GetObjectDigest() domain_interfaces.MarklId
@@ -76,6 +77,8 @@ type (
 		GetTypeMutable() TypeMutable
 		GetTypeLockMutable() TypeLockMutable
 		GetTagLockMutable(Tag) TagLockMutable
+		AddReference(SeqId) error
+		SetReferenceAlias(ref SeqId, alias string) error
 		GetReferencedObjectLockMutable(SeqId) IdLockMutable
 	}
 

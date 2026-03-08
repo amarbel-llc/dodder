@@ -104,13 +104,76 @@ func (contents ContainedObjects) Key(id SeqId) string {
 	return id.String()
 }
 
+func (contents ContainedObjects) TagLen() int {
+	n := 0
+	for i := range contents {
+		if contents[i].ContainedObjectType.IsTag() {
+			n++
+		}
+	}
+	return n
+}
+
+func (contents ContainedObjects) AllTags() interfaces.Seq[SeqId] {
+	return func(yield func(SeqId) bool) {
+		for id := range contents.GetSlice().All() {
+			if !id.ContainedObjectType.IsTag() {
+				continue
+			}
+			if !yield(id.GetKey()) {
+				return
+			}
+		}
+	}
+}
+
+func (contents ContainedObjects) AllReferences() interfaces.Seq[SeqId] {
+	return func(yield func(SeqId) bool) {
+		for id := range contents.GetSlice().All() {
+			if !id.ContainedObjectType.IsReference() {
+				continue
+			}
+			if !yield(id.GetKey()) {
+				return
+			}
+		}
+	}
+}
+
+func (contents *ContainedObjects) ResetTags() {
+	n := 0
+	for i := range *contents {
+		if !(*contents)[i].ContainedObjectType.IsTag() {
+			(*contents)[n] = (*contents)[i]
+			n++
+		}
+	}
+	*contents = (*contents)[:n]
+}
+
 func (contents *ContainedObjects) Add(id SeqId) error {
 	if _, alreadyExists := contents.Get(id.String()); alreadyExists {
 		return nil
 	}
 
 	contents.GetSliceMutable().Append(containedObject{
-		Lock: markl.MakeLockWith(id, nil),
+		ContainedObjectType: containedObjectTypeTag,
+		Lock:                markl.MakeLockWith(id, nil),
+	})
+
+	contents.GetSliceMutable().SortWithComparer(containedObjectCompareKey)
+
+	return nil
+}
+
+func (contents *ContainedObjects) AddReference(id SeqId) error {
+	if _, alreadyExists := contents.Get(id.String()); alreadyExists {
+		return nil
+	}
+
+	contents.GetSliceMutable().Append(containedObject{
+		ContainedObjectType: containedObjectTypeReference,
+		Lock:                markl.MakeLockWith(id, nil),
 	})
 
 	contents.GetSliceMutable().SortWithComparer(containedObjectCompareKey)
@@ -158,19 +221,22 @@ func (contents *ContainedObjects) addNormalizedTag(tag Tag) {
 		containedObjectCompareKey,
 	)
 
-	var lastId *containedObject
+	var lastTagEntry *containedObject
 
 	for index := range sorted {
 		id := &sorted[index]
 
-		if index == 0 {
-			// no need to do anything, this is the first
-			lastId = id
+		if !id.ContainedObjectType.IsTag() {
+			continue
+		}
+
+		if lastTagEntry == nil {
+			lastTagEntry = id
 			continue
 		}
 
 		tagString := id.Lock.GetKey().String()
-		lastTagString := lastId.Lock.GetKey().String()
+		lastTagString := lastTagEntry.Lock.GetKey().String()
 
 		switch {
 		case strings.HasPrefix(lastTagString, tagString):
@@ -179,7 +245,7 @@ func (contents *ContainedObjects) addNormalizedTag(tag Tag) {
 			// replace the shorter value with the longer value that contains the
 			// shorter value
 		case strings.HasPrefix(tagString, lastTagString):
-			if lastId.Lock.Value.IsEmpty() {
+			if lastTagEntry.Lock.Value.IsEmpty() {
 				contents.DelKey(lastTagString)
 			}
 
@@ -187,6 +253,6 @@ func (contents *ContainedObjects) addNormalizedTag(tag Tag) {
 			// keep the tag
 		}
 
-		lastId = id
+		lastTagEntry = id
 	}
 }

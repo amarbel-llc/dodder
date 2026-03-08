@@ -179,14 +179,9 @@ func (builder *Builder) AddTagsAndLocks(metadata objects.MetadataMutable) {
 }
 
 func (builder *Builder) AddReferencedObjectsAndLocks(metadata objects.MetadataMutable) {
-	metadataStruct := metadata.(*objects.MetadataStruct)
-
-	for index := range metadataStruct.References {
-		entry := &metadataStruct.References[index]
-
-		ref := entry.GetKey()
-		lockValue := entry.Lock.GetValue()
-		alias := entry.Alias.String()
+	for ref := range metadata.AllReferencedObjects() {
+		lockValue := metadata.GetReferencedObjectLock(ref).GetValue()
+		alias := metadata.GetReferenceAlias(ref)
 
 		var key string
 		if alias != "" {
