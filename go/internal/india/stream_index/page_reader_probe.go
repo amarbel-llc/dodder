@@ -55,11 +55,11 @@ func (index *Index) makeProbePageReader(
 func (pageReader *probePageReader) readOneCursor(
 	cursor ohio.Cursor,
 	object *sku.Transacted,
-) (ok bool) {
+) (ok bool, err error) {
 	// pages get deleted before reindexing, so this is actually valid to have a
 	// non-nil cursor request
 	if pageReader.readerAt == nil {
-		return ok
+		return
 	}
 
 	var bytesRead int64
@@ -71,37 +71,34 @@ func (pageReader *probePageReader) readOneCursor(
 		Cursor: cursor,
 	}
 
-	{
-		var err error
-
-		if bytesRead, err = pageReader.decoder.readFormatExactly(
-			pageReader.readerAt,
-			&objectPlus,
-		); err != nil {
-			ui.Debug().Print(err)
-			if err == io.EOF {
-				if bytesRead == cursor.ContentLength {
-					goto NO_ERR
-				} else {
-					panic(io.ErrUnexpectedEOF)
-				}
+	if bytesRead, err = pageReader.decoder.readFormatExactly(
+		pageReader.readerAt,
+		&objectPlus,
+	); err != nil {
+		ui.Debug().Print(err)
+		if err == io.EOF {
+			if bytesRead == cursor.ContentLength {
+				err = nil
+				ok = true
+				return
 			}
 
-			err = errors.Wrapf(
-				err,
-				"Range: %q, Page: %q, BytesRead: %d",
-				cursor,
-				pageReader.pageId.Path(),
-				bytesRead,
-			)
-
-			panic(err)
+			err = errors.Wrap(io.ErrUnexpectedEOF)
+			return
 		}
-	}
 
-NO_ERR:
+		err = errors.Wrapf(
+			err,
+			"Range: %q, Page: %q, BytesRead: %d",
+			cursor,
+			pageReader.pageId.Path(),
+			bytesRead,
+		)
+
+		return
+	}
 
 	ok = true
 
-	return ok
+	return
 }

@@ -57,7 +57,7 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 
 ## Probe index panic on truncated page entries
 
-- [ ] `stream_index/page_reader_probe.go:86` panics with `unexpected EOF` when a probe page file is shorter than the cursor's `ContentLength`. Should return an error instead of panicking so `fsck` can report it and continue.
+- [x] `stream_index/page_reader_probe.go:86` panics with `unexpected EOF` when a probe page file is shorter than the cursor's `ContentLength`. Should return an error instead of panicking so `fsck` can report it and continue.
 
 
 ## `go mod tidy` — circular dependency dodder ↔ chrest
@@ -74,16 +74,22 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 ## Gob removal follow-ups
 
 - [ ] FDR: evaluate making `delta/objects` metadata fields private after full gob removal
-- [ ] Evaluate removing `hotel/log_remote_inventory_lists` entirely (has TODO suggesting deprecation)
+- [x] Evaluate removing `hotel/log_remote_inventory_lists` entirely — **verdict:
+  keep for now.** Actively used by `tango/remote_http/{client,server_repo}` for
+  deduplicating inventory list transfers. The `v0.go:20` TODO ("not really used")
+  is stale; it IS used but only by those 2 modules. Removal would require either
+  dropping dedup (accepting duplicate transfers) or inlining the logic. Low
+  priority — gob serialization in this package is a better target for eventual
+  cleanup.
 
 ## CLAUDE.md improvements (from transcript analysis)
 
-- [ ] add instruction: ALWAYS use `just test*` recipes; NEVER run bats/go-test/fixture-generation directly
-- [ ] add instruction: BATS fixture tests use `get_fixture_type_sig` for signatures; fresh-store tests use `--regexp`
-- [ ] add instruction: NEVER call `errors.Is` when err might be EOF; use `errors.IsEOF()` guard first
-- [ ] add instruction: when bumping store version, do NOT remove old version's codec/gob support
-- [ ] add instruction: document "lock" dual meaning — content locks (metadata) vs filesystem mutex (LockSmith)
-- [ ] add instruction: trailing whitespace matters in dodder output; use `xxd` to debug invisible mismatches
+- [x] add instruction: ALWAYS use `just test*` recipes; NEVER run bats/go-test/fixture-generation directly
+- [x] add instruction: BATS fixture tests use `get_fixture_type_sig` for signatures; fresh-store tests use `--regexp`
+- [x] add instruction: NEVER call `errors.Is` when err might be EOF; use `errors.IsEOF()` guard first
+- [x] add instruction: when bumping store version, do NOT remove old version's codec/gob support
+- [x] add instruction: document "lock" dual meaning — content locks (metadata) vs filesystem mutex (LockSmith)
+- [x] add instruction: trailing whitespace matters in dodder output; use `xxd` to debug invisible mismatches
 
 ## Blob store ordering from config
 

@@ -45,7 +45,9 @@ func (index *Index) ReadOneMarklId(
 		}
 	}
 
-	ok = index.readOneLoc(loc, object)
+	var locErr error
+	ok, locErr = index.readOneLoc(loc, object)
+	errors.PanicIfError(locErr)
 
 	return ok
 }
@@ -64,7 +66,12 @@ func (index *Index) ReadManyMarklId(
 	for _, loc := range locs {
 		object, _ := sku.GetTransactedPool().GetWithRepool()
 
-		if !index.readOneLoc(loc, object) {
+		var ok bool
+
+		if ok, err = index.readOneLoc(loc, object); err != nil {
+			err = errors.Wrap(err)
+			return objects, err
+		} else if !ok {
 			err = errors.Errorf("failed to read loc: %s", loc)
 			return objects, err
 		}
@@ -173,11 +180,11 @@ func (index *Index) ReadOneObjectIdTai(
 func (index *Index) readOneLoc(
 	loc object_probe_index.Loc,
 	object *sku.Transacted,
-) (ok bool) {
+) (ok bool, err error) {
 	pageReader, pageReaderClose := index.makeProbePageReader(loc.Page)
 	defer errors.Must(pageReaderClose)
 
-	ok = pageReader.readOneCursor(loc.Cursor, object)
+	ok, err = pageReader.readOneCursor(loc.Cursor, object)
 
-	return ok
+	return
 }

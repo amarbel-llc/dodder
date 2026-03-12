@@ -74,12 +74,12 @@ func (index *Index) makeProbePageReader(
 func (pageReader *probePageReader) readOneCursor(
 	cursor ohio.Cursor,
 	object *sku.Transacted,
-) (ok bool) {
+) (ok bool, err error) {
 	if pageReader.readerAt == nil {
-		return ok
+		return
 	}
 
-	if err := pageReader.decoder.readFixedEntry(
+	if err = pageReader.decoder.readFixedEntry(
 		pageReader.readerAt,
 		pageReader.overflowReaderAt,
 		cursor.Offset,
@@ -92,10 +92,10 @@ func (pageReader *probePageReader) readOneCursor(
 			pageReader.pageId.Path(),
 		)
 
-		panic(err)
+		return
 	}
 
 	ok = true
 
-	return ok
+	return
 }

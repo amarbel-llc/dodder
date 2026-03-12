@@ -130,7 +130,9 @@ func (index *Index) VerifyObjectProbes(
 		checkObject, checkObjectRepool := sku.GetTransactedPool().GetWithRepool()
 		defer checkObjectRepool()
 
-		if !index.readOneLoc(loc, checkObject) {
+		if readOk, readErr := index.readOneLoc(loc, checkObject); readErr != nil {
+			return errors.Wrapf(readErr, "probe %q read failed", probeId.Key)
+		} else if !readOk {
 			return errors.Errorf("probe %q location invalid", probeId.Key)
 		}
 

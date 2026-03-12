@@ -71,6 +71,24 @@ Do NOT regenerate when:
 - **Fresh-store tests** (`run_dodder_init_disable_age`) generate a new key each
   run -- use `assert_output --regexp -` with `! type@.*` for signatures.
 
+## Critical Conventions
+
+- **ALWAYS use `just test*` recipes** — never run `bats`, `go test`, or fixture
+  generation directly. The just recipes set BATS_BIN_DIR, DODDER_VERSION, inject
+  the binary, and ensure fixtures exist.
+- **BATS fixture tests** use `$(get_fixture_type_sig)` for signatures (not
+  deterministic). Fresh-store tests (`run_dodder_init_disable_age`) use
+  `assert_output --regexp` with `! type@.*` patterns instead.
+- **NEVER call `errors.Is` when err might be EOF** — use `errors.IsEOF()` guard
+  first. The standard `errors.Is` does not handle the custom EOF wrapping.
+- **When bumping store version**, do NOT remove the old version's codec/gob
+  support. Old versions must remain decodable for migration.
+- **"Lock" has two meanings** — content locks (metadata on objects, managed by
+  the lock command) vs filesystem mutexes (`LockSmith` in `env_repo`). Don't
+  confuse them.
+- **Trailing whitespace matters** in dodder output assertions. Use `xxd` or
+  `cat -A` to debug invisible mismatches in BATS tests.
+
 ## Common Issues
 
 - **"dodder: command not found"** — run `just build` first, or ensure you're in the nix devshell
