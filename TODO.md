@@ -20,41 +20,36 @@
 
 - [ ] Remove the `strings.Contains(typeString, "/")` fallback in `text_parser2.readType` (`india/object_metadata_fmt_triple_hyphen/text_parser2.go`). Old checked-out zettel files used `! <path>` for blob references; new format uses `@ <path>`. Once all workspaces have been re-checked-out, this shim can be deleted.
 
-## `der import` bugs — phase 3: fix root causes
+## `der import` bugs
 
-Error reporting for all 4 bugs landed in `420a114d0` (phase 1+2: rich error
-types, `-continue-on-error` flag, error logfile). Root causes remain.
+Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
+`-continue-on-error` flag, error logfile). Bug 1 root cause fixed separately.
 
 - [x] **Bug 1 — cross-pubkey merge crash.** Fixed: `importLeaf` now skips
-  `MergeCheckedOut` when `parentNegotiator` is nil (always for imports). Without
-  a parent negotiator, diff3 uses an empty base and always produces false
-  conflicts. Imports accept the remote version directly; use `pull` for proper
-  conflict detection with parent negotiation.
+  `MergeCheckedOut` when `parentNegotiator` is nil (always for imports).
 
-- [ ] **Bug 2 — batch dedup drops distinct objects.** Deduper uses
-  `PurposeV5MetadataDigestWithoutTai` — two objects with different TAIs but
-  identical metadata+blob get the same key, so only the first imports. Now
-  reported as `ErrDeduped` with count. **Fix:** include TAI in the dedup
-  digest (different Purpose constant) or scope key to ObjectId+TAI. Need to
-  check whether TAI-exclusion was intentional for re-timestamped objects.
+- [x] **Bug 2 — batch dedup drops distinct objects.** Resolved: TAI-exclusion
+  in dedup key is intentional (same content = same object regardless of
+  timestamp). `ErrDeduped` reporting is the correct behavior.
 
 - [ ] **Bug 3 — blobless type definitions silently dropped.** Type-genre
   objects with null blob/pubkey/sig enter `importLeaf`, get signed by
   `FinalizeAndSignOverwrite`, but produce no stored output. Now detected
-  early as `ErrBloblessTypeSkipped`. **Fix:** either (a) import as
-  metadata-only type stubs (skip blob requirement for Type genre), or (b)
-  reject the inventory list as malformed if type blobs are missing. Option
-  (b) is safer since downstream objects need the type blob for lock
-  resolution.
+  early as `ErrBloblessTypeSkipped`. Root-cause handling subsumed by
+  two-phase import (see below).
 
 - [ ] **Bug 4 — ObjectId+TAI collisions (10,731 in production).** Different
   objects share ObjectId+TAI from sub-second writes in source repo. Now
-  detected as `ErrObjectIdTaiCollision` when blob digests differ. Note:
-  collision check compares blob digests (not object digests) because
-  `FinalizeAndSignOverwrite` produces nondeterministic signatures. **Fix:**
-  FDR for synthetic tai disambiguation — assign incrementing attosecond
-  offsets during import, re-sign affected objects. Requires
-  `OverwriteSignatures`. Alternative: use mother sig as secondary key.
+  detected as `ErrObjectIdTaiCollision` when blob digests differ. Root-cause
+  handling subsumed by two-phase import (see below).
+
+## Two-phase `der import` with topographic processing
+
+- [ ] FDR: Redesign `der import` as a two-phase pipeline: (1) plan+validate the
+  inventory list (topographic ordering, blobless type detection, TAI collision
+  detection, dedup summary), then (2) review+commit. Topographic processing
+  ensures types are imported before objects that reference them. The planning
+  phase surfaces all issues (bugs 2-4) upfront instead of mid-stream.
 
 ## Semantic diffing to replace diff3
 
@@ -64,9 +59,6 @@ types, `-continue-on-error` flag, error logfile). Root causes remain.
 
 - [ ] `stream_index/page_reader_probe.go:86` panics with `unexpected EOF` when a probe page file is shorter than the cursor's `ContentLength`. Should return an error instead of panicking so `fsck` can report it and continue.
 
-## Synthetic tai disambiguation for `der import`
-
-- [ ] FDR: Add sub-second tai disambiguation during import to eliminate objectId+tai collisions (10,731 in production repo). Intervene in `remote_transfer/main.go` before `importNewObject()` commit: group by objectId+tai, assign incrementing attosecond offsets for duplicates, re-sign affected objects. Caveat: changes object digests vs source repo, requires `OverwriteSignatures`.
 
 ## `go mod tidy` — circular dependency dodder ↔ chrest
 
