@@ -95,12 +95,12 @@ types, `-continue-on-error` flag, error logfile). Root causes remain.
 
 ## Blob store ordering from config
 
-- [ ] Wire blob-stores list from konfig into BlobStoreEnv ordering (replace alphabetical sort in setupStores)
+- [x] Wire blob-stores list from konfig into BlobStoreEnv ordering (replace alphabetical sort in setupStores)
 
 ## Tag/Reference unification
 
 - [ ] FDR: Unify Tags and References into single ContainedObjects collection
-- [ ] Use doddish.Scanner to distinguish tags from references in OpTagSeparator parser instead of strings.Contains("/") heuristic
+- [x] Use doddish.Scanner to distinguish tags from references in OpTagSeparator parser instead of strings.Contains("/") heuristic
 
 
 ## Archive store foreign digest support

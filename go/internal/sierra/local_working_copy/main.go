@@ -151,6 +151,8 @@ func (local *Repo) initialize(
 		}
 	}
 
+	local.envRepo.SetBlobStoreOrder(local.config.GetConfig().GetBlobStores())
+
 	if local.envWorkspace, err = env_workspace.Make(
 		local.envRepo,
 		local.config.GetConfig(),

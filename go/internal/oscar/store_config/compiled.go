@@ -3,6 +3,7 @@ package store_config
 import (
 	"sync"
 
+	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
@@ -60,6 +61,10 @@ type (
 		PrintOptions options_print.Options
 	}
 )
+
+func (config Config) GetBlobStores() []blob_store_id.Id {
+	return repo_configs.GetBlobStores(config.configRepo, nil)
+}
 
 func (config Config) GetPrintOptions() options_print.Options {
 	return config.PrintOptions

@@ -59,7 +59,7 @@ func (parser *textParser2) ReadFrom(r io.Reader) (n int64, err error) {
 			metadata.GetIndexMutable().GetCommentsMutable().Append(remainder)
 
 		case doddish.OpTagSeparator:
-			if strings.Contains(remainder, "/") {
+			if isContainedReference(remainder) {
 				refStr := strings.Replace(remainder, " < ", " = ", 1)
 				err = parser.readReference(metadata, refStr)
 			} else {
@@ -96,6 +96,23 @@ func (parser *textParser2) ReadFrom(r io.Reader) (n int64, err error) {
 	}
 
 	return n, err
+}
+
+// isContainedReference uses the doddish scanner to distinguish references
+// from tags under the unified `-` prefix. References contain a zettel ID
+// (identifier/identifier), while tags are simple identifiers.
+func isContainedReference(value string) bool {
+	seq, scanErr := doddish.ScanExactlyOneSeqWithDotAllowedInIdenfierFromString(value)
+	if scanErr != nil {
+		// Multiple sequences (e.g., alias = ref) → reference with alias
+		return true
+	}
+
+	hasPathSep, _, _, _ := seq.PartitionFavoringLeft(
+		doddish.TokenMatcherOp(doddish.OpPathSeparator),
+	)
+
+	return hasPathSep
 }
 
 func (parser *textParser2) readType(

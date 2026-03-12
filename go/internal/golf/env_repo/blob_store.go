@@ -73,17 +73,7 @@ func MakeBlobStoreEnvWithOrder(
 	}
 
 	env.setupStores()
-
-	if len(blobStoreIds) > 0 {
-		ids := make([]string, len(blobStoreIds))
-
-		for i, id := range blobStoreIds {
-			ids[i] = id.String()
-		}
-
-		env.orderedBlobStoreIds = ids
-		env.defaultBlobStoreIdString = ids[0]
-	}
+	env.SetBlobStoreOrder(blobStoreIds)
 
 	return env
 }
@@ -103,6 +93,21 @@ func (env *BlobStoreEnv) setupStores() {
 
 	sort.Strings(keys)
 	env.defaultBlobStoreIdString = keys[0]
+}
+
+func (env *BlobStoreEnv) SetBlobStoreOrder(blobStoreIds []blob_store_id.Id) {
+	if len(blobStoreIds) == 0 {
+		return
+	}
+
+	ids := make([]string, len(blobStoreIds))
+
+	for i, id := range blobStoreIds {
+		ids[i] = id.String()
+	}
+
+	env.orderedBlobStoreIds = ids
+	env.defaultBlobStoreIdString = ids[0]
 }
 
 func (env BlobStoreEnv) GetDefaultBlobStore() blob_stores.BlobStoreInitialized {
