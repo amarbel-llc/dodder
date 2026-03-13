@@ -687,3 +687,26 @@ function import_inventory_lists { # @test
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 }
+
+function import_interactive_flag_accepted_non_tty { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+
+  list="$(realpath list)"
+  pushd inner || exit 1
+
+  # -interactive in a non-TTY (piped) context should fall through gracefully
+  run_dodder import \
+    -interactive \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+}

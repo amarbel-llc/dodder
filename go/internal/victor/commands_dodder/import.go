@@ -1,10 +1,12 @@
 package commands_dodder
 
 import (
+	"fmt"
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -12,9 +14,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/romeo/remote_transfer"
+	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/charmbracelet/huh"
 )
 
 func init() {
@@ -33,6 +37,7 @@ type Import struct {
 
 	BlobStoreId blob_store_id.Id
 	PlanFormat  string
+	Interactive bool
 }
 
 var _ interfaces.CommandComponentWriter = (*Import)(nil)
@@ -54,6 +59,20 @@ func (cmd *Import) SetFlagDefinitions(
 		"plan-format",
 		"summary",
 		"output format for the import plan: summary or objects",
+	)
+
+	flagDefinitions.BoolVar(
+		&cmd.Interactive,
+		"interactive",
+		false,
+		"interactively resolve blobless types by selecting local replacements",
+	)
+
+	flagDefinitions.BoolVar(
+		&cmd.Interactive,
+		"i",
+		false,
+		"shorthand for -interactive",
 	)
 }
 
@@ -111,6 +130,13 @@ func (cmd Import) Run(req command.Request) {
 		return
 	}
 
+	if cmd.Interactive && plan.HasErrors {
+		remapping := promptBloblessTypeResolution(local, plan)
+		if len(remapping) > 0 {
+			plan.ResolveBloblessTypes(remapping)
+		}
+	}
+
 	if local.GetConfig().IsDryRun() {
 		switch cmd.PlanFormat {
 		case "objects":
@@ -151,4 +177,66 @@ func (cmd Import) Run(req command.Request) {
 	); err != nil {
 		local.Cancel(err)
 	}
+}
+
+func promptBloblessTypeResolution(
+	local *local_working_copy.Repo,
+	plan *import_plan.Plan,
+) map[string]string {
+	bloblessTypes := plan.BloblessTypes()
+	if len(bloblessTypes) == 0 {
+		return nil
+	}
+
+	if !local.GetEnv().GetIn().IsTty() {
+		fmt.Fprintln(
+			os.Stderr,
+			"stdin is not a tty, skipping interactive blobless type resolution",
+		)
+
+		return nil
+	}
+
+	remapping := make(map[string]string)
+	streamIndex := local.GetStore().GetStreamIndex()
+
+	for _, typeString := range bloblessTypes {
+		objectId, repool, err := ids.MakeObjectId(typeString)
+		if err != nil {
+			repool()
+			continue
+		}
+
+		var localType sku.Transacted
+		hasLocal := sku.ReadOneObjectId(streamIndex, objectId, &localType)
+		repool()
+
+		options := []huh.Option[string]{
+			huh.NewOption("Skip (keep as error)", ""),
+		}
+
+		if hasLocal && !localType.GetBlobDigest().IsNull() {
+			options = []huh.Option[string]{
+				huh.NewOption(
+					fmt.Sprintf("Use local %s", typeString),
+					typeString,
+				),
+				huh.NewOption("Skip (keep as error)", ""),
+			}
+		}
+
+		var result string
+
+		huh.NewSelect[string]().
+			Title(fmt.Sprintf("Blobless type: %s", typeString)).
+			Options(options...).
+			Value(&result).
+			Run()
+
+		if result != "" {
+			remapping[typeString] = result
+		}
+	}
+
+	return remapping
 }
