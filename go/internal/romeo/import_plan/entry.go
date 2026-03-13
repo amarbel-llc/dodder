@@ -11,6 +11,7 @@ type Entry struct {
 	SourceIndex    int
 	Height         int
 	OriginalTai    ids.Tai
+	ErrorCause     string
 }
 
 func (e *Entry) GetObject() *sku.Transacted {

@@ -33,6 +33,105 @@ func (plan *Plan) FormatSummary(w io.Writer) {
 	typeCount := plan.TypeCount()
 
 	p.Fprintf(w, "committable: %d (%d types)\n", committable, typeCount)
+
+	plan.formatErrorTree(w)
+}
+
+func (plan *Plan) formatErrorTree(w io.Writer) {
+	type errorRoot struct {
+		entry      *Entry
+		dependents []*Entry
+	}
+
+	roots := make(map[string]*errorRoot)
+	var rootOrder []string
+
+	for i := range plan.Entries {
+		entry := &plan.Entries[i]
+
+		if !entry.Classification.IsError() &&
+			entry.Classification != ClassificationSkipBloblessType {
+			continue
+		}
+
+		if entry.ErrorCause != "" {
+			continue
+		}
+
+		genre := genres.Make(entry.object.GetGenre())
+		if genre != genres.Type {
+			key := sku.String(&entry.object)
+			roots[key] = &errorRoot{entry: entry}
+			rootOrder = append(rootOrder, key)
+			continue
+		}
+
+		key := entry.object.GetObjectId().String()
+		roots[key] = &errorRoot{entry: entry}
+		rootOrder = append(rootOrder, key)
+	}
+
+	for i := range plan.Entries {
+		entry := &plan.Entries[i]
+
+		if entry.ErrorCause == "" {
+			continue
+		}
+
+		if root, ok := roots[entry.ErrorCause]; ok {
+			root.dependents = append(root.dependents, entry)
+		}
+	}
+
+	if len(rootOrder) == 0 {
+		return
+	}
+
+	fmt.Fprintln(w, "errors:")
+
+	for ri, key := range rootOrder {
+		root := roots[key]
+		isLastRoot := ri == len(rootOrder)-1
+
+		var prefix, childPrefix string
+		if isLastRoot {
+			prefix = "  └── "
+			childPrefix = "      "
+		} else {
+			prefix = "  ├── "
+			childPrefix = "  │   "
+		}
+
+		genre := genres.Make(root.entry.object.GetGenre())
+		objectId := root.entry.object.GetObjectId().String()
+
+		fmt.Fprintf(w, "%s%s %s %s\n",
+			prefix,
+			root.entry.Classification,
+			genre,
+			objectId,
+		)
+
+		for di, dep := range root.dependents {
+			isLastDep := di == len(root.dependents)-1
+
+			var depPrefix string
+			if isLastDep {
+				depPrefix = childPrefix + "└── "
+			} else {
+				depPrefix = childPrefix + "├── "
+			}
+
+			objectId := dep.object.GetObjectId().String()
+			description := dep.object.GetMetadata().GetDescription().String()
+
+			if description != "" {
+				fmt.Fprintf(w, "%s%s %q\n", depPrefix, objectId, description)
+			} else {
+				fmt.Fprintf(w, "%s%s\n", depPrefix, objectId)
+			}
+		}
+	}
 }
 
 func (plan *Plan) FormatObjects(w io.Writer) {

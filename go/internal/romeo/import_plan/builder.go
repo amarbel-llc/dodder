@@ -267,6 +267,7 @@ func (b *Builder) Build() (*Plan, error) {
 		typeString := typeId.String()
 		if erroredTypes[typeString] {
 			entry.Classification = ClassificationErrorMissingBlob
+			entry.ErrorCause = typeString
 		}
 	}
 
