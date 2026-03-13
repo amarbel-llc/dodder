@@ -119,7 +119,7 @@ func (cmd Import) Run(req command.Request) {
 		}
 
 		if plan.HasErrors {
-			local.Cancel(errors.Errorf("plan has errors"))
+			local.Cancel(errors.WithoutStack(errors.Errorf("plan has errors")))
 		}
 
 		return

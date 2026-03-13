@@ -30,10 +30,6 @@ func (plan *Plan) FormatSummary(w io.Writer) {
 	typeCount := plan.TypeCount()
 
 	fmt.Fprintf(w, "committable: %d (%d types)\n", committable, typeCount)
-
-	if plan.HasErrors {
-		fmt.Fprintln(w, "plan has errors")
-	}
 }
 
 func (plan *Plan) FormatObjects(w io.Writer) {
