@@ -8,9 +8,20 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/box_format"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
+
+var classificationOrder = []Classification{
+	ClassificationImport,
+	ClassificationResolveTaiReassign,
+	ClassificationSkipExists,
+	ClassificationSkipDedup,
+	ClassificationSkipBloblessType,
+	ClassificationErrorMissingBlob,
+}
 
 func (plan *Plan) FormatSummary(
 	w io.Writer,
@@ -19,25 +30,32 @@ func (plan *Plan) FormatSummary(
 	p := message.NewPrinter(language.English)
 	counts := plan.CountByClassification()
 
-	p.Fprintf(w, "import plan: %d entries\n", len(plan.Entries))
+	t := table.New().
+		Border(lipgloss.RoundedBorder()).
+		BorderStyle(lipgloss.NewStyle().Faint(true)).
+		Headers("classification", "count").
+		StyleFunc(func(row, col int) lipgloss.Style {
+			s := lipgloss.NewStyle().PaddingLeft(1).PaddingRight(1)
 
-	for _, c := range []Classification{
-		ClassificationImport,
-		ClassificationResolveTaiReassign,
-		ClassificationSkipExists,
-		ClassificationSkipDedup,
-		ClassificationSkipBloblessType,
-		ClassificationErrorMissingBlob,
-	} {
+			if col == 1 {
+				s = s.Align(lipgloss.Right)
+			}
+
+			return s
+		})
+
+	for _, c := range classificationOrder {
 		if n := counts[c]; n > 0 {
-			p.Fprintf(w, "  %s: %d\n", c, n)
+			t.Row(string(c), p.Sprintf("%d", n))
 		}
 	}
 
 	committable := plan.CommittableCount()
 	typeCount := plan.TypeCount()
 
-	p.Fprintf(w, "committable: %d (%d types)\n", committable, typeCount)
+	t.Row("committable", p.Sprintf("%d (%d types)", committable, typeCount))
+
+	fmt.Fprintln(w, t.Render())
 
 	plan.formatErrorTree(w, boxFormatter)
 }

@@ -500,9 +500,9 @@ function import_dry_run { # @test
     -blob_store-id shared \
     "$list"
   assert_success
-  assert_output --partial "import plan:"
-  assert_output --partial "committable:"
-  assert_output --partial "import:"
+  assert_output --partial "classification"
+  assert_output --partial "committable"
+  assert_output --partial "import"
 
   # Verify no objects were committed (inner should have only init objects)
   run_dodder show :z,e,t
