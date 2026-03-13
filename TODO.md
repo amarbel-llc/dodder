@@ -125,3 +125,4 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 
 - [ ] FDR: purse-first framework integration for madder MCP server
 - [x] Once purse-first install_mcp branch lands: add install-mcp command to madder using `app.InstallMCP()` from go-mcp
+- [ ] purse-first: support HTTP/SSE MCP servers in `App.InstallMCP()` (currently stdio-only)
