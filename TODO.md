@@ -101,10 +101,6 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 - [x] Use doddish.Scanner to distinguish tags from references in OpTagSeparator parser instead of strings.Contains("/") heuristic
 
 
-## SeqErrorDecoder double-yield bug
-
-- [ ] Fix `SeqErrorDecoder.DecodeFrom` in `india/inventory_list_coders/main.go`: when `coder.coder.DecodeFrom` returns a non-EOF error, the object is yielded in the error handler (line ~271 or ~278) AND falls through to yield again at line ~284. Compare with `SeqCoder.DecodeFrom` which correctly yields only once. Workaround: ObjectId+TAI dedup in `import.go` command.
-
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.

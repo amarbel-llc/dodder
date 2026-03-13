@@ -271,6 +271,8 @@ func (coder SeqErrorDecoder) DecodeFrom(
 				if !yield(object, err) {
 					break
 				}
+
+				continue
 			} else {
 				errIter := errors.Wrap(err)
 				err = nil
@@ -278,6 +280,8 @@ func (coder SeqErrorDecoder) DecodeFrom(
 				if !yield(object, errIter) {
 					break
 				}
+
+				continue
 			}
 		}
 

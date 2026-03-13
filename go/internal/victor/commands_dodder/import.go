@@ -84,8 +84,6 @@ func (cmd Import) Run(req command.Request) {
 		markl.PurposeV5MetadataDigestWithoutTai,
 	)
 
-	seenObjectTai := make(map[string]struct{})
-
 	for i, path := range inventoryListPaths {
 		builder.AddSourcePath(path)
 
@@ -102,13 +100,6 @@ func (cmd Import) Run(req command.Request) {
 				return
 			}
 
-			key := object.GetObjectId().String() + "\x00" + object.GetTai().String()
-
-			if _, ok := seenObjectTai[key]; ok {
-				continue
-			}
-
-			seenObjectTai[key] = struct{}{}
 			builder.AddObject(object, i)
 		}
 	}
