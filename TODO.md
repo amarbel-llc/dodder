@@ -101,6 +101,14 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 - [x] Use doddish.Scanner to distinguish tags from references in OpTagSeparator parser instead of strings.Contains("/") heuristic
 
 
+## Abbreviation: render format ID separately from abbreviated digest
+
+- [ ] `addMarklIdAbbreviated` in `object_metadata_box_builder` abbreviates the full `markl.Id.String()` (which includes the format HRP, e.g., `blake2b256-...`). The format ID portion should not be abbreviated — only the digest payload after the HRP should go through the tridex. Render as `purposeId@formatId-abbreviatedDigest`.
+
+## Abbreviation store: ad-hoc persistence
+
+- [ ] Extend `store_abbr.InMemoryIndex` to support ad-hoc persistence (write/read to a path without requiring `env_repo.Env`). In-memory is sufficient for the import plan; persistence would allow caching abbreviation indexes across runs.
+
 ## Topological sort: include object references
 
 - [ ] Incorporate object references into the import_plan dependency graph, not just type references. References can point to any object or blob (blob references may not yet be implemented). Currently only type→dependent edges are sorted; objects referencing other objects are not ordered.

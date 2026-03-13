@@ -3,14 +3,19 @@ package import_plan
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/hotel/box_format"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
-func (plan *Plan) FormatSummary(w io.Writer) {
+func (plan *Plan) FormatSummary(
+	w io.Writer,
+	boxFormatter *box_format.BoxTransacted,
+) {
 	p := message.NewPrinter(language.English)
 	counts := plan.CountByClassification()
 
@@ -34,17 +39,26 @@ func (plan *Plan) FormatSummary(w io.Writer) {
 
 	p.Fprintf(w, "committable: %d (%d types)\n", committable, typeCount)
 
-	plan.formatErrorTree(w)
+	plan.formatErrorTree(w, boxFormatter)
 }
 
-func (plan *Plan) formatErrorTree(w io.Writer) {
+func (plan *Plan) formatErrorTree(
+	w io.Writer,
+	boxFormatter *box_format.BoxTransacted,
+) {
 	type errorRoot struct {
 		entry      *Entry
 		dependents []*Entry
 	}
 
+	type classificationGroup struct {
+		classification Classification
+		roots          []*errorRoot
+	}
+
 	roots := make(map[string]*errorRoot)
-	var rootOrder []string
+	groups := make(map[Classification]*classificationGroup)
+	var groupOrder []Classification
 
 	for i := range plan.Entries {
 		entry := &plan.Entries[i]
@@ -58,17 +72,26 @@ func (plan *Plan) formatErrorTree(w io.Writer) {
 			continue
 		}
 
+		var key string
+
 		genre := genres.Make(entry.object.GetGenre())
 		if genre != genres.Type {
-			key := sku.String(&entry.object)
-			roots[key] = &errorRoot{entry: entry}
-			rootOrder = append(rootOrder, key)
-			continue
+			key = sku.String(&entry.object)
+		} else {
+			key = entry.object.GetObjectId().String()
 		}
 
-		key := entry.object.GetObjectId().String()
-		roots[key] = &errorRoot{entry: entry}
-		rootOrder = append(rootOrder, key)
+		root := &errorRoot{entry: entry}
+		roots[key] = root
+
+		group, ok := groups[entry.Classification]
+		if !ok {
+			group = &classificationGroup{classification: entry.Classification}
+			groups[entry.Classification] = group
+			groupOrder = append(groupOrder, entry.Classification)
+		}
+
+		group.roots = append(group.roots, root)
 	}
 
 	for i := range plan.Entries {
@@ -83,52 +106,58 @@ func (plan *Plan) formatErrorTree(w io.Writer) {
 		}
 	}
 
-	if len(rootOrder) == 0 {
+	if len(groupOrder) == 0 {
 		return
 	}
 
 	fmt.Fprintln(w, "errors:")
 
-	for ri, key := range rootOrder {
-		root := roots[key]
-		isLastRoot := ri == len(rootOrder)-1
+	for gi, classification := range groupOrder {
+		group := groups[classification]
+		isLastGroup := gi == len(groupOrder)-1
 
-		var prefix, childPrefix string
-		if isLastRoot {
-			prefix = "  └── "
-			childPrefix = "      "
+		var groupPrefix, groupChildPrefix string
+		if isLastGroup {
+			groupPrefix = "  └── "
+			groupChildPrefix = "      "
 		} else {
-			prefix = "  ├── "
-			childPrefix = "  │   "
+			groupPrefix = "  ├── "
+			groupChildPrefix = "  │   "
 		}
 
-		genre := genres.Make(root.entry.object.GetGenre())
-		objectId := root.entry.object.GetObjectId().String()
+		fmt.Fprintf(w, "%s%s\n", groupPrefix, classification)
 
-		fmt.Fprintf(w, "%s%s %s %s\n",
-			prefix,
-			root.entry.Classification,
-			genre,
-			objectId,
-		)
+		for ri, root := range group.roots {
+			isLastRoot := ri == len(group.roots)-1
 
-		for di, dep := range root.dependents {
-			isLastDep := di == len(root.dependents)-1
-
-			var depPrefix string
-			if isLastDep {
-				depPrefix = childPrefix + "└── "
+			var rootPrefix, rootChildPrefix string
+			if isLastRoot {
+				rootPrefix = groupChildPrefix + "└── "
+				rootChildPrefix = groupChildPrefix + "    "
 			} else {
-				depPrefix = childPrefix + "├── "
+				rootPrefix = groupChildPrefix + "├── "
+				rootChildPrefix = groupChildPrefix + "│   "
 			}
 
-			objectId := dep.object.GetObjectId().String()
-			description := dep.object.GetMetadata().GetDescription().String()
+			genre := genres.Make(root.entry.object.GetGenre())
+			objectId := root.entry.object.GetObjectId().String()
 
-			if description != "" {
-				fmt.Fprintf(w, "%s%s %q\n", depPrefix, objectId, description)
-			} else {
-				fmt.Fprintf(w, "%s%s\n", depPrefix, objectId)
+			fmt.Fprintf(w, "%s%s %s\n", rootPrefix, genre, objectId)
+
+			for di, dep := range root.dependents {
+				isLastDep := di == len(root.dependents)-1
+
+				var depPrefix string
+				if isLastDep {
+					depPrefix = rootChildPrefix + "└── "
+				} else {
+					depPrefix = rootChildPrefix + "├── "
+				}
+
+				sb := &strings.Builder{}
+				boxFormatter.EncodeStringTo(&dep.object, sb)
+
+				fmt.Fprintf(w, "%s%s\n", depPrefix, sb.String())
 			}
 		}
 	}

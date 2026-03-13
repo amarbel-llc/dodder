@@ -49,6 +49,7 @@ type (
 		BoxExcludeFields           bool
 		PrintMatchedDormant        bool
 		PrintBlobDigests           bool
+		PrintSigs                  bool
 		PrintFlush                 bool
 		PrintUnchanged             bool
 		PrintColors                bool
@@ -129,6 +130,11 @@ func (options Options) WithPrintTai(v bool) Options {
 
 func (options Options) WithExcludeFields(v bool) Options {
 	options.BoxExcludeFields = v
+	return options
+}
+
+func (options Options) WithPrintSigs(v bool) Options {
+	options.PrintSigs = v
 	return options
 }
 

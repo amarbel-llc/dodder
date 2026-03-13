@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/hotel/store_abbr"
 	"code.linenisgreat.com/dodder/go/lib/_/dagnabit"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	chai "github.com/brandondube/tai"
@@ -24,6 +25,8 @@ type Builder struct {
 
 	dedupFormatId string
 	dedupLookup   map[string]struct{}
+
+	abbrIndex *store_abbr.InMemoryIndex
 }
 
 func MakeBuilder(
@@ -31,12 +34,13 @@ func MakeBuilder(
 	dedupFormatId string,
 ) Builder {
 	return Builder{
-		index: index,
+		index:         index,
 		objectByKey:   make(map[string]int),
 		taiByObjectId: make(map[string]ids.Tai),
 		typeNameToKey: make(map[string]string),
 		dedupFormatId: dedupFormatId,
 		dedupLookup:   make(map[string]struct{}),
+		abbrIndex:     store_abbr.NewInMemoryIndex(),
 	}
 }
 
@@ -88,6 +92,8 @@ func (b *Builder) AddObject(
 	if genre == genres.Config {
 		return
 	}
+
+	b.abbrIndex.AddObject(object)
 
 	var entry Entry
 	entry.SourceIndex = sourceIndex
@@ -282,6 +288,7 @@ func (b *Builder) Build() (*Plan, error) {
 	plan := &Plan{
 		Entries:     b.entries,
 		SourcePaths: b.sourcePaths,
+		Abbr:        b.abbrIndex.GetAbbr(),
 	}
 
 	for i := range plan.Entries {

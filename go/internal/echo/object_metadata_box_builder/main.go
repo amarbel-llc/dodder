@@ -47,18 +47,47 @@ func (builder *Builder) AddBlobDigestIfNecessary(
 
 func (builder *Builder) AddRepoPubKey(
 	metadata objects.MetadataMutable,
+	funcAbbreviate domain_interfaces.FuncAbbreviateString,
 ) {
-	builder.addMarklIdIfNotNull(metadata.GetRepoPubKey())
+	id := metadata.GetRepoPubKey()
+
+	if id.IsNull() {
+		return
+	}
+
+	if funcAbbreviate == nil {
+		builder.addMarklId(id)
+	} else {
+		builder.addMarklIdAbbreviated(id, funcAbbreviate)
+	}
 }
 
-func (builder *Builder) AddObjectSig(metadata objects.MetadataMutable) {
-	builder.addMarklId(metadata.GetObjectSig())
+func (builder *Builder) AddObjectSig(
+	metadata objects.MetadataMutable,
+	funcAbbreviate domain_interfaces.FuncAbbreviateString,
+) {
+	if funcAbbreviate == nil {
+		builder.addMarklId(metadata.GetObjectSig())
+	} else {
+		builder.addMarklIdAbbreviated(metadata.GetObjectSig(), funcAbbreviate)
+	}
 }
 
 func (builder *Builder) AddMotherSigIfNecessary(
 	metadata objects.MetadataMutable,
+	funcAbbreviate domain_interfaces.FuncAbbreviateString,
 ) {
-	builder.addMarklIdIfNotNull(metadata.GetMotherObjectSig())
+	id := metadata.GetMotherObjectSig()
+
+	if id.IsNull() {
+		return
+	}
+
+	if funcAbbreviate == nil {
+		builder.addMarklId(id)
+	} else {
+		builder.addMarklIdAbbreviated(id, funcAbbreviate)
+	}
 }
 
 func (builder *Builder) addMarklIdIfNotNull(id domain_interfaces.MarklId) {
@@ -71,6 +100,34 @@ func (builder *Builder) addMarklIdIfNotNull(id domain_interfaces.MarklId) {
 
 func (builder *Builder) addMarklId(id domain_interfaces.MarklId) {
 	builder.addMarklIdWithColorType(id, id.GetPurposeId(), string_format_writer.ColorTypeHash)
+}
+
+func (builder *Builder) addMarklIdAbbreviated(
+	id domain_interfaces.MarklId,
+	funcAbbreviate domain_interfaces.FuncAbbreviateString,
+) {
+	value := id.String()
+
+	if funcAbbreviate != nil {
+		abbreviated, err := funcAbbreviate(id)
+		if err != nil {
+			panic(err)
+		}
+
+		if abbreviated != "" {
+			value = abbreviated
+		} else {
+			ui.Todo("abbreviation func produced empty string")
+		}
+	}
+
+	builder.Contents.Append(string_format_writer.Field{
+		Key:        id.GetPurposeId(),
+		Separator:  '@',
+		Value:      value,
+		NoTruncate: true,
+		ColorType:  string_format_writer.ColorTypeHash,
+	})
 }
 
 func (builder *Builder) addMarklIdLockWithColorType(

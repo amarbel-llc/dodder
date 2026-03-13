@@ -24,7 +24,8 @@ func MakeBoxTransactedArchive(
 	options := optionsOriginal.
 		WithPrintBlobDigests(true).
 		WithExcludeFields(true).
-		WithDescriptionInBox(true)
+		WithDescriptionInBox(true).
+		WithPrintSigs(true)
 
 	colorOptions := env.FormatColorOptionsOut(optionsOriginal)
 	colorOptions.OffEntirely = true
@@ -79,6 +80,10 @@ type BoxTransacted struct {
 	relativePath     env_dir.RelativePath
 
 	isArchive bool
+}
+
+func (format *BoxTransacted) SetAbbr(abbr ids.Abbr) {
+	format.abbr = abbr
 }
 
 func (format *BoxTransacted) EncodeStringTo(
@@ -253,10 +258,10 @@ func (format *BoxTransacted) addFieldsMetadata(
 		builder.AddTai(metadata)
 	}
 
-	if format.isArchive && !object.GetMetadata().GetObjectSig().IsNull() {
-		builder.AddRepoPubKey(metadata)
-		builder.AddMotherSigIfNecessary(metadata)
-		builder.AddObjectSig(metadata)
+	if options.PrintSigs && !object.GetMetadata().GetObjectSig().IsNull() {
+		builder.AddRepoPubKey(metadata, format.abbr.PubKey.Abbreviate)
+		builder.AddMotherSigIfNecessary(metadata, format.abbr.Sig.Abbreviate)
+		builder.AddObjectSig(metadata, format.abbr.Sig.Abbreviate)
 	}
 
 	if format.isArchive {

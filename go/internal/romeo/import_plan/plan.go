@@ -2,12 +2,14 @@ package import_plan
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 )
 
 type Plan struct {
 	Entries     []Entry
 	SourcePaths []string
 	HasErrors   bool
+	Abbr        ids.Abbr
 }
 
 func (plan *Plan) CountByClassification() map[Classification]int {

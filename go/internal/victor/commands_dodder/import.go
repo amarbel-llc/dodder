@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -115,7 +116,18 @@ func (cmd Import) Run(req command.Request) {
 		case "objects":
 			plan.FormatObjects(os.Stderr)
 		default:
-			plan.FormatSummary(os.Stderr)
+			printOptions := local.GetConfig().GetPrintOptions().
+				WithPrintSigs(true)
+			colorOptions := local.FormatColorOptionsErr(printOptions)
+
+			boxFormatter := local.StringFormatWriterSkuBoxTransacted(
+				printOptions,
+				colorOptions,
+				string_format_writer.CliFormatTruncation66CharEllipsis,
+			)
+
+			boxFormatter.SetAbbr(plan.Abbr)
+			plan.FormatSummary(os.Stderr, boxFormatter)
 		}
 
 		if plan.HasErrors {

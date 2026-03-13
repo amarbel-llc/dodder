@@ -11,6 +11,8 @@ type (
 	Abbr struct {
 		BlobId   domain_interfaces.Abbreviator
 		ZettelId domain_interfaces.Abbreviator
+		Sig      domain_interfaces.Abbreviator
+		PubKey   domain_interfaces.Abbreviator
 	}
 )
 
