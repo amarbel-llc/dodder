@@ -120,3 +120,7 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.
+
+## Purse-first integration
+
+- [ ] FDR: purse-first framework integration for madder MCP server
