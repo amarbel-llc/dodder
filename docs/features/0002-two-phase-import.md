@@ -1,7 +1,8 @@
 ---
-status: proposed
+status: experimental
 date: 2026-03-12
-promotion-criteria: import of a production inventory list with known blobless types, TAI collisions, and overwritten signatures completes phase 1 (plan) without errors, and phase 2 (commit) produces the same store state as the current single-pass import minus the dropped objects. Multi-list import merges plans correctly.
+updated: 2026-03-13
+promotion-criteria: import of a production inventory list with known blobless types, TAI collisions, and overwritten signatures completes phase 1 (plan) without errors, and phase 2 (commit) produces the same store state as the current single-pass import minus the dropped objects. Multi-list import merges plans correctly. Interactive blobless type resolution tested against a real inventory with foreign types.
 ---
 
 # Two-Phase Import with Topographic Processing
@@ -132,6 +133,10 @@ New flags:
   (default, human-readable counts), `objects` (one line per object with
   classification).
 
+- `-interactive` / `-i` — after building the plan, interactively resolve
+  blobless types by selecting local replacements. Requires a TTY; in non-TTY
+  contexts, prints a warning and falls through. Does not imply `-dry-run`.
+
 Existing flags are unchanged. `-continue-on-error` applies to phase 2 commit
 errors (not phase 1 validation, which always reports all issues).
 
@@ -183,6 +188,23 @@ Per-object plan output:
     resolve:tai-reassign  zettel  bombyx/downtown  1709234572.0 -> 1709234572.1
     ...
 
+Interactive blobless type resolution:
+
+    $ der import -interactive -dry-run export.inventory
+    ? Blobless type: !custom-note
+    > Use local !custom-note
+      Skip (keep as error)
+
+    ╭────────────────────────────────┬───────╮
+    │ classification                 │ count │
+    ├────────────────────────────────┼───────╯
+    │ import                         │ 1,216 │
+    │ resolve-tai-reassign           │    12 │
+    │ skip-exists                    │   112 │
+    │ skip-dedup                     │     7 │
+    │ committable                    │ 1,228 │
+    ╰────────────────────────────────┴───────╯
+
 Normal import with plan summary before commit:
 
     $ der import export.inventory
@@ -193,6 +215,82 @@ Normal import with plan summary before commit:
     [   1/1204] one/uno
     [   2/1204] two/dos
     ...
+
+### Interactive blobless type resolution
+
+`-interactive` (`-i`) adds a post-plan resolution step for blobless types.
+When the plan has errors and a TTY is available, the user is prompted for each
+blobless type: select a local replacement (if the type exists in the store with
+a blob) or skip.
+
+    der import -interactive -dry-run export.inventory
+
+Flow: `build plan → [interactive resolve] → dry-run OR commit`. The resolution
+operates on the completed plan, not on intermediate builder state — this matters
+because `Build()` cascades `skip-blobless-type` entries to
+`error-missing-blob` on all dependents before the plan is finalized.
+
+Implementation is two layers respecting the NATO tier hierarchy:
+
+1. **Pure data transformation** (`romeo/import_plan/resolve.go`):
+   - `Plan.BloblessTypes()` — returns objectId strings of
+     `ClassificationSkipBloblessType` entries, preserving encounter order.
+   - `Plan.ResolveBloblessTypes(remapping)` — for each
+     `ClassificationErrorMissingBlob` entry whose `ErrorCause` matches a
+     remapping key, sets the replacement type via
+     `entry.object.GetMetadataMutable().GetTypeMutable().SetType()` and
+     restores the correct classification. Classification recovery uses TAI
+     comparison: if `OriginalTai != object.GetTai()`, the entry was a TAI
+     reassign (the TAI was already adjusted during `AddObject`); otherwise
+     it's a plain import. After all entries are processed, `HasErrors` is
+     rescanned.
+
+2. **Interactive prompting** (`victor/commands_dodder/import.go`):
+   - TTY check via `local.GetEnv().GetIn().IsTty()`. Non-TTY prints a
+     warning to stderr and falls through.
+   - For each blobless type, probes the local store via
+     `sku.ReadOneObjectId(streamIndex, objectId, &localType)`. If the local
+     type exists and has a non-null blob digest, it's offered as a
+     replacement via `huh.NewSelect`.
+   - Uses `ids.MakeObjectId` with proper repool lifecycle to parse the type
+     string.
+
+**Design decisions:**
+
+- `Entry.object` is `sku.Transacted` by value (not pooled), so mutation via
+  `SetType` is safe without pool concerns.
+- `SetType` accepts the type string as-is (e.g. `!md`) — it parses via
+  `doddish.MakeScanner` internally.
+- `ErrorCause` is the bridge between `Build()`'s cascade pass and
+  `ResolveBloblessTypes` — it records which type caused each entry's error.
+- `-interactive` does NOT imply `--dry-run`. The combination
+  `-interactive -dry-run` resolves then shows the resolved summary;
+  `-interactive` alone resolves then commits.
+
+## Implementation Status
+
+### Implemented (experimental)
+
+- Two-phase plan+commit architecture (`import_plan.Builder`, `import_plan.Plan`)
+- Topographic ordering via DAG sort (`dagnabit.TopologicalSort`)
+- All six classification types with error cascade from types to dependents
+- TAI collision detection and resolution (within batch and against local store)
+- Cross-list dedup via content-addressed digest keys
+- `-dry-run` with `summary` and `objects` plan formats
+- Summary rendering as lipgloss table with locale-formatted numbers
+- Error tree showing blobless types and their affected dependents
+- Abbreviation indexes for plan output (tridex-based shortest unique prefixes)
+- `-interactive` (`-i`) blobless type resolution with `huh.Select`
+- Multi-list import with merged plan
+- Integration tests for all of the above
+
+### Not yet implemented
+
+- Signature rewriting in topographic order (`-overwrite-signatures` integration
+  with plan phase)
+- Selective import (`-filter` flag)
+- Referenced object edges in the dependency graph (pending FDR-0001)
+- Streaming plan construction for very large imports
 
 ## Limitations
 
