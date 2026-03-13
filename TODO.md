@@ -101,6 +101,10 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 - [x] Use doddish.Scanner to distinguish tags from references in OpTagSeparator parser instead of strings.Contains("/") heuristic
 
 
+## Topological sort: include object references
+
+- [ ] Incorporate object references into the import_plan dependency graph, not just type references. References can point to any object or blob (blob references may not yet be implemented). Currently only type→dependent edges are sorted; objects referencing other objects are not ordered.
+
 ## Archive store foreign digest support
 
 - [ ] Implement `BlobForeignDigestAdder` for inventory archive stores. Idea: use symlinks in the embedded loose blob directory pointing to packed blob entries, so `HasBlob(foreignDigest)` resolves via the loose store fallback. Requires solving the read path (symlink target is a packfile, not a single blob file). See `docs/plans/2026-02-23-sync-cross-hash-design.md`.

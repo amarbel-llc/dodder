@@ -481,6 +481,181 @@ EOM
   popd || exit 1
 }
 
+function import_dry_run { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+  )
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+
+  list="$(realpath list)"
+  pushd inner || exit 1
+
+  run_dodder import \
+    -dry-run \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+  assert_output --partial "import plan:"
+  assert_output --partial "committable:"
+  assert_output --partial "import:"
+
+  # Verify no objects were committed (inner should have only init objects)
+  run_dodder show :z,e,t
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[!md @$(get_type_blob_sha) !toml-type-v1]
+	EOM
+}
+
+function import_dry_run_objects_format { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+  )
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+
+  list="$(realpath list)"
+  pushd inner || exit 1
+
+  # First import to populate the inner repo
+  run_dodder import \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+
+  # Second dry-run to see skip-exists classifications
+  run_dodder import \
+    -dry-run \
+    -plan-format objects \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+
+  # Per-object output has tab-separated classification, genre, object, tai
+  assert_output --partial "skip-exists"
+  assert_output --partial "Type"
+  assert_output --partial "Zettel"
+}
+
+function import_multiple_lists { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+  )
+
+  # Export zettels into two separate lists
+  run_dodder export -print-time=true one/uno+
+  assert_success
+  echo "$output" >list_a
+
+  run_dodder export -print-time=true one/dos
+  assert_success
+  echo "$output" >list_b
+
+  list_a="$(realpath list_a)"
+  list_b="$(realpath list_b)"
+  pushd inner || exit 1
+
+  run_dodder import \
+    -blob_store-id shared \
+    "$list_a" "$list_b"
+  assert_success
+
+  # All objects from both lists should be present
+  run_dodder show +z,e,t
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[!md @$(get_type_blob_sha) !toml-type-v1]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+	EOM
+}
+
+function import_multiple_lists_cross_dedup { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+  )
+
+  # Export overlapping sets: both include one/uno (latest)
+  run_dodder export -print-time=true one/uno one/dos
+  assert_success
+  echo "$output" >list_a
+
+  run_dodder export -print-time=true one/uno
+  assert_success
+  echo "$output" >list_b
+
+  list_a="$(realpath list_a)"
+  list_b="$(realpath list_b)"
+  pushd inner || exit 1
+
+  run_dodder import \
+    -blob_store-id shared \
+    "$list_a" "$list_b"
+  assert_success
+
+  # The overlapping one/uno should be deduped
+  assert_output --partial "deduped during import"
+}
+
+function import_tai_collision_resolution { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+  )
+
+  # Craft a list with two objects sharing ObjectId+TAI but different blobs
+  cat >list <<-EOM
+		---
+		! inventory_list-v2
+		---
+
+		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m 2135591162.342034946 !toml-type-v1]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 2135591162.520209927 !md "wow ok" tag-1 tag-2]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd 2135591162.520209927 !md "wow the first" tag-3 tag-4]
+	EOM
+
+  list="$(realpath list)"
+  pushd inner || exit 1
+
+  # Dry-run to verify collision is detected and resolved
+  run_dodder import \
+    -dry-run \
+    -plan-format objects \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+  assert_output --partial "resolve-tai-reassign"
+
+  # Actual import: both objects should be committed
+  run_dodder import \
+    -overwrite-signatures=true \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+
+  # Both versions of one/uno should exist with different TAIs
+  run_dodder show -format inventory_list one/uno+
+  assert_success
+
+  line_count="$(echo "$output" | wc -l)"
+  [[ "$line_count" -eq 2 ]]
+}
+
 function import_inventory_lists { # @test
   (
     mkdir inner
