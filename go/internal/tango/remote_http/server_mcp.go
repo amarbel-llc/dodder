@@ -19,32 +19,33 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/_/mcp"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
+	"github.com/amarbel-llc/purse-first/libs/go-mcp/jsonrpc"
+	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 )
 
 func (server *Server) handleMCP(request Request) (response Response) {
 	response.Headers().Set("Content-Type", "application/json")
 
-	var mcpRequest mcp.Request
+	var msg jsonrpc.Message
 
 	decoder := json.NewDecoder(request.Body)
 
-	if err := decoder.Decode(&mcpRequest); err != nil {
+	if err := decoder.Decode(&msg); err != nil {
 		response.MCPError(
 			http.StatusBadRequest,
-			nil, -32700, "Parse error", nil,
+			nil, jsonrpc.ParseError, "Parse error", nil,
 		)
 
 		return response
 	}
 
-	if mcpRequest.JSONRPC != "2.0" {
+	if msg.JSONRPC != jsonrpc.Version {
 		response.MCPError(
 			http.StatusBadRequest,
-			mcpRequest.ID,
-			-32600,
+			msg.ID,
+			jsonrpc.InvalidRequest,
 			"Invalid Request",
 			nil,
 		)
@@ -52,46 +53,66 @@ func (server *Server) handleMCP(request Request) (response Response) {
 		return response
 	}
 
-	mcpResponse := mcp.Response{
-		JSONRPC: "2.0",
-		ID:      mcpRequest.ID,
+	resp := jsonrpc.Message{
+		JSONRPC: jsonrpc.Version,
+		ID:      msg.ID,
 	}
 
-	switch mcpRequest.Method {
+	switch msg.Method {
 	case "initialize":
-		mcpResponse.Result = mcp.InitializeResponse{
+		result := protocol.InitializeResult{
 			ProtocolVersion: "2024-11-05",
-			Capabilities: mcp.ServerCapabilities{
-				Resources: &mcp.ResourcesCapability{
+			Capabilities: protocol.ServerCapabilities{
+				Resources: &protocol.ResourcesCapability{
 					Subscribe:   false,
 					ListChanged: true,
 				},
 			},
-			ServerInfo: mcp.ServerInfo{
+			ServerInfo: protocol.Implementation{
 				Name:    "dodder",
 				Version: "1.0.0",
 			},
 		}
 
+		resultBytes, err := json.Marshal(result)
+		if err != nil {
+			response.MCPError(
+				http.StatusInternalServerError,
+				msg.ID,
+				jsonrpc.InternalError,
+				"Internal error",
+				nil,
+			)
+			return response
+		}
+
+		resp.Result = resultBytes
+
 	case "resources/list":
 		resources := server.getMCPResources()
-		mcpResponse.Result = mcp.ResourcesListResult{Resources: resources}
+		result := protocol.ResourcesListResult{Resources: resources}
+
+		resultBytes, err := json.Marshal(result)
+		if err != nil {
+			response.MCPError(
+				http.StatusInternalServerError,
+				msg.ID,
+				jsonrpc.InternalError,
+				"Internal error",
+				nil,
+			)
+			return response
+		}
+
+		resp.Result = resultBytes
 
 	case "resources/read":
-		var params mcp.ResourcesReadParams
+		var params protocol.ResourceReadParams
 
-		if mcpRequest.Params != nil {
-			paramsBytes, err := json.Marshal(mcpRequest.Params)
-			if err != nil {
-				mcpResponse.Error = &mcp.Error{
-					Code:    -32602,
-					Message: "Invalid params",
-				}
-				break
-			}
-			if err := json.Unmarshal(paramsBytes, &params); err != nil {
-				mcpResponse.Error = &mcp.Error{
-					Code:    -32602,
+		if msg.Params != nil {
+			if err := json.Unmarshal(msg.Params, &params); err != nil {
+				resp.Error = &jsonrpc.Error{
+					Code:    jsonrpc.InvalidParams,
 					Message: "Invalid params",
 				}
 				break
@@ -100,27 +121,41 @@ func (server *Server) handleMCP(request Request) (response Response) {
 
 		contents, err := server.readMCPResource(params.URI)
 		if err != nil {
-			mcpResponse.Error = &mcp.Error{
-				Code:    -32602,
+			resp.Error = &jsonrpc.Error{
+				Code:    jsonrpc.InvalidParams,
 				Message: fmt.Sprintf("Failed to read resource: %v", err),
 			}
 		} else {
-			mcpResponse.Result = mcp.ResourcesReadResult{Contents: contents}
+			result := protocol.ResourceReadResult{Contents: contents}
+
+			resultBytes, marshalErr := json.Marshal(result)
+			if marshalErr != nil {
+				response.MCPError(
+					http.StatusInternalServerError,
+					msg.ID,
+					jsonrpc.InternalError,
+					"Internal error",
+					nil,
+				)
+				return response
+			}
+
+			resp.Result = resultBytes
 		}
 
 	default:
-		mcpResponse.Error = &mcp.Error{
-			Code:    -32601,
+		resp.Error = &jsonrpc.Error{
+			Code:    jsonrpc.MethodNotFound,
 			Message: "Method not found",
 		}
 	}
 
-	responseBytes, err := json.Marshal(mcpResponse)
+	responseBytes, err := json.Marshal(resp)
 	if err != nil {
 		response.MCPError(
 			http.StatusInternalServerError,
-			mcpRequest.ID,
-			-32603,
+			msg.ID,
+			jsonrpc.InternalError,
 			"Internal error",
 			nil,
 		)
@@ -134,8 +169,8 @@ func (server *Server) handleMCP(request Request) (response Response) {
 	return response
 }
 
-func (server *Server) getMCPResources() []mcp.Resource {
-	resources := []mcp.Resource{
+func (server *Server) getMCPResources() []protocol.Resource {
+	resources := []protocol.Resource{
 		{
 			URI:         "dodder:///types",
 			Name:        "Objects",
@@ -161,7 +196,7 @@ func (server *Server) getMCPResources() []mcp.Resource {
 
 func (server *Server) readMCPResource(
 	uriString string,
-) ([]mcp.ResourceContent, error) {
+) ([]protocol.ResourceContent, error) {
 	uri, err := url.ParseRequestURI(uriString)
 	if err != nil {
 		return nil, err
@@ -197,7 +232,7 @@ func (server *Server) readMCPResource(
 
 func (server *Server) readMCPResourceTypes(
 	uri *url.URL,
-) ([]mcp.ResourceContent, error) {
+) ([]protocol.ResourceContent, error) {
 	repo := server.Repo
 
 	var queryGroup *queries.Query
@@ -214,7 +249,7 @@ func (server *Server) readMCPResourceTypes(
 		}
 	}
 
-	results := make([]mcp.ResourceContent, 0)
+	results := make([]protocol.ResourceContent, 0)
 
 	var lock sync.Mutex
 
@@ -243,7 +278,7 @@ func (server *Server) readMCPResourceTypes(
 
 func (server *Server) readMCPResourceObjects(
 	uri *url.URL,
-) ([]mcp.ResourceContent, error) {
+) ([]protocol.ResourceContent, error) {
 	repo := server.Repo
 
 	objectIdString := strings.TrimPrefix(
@@ -299,7 +334,7 @@ func (server *Server) readMCPResourceObjects(
 		}
 	}
 
-	results := make([]mcp.ResourceContent, 0, list.Len())
+	results := make([]protocol.ResourceContent, 0, list.Len())
 
 	for object := range list.All() {
 		objectResources, err := server.readMCPResourceObject(object)
@@ -315,7 +350,7 @@ func (server *Server) readMCPResourceObjects(
 
 func (server *Server) readMCPResourceObject(
 	object *sku.Transacted,
-) ([]mcp.ResourceContent, error) {
+) ([]protocol.ResourceContent, error) {
 	repo := server.Repo
 
 	var jsonRep sku_json_fmt.MCP
@@ -390,7 +425,7 @@ SKIP_TYPE_BLOB:
 		return nil, errors.Wrap(err)
 	}
 
-	return []mcp.ResourceContent{{
+	return []protocol.ResourceContent{{
 		URI:      jsonRep.URI,
 		MimeType: "application/json",
 		Text:     sb.String(),
@@ -399,7 +434,7 @@ SKIP_TYPE_BLOB:
 
 func (server *Server) readMCPResourceBlobs(
 	uri *url.URL,
-) ([]mcp.ResourceContent, error) {
+) ([]protocol.ResourceContent, error) {
 	pathComponents := strings.Split(strings.TrimPrefix(uri.Path, "/blobs"), "/")
 
 	if len(pathComponents) == 0 {
@@ -431,7 +466,7 @@ func (server *Server) readMCPResourceBlobs(
 		mimeType = pathComponents[1]
 	}
 
-	return []mcp.ResourceContent{{
+	return []protocol.ResourceContent{{
 		URI:      uri.String(),
 		MimeType: mimeType,
 		Blob:     base64.StdEncoding.EncodeToString(buffer.Bytes()),

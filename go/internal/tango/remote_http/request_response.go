@@ -9,10 +9,10 @@ import (
 	"slices"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/_/mcp"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/go-mcp/jsonrpc"
 	"github.com/gorilla/mux"
 )
 
@@ -67,21 +67,28 @@ func (response *Response) Error(err error) {
 
 func (response *Response) MCPError(
 	status int,
-	id any,
+	id *jsonrpc.ID,
 	code int,
 	message string,
 	data any,
 ) {
 	response.StatusCode = status
 
-	mcpResponse := mcp.Response{
-		JSONRPC: "2.0",
+	mcpErr := &jsonrpc.Error{
+		Code:    code,
+		Message: message,
+	}
+
+	if data != nil {
+		if raw, err := json.Marshal(data); err == nil {
+			mcpErr.Data = raw
+		}
+	}
+
+	mcpResponse := jsonrpc.Message{
+		JSONRPC: jsonrpc.Version,
 		ID:      id,
-		Error: &mcp.Error{
-			Code:    code,
-			Message: message,
-			Data:    data,
-		},
+		Error:   mcpErr,
 	}
 
 	responseBytes, _ := json.Marshal(mcpResponse)
