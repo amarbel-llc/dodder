@@ -88,6 +88,10 @@ Do NOT regenerate when:
   confuse them.
 - **Trailing whitespace matters** in dodder output assertions. Use `xxd` or
   `cat -A` to debug invisible mismatches in BATS tests.
+- **Do not recreate existing formatters.** When dodder already has a formatter
+  (e.g., `box_format.BoxTransacted`, `sku_fmt` printers), use it via dependency
+  injection or direct import — never hand-build the same output with
+  `fmt.Fprintf`/`strings.Builder`.
 
 ## Common Issues
 
