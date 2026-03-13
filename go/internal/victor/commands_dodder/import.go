@@ -1,15 +1,15 @@
 package commands_dodder
 
 import (
+	"os"
+
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/hotel/blob_transfers"
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
+	"code.linenisgreat.com/dodder/go/internal/romeo/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/romeo/remote_transfer"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -31,6 +31,7 @@ type Import struct {
 	Proto sku.Proto
 
 	BlobStoreId blob_store_id.Id
+	PlanFormat  string
 }
 
 var _ interfaces.CommandComponentWriter = (*Import)(nil)
@@ -46,16 +47,26 @@ func (cmd *Import) SetFlagDefinitions(
 		"blob_store-id",
 		"The name of the existing madder blob store to use",
 	)
+
+	flagDefinitions.StringVar(
+		&cmd.PlanFormat,
+		"plan-format",
+		"summary",
+		"output format for the import plan: summary or objects",
+	)
 }
 
 func (cmd Import) Run(req command.Request) {
-	inventoryListPath := req.PopArg("inventory_list-path")
+	inventoryListPaths := req.PopArgs()
+
+	if len(inventoryListPaths) == 0 {
+		errors.ContextCancelWithBadRequestf(
+			req,
+			"expected at least one inventory list path",
+		)
+	}
 
 	local := cmd.MakeLocalWorkingCopy(req)
-
-	if inventoryListPath == "" {
-		errors.ContextCancelWithBadRequestf(req, "empty inventory list")
-	}
 
 	cmd.DedupingFormatId = markl.PurposeV5MetadataDigestWithoutTai
 	cmd.CheckedOutPrinter = local.PrinterCheckedOutConflictsForRemoteTransfers()
@@ -66,91 +77,75 @@ func (cmd Import) Run(req command.Request) {
 		)
 	}
 
-	req.AssertNoMoreArgs()
+	closet := local.GetInventoryListCoderCloset()
 
-	var afterDecoding func(*sku.Transacted) error
-
-	blobImporter := blob_transfers.MakeBlobImporter(
-		local.GetEnvRepo().GetEnvBlobStore(),
-		cmd.RemoteBlobStore,
-		blob_stores.MakeBlobStoreMap(local.GetBlobStore()),
+	builder := import_plan.MakeBuilder(
+		local.GetStore().GetStreamIndex(),
+		markl.PurposeV5MetadataDigestWithoutTai,
 	)
 
-	blobImporter.UseDestinationHashType = true
+	seenObjectTai := make(map[string]struct{})
 
-	blobImporter.CopierDelegate = sku.MakeBlobCopierDelegate(
-		local.GetUI(),
-		false,
-	)
+	for i, path := range inventoryListPaths {
+		builder.AddSourcePath(path)
 
-	finalizer := local.GetObjectFinalizer()
+		seq := cmd.MakeSeqFromPath(
+			local,
+			closet,
+			path,
+			nil,
+		)
 
-	// TODO traverse object graph and rewrite all signature in topological order
-	// TODO move this to the importer directly
-	if cmd.OverwriteSignatures {
-		afterDecoding = func(object *sku.Transacted) (err error) {
-			object.GetMetadataMutable().GetObjectDigestMutable().Reset()
-			object.GetMetadataMutable().GetObjectSigMutable().Reset()
-			object.GetMetadataMutable().GetRepoPubKeyMutable().Reset()
-
-			if err = blobImporter.ImportBlobIfNecessary(
-				object.GetMetadata().GetBlobDigest(),
-				object,
-			); err != nil { // TODO rewrite blob
-				var errNotEqual markl.ErrNotEqual
-
-				if errors.As(err, &errNotEqual) {
-					if errNotEqual.IsDifferentHashTypes() {
-						err = nil
-						object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(
-							errNotEqual.Actual,
-						)
-					} else {
-						err = errors.Wrap(err)
-						return err
-					}
-				} else if env_dir.IsErrBlobAlreadyExists(err) {
-					err = nil
-				} else {
-					err = errors.Wrap(err)
-					return err
-				}
+		for object, err := range seq {
+			if err != nil {
+				local.Cancel(errors.Wrapf(err, "reading %s", path))
+				return
 			}
 
-			// TODO add mother?
-			// TODO rewrite time?
-			if err = finalizer.FinalizeAndSignOverwrite(
-				object,
-				local.GetEnvRepo().GetConfigPrivate().Blob,
-			); err != nil {
-				err = errors.Wrap(err)
-				return err
+			key := object.GetObjectId().String() + "\x00" + object.GetTai().String()
+
+			if _, ok := seenObjectTai[key]; ok {
+				continue
 			}
 
-			return err
+			seenObjectTai[key] = struct{}{}
+			builder.AddObject(object, i)
 		}
 	}
 
-	seq := cmd.MakeSeqFromPath(
-		local,
-		local.GetInventoryListCoderCloset(),
-		inventoryListPath,
-		afterDecoding,
-	)
+	plan, err := builder.Build()
+	if err != nil {
+		local.Cancel(errors.Wrap(err))
+		return
+	}
+
+	if local.GetConfig().IsDryRun() {
+		switch cmd.PlanFormat {
+		case "objects":
+			plan.FormatObjects(os.Stderr)
+		default:
+			plan.FormatSummary(os.Stderr)
+		}
+
+		if plan.HasErrors {
+			local.Cancel(errors.Errorf("plan has errors"))
+		}
+
+		return
+	}
 
 	importer := local.MakeImporter(
 		cmd.ImporterOptions,
 		sku.GetStoreOptionsImport(),
 	)
 
-	if err := local.ImportSeq(
-		seq,
+	if err := remote_transfer.CommitPlan(
+		local,
+		local,
+		local,
 		importer,
+		plan,
 	); err != nil {
-		if !errors.Is(err, remote_transfer.ErrNeedsMerge) {
-			err = errors.Wrap(err)
-		}
-
 		local.Cancel(err)
 	}
 }
