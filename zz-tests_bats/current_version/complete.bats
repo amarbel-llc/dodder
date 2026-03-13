@@ -96,6 +96,7 @@ function complete_subcmd { # @test
 		blob_store-init
 		blob_store-init-from
 		blob_store-init-pointer
+		blob_store-install-mcp
 		blob_store-init-sftp-explicit
 		blob_store-init-inventory-archive
 		blob_store-init-inventory-archive-v0
