@@ -6,12 +6,15 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 func (plan *Plan) FormatSummary(w io.Writer) {
+	p := message.NewPrinter(language.English)
 	counts := plan.CountByClassification()
 
-	fmt.Fprintf(w, "import plan: %d entries\n", len(plan.Entries))
+	p.Fprintf(w, "import plan: %d entries\n", len(plan.Entries))
 
 	for _, c := range []Classification{
 		ClassificationImport,
@@ -22,14 +25,14 @@ func (plan *Plan) FormatSummary(w io.Writer) {
 		ClassificationErrorMissingBlob,
 	} {
 		if n := counts[c]; n > 0 {
-			fmt.Fprintf(w, "  %s: %d\n", c, n)
+			p.Fprintf(w, "  %s: %d\n", c, n)
 		}
 	}
 
 	committable := plan.CommittableCount()
 	typeCount := plan.TypeCount()
 
-	fmt.Fprintf(w, "committable: %d (%d types)\n", committable, typeCount)
+	p.Fprintf(w, "committable: %d (%d types)\n", committable, typeCount)
 }
 
 func (plan *Plan) FormatObjects(w io.Writer) {
