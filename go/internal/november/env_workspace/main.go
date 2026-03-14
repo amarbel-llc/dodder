@@ -2,6 +2,7 @@ package env_workspace
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
@@ -169,7 +170,10 @@ func (env *env) findWorkspaceFile(
 	dir string,
 	name string,
 ) (found string) {
-	// TODO add workspace parent tree height limit?
+	ceilings := parseCeilingDirectories(
+		os.Getenv(env_repo.EnvCeilingDirectories),
+	)
+
 	for {
 		expectedWorkspaceConfigFilePath := filepath.Join(
 			dir,
@@ -187,7 +191,13 @@ func (env *env) findWorkspaceFile(
 			dir = ""
 		}
 
-		dir = filepath.Dir(dir)
+		parent := filepath.Dir(dir)
+
+		if isAtOrAboveCeiling(parent, ceilings) {
+			return found
+		}
+
+		dir = parent
 
 		if dir != "." {
 			continue
@@ -195,6 +205,47 @@ func (env *env) findWorkspaceFile(
 
 		return found
 	}
+}
+
+func parseCeilingDirectories(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+
+	var ceilings []string
+
+	for _, entry := range filepath.SplitList(raw) {
+		if !filepath.IsAbs(entry) {
+			continue
+		}
+
+		ceilings = append(ceilings, filepath.Clean(entry))
+	}
+
+	return ceilings
+}
+
+func isAtOrAboveCeiling(dir string, ceilings []string) bool {
+	cleaned := filepath.Clean(dir)
+
+	for _, ceiling := range ceilings {
+		if cleaned == ceiling || isParentOf(cleaned, ceiling) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isParentOf(parent, child string) bool {
+	rel, err := filepath.Rel(parent, child)
+	if err != nil {
+		return false
+	}
+
+	// If the relative path doesn't start with "..", parent is an ancestor of
+	// child (or equal to it), meaning dir is at or above the ceiling.
+	return len(rel) > 0 && rel[0] != '.'
 }
 
 func (env *env) GetWorkspaceDir() string {

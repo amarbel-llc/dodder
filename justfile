@@ -2,6 +2,11 @@ set output-format := "tap"
 
 dir_build := absolute_path("go/build")
 
+# Prevent dodder's findWorkspaceFile from walking above the BATS temp dir and
+# discovering .dodder-workspace in the worktree. Without this, tests that expect
+# "no workspace" would pass incorrectly when TMPDIR is inside the repo tree.
+bats_ceiling := absolute_path("")
+
 default: build test
 
 #   ____        _ _     _
@@ -36,15 +41,15 @@ test-bats-quick: build _test-bats-run
 
 # Run specific bats test files.
 test-bats-targets *targets: build
-  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
+  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
 
 # Run bats tests filtered by tag.
 test-bats-tags *tags: build
-  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
+  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
 
 # Run bats tests requiring Unix sockets (no sandbox).
 test-bats-no-sandbox: build
-  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
+  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
 
 # Force-regenerate fixtures. Review diff, then git add + commit.
 test-bats-update-fixtures: build
@@ -103,4 +108,4 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
 [private]
 _test-bats-run:
   @echo "==> Running bats integration tests..."
-  BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test
+  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test
