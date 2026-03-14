@@ -2,6 +2,7 @@
   nixpkgs,
   nixpkgs-master,
   purse-first,
+  bob,
   gomod2nix,
   system,
 }:
@@ -60,8 +61,8 @@ in
         pandoc
       ])
       ++ [
-        purse-first.packages.${system}.batman
-        purse-first.packages.${system}.tap-dancer
+        bob.packages.${system}.batman
+        bob.packages.${system}.tap-dancer
       ];
 
     inputsFrom = [
