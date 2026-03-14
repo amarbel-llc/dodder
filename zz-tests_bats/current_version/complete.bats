@@ -144,7 +144,9 @@ function complete_subcmd { # @test
 		info-workspace
 		init
 		init-workspace
+		install-mcp
 		last
+		mcp
 		merge-tool
 		migrate-zettel-ids
 		new
