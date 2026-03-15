@@ -133,6 +133,7 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 - [x] Once purse-first install_mcp branch lands: add install-mcp command to madder using `app.InstallMCP()` from go-mcp
 - [ ] purse-first: support HTTP/SSE MCP servers in `App.InstallMCP()` (currently stdio-only)
 
+
 ## Query executor workspace scanning
 
 - [ ] Fix query executor to only consult workspace store when `.` (CWD) sigil is in the query — currently `build_state.build()` passes all values to `workspaceStore.GetObjectIdsForString()` even for repo-only sigils like `:z`. The MCP bridge works around this with `IgnoreWorkspace: true` but the executor itself should be fixed.
@@ -182,3 +183,7 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 ## dagnabit: other misplaced packages
 
 - [ ] `dagnabit -dry-run` reports 5 packages in wrong tiers (as of 2026-03-15): `charlie/filesystem_ops` → `_/`, `charlie/zettel_id_log` → `delta/`, `charlie/zettel_id_provider` → `echo/`, `romeo/import_plan` → `india/`, `lib/charlie/fd` → `lib/delta/fd`. Run `dagnabit` (no flags) from the `go/` directory to auto-move, or use `just codemod-go-move_package <src> <dst>` individually.
+
+## Repo disambiguation
+
+- [ ] feat: user-config-wide repo definition that exists outside of repos (needed for `/<repo-id>` remote selection)
