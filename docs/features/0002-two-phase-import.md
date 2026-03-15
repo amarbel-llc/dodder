@@ -318,11 +318,10 @@ Implementation is two layers respecting the NATO tier hierarchy:
 - Abbreviation indexes for plan output (tridex-based shortest unique prefixes)
 - `-interactive` (`-i`) blobless type resolution with `huh.Select`
 - Multi-list import with merged plan
+- Object transform pipeline and `-omit-tags` flag
 - Integration tests for all of the above
 
 ### Not yet implemented
-
-- Object transform pipeline and `-omit-tags` flag
 - Signature rewriting in topographic order (`-overwrite-signatures` integration
   with plan phase)
 - Selective import (`-filter` flag)
