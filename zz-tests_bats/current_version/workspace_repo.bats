@@ -172,3 +172,67 @@ function workspace_repo_clone_filtered_by_tag { # @test
 	# Verify project-beta zettel was NOT cloned
 	refute_output --partial 'project-beta'
 }
+
+function workspace_repo_pull_filtered_by_tag { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# --- Clone only project-alpha zettels into workspace-repo ---
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder clone \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	run_dodder init-workspace
+	assert_success
+
+	# --- Add both project-alpha and project-beta zettels in parent ---
+	(
+		pushd "$parent_path" || exit 1
+		run_dodder new -edit=false - <<-EOM
+			---
+			# new alpha zettel
+			- project-alpha
+			! md
+			---
+
+			new alpha body
+		EOM
+		assert_success
+
+		run_dodder new -edit=false - <<-EOM
+			---
+			# new beta zettel
+			- project-beta
+			! md
+			---
+
+			new beta body
+		EOM
+		assert_success
+	)
+
+	# --- Pull with the same tag filter ---
+	run_dodder pull -direct "$parent_path" project-alpha:z
+
+	assert_success
+
+	# Should have the new project-alpha zettel
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'new alpha zettel'
+
+	# Should NOT have the new project-beta zettel
+	refute_output --partial 'new beta zettel'
+}
