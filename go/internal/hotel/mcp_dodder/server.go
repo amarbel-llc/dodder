@@ -30,7 +30,8 @@ Field order inside brackets:
 2. Blob digest prefixed with @ (e.g. @blake2b256-9ft3...)
 3. Type prefixed with ! (e.g. !md, !toml-type-v1)
 4. Tags as bare identifiers, sorted alphabetically. Tags prefixed with %
-   are auto-generated (by the object's type or other entities).
+   are not persisted to the repo (computed/derived at display time by the
+   object's type or other entities).
 Description appears as a trailer after the closing bracket.
 
 Values containing spaces are Go-quoted ("like this").
