@@ -187,3 +187,4 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 ## Repo disambiguation
 
 - [ ] feat: user-config-wide repo definition that exists outside of repos (needed for `/<repo-id>` remote selection)
+- [ ] split `init` into `init` (XDG) and `init-cwd`; remove `-repo_id` from init entirely

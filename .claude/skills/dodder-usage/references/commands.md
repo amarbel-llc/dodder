@@ -17,7 +17,7 @@ Initialize a new dodder repository.
 |------|---------|-------------|
 | `-yin` | `""` | File containing list of zettel ID left parts |
 | `-yang` | `""` | File containing list of zettel ID right parts |
-| `-override-xdg-with-cwd` | `false` | Create `.dodder/` in current directory instead of using XDG |
+| `-repo_id` | `""` | Repo location: `.` for CWD, empty for XDG user |
 | `-inventory_list-type` | (current version) | Type for inventory lists |
 | `-blob_store-id` | `""` | Name of an existing madder blob store to use |
 
@@ -31,7 +31,7 @@ Genesis configuration flags (set at creation time):
 
 ```bash
 dodder init my-repo
-dodder init -override-xdg-with-cwd my-repo
+dodder init -repo_id . my-repo
 dodder init -yin left-words.txt -yang right-words.txt my-repo
 ```
 
@@ -47,7 +47,7 @@ optional query arguments
 ```bash
 dodder clone local-id remote:///path/to/source
 dodder clone local-id remote:///path !md:z
-dodder clone -override-xdg-with-cwd local-id remote:///path
+dodder clone -repo_id . local-id remote:///path
 ```
 
 ### deinit

@@ -24,13 +24,13 @@ A blob store ID has an optional location prefix followed by a name. The prefix d
 
 ### CWD-Override and User-Scoped Stores Together
 
-When `-override-xdg-with-cwd` is active (which remaps XDG dirs under `.dodder/` in CWD), `MakeBlobStores()` performs a two-phase discovery:
+When `-repo_id .` is active (which remaps XDG dirs under `.dodder/` in CWD), `MakeBlobStores()` performs a two-phase discovery:
 
 1. Load CWD-scoped blob store configs from the override directory
 2. If in override mode, **also** load user-scoped stores via `CloneWithoutOverride()` (reads real XDG env vars)
 3. Merge both maps -- user-scoped stores are accessible alongside CWD-scoped ones
 
-This is how cross-repo blob sharing works: a user-scoped store (e.g., `shared`) is visible to any repo that shares the same XDG environment, regardless of whether those repos use `-override-xdg-with-cwd`.
+This is how cross-repo blob sharing works: a user-scoped store (e.g., `shared`) is visible to any repo that shares the same XDG environment, regardless of whether those repos use `-repo_id .`.
 
 **Source:** `go/internal/india/blob_stores/main.go:75-95`
 
@@ -123,7 +123,7 @@ setup() {
   run_dodder init \
     -yin <(cat_yin) -yang <(cat_yang) \
     -lock-internal-files=false \
-    -override-xdg-with-cwd \
+    -repo_id . \
     -encryption none \
     -blob_store-id shared \
     test

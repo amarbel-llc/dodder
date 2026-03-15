@@ -1,5 +1,5 @@
 ---
-status: exploring
+status: experimental
 date: 2026-03-15
 promotion-criteria: all BATS tests pass with -override-xdg-with-cwd replaced by -repo_id .; -override-xdg-with-cwd fully removed from codebase; new tests cover explicit . selection, DODDER_REPO_ID env var, and / panic
 ---

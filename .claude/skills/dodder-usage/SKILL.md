@@ -185,7 +185,7 @@ The first argument is the remote URI and the second is the local name. The
 
 ```bash
 dodder clone new-repo-id remote:///path/to/source
-dodder clone new-repo-id remote:///path -override-xdg-with-cwd
+dodder clone new-repo-id remote:///path -repo_id .
 ```
 
 Clone creates a new local repository and pulls all inventory lists from the
@@ -346,12 +346,12 @@ consistent. It reports errors but does not modify data.
 
 ```bash
 dodder init my-repo-id                         # create new repo with XDG layout
-dodder init -override-xdg-with-cwd my-repo-id  # create .dodder in current dir
+dodder init -repo_id . my-repo-id              # create .dodder in current dir
 dodder init -yin words.txt my-repo-id           # custom left-part word list
 dodder init -yang words.txt my-repo-id          # custom right-part word list
 ```
 
-The `-override-xdg-with-cwd` flag creates a `.dodder/` directory in the current
+The `-repo_id .` flag creates a `.dodder/` directory in the current
 working directory instead of using XDG base directories. This is useful for
 self-contained repositories.
 
