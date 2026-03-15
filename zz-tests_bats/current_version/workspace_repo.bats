@@ -236,3 +236,62 @@ function workspace_repo_pull_filtered_by_tag { # @test
 	# Should NOT have the new project-beta zettel
 	refute_output --partial 'new beta zettel'
 }
+
+function workspace_repo_push_unfiltered { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# --- Clone all objects into workspace-repo ---
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder clone \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+
+	assert_success
+
+	run_dodder init-workspace
+	assert_success
+
+	# --- Create zettels with different tags in workspace ---
+	run_dodder new -edit=false - <<-EOM
+		---
+		# workspace alpha zettel
+		- project-alpha
+		! md
+		---
+
+		workspace alpha body
+	EOM
+	assert_success
+
+	run_dodder new -edit=false - <<-EOM
+		---
+		# workspace gamma zettel
+		- project-gamma
+		! md
+		---
+
+		workspace gamma body
+	EOM
+	assert_success
+
+	# --- Push ALL workspace changes to parent (no filter) ---
+	run_dodder push -direct "$parent_path"
+	assert_success
+
+	# Verify parent received BOTH zettels regardless of original clone filter
+	pushd "$parent_path" || exit 1
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'workspace alpha zettel'
+	assert_output --partial 'workspace gamma zettel'
+}
