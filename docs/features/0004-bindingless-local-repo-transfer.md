@@ -1,5 +1,5 @@
 ---
-status: exploring
+status: experimental
 date: 2026-03-15
 promotion-criteria: BATS tests pass for direct push, pull, and clone between two local repos without a stored remote object; existing remote-add-based push/pull/clone still works unchanged
 ---
@@ -52,12 +52,15 @@ dodder clone -direct /path/to/source/repo new-repo-id
 
 ### Error Handling
 
-If the target path does not contain an initialized dodder repository, the
-existing `ErrNotInDodderDir` from `env_repo.Make` is wrapped with context:
-"direct remote at `<path>`: not in a dodder directory."
+If the target path does not contain an initialized dodder repository,
+`env_repo.Make` returns `ErrNotInDodderDir` with the expected config path
+(e.g. "not in a dodder directory. Looking for `<path>/.local/share/dodder/Konfig`").
+If the path does not exist or is not writable, XDG initialization fails with
+a filesystem error before reaching the config check.
 
 No separate pre-flight check — the construction chain already validates repo
-existence.
+existence. The `-direct` path appears in the error's expected config path,
+which is sufficient to identify the target.
 
 ## Implementation
 
@@ -69,7 +72,6 @@ Register `-direct` flag in `SetFlagDefinitions`. Add
 1. Resolves the path to absolute
 2. Constructs `repo_blobs.TomlLocalOverridePathV0{OverridePath: absPath}`
 3. Calls `MakeRemoteFromBlob`
-4. Wraps any `ErrNotInDodderDir` with `-direct` context
 
 **`push.go`** — Branch on `DirectPath != ""`: if set, call
 `MakeDirectRemoteFromPath`; otherwise, existing `GetObjectFromObjectId` +
