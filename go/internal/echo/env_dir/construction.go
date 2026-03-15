@@ -3,6 +3,7 @@ package env_dir
 import (
 	"os"
 
+	"code.linenisgreat.com/dodder/go/internal/_/repo_id"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/debug"
 	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
@@ -76,19 +77,13 @@ func MakeDefaultAndInitialize(
 	context errors.Context,
 	utilityName string,
 	do debug.Options,
-	overrideXDGWithCwd bool,
+	repoId repo_id.Id,
 ) env {
-	var home string
-
-	{
-		var err error
-
-		if home, err = os.UserHomeDir(); err != nil {
-			context.Cancel(err)
-		}
+	if repoId.IsSystem() {
+		panic(errors.WithoutStack(errors.Err501NotImplemented))
 	}
 
-	if overrideXDGWithCwd {
+	if repoId.IsCwd() {
 		var cwd string
 
 		{
@@ -105,14 +100,24 @@ func MakeDefaultAndInitialize(
 			utilityName,
 			do,
 		)
-	} else {
-		return MakeWithHomeAndInitialize(
-			context,
-			utilityName,
-			home,
-			do,
-		)
 	}
+
+	var home string
+
+	{
+		var err error
+
+		if home, err = os.UserHomeDir(); err != nil {
+			context.Cancel(err)
+		}
+	}
+
+	return MakeWithHomeAndInitialize(
+		context,
+		utilityName,
+		home,
+		do,
+	)
 }
 
 func MakeWithDefaultHome(

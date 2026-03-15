@@ -18,11 +18,22 @@ func (cmd EnvRepo) MakeEnvRepo(
 	permitNoDodderDirectory bool,
 ) env_repo.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
-	dir := env_dir.MakeDefault(
-		req,
-		env_dir.XDGUtilityNameDodder,
-		config.Debug,
-	)
+
+	var dir env_dir.Env
+	if config.RepoId.IsCwd() || config.RepoId.IsSystem() {
+		dir = env_dir.MakeDefaultAndInitialize(
+			req,
+			env_dir.XDGUtilityNameDodder,
+			config.Debug,
+			config.RepoId,
+		)
+	} else {
+		dir = env_dir.MakeDefault(
+			req,
+			env_dir.XDGUtilityNameDodder,
+			config.Debug,
+		)
+	}
 
 	envUI := env_ui.Make(
 		req,

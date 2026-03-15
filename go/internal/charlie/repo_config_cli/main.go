@@ -1,8 +1,11 @@
 package repo_config_cli
 
 import (
+	"os"
+
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
 	"code.linenisgreat.com/dodder/go/internal/_/options_tools"
+	"code.linenisgreat.com/dodder/go/internal/_/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/foxtrot/config_cli"
@@ -11,6 +14,7 @@ import (
 type Config struct {
 	config_cli.Config
 	BasePath string
+	RepoId   repo_id.Id
 
 	IgnoreHookErrors bool
 	Hooks            string
@@ -72,14 +76,22 @@ func (config *Config) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) 
 	flagSet.StringVar(&config.Hooks, "hooks", "", "")
 
 	flagSet.Var(&config.Description, "comment", "Comment for inventory list")
+
+	flagSet.Var(&config.RepoId, "repo_id", "repo location: . (cwd) or / (system)")
 }
 
 func Default() (config *Config) {
-	return &Config{
+	config = &Config{
 		Config: *(config_cli.Default()),
 	}
-	// config.printOptionsOverlay =
-	// options_print.DefaultOverlay().GetPrintOptionsOverlay()
+
+	if envRepoId := os.Getenv("DODDER_REPO_ID"); envRepoId != "" {
+		if err := config.RepoId.Set(envRepoId); err != nil {
+			// env var is invalid — ignore, let flag override or error later
+		}
+	}
+
+	return config
 }
 
 // func (config Config) GetPrintOptions() options_print.Options {
@@ -100,6 +112,10 @@ func (config Config) GetBasePath() string {
 
 func (config Config) GetIgnoreWorkspace() bool {
 	return config.IgnoreWorkspace
+}
+
+func (config Config) GetRepoId() repo_id.Id {
+	return config.RepoId
 }
 
 // FromAny extracts a Config from an any value (typically from command.Utility.GetConfigAny()).

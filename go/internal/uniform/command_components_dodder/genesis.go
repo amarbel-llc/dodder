@@ -1,6 +1,7 @@
 package command_components_dodder
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/_/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
@@ -90,11 +91,18 @@ func (cmd Genesis) OnTheFirstDay(
 
 	cmd.GenesisConfig.Blob.SetRepoId(repoId)
 
+	repoIdForDir := config.RepoId
+	if repoIdForDir.IsEmpty() && cmd.OverrideXDGWithCwd {
+		var rid repo_id.Id
+		rid.Set(".")
+		repoIdForDir = rid
+	}
+
 	dir := env_dir.MakeDefaultAndInitialize(
 		req,
 		env_dir.XDGUtilityNameDodder,
 		config.Debug,
-		cmd.OverrideXDGWithCwd,
+		repoIdForDir,
 	)
 
 	var envRepo env_repo.Env
