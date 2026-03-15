@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
+	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

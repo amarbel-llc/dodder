@@ -6,12 +6,12 @@ import (
 	"os/exec"
 
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
+	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"

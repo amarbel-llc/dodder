@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
-	"code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_provider"
+	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections"

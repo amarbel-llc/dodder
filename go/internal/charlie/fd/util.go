@@ -3,7 +3,7 @@ package fd
 import (
 	"fmt"
 
-	lib_fd "code.linenisgreat.com/dodder/go/lib/charlie/fd"
+	lib_fd "code.linenisgreat.com/dodder/go/lib/delta/fd"
 )
 
 func Base(p string) string { return lib_fd.Base(p) }

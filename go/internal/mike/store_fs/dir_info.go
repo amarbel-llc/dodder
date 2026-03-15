@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"

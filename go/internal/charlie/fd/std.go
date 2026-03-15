@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	lib_fd "code.linenisgreat.com/dodder/go/lib/charlie/fd"
+	lib_fd "code.linenisgreat.com/dodder/go/lib/delta/fd"
 )
 
 type Std = lib_fd.Std
