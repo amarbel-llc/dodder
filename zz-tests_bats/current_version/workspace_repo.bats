@@ -171,6 +171,11 @@ function workspace_repo_clone_filtered_by_tag { # @test
 
 	# Verify project-beta zettel was NOT cloned
 	refute_output --partial 'project-beta'
+
+	# Verify that referenced types were also cloned (edge expansion)
+	run_dodder show :t
+	assert_success
+	assert_output --partial '!md'
 }
 
 function workspace_repo_pull_filtered_by_tag { # @test

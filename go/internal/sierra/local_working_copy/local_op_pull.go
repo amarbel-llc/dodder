@@ -38,6 +38,11 @@ func (local *Repo) pullQueryGroupFromWorkingCopy(
 		return err
 	}
 
+	if err = expandEdges(list, remote.GetObjectStore()); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	importerOptions.CheckedOutPrinter = local.PrinterCheckedOutConflictsForRemoteTransfers()
 
 	if !importerOptions.ExcludeBlobs {
