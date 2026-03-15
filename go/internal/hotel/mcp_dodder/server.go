@@ -43,13 +43,25 @@ Examples:
 
 ## Resource Drill-Down
 
+### Types
 - dodder://types_index → word list for search
 - dodder://types → all type summaries
 - dodder://types/<id> → type metadata + links to sub-resources
 - dodder://types/<id>/objects → all objects of this type (box format)
+- dodder://types/<id>/objects/facets → tag breakdown grouped by prefix
 - dodder://types/<id>/blob → type blob content (TOML config)
-- dodder://objects/<id>/blob/<format> → object blob rendered with formatter
 - dodder://types/<id>/markl → type markl (merkle-tree) integrity fields
+
+### Tags
+- dodder://tags_index → word list for search
+- dodder://tags → all tag summaries
+- dodder://tags/<id> → tag metadata + links to sub-resources
+- dodder://tags/<id>/objects → all objects with this tag (box format)
+- dodder://tags/<id>/objects/facets → tag breakdown grouped by prefix
+- dodder://tags/<id>/markl → tag markl (merkle-tree) integrity fields
+
+### Objects
+- dodder://objects/<id>/blob/<format> → object blob rendered with formatter
 - dodder://objects/<id>/markl → object markl integrity fields
 
 Markl resources contain repo signatures, public keys, and object digests.
@@ -67,15 +79,17 @@ func RunServer(utility command.Utility) error {
 	tools := server.NewToolRegistryV1()
 	resources := server.NewResourceRegistry()
 	index := makeTypeIndex(bridge)
+	tagIdx := makeTagIndex(bridge)
 
 	provider := &typeResourceProvider{
 		registry: resources,
 		index:    index,
+		tagIndex: tagIdx,
 		bridge:   bridge,
 	}
 
-	registerTools(tools, bridge, index)
-	registerResources(resources, index, bridge)
+	registerTools(tools, bridge, index, tagIdx)
+	registerResources(resources, index, tagIdx, bridge)
 
 	t := transport.NewStdio(os.Stdin, os.Stdout)
 	srv, err := server.New(t, server.Options{
@@ -92,7 +106,7 @@ func RunServer(utility command.Utility) error {
 	return srv.Run(context.Background())
 }
 
-func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex) {
+func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex, tagIdx *tagIndex) {
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_show",
@@ -249,6 +263,58 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 			}
 
 			results := index.query(p.Words)
+
+			output, err := json.MarshalIndent(results, "", "  ")
+			if err != nil {
+				return protocol.ErrorResultV1(err.Error()), nil
+			}
+
+			return &protocol.ToolCallResultV1{
+				Content: []protocol.ContentBlockV1{
+					protocol.TextContentV1(string(output)),
+				},
+			}, nil
+		},
+	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_tag_query",
+			Description: "Search for dodder tags by word. Words are matched against tag IDs, descriptions, and tags (all expanded by hyphen segments). Returns compact summaries with resource URIs for drill-down. Use dodder://tags_index resource to discover available words.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"words": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Search words (OR-union). E.g. ['priority', 'urgency'] matches tags containing either word."
+					}
+				},
+				"required": ["words"],
+				"additionalProperties": false
+			}`),
+			Annotations: readOnlyAnnotations,
+		},
+		func(
+			ctx context.Context,
+			args json.RawMessage,
+		) (*protocol.ToolCallResultV1, error) {
+			var p struct {
+				Words []string `json:"words"`
+			}
+			if err := json.Unmarshal(args, &p); err != nil {
+				return protocol.ErrorResultV1(
+					fmt.Sprintf("Invalid arguments: %v", err),
+				), nil
+			}
+
+			if err := tagIdx.ensureBuilt(); err != nil {
+				return protocol.ErrorResultV1(
+					fmt.Sprintf("Failed to build tag index: %v", err),
+				), nil
+			}
+
+			results := tagIdx.query(p.Words)
 
 			output, err := json.MarshalIndent(results, "", "  ")
 			if err != nil {
