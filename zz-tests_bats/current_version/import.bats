@@ -710,3 +710,35 @@ function import_interactive_flag_accepted_non_tty { # @test
     "$list"
   assert_success
 }
+
+function import_omit_tags { # @test
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  # Export from outer repo (objects have tag-1, tag-2, tag-3, tag-4)
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+
+  list="$(realpath list)"
+  pushd inner || exit 1
+
+  # Import with -omit-tags stripping tag-1 and tag-2
+  run_dodder import \
+    -blob_store-id shared \
+    -omit-tags "^tag-[12]$" \
+    "$list"
+  assert_success
+
+  # Verify imported objects have tag-3 and tag-4 but not tag-1 or tag-2
+  run_dodder show one/uno
+  assert_success
+  refute_output --partial "tag-1"
+  refute_output --partial "tag-2"
+  assert_output --partial "tag-3"
+  assert_output --partial "tag-4"
+}

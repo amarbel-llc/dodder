@@ -25,6 +25,14 @@ func init() {
 	utility.AddCmd("import", &Import{})
 }
 
+type stringSliceFlag []string
+
+func (f *stringSliceFlag) String() string { return fmt.Sprintf("%v", *f) }
+func (f *stringSliceFlag) Set(value string) error {
+	*f = append(*f, value)
+	return nil
+}
+
 type Import struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.InventoryLists
@@ -38,6 +46,7 @@ type Import struct {
 	BlobStoreId blob_store_id.Id
 	PlanFormat  string
 	Interactive bool
+	OmitTags    stringSliceFlag
 }
 
 var _ interfaces.CommandComponentWriter = (*Import)(nil)
@@ -74,6 +83,12 @@ func (cmd *Import) SetFlagDefinitions(
 		false,
 		"shorthand for -interactive",
 	)
+
+	flagDefinitions.Var(
+		&cmd.OmitTags,
+		"omit-tags",
+		"regex pattern for tags to strip during import (repeatable)",
+	)
 }
 
 func (cmd Import) Run(req command.Request) {
@@ -103,6 +118,16 @@ func (cmd Import) Run(req command.Request) {
 		local.GetStore().GetStreamIndex(),
 		markl.PurposeV5MetadataDigestWithoutTai,
 	)
+
+	if len(cmd.OmitTags) > 0 {
+		transform, err := import_plan.MakeOmitTagsTransform(cmd.OmitTags)
+		if err != nil {
+			local.Cancel(errors.Wrap(err))
+			return
+		}
+
+		builder.AddTransform(transform)
+	}
 
 	for i, path := range inventoryListPaths {
 		builder.AddSourcePath(path)

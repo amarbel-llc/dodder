@@ -13,6 +13,10 @@ import (
 	chai "github.com/brandondube/tai"
 )
 
+// ObjectTransform mutates an object before plan classification.
+// Return true to keep the object, false to drop it entirely.
+type ObjectTransform func(*sku.Transacted) (keep bool, err error)
+
 type Builder struct {
 	index sku.Index
 
@@ -26,7 +30,8 @@ type Builder struct {
 	dedupFormatId string
 	dedupLookup   map[string]struct{}
 
-	abbrIndex *store_abbr.InMemoryIndex
+	abbrIndex  *store_abbr.InMemoryIndex
+	transforms []ObjectTransform
 }
 
 func MakeBuilder(
@@ -42,6 +47,10 @@ func MakeBuilder(
 		dedupLookup:   make(map[string]struct{}),
 		abbrIndex:     store_abbr.NewInMemoryIndex(),
 	}
+}
+
+func (b *Builder) AddTransform(t ObjectTransform) {
+	b.transforms = append(b.transforms, t)
 }
 
 func (b *Builder) AddSourcePath(path string) int {
@@ -91,6 +100,17 @@ func (b *Builder) AddObject(
 
 	if genre == genres.Config {
 		return
+	}
+
+	for _, transform := range b.transforms {
+		keep, err := transform(object)
+		if err != nil {
+			return
+		}
+
+		if !keep {
+			return
+		}
 	}
 
 	b.abbrIndex.AddObject(object)
