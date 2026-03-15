@@ -158,3 +158,27 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 ## BATS: `migration_status_empty` fails when TMPDIR is inside worktree
 
 - [x] `findWorkspaceFile` walks up from BATS temp dir and finds `.dodder-workspace` in the worktree when `TMPDIR` points into the worktree (e.g., `.tmp/`), causing `status` to succeed when the test expects failure (no workspace in fixture). Fix: set `TMPDIR="/tmp"` in justfile BATS recipes
+
+## MCP: streaming JSON array output from tools
+
+- [ ] FDR: MCP tools (`dodder_query`, `dodder_show`) return newline-delimited JSON. Agents can't parse this natively — they split lines and parse each one, or resort to python. Switch to streaming JSON arrays using a `json.Encoder` pattern (like `tango/remote_http`) that emits `[`, per-object JSON, `,`, `]` without buffering the full result set into memory. This would make tool output directly usable as structured data.
+
+## MCP: `dodder_show` returns unbounded results for type queries
+
+- [ ] `dodder_show` with a type ID like `!md` returns ALL objects of that type (potentially 100K+ chars), same problem that `dodder_query` had before the `limit` parameter was added. Options: (1) add `limit` to `dodder_show`, (2) make `dodder_show` only return the single object matching the exact ID (using `:t`/`:e`/`:z` genre sigils internally), or (3) split into separate "show one object" vs "list matching objects" tools with clearer semantics.
+
+## MCP: type blob format listing for types
+
+- [ ] Add `dodder://types/<id>/blob/formats` endpoint mirroring the object blob format discovery. Types have their own type (e.g. `!toml-type-v1`) which defines formatters. Currently only `dodder://objects/<id>/blob/formats` is implemented (in `tango/mcp_dodder/resources.go`). The `readTypeBlobFormatted` handler already calls `format-blob` for rendering but has no corresponding format listing endpoint.
+
+## MCP: expand `dodder_show` format enum
+
+- [ ] The `dodder_show` tool only exposes 4 formats in its enum: `["log", "text", "json", "organize"]`. The CLI supports 60+ formats (see `sierra/local_working_copy/format.go` `formatters` map). Consider making the enum dynamic or expanding it to include commonly useful formats like `box`, `json-with-blob_string`, `tags`, `description`, `object-id`. The `dodder_query` tool already includes `box` and `json-with-blob_string`.
+
+## MCP: debug code cleanup in server.go
+
+- [ ] `formatErrorDetail` and `describeError` in `tango/mcp_dodder/server.go` were added during development for debugging multi-error unwrapping and `ErrorTree` stack frames. Review whether these are still needed or if the standard error formatting is sufficient. They add ~50 lines of error inspection code.
+
+## dagnabit: other misplaced packages
+
+- [ ] `dagnabit -dry-run` reports 5 packages in wrong tiers (as of 2026-03-15): `charlie/filesystem_ops` → `_/`, `charlie/zettel_id_log` → `delta/`, `charlie/zettel_id_provider` → `echo/`, `romeo/import_plan` → `india/`, `lib/charlie/fd` → `lib/delta/fd`. Run `dagnabit` (no flags) from the `go/` directory to auto-move, or use `just codemod-go-move_package <src> <dst>` individually.
