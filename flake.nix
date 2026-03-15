@@ -51,7 +51,7 @@
       in
       {
         inherit (result) packages;
-        devShells.default = result.devShell;
+        devShells.default = result.devShells.default;
       }
     ));
 }

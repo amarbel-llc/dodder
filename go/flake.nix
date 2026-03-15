@@ -41,7 +41,7 @@
       in
       {
         inherit (result) packages docker;
-        devShells.default = result.devShell;
+        devShells.default = result.devShells.default;
       }
     ));
 }

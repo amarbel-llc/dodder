@@ -52,7 +52,7 @@ in
     };
   };
 
-  devShell = pkgs-master.mkShell {
+  devShells.default = pkgs-master.mkShell {
     packages =
       (with pkgs-master; [
         fish
