@@ -45,6 +45,10 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
   detected as `ErrObjectIdTaiCollision` when blob digests differ. Root-cause
   handling subsumed by two-phase import (see below).
 
+## Import: tag regex exclusion filter
+
+- [ ] Add a flag or config option to `der import` to exclude tags matching a regex pattern. Example: a past migration misinterpreted repo pubkey/sig metadata as tags, producing tags like `-repo-public_key-v1-gayur0wh5y...toml-type-v1` on 19 type objects (e.g. `!aax`, `!pdf`, `!md-snippet`). These should have been omitted during import. A `--exclude-tags` regex filter would prevent similar data pollution. The MCP type index currently works around this by skipping tags starting with `-repo` in `type_index.go`.
+
 ## Two-phase `der import` with topographic processing
 
 - [ ] FDR: Redesign `der import` as a two-phase pipeline: (1) plan+validate the
@@ -128,3 +132,21 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 - [ ] FDR: purse-first framework integration for madder MCP server
 - [x] Once purse-first install_mcp branch lands: add install-mcp command to madder using `app.InstallMCP()` from go-mcp
 - [ ] purse-first: support HTTP/SSE MCP servers in `App.InstallMCP()` (currently stdio-only)
+
+## Query executor workspace scanning
+
+- [ ] Fix query executor to only consult workspace store when `.` (CWD) sigil is in the query — currently `build_state.build()` passes all values to `workspaceStore.GetObjectIdsForString()` even for repo-only sigils like `:z`. The MCP bridge works around this with `IgnoreWorkspace: true` but the executor itself should be fixed.
+
+## Workspace naming
+
+- [ ] Rename `store_fs` to `workspace_fs`
+- [ ] Rename `store_browser` to `workspace_browser`
+- [ ] Add `workspace_agent` for MCPs
+
+## MCP: content block validation error on single-object queries
+
+- [ ] `dodder_query` MCP tool returns MCP protocol validation errors when the query matches a single object (e.g. `["!md-snippet"]`). The error is `invalid_union` on `content[0]` — the content block doesn't match any of the expected MCP types (text, image, audio, resource_link, resource). Reproduce: call `dodder_type_query` or `dodder_query` with a query that returns exactly one result, or call `dodder_query` with `["!md-snippet"]`. The `makeBridgeHandler` in `server.go` wraps output in `protocol.TextContentV1()` which should be correct — investigate whether the JSON output for single objects is malformed or whether the issue is in the go-mcp library's content block serialization.
+
+## BATS: `migration_status_empty` fails when TMPDIR is inside worktree
+
+- [x] `findWorkspaceFile` walks up from BATS temp dir and finds `.dodder-workspace` in the worktree when `TMPDIR` points into the worktree (e.g., `.tmp/`), causing `status` to succeed when the test expects failure (no workspace in fixture). Fix: set `TMPDIR="/tmp"` in justfile BATS recipes

@@ -3,9 +3,9 @@ package mcp_dodder
 import (
 	"context"
 
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/foxtrot/config_cli"
 )
 
 type BridgeResult struct {
@@ -34,10 +34,10 @@ func (b Bridge) RunCommand(
 	outWriter := MakeLimitingWriter(maxBytes)
 	errWriter := MakeLimitingWriter(maxBytes)
 
-	config := &config_cli.Config{
-		CustomOut: outWriter,
-		CustomErr: errWriter,
-	}
+	config := repo_config_cli.Default()
+	config.CustomOut = outWriter
+	config.CustomErr = errWriter
+	config.IgnoreWorkspace = true
 
 	utility := command.MakeUtility("dodder", config)
 

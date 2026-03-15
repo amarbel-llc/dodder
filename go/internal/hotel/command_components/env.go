@@ -28,6 +28,14 @@ func (cmd *Env) MakeEnvWithOptions(
 		config.Debug,
 	)
 
+	if options.CustomOut == nil && config.CustomOut != nil {
+		options.CustomOut = config.CustomOut
+	}
+
+	if options.CustomErr == nil && config.CustomErr != nil {
+		options.CustomErr = config.CustomErr
+	}
+
 	return env_local.Make(
 		env_ui.Make(
 			req,
@@ -50,6 +58,14 @@ func (cmd *Env) MakeEnvWithXDGLayoutAndOptions(
 		config.Debug,
 		xdgDotenvPath,
 	)
+
+	if options.CustomOut == nil && config.CustomOut != nil {
+		options.CustomOut = config.CustomOut
+	}
+
+	if options.CustomErr == nil && config.CustomErr != nil {
+		options.CustomErr = config.CustomErr
+	}
 
 	ui := env_ui.Make(
 		req,

@@ -29,7 +29,7 @@ func (query *Query) GetDefaultQuery() *Query {
 	return query.defaultQuery
 }
 
-func (query *Query) isDotOperatorActive() bool {
+func (query *Query) IsDotOperatorActive() bool {
 	if query.dotOperatorActive {
 		return true
 	}

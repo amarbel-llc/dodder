@@ -209,7 +209,7 @@ func (e *Executor) ExecuteTransactedAsSkuType(
 		return err
 	}
 
-	if e.isDotOperatorActive() && e.WorkspaceStore != nil {
+	if e.IsDotOperatorActive() && e.WorkspaceStore != nil {
 		if err = e.executeExternalQueryCheckedOut(out); err != nil {
 			err = errors.Wrap(err)
 			return err
@@ -362,7 +362,7 @@ func (e *Executor) makeEmitSkuSigilLatestSkuType(
 }
 
 func (executor *Executor) applyDotOperatorIfNecessary() (err error) {
-	if !executor.isDotOperatorActive() {
+	if !executor.IsDotOperatorActive() {
 		return err
 	}
 
@@ -376,6 +376,10 @@ func (executor *Executor) applyDotOperatorIfNecessary() (err error) {
 
 func (executor *Executor) readAllItemsIfNecessary() (err error) {
 	if executor.WorkspaceStore == nil {
+		return err
+	}
+
+	if !executor.IsDotOperatorActive() {
 		return err
 	}
 

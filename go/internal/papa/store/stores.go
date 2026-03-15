@@ -45,6 +45,13 @@ func (store *Store) CheckoutQuery(
 ) (err error) {
 	externalStore := store.envWorkspace.GetStore()
 
+	if !store.envWorkspace.IsTemporary() {
+		if err = externalStore.ReadAllExternalItems(); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	qf := func(t *sku.Transacted) (err error) {
 		var co sku.SkuType
 
@@ -221,6 +228,13 @@ func (store *Store) ReadCheckedOutFromTransacted(
 	object *sku.Transacted,
 ) (checkedOut *sku.CheckedOut, err error) {
 	workspaceStore := store.envWorkspace.GetStore()
+
+	if !store.envWorkspace.IsTemporary() {
+		if err = workspaceStore.ReadAllExternalItems(); err != nil {
+			err = errors.Wrap(err)
+			return checkedOut, err
+		}
+	}
 
 	if checkedOut, err = workspaceStore.ReadCheckedOutFromTransacted(
 		object,

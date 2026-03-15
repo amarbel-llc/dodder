@@ -142,7 +142,7 @@ func (env *env) GetUI() fd.Std {
 }
 
 func (env *env) GetUIFile() interfaces.WriterAndStringWriter {
-	return env.ui.GetFile()
+	return fileOrWriter(env.ui)
 }
 
 func (env *env) GetOut() fd.Std {
@@ -150,7 +150,7 @@ func (env *env) GetOut() fd.Std {
 }
 
 func (env *env) GetOutFile() interfaces.WriterAndStringWriter {
-	return env.out.GetFile()
+	return fileOrWriter(env.out)
 }
 
 func (env *env) GetErr() fd.Std {
@@ -158,7 +158,23 @@ func (env *env) GetErr() fd.Std {
 }
 
 func (env *env) GetErrFile() interfaces.WriterAndStringWriter {
-	return env.err.GetFile()
+	return fileOrWriter(env.err)
+}
+
+func fileOrWriter(std fd.Std) interfaces.WriterAndStringWriter {
+	if f := std.GetFile(); f != nil {
+		return f
+	}
+
+	return writerWithStringWriter{std}
+}
+
+type writerWithStringWriter struct {
+	io.Writer
+}
+
+func (w writerWithStringWriter) WriteString(s string) (int, error) {
+	return w.Write([]byte(s))
 }
 
 func (env *env) GetCLIConfig() domain_interfaces.CLIConfigProvider {
