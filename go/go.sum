@@ -14,10 +14,10 @@ github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/akutz/memconn v0.1.0 h1:NawI0TORU4hcOMsMr11g7vwlCdkYeLKXBcxWu2W/P8A=
 github.com/akutz/memconn v0.1.0/go.mod h1:Jo8rI7m0NieZyLI5e2CDlRdRqRRB4S7Xp77ukDjH+Fw=
+github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327 h1:P/jqOVKS7TLKGH0R5qwzA1s41SW/YjXJfSLEHZl2V0I=
+github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327/go.mod h1:D9DuJd5WV27RaeNxXGmZMKFH2tuSAg/y5coGd1ZHfJo=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4 h1:Xyq57MegLHgS/UU/IYWZUdQ4oiMA3Ggr7fY4w0N0zVM=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4/go.mod h1:l/5fqg8ZEzjVxK8OqdiN9vxsz1gVUGQaYd6rgFIOU7I=
-github.com/amarbel-llc/purse-first/packages/tap-dancer/go v0.0.0-20260304183015-8efa59083a38 h1:5ns95cmSiAhUEnFdkyJi2Z5lhwc2bpWGOfugfAJz4bc=
-github.com/amarbel-llc/purse-first/packages/tap-dancer/go v0.0.0-20260304183015-8efa59083a38/go.mod h1:v9atBLGVUxgruYZKOmNgaSpOPzsa3pI1oeLFy6/Mm+o=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=

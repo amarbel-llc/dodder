@@ -6,8 +6,8 @@ require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260307130930-9ae16a0979e6
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
+	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4
-	github.com/amarbel-llc/purse-first/packages/tap-dancer/go v0.0.0-20260304183015-8efa59083a38
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/lipgloss v1.1.0
