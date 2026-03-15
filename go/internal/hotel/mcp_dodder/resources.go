@@ -50,6 +50,8 @@ func (p *typeResourceProvider) ReadResource(
 			return p.readObjectMarkl(ctx, objectId)
 		}
 
+		return p.readObject(ctx, rest)
+
 	case strings.HasPrefix(uri, "dodder://types/"):
 		rest := strings.TrimPrefix(uri, "dodder://types/")
 
@@ -435,6 +437,97 @@ func (p *typeResourceProvider) readTypeBlobFormatted(
 	}, nil
 }
 
+func (p *typeResourceProvider) readObject(
+	ctx context.Context,
+	objectId string,
+) (*protocol.ResourceReadResult, error) {
+	result, err := p.bridge.RunCommand(
+		ctx,
+		"show",
+		[]string{"-format", "json", objectId},
+		defaultMaxBytes,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("show object %s: %w", objectId, err)
+	}
+
+	for _, line := range strings.Split(result.Stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		var obj map[string]any
+		if err := json.Unmarshal([]byte(line), &obj); err != nil {
+			continue
+		}
+
+		// Build lightweight detail excluding markl fields
+		detail := map[string]any{
+			"object-id":   obj["object-id"],
+			"date":        obj["date"],
+			"description": obj["description"],
+			"tags":        obj["tags"],
+			"type":        obj["type"],
+		}
+
+		// Add traversal links
+		typeId := ""
+		if t, ok := obj["type"].(string); ok {
+			typeId = strings.TrimPrefix(t, "!")
+		}
+
+		detail["blob-resource"] = fmt.Sprintf(
+			"dodder://objects/%s/blob/text", objectId,
+		)
+		detail["markl-resource"] = fmt.Sprintf(
+			"dodder://objects/%s/markl", objectId,
+		)
+
+		if typeId != "" {
+			detail["type-resource"] = fmt.Sprintf(
+				"dodder://types/%s", typeId,
+			)
+			detail["type-objects-resource"] = fmt.Sprintf(
+				"dodder://types/%s/objects", typeId,
+			)
+		}
+
+		// Add tag resource links for each tag
+		if tags, ok := obj["tags"].([]any); ok && len(tags) > 0 {
+			tagResources := make([]map[string]string, 0, len(tags))
+			for _, t := range tags {
+				if tag, ok := t.(string); ok {
+					if strings.HasPrefix(tag, "-repo") {
+						continue
+					}
+					stripped := strings.TrimPrefix(tag, "%")
+					tagResources = append(tagResources, map[string]string{
+						"tag":      tag,
+						"resource": fmt.Sprintf("dodder://tags/%s", stripped),
+					})
+				}
+			}
+			detail["tag-resources"] = tagResources
+		}
+
+		output, err := json.MarshalIndent(detail, "", "  ")
+		if err != nil {
+			return nil, err
+		}
+
+		return &protocol.ResourceReadResult{
+			Contents: []protocol.ResourceContent{{
+				URI:      fmt.Sprintf("dodder://objects/%s", objectId),
+				MimeType: "application/json",
+				Text:     string(output),
+			}},
+		}, nil
+	}
+
+	return nil, fmt.Errorf("object not found: %s", objectId)
+}
+
 func (p *typeResourceProvider) readObjectBlob(
 	ctx context.Context,
 	objectId string,
@@ -810,6 +903,16 @@ func registerResources(
 			URITemplate: "dodder://types/{type_id}/markl",
 			Name:        "Type Markl",
 			Description: "Markl (merkle-tree) integrity fields for a type: object-digest, repo signature, repo public key, mother-object-sig, blob-id. Most queries do not need this — use only when verifying integrity or provenance.",
+			MimeType:    "application/json",
+		},
+		nil,
+	)
+
+	registry.RegisterTemplate(
+		protocol.ResourceTemplate{
+			URITemplate: "dodder://objects/{object_id}",
+			Name:        "Object Detail",
+			Description: "Object metadata (id, date, description, type, tags) with traversal links to blob, markl, type, and tag resources. Excludes heavy markl fields — use dodder://objects/{id}/markl for integrity data.",
 			MimeType:    "application/json",
 		},
 		nil,

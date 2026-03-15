@@ -61,6 +61,7 @@ Examples:
 - dodder://tags/<id>/markl → tag markl (merkle-tree) integrity fields
 
 ### Objects
+- dodder://objects/<id> → object metadata + traversal links to type, tags, blob, markl
 - dodder://objects/<id>/blob/<format> → object blob rendered with formatter
 - dodder://objects/<id>/markl → object markl integrity fields
 
