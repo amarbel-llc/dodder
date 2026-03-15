@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
+	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/transport"
@@ -92,8 +94,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge) {
 					},
 					"format": {
 						"type": "string",
-						"description": "Output format (log, text, json, organize). Defaults to log.",
-						"enum": ["log", "text", "json", "organize"]
+						"description": "Output format. Defaults to json (without blob content). Use json-with-blob_string to include blob content.",
+						"enum": ["log", "text", "json", "json-with-blob_string", "organize"]
 					}
 				},
 				"required": ["query"],
@@ -109,10 +111,11 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge) {
 			if err := json.Unmarshal(args, &p); err != nil {
 				return nil, err
 			}
-			var cliArgs []string
-			if p.Format != "" {
-				cliArgs = append(cliArgs, "-format", p.Format)
+			format := p.Format
+			if format == "" {
+				format = "json"
 			}
+			cliArgs := []string{"-format", format}
 			cliArgs = append(cliArgs, p.Query...)
 			return cliArgs, nil
 		}),
@@ -157,6 +160,65 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge) {
 	)
 }
 
+func formatErrorDetail(err error) string {
+	type unwrapMany interface {
+		Unwrap() []error
+	}
+
+	// Unwrap through single-error wrappers to find a multi-error
+	current := err
+	for current != nil {
+		if group, ok := current.(unwrapMany); ok {
+			children := group.Unwrap()
+			const maxErrors = 3
+			n := len(children)
+			if n > maxErrors {
+				n = maxErrors
+			}
+
+			msg := fmt.Sprintf("%s (type: %T)", err.Error(), err)
+			for i := 0; i < n; i++ {
+				msg += "\n  - " + describeError(children[i])
+			}
+			if len(children) > maxErrors {
+				msg += fmt.Sprintf("\n  ... and %d more", len(children)-maxErrors)
+			}
+
+			return msg
+		}
+
+		type unwrapOne interface {
+			Unwrap() error
+		}
+
+		if w, ok := current.(unwrapOne); ok {
+			current = w.Unwrap()
+		} else {
+			break
+		}
+	}
+
+	return fmt.Sprintf("%s (type: %T)", err.Error(), err)
+}
+
+func describeError(err error) string {
+	var tree *stack_frame.ErrorTree
+	if ok := errors.As(err, &tree); ok {
+		msg := err.Error()
+		frames := tree.GetErrorsAndFrames()
+		for i, ef := range frames {
+			if i >= 5 {
+				msg += fmt.Sprintf("\n    ... and %d more frames", len(frames)-5)
+				break
+			}
+			msg += fmt.Sprintf("\n    %s: %s", ef.Frame, ef.Err)
+		}
+		return msg
+	}
+
+	return fmt.Sprintf("[%T] %s", err, err.Error())
+}
+
 type paramTranslator func(args json.RawMessage) ([]string, error)
 
 func makeBridgeHandler(
@@ -181,7 +243,11 @@ func makeBridgeHandler(
 
 		result, err := bridge.RunCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
 		if err != nil {
-			return protocol.ErrorResultV1(err.Error()), nil
+			errMsg := formatErrorDetail(err)
+			if result.Stderr != "" {
+				errMsg += "\n\nstderr:\n" + result.Stderr
+			}
+			return protocol.ErrorResultV1(errMsg), nil
 		}
 
 		output := result.Stdout

@@ -615,6 +615,30 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				var jsonRep sku_json_fmt.Transacted
 
+				if err = jsonRep.FromTransacted(object, nil); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				if err = enc.Encode(jsonRep); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				return err
+			}
+		},
+	},
+	"json-with-blob_string": {
+		FormatFuncConstructor: func(
+			repo *Repo,
+			writer interfaces.WriterAndStringWriter,
+		) interfaces.FuncIter[*sku.Transacted] {
+			enc := json.NewEncoder(writer)
+
+			return func(object *sku.Transacted) (err error) {
+				var jsonRep sku_json_fmt.Transacted
+
 				if err = jsonRep.FromTransacted(
 					object,
 					repo.GetStore().GetEnvRepo().GetDefaultBlobStore(),
