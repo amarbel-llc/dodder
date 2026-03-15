@@ -229,3 +229,37 @@ function clone_history_zettel_type_tag_port { # @test
 
 	try_add_new_after_clone
 }
+
+function clone_direct_local_path { # @test
+	them="them"
+	bootstrap "$them"
+
+	run_clone_default_with \
+		-direct "$(realpath ./them)" \
+		test-repo-id-us \
+		+zettel,typ,etikett
+
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		\[konfig @blake2b256-.* !toml-config-v2]
+		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
+		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B)
+		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc \(5 B)
+		copied Blob blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m \(51 B)
+	EOM
+
+	try_add_new_after_clone
+}
+
+function clone_direct_no_repo_at_path { # @test
+	mkdir -p empty_dir
+
+	run_clone_default_with \
+		-direct "$(realpath empty_dir)" \
+		test-repo-id-us
+
+	assert_failure
+	assert_output --partial 'not in a dodder directory'
+}

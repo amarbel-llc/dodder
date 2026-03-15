@@ -364,3 +364,44 @@ function push_history_default_stdio_twice { # @test
 	assert_success
 	assert_output_unsorted ''
 }
+
+function push_direct_local_path_no_conflicts { # @test
+	(
+		mkdir -p them
+		pushd them || exit 1
+		run_dodder_init
+	)
+
+	run_dodder push -direct "$(realpath them)" +zettel,typ,etikett
+
+	assert_success
+	assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+		copied Blob blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd (10 B)
+		copied Blob blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd (16 B)
+		copied Blob blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 (27 B)
+	EOM
+
+	(
+		pushd them || exit 1
+		run_dodder show +zettel,typ,konfig,etikett
+		assert_output_unsorted - <<-EOM
+			[konfig @$(get_konfig_sha) !toml-config-v2]
+			[!md @$(get_type_blob_sha) !toml-type-v1]
+			[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+			[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+			[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+		EOM
+	)
+}
+
+function push_direct_no_repo_at_path { # @test
+	mkdir -p empty_dir
+
+	run_dodder push -direct "$(realpath empty_dir)" +zettel
+
+	assert_failure
+	assert_output --partial 'not in a dodder directory'
+}

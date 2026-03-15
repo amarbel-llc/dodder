@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
+	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
@@ -31,19 +32,25 @@ func (cmd *Pull) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 func (cmd Pull) Run(req command.Request) {
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(req)
 
-	var object *sku.Transacted
+	var remote repo.Repo
 
-	{
-		var err error
+	if cmd.IsDirectTransfer() {
+		remote = cmd.MakeDirectRemoteFromPath(req, localWorkingCopy)
+	} else {
+		var object *sku.Transacted
 
-		if object, err = localWorkingCopy.GetObjectFromObjectId(
-			req.PopArg("repo-id"),
-		); err != nil {
-			localWorkingCopy.Cancel(err)
+		{
+			var err error
+
+			if object, err = localWorkingCopy.GetObjectFromObjectId(
+				req.PopArg("repo-id"),
+			); err != nil {
+				localWorkingCopy.Cancel(err)
+			}
 		}
-	}
 
-	remote := cmd.MakeRemote(req, localWorkingCopy, object)
+		remote = cmd.MakeRemote(req, localWorkingCopy, object)
+	}
 
 	qg := cmd.MakeQueryIncludingWorkspace(
 		req,

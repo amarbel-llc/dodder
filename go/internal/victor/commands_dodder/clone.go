@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
+	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
@@ -41,8 +42,14 @@ func (cmd *Clone) SetFlagDefinitions(
 func (cmd Clone) Run(req command.Request) {
 	local := cmd.OnTheFirstDay(req, req.PopArg("new repo id"))
 
-	// TODO offer option to persist remote object, if supported
-	remote, _ := cmd.MakeRemoteAndObject(req, local)
+	var remote repo.Repo
+
+	if cmd.IsDirectTransfer() {
+		remote = cmd.MakeDirectRemoteFromPath(req, local)
+	} else {
+		// TODO offer option to persist remote object, if supported
+		remote, _ = cmd.MakeRemoteAndObject(req, local)
+	}
 
 	queryGroup := cmd.MakeQueryIncludingWorkspace(
 		req,

@@ -548,3 +548,38 @@ function pull_history_zettels_no_conflict_no_blobs { # @test
 
 	try_add_new_after_pull
 }
+
+function pull_direct_local_path_no_conflicts { # @test
+	them="them"
+	bootstrap_repo "$them"
+
+	pushd "$BATS_TEST_TMPDIR" || exit 1
+
+	run_dodder_init_disable_age
+
+	run_dodder pull -direct "$(realpath them)" +zettel,typ,etikett
+
+	assert_success
+	assert_output_unsorted - <<-EOM
+		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
+		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
+		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
+		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+	EOM
+
+	try_add_new_after_pull
+}
+
+function pull_direct_no_repo_at_path { # @test
+	pushd "$BATS_TEST_TMPDIR" || exit 1
+	run_dodder_init_disable_age
+
+	mkdir -p empty_dir
+
+	run_dodder pull -direct "$(realpath empty_dir)" +zettel
+
+	assert_failure
+	assert_output --partial 'not in a dodder directory'
+}

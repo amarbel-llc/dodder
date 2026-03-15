@@ -1,6 +1,8 @@
 package command_components_dodder
 
 import (
+	"path/filepath"
+
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/_/remote_connection_types"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
@@ -28,6 +30,7 @@ type Remote struct {
 	InventoryLists
 	LocalWorkingCopy
 
+	DirectPath           string
 	RemoteConnectionType remote_connection_types.Type
 }
 
@@ -36,11 +39,38 @@ var _ interfaces.CommandComponentWriter = (*Remote)(nil)
 func (cmd *Remote) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
+	flagSet.StringVar(&cmd.DirectPath, "direct", "", "path to a local dodder repository for direct transfer without a stored remote")
+
 	cli.FlagSetVarWithCompletion(
 		flagSet,
 		&cmd.RemoteConnectionType,
 		"remote-connection-type",
 	)
+}
+
+func (cmd Remote) IsDirectTransfer() bool {
+	return cmd.DirectPath != ""
+}
+
+func (cmd Remote) MakeDirectRemoteFromPath(
+	req command.Request,
+	local *local_working_copy.Repo,
+) repo.Repo {
+	absPath := cmd.DirectPath
+
+	if !filepath.IsAbs(absPath) {
+		var err error
+
+		if absPath, err = filepath.Abs(absPath); err != nil {
+			req.Cancel(err)
+		}
+	}
+
+	blob := &repo_blobs.TomlLocalOverridePathV0{
+		OverridePath: absPath,
+	}
+
+	return cmd.MakeRemoteFromBlob(req, local, blob)
 }
 
 // returns a ready-to-use repo.Repo and an associated *sku.Transacted that can
