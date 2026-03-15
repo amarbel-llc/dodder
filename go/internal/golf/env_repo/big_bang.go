@@ -21,7 +21,6 @@ type BigBang struct {
 	Yang                 string
 	ExcludeDefaultType   bool
 	ExcludeDefaultConfig bool
-	OverrideXDGWithCwd   bool
 	BlobStoreId          blob_store_id.Id
 }
 

@@ -1,7 +1,6 @@
 package command_components_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
@@ -29,13 +28,6 @@ func (cmd *Genesis) SetFlagDefinitions(
 		&cmd.BigBang.InventoryListType,
 		"inventory_list-type",
 		"the type that will be used when creating inventory lists for this repo",
-	)
-
-	flagSet.BoolVar(
-		&cmd.BigBang.OverrideXDGWithCwd,
-		"override-xdg-with-cwd",
-		false,
-		"don't use XDG for this repo, and instead use the CWD and make a `.dodder` directory",
 	)
 
 	flagSet.StringVar(
@@ -91,18 +83,11 @@ func (cmd Genesis) OnTheFirstDay(
 
 	cmd.GenesisConfig.Blob.SetRepoId(repoId)
 
-	repoIdForDir := config.RepoId
-	if repoIdForDir.IsEmpty() && cmd.OverrideXDGWithCwd {
-		var rid repo_id.Id
-		rid.Set(".")
-		repoIdForDir = rid
-	}
-
 	dir := env_dir.MakeDefaultAndInitialize(
 		req,
 		env_dir.XDGUtilityNameDodder,
 		config.Debug,
-		repoIdForDir,
+		config.RepoId,
 	)
 
 	var envRepo env_repo.Env
