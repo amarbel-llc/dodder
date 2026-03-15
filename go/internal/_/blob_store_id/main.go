@@ -4,12 +4,13 @@ import (
 	"encoding"
 	"fmt"
 
+	"code.linenisgreat.com/dodder/go/internal/_/xdg_location_type"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type Id struct {
-	location location
+	location xdg_location_type.Typee
 	id       string
 }
 
@@ -22,14 +23,14 @@ var (
 
 func Make(id string) Id {
 	return Id{
-		location: LocationTypeXDGUser,
+		location: xdg_location_type.XDGUser,
 		id:       id,
 	}
 }
 
 func MakeWithLocation(id string, locationType LocationTypeGetter) Id {
 	return Id{
-		location: locationType.GetLocationType().(location),
+		location: locationType.GetLocationType().(xdg_location_type.Typee),
 		id:       id,
 	}
 }
@@ -80,7 +81,7 @@ func (id *Id) Set(value string) (err error) {
 			return err
 		}
 	} else {
-		id.location = LocationTypeXDGUser
+		id.location = xdg_location_type.XDGUser
 		id.id = value
 	}
 
