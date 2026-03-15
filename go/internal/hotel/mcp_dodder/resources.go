@@ -605,7 +605,7 @@ func (p *typeResourceProvider) readTagObjects(
 	result, err := p.bridge.RunCommand(
 		ctx,
 		"show",
-		[]string{"-format", "box", "%" + id},
+		[]string{"-format", "box", id},
 		500_000,
 	)
 	if err != nil {
@@ -628,7 +628,7 @@ func (p *typeResourceProvider) readTagObjectFacets(
 	result, err := p.bridge.RunCommand(
 		ctx,
 		"show",
-		[]string{"-format", "json", "%" + id},
+		[]string{"-format", "json", id},
 		500_000,
 	)
 	if err != nil {

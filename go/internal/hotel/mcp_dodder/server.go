@@ -118,7 +118,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 				"properties": {
 					"object_id": {
 						"type": "string",
-						"description": "Object identifier (e.g. zettel ID like 'ceroplastes/midtown', tag like '%tag', or type like '!type')"
+						"description": "Object identifier (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', or type like '!type')"
 					},
 					"format": {
 						"type": "string",
@@ -151,14 +151,14 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_query",
-			Description: "Search for dodder objects matching a query expression. Query terms are combined with AND. Examples: ':z' (all zettels), ':t' (all tags), '%todo' (tagged with todo), '!article' (type article).",
+			Description: "Search for dodder objects matching a query expression. Query terms are combined with AND. Examples: ':z' (all zettels), ':e' (all tags), 'todo' (tagged with todo), '!article' (type article).",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"query": {
 						"type": "array",
 						"items": {"type": "string"},
-						"description": "Query terms (e.g. [':z', '%todo'] for zettels tagged todo)"
+						"description": "Query terms (e.g. [':z', 'todo'] for zettels tagged todo)"
 					},
 					"format": {
 						"type": "string",

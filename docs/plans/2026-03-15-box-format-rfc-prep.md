@@ -45,8 +45,7 @@ used in queries.
 - The `%` prefix is an indicator for the reader, not a query sigil — it means
   "this tag was computed/derived, not stored"
 - Currently mostly unused but may appear in bats tests
-- Do NOT confuse with the `%tag` query syntax, which is a completely separate
-  concept (query for "objects tagged with `tag`")
+- `%` has NO meaning in query syntax. To filter by tag, use the bare tag name
 
 ### Object ID Disambiguation (Current)
 
@@ -104,22 +103,19 @@ brackets (specify when this variant is used).
 [zz-inbox]
 ```
 
-## Query Sigils (Context for RFC)
+## Query Syntax (Context for RFC)
 
 These are NOT part of the box format itself but are relevant for understanding
-how objects are addressed. Note: `%` has completely different meanings in query
-context vs output context.
+how objects are addressed.
 
-- `%tag` — **query sigil**: "objects tagged with `tag`" (NOT the tag object
-  itself). This is unrelated to the `%` output prefix.
+- `tag` — bare tag name filters objects by tag (e.g. `todo`, `priority-0_must`)
 - `!type` — both the object-id prefix for types AND a query filter
 - `:e` — genre filter for etiketten (tags)
 - `:z` — genre filter for zettels
 - `:t` — genre filter for types
 
-The `%` prefix in box format output means "non-persisted/computed tag". The `%`
-prefix in query syntax means "filter by tag". These are completely separate
-semantics that happen to share the same character.
+**Important**: `%` has NO meaning in query syntax. It is ONLY an output
+indicator for non-persisted tags. To filter by tag, use the bare tag name.
 
 ## Where to Find the Specification
 
