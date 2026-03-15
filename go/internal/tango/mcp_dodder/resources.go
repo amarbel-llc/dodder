@@ -431,7 +431,7 @@ func (p *typeResourceProvider) readTypeBlobFormatted(
 	result, err := p.bridge.RunCommand(
 		ctx,
 		"format-blob",
-		[]string{format, "!" + id},
+		[]string{"!" + id, format},
 		defaultMaxBytes,
 	)
 	if err != nil {
@@ -487,9 +487,13 @@ func (p *typeResourceProvider) readObject(
 			typeId = strings.TrimPrefix(t, "!")
 		}
 
-		detail["blob-formats-resource"] = fmt.Sprintf(
-			"dodder://objects/%s/blob/formats", objectId,
-		)
+		// Only link to blob formats if the object has blob content
+		if blobId, _ := obj["blob-id"].(string); blobId != "" {
+			detail["blob-formats-resource"] = fmt.Sprintf(
+				"dodder://objects/%s/blob/formats", objectId,
+			)
+		}
+
 		detail["markl-resource"] = fmt.Sprintf(
 			"dodder://objects/%s/markl", objectId,
 		)
@@ -546,7 +550,7 @@ func (p *typeResourceProvider) readObjectBlob(
 	result, err := p.bridge.RunCommand(
 		ctx,
 		"format-blob",
-		[]string{format, objectId},
+		[]string{objectId, format},
 		defaultMaxBytes,
 	)
 	if err != nil {
@@ -633,11 +637,13 @@ func (p *typeResourceProvider) getBlobFormatIds(
 		return nil, fmt.Errorf("object %s has no type", objectId)
 	}
 
-	// Get the type object to find its blob digest and type-of-type
+	// Get the type object to find its blob digest and type-of-type.
+	// Append :t genre sigil to restrict to the type object itself,
+	// otherwise show returns all objects OF that type.
 	result, err = p.bridge.RunCommand(
 		ctx,
 		"show",
-		[]string{"-format", "json", obj.Type},
+		[]string{"-format", "json", obj.Type + ":t"},
 		defaultMaxBytes,
 	)
 	if err != nil {

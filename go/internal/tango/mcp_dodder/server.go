@@ -334,11 +334,10 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 			if err := json.Unmarshal(args, &p); err != nil {
 				return nil, err
 			}
-			var cliArgs []string
+			cliArgs := []string{p.ObjectId}
 			if p.FormatId != "" {
 				cliArgs = append(cliArgs, p.FormatId)
 			}
-			cliArgs = append(cliArgs, p.ObjectId)
 			return cliArgs, nil
 		}),
 	)
