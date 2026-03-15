@@ -6,7 +6,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
@@ -64,7 +64,7 @@ func (cmd *InitFrom) Run(req command.Request) {
 	{
 		var err error
 
-		if typedConfig, err = triple_hyphen_io.DecodeFromFile(
+		if typedConfig, err = hyphence.DecodeFromFile(
 			blob_store_configs.Coder,
 			configPathFD.String(),
 		); err != nil {

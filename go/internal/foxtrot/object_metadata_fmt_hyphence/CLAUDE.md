@@ -1,6 +1,6 @@
-# object_metadata_fmt_triple_hyphen
+# object_metadata_fmt_hyphence
 
-Triple-hyphen metadata format parser and formatter for object serialization.
+Hyphence metadata format parser and formatter for object serialization.
 
 ## Key Types
 

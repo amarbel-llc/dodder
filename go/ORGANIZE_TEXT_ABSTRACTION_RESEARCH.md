@@ -480,7 +480,7 @@ The `reader` and `writer` structs use `box_format.BoxCheckedOut` for serializati
 - `expansion.*` - Tag expansion is generic
 - `format.LineWriter` - Output formatting is generic
 - `catgut.*` - String scanning is generic
-- `triple_hyphen_io.*` - Metadata format is generic
+- `hyphence.*` - Metadata format is generic
 
 ### 7.2 Must Be Abstracted
 

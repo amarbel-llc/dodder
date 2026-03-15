@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
@@ -122,8 +122,8 @@ type (
 		GetPrivateKeyPath() string
 	}
 
-	TypedConfig        = triple_hyphen_io.TypedBlob[Config]
-	TypedMutableConfig = triple_hyphen_io.TypedBlob[ConfigMutable]
+	TypedConfig        = hyphence.TypedBlob[Config]
+	TypedMutableConfig = hyphence.TypedBlob[ConfigMutable]
 )
 
 var (

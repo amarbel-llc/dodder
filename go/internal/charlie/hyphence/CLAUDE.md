@@ -1,6 +1,6 @@
-# triple_hyphen_io
+# hyphence
 
-I/O for triple-hyphen delimited format (metadata/content separation).
+I/O for hyphence (hyphen-fence) delimited format (metadata/content separation).
 
 ## Key Types
 

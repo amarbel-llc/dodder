@@ -1,34 +1,33 @@
-package triple_hyphen_io
+package hyphence
 
 import (
 	"bufio"
+	"encoding/gob"
 	"io"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
-type CoderToml[
+type CoderGob[
 	BLOB any,
 	BLOB_PTR interfaces.Ptr[BLOB],
 ] struct {
-	Progenitor         func() BLOB
-	IgnoreDecodeErrors bool
+	Progenitor func() BLOB
 }
 
-func (coder CoderToml[BLOB, BLOB_PTR]) DecodeFrom(
+func (coder CoderGob[BLOB, BLOB_PTR]) DecodeFrom(
 	blob BLOB_PTR,
 	bufferedReader *bufio.Reader,
 ) (n int64, err error) {
-	tomlDecoder := toml.NewDecoder(bufferedReader)
+	gobDecoder := gob.NewDecoder(bufferedReader)
 	clone := coder.Progenitor()
 
-	if err = tomlDecoder.Decode(clone); err != nil {
-		if err == io.EOF || coder.IgnoreDecodeErrors {
+	if err = gobDecoder.Decode(clone); err != nil {
+		if err == io.EOF {
 			err = nil
 		} else {
-			err = errors.Wrapf(err, "%T", err)
+			err = errors.Wrap(err)
 			return n, err
 		}
 	}
@@ -38,13 +37,13 @@ func (coder CoderToml[BLOB, BLOB_PTR]) DecodeFrom(
 	return n, err
 }
 
-func (coder CoderToml[BLOB, BLOB_PTR]) EncodeTo(
+func (coder CoderGob[BLOB, BLOB_PTR]) EncodeTo(
 	blob BLOB_PTR,
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
-	tomlEncoder := toml.NewEncoder(bufferedWriter)
+	gobEncoder := gob.NewEncoder(bufferedWriter)
 
-	if err = tomlEncoder.Encode(*blob); err != nil {
+	if err = gobEncoder.Encode(*blob); err != nil {
 		if err == io.EOF {
 			err = nil
 		} else {

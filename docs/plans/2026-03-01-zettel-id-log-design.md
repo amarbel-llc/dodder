@@ -21,7 +21,7 @@ signed, append-only zettel ID log.
 ### Data Model
 
 **Zettel ID log** -- append-only file at `FileZettelIdLog()`. Each entry is a
-box-format record encoded via `triple_hyphen_io`. Entry fields:
+box-format record encoded via `hyphence`. Entry fields:
 
 - Side (Yin or Yang)
 - TAI timestamp

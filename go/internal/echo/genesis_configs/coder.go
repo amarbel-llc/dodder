@@ -2,15 +2,15 @@ package genesis_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
-var CoderPrivate = triple_hyphen_io.CoderToTypedBlob[ConfigPrivate]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[ConfigPrivate]{},
-	Blob: triple_hyphen_io.CoderTypeMapWithoutType[ConfigPrivate](
+var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigPrivate]{},
+	Blob: hyphence.CoderTypeMapWithoutType[ConfigPrivate](
 		map[string]interfaces.CoderBufferedReadWriter[*ConfigPrivate]{
-			ids.TypeTomlConfigImmutableV2: triple_hyphen_io.CoderToml[
+			ids.TypeTomlConfigImmutableV2: hyphence.CoderToml[
 				ConfigPrivate,
 				*ConfigPrivate,
 			]{
@@ -18,7 +18,7 @@ var CoderPrivate = triple_hyphen_io.CoderToTypedBlob[ConfigPrivate]{
 					return &TomlV2Private{}
 				},
 			},
-			ids.TypeTomlConfigImmutableV1: triple_hyphen_io.CoderToml[
+			ids.TypeTomlConfigImmutableV1: hyphence.CoderToml[
 				ConfigPrivate,
 				*ConfigPrivate,
 			]{
@@ -30,11 +30,11 @@ var CoderPrivate = triple_hyphen_io.CoderToTypedBlob[ConfigPrivate]{
 	),
 }
 
-var CoderPublic = triple_hyphen_io.CoderToTypedBlob[ConfigPublic]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[ConfigPublic]{},
-	Blob: triple_hyphen_io.CoderTypeMapWithoutType[ConfigPublic](
+var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigPublic]{},
+	Blob: hyphence.CoderTypeMapWithoutType[ConfigPublic](
 		map[string]interfaces.CoderBufferedReadWriter[*ConfigPublic]{
-			ids.TypeTomlConfigImmutableV2: triple_hyphen_io.CoderToml[
+			ids.TypeTomlConfigImmutableV2: hyphence.CoderToml[
 				ConfigPublic,
 				*ConfigPublic,
 			]{
@@ -42,7 +42,7 @@ var CoderPublic = triple_hyphen_io.CoderToTypedBlob[ConfigPublic]{
 					return &TomlV2Public{}
 				},
 			},
-			ids.TypeTomlConfigImmutableV1: triple_hyphen_io.CoderToml[
+			ids.TypeTomlConfigImmutableV1: hyphence.CoderToml[
 				ConfigPublic,
 				*ConfigPublic,
 			]{

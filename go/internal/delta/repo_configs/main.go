@@ -7,12 +7,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 
 type (
-	TypedBlob = triple_hyphen_io.TypedBlob[ConfigOverlay]
+	TypedBlob = hyphence.TypedBlob[ConfigOverlay]
 
 	DefaultsGetter interface {
 		GetDefaults() Defaults

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
@@ -31,7 +31,7 @@ func (l Log) AppendEntry(entry Entry) (err error) {
 
 	defer errors.DeferredCloser(&err, file)
 
-	typedBlob := &triple_hyphen_io.TypedBlob[Entry]{
+	typedBlob := &hyphence.TypedBlob[Entry]{
 		Type: ids.GetOrPanic(ids.TypeZettelIdLogVCurrent).TypeStruct,
 		Blob: entry,
 	}
@@ -69,7 +69,7 @@ func (l Log) ReadAllEntries() (entries []Entry, err error) {
 	}
 
 	for _, segment := range segments {
-		var typedBlob triple_hyphen_io.TypedBlob[Entry]
+		var typedBlob hyphence.TypedBlob[Entry]
 
 		stringReader, repoolStringReader := pool.GetStringReader(segment)
 		defer repoolStringReader()
@@ -102,7 +102,7 @@ func segmentEntries(
 
 		trimmed := strings.TrimSuffix(line, "\n")
 
-		if trimmed == triple_hyphen_io.Boundary {
+		if trimmed == hyphence.Boundary {
 			boundaryCount++
 
 			if boundaryCount > 2 && boundaryCount%2 == 1 {

@@ -61,7 +61,7 @@ These TODOs represent structural improvements that would improve code maintainab
 
 #### Error Context in Operations
 - `src/oscar/queries/errors.go:15` - Add recovery text
-- `src/golf/triple_hyphen_io/decoder.go:76` - Add context to errors
+- `src/golf/hyphence/decoder.go:76` - Add context to errors
 - `src/lima/box_format/read.go:92` - Switch to returning ErrBoxParse
 - `src/bravo/flags/main.go:1129` - Switch to errors.BadRequestf
 

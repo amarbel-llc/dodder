@@ -1,6 +1,6 @@
 # organize_text
 
-Text-based organization format for hierarchical zettel assignments with triple-hyphen IO support.
+Text-based organization format for hierarchical zettel assignments with hyphence support.
 
 ## Key Types
 
@@ -11,7 +11,7 @@ Text-based organization format for hierarchical zettel assignments with triple-h
 
 ## Features
 
-- Reads and writes organize text format via triple-hyphen IO
+- Reads and writes organize text format via hyphence
 - Supports hierarchical assignment trees with depth limits
 - Refinement system for processing assignments
 - Option comments that modify reader/writer behavior

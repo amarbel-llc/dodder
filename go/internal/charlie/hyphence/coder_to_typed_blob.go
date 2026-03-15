@@ -1,4 +1,4 @@
-package triple_hyphen_io
+package hyphence
 
 import (
 	"bufio"
@@ -10,14 +10,19 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 )
 
-type Coder[BLOB any] struct {
+type CoderToTypedBlob[BLOB any] struct {
 	RequireMetadata bool
-	Metadata, Blob  interfaces.CoderBufferedReadWriter[BLOB]
+	// TODO replace with a metadata-like object
+	Metadata interfaces.CoderBufferedReadWriter[*TypedBlob[BLOB]]
+	Blob     CoderTypeMapWithoutType[BLOB]
 }
 
-func (coder *Coder[O]) DecodeFrom(object O, r io.Reader) (n int64, err error) {
+func (coder CoderToTypedBlob[O]) DecodeFrom(
+	typedBlob *TypedBlob[O],
+	reader io.Reader,
+) (n int64, err error) {
 	var n1 int64
-	n1, err = coder.readMetadataFrom(object, &r)
+	n1, err = coder.readMetadataFrom(typedBlob, &reader)
 	n += n1
 
 	if err != nil {
@@ -25,23 +30,23 @@ func (coder *Coder[O]) DecodeFrom(object O, r io.Reader) (n int64, err error) {
 		return n, err
 	}
 
-	n1, err = coder.Blob.DecodeFrom(object, bufio.NewReader(r))
+	n1, err = coder.Blob.DecodeFrom(typedBlob, bufio.NewReader(reader))
 	n += n1
 
 	if err != nil {
-		err = errors.Wrapf(err, "blob read failed")
+		err = errors.Wrapf(err, "blob read failed for type: %q", typedBlob.Type)
 		return n, err
 	}
 
 	return n, err
 }
 
-func (coder *Coder[O]) readMetadataFrom(
-	object O,
-	bufferedReader *io.Reader,
+func (coder CoderToTypedBlob[O]) readMetadataFrom(
+	typedBlob *TypedBlob[O],
+	reader *io.Reader,
 ) (n int64, err error) {
 	var state readerState
-	br := bufio.NewReader(*bufferedReader)
+	bufferedReader := bufio.NewReader(*reader)
 
 	if coder.RequireMetadata && coder.Metadata == nil {
 		err = errors.ErrorWithStackf("metadata reader is nil")
@@ -61,7 +66,7 @@ LINE_READ_LOOP:
 	for !isEOF {
 		var rawLine, line string
 
-		rawLine, err = br.ReadString('\n')
+		rawLine, err = bufferedReader.ReadString('\n')
 		n += int64(len(rawLine))
 
 		if err != nil && err != io.EOF {
@@ -84,9 +89,9 @@ LINE_READ_LOOP:
 				return n, err
 
 			case line != Boundary:
-				*bufferedReader = io.MultiReader(
+				*reader = io.MultiReader(
 					strings.NewReader(rawLine),
-					br,
+					bufferedReader,
 				)
 
 				break LINE_READ_LOOP
@@ -94,7 +99,7 @@ LINE_READ_LOOP:
 
 			state += 1
 
-			metadataPipe = ohio.MakePipedDecoder(object, coder.Metadata)
+			metadataPipe = ohio.MakePipedDecoder(typedBlob, coder.Metadata)
 
 		case readerStateFirstBoundary:
 			if line == Boundary {
@@ -113,7 +118,7 @@ LINE_READ_LOOP:
 			}
 
 		case readerStateSecondBoundary:
-			*bufferedReader = br
+			*reader = bufferedReader
 			break LINE_READ_LOOP
 
 		default:
@@ -125,8 +130,8 @@ LINE_READ_LOOP:
 	return n, err
 }
 
-func (coder Coder[O]) EncodeTo(
-	object O,
+func (coder CoderToTypedBlob[O]) EncodeTo(
+	typedBlob *TypedBlob[O],
 	writer io.Writer,
 ) (n int64, err error) {
 	bufferedWriter := bufio.NewWriter(writer)
@@ -150,7 +155,7 @@ func (coder Coder[O]) EncodeTo(
 			return n, err
 		}
 
-		n1, err = coder.Metadata.EncodeTo(object, bufferedWriter)
+		n1, err = coder.Metadata.EncodeTo(typedBlob, bufferedWriter)
 		n += n1
 
 		if err != nil {
@@ -176,7 +181,7 @@ func (coder Coder[O]) EncodeTo(
 	}
 
 	if coder.Blob != nil {
-		n1, err = coder.Blob.EncodeTo(object, bufferedWriter)
+		n1, err = coder.Blob.EncodeTo(typedBlob, bufferedWriter)
 		n += n1
 
 		if err != nil {

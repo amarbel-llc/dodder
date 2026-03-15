@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
@@ -97,7 +97,7 @@ func (cmd *New) Run(req command.Request) {
 
 	textFormatterOptions := checkout_options.TextFormatterOptions{}
 
-	format := object_metadata_fmt_triple_hyphen.Factory{
+	format := object_metadata_fmt_hyphence.Factory{
 		EnvDir:    repo.GetEnvRepo(),
 		BlobStore: repo.GetEnvRepo().GetDefaultBlobStore(),
 	}.Make()

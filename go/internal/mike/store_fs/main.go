@@ -15,7 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
@@ -57,7 +57,7 @@ func Make(
 		deletedInternal: collections_value.MakeMutableValueSet[*fd.FD](
 			nil,
 		),
-		metadataTextParser: object_metadata_fmt_triple_hyphen.Factory{
+		metadataTextParser: object_metadata_fmt_hyphence.Factory{
 			EnvDir:    envRepo,
 			BlobStore: blobStore,
 		}.MakeTextParser(),
@@ -69,7 +69,7 @@ func Make(
 type Store struct {
 	config             sku.Config
 	deletedPrinter     interfaces.FuncIter[*fd.FD]
-	metadataTextParser object_metadata_fmt_triple_hyphen.Parser
+	metadataTextParser object_metadata_fmt_hyphence.Parser
 	envRepo            env_repo.Env
 	fsOps              filesystem_ops.V0
 	fileEncoder        FileEncoder

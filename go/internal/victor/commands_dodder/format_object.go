@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/typed_blob_store"
@@ -141,7 +141,7 @@ func (cmd *FormatObject) Run(req command.Request) {
 		object,
 		cmd.CheckoutMode,
 	); err != nil {
-		var errBlobFormatterFailed *object_metadata_fmt_triple_hyphen.ErrBlobFormatterFailed
+		var errBlobFormatterFailed *object_metadata_fmt_hyphence.ErrBlobFormatterFailed
 
 		if errors.As(err, &errBlobFormatterFailed) {
 			localWorkingCopy.Cancel(errBlobFormatterFailed)

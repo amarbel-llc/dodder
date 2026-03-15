@@ -148,7 +148,7 @@ defer the `Put()` to ensure the clone returns to the pool when done.
 ### CORRECT: ResetWith into Typed Blob Struct
 
 ```go
-typedBlob := &triple_hyphen_io.TypedBlob[sku.Transacted]{
+typedBlob := &hyphence.TypedBlob[sku.Transacted]{
     Type: tipe,
 }
 sku.TransactedResetter.ResetWith(&typedBlob.Blob, sourcePointer)

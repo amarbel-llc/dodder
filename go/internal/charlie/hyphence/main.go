@@ -1,4 +1,4 @@
-package triple_hyphen_io
+package hyphence
 
 import "io"
 

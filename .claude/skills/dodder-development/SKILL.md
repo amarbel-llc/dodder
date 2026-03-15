@@ -96,7 +96,7 @@ and makes the dependency direction visible in the directory name alone.
 | **charlie** | catgut, doddish, checkout_options, store_version | Core domain types (string interning, tokenized IDs, checkout options) |
 | **delta** | alfred, age, editor | Development and debug tools (age encryption, editor integration) |
 | **echo** | ids, format, markl, checked_out_state, blob_store_configs | Object ID and format system |
-| **foxtrot** | triple_hyphen_io, tag_paths | Repository and page management (format versioning, tag paths) |
+| **foxtrot** | hyphence, tag_paths | Repository and page management (format versioning, tag paths) |
 | **golf** | command, env_ui, objects | Command and object handling |
 | **hotel** | env_dir, file_lock, genesis_configs | File and directory management |
 | **india** | blob_stores, zettel_id_index | Storage and indexing |
@@ -263,7 +263,7 @@ When adding blob store types or registering new coders:
    `go/lib/alfa/interfaces/` or `go/internal/alfa/domain_interfaces/`. Use existing
    implementations as templates.
 5. **Triple-hyphen format:** If the type is serialized through the triple-hyphen
-   IO system (`foxtrot/triple_hyphen_io`), add the format version mapping.
+   IO system (`foxtrot/hyphence`), add the format version mapping.
 
 ## Key Architectural Patterns
 

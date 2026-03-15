@@ -1,4 +1,4 @@
-package object_metadata_fmt_triple_hyphen
+package object_metadata_fmt_hyphence
 
 import (
 	"bufio"
@@ -9,7 +9,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -65,7 +65,7 @@ func (factory formatterComponents) writeBoundary(
 	writer interfaces.WriterAndStringWriter,
 	_ FormatterContext,
 ) (n int64, err error) {
-	return ohio.WriteLine(writer, triple_hyphen_io.Boundary)
+	return ohio.WriteLine(writer, hyphence.Boundary)
 }
 
 func (factory formatterComponents) writeNewLine(

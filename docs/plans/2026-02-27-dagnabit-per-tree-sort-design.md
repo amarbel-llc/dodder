@@ -48,7 +48,7 @@ Per-tree sort of `internal/` produces:
 | `delta` | `_` or `alfa` | genres→alfa, doddish→_ |
 | `echo` | `_`, `alfa`, or `bravo` | file_extensions→bravo |
 | `foxtrot` | `bravo` | ids, markl, directory_layout |
-| `golf` | `charlie` | fd, triple_hyphen_io |
+| `golf` | `charlie` | fd, hyphence |
 | `hotel` | `delta` | objects, blob_store_configs |
 | `india` | `echo` | env_dir, genesis_configs |
 | `juliett` | `foxtrot` | blob_stores, zettel_id_index |

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
@@ -14,7 +14,7 @@ func registerToml[CONFIG Config, CONFIG_PTR interface {
 	ConfigMutable
 	interfaces.Ptr[CONFIG]
 }](
-	typeMap triple_hyphen_io.CoderTypeMapWithoutType[Config],
+	typeMap hyphence.CoderTypeMapWithoutType[Config],
 	typeString string,
 ) struct{} {
 	if existing, ok := typeMap[typeString]; ok {
@@ -27,7 +27,7 @@ func registerToml[CONFIG Config, CONFIG_PTR interface {
 		)
 	}
 
-	typeMap[typeString] = triple_hyphen_io.CoderToml[
+	typeMap[typeString] = hyphence.CoderToml[
 		Config,
 		*Config,
 	]{
@@ -40,11 +40,11 @@ func registerToml[CONFIG Config, CONFIG_PTR interface {
 	return struct{}{}
 }
 
-var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[Config]{},
-	Blob: triple_hyphen_io.CoderTypeMapWithoutType[Config](
+var Coder = hyphence.CoderToTypedBlob[Config]{
+	Metadata: hyphence.TypedMetadataCoder[Config]{},
+	Blob: hyphence.CoderTypeMapWithoutType[Config](
 		map[string]interfaces.CoderBufferedReadWriter[*Config]{
-			ids.TypeTomlBlobStoreConfigV0: triple_hyphen_io.CoderToml[
+			ids.TypeTomlBlobStoreConfigV0: hyphence.CoderToml[
 				Config,
 				*Config,
 			]{
@@ -52,7 +52,7 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 					return &TomlV0{}
 				},
 			},
-			ids.TypeTomlBlobStoreConfigV1: triple_hyphen_io.CoderToml[
+			ids.TypeTomlBlobStoreConfigV1: hyphence.CoderToml[
 				Config,
 				*Config,
 			]{
@@ -60,7 +60,7 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 					return &TomlV1{}
 				},
 			},
-			ids.TypeTomlBlobStoreConfigV2: triple_hyphen_io.CoderToml[
+			ids.TypeTomlBlobStoreConfigV2: hyphence.CoderToml[
 				Config,
 				*Config,
 			]{
@@ -68,7 +68,7 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 					return &TomlV2{}
 				},
 			},
-			ids.TypeTomlBlobStoreConfigV3: triple_hyphen_io.CoderToml[
+			ids.TypeTomlBlobStoreConfigV3: hyphence.CoderToml[
 				Config,
 				*Config,
 			]{
@@ -76,7 +76,7 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 					return &TomlV3{}
 				},
 			},
-			ids.TypeTomlBlobStoreConfigSftpExplicitV0: triple_hyphen_io.CoderToml[
+			ids.TypeTomlBlobStoreConfigSftpExplicitV0: hyphence.CoderToml[
 				Config,
 				*Config,
 			]{
@@ -84,7 +84,7 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 					return &TomlSFTPV0{}
 				},
 			},
-			ids.TypeTomlBlobStoreConfigSftpViaSSHConfigV0: triple_hyphen_io.CoderToml[
+			ids.TypeTomlBlobStoreConfigSftpViaSSHConfigV0: hyphence.CoderToml[
 				Config,
 				*Config,
 			]{

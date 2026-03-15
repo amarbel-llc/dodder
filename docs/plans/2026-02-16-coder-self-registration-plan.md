@@ -48,9 +48,9 @@ var _ = registerToml[TomlSFTPViaSSHConfigV0](Coder.Blob, ids.TypeTomlBlobStoreCo
 Replace the map literal with an empty map. The `Coder` var becomes:
 
 ```go
-var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[Config]{},
-	Blob: triple_hyphen_io.CoderTypeMapWithoutType[Config](
+var Coder = hyphence.CoderToTypedBlob[Config]{
+	Metadata: hyphence.TypedMetadataCoder[Config]{},
+	Blob: hyphence.CoderTypeMapWithoutType[Config](
 		make(map[string]interfaces.CoderBufferedReadWriter[*Config]),
 	),
 }
@@ -93,7 +93,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
 var coderMap = make(map[string]interfaces.CoderBufferedReadWriter[*Blob])
@@ -109,7 +109,7 @@ func register[IMPL any, IMPL_PTR interface {
 		))
 	}
 
-	coderMap[typeString] = triple_hyphen_io.CoderToml[Blob, *Blob]{
+	coderMap[typeString] = hyphence.CoderToml[Blob, *Blob]{
 		Progenitor: func() Blob {
 			var impl IMPL
 			return IMPL_PTR(&impl)
@@ -119,9 +119,9 @@ func register[IMPL any, IMPL_PTR interface {
 	return struct{}{}
 }
 
-var Coder = triple_hyphen_io.CoderToTypedBlob[Blob]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[Blob]{},
-	Blob:     triple_hyphen_io.CoderTypeMapWithoutType[Blob](coderMap),
+var Coder = hyphence.CoderToTypedBlob[Blob]{
+	Metadata: hyphence.TypedMetadataCoder[Blob]{},
+	Blob:     hyphence.CoderTypeMapWithoutType[Blob](coderMap),
 }
 ```
 
@@ -173,7 +173,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
 var coderMap = make(map[string]interfaces.CoderBufferedReadWriter[*ConfigOverlay])
@@ -189,7 +189,7 @@ func register[IMPL any, IMPL_PTR interface {
 		))
 	}
 
-	coderMap[typeString] = triple_hyphen_io.CoderToml[ConfigOverlay, *ConfigOverlay]{
+	coderMap[typeString] = hyphence.CoderToml[ConfigOverlay, *ConfigOverlay]{
 		Progenitor: func() ConfigOverlay {
 			var impl IMPL
 			return IMPL_PTR(&impl)
@@ -199,9 +199,9 @@ func register[IMPL any, IMPL_PTR interface {
 	return struct{}{}
 }
 
-var Coder = triple_hyphen_io.CoderToTypedBlob[ConfigOverlay]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[ConfigOverlay]{},
-	Blob:     triple_hyphen_io.CoderTypeMapWithoutType[ConfigOverlay](coderMap),
+var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigOverlay]{},
+	Blob:     hyphence.CoderTypeMapWithoutType[ConfigOverlay](coderMap),
 }
 ```
 
@@ -254,7 +254,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
 var (
@@ -279,7 +279,7 @@ func register[
 		))
 	}
 
-	privateCoderMap[typeString] = triple_hyphen_io.CoderToml[
+	privateCoderMap[typeString] = hyphence.CoderToml[
 		ConfigPrivate,
 		*ConfigPrivate,
 	]{
@@ -289,7 +289,7 @@ func register[
 		},
 	}
 
-	publicCoderMap[typeString] = triple_hyphen_io.CoderToml[
+	publicCoderMap[typeString] = hyphence.CoderToml[
 		ConfigPublic,
 		*ConfigPublic,
 	]{
@@ -302,14 +302,14 @@ func register[
 	return struct{}{}
 }
 
-var CoderPrivate = triple_hyphen_io.CoderToTypedBlob[ConfigPrivate]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[ConfigPrivate]{},
-	Blob:     triple_hyphen_io.CoderTypeMapWithoutType[ConfigPrivate](privateCoderMap),
+var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigPrivate]{},
+	Blob:     hyphence.CoderTypeMapWithoutType[ConfigPrivate](privateCoderMap),
 }
 
-var CoderPublic = triple_hyphen_io.CoderToTypedBlob[ConfigPublic]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[ConfigPublic]{},
-	Blob:     triple_hyphen_io.CoderTypeMapWithoutType[ConfigPublic](publicCoderMap),
+var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigPublic]{},
+	Blob:     hyphence.CoderTypeMapWithoutType[ConfigPublic](publicCoderMap),
 }
 ```
 
@@ -354,7 +354,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
 var coderMap = make(map[string]interfaces.CoderBufferedReadWriter[*Config])
@@ -370,7 +370,7 @@ func register[IMPL any, IMPL_PTR interface {
 		))
 	}
 
-	coderMap[typeString] = triple_hyphen_io.CoderToml[Config, *Config]{
+	coderMap[typeString] = hyphence.CoderToml[Config, *Config]{
 		Progenitor: func() Config {
 			var impl IMPL
 			return IMPL_PTR(&impl)
@@ -380,9 +380,9 @@ func register[IMPL any, IMPL_PTR interface {
 	return struct{}{}
 }
 
-var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[Config]{},
-	Blob:     triple_hyphen_io.CoderTypeMapWithoutType[Config](coderMap),
+var Coder = hyphence.CoderToTypedBlob[Config]{
+	Metadata: hyphence.TypedMetadataCoder[Config]{},
+	Blob:     hyphence.CoderTypeMapWithoutType[Config](coderMap),
 }
 ```
 

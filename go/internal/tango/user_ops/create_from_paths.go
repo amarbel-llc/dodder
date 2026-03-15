@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -14,7 +14,7 @@ import (
 type CreateFromPaths struct {
 	*local_working_copy.Repo
 	Proto      sku.Proto
-	TextParser object_metadata_fmt_triple_hyphen.Parser
+	TextParser object_metadata_fmt_hyphence.Parser
 	Filter     script_value.ScriptValue
 	Delete     bool
 	// ReadHinweisFromPath bool

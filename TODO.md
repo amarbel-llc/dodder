@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] RFC: markl.Id format specification (referenced by hyphence RFC 0001)
+
 ## V14 stream index exploration
 
 - [ ] explore using sigil as continuation operator in v14 fixed stream index
@@ -18,7 +20,7 @@
 
 ## Temporary backwards-compat: `!` blob path fallback in triple-hyphen parser
 
-- [ ] Remove the `strings.Contains(typeString, "/")` fallback in `text_parser2.readType` (`india/object_metadata_fmt_triple_hyphen/text_parser2.go`). Old checked-out zettel files used `! <path>` for blob references; new format uses `@ <path>`. Once all workspaces have been re-checked-out, this shim can be deleted.
+- [ ] Remove the `strings.Contains(typeString, "/")` fallback in `text_parser2.readType` (`india/object_metadata_fmt_hyphence/text_parser2.go`). Old checked-out zettel files used `! <path>` for blob references; new format uses `@ <path>`. Once all workspaces have been re-checked-out, this shim can be deleted.
 
 ## `der import` bugs
 

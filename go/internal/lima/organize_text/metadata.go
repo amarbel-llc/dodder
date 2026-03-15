@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -89,7 +89,7 @@ func (metadata Metadata) AsMetadata() (m1 objects.MetadataMutable) {
 	return m1
 }
 
-func (metadata Metadata) GetMetadataWriterTo() triple_hyphen_io.MetadataWriterTo {
+func (metadata Metadata) GetMetadataWriterTo() hyphence.MetadataWriterTo {
 	return metadata
 }
 

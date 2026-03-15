@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
@@ -24,12 +24,12 @@ import (
 type Diff struct {
 	*local_working_copy.Repo
 
-	object_metadata_fmt_triple_hyphen.FormatterFamily
+	object_metadata_fmt_hyphence.FormatterFamily
 }
 
 func (op Diff) Run(
 	remoteCheckedOut sku.SkuType,
-	options object_metadata_fmt_triple_hyphen.FormatterOptions,
+	options object_metadata_fmt_hyphence.FormatterOptions,
 ) (err error) {
 	var localCheckedOut sku.SkuType
 
@@ -66,13 +66,13 @@ func (op Diff) Run(
 	var mode checkout_mode.Mode
 
 	local := localCheckedOut.GetSku()
-	localContext := object_metadata_fmt_triple_hyphen.FormatterContext{
+	localContext := object_metadata_fmt_hyphence.FormatterContext{
 		EncoderContext:   local,
 		FormatterOptions: options,
 	}
 
 	remote := remoteCheckedOut.GetSkuExternal()
-	remoteCtx := object_metadata_fmt_triple_hyphen.FormatterContext{
+	remoteCtx := object_metadata_fmt_hyphence.FormatterContext{
 		EncoderContext:   remote,
 		FormatterOptions: options,
 	}
@@ -200,8 +200,8 @@ func (op Diff) Run(
 
 func (c Diff) makeDo(
 	writeCloser io.WriteCloser,
-	textFormatter object_metadata_fmt_triple_hyphen.Formatter,
-	textFormatterContext object_metadata_fmt_triple_hyphen.FormatterContext,
+	textFormatter object_metadata_fmt_hyphence.Formatter,
+	textFormatterContext object_metadata_fmt_hyphence.FormatterContext,
 ) errors.FuncErr {
 	return func() (err error) {
 		defer errors.DeferredCloser(&err, writeCloser)

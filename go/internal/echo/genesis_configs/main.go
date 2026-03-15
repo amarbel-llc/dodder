@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
@@ -40,9 +40,9 @@ type (
 		GetPrivateKeyMutable() domain_interfaces.MarklIdMutable
 	}
 
-	TypedConfigPublic         = triple_hyphen_io.TypedBlob[ConfigPublic]
-	TypedConfigPrivate        = triple_hyphen_io.TypedBlob[ConfigPrivate]
-	TypedConfigPrivateMutable = triple_hyphen_io.TypedBlob[ConfigPrivateMutable]
+	TypedConfigPublic         = hyphence.TypedBlob[ConfigPublic]
+	TypedConfigPrivate        = hyphence.TypedBlob[ConfigPrivate]
+	TypedConfigPrivateMutable = hyphence.TypedBlob[ConfigPrivateMutable]
 )
 
 func Default() *TypedConfigPrivateMutable {

@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
@@ -24,7 +24,7 @@ func (cmd *BlobStore) MakeBlobStoreFromConfigPath(
 	{
 		var err error
 
-		if typedConfig, err = triple_hyphen_io.DecodeFromFile(
+		if typedConfig, err = hyphence.DecodeFromFile(
 			blob_store_configs.Coder,
 			configPath,
 		); err != nil {
@@ -73,7 +73,7 @@ func (cmd *BlobStore) MakeBlobStoreFromIdOrConfigPath(
 		{
 			var err error
 
-			if typedConfig, err = triple_hyphen_io.DecodeFromFile(
+			if typedConfig, err = hyphence.DecodeFromFile(
 				blob_store_configs.Coder,
 				configPath,
 			); err != nil {

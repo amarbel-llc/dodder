@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/box_format"
@@ -27,7 +27,7 @@ type Closet struct {
 
 	coders map[string]coder
 
-	objectCoders triple_hyphen_io.CoderTypeMapWithoutType[sku.Transacted]
+	objectCoders hyphence.CoderTypeMapWithoutType[sku.Transacted]
 
 	seqDecoders      map[string]interfaces.DecoderFromBufferedReader[funcIterSeq]
 	seqErrorDecoders map[string]interfaces.DecoderFromBufferedReader[funcIterSeqError]
@@ -59,7 +59,7 @@ func MakeCloset(
 			coders[key] = value
 		}
 
-		store.objectCoders = triple_hyphen_io.CoderTypeMapWithoutType[sku.Transacted](
+		store.objectCoders = hyphence.CoderTypeMapWithoutType[sku.Transacted](
 			coders,
 		)
 	}
@@ -135,7 +135,7 @@ func (closet Closet) WriteObjectToWriter(
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
 	// Create TypedBlob and reset its Blob field directly from source
-	typedBlob := &triple_hyphen_io.TypedBlob[sku.Transacted]{
+	typedBlob := &hyphence.TypedBlob[sku.Transacted]{
 		Type: tipe,
 		// Blob field is zero-value sku.Transacted
 	}
@@ -187,15 +187,15 @@ func (closet Closet) WriteTypedBlobToWriter(
 	seq sku.Seq,
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
-	decoder := triple_hyphen_io.Encoder[*triple_hyphen_io.TypedBlob[sku.Seq]]{
-		Metadata: triple_hyphen_io.TypedMetadataCoder[sku.Seq]{},
-		Blob: triple_hyphen_io.EncoderTypeMapWithoutType[sku.Seq](
+	decoder := hyphence.Encoder[*hyphence.TypedBlob[sku.Seq]]{
+		Metadata: hyphence.TypedMetadataCoder[sku.Seq]{},
+		Blob: hyphence.EncoderTypeMapWithoutType[sku.Seq](
 			closet.seqEncoders,
 		),
 	}
 
 	if _, err = decoder.EncodeTo(
-		&triple_hyphen_io.TypedBlob[sku.Seq]{
+		&hyphence.TypedBlob[sku.Seq]{
 			Type: tipe,
 			Blob: seq,
 		},
@@ -209,7 +209,7 @@ func (closet Closet) WriteTypedBlobToWriter(
 }
 
 // TODO refactor all the below. Simplify the naming, and move away from the
-// stream coders, instead use a utility function like in triple_hyphen_io
+// stream coders, instead use a utility function like in hyphence
 
 func (closet Closet) StreamInventoryListBlobSkus(
 	transactedGetter sku.TransactedGetter,
@@ -275,9 +275,9 @@ func (closet Closet) AllDecodedObjectsFromStream(
 	}
 
 	return func(yield func(*sku.Transacted, error) bool) {
-		decoder := triple_hyphen_io.Decoder[*triple_hyphen_io.TypedBlob[funcIterSeqError]]{
-			Metadata: triple_hyphen_io.TypedMetadataCoder[funcIterSeqError]{},
-			Blob: triple_hyphen_io.DecoderTypeMapWithoutType[funcIterSeqError](
+		decoder := hyphence.Decoder[*hyphence.TypedBlob[funcIterSeqError]]{
+			Metadata: hyphence.TypedMetadataCoder[funcIterSeqError]{},
+			Blob: hyphence.DecoderTypeMapWithoutType[funcIterSeqError](
 				coders,
 			),
 		}
@@ -286,7 +286,7 @@ func (closet Closet) AllDecodedObjectsFromStream(
 		defer repoolBufferedReader()
 
 		if _, err := decoder.DecodeFrom(
-			&triple_hyphen_io.TypedBlob[funcIterSeqError]{
+			&hyphence.TypedBlob[funcIterSeqError]{
 				Type: ids.TypeStruct{},
 				Blob: func(object *sku.Transacted, err error) bool {
 					return yield(object, err)
@@ -319,7 +319,7 @@ func (closet Closet) IterInventoryListBlobSkusFromBlobStore(
 
 		defer errors.DeferredYieldCloser(yield, readCloser)
 
-		decoder := triple_hyphen_io.DecoderTypeMapWithoutType[funcIterSeq](
+		decoder := hyphence.DecoderTypeMapWithoutType[funcIterSeq](
 			closet.seqDecoders,
 		)
 
@@ -329,7 +329,7 @@ func (closet Closet) IterInventoryListBlobSkusFromBlobStore(
 		defer repoolBufferedReader()
 
 		if _, err := decoder.DecodeFrom(
-			&triple_hyphen_io.TypedBlob[funcIterSeq]{
+			&hyphence.TypedBlob[funcIterSeq]{
 				Type: tipe,
 				Blob: func(object *sku.Transacted) bool {
 					return yield(object, nil)
@@ -348,7 +348,7 @@ func (closet Closet) IterInventoryListBlobSkusFromReader(
 	reader io.Reader,
 ) interfaces.SeqError[*sku.Transacted] {
 	return func(yield func(*sku.Transacted, error) bool) {
-		decoder := triple_hyphen_io.DecoderTypeMapWithoutType[funcIterSeq](
+		decoder := hyphence.DecoderTypeMapWithoutType[funcIterSeq](
 			closet.seqDecoders,
 		)
 
@@ -356,7 +356,7 @@ func (closet Closet) IterInventoryListBlobSkusFromReader(
 		defer repoolBufferedReader()
 
 		if _, err := decoder.DecodeFrom(
-			&triple_hyphen_io.TypedBlob[funcIterSeq]{
+			&hyphence.TypedBlob[funcIterSeq]{
 				Type: tipe,
 				Blob: func(object *sku.Transacted) bool {
 					return yield(object, nil)

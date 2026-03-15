@@ -44,7 +44,7 @@ composing each component.
 | Name | Parts |
 |------|-------|
 | `blob_store_configs` | single part: "blob store configs" |
-| `triple_hyphen_io` | single part: "triple hyphen io" |
+| `hyphence` | single part: "triple hyphen io" |
 | `type_blobs` | single part: "type blobs" |
 | `inventory_list_coders` | single part: "inventory list coders" |
 
@@ -128,8 +128,8 @@ Type strings follow a consistent structure:
 | Mistake | Correct |
 |---------|---------|
 | `blob-store-configs` (all kebab) | `blob_store_configs` (single compound noun) |
-| `triple_hyphen_io-toml_v0` (wrong split) | Depends on semantics — split on concept boundaries |
-| `design_pattern-tripleHyphenIo` (camelCase) | `design_patterns-triple_hyphen_io` |
-| `designPattern-tripleHyphenIo` (camelCase both) | `design_patterns-triple_hyphen_io` |
-| `design-pattern-triple-hyphen-io` (all kebab) | `design_patterns-triple_hyphen_io` |
+| `hyphence-toml_v0` (wrong split) | Depends on semantics — split on concept boundaries |
+| `design_pattern-tripleHyphenIo` (camelCase) | `design_patterns-hyphence` |
+| `designPattern-tripleHyphenIo` (camelCase both) | `design_patterns-hyphence` |
+| `design-pattern-triple-hyphen-io` (all kebab) | `design_patterns-hyphence` |
 | `design_pattern-pool_repool` in `skills/` (singular in plural container) | `design_patterns-pool_repool` |

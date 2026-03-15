@@ -65,7 +65,7 @@ func register[IMPL any, IMPL_PTR interface {
             typeString,
         ))
     }
-    coderMap[typeString] = triple_hyphen_io.CoderToml[Blob, *Blob]{
+    coderMap[typeString] = hyphence.CoderToml[Blob, *Blob]{
         Progenitor: func() Blob {
             var impl IMPL
             return IMPL_PTR(&impl)
@@ -74,9 +74,9 @@ func register[IMPL any, IMPL_PTR interface {
     return struct{}{}
 }
 
-var Coder = triple_hyphen_io.CoderToTypedBlob[Blob]{
-    Metadata: triple_hyphen_io.TypedMetadataCoder[Blob]{},
-    Blob:     triple_hyphen_io.CoderTypeMapWithoutType[Blob](coderMap),
+var Coder = hyphence.CoderToTypedBlob[Blob]{
+    Metadata: hyphence.TypedMetadataCoder[Blob]{},
+    Blob:     hyphence.CoderTypeMapWithoutType[Blob](coderMap),
 }
 ```
 

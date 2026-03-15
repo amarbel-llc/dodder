@@ -1,4 +1,4 @@
-package object_metadata_fmt_triple_hyphen
+package object_metadata_fmt_hyphence
 
 import (
 	"io"
@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
@@ -47,7 +47,7 @@ func (parser textParser) ParseMetadata(
 
 	defer errors.DeferredCloser(&err, blobWriter)
 
-	metadataReader := triple_hyphen_io.Reader{
+	metadataReader := hyphence.Reader{
 		Metadata: parser2,
 		Blob:     blobWriter,
 	}

@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
@@ -86,7 +86,7 @@ func (cmd Diff) Run(dep command.Request) {
 
 	opDiffFS := user_ops.Diff{
 		Repo: localWorkingCopy,
-		FormatterFamily: object_metadata_fmt_triple_hyphen.Factory{
+		FormatterFamily: object_metadata_fmt_hyphence.Factory{
 			EnvDir:    localWorkingCopy.GetEnvRepo(),
 			BlobStore: localWorkingCopy.GetBlobStore(),
 		}.MakeFormatterFamily(),

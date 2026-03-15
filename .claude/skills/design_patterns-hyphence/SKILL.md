@@ -1,14 +1,15 @@
 ---
-name: design_patterns-triple_hyphen_io
+name: design_patterns-hyphence
 description: >
-  Use when working with the triple-hyphen serialization format, adding coders
-  for versioned types, reading or writing typed blobs, or debugging
+  Use when working with the hyphence (hyphen-fence) serialization format, adding
+  coders for versioned types, reading or writing typed blobs, or debugging
   serialization issues. Also applies when encountering --- boundary parsing,
   TypedBlob, CoderToTypedBlob, CoderTypeMapWithoutType, or type-dispatched
   decoding.
 triggers:
+  - hyphence
+  - hyphen fence
   - triple hyphen
-  - triple_hyphen_io
   - TypedBlob
   - CoderToTypedBlob
   - CoderTypeMapWithoutType
@@ -17,15 +18,15 @@ triggers:
   - typed serialization
 ---
 
-# Triple-Hyphen IO Format
+# Hyphence Format
 
 ## Overview
 
-The triple-hyphen IO system is dodder's serialization format for typed,
-versioned data. Files use `---` boundaries to separate a type metadata header
-from the body content. On read, the type string from the header selects the
-correct version-specific decoder. On write, the current version's type string
-and encoder produce the output.
+Hyphence (hyphen-fence) is dodder's serialization format for typed, versioned
+data. Files use `---` boundaries (the "hyphen fence") to separate a type
+metadata header from the body content. On read, the type string from the header
+selects the correct version-specific decoder. On write, the current version's
+type string and encoder produce the output.
 
 ## On-Disk Format
 
@@ -49,7 +50,7 @@ follows the second `---` boundary and an empty line.
 Generic wrapper pairing a type identifier with blob data:
 
 ```go
-// foxtrot/triple_hyphen_io/coder_type_map.go
+// foxtrot/hyphence/coder_type_map.go
 type TypedBlob[BLOB any] struct {
     Type ids.TypeStruct
     Blob BLOB
@@ -61,7 +62,7 @@ type TypedBlob[BLOB any] struct {
 Composes metadata and blob coders into a complete serializer:
 
 ```go
-// foxtrot/triple_hyphen_io/coder_to_typed_blob.go
+// foxtrot/hyphence/coder_to_typed_blob.go
 type CoderToTypedBlob[BLOB any] struct {
     RequireMetadata bool
     Metadata        interfaces.CoderBufferedReadWriter[*TypedBlob[BLOB]]
@@ -74,7 +75,7 @@ type CoderToTypedBlob[BLOB any] struct {
 Maps type strings to version-specific decoders:
 
 ```go
-// foxtrot/triple_hyphen_io/coder_type_map.go
+// foxtrot/hyphence/coder_type_map.go
 type CoderTypeMapWithoutType[BLOB any] map[string]interfaces.CoderBufferedReadWriter[*BLOB]
 ```
 
@@ -83,7 +84,7 @@ type CoderTypeMapWithoutType[BLOB any] map[string]interfaces.CoderBufferedReadWr
 Handles encoding/decoding of the `! type-string` metadata line:
 
 ```go
-// foxtrot/triple_hyphen_io/coder_metadata.go
+// foxtrot/hyphence/coder_metadata.go
 type TypedMetadataCoder[BLOB any] struct{}
 ```
 
@@ -126,10 +127,10 @@ returns a zero-value of the concrete struct:
 
 ```go
 // golf/blob_store_configs/coding.go
-var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
-    Blob: triple_hyphen_io.CoderTypeMapWithoutType[Config](
+var Coder = hyphence.CoderToTypedBlob[Config]{
+    Blob: hyphence.CoderTypeMapWithoutType[Config](
         map[string]interfaces.CoderBufferedReadWriter[*Config]{
-            ids.TypeTomlBlobStoreConfigV0: triple_hyphen_io.CoderToml[Config, *Config]{
+            ids.TypeTomlBlobStoreConfigV0: hyphence.CoderToml[Config, *Config]{
                 Progenitor: func() Config { return &TomlV0{} },
             },
             // ... more versions

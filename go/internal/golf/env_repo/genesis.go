@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
 	"code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/echo/genesis_configs"
@@ -105,15 +105,15 @@ func (env Env) writeInventoryListLog() {
 		defer errors.ContextMustClose(env, file)
 	}
 
-	coder := triple_hyphen_io.Coder[*triple_hyphen_io.TypedBlobEmpty]{
-		Metadata: triple_hyphen_io.TypedMetadataCoder[struct{}]{},
+	coder := hyphence.Coder[*hyphence.TypedBlobEmpty]{
+		Metadata: hyphence.TypedMetadataCoder[struct{}]{},
 	}
 
 	tipe := ids.GetOrPanic(
 		env.config.Blob.GetInventoryListTypeId(),
 	).TypeStruct
 
-	subject := triple_hyphen_io.TypedBlobEmpty{
+	subject := hyphence.TypedBlobEmpty{
 		Type: tipe,
 	}
 
@@ -123,7 +123,7 @@ func (env Env) writeInventoryListLog() {
 }
 
 func (env *Env) writeConfig(bigBang BigBang) {
-	if err := triple_hyphen_io.EncodeToFile(
+	if err := hyphence.EncodeToFile(
 		genesis_configs.CoderPrivate,
 		&env.config,
 		env.GetPathConfigSeed().String(),

@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/internal/charlie/filesystem_ops"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
@@ -81,7 +81,7 @@ func Make(
 		outputEnv.isTemporary = true
 		outputEnv.blob = workspace_config_blobs.Temporary{}
 	} else {
-		if err = triple_hyphen_io.DecodeFromFileInto(
+		if err = hyphence.DecodeFromFileInto(
 			&object,
 			workspace_config_blobs.Coder,
 			workspaceFile,
@@ -264,7 +264,7 @@ func (env *env) CreateWorkspace(
 
 	env.dir = env.GetCwd()
 
-	if err = triple_hyphen_io.EncodeToFile(
+	if err = hyphence.EncodeToFile(
 		workspace_config_blobs.Coder,
 		&object,
 		env.GetWorkspaceConfigFilePath(),

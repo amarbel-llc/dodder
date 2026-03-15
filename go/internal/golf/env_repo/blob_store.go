@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
@@ -218,7 +218,7 @@ func (env *BlobStoreEnv) writeBlobStoreConfigIfNecessary(
 
 	blobStoreConfig := bigBang.TypedBlobStoreConfig
 
-	if err := triple_hyphen_io.EncodeToFile(
+	if err := hyphence.EncodeToFile(
 		blob_store_configs.Coder,
 		&blob_store_configs.TypedConfig{
 			Type: blobStoreConfig.Type,

@@ -103,8 +103,8 @@ git mv go/internal/foxtrot/format go/lib/delta/format
 Replace `code.linenisgreat.com/dodder/go/internal/foxtrot/format` with
 `code.linenisgreat.com/dodder/go/lib/delta/format` in:
 
-1. `go/internal/golf/triple_hyphen_io/coder_metadata.go`
-2. `go/internal/juliett/object_metadata_fmt_triple_hyphen/formatter_components.go`
+1. `go/internal/golf/hyphence/coder_metadata.go`
+2. `go/internal/juliett/object_metadata_fmt_hyphence/formatter_components.go`
 3. `go/internal/papa/organize_text/main.go`
 4. `go/internal/papa/organize_text/metadata.go`
 5. `go/internal/papa/organize_text/writer.go`

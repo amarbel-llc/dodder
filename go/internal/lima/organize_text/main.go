@@ -3,7 +3,7 @@ package organize_text
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/format"
 )
@@ -72,7 +72,7 @@ func (t *Text) ReadFrom(r io.Reader) (n int64, err error) {
 		},
 	}
 
-	mr := triple_hyphen_io.Reader{
+	mr := hyphence.Reader{
 		Metadata: &r1,
 		Blob:     &r1.reader,
 	}
@@ -121,7 +121,7 @@ func (ot Text) WriteTo(out io.Writer) (n int64, err error) {
 		return n, err
 	}
 
-	mw := triple_hyphen_io.Writer{
+	mw := hyphence.Writer{
 		Blob: lw,
 	}
 

@@ -133,7 +133,7 @@ error formatting
 **For temporary value structures (no dereferencing - preferred pattern):**
 ```go
 // Create target structure and reset its field directly from source
-typedBlob := &triple_hyphen_io2.TypedBlob[sku.Transacted]{
+typedBlob := &hyphence2.TypedBlob[sku.Transacted]{
     Type: tipe,
     // Blob field is zero-value sku.Transacted
 }

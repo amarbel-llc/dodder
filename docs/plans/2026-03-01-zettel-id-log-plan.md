@@ -6,7 +6,7 @@
 
 **Architecture:** New `zettel_id_log` package at `go/internal/charlie/` defines the log entry types and append-only reader/writer. Provider loading replays the log or falls back to flat files for pre-migration repos. Three new commands (`add-zettel-ids-yin`, `add-zettel-ids-yang`, `migrate-zettel-ids`) and genesis changes write blobs + log entries instead of flat files. Also renames `object_id_provider` to `zettel_id_provider` and adds `ohio.MakeLineSeqFromReader` utility.
 
-**Tech Stack:** Go, `triple_hyphen_io` box-format encoding, content-addressed blob store, BATS integration tests.
+**Tech Stack:** Go, `hyphence` box-format encoding, content-addressed blob store, BATS integration tests.
 
 **Design doc:** `docs/plans/2026-03-01-zettel-id-log-design.md`
 
@@ -235,15 +235,15 @@ package zettel_id_log
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
-var Coder = triple_hyphen_io.CoderToTypedBlob[Entry]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[Entry]{},
-	Blob: triple_hyphen_io.CoderTypeMapWithoutType[Entry](
+var Coder = hyphence.CoderToTypedBlob[Entry]{
+	Metadata: hyphence.TypedMetadataCoder[Entry]{},
+	Blob: hyphence.CoderTypeMapWithoutType[Entry](
 		map[string]interfaces.CoderBufferedReadWriter[*Entry]{
-			ids.TypeZettelIdLogV1: triple_hyphen_io.CoderToml[
+			ids.TypeZettelIdLogV1: hyphence.CoderToml[
 				Entry,
 				*Entry,
 			]{
@@ -277,7 +277,7 @@ git commit -m "feat: add zettel ID log entry interface, V1 struct, and coder"
 
 **Step 1: Study the reference pattern**
 
-Read `go/internal/golf/env_repo/genesis.go:104-135` — the `writeInventoryListLog()` method shows how `triple_hyphen_io` encodes typed blobs to files.
+Read `go/internal/golf/env_repo/genesis.go:104-135` — the `writeInventoryListLog()` method shows how `hyphence` encodes typed blobs to files.
 
 **Step 2: Write log.go**
 
@@ -290,7 +290,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
@@ -315,7 +315,7 @@ func (l Log) AppendEntry(entry Entry) (err error) {
 
 	defer errors.DeferredCloser(&err, file)
 
-	typedBlob := &triple_hyphen_io.TypedBlob[Entry]{
+	typedBlob := &hyphence.TypedBlob[Entry]{
 		Type: ids.GetOrPanic(ids.TypeZettelIdLogVCurrent).TypeStruct,
 		Blob: entry,
 	}
@@ -353,7 +353,7 @@ func (l Log) ReadAllEntries() (entries []Entry, err error) {
 	}
 
 	for _, segment := range segments {
-		var typedBlob triple_hyphen_io.TypedBlob[Entry]
+		var typedBlob hyphence.TypedBlob[Entry]
 
 		stringReader, repoolStringReader := pool.GetStringReader(segment)
 		defer repoolStringReader()
@@ -386,7 +386,7 @@ func segmentEntries(
 
 		trimmed := strings.TrimSuffix(line, "\n")
 
-		if trimmed == triple_hyphen_io.Boundary {
+		if trimmed == hyphence.Boundary {
 			boundaryCount++
 
 			if boundaryCount > 2 && boundaryCount%2 == 1 {
@@ -408,7 +408,7 @@ func segmentEntries(
 
 **Step 3: Verify imports resolve**
 
-Check that `pool.GetBufferedReader`, `pool.GetStringReader`, `files.Open`, `files.OpenFile`, `errors.DeferredCloser`, and `triple_hyphen_io.Boundary` exist on master. Use LSP hover or grep if uncertain.
+Check that `pool.GetBufferedReader`, `pool.GetStringReader`, `files.Open`, `files.OpenFile`, `errors.DeferredCloser`, and `hyphence.Boundary` exist on master. Use LSP hover or grep if uncertain.
 
 **Step 4: Run tests**
 

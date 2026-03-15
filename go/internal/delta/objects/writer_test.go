@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
@@ -22,7 +22,7 @@ blob
 
 	out := &strings.Builder{}
 
-	sut := triple_hyphen_io.Writer{
+	sut := hyphence.Writer{
 		Metadata: strings.NewReader("metadatei\n"),
 		Blob:     strings.NewReader("blob\n"),
 	}
@@ -46,7 +46,7 @@ metadatei
 
 	out := &strings.Builder{}
 
-	sut := triple_hyphen_io.Writer{
+	sut := hyphence.Writer{
 		Metadata: strings.NewReader("metadatei\n"),
 	}
 
@@ -67,7 +67,7 @@ func TestWriter3(t1 *testing.T) {
 
 	out := &strings.Builder{}
 
-	sut := triple_hyphen_io.Writer{
+	sut := hyphence.Writer{
 		Blob: strings.NewReader("blob\n"),
 	}
 

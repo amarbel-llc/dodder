@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_triple_hyphen"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
@@ -37,7 +37,7 @@ func MakeTextFormatterWithBlobFormatter(
 	return textFormatter{
 		options:           options,
 		InlineTypeChecker: inlineTypeChecker,
-		FormatterFamily: object_metadata_fmt_triple_hyphen.Factory{
+		FormatterFamily: object_metadata_fmt_hyphence.Factory{
 			EnvDir:        envRepo,
 			BlobStore:     envRepo.GetDefaultBlobStore(),
 			BlobFormatter: formatter,
@@ -49,7 +49,7 @@ func MakeTextFormatterWithBlobFormatter(
 type textFormatter struct {
 	ids.InlineTypeChecker
 	options checkout_options.TextFormatterOptions
-	object_metadata_fmt_triple_hyphen.FormatterFamily
+	object_metadata_fmt_hyphence.FormatterFamily
 	checkoutMode checkout_mode.Mode
 }
 
@@ -57,7 +57,7 @@ func (formatter textFormatter) EncodeStringTo(
 	object *sku.Transacted,
 	writer io.Writer,
 ) (n int64, err error) {
-	context := object_metadata_fmt_triple_hyphen.FormatterContext{
+	context := object_metadata_fmt_hyphence.FormatterContext{
 		EncoderContext:   object,
 		FormatterOptions: formatter.options,
 	}
@@ -84,7 +84,7 @@ func (tf textFormatter) WriteStringFormatWithMode(
 	object *sku.Transacted,
 	mode checkout_mode.Mode,
 ) (n int64, err error) {
-	ctx := object_metadata_fmt_triple_hyphen.FormatterContext{
+	ctx := object_metadata_fmt_hyphence.FormatterContext{
 		EncoderContext:   object,
 		FormatterOptions: tf.options,
 	}

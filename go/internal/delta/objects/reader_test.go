@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
@@ -27,7 +27,7 @@ body
 	mr := &bytes.Buffer{}
 	ar := &bytes.Buffer{}
 
-	r := triple_hyphen_io.Reader{
+	r := hyphence.Reader{
 		Metadata: mr,
 		Blob:     ar,
 	}
@@ -76,7 +76,7 @@ metadatei
 	mr := &bytes.Buffer{}
 	ar := &bytes.Buffer{}
 
-	r := triple_hyphen_io.Reader{
+	r := hyphence.Reader{
 		Metadata: mr,
 		Blob:     ar,
 	}

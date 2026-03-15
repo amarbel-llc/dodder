@@ -4,7 +4,7 @@ description: >
   Use when adding a new version of a persistent data structure, creating a new
   blob or config type, implementing an upgrade path between versions, or
   registering a coder for a versioned type. Also applies when working with
-  type_blobs, blob_store_configs, blob_stores, triple_hyphen_io, or any
+  type_blobs, blob_store_configs, blob_stores, hyphence, or any
   package following the *_blobs / *_configs / *_stores naming convention.
 triggers:
   - add a new version
@@ -15,7 +15,7 @@ triggers:
   - register a coder
   - type_blobs
   - blob_store_configs
-  - triple_hyphen_io
+  - hyphence
   - horizontal versioning
 ---
 
@@ -139,16 +139,16 @@ correct concrete struct behind the shared interface.
 
 ```go
 // go/internal/golf/blob_store_configs/coding.go
-var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
-    Blob: triple_hyphen_io.CoderTypeMapWithoutType[Config](
+var Coder = hyphence.CoderToTypedBlob[Config]{
+    Blob: hyphence.CoderTypeMapWithoutType[Config](
         map[string]interfaces.CoderBufferedReadWriter[*Config]{
-            ids.TypeTomlBlobStoreConfigV0: triple_hyphen_io.CoderToml[Config, *Config]{
+            ids.TypeTomlBlobStoreConfigV0: hyphence.CoderToml[Config, *Config]{
                 Progenitor: func() Config { return &TomlV0{} },
             },
-            ids.TypeTomlBlobStoreConfigV1: triple_hyphen_io.CoderToml[Config, *Config]{
+            ids.TypeTomlBlobStoreConfigV1: hyphence.CoderToml[Config, *Config]{
                 Progenitor: func() Config { return &TomlV1{} },
             },
-            ids.TypeTomlBlobStoreConfigV2: triple_hyphen_io.CoderToml[Config, *Config]{
+            ids.TypeTomlBlobStoreConfigV2: hyphence.CoderToml[Config, *Config]{
                 Progenitor: func() Config { return &TomlV2{} },
             },
         },
@@ -158,12 +158,12 @@ var Coder = triple_hyphen_io.CoderToTypedBlob[Config]{
 
 ### Type-Dispatched Serialization
 
-The `triple_hyphen_io` package provides the generic serialization layer. Files
+The `hyphence` package provides the generic serialization layer. Files
 on disk use `---` delimiters to separate a type header from the body. On read,
 the type string from the header selects the correct coder:
 
 ```go
-// go/internal/foxtrot/triple_hyphen_io/coder_type_map.go
+// go/internal/foxtrot/hyphence/coder_type_map.go
 type TypedBlob[BLOB any] struct {
     Type ids.TypeStruct
     Blob BLOB
@@ -279,7 +279,7 @@ version to `VCurrent`.
 
 | Architecture | Description | Target? |
 |---|---|---|
-| **A: `CoderToTypedBlob`** | Declarative type-string→progenitor map in `coding.go`. Uses `triple_hyphen_io.CoderToml` with `Progenitor` functions. | Yes |
+| **A: `CoderToTypedBlob`** | Declarative type-string→progenitor map in `coding.go`. Uses `hyphence.CoderToml` with `Progenitor` functions. | Yes |
 | **B: `TypedStore` + switch** | Hand-written struct with one `domain_interfaces.TypedStore` field per version. Dispatch via `switch` on type string. | No — migrate to A |
 | **C: Custom constructor map** | Package-local `coderConstructors` map producing custom `coder` structs. `Closet` bridges to `CoderTypeMapWithoutType` at runtime. | No — migrate to A |
 

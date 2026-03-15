@@ -5,7 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -52,7 +52,7 @@ func (cmd Init) InitBlobStore(
 		return path
 	}
 
-	if err := triple_hyphen_io.EncodeToFile(
+	if err := hyphence.EncodeToFile(
 		blob_store_configs.Coder,
 		config,
 		path.GetConfig(),

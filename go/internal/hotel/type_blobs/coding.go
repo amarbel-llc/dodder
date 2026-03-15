@@ -2,17 +2,17 @@ package type_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
-type TypedBlob = triple_hyphen_io.TypedBlob[Blob]
+type TypedBlob = hyphence.TypedBlob[Blob]
 
-var CoderToTypedBlob = triple_hyphen_io.CoderToTypedBlob[Blob]{
-	Metadata: triple_hyphen_io.TypedMetadataCoder[Blob]{},
-	Blob: triple_hyphen_io.CoderTypeMapWithoutType[Blob](
+var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
+	Metadata: hyphence.TypedMetadataCoder[Blob]{},
+	Blob: hyphence.CoderTypeMapWithoutType[Blob](
 		map[string]interfaces.CoderBufferedReadWriter[*Blob]{
-			ids.TypeTomlTypeV0: triple_hyphen_io.CoderToml[
+			ids.TypeTomlTypeV0: hyphence.CoderToml[
 				Blob,
 				*Blob,
 			]{
@@ -21,7 +21,7 @@ var CoderToTypedBlob = triple_hyphen_io.CoderToTypedBlob[Blob]{
 				},
 				IgnoreDecodeErrors: true,
 			},
-			ids.TypeTomlTypeV1: triple_hyphen_io.CoderToml[
+			ids.TypeTomlTypeV1: hyphence.CoderToml[
 				Blob,
 				*Blob,
 			]{

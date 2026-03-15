@@ -2,12 +2,12 @@ package workspace_config_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 )
 
 type (
-	TypedConfig = triple_hyphen_io.TypedBlob[Config]
+	TypedConfig = hyphence.TypedBlob[Config]
 
 	Config interface {
 		GetDefaults() repo_configs.Defaults

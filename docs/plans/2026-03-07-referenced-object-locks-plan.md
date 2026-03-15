@@ -258,7 +258,7 @@ feat: add < (OpReference) operator and token matchers to doddish
 ### Task 5: Triple-hyphen parser — read references
 
 **Files:**
-- Modify: `go/internal/foxtrot/object_metadata_fmt_triple_hyphen/text_parser2.go:54-76`
+- Modify: `go/internal/foxtrot/object_metadata_fmt_hyphence/text_parser2.go:54-76`
 
 **Step 1: Add OpReference case to parser switch**
 
@@ -296,8 +296,8 @@ feat: parse referenced object locks in triple-hyphen format
 ### Task 6: Triple-hyphen formatter — write references
 
 **Files:**
-- Modify: `go/internal/foxtrot/object_metadata_fmt_triple_hyphen/formatter_components.go` (add writeReferencedObjects)
-- Modify: `go/internal/foxtrot/object_metadata_fmt_triple_hyphen/factory.go:55-79` (add to formatter chains)
+- Modify: `go/internal/foxtrot/object_metadata_fmt_hyphence/formatter_components.go` (add writeReferencedObjects)
+- Modify: `go/internal/foxtrot/object_metadata_fmt_hyphence/factory.go:55-79` (add to formatter chains)
 
 **Step 1: Add writeReferencedObjects method**
 

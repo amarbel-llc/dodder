@@ -6,7 +6,7 @@
 
 **Architecture:** `TomlInventoryArchiveV2` implements `ConfigInventoryArchiveDelta` with a zero `LooseBlobStoreId`. The factory detects the empty ID and constructs an embedded `localHashBucketed` at `<basePath>/loose/`. Reuses `inventoryArchiveV1` store struct unchanged.
 
-**Tech Stack:** Go, TOML config via triple-hyphen IO, existing blob store infrastructure.
+**Tech Stack:** Go, TOML config via hyphence, existing blob store infrastructure.
 
 ---
 

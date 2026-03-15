@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/triple_hyphen_io"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/file_lock"
@@ -66,7 +66,7 @@ func Make(
 	var configLoaded bool
 
 	if options.PermitNoDodderDirectory {
-		if env.config, err = triple_hyphen_io.DecodeFromFile(
+		if env.config, err = hyphence.DecodeFromFile(
 			genesis_configs.CoderPrivate,
 			fileConfigPermanent,
 		); err != nil {
@@ -80,7 +80,7 @@ func Make(
 			configLoaded = true
 		}
 	} else {
-		if env.config, err = triple_hyphen_io.DecodeFromFile(
+		if env.config, err = hyphence.DecodeFromFile(
 			genesis_configs.CoderPrivate,
 			fileConfigPermanent,
 		); err != nil {

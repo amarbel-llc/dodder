@@ -1,4 +1,4 @@
-package object_metadata_fmt_triple_hyphen
+package object_metadata_fmt_hyphence
 
 import (
 	"fmt"

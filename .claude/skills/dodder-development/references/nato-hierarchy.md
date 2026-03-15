@@ -95,16 +95,16 @@ layer.
 
 ### Layer 6: foxtrot
 
-**Packages:** triple_hyphen_io, markl_age_id, fd, object_id_provider, page_id,
+**Packages:** hyphence, markl_age_id, fd, object_id_provider, page_id,
 repo_config_cli, store_workspace, tag_paths
 
-Format versioning and repository page management. The `triple_hyphen_io` package
+Format versioning and repository page management. The `hyphence` package
 handles versioned serialization formats (V0, V1, V2, etc.) using the
 triple-hyphen delimiter. MARKL+Age ID generation (`markl_age_id`) combines
 content hashing with encryption. Tag path management (`tag_paths`) handles
 hierarchical tag structures.
 
-**Notable types and interfaces:** `triple_hyphen_io.FormatVersion`,
+**Notable types and interfaces:** `hyphence.FormatVersion`,
 `page_id.PageId`, `tag_paths.TagPath`, `object_id_provider.Provider`.
 
 ### Layer 7: golf
@@ -138,13 +138,13 @@ workspace configuration blob storage round out this layer.
 
 ### Layer 9: india
 
-**Packages:** blob_stores, env_local, object_metadata_fmt_triple_hyphen,
+**Packages:** blob_stores, env_local, object_metadata_fmt_hyphence,
 zettel_id_index
 
 Storage and indexing. Concrete blob store implementations (`blob_stores`)
 provide the actual storage backends. Local environment setup (`env_local`)
 manages the local dodder environment. Triple-hyphen metadata formatting
-(`object_metadata_fmt_triple_hyphen`) serializes metadata in the triple-hyphen
+(`object_metadata_fmt_hyphence`) serializes metadata in the triple-hyphen
 format. Zettel ID indexing (`zettel_id_index`) enables fast zettel lookups.
 
 **Notable types and interfaces:** `blob_stores.BlobStore`, `env_local.EnvLocal`,
