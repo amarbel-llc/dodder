@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
@@ -231,7 +232,11 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 					"format": {
 						"type": "string",
 						"description": "Output format. Defaults to json (without blob content). Use json-with-blob_string to include blob content.",
-						"enum": ["log", "text", "json", "json-with-blob_string", "organize"]
+						"enum": ["log", "text", "json", "json-with-blob_string", "organize", "box"]
+					},
+					"limit": {
+						"type": "integer",
+						"description": "Maximum number of results to return. Defaults to 0 (unlimited). Use this to avoid large result sets when you only need a few objects."
 					}
 				},
 				"required": ["query"],
@@ -239,22 +244,65 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 			}`),
 			Annotations: readOnlyAnnotations,
 		},
-		makeBridgeHandler(bridge, "show", func(args json.RawMessage) ([]string, error) {
+		func(
+			ctx context.Context,
+			args json.RawMessage,
+		) (*protocol.ToolCallResultV1, error) {
 			var p struct {
 				Query  []string `json:"query"`
 				Format string   `json:"format"`
+				Limit  int      `json:"limit"`
 			}
 			if err := json.Unmarshal(args, &p); err != nil {
-				return nil, err
+				return protocol.ErrorResultV1(
+					fmt.Sprintf("Invalid arguments: %v", err),
+				), nil
 			}
+
 			format := p.Format
 			if format == "" {
 				format = "json"
 			}
+
 			cliArgs := []string{"-format", format}
 			cliArgs = append(cliArgs, p.Query...)
-			return cliArgs, nil
-		}),
+
+			result, err := bridge.RunCommand(ctx, "show", cliArgs, defaultMaxBytes)
+			if err != nil {
+				errMsg := formatErrorDetail(err)
+				if result.Stderr != "" {
+					errMsg += "\n\nstderr:\n" + result.Stderr
+				}
+				return protocol.ErrorResultV1(errMsg), nil
+			}
+
+			output := result.Stdout
+
+			if p.Limit > 0 {
+				lines := strings.SplitN(output, "\n", p.Limit+1)
+				if len(lines) > p.Limit {
+					output = strings.Join(lines[:p.Limit], "\n")
+					output += fmt.Sprintf(
+						"\n\n[limited: showed %d of %d+ results]",
+						p.Limit, p.Limit,
+					)
+				}
+			}
+
+			if result.Truncated {
+				output += fmt.Sprintf(
+					"\n\n[truncated: showed %d of %d bytes]",
+					len(result.Stdout),
+					result.BytesSeen,
+				)
+			}
+
+			return &protocol.ToolCallResultV1{
+				Content: []protocol.ContentBlockV1{
+					protocol.TextContentV1(output),
+				},
+			}, nil
+		},
 	)
 
 	tools.Register(
