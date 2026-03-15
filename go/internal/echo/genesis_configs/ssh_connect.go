@@ -44,7 +44,7 @@ func connectSSHSignerIfNecessary(privateKey *markl.Id) error {
 var (
 	ecdsaP256ConnectOnce sync.Once
 	ecdsaP256ConnectErr  error
-	ecdsaP256Conn       io.Closer
+	ecdsaP256Conn        io.Closer
 )
 
 func connectEcdsaP256SignerIfNecessary(privateKey *markl.Id) error {

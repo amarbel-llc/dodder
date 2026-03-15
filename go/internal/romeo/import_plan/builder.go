@@ -16,7 +16,7 @@ import (
 type Builder struct {
 	index sku.Index
 
-	sourcePaths []string
+	sourcePaths   []string
 	entries       []Entry
 	objectByKey   map[string]int
 	taiByObjectId map[string]ids.Tai

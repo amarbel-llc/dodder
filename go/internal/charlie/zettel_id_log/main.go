@@ -8,7 +8,7 @@ import (
 type Side uint8
 
 const (
-	SideYin  Side = iota
+	SideYin Side = iota
 	SideYang
 )
 

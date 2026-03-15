@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
+	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
+	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
@@ -74,7 +76,11 @@ Browse objects of a type:
   → read dodder://types/<id>/objects (box format listing)
 
 Inspect a specific object and navigate to related objects:
-  → read dodder://objects/<id> (returns traversal links to type, tags, blob)
+  → read dodder://objects/<id> (returns traversal links to type, tags, blob formats)
+
+View an object's blob content:
+  → read dodder://objects/<id>/blob/formats (discover available formatters)
+  → read dodder://objects/<id>/blob/formats/<format-id> (render blob with formatter)
 
 ## Object Listings — Box Format
 
@@ -121,7 +127,8 @@ Examples:
 
 ### Objects
 - dodder://objects/<id> → object metadata + traversal links to type, tags, blob, markl
-- dodder://objects/<id>/blob/<format> → object blob rendered with formatter
+- dodder://objects/<id>/blob/formats → available blob formatters for this object's type
+- dodder://objects/<id>/blob/formats/<format-id> → object blob rendered with formatter
 - dodder://objects/<id>/markl → object markl integrity fields
 
 Markl resources contain repo signatures, public keys, and object digests.
@@ -134,18 +141,21 @@ var readOnlyAnnotations = &protocol.ToolAnnotations{
 	IdempotentHint: protocol.BoolPtr(true),
 }
 
-func RunServer(utility command.Utility) error {
+func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	bridge := MakeBridge(utility)
 	tools := server.NewToolRegistryV1()
 	resources := server.NewResourceRegistry()
 	index := makeTypeIndex(bridge)
 	tagIdx := makeTagIndex(bridge)
 
+	typeBlobCoder := type_blobs.MakeTypeStore(repo.GetEnvRepo())
+
 	provider := &typeResourceProvider{
-		registry: resources,
-		index:    index,
-		tagIndex: tagIdx,
-		bridge:   bridge,
+		registry:      resources,
+		index:         index,
+		tagIndex:      tagIdx,
+		bridge:        bridge,
+		typeBlobCoder: typeBlobCoder,
 	}
 
 	registerTools(tools, bridge, index, tagIdx)

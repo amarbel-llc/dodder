@@ -7,15 +7,19 @@ import (
 	"sort"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 )
 
 type typeResourceProvider struct {
-	registry *server.ResourceRegistry
-	index    *typeIndex
-	tagIndex *tagIndex
-	bridge   Bridge
+	registry      *server.ResourceRegistry
+	index         *typeIndex
+	tagIndex      *tagIndex
+	bridge        Bridge
+	typeBlobCoder type_blobs.Coder
 }
 
 func (p *typeResourceProvider) ListResources(
@@ -38,10 +42,16 @@ func (p *typeResourceProvider) ReadResource(
 	case strings.HasPrefix(uri, "dodder://objects/"):
 		rest := strings.TrimPrefix(uri, "dodder://objects/")
 
-		if idx := strings.Index(rest, "/blob/"); idx >= 0 {
+		if idx := strings.Index(rest, "/blob/formats/"); idx >= 0 {
 			objectId := rest[:idx]
-			format := rest[idx+len("/blob/"):]
-			return p.readObjectBlob(ctx, objectId, format)
+			formatId := rest[idx+len("/blob/formats/"):]
+			return p.readObjectBlob(ctx, objectId, formatId)
+		}
+
+		if idx := strings.Index(rest, "/blob/formats"); idx >= 0 &&
+			idx+len("/blob/formats") == len(rest) {
+			objectId := rest[:idx]
+			return p.readObjectBlobFormats(ctx, objectId)
 		}
 
 		if idx := strings.LastIndex(rest, "/markl"); idx >= 0 &&
@@ -70,9 +80,9 @@ func (p *typeResourceProvider) ReadResource(
 			return p.readTypeMarkl(ctx, id)
 		}
 
-		if idx := strings.Index(rest, "/blob/"); idx >= 0 {
+		if idx := strings.Index(rest, "/blob/formats/"); idx >= 0 {
 			id := rest[:idx]
-			format := rest[idx+len("/blob/"):]
+			format := rest[idx+len("/blob/formats/"):]
 			return p.readTypeBlobFormatted(ctx, id, format)
 		}
 
@@ -344,7 +354,7 @@ func (p *typeResourceProvider) readTypeMarkl(
 ) (*protocol.ResourceReadResult, error) {
 	return p.readMarkl(
 		ctx,
-		"!" + id,
+		"!"+id,
 		fmt.Sprintf("dodder://types/%s/markl", id),
 	)
 }
@@ -388,12 +398,12 @@ func (p *typeResourceProvider) readMarkl(
 
 		// Extract only the markl (merkle-tree) fields
 		markl := map[string]any{
-			"object-id":        full["object-id"],
-			"object-digest":    full["object-digest"],
-			"repo-pub_key":     full["repo-pub_key"],
-			"repo-sig":         full["repo-sig"],
+			"object-id":         full["object-id"],
+			"object-digest":     full["object-digest"],
+			"repo-pub_key":      full["repo-pub_key"],
+			"repo-sig":          full["repo-sig"],
 			"mother-object-sig": full["mother-object-sig"],
-			"blob-id":          full["blob-id"],
+			"blob-id":           full["blob-id"],
 		}
 
 		output, err := json.MarshalIndent(markl, "", "  ")
@@ -430,7 +440,7 @@ func (p *typeResourceProvider) readTypeBlobFormatted(
 
 	return &protocol.ResourceReadResult{
 		Contents: []protocol.ResourceContent{{
-			URI:      fmt.Sprintf("dodder://types/%s/blob/%s", id, format),
+			URI:      fmt.Sprintf("dodder://types/%s/blob/formats/%s", id, format),
 			MimeType: "text/plain",
 			Text:     result.Stdout,
 		}},
@@ -477,8 +487,8 @@ func (p *typeResourceProvider) readObject(
 			typeId = strings.TrimPrefix(t, "!")
 		}
 
-		detail["blob-resource"] = fmt.Sprintf(
-			"dodder://objects/%s/blob/text", objectId,
+		detail["blob-formats-resource"] = fmt.Sprintf(
+			"dodder://objects/%s/blob/formats", objectId,
 		)
 		detail["markl-resource"] = fmt.Sprintf(
 			"dodder://objects/%s/markl", objectId,
@@ -545,11 +555,136 @@ func (p *typeResourceProvider) readObjectBlob(
 
 	return &protocol.ResourceReadResult{
 		Contents: []protocol.ResourceContent{{
-			URI:      fmt.Sprintf("dodder://objects/%s/blob/%s", objectId, format),
+			URI:      fmt.Sprintf("dodder://objects/%s/blob/formats/%s", objectId, format),
 			MimeType: "text/plain",
 			Text:     result.Stdout,
 		}},
 	}, nil
+}
+
+func (p *typeResourceProvider) readObjectBlobFormats(
+	ctx context.Context,
+	objectId string,
+) (*protocol.ResourceReadResult, error) {
+	formatIds, err := p.getBlobFormatIds(ctx, objectId)
+	if err != nil {
+		return nil, fmt.Errorf("blob formats for %s: %w", objectId, err)
+	}
+
+	type formatEntry struct {
+		FormatId    string `json:"format_id"`
+		ResourceURI string `json:"resource_uri"`
+	}
+
+	entries := make([]formatEntry, len(formatIds))
+	for i, id := range formatIds {
+		entries[i] = formatEntry{
+			FormatId:    id,
+			ResourceURI: fmt.Sprintf("dodder://objects/%s/blob/formats/%s", objectId, id),
+		}
+	}
+
+	output, err := json.MarshalIndent(entries, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+
+	return &protocol.ResourceReadResult{
+		Contents: []protocol.ResourceContent{{
+			URI:      fmt.Sprintf("dodder://objects/%s/blob/formats", objectId),
+			MimeType: "application/json",
+			Text:     string(output),
+		}},
+	}, nil
+}
+
+// getBlobFormatIds resolves the available blob formatter IDs for an object
+// by parsing its type's blob through the versioned type_blobs codec.
+func (p *typeResourceProvider) getBlobFormatIds(
+	ctx context.Context,
+	objectId string,
+) ([]string, error) {
+	// Get the object to find its type
+	result, err := p.bridge.RunCommand(
+		ctx,
+		"show",
+		[]string{"-format", "json", objectId},
+		defaultMaxBytes,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("show object %s: %w", objectId, err)
+	}
+
+	var obj struct {
+		Type string `json:"type"`
+	}
+
+	for _, line := range strings.Split(result.Stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if err := json.Unmarshal([]byte(line), &obj); err == nil && obj.Type != "" {
+			break
+		}
+	}
+
+	if obj.Type == "" {
+		return nil, fmt.Errorf("object %s has no type", objectId)
+	}
+
+	// Get the type object to find its blob digest and type-of-type
+	result, err = p.bridge.RunCommand(
+		ctx,
+		"show",
+		[]string{"-format", "json", obj.Type},
+		defaultMaxBytes,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("show type %s: %w", obj.Type, err)
+	}
+
+	var typeObj struct {
+		Type   string `json:"type"`
+		BlobId string `json:"blob-id"`
+	}
+
+	for _, line := range strings.Split(result.Stdout, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if err := json.Unmarshal([]byte(line), &typeObj); err == nil && typeObj.BlobId != "" {
+			break
+		}
+	}
+
+	if typeObj.BlobId == "" {
+		return nil, fmt.Errorf("type %s has no blob", obj.Type)
+	}
+
+	// Parse the type blob using the versioned codec
+	var blobDigest markl.Id
+	if err := blobDigest.Set(typeObj.BlobId); err != nil {
+		return nil, fmt.Errorf("parse blob digest %s: %w", typeObj.BlobId, err)
+	}
+
+	typeOfType := ids.MustTypeStruct(typeObj.Type)
+
+	typeBlob, repool, _, err := p.typeBlobCoder.ParseTypedBlob(typeOfType, &blobDigest)
+	if err != nil {
+		return nil, fmt.Errorf("parse type blob for %s: %w", obj.Type, err)
+	}
+	defer repool()
+
+	formatters := typeBlob.GetFormatters()
+	result_ids := make([]string, 0, len(formatters))
+	for id := range formatters {
+		result_ids = append(result_ids, id)
+	}
+	sort.Strings(result_ids)
+
+	return result_ids, nil
 }
 
 func (p *typeResourceProvider) readTag(
@@ -869,7 +1004,7 @@ func registerResources(
 
 	registry.RegisterTemplate(
 		protocol.ResourceTemplate{
-			URITemplate: "dodder://types/{type_id}/blob/{format}",
+			URITemplate: "dodder://types/{type_id}/blob/formats/{format_id}",
 			Name:        "Type Blob (Formatted)",
 			Description: "Type blob content rendered with a specific formatter.",
 			MimeType:    "text/plain",
@@ -919,9 +1054,19 @@ func registerResources(
 
 	registry.RegisterTemplate(
 		protocol.ResourceTemplate{
-			URITemplate: "dodder://objects/{object_id}/blob/{format}",
+			URITemplate: "dodder://objects/{object_id}/blob/formats",
+			Name:        "Object Blob Formats",
+			Description: "Lists available blob formatter IDs for this object's type, with resource URIs for each format.",
+			MimeType:    "application/json",
+		},
+		nil,
+	)
+
+	registry.RegisterTemplate(
+		protocol.ResourceTemplate{
+			URITemplate: "dodder://objects/{object_id}/blob/formats/{format_id}",
 			Name:        "Object Blob (Formatted)",
-			Description: "Object blob content rendered with a specific formatter (e.g. 'text').",
+			Description: "Object blob content rendered with a specific formatter.",
 			MimeType:    "text/plain",
 		},
 		nil,

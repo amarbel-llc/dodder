@@ -15,7 +15,7 @@ type TomlV1 struct {
 	Formatters    map[string]script_config.WithOutputFormat `toml:"formatters,omitempty"`
 
 	// TODO migrate to properly-typed hooks
-	Hooks            any                      `toml:"hooks"`
+	Hooks            any                     `toml:"hooks"`
 	ObjectReferences *ObjectReferencesConfig `toml:"object-references,omitempty"`
 }
 

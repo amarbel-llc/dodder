@@ -9,4 +9,4 @@ const (
 )
 
 func (t containedObjectType) IsTag() bool       { return t == containedObjectTypeTag }
-func (t containedObjectType) IsReference() bool  { return t == containedObjectTypeReference }
+func (t containedObjectType) IsReference() bool { return t == containedObjectTypeReference }

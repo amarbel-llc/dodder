@@ -2,7 +2,7 @@ package commands_dodder
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"code.linenisgreat.com/dodder/go/internal/hotel/mcp_dodder"
+	"code.linenisgreat.com/dodder/go/internal/tango/mcp_dodder"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 )
 
@@ -19,7 +19,7 @@ func (cmd Mcp) Run(req command.Request) {
 	envWorkspace := repo.GetEnvWorkspace()
 	envWorkspace.AssertNotTemporary(repo)
 
-	if err := mcp_dodder.RunServer(req.Utility); err != nil {
+	if err := mcp_dodder.RunServer(req.Utility, repo); err != nil {
 		req.Cancel(err)
 	}
 }

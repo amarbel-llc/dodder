@@ -258,7 +258,6 @@ func (cmd Fsck) runV14IndexTrial(
 		ids.Tai{},
 		0,
 	)
-
 	if err != nil {
 		tw.BailOut(fmt.Sprintf("failed to create V14 index: %s", err))
 		repo.Cancel(err)

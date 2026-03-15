@@ -52,7 +52,6 @@ func (index *Index) makeProbePageReader(
 		index.envRepo,
 		overflowPath,
 	)
-
 	if err != nil {
 		panic(err)
 	}
