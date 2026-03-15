@@ -186,9 +186,23 @@ func (imp importer) commitPlanEntryOverwrite(
 	object *sku.Transacted,
 	configGenesis genesis_configs.ConfigPrivate,
 ) (err error) {
-	object.GetMetadataMutable().GetObjectDigestMutable().Reset()
-	object.GetMetadataMutable().GetObjectSigMutable().Reset()
-	object.GetMetadataMutable().GetRepoPubKeyMutable().Reset()
+	metadata := object.GetMetadataMutable()
+	metadata.GetObjectDigestMutable().Reset()
+	metadata.GetObjectSigMutable().Reset()
+	metadata.GetRepoPubKeyMutable().Reset()
+
+	// Reset lock values so WriteLockfileIfNecessary repopulates them from the
+	// store, where types/tags/refs were already re-signed earlier in
+	// topographic order.
+	metadata.GetTypeLockMutable().GetValueMutable().Reset()
+
+	for tag := range metadata.GetTags().All() {
+		metadata.GetTagLockMutable(tag).GetValueMutable().Reset()
+	}
+
+	for ref := range metadata.AllReferencedObjects() {
+		metadata.GetReferencedObjectLockMutable(ref).GetValueMutable().Reset()
+	}
 
 	if err = imp.blobImporter.ImportBlobIfNecessary(
 		object.GetMetadata().GetBlobDigest(),

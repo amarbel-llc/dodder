@@ -742,3 +742,40 @@ function import_omit_tags { # @test
   assert_output --partial "tag-3"
   assert_output --partial "tag-4"
 }
+
+function import_overwrite_sig_type_lock_consistency { # @test
+  # Get the source (outer) repo's !md type signature
+  run_dodder show -format inventory_list !md
+  assert_success
+  source_type_sig="$(echo "$output" | grep -oP 'dodder-object-sig-v\d+@\K\S+')"
+  [ -n "$source_type_sig" ]
+
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+
+  list="$(realpath list)"
+  pushd inner || exit 1
+
+  run_dodder import \
+    -overwrite-signatures=true \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+
+  # After import with overwrite-sig, dependent objects should have type
+  # locks pointing to the importing repo's !md signature, not the source's
+  run_dodder show -format inventory_list one/uno
+  assert_success
+  # Type lock should be present
+  assert_output --regexp '!md@ed25519_sig-'
+  # Type lock should NOT reference the source repo's type signature
+  refute_output --partial "!md@${source_type_sig}"
+}

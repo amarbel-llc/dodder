@@ -319,11 +319,10 @@ Implementation is two layers respecting the NATO tier hierarchy:
 - `-interactive` (`-i`) blobless type resolution with `huh.Select`
 - Multi-list import with merged plan
 - Object transform pipeline and `-omit-tags` flag
+- Signature rewriting in topographic order (lock value reset + store repopulation)
 - Integration tests for all of the above
 
 ### Not yet implemented
-- Signature rewriting in topographic order (`-overwrite-signatures` integration
-  with plan phase)
 - Selective import (`-filter` flag)
 - Referenced object edges in the dependency graph (pending FDR-0001)
 - Streaming plan construction for very large imports
