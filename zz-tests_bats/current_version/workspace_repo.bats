@@ -136,3 +136,39 @@ function workspace_repo_clone_pull_push { # @test
 	assert_success
 	assert_output --partial 'parent-created zettel'
 }
+
+function workspace_repo_clone_filtered_by_tag { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# --- Clone only project-alpha zettels into workspace-repo ---
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder clone \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	run_dodder init-workspace
+	assert_success
+
+	# Should have only project-alpha zettels, not project-beta
+	run_dodder show :z
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[one/dos @blake2b256-.+ !md "second zettel" priority-high project-alpha]
+		\[one/uno @blake2b256-.+ !md "first zettel" project-alpha]
+	EOM
+
+	# Verify project-beta zettel was NOT cloned
+	refute_output --partial 'project-beta'
+}
