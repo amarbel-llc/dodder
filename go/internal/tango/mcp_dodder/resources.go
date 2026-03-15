@@ -8,8 +8,9 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
+	"code.linenisgreat.com/dodder/go/internal/papa/store"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 )
@@ -19,6 +20,7 @@ type typeResourceProvider struct {
 	index         *typeIndex
 	tagIndex      *tagIndex
 	bridge        Bridge
+	store         *store.Store
 	typeBlobCoder type_blobs.Coder
 }
 
@@ -603,94 +605,50 @@ func (p *typeResourceProvider) readObjectBlobFormats(
 }
 
 // getBlobFormatIds resolves the available blob formatter IDs for an object
-// by parsing its type's blob through the versioned type_blobs codec.
+// by reading its type object directly from the store, bypassing workspace
+// query filters that would otherwise exclude type objects.
 func (p *typeResourceProvider) getBlobFormatIds(
 	ctx context.Context,
 	objectId string,
 ) ([]string, error) {
-	// Get the object to find its type
-	result, err := p.bridge.RunCommand(
-		ctx,
-		"show",
-		[]string{"-format", "json", objectId},
-		defaultMaxBytes,
-	)
+	oid, oidRepool, err := ids.MakeObjectId(objectId)
 	if err != nil {
-		return nil, fmt.Errorf("show object %s: %w", objectId, err)
+		return nil, fmt.Errorf("parse object id %s: %w", objectId, err)
 	}
+	defer oidRepool()
 
-	var obj struct {
-		Type string `json:"type"`
-	}
-
-	for _, line := range strings.Split(result.Stdout, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if err := json.Unmarshal([]byte(line), &obj); err == nil && obj.Type != "" {
-			break
-		}
-	}
-
-	if obj.Type == "" {
-		return nil, fmt.Errorf("object %s has no type", objectId)
-	}
-
-	// Get the type object to find its blob digest and type-of-type.
-	// Append :t genre sigil to restrict to the type object itself,
-	// otherwise show returns all objects OF that type.
-	result, err = p.bridge.RunCommand(
-		ctx,
-		"show",
-		[]string{"-format", "json", obj.Type + ":t"},
-		defaultMaxBytes,
-	)
+	object, err := p.store.ReadTransactedFromObjectId(oid)
 	if err != nil {
-		return nil, fmt.Errorf("show type %s: %w", obj.Type, err)
+		return nil, fmt.Errorf("read object %s: %w", objectId, err)
 	}
 
-	var typeObj struct {
-		Type   string `json:"type"`
-		BlobId string `json:"blob-id"`
-	}
-
-	for _, line := range strings.Split(result.Stdout, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-		if err := json.Unmarshal([]byte(line), &typeObj); err == nil && typeObj.BlobId != "" {
-			break
-		}
-	}
-
-	if typeObj.BlobId == "" {
-		return nil, fmt.Errorf("type %s has no blob", obj.Type)
-	}
-
-	// Parse the type blob using the versioned codec
-	var blobDigest markl.Id
-	if err := blobDigest.Set(typeObj.BlobId); err != nil {
-		return nil, fmt.Errorf("parse blob digest %s: %w", typeObj.BlobId, err)
-	}
-
-	typeOfType := ids.MustTypeStruct(typeObj.Type)
-
-	typeBlob, repool, _, err := p.typeBlobCoder.ParseTypedBlob(typeOfType, &blobDigest)
+	typeObject, err := p.store.ReadObjectTypeAndLockIfNecessary(object)
 	if err != nil {
-		return nil, fmt.Errorf("parse type blob for %s: %w", obj.Type, err)
+		if errors.IsErrNotFound(err) {
+			return nil, fmt.Errorf("type %s has no blob", object.GetType())
+		}
+		return nil, fmt.Errorf("read type for %s: %w", objectId, err)
+	}
+
+	blobDigest := typeObject.GetMetadata().GetBlobDigest()
+	if blobDigest.IsNull() {
+		return nil, fmt.Errorf("type %s has no blob", object.GetType())
+	}
+
+	typeBlob, repool, _, err := p.typeBlobCoder.ParseTypedBlob(typeObject.GetType(), blobDigest)
+	if err != nil {
+		return nil, fmt.Errorf("parse type blob for %s: %w", object.GetType(), err)
 	}
 	defer repool()
 
 	formatters := typeBlob.GetFormatters()
-	result_ids := make([]string, 0, len(formatters))
+	resultIds := make([]string, 0, len(formatters))
 	for id := range formatters {
-		result_ids = append(result_ids, id)
+		resultIds = append(resultIds, id)
 	}
-	sort.Strings(result_ids)
+	sort.Strings(resultIds)
 
-	return result_ids, nil
+	return resultIds, nil
 }
 
 func (p *typeResourceProvider) readTag(

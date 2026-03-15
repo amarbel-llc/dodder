@@ -156,6 +156,7 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 		index:         index,
 		tagIndex:      tagIdx,
 		bridge:        bridge,
+		store:         repo.GetStore(),
 		typeBlobCoder: typeBlobCoder,
 	}
 
