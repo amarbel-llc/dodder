@@ -32,11 +32,14 @@ calls, no CLI invocations at render time.
 
 | Prompt | Arguments | Workflow |
 |--------|-----------|----------|
-| `summarize-projects` | none | tag_query → filter meta-tags for "active" → facets drill-down |
-| `find-tasks` | `priority` (opt), `tag` (opt) | dodder_query with AND-combined filters + limit |
+| `discover` | `word` (opt) | word indexes → type_query/tag_query → filter meta-tags → facets drill-down |
+| `query-objects` | `type` (opt), `tag` (opt), `genre` (opt) | dodder_query with AND-combined filters + limit |
 | `read-object` | `object_id` (req) | show → blob format discovery → blob render |
 | `explore-type` | `type` (req) | type_query → type detail → facets → sample objects |
 | `explore-tag` | `tag` (req) | tag_query → tag detail → facets → objects |
+
+All prompts are generic — they teach the progressive disclosure pattern without
+assuming specific content conventions (types, tags, or meta-tag meanings).
 
 ## Message Structure
 

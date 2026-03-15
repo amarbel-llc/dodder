@@ -12,28 +12,38 @@ import (
 func registerPrompts(prompts *server.PromptRegistry) {
 	prompts.Register(
 		protocol.Prompt{
-			Name:        "summarize-projects",
-			Description: "Step-by-step recipe to find and summarize all active projects with their tag distributions.",
+			Name:        "discover",
+			Description: "Step-by-step recipe to discover what's in a dodder repo: browse the type/tag word indexes, search by word, and drill into facets.",
+			Arguments: []protocol.PromptArgument{
+				{
+					Name:        "word",
+					Description: "A word to search for in tag and type names (e.g. 'project', 'task', 'area'). Omit to start with the full word indexes.",
+				},
+			},
 		},
-		renderSummarizeProjects,
+		renderDiscover,
 	)
 
 	prompts.Register(
 		protocol.Prompt{
-			Name:        "find-tasks",
-			Description: "Step-by-step recipe to find tasks, optionally filtered by priority or tag.",
+			Name:        "query-objects",
+			Description: "Step-by-step recipe to find dodder objects using AND-combined query filters (type, tag, genre).",
 			Arguments: []protocol.PromptArgument{
 				{
-					Name:        "priority",
-					Description: "Priority level filter (e.g. priority-0_must, priority-1_should, priority-2_want). Omit for all priorities.",
+					Name:        "type",
+					Description: "Type filter (e.g. task, md). Omit to match all types.",
 				},
 				{
 					Name:        "tag",
-					Description: "Additional tag filter (e.g. area-home, project-dodder). Omit for all tags.",
+					Description: "Tag filter (e.g. todo, area-home). Omit to match all tags.",
+				},
+				{
+					Name:        "genre",
+					Description: "Genre filter: :z (zettels), :e (tags), :t (types). Omit to match all genres.",
 				},
 			},
 		},
-		renderFindTasks,
+		renderQueryObjects,
 	)
 
 	prompts.Register(
@@ -82,99 +92,154 @@ func registerPrompts(prompts *server.PromptRegistry) {
 	)
 }
 
-func renderSummarizeProjects(
+func renderDiscover(
 	ctx context.Context,
 	args map[string]string,
 ) (*protocol.PromptGetResult, error) {
+	word := args["word"]
+
+	if word != "" {
+		return &protocol.PromptGetResult{
+			Description: fmt.Sprintf("Discover types and tags matching '%s'", word),
+			Messages: []protocol.PromptMessage{
+				{
+					Role: "user",
+					Content: protocol.TextContent(fmt.Sprintf(`## Goal: Discover what's in this dodder repo related to "%s"
+
+### Step 1: Search for matching types
+Call dodder_type_query with words: ["%s"]
+This returns type summaries matching the word. Each result includes
+object-id, description, tags (meta-tags), and a resource-uri.
+
+### Step 2: Search for matching tags
+Call dodder_tag_query with words: ["%s"]
+This returns tag summaries matching the word. Each result includes
+object-id, description, its own tags (meta-tags), and a resource-uri.
+
+### Step 3: Filter results using meta-tags
+Each result has a "tags" field containing meta-tags that describe the
+type or tag itself. Use meta-tags to filter — e.g. check for specific
+meta-tags that indicate status, priority, or categorization.
+
+### Step 4: Drill into interesting results
+For types, read the facets resource to understand the data shape:
+  dodder://types/<type-id>/objects/facets
+
+For tags, read the facets resource to see what's tagged:
+  dodder://tags/<tag-id>/objects/facets
+
+Facets show object counts grouped by tag prefix, revealing the
+tag taxonomy used in this repo.
+
+### Step 5: Browse objects (optional)
+  dodder://types/<type-id>/objects — all objects of a type (box format)
+  dodder://tags/<tag-id>/objects — all objects with a tag (box format)`, word, word, word)),
+				},
+			},
+		}, nil
+	}
+
 	return &protocol.PromptGetResult{
-		Description: "Find active projects and summarize their contents",
+		Description: "Discover what's in this dodder repo",
 		Messages: []protocol.PromptMessage{
 			{
 				Role: "user",
-				Content: protocol.TextContent(`## Goal: Summarize active projects
+				Content: protocol.TextContent(`## Goal: Discover what's in this dodder repo
 
-### Step 1: Find project tags
-Call dodder_tag_query with words: ["project"]
-This returns all tags containing "project" in their name (e.g. project-2024-q3, project-dodder).
+### Step 1: Browse the word indexes
+Read these resources to see what words appear in type and tag names:
+  dodder://types_index — words from all type names, with counts
+  dodder://tags_index — words from all tag names, with counts
 
-### Step 2: Filter for active projects
-In the results array, each tag has a "tags" field listing its meta-tags.
-Keep only tags where the "tags" array contains "active".
-Tags without "active" in their meta-tags are inactive/archived projects.
+These give you the vocabulary of this repo without loading all objects.
 
-### Step 3: Get analytics for each active project
-For each active project tag, read the resource:
+### Step 2: Search by word
+Pick interesting words from the indexes and search:
+  Call dodder_type_query with words: ["<word>"] — finds matching types
+  Call dodder_tag_query with words: ["<word>"] — finds matching tags
+
+Results include meta-tags in the "tags" field that describe each type/tag.
+
+### Step 3: Drill into interesting types or tags
+For types, read the facets resource to understand the data shape:
+  dodder://types/<type-id>/objects/facets
+
+For tags, read the facets resource to see what's tagged:
   dodder://tags/<tag-id>/objects/facets
 
-Replace <tag-id> with the tag's object-id from step 2.
-This returns a breakdown of object counts grouped by tag prefix (e.g. priority-, urgency-, area-).
+Facets show object counts grouped by tag prefix, revealing the
+tag taxonomy used in this repo.
 
-### Step 4: Optionally browse project objects
-To see what objects belong to a project, read:
-  dodder://tags/<tag-id>/objects
-
-This returns a box-format listing (one line per object) with object IDs, types, tags, and descriptions.
-
-### Step 5: Summarize
-Compile the facets from step 3 into a summary table showing each active project's name, total object count, and notable tag distributions (priorities, types, areas).`),
+### Step 4: Browse objects (optional)
+  dodder://types/<type-id>/objects — all objects of a type (box format)
+  dodder://tags/<tag-id>/objects — all objects with a tag (box format)`),
 			},
 		},
 	}, nil
 }
 
-func renderFindTasks(
+func renderQueryObjects(
 	ctx context.Context,
 	args map[string]string,
 ) (*protocol.PromptGetResult, error) {
-	priority := args["priority"]
+	typeName := args["type"]
 	tag := args["tag"]
+	genre := args["genre"]
 
 	var queryTerms []string
-	queryTerms = append(queryTerms, `"!task"`)
-	if priority != "" {
-		queryTerms = append(queryTerms, fmt.Sprintf("%q", priority))
+	if genre != "" {
+		queryTerms = append(queryTerms, fmt.Sprintf("%q", genre))
+	}
+	if typeName != "" {
+		queryTerms = append(queryTerms, fmt.Sprintf("\"!%s\"", typeName))
 	}
 	if tag != "" {
 		queryTerms = append(queryTerms, fmt.Sprintf("%q", tag))
 	}
+
 	queryArray := "[" + strings.Join(queryTerms, ", ") + "]"
+	if len(queryTerms) == 0 {
+		queryArray = `["<term1>", "<term2>"]`
+	}
 
 	return &protocol.PromptGetResult{
-		Description: "Find tasks with optional priority and tag filters",
+		Description: "Find objects using AND-combined query filters",
 		Messages: []protocol.PromptMessage{
 			{
 				Role: "user",
-				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Find tasks
+				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Query for dodder objects
 
-### Step 1: Query for tasks
+### Step 1: Run the query
 Call dodder_query with:
   query: %s
   format: "box"
   limit: 50
 
-Query terms are AND-combined, so this returns objects that match ALL terms.
-The "box" format gives a compact one-line-per-object listing.
+Query terms are AND-combined — results must match ALL terms.
+Term types:
+  - Genre filters: :z (zettels), :e (tags), :t (types)
+  - Type filters: !<type-name> (e.g. !task, !md)
+  - Tag filters: bare tag name (e.g. todo, area-home)
 
-### Step 2: Examine results
-Each line in box format looks like:
-  [<object-id> @<blob-digest> !task <tag1> <tag2> ...] <description>
+### Step 2: Read box-format results
+Each line in the output looks like:
+  [<object-id> @<blob-digest> !<type> <tag1> <tag2> ...] <description>
 
-The description after the closing bracket tells you what the task is about.
-Tags inside the brackets show priority, urgency, area, and project associations.
+The description after the closing bracket summarizes the object.
+Tags inside brackets show the object's full tag set.
 
-### Step 3: Read task content (optional)
-To see a task's full content, read the resource:
+### Step 3: Inspect individual objects (optional)
+To see an object's full metadata and traversal links, read:
   dodder://objects/<object-id>
 
-This returns metadata with traversal links. If the task has blob content,
-follow the blob-formats-resource link to discover formatters, then read
-the formatted blob.
+If the response includes "blob-formats-resource", follow it to
+discover available formatters and read the blob content.
 
-### Step 4: Get task distribution overview (optional)
-To see how tasks break down by tag, read:
-  dodder://types/task/objects/facets
-
-This shows counts grouped by tag prefix (priority, urgency, area, project).`, queryArray)),
+### Step 4: Refine the query (optional)
+Add more terms to narrow results. Examples:
+  [":z", "!md"] — all markdown zettels
+  ["!task", "todo"] — tasks tagged with todo
+  [":e", "area"] — tags in the "area" namespace`, queryArray)),
 			},
 		},
 	}, nil
