@@ -163,12 +163,16 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	registerTools(tools, bridge, index, tagIdx)
 	registerResources(resources, index, tagIdx, bridge)
 
+	prompts := server.NewPromptRegistry()
+	registerPrompts(prompts)
+
 	t := transport.NewStdio(os.Stdin, os.Stdout)
 	srv, err := server.New(t, server.Options{
 		ServerName:    "dodder",
 		ServerVersion: "0.1.0",
 		Tools:         tools,
 		Resources:     provider,
+		Prompts:       prompts,
 		Instructions:  mcpInstructions,
 	})
 	if err != nil {
