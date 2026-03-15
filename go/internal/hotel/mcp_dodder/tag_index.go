@@ -65,7 +65,7 @@ func (idx *tagIndex) build() error {
 		}
 
 		// Skip repo signature artifacts
-		if strings.HasPrefix(obj.ObjectId, "%-repo") {
+		if strings.HasPrefix(obj.ObjectId, "-repo") {
 			continue
 		}
 
@@ -74,7 +74,7 @@ func (idx *tagIndex) build() error {
 			Date:        obj.Date,
 			Description: obj.Description,
 			Tags:        obj.Tags,
-			ResourceURI: "dodder://tags/" + strings.TrimPrefix(obj.ObjectId, "%"),
+			ResourceURI: "dodder://tags/" + obj.ObjectId,
 		}
 
 		seen := make(map[string]bool)
@@ -91,7 +91,7 @@ func (idx *tagIndex) build() error {
 			})
 		}
 
-		addWords(strings.TrimPrefix(obj.ObjectId, "%"))
+		addWords(obj.ObjectId)
 
 		for _, word := range strings.Fields(obj.Description) {
 			addWords(strings.ToLower(word))

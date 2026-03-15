@@ -560,12 +560,11 @@ func (p *typeResourceProvider) readTag(
 		return nil, fmt.Errorf("build tag index: %w", err)
 	}
 
-	targetId := "%" + id
 	results := p.tagIndex.query([]string{id})
 
 	var found *tagSummary
 	for i := range results {
-		if results[i].ObjectId == targetId {
+		if results[i].ObjectId == id {
 			found = &results[i]
 			break
 		}
@@ -747,7 +746,7 @@ func (p *typeResourceProvider) readTagMarkl(
 ) (*protocol.ResourceReadResult, error) {
 	return p.readMarkl(
 		ctx,
-		"%" + id,
+		id,
 		fmt.Sprintf("dodder://tags/%s/markl", id),
 	)
 }
