@@ -130,7 +130,7 @@ function run_dodder_init {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -lock-internal-files=false \
-    -override-xdg-with-cwd \
+    -repo_id . \
     "${args[@]}"
 
   assert_success
@@ -153,7 +153,7 @@ function run_dodder_init_sha256 {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -lock-internal-files=false \
-    -override-xdg-with-cwd \
+    -repo_id . \
     -hash_type-id sha256 \
     "${args[@]}"
 
@@ -222,7 +222,7 @@ function run_dodder_init_disable_age {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -override-xdg-with-cwd \
+    -repo_id . \
     -lock-internal-files=false \
     "${args[@]}"
 

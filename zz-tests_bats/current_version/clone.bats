@@ -17,7 +17,7 @@ function bootstrap {
 	mkdir -p "$1"
 	(
 		pushd "$1" || exit 1
-		run_dodder_init -override-xdg-with-cwd "test-repo-id-them"
+		run_dodder_init -repo_id . "test-repo-id-them"
 
 		{
 			echo "---"
@@ -58,7 +58,7 @@ function run_clone_default_with() {
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-override-xdg-with-cwd \
+		-repo_id . \
 		-lock-internal-files=false \
 		"$@"
 }

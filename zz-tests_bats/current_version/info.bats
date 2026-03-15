@@ -46,7 +46,7 @@ function info_xdg { # @test
 }
 
 function info_non_xdg { # @test
-	run_dodder_init -override-xdg-with-cwd test-repo-id
+	run_dodder_init -repo_id . test-repo-id
 	run_dodder info xdg
 	assert_output - <<-EOM
 		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache

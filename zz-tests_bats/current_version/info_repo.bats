@@ -77,7 +77,7 @@ function info_age_some { # @test
 	assert_output --regexp 'madder-private_key-v1@age_x25519_sec-'
 	key="$output"
 	echo "$key" >age-key
-	run_dodder_init -override-xdg-with-cwd -encryption age-key test-repo-id
+	run_dodder_init -repo_id . -encryption age-key test-repo-id
 	run_dodder info-repo encryption
 	assert_output "$key"
 }
@@ -106,7 +106,7 @@ function info_xdg { # @test
 }
 
 function info_non_xdg { # @test
-	run_dodder_init -override-xdg-with-cwd test-repo-id
+	run_dodder_init -repo_id . test-repo-id
 	run_dodder info-repo xdg
 	assert_output - <<-EOM
 		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share

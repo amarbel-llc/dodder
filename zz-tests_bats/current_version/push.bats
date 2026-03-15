@@ -67,7 +67,7 @@ function bootstrap_without_content {
 	mkdir -p them || exit 1
 
 	pushd them || exit 1
-	run_dodder_init -override-xdg-with-cwd test-repo-id-them
+	run_dodder_init -repo_id . test-repo-id-them
 	assert_success
 	popd || exit 1
 }
@@ -77,7 +77,7 @@ function bootstrap_archive {
 
 	pushd them || exit 1
 	run_dodder init \
-		-override-xdg-with-cwd \
+		-repo_id . \
 		-repo-type archive \
 		-lock-internal-files=false \
 		test-repo-id-them

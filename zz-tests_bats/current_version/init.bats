@@ -133,7 +133,7 @@ function init_and_with_another_age { # @test
 }
 
 function init_with_non_xdg { # @test
-	run_dodder_init -override-xdg-with-cwd test-repo-id
+	run_dodder_init -repo_id . test-repo-id
 	run tree .dodder
 	assert_output
 
@@ -178,7 +178,7 @@ function init_and_init { # @test
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder init -lock-internal-files=false -override-xdg-with-cwd test-repo-id
+	run_dodder init -lock-internal-files=false -repo_id . test-repo-id
 	assert_failure
 	assert_output --partial ': file exists'
 
@@ -204,7 +204,7 @@ function init_with_age { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-    -override-xdg-with-cwd \
+    -repo_id . \
 		-encryption generate \
 		test-repo-id
 
@@ -237,7 +237,7 @@ function init_with_json_inventory_list_type { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-    -override-xdg-with-cwd \
+    -repo_id . \
 		-encryption generate \
 		-inventory_list-type inventory_list-json-v0 \
 		test-repo-id

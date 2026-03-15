@@ -17,7 +17,7 @@ setup() {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -lock-internal-files=false \
-    -override-xdg-with-cwd \
+    -repo_id . \
     -encryption none \
     -blob_store-id shared \
     test
