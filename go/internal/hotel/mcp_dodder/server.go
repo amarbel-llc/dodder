@@ -16,6 +16,47 @@ import (
 
 const defaultMaxBytes = 100_000
 
+const mcpInstructions = `Dodder is a distributed zettelkasten and content-addressable blob store.
+
+## Object Listings — Box Format
+
+Object listings (e.g. dodder://types/<id>/objects) use the compact box format.
+Each line represents one object:
+
+  [<object-id> @<blob-digest> !<type> <tag1> <tag2> ...] <description>
+
+Field order inside brackets:
+1. Object ID (e.g. thallium/golem, !md, konfig)
+2. Blob digest prefixed with @ (e.g. @blake2b256-9ft3...)
+3. Type prefixed with ! (e.g. !md, !toml-type-v1)
+4. Tags as bare identifiers, sorted alphabetically. Tags prefixed with %
+   are auto-generated (by the object's type or other entities).
+Description appears as a trailer after the closing bracket.
+
+Values containing spaces are Go-quoted ("like this").
+
+Examples:
+
+  [thallium/golem !task area-home urgency-2_week] purchase izipizi glasses
+  [ceroplastes/midtown @blake2b256-9ft3... !md project-2024-q3] meeting notes
+  [!md @blake2b256-76m5... !toml-type-v1]
+
+## Resource Drill-Down
+
+- dodder://types_index → word list for search
+- dodder://types → all type summaries
+- dodder://types/<id> → type metadata + links to sub-resources
+- dodder://types/<id>/objects → all objects of this type (box format)
+- dodder://types/<id>/blob → type blob content (TOML config)
+- dodder://objects/<id>/blob/<format> → object blob rendered with formatter
+- dodder://types/<id>/markl → type markl (merkle-tree) integrity fields
+- dodder://objects/<id>/markl → object markl integrity fields
+
+Markl resources contain repo signatures, public keys, and object digests.
+Most queries do not need this data — use only when verifying integrity or
+provenance.
+`
+
 var readOnlyAnnotations = &protocol.ToolAnnotations{
 	ReadOnlyHint:   protocol.BoolPtr(true),
 	IdempotentHint: protocol.BoolPtr(true),
@@ -42,6 +83,7 @@ func RunServer(utility command.Utility) error {
 		ServerVersion: "0.1.0",
 		Tools:         tools,
 		Resources:     provider,
+		Instructions:  mcpInstructions,
 	})
 	if err != nil {
 		return err

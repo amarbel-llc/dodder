@@ -143,6 +143,14 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 - [ ] Rename `store_browser` to `workspace_browser`
 - [ ] Add `workspace_agent` for MCPs
 
+## MCP: CLAUDE.md / AGENTS.md as top-level resource
+
+- [ ] Explore exposing a `dodder://instructions` or `dodder://agents` resource that provides context about the box format grammar, resource hierarchy, and query patterns. Could be served from a CLAUDE.md or AGENTS.md file in the repo. Consider whether this should exist at the server level (current `Instructions` field), as a static resource, or at each level of the resource hierarchy (e.g. `dodder://types/instructions`).
+
+## RFC: box format specification
+
+- [ ] FDR: Write an RFC for the box format used by dodder's output. The format is a compact one-line-per-object representation: `[<type> <@blob-id> <object-id>] <description> %<tag>...`. Currently the grammar is implicit in the formatter code (`box_format.BoxTransacted`). An RFC would make it consumable by external tools and agents. Include variants: with/without time prefix, with/without color, archive mode.
+
 ## MCP: content block validation error on single-object queries
 
 - [ ] `dodder_query` MCP tool returns MCP protocol validation errors when the query matches a single object (e.g. `["!md-snippet"]`). The error is `invalid_union` on `content[0]` — the content block doesn't match any of the expected MCP types (text, image, audio, resource_link, resource). Reproduce: call `dodder_type_query` or `dodder_query` with a query that returns exactly one result, or call `dodder_query` with `["!md-snippet"]`. The `makeBridgeHandler` in `server.go` wraps output in `protocol.TextContentV1()` which should be correct — investigate whether the JSON output for single objects is malformed or whether the issue is in the go-mcp library's content block serialization.
