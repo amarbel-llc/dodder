@@ -137,8 +137,44 @@ New flags:
   blobless types by selecting local replacements. Requires a TTY; in non-TTY
   contexts, prints a warning and falls through. Does not imply `-dry-run`.
 
+- `-omit-tags <regex>` — strip tags matching the pattern from each object before
+  plan classification. Matched against the tag value without the leading `#`
+  (e.g., `-omit-tags "^archived$"` strips `#archived`). May be specified
+  multiple times; patterns are OR'd. Objects are never dropped — only their
+  matching tags are removed. If all tags are removed, the object is still
+  imported with an empty tag set.
+
 Existing flags are unchanged. `-continue-on-error` applies to phase 2 commit
 errors (not phase 1 validation, which always reports all issues).
+
+### Object transform pipeline
+
+Transforms mutate objects between decoding and plan classification:
+
+    decode from inventory list
+      → transform pipeline (tag omit, future: external scripts)
+        → plan builder (classify, dedup, DAG sort)
+          → commit
+
+Each transform is a function that receives a mutable object and returns whether
+to keep it:
+
+    type ObjectTransform func(*sku.Transacted) (keep bool, err error)
+
+Transforms run in registration order. A transform may:
+
+- **Mutate** the object (e.g., strip tags) and return `keep=true`.
+- **Drop** the object entirely by returning `keep=false`. Dropped objects do not
+  enter the plan and are not counted in the summary.
+- **Error** by returning a non-nil error, which aborts phase 1.
+
+`-omit-tags` registers a transform that compiles the regex(es), iterates the
+object's tag set, removes matches, and always returns `keep=true`.
+
+The transform pipeline lives in `romeo/import_plan` as a slice of
+`ObjectTransform` functions on the `Builder`. The builder applies them in
+`AddObject` before classification. The CLI (victor tier) is responsible for
+constructing transforms from flags and passing them to the builder.
 
 ### Topographic ordering
 
@@ -286,6 +322,7 @@ Implementation is two layers respecting the NATO tier hierarchy:
 
 ### Not yet implemented
 
+- Object transform pipeline and `-omit-tags` flag
 - Signature rewriting in topographic order (`-overwrite-signatures` integration
   with plan phase)
 - Selective import (`-filter` flag)
@@ -321,6 +358,33 @@ Approaches worth exploring:
 - **Chunked planning.** Process objects in dependency-level chunks — all types
   first (one streaming pass filtered to type genre), then all dependents (second
   pass). Works if the dependency graph is shallow (few levels), which is typical.
+
+## Future exploration: external script transforms
+
+The `ObjectTransform` interface is designed to support external preprocessing
+scripts. An external script transform would:
+
+1. Serialize the object to hyphence format on stdin.
+2. Exec the user-specified script as a subprocess.
+3. Read back the (possibly modified) hyphence from stdout.
+4. If stdout is empty or the script exits non-zero, return `keep=false`.
+
+This enables arbitrary preprocessing without changing the plan builder — the
+script sees one object at a time and can modify fields, strip metadata, or
+reject objects based on external state (database lookups, API calls, etc.).
+
+CLI shape (tentative):
+
+    der import -transform ./cleanup.sh export.inventory
+
+Multiple `-transform` flags chain in order, after built-in transforms like
+`-omit-tags`. The script contract is simple: hyphence in, hyphence out, non-zero
+exit to drop.
+
+Performance consideration: subprocess-per-object is expensive for large imports.
+A long-running script mode (newline-delimited hyphence stream on stdin/stdout)
+would amortize startup cost. The transform interface supports both — the
+implementation detail is hidden behind `ObjectTransform`.
 
 ## More Information
 
