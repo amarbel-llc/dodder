@@ -18,6 +18,64 @@ const defaultMaxBytes = 100_000
 
 const mcpInstructions = `Dodder is a distributed zettelkasten and content-addressable blob store.
 
+## Data Model
+
+Every object in dodder has: an object-id, a date, an optional description,
+an optional type, and zero or more tags. Tags are themselves objects that
+can have their own tags (meta-tags). Common meta-tag patterns:
+
+- active — marks a project/tag as currently active
+- priority-0_must, priority-1_should, priority-2_want — priority levels
+- area-home, area-career, area-health — life areas
+- project-* — project groupings
+
+Object genres:
+- Zettels: ID has left/right parts separated by / (e.g. thallium/golem)
+- Types: ID prefixed with ! (e.g. !task, !md)
+- Tags: bare identifier, no ! prefix, no / separator (e.g. priority-0_must)
+
+## Query Syntax
+
+Query terms in dodder_query are AND-combined. Term types:
+- Genre filters: :z (zettels), :e (tags), :t (types)
+- Tag filter: bare tag name (e.g. todo, priority-0_must)
+- Type filter: !type (e.g. !task, !md)
+
+Examples: [":z", "todo"] = zettels tagged todo. ["!task", "urgency-2_week"] =
+tasks with urgency-2_week tag. [":e"] = all tag objects.
+
+## Tool Selection Guide
+
+1. type_query / tag_query — START HERE for discovery. Returns summaries with
+   tags and resource URIs. Use tag_query to find tags by word (e.g. ["project"]
+   finds all project-* tags), then inspect the tags field to filter
+   (e.g. check for "active" in tags).
+
+2. Resources (dodder://...) — DRILL DOWN for detail. Follow resource URIs from
+   query results. Use /objects for listings, /objects/facets for analytics.
+
+3. dodder_query — RAW QUERIES when you need AND-combined filters or specific
+   format output. Returns full object data.
+
+4. dodder_show — VIEW A SINGLE OBJECT by exact ID.
+
+## Common Workflows
+
+Find active projects:
+  → tag_query(["project"]) → filter results where tags contains "active"
+
+Find tasks by priority:
+  → dodder_query(["!task", "priority-0_must"]) with format "box"
+
+Summarize a type's tag distribution:
+  → read dodder://types/<id>/objects/facets
+
+Browse objects of a type:
+  → read dodder://types/<id>/objects (box format listing)
+
+Inspect a specific object and navigate to related objects:
+  → read dodder://objects/<id> (returns traversal links to type, tags, blob)
+
 ## Object Listings — Box Format
 
 Object listings (e.g. dodder://types/<id>/objects) use the compact box format.
@@ -151,7 +209,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_query",
-			Description: "Search for dodder objects matching a query expression. Query terms are combined with AND. Examples: ':z' (all zettels), ':e' (all tags), 'todo' (tagged with todo), '!article' (type article).",
+			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer type_query/tag_query for discovery; use this for AND-filtered object listings.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -230,7 +288,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_type_query",
-			Description: "Search for dodder types by word. Words are matched against type IDs, descriptions, and tags (all expanded by hyphen segments). Returns compact summaries with resource URIs for drill-down. Use dodder://types_index resource to discover available words.",
+			Description: "Search for dodder types by word (OR-union). Returns type summaries including tags and resource URIs for drill-down. Words are expanded by hyphen segments: 'task' matches !task, !taskpaper, etc. Use dodder://types/<id>/objects to list objects of a matched type, or /objects/facets for tag analytics.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -282,7 +340,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_tag_query",
-			Description: "Search for dodder tags by word. Words are matched against tag IDs, descriptions, and tags (all expanded by hyphen segments). Returns compact summaries with resource URIs for drill-down. Use dodder://tags_index resource to discover available words.",
+			Description: "Search for dodder tags by word (OR-union). Returns tag summaries including each tag's own tags (meta-tags like 'active', 'priority-0_must'). Use this to discover and filter tags — e.g. tag_query(['project']) returns all project tags, then check each result's tags field for 'active' to find active projects. Words are expanded by hyphen segments: 'project' matches project-2021-zit, project-24q2-personal_sites, etc.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
