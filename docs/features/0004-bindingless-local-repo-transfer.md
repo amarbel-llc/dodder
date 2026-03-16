@@ -1,5 +1,5 @@
 ---
-status: experimental
+status: accepted
 date: 2026-03-15
 promotion-criteria: BATS tests pass for direct push, pull, and clone between two local repos without a stored remote object; existing remote-add-based push/pull/clone still works unchanged
 ---
