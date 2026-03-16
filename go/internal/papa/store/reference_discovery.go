@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -15,6 +16,7 @@ import (
 
 type discoveredReference struct {
 	ObjectId string
+	BlobId   string
 	Alias    string
 }
 
@@ -29,12 +31,19 @@ func parseReferenceOutput(output string) ([]discoveredReference, error) {
 		}
 
 		var ref discoveredReference
+		var value string
 
 		if idx := strings.Index(line, " = "); idx != -1 {
 			ref.Alias = strings.TrimSpace(line[:idx])
-			ref.ObjectId = strings.TrimSpace(line[idx+3:])
+			value = strings.TrimSpace(line[idx+3:])
 		} else {
-			ref.ObjectId = line
+			value = line
+		}
+
+		if strings.HasPrefix(value, "@") {
+			ref.BlobId = strings.TrimPrefix(value, "@")
+		} else {
+			ref.ObjectId = value
 		}
 
 		refs = append(refs, ref)
@@ -131,23 +140,43 @@ func (store *Store) discoverReferences(
 	metadata := daughter.GetMetadataMutable()
 
 	for _, ref := range refs {
-		var refId ids.SeqId
+		if ref.BlobId != "" {
+			var blobId markl.Id
 
-		if err = refId.Set(ref.ObjectId); err != nil {
-			if objectReferences.Optional {
-				continue
+			if err = blobId.Set(ref.BlobId); err != nil {
+				if objectReferences.Optional {
+					continue
+				}
+
+				return errors.Wrapf(err, "invalid blob reference: %q", ref.BlobId)
 			}
 
-			return errors.Wrapf(err, "invalid reference: %q", ref.ObjectId)
-		}
+			metadata.AddBlobReference(blobId)
 
-		if err = metadata.AddReference(refId); err != nil {
-			return errors.Wrap(err)
-		}
+			if ref.Alias != "" {
+				if err = metadata.SetBlobReferenceAlias(blobId, ref.Alias); err != nil {
+					return errors.Wrap(err)
+				}
+			}
+		} else {
+			var refId ids.SeqId
 
-		if ref.Alias != "" {
-			if err = metadata.SetReferenceAlias(refId, ref.Alias); err != nil {
+			if err = refId.Set(ref.ObjectId); err != nil {
+				if objectReferences.Optional {
+					continue
+				}
+
+				return errors.Wrapf(err, "invalid reference: %q", ref.ObjectId)
+			}
+
+			if err = metadata.AddReference(refId); err != nil {
 				return errors.Wrap(err)
+			}
+
+			if ref.Alias != "" {
+				if err = metadata.SetReferenceAlias(refId, ref.Alias); err != nil {
+					return errors.Wrap(err)
+				}
 			}
 		}
 	}
