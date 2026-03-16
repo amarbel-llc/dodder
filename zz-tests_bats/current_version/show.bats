@@ -684,7 +684,7 @@ function show_zettel_with_discovered_references { # @test
 		file-extension = 'md'
 		vim-syntax-type = 'markdown'
 
-		[object-references]
+		[references]
 		shell = ['bash', '-c']
 		script = "grep -oP '\\[\\[(.+?)\\]\\]' | sed 's/\\[\\[//;s/\\]\\]//'"
 	TYPEFILE
@@ -730,7 +730,7 @@ function show_zettel_with_pandoc_discovered_references { # @test
 		file-extension = 'md'
 		vim-syntax-type = 'markdown'
 
-		[object-references]
+		[references]
 		shell = ['pandoc', '--from', 'markdown+wikilinks_title_after_pipe', '--to']
 		script = '$DIR/../zz-pandoc-refs/discover-refs.lua'
 	TYPEFILE
@@ -776,7 +776,7 @@ function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
 		file-extension = 'md'
 		vim-syntax-type = 'markdown'
 
-		[object-references]
+		[references]
 		shell = ['pandoc', '--from', 'markdown+wikilinks_title_after_pipe', '--to']
 		script = '$DIR/../zz-pandoc-refs/discover-refs.lua'
 	TYPEFILE

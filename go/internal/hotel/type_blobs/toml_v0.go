@@ -60,6 +60,6 @@ func (blob *TomlV0) GetStringLuaHooks() string {
 	return hooks
 }
 
-func (blob *TomlV0) GetObjectReferences() *ObjectReferencesConfig {
+func (blob *TomlV0) GetReferences() *ReferencesConfig {
 	return nil
 }

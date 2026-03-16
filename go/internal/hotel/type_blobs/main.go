@@ -21,7 +21,7 @@ type Blob interface {
 	WithFormatters
 	WithFormatterUTIGroups
 	WithStringLuaHooks
-	WithObjectReferences
+	WithReferences
 }
 
 var (
@@ -42,6 +42,6 @@ type WithStringLuaHooks interface {
 	GetStringLuaHooks() string
 }
 
-type WithObjectReferences interface {
-	GetObjectReferences() *ObjectReferencesConfig
+type WithReferences interface {
+	GetReferences() *ReferencesConfig
 }

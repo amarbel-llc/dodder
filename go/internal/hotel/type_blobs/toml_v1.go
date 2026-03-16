@@ -16,7 +16,7 @@ type TomlV1 struct {
 
 	// TODO migrate to properly-typed hooks
 	Hooks            any                     `toml:"hooks"`
-	ObjectReferences *ObjectReferencesConfig `toml:"object-references,omitempty"`
+	References *ReferencesConfig `toml:"references,omitempty"`
 }
 
 func (blob *TomlV1) Reset() {
@@ -29,7 +29,7 @@ func (blob *TomlV1) Reset() {
 	blob.UTIGroups = reset.Map(blob.UTIGroups)
 	blob.Formatters = reset.Map(blob.Formatters)
 	blob.Hooks = nil
-	blob.ObjectReferences = nil
+	blob.References = nil
 }
 
 func (blob *TomlV1) GetBinary() bool {
@@ -61,6 +61,6 @@ func (blob *TomlV1) GetStringLuaHooks() string {
 	return hooks
 }
 
-func (blob *TomlV1) GetObjectReferences() *ObjectReferencesConfig {
-	return blob.ObjectReferences
+func (blob *TomlV1) GetReferences() *ReferencesConfig {
+	return blob.References
 }

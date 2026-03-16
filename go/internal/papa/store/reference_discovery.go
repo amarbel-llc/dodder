@@ -84,7 +84,7 @@ func (store *Store) discoverReferences(
 		defer repool()
 	}
 
-	objectReferences := blob.GetObjectReferences()
+	objectReferences := blob.GetReferences()
 	if objectReferences == nil {
 		return err
 	}
