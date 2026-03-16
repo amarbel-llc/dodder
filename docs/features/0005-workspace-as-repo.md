@@ -203,6 +203,81 @@ The resolution is a no-op when:
 - If the query matches no objects in the parent, the workspace-repo is created
   empty (not an error — objects may be created locally and pushed later)
 
+## Implementation Status
+
+### What's Built
+
+All core workspace-repo functionality is implemented and tested:
+
+- **`init-workspace -experimental-repo`** — single command creating a CWD-rooted
+  repo, cloning filtered objects from parent, writing V1 workspace config
+- **Implicit parent transfers** — push/pull auto-resolve stored parent path
+  when no explicit `-direct` is provided
+- **Edge expansion on filtered pull** — types, tags, and referenced objects
+  reachable from matching objects are included (depth limit 5)
+- **Query filtering** — clone/pull respect query filter; push transfers all
+  objects unfiltered
+- **Error cases** — existing repo detection, stale parent path, empty query
+
+### What's NOT Built
+
+These are described in the Design section but not yet implemented:
+
+- **Divergence detection** — no commit hash baseline tracking, no
+  workspace-vs-parent status comparison
+- **Pluggable checkout stores** — only `store_fs` exists
+- **Agent isolation workflows** — no structured review UI beyond manual
+  inspection
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `go/internal/victor/commands_dodder/init_workspace.go` | `InitWorkspace` command with `runLightweight` and `runExperimentalRepo` paths |
+| `go/internal/uniform/command_components_dodder/remote.go` | `ResolveImplicitDirectPath` — reads parent path from workspace config |
+| `go/internal/echo/workspace_config_blobs/v1.go` | V1 config struct with `ParentPath` field |
+| `go/internal/echo/workspace_config_blobs/main.go` | `ConfigWithParentPath` interface for V0/V1 type-switching |
+| `go/internal/echo/workspace_config_blobs/io.go` | Coder registration for V0 and V1 |
+| `go/internal/november/env_workspace/main.go` | `GetParentPath()`, `CreateWorkspace` with V0/V1 type selection |
+| `go/internal/bravo/ids/types_builtin.go` | `TypeTomlWorkspaceConfigV1` constant |
+| `go/internal/victor/commands_dodder/pull.go` | Wires `ResolveImplicitDirectPath` |
+| `go/internal/victor/commands_dodder/push.go` | Wires `ResolveImplicitDirectPath` |
+| `zz-tests_bats/current_version/workspace_repo.bats` | 9 integration tests covering all workspace-repo scenarios |
+
+### Key Types and Interfaces
+
+- **`workspace_config_blobs.V0`** — original workspace config (query, defaults).
+  Used by lightweight workspaces.
+- **`workspace_config_blobs.V1`** — embeds V0, adds `ParentPath string`. Used by
+  workspace-repos created with `-experimental-repo`.
+- **`workspace_config_blobs.ConfigWithParentPath`** — interface with
+  `GetParentPath() string`. Used to type-switch between V0/V1 in
+  `CreateWorkspace` and `GetWorkspaceConfigTyped`.
+- **`command_components_dodder.Remote.ResolveImplicitDirectPath`** — called after
+  `MakeLocalWorkingCopy` in push/pull. Reads parent path from workspace config,
+  sets `DirectPath` if no explicit `-direct` was provided.
+
+### Gotchas
+
+**Query storage vs. clone filter.** Positional args to `init-workspace
+-experimental-repo` (e.g. `project-alpha:z` or `+zettel,typ,etikett`) are the
+**initial clone filter only**. They are NOT stored as the workspace's default
+query. The workspace default query comes from the `-query` flag (stored as
+`workspace_config_blobs.V0.Query`). If positional args were stored as the
+default query, push would filter outgoing objects through that query, causing it
+to transfer zero objects when the query doesn't match workspace-created content.
+
+**`ExcludeDefaultType` on Genesis.** `runExperimentalRepo` sets
+`cmd.Genesis.BigBang.ExcludeDefaultType = true` before calling `OnTheFirstDay`.
+Without this, the default `!md` type would be auto-created in the new repo
+before the pull, potentially conflicting with the pulled type objects.
+
+**Zettel ID conflicts with filtered clones.** When a workspace-repo is cloned
+with a tag filter (e.g. `project-alpha:z`), it doesn't know about the parent's
+full zettel ID space. Creating new zettels in the workspace may assign IDs that
+already exist in the parent, causing conflicts on push. The unfiltered clone
+(`+zettel,typ,etikett`) avoids this by syncing the full ID index.
+
 ## What Does NOT Change
 
 - Lightweight workspace behavior (`init-workspace` without `-experimental-repo`)
@@ -328,13 +403,23 @@ The `-experimental-repo` flag is purely additive. Existing lightweight
 workspaces are completely unchanged. Both types coexist — `init-workspace`
 without the flag produces the current lightweight workspace.
 
-### Promotion Criteria
+### Promotion Criteria (experimental → testing)
 
-- BATS tests pass for repo-backed workspace init, push, and pull
-- Query filtering + edge reachability produces correct object sets
-- Commit history merges cleanly from workspace to parent
-- Existing lightweight workspace tests still pass unchanged
-- Error messages are clear for invalid parent path, existing repo, empty query
+The following criteria for `experimental` status are **all met** as of
+2026-03-15:
+
+- [x] BATS tests pass for repo-backed workspace init, push, and pull
+- [x] Query filtering + edge reachability produces correct object sets
+- [x] Commit history merges cleanly from workspace to parent
+- [x] Existing lightweight workspace tests still pass unchanged
+- [x] Error messages are clear for invalid parent path, existing repo, empty query
+
+To advance to `testing`:
+
+- [ ] Zettel ID conflict resolution for filtered clones (push back to parent
+  without collisions)
+- [ ] Divergence detection (workspace HEAD vs parent HEAD baseline comparison)
+- [ ] Real-world validation with a non-trivial object graph (100+ objects)
 
 ### Rollback Procedure
 
