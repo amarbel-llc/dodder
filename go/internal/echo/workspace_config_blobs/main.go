@@ -31,6 +31,11 @@ type (
 		Config
 		domain_interfaces.ConfigDryRunGetter
 	}
+
+	ConfigWithParentPath interface {
+		Config
+		GetParentPath() string
+	}
 )
 
 var (

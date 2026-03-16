@@ -4,16 +4,19 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/hotel/command_components"
+	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
@@ -25,11 +28,13 @@ func init() {
 }
 
 type InitWorkspace struct {
-	command_components.Env
-	command_components_dodder.LocalWorkingCopy
+	command_components_dodder.Genesis
+	command_components_dodder.RemoteTransfer
+	command_components_dodder.Query
 
 	complete command_components_dodder.Complete
 
+	ExperimentalRepo  bool
 	DefaultQueryGroup values.String
 	Proto             sku.Proto
 }
@@ -39,8 +44,16 @@ var _ interfaces.CommandComponentWriter = (*InitWorkspace)(nil)
 func (cmd *InitWorkspace) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
-	cmd.LocalWorkingCopy.SetFlagDefinitions(flagSet)
-	// TODO add command.Completer variants of tags, type, and query flags
+	flagSet.BoolVar(
+		&cmd.ExperimentalRepo,
+		"experimental-repo",
+		false,
+		"create a repo-backed workspace with independent store and commit history",
+	)
+
+	cmd.Genesis.SetFlagDefinitions(flagSet)
+	cmd.RemoteTransfer.SetFlagDefinitions(flagSet)
+	cmd.Query.SetFlagDefinitions(flagSet)
 
 	flagSet.Var(
 		cmd.complete.GetFlagValueMetadataTags(&cmd.Proto.Metadata),
@@ -101,7 +114,16 @@ func (cmd InitWorkspace) Complete(
 }
 
 func (cmd InitWorkspace) Run(req command.Request) {
-	envLocal := cmd.MakeEnv(req)
+	if cmd.ExperimentalRepo {
+		cmd.runExperimentalRepo(req)
+		return
+	}
+
+	cmd.runLightweight(req)
+}
+
+func (cmd InitWorkspace) runLightweight(req command.Request) {
+	envLocal := cmd.Genesis.MakeEnv(req)
 
 	switch req.RemainingArgCount() {
 	case 0:
@@ -139,3 +161,72 @@ func (cmd InitWorkspace) Run(req command.Request) {
 		req.Cancel(err)
 	}
 }
+
+func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
+	if !cmd.IsDirectTransfer() {
+		req.Cancel(
+			errors.BadRequestf(
+				"-direct <parent-path> is required with -experimental-repo",
+			),
+		)
+		return
+	}
+
+	cmd.Genesis.BigBang.ExcludeDefaultType = true
+
+	local := cmd.OnTheFirstDay(req, req.PopArg("workspace repo id"))
+
+	remote := cmd.MakeDirectRemoteFromPath(req, local)
+
+	queryArgs := req.PopArgs()
+
+	queryGroup := cmd.MakeQueryIncludingWorkspace(
+		req,
+		queries.BuilderOptions(
+			queries.BuilderOptionDefaultSigil(
+				ids.SigilHistory,
+				ids.SigilHidden,
+			),
+			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+		),
+		local,
+		queryArgs,
+	)
+
+	if err := local.PullQueryGroupFromRemote(
+		remote,
+		queryGroup,
+		cmd.WithPrintCopies(true),
+	); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	absParentPath := cmd.DirectPath
+	if !filepath.IsAbs(absParentPath) {
+		var err error
+
+		if absParentPath, err = filepath.Abs(absParentPath); err != nil {
+			req.Cancel(err)
+			return
+		}
+	}
+
+	blob := &workspace_config_blobs.V1{
+		V0: workspace_config_blobs.V0{
+			Query: strings.Join(queryArgs, " "),
+			Defaults: repo_configs.DefaultsV1OmitEmpty{
+				Type: cmd.Proto.Metadata.GetType().ToType(),
+				Tags: slices.Collect(
+					ids.ITagSeqToTagStructSeq(cmd.Proto.Metadata.AllTags()),
+				),
+			},
+		},
+		ParentPath: absParentPath,
+	}
+
+	if err := local.GetEnvWorkspace().CreateWorkspace(blob); err != nil {
+		req.Cancel(err)
+	}
+}
+

@@ -52,7 +52,8 @@ const (
 	TypeTomlTypeV1                                  = "!toml-type-v1"
 	TypeTomlTypeVCurrent                            = TypeTomlTypeV1
 	TypeTomlWorkspaceConfigV0                       = "!toml-workspace_config-v0"
-	TypeTomlWorkspaceConfigVCurrent                 = TypeTomlWorkspaceConfigV0
+	TypeTomlWorkspaceConfigV1                       = "!toml-workspace_config-v1"
+	TypeTomlWorkspaceConfigVCurrent                 = TypeTomlWorkspaceConfigV1
 
 	// Aliases
 	TypeInventoryListVCurrent = TypeInventoryListV2
@@ -133,6 +134,7 @@ func init() {
 	registerBuiltinTypeString(TypeTomlTypeV0, genres.Type, false)
 	registerBuiltinTypeString(TypeTomlTypeV1, genres.Type, true)
 	registerBuiltinTypeString(TypeTomlWorkspaceConfigV0, genres.Unknown, false)
+	registerBuiltinTypeString(TypeTomlWorkspaceConfigV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeZettelIdLogV1, genres.Unknown, false)
 }
 

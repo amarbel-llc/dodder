@@ -18,6 +18,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 					return &V0{}
 				},
 			},
+			ids.TypeTomlWorkspaceConfigV1: hyphence.CoderToml[
+				Config,
+				*Config,
+			]{
+				Progenitor: func() Config {
+					return &V1{}
+				},
+			},
 		},
 	),
 }

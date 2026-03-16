@@ -242,6 +242,44 @@ function workspace_repo_pull_filtered_by_tag { # @test
 	refute_output --partial 'new beta zettel'
 }
 
+function workspace_repo_init_experimental_repo { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	# Verify workspace has filtered objects + edge-expanded types
+	run_dodder show :z
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[one/dos @blake2b256-.+ !md "second zettel" priority-high project-alpha]
+		\[one/uno @blake2b256-.+ !md "first zettel" project-alpha]
+	EOM
+	refute_output --partial 'project-beta'
+
+	# Verify that referenced types were also pulled (edge expansion)
+	run_dodder show :t
+	assert_success
+
+	# Verify .dodder-workspace was created with parent path
+	assert [ -f .dodder-workspace ]
+}
+
 function workspace_repo_push_unfiltered { # @test
 	parent="parent"
 	bootstrap_parent "$parent"

@@ -34,6 +34,7 @@ type Env interface {
 	GetWorkspaceConfigFilePath() string
 	GetDefaults() repo_configs.Defaults
 	CreateWorkspace(workspace_config_blobs.Config) (err error)
+	GetParentPath() string
 	GetStore() *Store
 
 	// TODO identify users of this and reduce / isolate them
@@ -277,7 +278,12 @@ func (env *env) IsTemporary() bool {
 }
 
 func (env *env) GetWorkspaceConfigTyped() workspace_config_blobs.TypedConfig {
-	typeWorkspaceConfig := ids.GetOrPanic(ids.TypeTomlWorkspaceConfigV0).TypeStruct
+	typeString := ids.TypeTomlWorkspaceConfigV0
+	if _, ok := env.blob.(workspace_config_blobs.ConfigWithParentPath); ok {
+		typeString = ids.TypeTomlWorkspaceConfigV1
+	}
+
+	typeWorkspaceConfig := ids.GetOrPanic(typeString).TypeStruct
 
 	return workspace_config_blobs.TypedConfig{
 		Type: typeWorkspaceConfig,
@@ -301,12 +307,25 @@ func (env *env) GetStoreFS() *store_fs.Store {
 	return env.storeFS
 }
 
+func (env *env) GetParentPath() string {
+	if cp, ok := env.blob.(workspace_config_blobs.ConfigWithParentPath); ok {
+		return cp.GetParentPath()
+	}
+
+	return ""
+}
+
 func (env *env) CreateWorkspace(
 	blob workspace_config_blobs.Config,
 ) (err error) {
 	env.blob = blob
 
-	typeWorkspaceConfig := ids.GetOrPanic(ids.TypeTomlWorkspaceConfigV0).TypeStruct
+	typeString := ids.TypeTomlWorkspaceConfigV0
+	if _, ok := blob.(workspace_config_blobs.ConfigWithParentPath); ok {
+		typeString = ids.TypeTomlWorkspaceConfigV1
+	}
+
+	typeWorkspaceConfig := ids.GetOrPanic(typeString).TypeStruct
 
 	object := workspace_config_blobs.TypedConfig{
 		Type: typeWorkspaceConfig,
