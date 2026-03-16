@@ -352,6 +352,7 @@ func (cmd *Remote) MakeRemoteStdioLocal(
 	}
 
 	httpRoundTripper.Cmd.Dir = dir
+	httpRoundTripper.HashFormat = repo.GetBlobStore().GetDefaultHashType()
 
 	if err := httpRoundTripper.InitializeWithLocal(
 		envRepo,

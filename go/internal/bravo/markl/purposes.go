@@ -123,6 +123,13 @@ func init() {
 	makePurpose(PurposeRequestAuthResponseV1, PurposeTypeRequestAuth)
 
 	makePurpose(
+		PurposeRequestRepoSigV1,
+		PurposeTypeRequestAuth,
+		FormatIdEd25519Sig,
+		FormatIdEcdsaP256Sig,
+	)
+
+	makePurpose(
 		PurposeMadderPubKeyV1,
 		PurposeTypePubKey,
 		FormatIdEd25519Pub,

@@ -21,6 +21,7 @@ func (roundTripper *RoundTripperUnixSocket) Initialize(
 	pubkey markl.Id,
 ) (err error) {
 	roundTripper.PublicKey = pubkey
+	roundTripper.HashFormat = remote.Repo.GetBlobStore().GetDefaultHashType()
 
 	if roundTripper.UnixSocket, err = remote.InitializeUnixSocket(
 		net.ListenConfig{},

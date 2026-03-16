@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
@@ -272,6 +273,26 @@ func (server *Server) addSignatureIfNecessary(
 	return err
 }
 
+func (server *Server) signBodyTrailer(
+	bodyDigest domain_interfaces.MarklId,
+	responseWriter http.ResponseWriter,
+) {
+	sec := server.Repo.GetImmutableConfigPrivate().Blob.GetPrivateKey()
+
+	var sig markl.Id
+
+	if err := sec.Sign(
+		bodyDigest,
+		&sig,
+		markl.PurposeRequestRepoSigV1,
+	); err != nil {
+		ui.Err().Print(err)
+		return
+	}
+
+	responseWriter.Header().Set(headerRepoSig, sig.String())
+}
+
 func (server *Server) sigMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(responseWriter http.ResponseWriter, request *http.Request) {
@@ -444,14 +465,28 @@ func (server *Server) makeHandler(
 					response.StatusCode = http.StatusOK
 				}
 
+				header.Set("Trailer", headerRepoSig)
+
 				responseWriter.WriteHeader(response.StatusCode)
 
+				hashFormat := server.Repo.GetBlobStore().GetDefaultHashType()
+				hash, repoolHash := hashFormat.GetHash()
+				defer repoolHash()
+
+				digestWriter := markl_io.MakeWriter(hash, nil)
+
 				if response.Body == nil {
+					if flusher, ok := responseWriter.(http.Flusher); ok {
+						flusher.Flush()
+					}
+
+					server.signBodyTrailer(digestWriter.GetMarklId(), responseWriter)
+
 					return
 				}
 
 				if _, err := io.Copy(
-					io.MultiWriter(responseWriter, &progressWriter),
+					io.MultiWriter(responseWriter, digestWriter, &progressWriter),
 					response.Body,
 				); err != nil {
 					if errors.IsEOF(err) {
@@ -468,8 +503,11 @@ func (server *Server) makeHandler(
 						err = nil
 					} else {
 						ctx.Cancel(err)
+						return
 					}
 				}
+
+				server.signBodyTrailer(digestWriter.GetMarklId(), responseWriter)
 			},
 			func(time time.Time) {
 				ui.Log().Printf(

@@ -2,10 +2,12 @@ package remote_http
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
@@ -17,7 +19,8 @@ const (
 )
 
 type RoundTripperBufioWrappedSigner struct {
-	PublicKey domain_interfaces.MarklId
+	PublicKey  domain_interfaces.MarklId
+	HashFormat domain_interfaces.FormatHash
 	roundTripperBufio
 }
 
@@ -92,5 +95,75 @@ func (roundTripper *RoundTripperBufioWrappedSigner) RoundTrip(
 		return response, err
 	}
 
+	if roundTripper.HashFormat != nil && response.Body != nil {
+		hash, repoolHash := roundTripper.HashFormat.GetHash()
+
+		response.Body = &verifyingBodyReader{
+			body:       response.Body,
+			response:   response,
+			hash:       hash,
+			repoolHash: repoolHash,
+			pubkey:     pubkey,
+		}
+	}
+
 	return response, err
+}
+
+type verifyingBodyReader struct {
+	body       io.ReadCloser
+	response   *http.Response
+	hash       domain_interfaces.Hash
+	repoolHash interfaces.FuncRepool
+	pubkey     markl.Id
+	verified   bool
+}
+
+func (r *verifyingBodyReader) Read(p []byte) (n int, err error) {
+	n, err = r.body.Read(p)
+
+	if n > 0 {
+		r.hash.Write(p[:n])
+	}
+
+	if errors.IsEOF(err) && !r.verified {
+		r.verified = true
+
+		if verifyErr := r.verifyTrailer(); verifyErr != nil {
+			return n, verifyErr
+		}
+	}
+
+	return n, err
+}
+
+func (r *verifyingBodyReader) Close() error {
+	if r.repoolHash != nil {
+		defer r.repoolHash()
+	}
+
+	return r.body.Close()
+}
+
+func (r *verifyingBodyReader) verifyTrailer() error {
+	sigString := r.response.Trailer.Get(headerRepoSig)
+
+	if sigString == "" {
+		return errors.Errorf("response body signature trailer missing")
+	}
+
+	var sig markl.Id
+
+	if err := sig.Set(sigString); err != nil {
+		return errors.Wrap(err)
+	}
+
+	bodyDigest, repoolDigest := r.hash.GetMarklId()
+	defer repoolDigest()
+
+	if err := r.pubkey.Verify(bodyDigest, sig); err != nil {
+		return errors.Wrapf(err, "response body signature verification failed")
+	}
+
+	return nil
 }
