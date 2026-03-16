@@ -69,7 +69,7 @@ func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(
 			sku.String(result.ObjectOrNil),
 		)
 
-		clonedObj, _ := result.ObjectOrNil.CloneTransacted()
+		clonedObj, _ := result.ObjectOrNil.CloneTransacted() //repool:owned
 		listMissingObjects.Add(clonedObj)
 
 		return err

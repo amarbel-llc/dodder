@@ -363,6 +363,16 @@ func (server *Server) readMCPResourceObject(
 	}
 
 	var typeBlob type_blobs.Blob
+	var repoolTypeBlob interfaces.FuncRepool
+
+	// TODO fix repool analyzer false positive: the goto SKIP_TYPE_BLOB bypasses
+	// ParseTypedBlob, so repoolTypeBlob is never assigned on that path. The
+	// analyzer can't see that the defer is safe when goto fires.
+	defer func() {
+		if repoolTypeBlob != nil {
+			repoolTypeBlob()
+		}
+	}()
 
 	{
 		var typeObject *sku.Transacted
@@ -385,16 +395,13 @@ func (server *Server) readMCPResourceObject(
 
 		{
 			var err error
-			var repool interfaces.FuncRepool
 
-			if typeBlob, repool, _, err = repo.GetTypedBlobStore().Type.ParseTypedBlob(
+			if typeBlob, repoolTypeBlob, _, err = repo.GetTypedBlobStore().Type.ParseTypedBlob(
 				typeObject.GetType(),
 				typeObject.GetBlobDigest(),
 			); err != nil {
 				return nil, errors.Wrap(err)
 			}
-
-			defer repool()
 		}
 	}
 

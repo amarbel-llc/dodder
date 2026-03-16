@@ -95,7 +95,7 @@ func (cmd Remote) MakeRemoteAndObject(
 	remoteEnvRepo := cmd.MakeEnvRepo(req, false)
 	remoteTypedRepoBlobStore := typed_blob_store.MakeRepoStore(remoteEnvRepo)
 
-	remoteObject, _ = sku.GetTransactedPool().GetWithRepool()
+	remoteObject, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	command.PopRequestArgToFunc(
 		req,

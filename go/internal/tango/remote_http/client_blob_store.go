@@ -113,7 +113,7 @@ func (client *client) MakeBlobReader(
 			return reader, err
 		}
 
-		hash, _ := hashType.Get()
+		hash, _ := hashType.Get() //repool:owned
 		reader = markl_io.MakeReadCloser(
 			hash,
 			response.Body,
