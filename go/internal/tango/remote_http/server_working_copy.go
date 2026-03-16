@@ -108,14 +108,19 @@ func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(
 		computedBlobDigest,
 	)
 
-	if !claimedBlobDigest.IsNull() {
-		if err := markl.AssertEqual(&claimedBlobDigest, computedBlobDigest); err != nil {
-			response.Error(errors.Wrapf(
-				err,
-				"inventory list blob digest mismatch",
-			))
-			return response
-		}
+	if claimedBlobDigest.IsNull() {
+		response.Error(errors.Errorf(
+			"inventory list missing required blob digest in metadata",
+		))
+		return response
+	}
+
+	if err := markl.AssertEqual(&claimedBlobDigest, computedBlobDigest); err != nil {
+		response.Error(errors.Wrapf(
+			err,
+			"inventory list blob digest mismatch",
+		))
+		return response
 	}
 
 	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(
