@@ -953,3 +953,50 @@ function format_blob_prefers_text_edit_over_text { # @test
 	assert_success
 	assert_output "<p>some content</p>"
 }
+
+# bats test_tags=user_story:referenced_objects
+function show_zettel_with_discovered_blob_references { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with reference discovery that finds both object and blob refs
+	cat >ref-blob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-blob.type
+	assert_success
+
+	# Create a zettel with both a wiki-link and a blob reference
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with blob ref
+		! ref-blob
+		---
+
+		See [[one/dos]] and blob @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd for details.
+	EOM
+	assert_success
+
+	# Show the new zettel and verify both reference types appear
+	run_dodder show -format text two/uno:
+	assert_success
+	assert_output --regexp - <<-'EOM'
+		---
+		# zettel with blob ref
+		@ blake2b256-.+
+		! ref-blob@.+
+		- one/dos@ed25519_sig-.+
+		- @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		---
+	EOM
+}
