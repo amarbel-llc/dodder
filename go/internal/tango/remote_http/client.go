@@ -18,7 +18,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
@@ -126,14 +125,14 @@ func (client *client) MakeImporter(
 	options repo.ImporterOptions,
 	storeOptions sku.StoreOptions,
 ) repo.Importer {
-	panic(comments.Implement())
+	panic(errors.Err501NotImplemented)
 }
 
 func (client *client) ImportSeq(
 	seq sku.Seq,
 	importer repo.Importer,
 ) (err error) {
-	return comments.Implement()
+	panic(errors.Err501NotImplemented)
 }
 
 func (client *client) MakeExternalQueryGroup(
@@ -141,8 +140,7 @@ func (client *client) MakeExternalQueryGroup(
 	externalQueryOptions sku.ExternalQueryOptions,
 	args ...string,
 ) (qg *queries.Query, err error) {
-	err = comments.Implement()
-	return qg, err
+	panic(errors.Err501NotImplemented)
 }
 
 func (client *client) MakeInventoryList(
@@ -189,29 +187,6 @@ func (client *client) MakeInventoryList(
 	return list, err
 }
 
-// func (remoteHTTP *HTTP) PullQueryGroupFromRemote2(
-// 	remote repo.ReadWrite,
-// 	options repo.RemoteTransferOptions,
-// 	queryStrings ...string,
-// ) (err error) {
-// 	var qg *query.Group
-
-// 	if qg, err = remoteHTTP.MakeQueryGroup(queryStrings...); err != nil {
-// 		err = errors.Wrap(err)
-// 		return
-// 	}
-
-// 	if err = remoteHTTP.PullQueryGroupFromRemote(
-// 		remote,
-// 		qg,
-// 		options,
-// 	); err != nil {
-// 		err = errors.Wrap(err)
-// 		return
-// 	}
-
-// 	return
-// }
 
 func (client *client) PullQueryGroupFromRemote(
 	remote repo.Repo,
@@ -364,6 +339,5 @@ func (client *client) pullQueryGroupFromWorkingCopy(
 func (client *client) ReadObjectHistory(
 	oid *ids.ObjectId,
 ) (skus []*sku.Transacted, err error) {
-	err = comments.Implement()
-	return skus, err
+	panic(errors.Err501NotImplemented)
 }

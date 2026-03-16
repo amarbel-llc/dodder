@@ -7,15 +7,14 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 )
 
 func (client client) WriteInventoryListObject(t *sku.Transacted) (err error) {
-	return comments.Implement()
+	panic(errors.Err501NotImplemented)
 }
 
 func (client client) ReadLast() (max *sku.Transacted, err error) {
-	return nil, comments.Implement()
+	panic(errors.Err501NotImplemented)
 }
 
 func (client client) AllInventoryListContents(
@@ -27,7 +26,7 @@ func (client client) AllInventoryListContents(
 func (client client) ReadAllSkus(
 	f func(besty, sk *sku.Transacted) error,
 ) (err error) {
-	return comments.Implement()
+	panic(errors.Err501NotImplemented)
 }
 
 func (client client) AllInventoryLists() interfaces.SeqError[*sku.Transacted] {
