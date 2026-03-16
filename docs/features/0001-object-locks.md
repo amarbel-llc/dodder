@@ -65,7 +65,7 @@ optional only in user-facing text input.
 | Format         | Type lock             | Tag lock           | Referenced object lock                     |
 |----------------|-----------------------|--------------------|--------------------------------------------|
 | Triple-hyphen  | `! type@signature`    | (in tag lines)     | `- ref@sig` or `- alias < ref@sig`         |
-| Inventory list | `!type@signature`     | `tag@signature`    | `<ref@sig` or `<alias=ref@sig`             |
+| Inventory list | `!type@signature`     | `tag@signature`    | `<ref@sig` or `alias<ref@sig`              |
 | Binary index   | key + null + fmt + id | same               | same, with ContainedObjectType byte        |
 | JSON           | `{ "Lock": { "Type": "sig" } }` | --      | `{ "References": { ... } }`               |
 
@@ -77,7 +77,7 @@ Triple-hyphen examples:
 
 Inventory list box examples:
 
-    [one/dos @digest !md <one/uno@sig <blog-template=one/uno@sig]
+    [one/dos @digest !md <one/uno@sig blog-template<one/uno@sig]
 
 Aliases with unsafe characters are quoted using the same escaping rules as
 object descriptions.
@@ -175,7 +175,7 @@ the formatter and reference discovery systems on the `light-maple` branch.
 
 ### Reference discovery works with pandoc
 
-Type-driven reference discovery (`[object-references]` in `toml-type-v1`) is
+Type-driven reference discovery (`[references]` in `toml-type-v1`) is
 implemented and tested with three approaches:
 
 1. **Shell pipeline** -- `grep -oP` + `sed` extracts `[[wiki-link]]` references.
@@ -279,34 +279,45 @@ All tests in `zz-tests_bats/current_version/show.bats`, tags `format_stdin` and
 | Test | What it covers |
 |------|---------------|
 | `show_zettel_with_referenced_object_lock` | Manual `- ref` in metadata gets locked at commit |
-| `show_zettel_with_discovered_references` | Shell-based `[object-references]` discovers `[[wiki-links]]` |
+| `show_zettel_with_discovered_references` | Shell-based `[references]` discovers `[[wiki-links]]` |
 | `show_zettel_with_pandoc_discovered_references` | Pandoc Lua writer discovers `[[wiki-links]]` via AST |
 | `show_zettel_with_pandoc_discovered_code_block_type_references` | Pandoc discovers `!type` refs in code block classes |
 | `format_blob_stdin_resolves_type_with_and_without_lock` | Pandoc formatter works with both locked and unlocked types |
 | `format_blob_stdin_selects_formatter_via_uti_group` | UTI groups `text-edit`/`text-render` route to different pandoc output formats |
 | `format_blob_prefers_text_edit_over_text` | Default fallback prefers `text-edit` formatter over `text` |
 
+| `show_zettel_with_discovered_blob_references` | Shell-based `[references]` discovers both `[[wiki-links]]` and `@blake2b256-...` blob refs |
+
 All formatter tests use pandoc (not cat/sed) to exercise the real pipeline.
 Pandoc is a devshell dependency in `go/default.nix`.
 
-### Future: blob references
+### Blob references (implemented)
 
-Referenced object locks pin object-to-object relationships. A parallel need
-exists for object-to-blob relationships: an object's content may embed or refer
-to a specific blob by its `markl.Id` digest (e.g., an image, a code snippet, an
-attachment). Today there is no metadata-level record of these blob dependencies.
+Blob references pin object-to-blob relationships: an object's content may embed
+or refer to a specific blob by its `markl.Id` digest (e.g., an image, a code
+snippet, an attachment).
 
-Blob references would reuse the same alias mechanism as object references but
-with `markl.Id` as the key instead of `SeqId`:
+Blob references use a separate `BlobReferences` collection on metadata with
+`markl.Id` keys (distinct from `ContainedObjects` which uses `SeqId` keys). The
+`@` prefix distinguishes blob references from object references in all formats:
 
 - **Literal:** `- @blake2b256-abc...` — pins a blob by digest
 - **Aliased:** `- hero-image < @blake2b256-abc...` — blob-local name for a digest
 
-This would let types define blob discovery scripts (analogous to
-`[object-references]`) that extract embedded blob digests from content. Use cases
-include markdown images referencing blob-store assets, config files embedding
-other configs by digest, and ensuring blob garbage collection doesn't delete
-blobs still referenced by live objects.
+In box format:
+- **Literal:** `<@blake2b256-abc...`
+- **Aliased:** `hero-image<@blake2b256-abc...`
+
+Reference discovery scripts (configured in `[references]` on `toml-type-v1`)
+output both object and blob references. Lines starting with `@` are parsed as
+blob references; all others as object references.
+
+Binary serialization uses the `BlobReferences` key byte with a length-prefixed
+`markl.Id` encoding plus optional alias.
+
+Use cases include markdown images referencing blob-store assets, config files
+embedding other configs by digest, and ensuring blob garbage collection doesn't
+delete blobs still referenced by live objects.
 
 A key use case is type-defined actions that generate blobs for an object to
 reference. Types could offer methods that produce blobs and wire them into the
@@ -319,10 +330,6 @@ object's metadata automatically. Examples:
 - The `!md` type itself referencing a pre-packaged pandoc binary as a blob,
   making the type fully self-contained rather than depending on `pandoc` being in
   the host environment
-
-The alias mechanism already supports arbitrary key types via
-`containedObject.Alias`. Extending it to `markl.Id` keys requires a new
-`ContainedObjectType` value and corresponding serialization in all formats.
 
 ### Open questions
 
