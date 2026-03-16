@@ -228,6 +228,45 @@ func (encoder *binaryEncoder) writeFieldKey(
 			n += n1
 		}
 
+	case key_bytes.BlobReferences:
+		for blobId := range metadata.AllBlobReferences() {
+			bites, marshalErr := blobId.MarshalBinary()
+			if marshalErr != nil {
+				err = errors.Wrap(marshalErr)
+				return n, err
+			}
+
+			// Write 2-byte length prefix for markl.Id bytes
+			idLen := len(bites)
+			if _, err = ohio.WriteFixedUInt16(
+				&encoder.Content,
+				uint16(idLen),
+			); err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+
+			if _, err = ohio.WriteAllOrDieTrying(&encoder.Content, bites); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			alias := metadata.GetBlobReferenceAlias(blobId)
+			if alias != "" {
+				if _, err = io.WriteString(&encoder.Content, alias); err != nil {
+					err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+					return n, err
+				}
+			}
+
+			var n1 int64
+			if n1, err = encoder.binaryField.WriteTo(&encoder.Buffer); err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+			n += n1
+		}
+
 	case key_bytes.SigParentMetadataParentObjectId:
 		if n, err = encoder.writeFieldMerkleId(
 			metadata.GetMotherObjectSig(),

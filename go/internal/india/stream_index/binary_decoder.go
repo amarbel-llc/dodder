@@ -368,6 +368,55 @@ func (decoder *binaryDecoder) readFieldKey(
 			return err
 		}
 
+	case key_bytes.BlobReferences:
+		contentBytes := decoder.Content.Bytes()
+
+		// Read 2-byte length prefix for markl.Id bytes
+		if len(contentBytes) < 2 {
+			err = errors.Errorf("blob reference field too short")
+			return err
+		}
+
+		var idLen uint16
+		contentReader := bytes.NewReader(contentBytes)
+
+		if _, idLen, err = ohio.ReadFixedUInt16(contentReader); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		remaining := contentBytes[2:]
+
+		if int(idLen) > len(remaining) {
+			err = errors.Errorf(
+				"blob reference id length %d exceeds content length %d",
+				idLen,
+				len(remaining),
+			)
+			return err
+		}
+
+		idBytes := remaining[:idLen]
+		aliasBytes := remaining[idLen:]
+
+		var blobId markl.Id
+		if err = blobId.UnmarshalBinary(idBytes); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		metadata.AddBlobReference(blobId)
+
+		if len(aliasBytes) > 0 {
+			if err = metadata.SetBlobReferenceAlias(
+				blobId,
+				string(aliasBytes),
+			); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
 	case key_bytes.SigParentMetadataParentObjectId:
 		if err = metadata.GetMotherObjectSigMutable().UnmarshalBinary(
 			decoder.Content.Bytes(),
