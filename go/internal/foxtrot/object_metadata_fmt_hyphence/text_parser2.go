@@ -260,12 +260,6 @@ func (parser *textParser2) readObjectId(
 ) (err error) {
 	err = errors.Err405MethodNotAllowed
 	return
-
-	if objectIdString == "" {
-		return err
-	}
-
-	return err
 }
 
 func (parser *textParser2) readBlobDigest(

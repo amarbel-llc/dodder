@@ -157,19 +157,19 @@ check-go-vuln:
   govulncheck ./...
 
 check-go-vet:
-  go vet ./... || true
+  go vet -tags test,debug ./... || true
 
 build-analyzer-repool:
   go build -o build/repool-analyzer ./lib/alfa/analyzers/repool/cmd/
 
 check-go-repool: build-analyzer-repool
-  go vet -vettool=build/repool-analyzer ./... || true
+  go vet -tags test,debug -vettool=build/repool-analyzer ./... || true
 
 build-analyzer-seqerror:
   go build -o build/seqerror-analyzer ./lib/alfa/analyzers/seqerror/cmd/
 
 check-go-seqerror: build-analyzer-seqerror
-  go vet -vettool=build/seqerror-analyzer ./... || true
+  go vet -tags test,debug -vettool=build/seqerror-analyzer ./... || true
 
 check: check-go-vuln check-go-vet check-go-repool check-go-seqerror
 

@@ -1,7 +1,6 @@
 package expansion
 
 import (
-	"fmt"
 	"slices"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -35,15 +34,6 @@ func ExpandOneIntoIds[
 		for expanded := range expander.Expand(identifierString) {
 			if expanded == "" {
 				continue
-
-				// TODO move this check into expansion.*
-				panic(
-					fmt.Sprintf(
-						"empty expansion for original identifier %q for expander %T",
-						identifierString,
-						expander,
-					),
-				)
 			}
 
 			if err := ID_PTR(&expandedId).Set(expanded); err != nil {

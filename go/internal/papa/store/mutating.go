@@ -462,7 +462,12 @@ func (commitFacilitator commitFacilitator) addTypeAndExpandedIfNecessary(
 		expansion.ExpanderRight,
 	)
 
-	for tipe := range typesExpanded {
+	for tipe, expandErr := range typesExpanded {
+		if expandErr != nil {
+			err = errors.Wrap(expandErr)
+			return err
+		}
+
 		if err = commitFacilitator.addTypeIfNecessary(tipe); err != nil {
 			err = errors.Wrap(err)
 			return err
