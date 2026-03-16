@@ -11,6 +11,7 @@ func (resetter) Reset(metadatuh MetadataMutable) {
 		metadata.sigRepo.Reset()
 		metadata.pubRepo.Reset()
 		metadata.Contents.Reset()
+		metadata.BlobRefs.Reset()
 		resetIndex(&metadata.Index)
 		metadata.Type.Reset()
 		metadata.Tai.Reset()
@@ -28,6 +29,7 @@ func (resetter) ResetWithExceptFields(dst MetadataMutable, src Metadata) {
 		dst.Description = src.Description
 
 		dst.Contents.GetSliceMutable().ResetWith(src.Contents.GetSlice())
+		dst.BlobRefs.ResetWith(src.BlobRefs)
 
 		resetIndexWith(&dst.Index, &src.Index)
 

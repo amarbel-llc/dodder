@@ -22,6 +22,7 @@ type metadata struct {
 
 	Description descriptions.Description
 	Contents    ContainedObjects
+	BlobRefs    BlobReferences
 	Type        markl.Lock[Type, TypeMutable]
 
 	DigBlob   markl.Id
@@ -288,6 +289,26 @@ func (metadata *metadata) GetReferenceAlias(ref SeqId) string {
 	}
 
 	return ""
+}
+
+func (metadata *metadata) AllBlobReferences() interfaces.Seq[markl.Id] {
+	return metadata.BlobRefs.All()
+}
+
+func (metadata *metadata) AddBlobReference(id markl.Id) {
+	metadata.BlobRefs.Add(id)
+}
+
+func (metadata *metadata) SetBlobReferenceAlias(id markl.Id, alias string) error {
+	return metadata.BlobRefs.SetAlias(id, alias)
+}
+
+func (metadata *metadata) GetBlobReferenceAlias(id markl.Id) string {
+	return metadata.BlobRefs.GetAlias(id)
+}
+
+func (metadata *metadata) ResetBlobReferences() {
+	metadata.BlobRefs.Reset()
 }
 
 func (metadata *metadata) Subtract(otherMetadata Metadata) {

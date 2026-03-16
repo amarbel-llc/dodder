@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
@@ -45,6 +46,9 @@ type (
 		GetReferencedObjectLock(SeqId) IdLock
 		GetReferenceAlias(SeqId) string
 
+		AllBlobReferences() interfaces.Seq[markl.Id]
+		GetBlobReferenceAlias(markl.Id) string
+
 		GetBlobDigest() domain_interfaces.MarklId
 		GetObjectDigest() domain_interfaces.MarklId
 		GetMotherObjectSig() domain_interfaces.MarklId
@@ -80,6 +84,10 @@ type (
 		AddReference(SeqId) error
 		SetReferenceAlias(ref SeqId, alias string) error
 		GetReferencedObjectLockMutable(SeqId) IdLockMutable
+
+		AddBlobReference(markl.Id)
+		SetBlobReferenceAlias(markl.Id, string) error
+		ResetBlobReferences()
 	}
 
 	Getter interface {
