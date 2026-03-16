@@ -59,7 +59,9 @@ func (parser *textParser2) ReadFrom(r io.Reader) (n int64, err error) {
 			metadata.GetIndexMutable().GetCommentsMutable().Append(remainder)
 
 		case doddish.OpTagSeparator:
-			if isContainedReference(remainder) {
+			if isBlobReference(remainder) {
+				err = parser.readBlobReference(metadata, remainder)
+			} else if isContainedReference(remainder) {
 				refStr := strings.Replace(remainder, " < ", " = ", 1)
 				err = parser.readReference(metadata, refStr)
 			} else {
@@ -113,6 +115,64 @@ func isContainedReference(value string) bool {
 	)
 
 	return hasPathSep
+}
+
+// isBlobReference detects blob reference patterns:
+// - @digest (without alias)
+// - alias < @digest (with alias)
+func isBlobReference(value string) bool {
+	if strings.HasPrefix(value, "@") {
+		return true
+	}
+
+	if idx := strings.Index(value, " < @"); idx != -1 {
+		return true
+	}
+
+	return false
+}
+
+func (parser *textParser2) readBlobReference(
+	metadata objects.MetadataMutable,
+	refString string,
+) (err error) {
+	if refString == "" {
+		return err
+	}
+
+	var alias string
+	var digestStr string
+
+	if idx := strings.Index(refString, " < @"); idx != -1 {
+		alias = strings.TrimSpace(refString[:idx])
+		digestStr = strings.TrimSpace(refString[idx+4:])
+
+		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
+			alias = alias[1 : len(alias)-1]
+		}
+	} else if strings.HasPrefix(refString, "@") {
+		digestStr = strings.TrimSpace(refString[1:])
+	} else {
+		err = errors.Errorf("unsupported blob reference format: %q", refString)
+		return err
+	}
+
+	var blobId markl.Id
+	if err = blobId.Set(digestStr); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	metadata.AddBlobReference(blobId)
+
+	if alias != "" {
+		if err = metadata.SetBlobReferenceAlias(blobId, alias); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	return err
 }
 
 func (parser *textParser2) readType(

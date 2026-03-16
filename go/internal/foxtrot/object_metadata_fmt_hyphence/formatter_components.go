@@ -217,6 +217,37 @@ func (factory formatterComponents) writeReferencedObjects(
 	return n, err
 }
 
+func (factory formatterComponents) writeBlobReferences(
+	writer interfaces.WriterAndStringWriter,
+	formatterContext FormatterContext,
+) (n int64, err error) {
+	metadata := formatterContext.GetMetadata()
+
+	for blobId := range metadata.AllBlobReferences() {
+		var line string
+
+		alias := metadata.GetBlobReferenceAlias(blobId)
+
+		if alias != "" {
+			if strings.ContainsAny(alias, " \t\"") {
+				alias = fmt.Sprintf("%q", alias)
+			}
+
+			line = fmt.Sprintf("- %s < @%s", alias, blobId)
+		} else {
+			line = fmt.Sprintf("- @%s", blobId)
+		}
+
+		var n1 int64
+		if n1, err = ohio.WriteLine(writer, line); err != nil {
+			return n, err
+		}
+		n += n1
+	}
+
+	return n, err
+}
+
 func (factory formatterComponents) writeBlobDigest(
 	writer interfaces.WriterAndStringWriter,
 	formatterContext FormatterContext,
