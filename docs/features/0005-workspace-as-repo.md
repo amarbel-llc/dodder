@@ -211,6 +211,96 @@ The resolution is a no-op when:
 - Stored-remote workflow (`remote-add` + push/pull by repo-id)
 - Object format, blob format, commit format
 
+## Exploration: Workspace-Repos as the Only Checkout Mechanism
+
+Today dodder has two distinct concepts for materializing objects:
+
+1. **Checkout stores** (`checkout`, `checkin`) — the repo writes objects into a
+   filesystem store (`store_fs`) and reads them back. The checkout store is a
+   mutable view directly coupled to the parent repo's inventory. Changes
+   propagate immediately on `checkin`.
+2. **Workspace-repos** (`init-workspace -experimental-repo`, `push`, `pull`) — a
+   full repo that pulls a filtered subset from a parent and pushes changes back.
+   The workspace-repo has its own store, commit history, and isolation boundary.
+
+These two concepts overlap significantly. Both answer the question "how do I
+work with a subset of a repo's objects?" The checkout store answers it with
+tight coupling and immediate propagation. The workspace-repo answers it with
+isolation and explicit sync.
+
+### What if checkout stores were workspace-repos?
+
+Every `checkout` would become `init-workspace -experimental-repo` (or its
+eventual non-experimental successor). Instead of materializing files from a
+repo's store into a sibling directory, you'd create a workspace-repo that pulls
+the objects you want to work with. `checkin` becomes `push`. `checkout` becomes
+`pull`.
+
+**What this unifies:**
+
+- **One sync model.** Today `checkin`/`checkout` uses a different code path than
+  `push`/`pull`. Workspace-repos would make all object exchange go through the
+  same inventory-list-based transfer protocol.
+- **Automatic history.** Every checkout gets its own commit history for free.
+  Today, checking in a file directly mutates the parent's commit history — there
+  is no record of intermediate states in the working copy.
+- **Isolation by default.** Checkout stores have no isolation boundary — a bad
+  `checkin` directly corrupts the parent. Workspace-repos require an explicit
+  `push`, providing a natural review gate.
+- **Pluggable stores become pluggable workspace-repos.** The "alternative
+  checkout store" concept (browser, CalDAV, WebDAV, git) becomes "alternative
+  workspace-repo type." The workspace-repo's type determines how objects are
+  presented, but the sync protocol is always push/pull. No new store interface
+  needed — each presentation layer is just a different workspace-repo
+  implementation.
+
+**What this simplifies:**
+
+- `checkout`/`checkin` commands could be sugar over `push`/`pull` with implicit
+  workspace-repo creation.
+- The `store_fs` code path in `env_repo` becomes a workspace-repo type rather
+  than a special case wired into the repo internals.
+- Organize, which currently operates on the checkout store directly, would
+  operate on the workspace-repo and push results back.
+
+**What this complicates:**
+
+- **Performance.** A lightweight checkout is fast — it writes files and updates
+  an index. A workspace-repo requires creating a full `.dodder/` directory,
+  generating a signing key, and maintaining a separate inventory. For quick
+  edits this is heavyweight.
+- **Ergonomics for simple cases.** `dodder checkout my-zettel && vim ... &&
+  dodder checkin` is three commands. The workspace-repo equivalent is five:
+  init-workspace, pull, edit, push, cleanup. Sugar could hide this but adds
+  conceptual weight.
+- **Workspace lifecycle.** Checkout stores are implicitly cleaned up (or persist
+  as stale files). Workspace-repos are full repos that accumulate history and
+  consume disk. Users would need to manage workspace-repo lifecycle (create,
+  sync, delete).
+- **Nested repo detection.** If every checkout creates a `.dodder/` directory,
+  tools that walk the filesystem (including dodder itself) need to handle nested
+  `.dodder/` directories without confusion.
+
+**Possible middle ground:**
+
+Ephemeral workspace-repos — workspace-repos that are created on-demand, have no
+persistent commit history (single-commit lifecycle), and are cleaned up after
+push. This preserves the isolation benefit without the lifecycle burden. The
+implementation would be a workspace-repo with a flag like `-ephemeral` that
+auto-pushes and self-destructs, making the user experience identical to
+`checkout`/`checkin` while using the workspace-repo machinery underneath.
+
+### Open questions
+
+- Does the performance cost of workspace-repo creation matter in practice, or
+  is it dominated by blob transfer time?
+- Can `organize` work through push/pull, or does its interactive editing model
+  require direct store access?
+- Would ephemeral workspace-repos actually be simpler than the current checkout
+  store, or would they just be checkout stores with extra steps?
+- How does this interact with `store_fs` watching (inotify/FSEvents) for
+  automatic `checkin`?
+
 ## Future Possibilities
 
 ### Workspace Query Evolution
@@ -218,13 +308,6 @@ The resolution is a no-op when:
 Allow the workspace's filter query to be updated after creation, triggering a
 re-sync (pull new matching objects, optionally prune objects that no longer
 match).
-
-### Alternative Checkout Stores
-
-Implement `store_browser`, CalDAV, WebDAV, git, and other checkout stores behind
-the store interface. Each store presents the same objects through a
-domain-appropriate interface while sharing the same blob store and transfer
-protocol.
 
 ### Nested Workspaces
 
