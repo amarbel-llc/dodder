@@ -142,7 +142,7 @@ func (importer importer) importInventoryList(
 
 	if !importer.envRepo.GetDefaultBlobStore().HasBlob(blobDigest) {
 		err = env_dir.ErrBlobMissing{
-			BlobId: func() domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(),
+			BlobId: func() domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(), //repool:owned
 		}
 
 		return checkedOut, err
@@ -213,7 +213,7 @@ func (importer importer) importLeaf(
 		return checkedOut, err
 	}
 
-	checkedOut, _ = sku.GetCheckedOutPool().GetWithRepool()
+	checkedOut, _ = sku.GetCheckedOutPool().GetWithRepool() //repool:owned
 
 	sku.Resetter.ResetWith(checkedOut.GetSkuExternal(), external)
 

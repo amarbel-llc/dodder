@@ -175,7 +175,7 @@ func (importer importer) importOne(
 		err = nil
 		return hasConflicts, err
 	} else if env_dir.IsErrBlobMissing(err) {
-		checkedOut, _ := sku.GetCheckedOutPool().GetWithRepool()
+		checkedOut, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
 		sku.TransactedResetter.ResetWith(
 			checkedOut.GetSkuExternal(),
 			object,

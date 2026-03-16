@@ -516,7 +516,7 @@ func (closet Closet) ReadInventoryListObject(
 		}
 
 		if out == nil {
-			out, _ = object.CloneTransacted()
+			out, _ = object.CloneTransacted() //repool:owned
 		} else {
 			err = errors.ErrorWithStackf("expected only one sku.Transacted, but read more than one")
 			return out, err

@@ -110,7 +110,7 @@ func (imp importer) commitPlan(
 			continue
 		}
 
-		checkedOut, _ := sku.GetCheckedOutPool().GetWithRepool()
+		checkedOut, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
 		sku.Resetter.ResetWith(checkedOut.GetSkuExternal(), object)
 
 		if printErr := checkedOutPrinter(checkedOut); printErr != nil {

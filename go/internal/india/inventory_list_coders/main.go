@@ -168,9 +168,8 @@ func streamInventoryList(
 		for {
 			errors.ContextContinueOrPanic(ctx)
 
-			object, _ := sku.GetTransactedPool().GetWithRepool()
+			object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 			// TODO Fix upstream issues with repooling
-			// defer sku.GetTransactedPool().Put(object)
 
 			if _, err := format.DecodeFrom(
 				object,
@@ -222,9 +221,8 @@ func (coder SeqCoder) DecodeFrom(
 	for {
 		errors.ContextContinueOrPanic(coder.ctx)
 
-		object, _ := sku.GetTransactedPool().GetWithRepool()
+		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 		// TODO Fix upstream issues with repooling
-		// defer sku.GetTransactedPool().Put(object)
 
 		if _, err = coder.coder.DecodeFrom(object, bufferedReader); err != nil {
 			if err == io.EOF {
@@ -256,9 +254,8 @@ func (coder SeqErrorDecoder) DecodeFrom(
 	for {
 		errors.ContextContinueOrPanic(coder.ctx)
 
-		object, _ := sku.GetTransactedPool().GetWithRepool()
+		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 		// TODO Fix upstream issues with repooling
-		// defer sku.GetTransactedPool().Put(object)
 
 		// TODO add bufferedReader location information (line location, etc)
 		if _, err = coder.coder.DecodeFrom(object, bufferedReader); err != nil {
