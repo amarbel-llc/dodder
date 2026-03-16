@@ -130,6 +130,32 @@ Inventory list output:
 
     [ceroplastes/midtown @digest !doc@blake2b256-abc... project@blake2b256-ghi... <blog-template=one/uno@blake2b256-def...]
 
+## Consumers
+
+### Edge expansion in filtered pull (workspace-as-repo)
+
+When pulling a filtered subset of objects from a remote repo, the transfer set
+may omit types, tags, or referenced objects that the pulled objects depend on.
+`expandEdges` (`sierra/local_working_copy/expand_edges.go`) walks all three lock
+edge kinds on the pulled objects and transitively includes them in the transfer:
+
+1. **Type edges** -- `object.GetType()` → fetch the type object
+2. **Tag edges** -- `object.AllTags()` → fetch each tag object
+3. **Referenced object edges** -- `object.GetMetadata().AllReferencedObjects()` →
+   fetch each referenced object
+
+Traversal runs up to 5 levels deep (referenced objects may themselves have types,
+tags, and references). Objects already in the transfer set or missing from the
+remote are skipped silently.
+
+This is used by `PullQueryGroupFromRemote` in
+`sierra/local_working_copy/local_op_pull.go` and is exercised by
+`init-workspace -experimental-repo` (FDR-0005) and the `clone` command when the
+query filters to a subset of objects.
+
+Integration tests: `zz-tests_bats/current_version/workspace_repo.bats`
+(`workspace_repo_clone_filtered_by_tag`, `workspace_repo_init_experimental_repo`).
+
 ## Limitations
 
 - Builtin types are not locked (there is a TODO to address this).
