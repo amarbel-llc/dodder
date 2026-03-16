@@ -7,7 +7,7 @@ dir_build := absolute_path("go/build")
 # "no workspace" would pass incorrectly when TMPDIR is inside the repo tree.
 bats_ceiling := absolute_path("")
 
-default: build test
+default: build check test
 
 #   ____        _ _     _
 #  | __ ) _   _(_) | __| |
@@ -18,6 +18,17 @@ default: build test
 
 build:
   just go/build-go
+
+#    ____ _               _
+#   / ___| |__   ___  ___| | __
+#  | |   | '_ \ / _ \/ __| |/ /
+#  | |___| | | |  __/ (__|   <
+#   \____|_| |_|\___|\___|_|\_\
+#
+
+# Run all static checks: vuln, vet, repool, seqerror.
+check:
+  just go/check
 
 #   _____         _
 #  |_   _|__  ___| |_
