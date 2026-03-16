@@ -178,13 +178,18 @@ constructing transforms from flags and passing them to the builder.
 
 ### Topographic ordering
 
-The dependency graph has two edge types:
+The dependency graph has three edge types:
 
 1. **Type edges.** Every object with a non-builtin type depends on its type
-   object. Type objects may themselves have types (meta-types).
+   object. Type objects may themselves have types (meta-types). **Implemented.**
 
 2. **Referenced object edges.** Objects with referenced-object locks
-   (FDR-0001) depend on their referenced objects.
+   (FDR-0001) depend on their referenced objects. **Not yet in DAG.**
+
+3. **Blob reference edges.** Objects with blob references (FDR-0001) depend
+   on the referenced blobs being available in the local blob store. Unlike
+   type/object edges which reference other objects by `SeqId`, blob edges
+   reference content by `markl.Id` digest. **Not yet in DAG.**
 
 Cycles are not expected (types form a DAG) but are detected and reported as
 plan errors if encountered.
@@ -324,7 +329,12 @@ Implementation is two layers respecting the NATO tier hierarchy:
 
 ### Not yet implemented
 - Selective import (`-filter` flag)
-- Referenced object edges in the dependency graph (pending FDR-0001)
+- Referenced object edges in the dependency graph (object refs use `SeqId`,
+  blob refs use `markl.Id` — both are now on metadata per FDR-0001 but the
+  DAG in `import_plan.Builder` only uses type edges today)
+- Blob reference edges in the dependency graph (blob refs are discovered and
+  persisted but not yet used for topographic ordering — an object referencing
+  a blob should be ordered after the blob is available in the local store)
 - Streaming plan construction for very large imports
 
 ## Limitations

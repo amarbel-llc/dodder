@@ -315,6 +315,20 @@ blob references; all others as object references.
 Binary serialization uses the `BlobReferences` key byte with a length-prefixed
 `markl.Id` encoding plus optional alias.
 
+Key files:
+- `delta/objects/blob_reference.go` — `BlobReferences` collection type
+- `delta/objects/interfaces.go` — `AllBlobReferences`, `AddBlobReference`, etc.
+- `papa/store/reference_discovery.go` — `@` prefix dispatch in `parseReferenceOutput`
+- `hotel/type_blobs/references_config.go` — `[references]` TOML section config
+- `echo/object_metadata_box_builder/main.go` — `AddBlobReferences` for box output
+- `foxtrot/object_metadata_fmt_hyphence/formatter_components.go` — `writeBlobReferences`
+- `foxtrot/object_metadata_fmt_hyphence/text_parser2.go` — `readBlobReference`
+- `_/doddish/token_matcher.go` — `TokenMatcherBlobReference`, `TokenMatcherBlobReferenceAlias`
+- `hotel/box_format/read.go` — blob ref token matcher cases
+- `india/stream_index/binary_encoder.go` — `BlobReferences` key encoder
+- `india/stream_index/binary_decoder.go` — `BlobReferences` key decoder
+- `_/key_bytes/main.go` — `BlobReferences = Binary('b')`
+
 Use cases include markdown images referencing blob-store assets, config files
 embedding other configs by digest, and ensuring blob garbage collection doesn't
 delete blobs still referenced by live objects.
