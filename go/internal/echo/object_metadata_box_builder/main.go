@@ -242,7 +242,7 @@ func (builder *Builder) AddReferencedObjectsAndLocks(metadata objects.MetadataMu
 
 		var key string
 		if alias != "" {
-			key = "<" + alias + "=" + ref.String()
+			key = alias + "<" + ref.String()
 		} else {
 			key = "<" + ref.String()
 		}
@@ -259,6 +259,25 @@ func (builder *Builder) AddReferencedObjectsAndLocks(metadata objects.MetadataMu
 				string_format_writer.ColorTypeId,
 			)
 		}
+	}
+}
+
+func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
+	for blobId := range metadata.AllBlobReferences() {
+		alias := metadata.GetBlobReferenceAlias(blobId)
+
+		var value string
+		if alias != "" {
+			value = alias + "<@" + blobId.String()
+		} else {
+			value = "<@" + blobId.String()
+		}
+
+		builder.Contents.Append(string_format_writer.Field{
+			Value:      value,
+			ColorType:  string_format_writer.ColorTypeId,
+			NoTruncate: true,
+		})
 	}
 }
 

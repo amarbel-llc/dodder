@@ -235,10 +235,10 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			// <alias=ref@sig (referenced object with alias — check FIRST, longer match)
+			// alias<ref@sig (referenced object with alias — check FIRST, longer match)
 		case seq.MatchAll(doddish.TokenMatcherReferencedObjectAlias...):
 			var refId ids.SeqId
-			if err = refId.Set(seq.At(3).String()); err != nil {
+			if err = refId.Set(seq.At(2).String()); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}
@@ -252,17 +252,43 @@ LOOP_AFTER_OBJECT_ID:
 			if err = markl.SetMarklIdWithFormatBlech32(
 				refLock.GetValueMutable(),
 				"",
-				seq[4:].String(),
+				seq[3:].String(),
 			); err != nil {
 				err = errors.Wrapf(err, "Seq: %q", seq)
 				return err
 			}
 
-			alias := seq.At(1).String()
+			alias := seq.At(0).String()
 			if err = object.GetMetadataMutable().SetReferenceAlias(refId, alias); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}
+
+		// alias<@digest (blob reference with alias)
+		case seq.MatchAll(doddish.TokenMatcherBlobReferenceAlias...):
+			var blobId markl.Id
+			if err = blobId.Set(seq.At(3).String()); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			object.GetMetadataMutable().AddBlobReference(blobId)
+
+			alias := seq.At(0).String()
+			if err = object.GetMetadataMutable().SetBlobReferenceAlias(blobId, alias); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+		// <@digest (blob reference without alias)
+		case seq.MatchAll(doddish.TokenMatcherBlobReference...):
+			var blobId markl.Id
+			if err = blobId.Set(seq.At(2).String()); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			object.GetMetadataMutable().AddBlobReference(blobId)
 
 			// <ref@sig (referenced object without alias)
 		case seq.MatchAll(doddish.TokenMatcherReferencedObject...):

@@ -61,12 +61,26 @@ var (
 		TokenTypeIdentifier,
 	}
 
-	// <alias=ref@sig
+	// alias<ref@sig
 	TokenMatcherReferencedObjectAlias = TokensMatcher{
+		TokenTypeIdentifier,
 		TokenMatcherOp('<'),
 		TokenTypeIdentifier,
-		TokenMatcherOp('='),
+		TokenMatcherOp('@'),
 		TokenTypeIdentifier,
+	}
+
+	// <@digest
+	TokenMatcherBlobReference = TokensMatcher{
+		TokenMatcherOp('<'),
+		TokenMatcherOp('@'),
+		TokenTypeIdentifier,
+	}
+
+	// alias<@digest
+	TokenMatcherBlobReferenceAlias = TokensMatcher{
+		TokenTypeIdentifier,
+		TokenMatcherOp('<'),
 		TokenMatcherOp('@'),
 		TokenTypeIdentifier,
 	}
