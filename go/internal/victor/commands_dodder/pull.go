@@ -32,6 +32,8 @@ func (cmd *Pull) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 func (cmd Pull) Run(req command.Request) {
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(req)
 
+	cmd.ResolveImplicitDirectPath(localWorkingCopy)
+
 	var remote repo.Repo
 
 	if cmd.IsDirectTransfer() {

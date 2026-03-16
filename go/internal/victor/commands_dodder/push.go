@@ -32,6 +32,8 @@ func (cmd *Push) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 func (cmd Push) Run(req command.Request) {
 	local := cmd.MakeLocalWorkingCopy(req)
 
+	cmd.ResolveImplicitDirectPath(local)
+
 	var remote repo.Repo
 
 	if cmd.IsDirectTransfer() {

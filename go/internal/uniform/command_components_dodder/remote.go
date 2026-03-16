@@ -52,6 +52,19 @@ func (cmd Remote) IsDirectTransfer() bool {
 	return cmd.DirectPath != ""
 }
 
+func (cmd *Remote) ResolveImplicitDirectPath(
+	local *local_working_copy.Repo,
+) {
+	if cmd.IsDirectTransfer() {
+		return
+	}
+
+	parentPath := local.GetEnvWorkspace().GetParentPath()
+	if parentPath != "" {
+		cmd.DirectPath = parentPath
+	}
+}
+
 func (cmd Remote) MakeDirectRemoteFromPath(
 	req command.Request,
 	local *local_working_copy.Repo,

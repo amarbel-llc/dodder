@@ -1,5 +1,5 @@
 ---
-status: exploring
+status: experimental
 date: 2026-03-15
 promotion-criteria: BATS tests pass for init-workspace -experimental-repo, push from workspace to parent, pull from parent to workspace with query filtering and edge reachability; existing lightweight workspaces work unchanged
 ---
@@ -165,20 +165,34 @@ specify the parent path on each operation.
 
 ```sh
 # Create a repo-backed workspace filtered to a query
-dodder init-workspace -experimental-repo project-alpha
+dodder init-workspace -experimental-repo -direct /path/to/parent \
+  workspace-id project-alpha:z
 
-# Push workspace changes back to parent (uses stored parent path)
+# Push workspace changes back to parent (implicit parent discovery)
 cd workspace-dir
-dodder push -direct <stored-parent-path>
+dodder push
 
-# Pull parent updates into workspace (filtered)
+# Pull parent updates into workspace (implicit parent discovery)
 cd workspace-dir
-dodder pull -direct <stored-parent-path>
+dodder pull
+
+# Explicit -direct overrides stored parent path
+dodder push -direct /other/path
+dodder pull -direct /other/path
 ```
 
-> **Open question:** Whether push/pull should automatically use the stored
-> parent path (no `-direct` needed) or require explicit invocation. Automatic
-> parent detection would be more ergonomic but adds implicit behavior.
+### Implicit Parent Transfers
+
+When push/pull are run inside a workspace-repo with a V1 config, the stored
+`ParentPath` is automatically used as the `-direct` target if no remote is
+explicitly specified. This is implemented via `ResolveImplicitDirectPath` which
+reads the parent path from the workspace config after the local working copy is
+initialized.
+
+The resolution is a no-op when:
+- `-direct` is explicitly provided (explicit overrides implicit)
+- The workspace has no V1 config (lightweight workspaces are unaffected)
+- The stored parent path is empty
 
 ### Error Handling
 
@@ -198,12 +212,6 @@ dodder pull -direct <stored-parent-path>
 - Object format, blob format, commit format
 
 ## Future Possibilities
-
-### Automatic Parent Push/Pull
-
-Instead of requiring `-direct <stored-parent-path>`, workspace push/pull could
-detect the parent relationship and transfer automatically. This removes the need
-to know or specify the parent path after init.
 
 ### Workspace Query Evolution
 

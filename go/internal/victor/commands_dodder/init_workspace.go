@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -214,7 +213,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 
 	blob := &workspace_config_blobs.V1{
 		V0: workspace_config_blobs.V0{
-			Query: strings.Join(queryArgs, " "),
+			Query: cmd.DefaultQueryGroup.String(),
 			Defaults: repo_configs.DefaultsV1OmitEmpty{
 				Type: cmd.Proto.Metadata.GetType().ToType(),
 				Tags: slices.Collect(

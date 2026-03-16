@@ -280,6 +280,176 @@ function workspace_repo_init_experimental_repo { # @test
 	assert [ -f .dodder-workspace ]
 }
 
+function workspace_repo_implicit_parent_push_pull { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	# Create workspace-repo with V1 config storing parent path
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+
+	assert_success
+
+	# --- Create content in workspace ---
+	run_dodder new -edit=false - <<-EOM
+		---
+		# implicit-push zettel
+		- project-alpha
+		! md
+		---
+
+		created for implicit push test
+	EOM
+	assert_success
+
+	# --- Push WITHOUT -direct (should use stored parent path) ---
+	run_dodder push
+	assert_success
+
+	# Verify parent received the new zettel
+	pushd "$parent_path" || exit 1
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'implicit-push zettel'
+	popd || exit 1
+
+	# --- Add content in parent ---
+	(
+		pushd "$parent_path" || exit 1
+		run_dodder new -edit=false - <<-EOM
+			---
+			# implicit-pull zettel
+			- project-alpha
+			! md
+			---
+
+			created for implicit pull test
+		EOM
+		assert_success
+	)
+
+	# --- Pull WITHOUT -direct (should use stored parent path) ---
+	run_dodder pull
+	assert_success
+
+	# Verify workspace received the new parent zettel
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'implicit-pull zettel'
+}
+
+function workspace_repo_init_experimental_repo_existing_repo { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	# --- Second init should fail (repo already exists) ---
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id-2 \
+		project-alpha:z
+
+	assert_failure
+}
+
+function workspace_repo_stale_parent_path { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	# --- Delete the parent repo ---
+	rm -rf "$parent_path"
+
+	# --- Push should fail with meaningful error ---
+	run_dodder push
+	assert_failure
+
+	# --- Pull should fail with meaningful error ---
+	run_dodder pull
+	assert_failure
+}
+
+function workspace_repo_init_experimental_repo_empty_query { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	# Query for a tag that doesn't exist — should succeed with empty workspace
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		nonexistent-tag:z
+
+	assert_success
+
+	# Workspace should have no zettels
+	run_dodder show :z
+	assert_success
+	assert_output ''
+
+	# Workspace config should exist
+	assert [ -f .dodder-workspace ]
+}
+
 function workspace_repo_push_unfiltered { # @test
 	parent="parent"
 	bootstrap_parent "$parent"
