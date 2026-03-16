@@ -13,6 +13,7 @@ import (
 type Decoder[BLOB any] struct {
 	RequireMetadata bool
 	Metadata, Blob  interfaces.DecoderFromBufferedReader[BLOB]
+	BlobTeeWriter   io.Writer
 }
 
 func (decoder *Decoder[BLOB]) DecodeFrom(
@@ -28,7 +29,15 @@ func (decoder *Decoder[BLOB]) DecodeFrom(
 		return n, err
 	}
 
-	n1, err = decoder.Blob.DecodeFrom(blob, bufferedReader)
+	blobReader := bufferedReader
+
+	if decoder.BlobTeeWriter != nil {
+		blobReader = bufio.NewReader(
+			io.TeeReader(bufferedReader, decoder.BlobTeeWriter),
+		)
+	}
+
+	n1, err = decoder.Blob.DecodeFrom(blob, blobReader)
 	n += n1
 
 	if err != nil {

@@ -321,6 +321,31 @@ function push_history_default_stdio_local_twice { # @test
 	EOM
 }
 
+# bats test_tags=user_story:integrity
+function push_validates_blob_digest { # @test
+	# Verify that the push flow includes blob digest validation by
+	# confirming a normal push succeeds (the client computes and sends
+	# the digest, the server validates it).
+	bootstrap_without_content
+
+	run_dodder remote-add \
+		toml-repo-local_override_path-v0 \
+		them \
+		them
+	assert_success
+
+	run_dodder push /them
+	assert_success
+
+	pushd them || exit 1
+	run_dodder show :zettel
+	assert_success
+	assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+}
+
 function push_history_default_stdio_twice { # @test
 	bootstrap_without_content
 

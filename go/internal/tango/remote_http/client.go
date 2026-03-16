@@ -256,9 +256,10 @@ func (client *client) pullQueryGroupFromWorkingCopy(
 		errors.ContextContinueOrPanic(client.envUI)
 
 		// TODO make a reader version of inventory lists to avoid allocation
-		if _, err = inventoryListCoderCloset.WriteTypedBlobToWriter(
+		if _, err = inventoryListCoderCloset.WriteTypedBlobToWriterComputingBlobDigest(
 			client.envUI,
 			listType,
+			client.repo.GetBlobStore().GetDefaultHashType(),
 			quiter.MakeSeqErrorFromSeq(list.All()),
 			bufferedWriter,
 		); err != nil {

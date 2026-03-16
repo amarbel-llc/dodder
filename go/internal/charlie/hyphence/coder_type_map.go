@@ -4,14 +4,16 @@ import (
 	"bufio"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type TypedBlob[BLOB any] struct {
 	// TODO determine why this needs to be a pointer
-	Type ids.TypeStruct
-	Blob BLOB
+	Type       ids.TypeStruct
+	BlobDigest markl.Id
+	Blob       BLOB
 }
 
 type TypedBlobEmpty = TypedBlob[struct{}]

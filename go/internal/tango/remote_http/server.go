@@ -219,14 +219,6 @@ func (server *Server) makeRouter(
 			Methods(
 				"POST",
 			)
-
-		router.HandleFunc(
-			"/inventory_lists/{list_type}/{list_object}",
-			makeHandler(server.handlePostInventoryList),
-		).
-			Methods(
-				"POST",
-			)
 	}
 
 	if server.Repo.GetEnv().GetCLIConfig().GetVerbose() {
@@ -802,93 +794,10 @@ func (server *Server) handleGetInventoryList(
 func (server *Server) handlePostInventoryList(
 	request Request,
 ) (response Response) {
-	listTypeString := request.Vars()["list_type"]
-	listObjectString := request.Vars()["list_object"]
-
-	if listTypeString == "" || listObjectString == "" {
-		if listTypeString != "" {
-			response.ErrorWithStatus(
-				http.StatusBadRequest,
-				errors.BadRequestf("no list type provided"),
-			)
-			return response
-		} else if listObjectString != "" {
-			response.ErrorWithStatus(
-				http.StatusBadRequest,
-				errors.BadRequestf("no list object provided"),
-			)
-			return response
-		} else {
-			return server.handlePostInventoryListNew(request)
-		}
-	}
-
-	inventoryListCoderCloset := server.Repo.GetInventoryListCoderCloset()
-
-	{
-		var err error
-
-		if listTypeString, err = url.QueryUnescape(listTypeString); err != nil {
-			response.Error(err)
-			return response
-		}
-	}
-
-	{
-		var err error
-
-		if listObjectString, err = url.QueryUnescape(listObjectString); err != nil {
-			response.Error(err)
-			return response
-		}
-	}
-
-	var object *sku.Transacted
-
-	{
-		var err error
-
-		bufferedReader, repool := pool.GetBufferedReader(
-			strings.NewReader(listObjectString),
-		)
-		defer repool()
-
-		if object, err = inventoryListCoderCloset.ReadInventoryListObject(
-			request.ctx,
-			ids.MustTypeStruct(listTypeString),
-			bufferedReader,
-		); err != nil {
-			response.Error(
-				errors.ErrorWithStackf(
-					"failed to parse inventory list sku (%q): %w",
-					listObjectString,
-					err,
-				),
-			)
-
-			return response
-		}
-
-	}
-
-	response = server.writeInventoryListLocalWorkingCopy(
-		server.Repo,
-		request,
-		object,
-	)
-
-	return response
-}
-
-func (server *Server) handlePostInventoryListNew(
-	request Request,
-) (response Response) {
-	response = server.writeInventoryListTypedBlobLocalWorkingCopy(
+	return server.writeInventoryListTypedBlobLocalWorkingCopy(
 		server.Repo,
 		request,
 	)
-
-	return response
 }
 
 func (server *Server) handleGetConfigImmutable(

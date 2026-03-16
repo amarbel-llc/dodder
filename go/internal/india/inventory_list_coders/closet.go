@@ -6,7 +6,9 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -208,6 +210,66 @@ func (closet Closet) WriteTypedBlobToWriter(
 	return n, err
 }
 
+func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
+	ctx interfaces.ActiveContext,
+	tipe ids.TypeStruct,
+	hashFormat domain_interfaces.FormatHash,
+	seq sku.Seq,
+	bufferedWriter *bufio.Writer,
+) (n int64, err error) {
+	blobEncoder := hyphence.EncoderTypeMapWithoutType[sku.Seq](
+		closet.seqEncoders,
+	)
+
+	hash, repoolHash := hashFormat.GetHash()
+	defer repoolHash()
+
+	digestWriter := markl_io.MakeWriter(hash, nil)
+
+	digestBufWriter, repoolDigestBufWriter := pool.GetBufferedWriter(
+		digestWriter,
+	)
+	defer repoolDigestBufWriter()
+
+	if _, err = blobEncoder.EncodeTo(
+		&hyphence.TypedBlob[sku.Seq]{
+			Type: tipe,
+			Blob: seq,
+		},
+		digestBufWriter,
+	); err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
+	if err = digestBufWriter.Flush(); err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
+	var blobDigest markl.Id
+	blobDigest.ResetWithMarklId(digestWriter.GetMarklId())
+
+	encoder := hyphence.Encoder[*hyphence.TypedBlob[sku.Seq]]{
+		Metadata: hyphence.TypedMetadataCoder[sku.Seq]{},
+		Blob:     blobEncoder,
+	}
+
+	if n, err = encoder.EncodeTo(
+		&hyphence.TypedBlob[sku.Seq]{
+			Type:       tipe,
+			BlobDigest: blobDigest,
+			Blob:       seq,
+		},
+		bufferedWriter,
+	); err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
+	return n, err
+}
+
 // TODO refactor all the below. Simplify the naming, and move away from the
 // stream coders, instead use a utility function like in hyphence
 
@@ -296,6 +358,64 @@ func (closet Closet) AllDecodedObjectsFromStream(
 		); err != nil {
 			yield(nil, errors.Wrap(err))
 			return
+		}
+	}
+}
+
+func (closet Closet) AllDecodedObjectsFromStreamWithBlobDigestValidation(
+	reader io.Reader,
+	afterDecoding func(*sku.Transacted) error,
+	blobTeeWriter io.Writer,
+	claimedBlobDigest *markl.Id,
+) interfaces.SeqError[*sku.Transacted] {
+	var coders map[string]interfaces.DecoderFromBufferedReader[funcIterSeqError]
+
+	if afterDecoding == nil {
+		coders = closet.seqErrorDecoders
+	} else {
+		coders = make(
+			map[string]interfaces.DecoderFromBufferedReader[funcIterSeqError],
+			len(closet.coders),
+		)
+
+		for tipe, coder := range closet.coders {
+			coder.afterDecoding = afterDecoding
+			coders[tipe] = SeqErrorDecoder{
+				ctx:   closet.envRepo,
+				coder: coder,
+			}
+		}
+	}
+
+	return func(yield func(*sku.Transacted, error) bool) {
+		decoder := hyphence.Decoder[*hyphence.TypedBlob[funcIterSeqError]]{
+			Metadata: hyphence.TypedMetadataCoder[funcIterSeqError]{},
+			Blob: hyphence.DecoderTypeMapWithoutType[funcIterSeqError](
+				coders,
+			),
+			BlobTeeWriter: blobTeeWriter,
+		}
+
+		bufferedReader, repoolBufferedReader := pool.GetBufferedReader(reader)
+		defer repoolBufferedReader()
+
+		typedBlob := &hyphence.TypedBlob[funcIterSeqError]{
+			Type: ids.TypeStruct{},
+			Blob: func(object *sku.Transacted, err error) bool {
+				return yield(object, err)
+			},
+		}
+
+		if _, err := decoder.DecodeFrom(
+			typedBlob,
+			bufferedReader,
+		); err != nil {
+			yield(nil, errors.Wrap(err))
+			return
+		}
+
+		if claimedBlobDigest != nil {
+			*claimedBlobDigest = typedBlob.BlobDigest
 		}
 	}
 }

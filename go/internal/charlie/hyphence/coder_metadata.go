@@ -23,6 +23,7 @@ func (TypedMetadataCoder[BLOB]) DecodeFrom(
 			ohio.MakeLineReaderKeyValues(
 				map[string]interfaces.FuncSetString{
 					"!": typedBlob.Type.Set,
+					"@": typedBlob.BlobDigest.Set,
 				},
 			),
 		),
@@ -39,6 +40,7 @@ func (TypedMetadataCoder[BLOB]) EncodeTo(
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
 	var n1 int
+
 	n1, err = fmt.Fprintf(
 		bufferedWriter,
 		"! %s\n",
@@ -49,6 +51,20 @@ func (TypedMetadataCoder[BLOB]) EncodeTo(
 	if err != nil {
 		err = errors.Wrap(err)
 		return n, err
+	}
+
+	if !typedBlob.BlobDigest.IsNull() {
+		n1, err = fmt.Fprintf(
+			bufferedWriter,
+			"@ %s\n",
+			&typedBlob.BlobDigest,
+		)
+		n += int64(n1)
+
+		if err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
 	}
 
 	return n, err
