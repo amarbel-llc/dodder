@@ -36,6 +36,7 @@ type Env interface {
 	CreateWorkspace(workspace_config_blobs.Config) (err error)
 	GetParentPath() string
 	GetSyncBaseline() (tai string, digest string)
+	UpdateSyncBaseline(inventoryListStore sku.InventoryListStore) error
 	GetStore() *Store
 
 	// TODO identify users of this and reduce / isolate them
@@ -322,6 +323,42 @@ func (env *env) GetSyncBaseline() (tai string, digest string) {
 	}
 
 	return "", ""
+}
+
+func (env *env) UpdateSyncBaseline(
+	inventoryListStore sku.InventoryListStore,
+) (err error) {
+	v1, ok := env.blob.(*workspace_config_blobs.V1)
+	if !ok {
+		return nil // V0 workspace, no-op
+	}
+
+	last, err := inventoryListStore.ReadLast()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	v1.SyncTai = last.GetTai().String()
+	v1.SyncDigest = last.GetMetadata().GetObjectDigest().String()
+
+	return env.rewriteConfig()
+}
+
+func (env *env) rewriteConfig() (err error) {
+	object := env.GetWorkspaceConfigTyped()
+
+	file, err := os.Create(env.GetWorkspaceConfigFilePath())
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	if _, err = workspace_config_blobs.Coder.EncodeTo(&object, file); err != nil {
+		return errors.Wrap(err)
+	}
+
+	return nil
 }
 
 func (env *env) CreateWorkspace(

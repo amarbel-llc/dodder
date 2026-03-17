@@ -227,5 +227,11 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 	if err := local.GetEnvWorkspace().CreateWorkspace(blob); err != nil {
 		req.Cancel(err)
 	}
+
+	if err := local.GetEnvWorkspace().UpdateSyncBaseline(
+		local.GetInventoryListStore(),
+	); err != nil {
+		req.Cancel(err)
+	}
 }
 

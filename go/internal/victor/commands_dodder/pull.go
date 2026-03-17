@@ -74,4 +74,10 @@ func (cmd Pull) Run(req command.Request) {
 	); err != nil {
 		localWorkingCopy.Cancel(err)
 	}
+
+	if err := localWorkingCopy.GetEnvWorkspace().UpdateSyncBaseline(
+		localWorkingCopy.GetInventoryListStore(),
+	); err != nil {
+		localWorkingCopy.Cancel(err)
+	}
 }

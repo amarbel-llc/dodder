@@ -74,4 +74,10 @@ func (cmd Push) Run(req command.Request) {
 	); err != nil {
 		local.Cancel(err)
 	}
+
+	if err := local.GetEnvWorkspace().UpdateSyncBaseline(
+		local.GetInventoryListStore(),
+	); err != nil {
+		local.Cancel(err)
+	}
 }
