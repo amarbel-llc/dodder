@@ -42,7 +42,7 @@ func (op Checkin) Run(
 			lock.Lock()
 			defer lock.Unlock()
 
-			cloned, _ := co.Clone()
+			cloned, _ := co.Clone() //repool:owned
 			return results.Add(cloned)
 		},
 	); err != nil {
@@ -130,7 +130,7 @@ func (op Checkin) runOrganize(
 	}
 
 	for _, co := range changes.After.AllSkuAndIndex() {
-		clonedCo, _ := co.Clone()
+		clonedCo, _ := co.Clone() //repool:owned
 		if err = results.Add(clonedCo); err != nil {
 			err = errors.Wrap(err)
 			return err

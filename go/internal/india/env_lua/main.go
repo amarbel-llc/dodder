@@ -58,7 +58,7 @@ func (s *env) luaSearcher(ls *lua.LState) int {
 }
 
 func (s *env) GetSkuFromString(lv string) (object *sku.Transacted, err error) {
-	object, _ = sku.GetTransactedPool().GetWithRepool()
+	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	defer func() {
 		if err != nil {

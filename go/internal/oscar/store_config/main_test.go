@@ -13,7 +13,7 @@ import (
 func TestListCoderRoundTrip(t1 *testing.T) {
 	t := ui.T{T: t1}
 
-	ta, _ := sku.GetTransactedPool().GetWithRepool()
+	ta, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if err := ta.GetObjectIdMutable().Set("test-tag"); err != nil {
 		t.Fatalf("failed to set object id: %s", err)

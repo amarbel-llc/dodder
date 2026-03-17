@@ -324,7 +324,7 @@ func (blobStore *remoteSftp) MakeBlobReader(
 
 	if remoteFile, err = blobStore.sftpClient.Open(remotePath); err != nil {
 		if os.IsNotExist(err) {
-			clonedDigest, _ := markl.Clone(digest)
+			clonedDigest, _ := markl.Clone(digest) //repool:owned
 			err = env_dir.ErrBlobMissing{
 				BlobId: clonedDigest,
 				Path:   remotePath,
@@ -346,8 +346,7 @@ func (blobStore *remoteSftp) MakeBlobReader(
 		config: config,
 	}
 
-	readerHash, readerHashRepool := blobStore.defaultHashType.Get()
-	defer readerHashRepool()
+	readerHash, _ := blobStore.defaultHashType.Get() //repool:owned
 
 	if readCloser, err = streamingReader.createReader(
 		readerHash,
@@ -578,7 +577,7 @@ func (writer *sftpWriter) Close() (err error) {
 }
 
 func (writer *sftpWriter) GetDigest() domain_interfaces.MarklId {
-	id, _ := writer.hash.GetMarklId()
+	id, _ := writer.hash.GetMarklId() //repool:owned
 	return id
 }
 
@@ -682,6 +681,6 @@ func (reader *sftpReader) Close() error {
 }
 
 func (reader *sftpReader) GetMarklId() domain_interfaces.MarklId {
-	id, _ := reader.hash.GetMarklId()
+	id, _ := reader.hash.GetMarklId() //repool:owned
 	return id
 }

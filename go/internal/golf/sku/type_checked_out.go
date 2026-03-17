@@ -45,7 +45,7 @@ func (factory *objectFactoryCheckedOut) SetDefaultsIfNecessary() objectFactoryCh
 	if factory.Pool == nil {
 		factory.Pool = pool.Bespoke[*CheckedOut]{
 			FuncGet: func() *CheckedOut {
-				co, _ := GetCheckedOutPool().GetWithRepool()
+				co, _ := GetCheckedOutPool().GetWithRepool() //repool:owned
 				return co
 			},
 			FuncPut: func(e *CheckedOut) {

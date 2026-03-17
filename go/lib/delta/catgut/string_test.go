@@ -45,8 +45,8 @@ func TestCompare(t1 *testing.T) {
 			func(t1 *testing.T) {
 				t := ui.T{T: t1}
 
-				a, _ := MakeFromString(tc.a)
-				b, _ := MakeFromString(tc.b)
+				a, _ := MakeFromString(tc.a) //repool:owned
+				b, _ := MakeFromString(tc.b) //repool:owned
 
 				actual := a.Compare(b)
 
@@ -90,8 +90,8 @@ func TestComparePartial(t1 *testing.T) {
 			func(t1 *testing.T) {
 				t := ui.T{T: t1}
 
-				a, _ := MakeFromString(tc.a)
-				b, _ := MakeFromString(tc.b)
+				a, _ := MakeFromString(tc.a) //repool:owned
+				b, _ := MakeFromString(tc.b) //repool:owned
 
 				actual := a.ComparePartial(b)
 

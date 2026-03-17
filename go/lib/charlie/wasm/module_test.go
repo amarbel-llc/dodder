@@ -52,12 +52,13 @@ func TestModulePoolReuse(t *testing.T) {
 
 	// Borrow, use, return, borrow again -- verify pool reuse works.
 	for i := 0; i < 3; i++ {
-		mod, repool := pool.GetWithRepool()
+		func() {
+			mod, repool := pool.GetWithRepool()
+			defer repool()
 
-		if _, err := mod.CallCabiRealloc(ctx, 0, 0, 4, 64); err != nil {
-			t.Fatalf("iteration %d: %v", i, err)
-		}
-
-		repool()
+			if _, err := mod.CallCabiRealloc(ctx, 0, 0, 4, 64); err != nil {
+				t.Fatalf("iteration %d: %v", i, err)
+			}
+		}()
 	}
 }

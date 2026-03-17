@@ -309,7 +309,7 @@ LOOP:
 				}
 			}
 
-			oid, _ := ids.GetObjectIdPool().GetWithRepool()
+			oid, _ := ids.GetObjectIdPool().GetWithRepool() //repool:owned
 			objectId := ObjectId{
 				ObjectId: oid,
 			}
@@ -509,7 +509,7 @@ func (buildState *buildState) makeTagOrLuaTag(
 
 	var tagBlob tag_blobs.Blob
 
-	if tagBlob, _, err = buildState.builder.typedBlobStore.Tag.GetBlob(
+	if tagBlob, _, err = buildState.builder.typedBlobStore.Tag.GetBlob( //repool:owned
 		object,
 	); err != nil {
 		err = errors.Wrap(err)

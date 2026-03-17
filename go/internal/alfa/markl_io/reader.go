@@ -132,7 +132,7 @@ func (readCloser readCloser) Close() (err error) {
 }
 
 func (readCloser readCloser) GetMarklId() domain_interfaces.MarklId {
-	digest, _ := readCloser.hash.GetMarklId()
+	digest, _ := readCloser.hash.GetMarklId() //repool:owned
 	return digest
 }
 
@@ -168,6 +168,6 @@ func (readCloser nopReadCloser) WriteTo(writer io.Writer) (n int64, err error) {
 }
 
 func (readCloser nopReadCloser) GetMarklId() domain_interfaces.MarklId {
-	id, _ := readCloser.hash.GetMarklId()
+	id, _ := readCloser.hash.GetMarklId() //repool:owned
 	return id
 }

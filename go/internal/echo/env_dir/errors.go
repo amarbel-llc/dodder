@@ -23,7 +23,7 @@ func MakeErrBlobAlreadyExists(
 ) ErrBlobAlreadyExists {
 	errors.PanicIfError(markl.AssertIdIsNotNull(blobId))
 
-	clonedId, _ := markl.Clone(blobId)
+	clonedId, _ := markl.Clone(blobId) //repool:owned
 
 	return ErrBlobAlreadyExists{
 		Path:   path,

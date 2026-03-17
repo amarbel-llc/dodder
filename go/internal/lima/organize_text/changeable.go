@@ -51,7 +51,7 @@ func (assignment *Assignment) addToSet(
 		previouslyProcessedObject, wasPreviouslyProcessed := output.m[objectKey]
 
 		if !wasPreviouslyProcessed {
-			outputObject, _ = ot.ObjectFactory.GetWithRepool()
+			outputObject, _ = ot.ObjectFactory.GetWithRepool() //repool:owned
 
 			ot.ObjectFactory.ResetWith(outputObject, organizeObject.sku)
 

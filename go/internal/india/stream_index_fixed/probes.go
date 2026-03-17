@@ -62,7 +62,7 @@ func (index *Index) ReadManyMarklId(
 	}
 
 	for _, loc := range locs {
-		object, _ := sku.GetTransactedPool().GetWithRepool()
+		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 		var ok bool
 
@@ -164,7 +164,7 @@ func (index *Index) ReadOneObjectIdTai(
 	digest, digestRepool := markl.FormatHashSha256.GetMarklIdForString(key)
 	defer digestRepool()
 
-	object, _ = sku.GetTransactedPool().GetWithRepool()
+	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if !index.ReadOneMarklId(digest, object) {
 		err = errors.MakeErrNotFoundString(key)

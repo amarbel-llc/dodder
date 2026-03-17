@@ -151,7 +151,7 @@ func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 		return err
 	}
 
-	newConfig, _ := sku.GetTransactedPool().GetWithRepool()
+	newConfig, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if err = newConfig.GetObjectIdMutable().SetWithId(
 		ids.Config,

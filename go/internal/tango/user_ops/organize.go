@@ -38,7 +38,7 @@ func (op Organize) RunWithQueryGroup(
 			l.Lock()
 			defer l.Unlock()
 
-			cloned, _ := co.Clone()
+			cloned, _ := co.Clone() //repool:owned
 			return skus.Add(cloned)
 		},
 	); err != nil {
@@ -62,7 +62,7 @@ func (op Organize) RunWithTransacted(
 	skus := sku.MakeSkuTypeSetMutable()
 
 	for z := range transacted.All() {
-		clone, _ := sku.CloneSkuTypeFromTransacted(
+		clone, _ := sku.CloneSkuTypeFromTransacted( //repool:owned
 			z.GetSku(),
 			checked_out_state.Internal,
 		)

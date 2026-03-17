@@ -96,7 +96,7 @@ func (store *Store) ReadOneObjectId(
 		return object, err
 	}
 
-	object, _ = sku.GetTransactedPool().GetWithRepool()
+	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if err = store.streamIndex.ReadOneObjectId(objectId, object); err != nil {
 		if !errors.IsErrNotFound(err) {

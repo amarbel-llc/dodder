@@ -45,7 +45,7 @@ func (store *Store) applyDormantAndRealizeTags(
 			return err
 		}
 
-		selfTag, _ := catgut.MakeFromString(objectIdString)
+		selfTag, _ := catgut.MakeFromString(objectIdString) //repool:owned
 		object.GetMetadataMutable().GetIndexMutable().GetTagPaths().AddSelf(
 			selfTag,
 		)
@@ -122,7 +122,7 @@ func (store *Store) addSuperTags(
 				return
 			}
 
-			prefix, _ := catgut.MakeFromString(expandedObjectIdComponent)
+			prefix, _ := catgut.MakeFromString(expandedObjectIdComponent) //repool:owned
 
 			newTagPaths := object.GetMetadataMutable().GetIndexMutable().GetTagPaths()
 
@@ -147,7 +147,7 @@ func (store *Store) addImplicitTags(
 	addImplicitTags := func(tag ids.Tag) (err error) {
 		tagPathWithType := tag_paths.MakePathWithType()
 		tagPathWithType.Type = tag_paths.TypeIndirect
-		tagStr, _ := catgut.MakeFromString(tag.String())
+		tagStr, _ := catgut.MakeFromString(tag.String()) //repool:owned
 		tagPathWithType.Add(tagStr)
 
 		implicitTags := store.storeConfig.GetConfig().GetImplicitTags(tag)
@@ -159,7 +159,7 @@ func (store *Store) addImplicitTags(
 
 		for implicitTag := range implicitTags.All() {
 			tagPathWithTypeClone := tagPathWithType.Clone()
-			implicitTagStr, _ := catgut.MakeFromString(implicitTag.String())
+			implicitTagStr, _ := catgut.MakeFromString(implicitTag.String()) //repool:owned
 			tagPathWithTypeClone.Add(implicitTagStr)
 
 			tagPaths.AddPathWithType(tagPathWithTypeClone)

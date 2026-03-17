@@ -45,13 +45,13 @@ func (fb *pageAdditionsFileBacked) initialize(index *Index) (err error) {
 
 	var repool interfaces.FuncRepool
 	fb.bufferedWriter, repool = pool.GetBufferedWriter(fb.file)
-	_ = repool // bufferedWriter will be flushed and file closed in Close()
+	_ = repool //repool:owned // bufferedWriter will be flushed and file closed in Close()
 
 	return err
 }
 
 func (fb *pageAdditionsFileBacked) add(object *sku.Transacted) {
-	objectClone, _ := object.CloneTransacted()
+	objectClone, _ := object.CloneTransacted() //repool:owned
 
 	fb.objectIds[object.GetObjectId().String()] = struct{}{}
 

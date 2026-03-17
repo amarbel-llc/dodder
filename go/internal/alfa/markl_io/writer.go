@@ -24,7 +24,7 @@ func MakeWriter(
 	hash domain_interfaces.Hash,
 	in io.Writer,
 ) (writer *writer) {
-	writer, _ = MakeWriterWithRepool(hash, in)
+	writer, _ = MakeWriterWithRepool(hash, in) //repool:owned
 	return writer
 }
 
@@ -95,6 +95,6 @@ func (writer *writer) Close() (err error) {
 }
 
 func (writer *writer) GetMarklId() domain_interfaces.MarklId {
-	digest, _ := writer.hash.GetMarklId()
+	digest, _ := writer.hash.GetMarklId() //repool:owned
 	return digest
 }

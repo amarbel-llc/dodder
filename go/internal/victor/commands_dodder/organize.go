@@ -119,7 +119,7 @@ func (cmd *Organize) Run(req command.Request) {
 			lock.Lock()
 			defer lock.Unlock()
 
-			cloned, _ := checkedOut.Clone()
+			cloned, _ := checkedOut.Clone() //repool:owned
 			return objects.Add(cloned)
 		},
 	); err != nil {

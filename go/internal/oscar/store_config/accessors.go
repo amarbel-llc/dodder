@@ -22,7 +22,7 @@ func (compiled *compiled) getType(k ids.Id) (ct *sku.Transacted) {
 	}
 
 	if ct1, ok := compiled.Types.Get(k.String()); ok {
-		ct, _ = ct1.CloneTransacted()
+		ct, _ = ct1.CloneTransacted() //repool:owned
 	}
 
 	return ct
@@ -34,7 +34,7 @@ func (compiled *compiled) getRepo(k ids.Id) (ct *sku.Transacted) {
 	}
 
 	if ct1, ok := compiled.Repos.Get(k.String()); ok {
-		ct, _ = ct1.CloneTransacted()
+		ct, _ = ct1.CloneTransacted() //repool:owned
 	}
 
 	return ct
@@ -129,7 +129,7 @@ func (compiled *compiled) getTag(
 	}
 
 	if cursor != nil {
-		object, _ = sku.GetTransactedPool().GetWithRepool()
+		object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 		sku.Resetter.ResetWith(object, &cursor.Transacted)
 	}
 

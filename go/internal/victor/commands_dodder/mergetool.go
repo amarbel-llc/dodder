@@ -45,7 +45,7 @@ func (cmd Mergetool) Run(req command.Request) {
 				return err
 			}
 
-			cloned, _ := co.Clone()
+			cloned, _ := co.Clone() //repool:owned
 			if err = conflicted.Add(cloned); err != nil {
 				err = errors.Wrap(err)
 				return err
@@ -81,7 +81,7 @@ func (cmd Mergetool) doOne(
 	checkedOut *sku.CheckedOut,
 ) {
 	conflicted := sku.Conflicted{
-		CheckedOut: func() *sku.CheckedOut { c, _ := checkedOut.Clone(); return c }(),
+		CheckedOut: func() *sku.CheckedOut { c, _ := checkedOut.Clone(); return c }(), //repool:owned
 	}
 
 	var conflict *fd.FD

@@ -88,10 +88,10 @@ func testIdNullAndEqualFor(t *ui.TestContext, formatHash FormatHash) {
 	}
 
 	var idZero Id
-	hash, _ := formatHash.Get()
+	hash, _ := formatHash.Get() //repool:owned
 
 	{
-		idNull, _ := hash.GetMarklId()
+		idNull, _ := hash.GetMarklId() //repool:owned
 
 		t.AssertNoError(AssertIdIsNull(idZero))
 		t.AssertNoError(AssertIdIsNull(idNull))
@@ -102,7 +102,7 @@ func testIdNullAndEqualFor(t *ui.TestContext, formatHash FormatHash) {
 	}
 
 	{
-		idNull, _ := formatHash.GetMarklIdForString("")
+		idNull, _ := formatHash.GetMarklIdForString("") //repool:owned
 
 		t.AssertNoError(AssertIdIsNull(idZero))
 		t.AssertNoError(AssertIdIsNull(idNull))
@@ -113,7 +113,7 @@ func testIdNullAndEqualFor(t *ui.TestContext, formatHash FormatHash) {
 	}
 
 	{
-		idNull, _ := formatHash.GetBlobIdForHexString(
+		idNull, _ := formatHash.GetBlobIdForHexString( //repool:owned
 			fmt.Sprintf("%x", formatHash.null.GetBytes()),
 		)
 
@@ -126,7 +126,7 @@ func testIdNullAndEqualFor(t *ui.TestContext, formatHash FormatHash) {
 	}
 
 	{
-		idNonZero, _ := formatHash.GetMarklIdForString("nonZero")
+		idNonZero, _ := formatHash.GetMarklIdForString("nonZero") //repool:owned
 		t.AssertNoError(AssertIdIsNotNull(idNonZero))
 		t.AssertError(AssertIdIsNull(idNonZero))
 		t.AssertError(AssertEqual(idNonZero, idZero))

@@ -17,7 +17,7 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 	t := ui.T{T: t1}
 
 	encoder := binaryEncoder{Sigil: ids.SigilLatest}
-	expected, _ := sku.GetTransactedPool().GetWithRepool()
+	expected, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	{
 		t.AssertNoError(
@@ -99,7 +99,7 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 
 	// Decode the entry.
 	decoder := makeBinaryDecoder(ids.SigilLatest)
-	actual, _ := sku.GetTransactedPool().GetWithRepool()
+	actual, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	entryReader := bytes.NewReader(entryBytes)
 	overflowRA := &overflowReaderAt{readerAt: overflowTempFile}
@@ -148,7 +148,7 @@ func TestFixedBinaryOverflow(t1 *testing.T) {
 	t := ui.T{T: t1}
 
 	encoder := binaryEncoder{Sigil: ids.SigilHistory}
-	object, _ := sku.GetTransactedPool().GetWithRepool()
+	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	t.AssertNoError(
 		object.GetObjectIdMutable().SetWithId(ids.MustZettelId("one/uno")),
@@ -223,7 +223,7 @@ func TestFixedBinaryZeroPadding(t1 *testing.T) {
 	t := ui.T{T: t1}
 
 	encoder := binaryEncoder{Sigil: ids.SigilHistory}
-	object, _ := sku.GetTransactedPool().GetWithRepool()
+	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	// Minimal object — should have significant zero padding.
 	t.AssertNoError(

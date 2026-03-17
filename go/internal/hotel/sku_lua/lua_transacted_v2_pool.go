@@ -19,7 +19,7 @@ func PushTopFuncV2(
 	luaVMPool LuaVMPoolV2,
 	args []string,
 ) (vm *LuaVMV2, argsOut []string, err error) {
-	vm, _ = luaVMPool.GetWithRepool()
+	vm, _ = luaVMPool.GetWithRepool() //repool:owned
 
 	vm.LValue = vm.Top
 
@@ -45,7 +45,7 @@ type (
 func MakeLuaVMPoolV2(luaVMPool *lua.VMPool, self *sku.Transacted) LuaVMPoolV2 {
 	return pool.Make(
 		func() (out *LuaVMV2) {
-			vm, _ := luaVMPool.PoolPtr.GetWithRepool()
+			vm, _ := luaVMPool.PoolPtr.GetWithRepool() //repool:owned
 
 			out = &LuaVMV2{
 				VM:        vm,
@@ -62,9 +62,9 @@ func MakeLuaVMPoolV2(luaVMPool *lua.VMPool, self *sku.Transacted) LuaVMPoolV2 {
 func MakeLuaTablePoolV2(vm *lua.VM) LuaTablePoolV2 {
 	return pool.Make(
 		func() (t *LuaTableV2) {
-			transacted, _ := vm.PoolPtr.GetWithRepool()
-			tags, _ := vm.PoolPtr.GetWithRepool()
-			tagsImplicit, _ := vm.PoolPtr.GetWithRepool()
+			transacted, _ := vm.PoolPtr.GetWithRepool()   //repool:owned
+			tags, _ := vm.PoolPtr.GetWithRepool()          //repool:owned
+			tagsImplicit, _ := vm.PoolPtr.GetWithRepool()  //repool:owned
 
 			t = &LuaTableV2{
 				Transacted:   transacted,

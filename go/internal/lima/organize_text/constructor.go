@@ -298,7 +298,7 @@ func (c *constructor) makeAndAddUngrouped(
 func (c *constructor) cloneObj(
 	named *obj,
 ) (z *obj, err error) {
-	clonedSku, _ := sku.CloneSkuType(named.sku)
+	clonedSku, _ := sku.CloneSkuType(named.sku) //repool:owned
 	z = &obj{
 		tipe: named.tipe,
 		sku:  clonedSku,

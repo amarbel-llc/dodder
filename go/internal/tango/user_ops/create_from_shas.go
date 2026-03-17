@@ -56,7 +56,7 @@ func (op CreateFromShas) Run(
 			continue
 		}
 
-		object, _ := sku.GetTransactedPool().GetWithRepool()
+		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 		object.GetObjectIdMutable().SetGenre(genres.Zettel)
 		object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(&digest)

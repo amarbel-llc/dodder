@@ -231,7 +231,7 @@ func (blobStore localHashBucketed) blobReaderFrom(
 	); err != nil {
 		if errors.IsNotExist(err) {
 			err = env_dir.ErrBlobMissing{
-				BlobId: func() domain_interfaces.MarklId { id, _ := markl.Clone(digest); return id }(),
+				BlobId: func() domain_interfaces.MarklId { id, _ := markl.Clone(digest); return id }(), //repool:owned
 				Path:   basePath,
 			}
 		} else {

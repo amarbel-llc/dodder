@@ -15,10 +15,10 @@ func MakeLuaSelfApplyV2(
 		panic("self was nil")
 	}
 
-	self, _ := selfOriginal.CloneTransacted()
+	self, _ := selfOriginal.CloneTransacted() //repool:owned
 
 	return func(vm *lua.VM) (err error) {
-		selfTable, _ := sku_lua.MakeLuaTablePoolV2(vm).GetWithRepool()
+		selfTable, _ := sku_lua.MakeLuaTablePoolV2(vm).GetWithRepool() //repool:owned
 		sku_lua.ToLuaTableV2(self, vm.LState, selfTable)
 		vm.SetGlobal("Self", selfTable.Transacted)
 		return err

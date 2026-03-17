@@ -126,7 +126,7 @@ func (s *stubBlobStore) MakeBlobReader(
 
 	if s.blobData != nil {
 		if data, ok := s.blobData[id.String()]; ok {
-			hash, _ := markl.FormatHashSha256.Get()
+			hash, _ := markl.FormatHashSha256.Get() //repool:owned
 			return markl_io.MakeReadCloser(
 				hash,
 				bytes.NewReader(data),
@@ -134,7 +134,7 @@ func (s *stubBlobStore) MakeBlobReader(
 		}
 	}
 
-	hash, _ := markl.FormatHashSha256.Get()
+	hash, _ := markl.FormatHashSha256.Get() //repool:owned
 	return markl_io.MakeNopReadCloser(
 		hash,
 		ohio.NopCloser(bytes.NewReader(nil)),

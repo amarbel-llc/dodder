@@ -69,7 +69,7 @@ func (executor *Executor) ExecuteExactlyOneExternalObject(
 			return object, err
 		}
 
-		object, _ = sku.GetTransactedPool().GetWithRepool()
+		object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 		var external sku.ExternalLike
 
@@ -98,7 +98,7 @@ func (executor *Executor) ExecuteExactlyOneExternalObject(
 			return object, err
 		}
 
-		object, _ = sku.GetTransactedPool().GetWithRepool()
+		object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 		if err = executor.FuncReadOneInto(
 			objectId,
@@ -121,7 +121,7 @@ func (executor *Executor) ExecuteExactlyOne() (object *sku.Transacted, err error
 		return object, err
 	}
 
-	object, _ = sku.GetTransactedPool().GetWithRepool()
+	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if err = executor.ExecutionInfo.FuncReadOneInto(objectId, object); err != nil {
 		err = errors.Wrap(err)

@@ -32,7 +32,7 @@ func (pa *pageAdditions) initialize(index *Index) {
 }
 
 func (pa *pageAdditions) add(object *sku.Transacted) {
-	objectClone, _ := object.CloneTransacted()
+	objectClone, _ := object.CloneTransacted() //repool:owned
 
 	pa.objects.Add(objectClone)
 	pa.objectIdLookup[object.GetObjectId().String()] = struct{}{}

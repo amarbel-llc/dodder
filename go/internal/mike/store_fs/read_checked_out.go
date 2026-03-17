@@ -52,7 +52,7 @@ func (store *Store) RefreshCheckedOut(
 func (store *Store) ReadCheckedOutFromTransacted(
 	object *sku.Transacted,
 ) (checkedOut *sku.CheckedOut, err error) {
-	checkedOut, _ = GetCheckedOutPool().GetWithRepool()
+	checkedOut, _ = GetCheckedOutPool().GetWithRepool() //repool:owned
 
 	if err = store.readIntoCheckedOutFromTransacted(
 		object,

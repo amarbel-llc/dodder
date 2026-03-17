@@ -65,7 +65,7 @@ func (sp *VMPool) PrepareVM(
 			return 1
 		})
 
-		table, _ := vm.PoolPtr.GetWithRepool()
+		table, _ := vm.PoolPtr.GetWithRepool() //repool:owned
 		vm.SetField(table, "require", vm.NewFunction(sp.Require))
 		vm.SetGlobal("der", table)
 		vm.SetGlobal("dodder", table)
@@ -79,7 +79,7 @@ func (sp *VMPool) PrepareVM(
 			loaderTable := vm.GetField(packageTable, "loaders").(*LTable)
 			loaderTable.Insert(1, vm.NewFunction(sp.Searcher))
 		} else {
-			searcherTable, _ := vm.PoolPtr.GetWithRepool()
+			searcherTable, _ := vm.PoolPtr.GetWithRepool() //repool:owned
 			packageTable.Insert(1, searcherTable)
 			searcherTable.Insert(1, vm.NewFunction(sp.Searcher))
 		}

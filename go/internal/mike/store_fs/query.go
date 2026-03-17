@@ -62,7 +62,7 @@ func (store *Store) makeFuncIterHydrateCheckedOutProbablyCheckedOut(
 	out interfaces.FuncIter[sku.SkuType],
 ) interfaces.FuncIter[*sku.FSItem] {
 	return func(item *sku.FSItem) (err error) {
-		checkedOut, _ := GetCheckedOutPool().GetWithRepool()
+		checkedOut, _ := GetCheckedOutPool().GetWithRepool() //repool:owned
 
 		// at a bare minimum, the internal object ID must always be set as there
 		// are hard assumptions about internal being valid throughout the
@@ -156,7 +156,7 @@ func (store *Store) makeFuncIterHydrateCheckedOutDefinitelyNotCheckedOut(
 	f interfaces.FuncIter[sku.SkuType],
 ) interfaces.FuncIter[any] {
 	return func(itemUnknown any) (err error) {
-		co, _ := sku.GetCheckedOutPool().GetWithRepool()
+		co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
 
 		switch item := itemUnknown.(type) {
 		case *sku.FSItem:

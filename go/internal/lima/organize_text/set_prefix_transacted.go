@@ -52,7 +52,7 @@ func (prefixSet *PrefixSet) AddSku(object sku.SkuType) (err error) {
 		return err
 	}
 
-	clonedSku, _ := sku.CloneSkuType(object)
+	clonedSku, _ := sku.CloneSkuType(object) //repool:owned
 	o := obj{
 		sku: clonedSku,
 	}

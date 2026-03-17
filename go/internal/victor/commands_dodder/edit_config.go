@@ -147,7 +147,7 @@ func (cmd EditConfig) readTempConfigFile(
 	localWorkingCopy *local_working_copy.Repo,
 	path string,
 ) (object *sku.Transacted, err error) {
-	object, _ = sku.GetTransactedPool().GetWithRepool()
+	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if object.GetObjectIdMutable().Set("konfig"); err != nil {
 		err = errors.Wrap(err)

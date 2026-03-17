@@ -16,7 +16,7 @@ func (local *Repo) MakeInventoryList(
 		query,
 		quiter.MakeSyncSerializer(
 			func(object *sku.Transacted) (err error) {
-				cloned, _ := object.CloneTransacted()
+				cloned, _ := object.CloneTransacted() //repool:owned
 				return list.Add(cloned)
 			},
 		),

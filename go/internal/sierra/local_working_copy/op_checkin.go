@@ -87,7 +87,7 @@ func (local *Repo) Checkin(
 			return processed, err
 		}
 
-		cloned, _ := co.GetSkuExternal().CloneTransacted()
+		cloned, _ := co.GetSkuExternal().CloneTransacted() //repool:owned
 		if err = processed.Add(cloned); err != nil {
 			err = errors.Wrap(err)
 			return processed, err

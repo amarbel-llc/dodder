@@ -61,7 +61,7 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 				objectsWithErrors[string(keyBytes)] = objectWithError{
 					error: iterErr,
 					ObjectWithList: sku.ObjectWithList{
-						List: func() *sku.Transacted { c, _ := objectWithList.List.CloneTransacted(); return c }(),
+						List: func() *sku.Transacted { c, _ := objectWithList.List.CloneTransacted(); return c }(), //repool:owned
 					},
 				}
 			}
@@ -79,8 +79,8 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 			objectsWithErrors[string(keyBytes)] = objectWithError{
 				error: err,
 				ObjectWithList: sku.ObjectWithList{
-					Object: func() *sku.Transacted { c, _ := objectWithList.Object.CloneTransacted(); return c }(),
-					List:   func() *sku.Transacted { c, _ := objectWithList.List.CloneTransacted(); return c }(),
+					Object: func() *sku.Transacted { c, _ := objectWithList.Object.CloneTransacted(); return c }(), //repool:owned
+					List: func() *sku.Transacted { c, _ := objectWithList.List.CloneTransacted(); return c }(), //repool:owned
 				},
 			}
 

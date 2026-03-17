@@ -167,7 +167,7 @@ func (metadata *metadata) AddTagPtr(tag Tag) (err error) {
 	}
 
 	metadata.Contents.addNormalizedTag(tag)
-	cs, _ := catgut.MakeFromString(tag.String())
+	cs, _ := catgut.MakeFromString(tag.String()) //repool:owned
 	metadata.Index.TagPaths.AddTag(cs)
 
 	return err
@@ -176,7 +176,7 @@ func (metadata *metadata) AddTagPtr(tag Tag) (err error) {
 func (metadata *metadata) AddTagPtrFast(tag Tag) (err error) {
 	ids.TagSetMutableAdd(metadata.GetTagsMutable(), tag)
 
-	tagBytestring, _ := catgut.MakeFromString(tag.String())
+	tagBytestring, _ := catgut.MakeFromString(tag.String()) //repool:owned
 
 	if err = metadata.Index.TagPaths.AddTag(tagBytestring); err != nil {
 		err = errors.Wrap(err)

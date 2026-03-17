@@ -243,7 +243,7 @@ func (store *store) loadMutableConfigStreamIndex(
 		envRepo.FileConfigTypes(),
 		&coder,
 		func(object *sku.Transacted) error {
-			b, _ := sku.GetTransactedPool().GetWithRepool()
+			b, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 			sku.Resetter.ResetWith(b, object)
 			store.config.Types.Add(b)
 			return nil
@@ -257,7 +257,7 @@ func (store *store) loadMutableConfigStreamIndex(
 		envRepo.FileConfigRepos(),
 		&coder,
 		func(object *sku.Transacted) error {
-			b, _ := sku.GetTransactedPool().GetWithRepool()
+			b, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 			sku.Resetter.ResetWith(b, object)
 			store.config.Repos.Add(b)
 			return nil

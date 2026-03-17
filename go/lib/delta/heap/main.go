@@ -109,7 +109,7 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) popAndSave() (element ELEMENT_PTR, ok bo
 		return element, ok
 	}
 
-	element, _ = heap.private.GetPool().GetWithRepool()
+	element, _ = heap.private.GetPool().GetWithRepool() //repool:owned
 	e := pkg_heap.Pop(&heap.private).(ELEMENT_PTR)
 	heap.private.Resetter.ResetWith(element, e)
 	ok = true
@@ -168,7 +168,7 @@ func (heap *Heap[ELEMENT, ELEMENT_PTR]) Pop() (element ELEMENT_PTR, ok bool) {
 		return element, ok
 	}
 
-	element, _ = heap.private.GetPool().GetWithRepool()
+	element, _ = heap.private.GetPool().GetWithRepool() //repool:owned
 	heap.private.Resetter.ResetWith(
 		element,
 		pkg_heap.Pop(&heap.private).(ELEMENT_PTR),

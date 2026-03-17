@@ -343,7 +343,7 @@ func (blobStore blobReaderFactory) BlobReader(
 	)
 	blobStore.t.AssertNoError(err)
 
-	hash, _ := hashType.Get()
+	hash, _ := hashType.Get() //repool:owned
 	readCloser = markl_io.MakeNopReadCloser(
 		hash,
 		ohio.NopCloser(strings.NewReader(value)),
@@ -369,7 +369,7 @@ func writeFormat(
 		t.Fatalf("%s", err)
 	}
 
-	blobDigest, _ := hashType.GetMarklIdForString(blobBody)
+	blobDigest, _ := hashType.GetMarklIdForString(blobBody) //repool:owned
 
 	metadata.GetBlobDigestMutable().ResetWithMarklId(blobDigest)
 

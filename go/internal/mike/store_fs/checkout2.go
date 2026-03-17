@@ -12,7 +12,7 @@ func (store *Store) checkoutOneIfNecessary(
 	transactedGetter sku.TransactedGetter,
 ) (checkedOut *sku.CheckedOut, item *sku.FSItem, err error) {
 	internal := transactedGetter.GetSku()
-	checkedOut, _ = GetCheckedOutPool().GetWithRepool()
+	checkedOut, _ = GetCheckedOutPool().GetWithRepool() //repool:owned
 
 	sku.Resetter.ResetWith(checkedOut.GetSku(), internal)
 
