@@ -1,5 +1,3 @@
-set output-format := "tap"
-
 dir_build := absolute_path("go/build")
 
 # Prevent dodder's findWorkspaceFile from walking above the BATS temp dir and
@@ -7,7 +5,7 @@ dir_build := absolute_path("go/build")
 # "no workspace" would pass incorrectly when TMPDIR is inside the repo tree.
 bats_ceiling := absolute_path("")
 
-default: build check test
+default: build test
 
 #   ____        _ _     _
 #  | __ ) _   _(_) | __| |

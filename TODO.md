@@ -184,6 +184,14 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 
 - [ ] `dagnabit -dry-run` reports 5 packages in wrong tiers (as of 2026-03-15): `charlie/filesystem_ops` → `_/`, `charlie/zettel_id_log` → `delta/`, `charlie/zettel_id_provider` → `echo/`, `romeo/import_plan` → `india/`, `lib/charlie/fd` → `lib/delta/fd`. Run `dagnabit` (no flags) from the `go/` directory to auto-move, or use `just codemod-go-move_package <src> <dst>` individually.
 
+## Static analysis (`just check`)
+
+- [ ] add `check` to root justfile default recipe (`default: build check test`) once all warnings are resolved
+- [ ] fix 20 remaining repool "not called on all paths" warnings (markl/hash.go, papa/store, sierra/local_working_copy/format_type.go, oscar/store_config/persist.go, india/stream_index*, india/sku_fmt, tango/remote_http/server_mcp.go)
+- [ ] fix 2 unreachable code warnings in go vet (bravo/ids/main.go, lib/delta/files/chflags_linux.go, lib/delta/heap/private.go)
+- [ ] fix 3 seqerror warnings in oscar/store_config (accessors.go, tag.go)
+- [ ] upgrade Go from 1.25.7 to 1.25.8 to resolve 2 stdlib vulnerabilities (GO-2026-4602, GO-2026-4601)
+
 ## Repo disambiguation
 
 - [ ] feat: user-config-wide repo definition that exists outside of repos (needed for `/<repo-id>` remote selection)
