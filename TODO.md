@@ -184,6 +184,30 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 
 - [ ] `dagnabit -dry-run` reports 5 packages in wrong tiers (as of 2026-03-15): `charlie/filesystem_ops` → `_/`, `charlie/zettel_id_log` → `delta/`, `charlie/zettel_id_provider` → `echo/`, `romeo/import_plan` → `india/`, `lib/charlie/fd` → `lib/delta/fd`. Run `dagnabit` (no flags) from the `go/` directory to auto-move, or use `just codemod-go-move_package <src> <dst>` individually.
 
+## remote_http cleanup (branch: remote-transfer-cleanup)
+
+Completed in this branch: dead code removal (server_repo.go, commented-out
+functions, unreachable routes), stub standardization to
+`panic(errors.Err501NotImplemented)`, blob digest validation (client sends
+`@ <digest>` in hyphence metadata, server verifies via BlobTeeWriter), HTTP
+trailer response body signing (`X-Dodder-Repo-Sig`), repool warning sweep.
+
+Remaining:
+
+- [ ] BATS integration test for digest mismatch rejection (push with tampered
+  blob, assert server rejects with digest error). See
+  `server_working_copy.go:writeInventoryListLocalWorkingCopy` for the
+  validation path.
+- [ ] TOFU prompt for unknown public keys (`round_tripper_wrapped_signer.go:77`)
+- [ ] extract signing into agnostic middleware (`round_tripper_wrapped_signer.go:27`)
+- [ ] context-based error handling: replace error returns with context
+  cancellation in server.go (5 TODOs at lines 44, 60, 163, 330, 357)
+- [ ] streaming performance: avoid buffering inventory lists in server.go
+  (lines 758, 789, 792, 851)
+- [ ] local/remote version negotiation (`client.go:215`)
+- [ ] server_mcp.go repool false positive: restructure goto/ParseTypedBlob
+  control flow so analyzer can verify repool coverage
+
 ## Static analysis (`just check`)
 
 - [ ] add `check` to root justfile default recipe (`default: build check test`) once all warnings are resolved
