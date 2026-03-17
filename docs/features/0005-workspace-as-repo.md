@@ -218,13 +218,16 @@ All core workspace-repo functionality is implemented and tested:
 - **Query filtering** — clone/pull respect query filter; push transfers all
   objects unfiltered
 - **Error cases** — existing repo detection, stale parent path, empty query
+- **Divergence detection** — `check-workspace dirty` compares sync baseline
+  (TAI + object digest stored in V1 config at clone/pull/push time) against
+  current inventory list state. Local-only, no parent repo access. Exit codes:
+  0 = dirty, 1 = clean, 2 = not in a workspace-repo. Designed for shell prompt
+  use (quiet by default).
 
 ### What's NOT Built
 
 These are described in the Design section but not yet implemented:
 
-- **Divergence detection** — no commit hash baseline tracking, no
-  workspace-vs-parent status comparison
 - **Pluggable checkout stores** — only `store_fs` exists
 - **Agent isolation workflows** — no structured review UI beyond manual
   inspection
@@ -235,21 +238,24 @@ These are described in the Design section but not yet implemented:
 |------|---------|
 | `go/internal/victor/commands_dodder/init_workspace.go` | `InitWorkspace` command with `runLightweight` and `runExperimentalRepo` paths |
 | `go/internal/uniform/command_components_dodder/remote.go` | `ResolveImplicitDirectPath` — reads parent path from workspace config |
-| `go/internal/echo/workspace_config_blobs/v1.go` | V1 config struct with `ParentPath` field |
-| `go/internal/echo/workspace_config_blobs/main.go` | `ConfigWithParentPath` interface for V0/V1 type-switching |
+| `go/internal/echo/workspace_config_blobs/v1.go` | V1 config struct with `ParentPath`, `SyncTai`, `SyncDigest` fields |
+| `go/internal/echo/workspace_config_blobs/main.go` | `ConfigWithParentPath`, `ConfigWithSyncBaseline` interfaces |
 | `go/internal/echo/workspace_config_blobs/io.go` | Coder registration for V0 and V1 |
 | `go/internal/november/env_workspace/main.go` | `GetParentPath()`, `CreateWorkspace` with V0/V1 type selection |
 | `go/internal/bravo/ids/types_builtin.go` | `TypeTomlWorkspaceConfigV1` constant |
 | `go/internal/victor/commands_dodder/pull.go` | Wires `ResolveImplicitDirectPath` |
 | `go/internal/victor/commands_dodder/push.go` | Wires `ResolveImplicitDirectPath` |
+| `go/internal/victor/commands_dodder/check_workspace.go` | `check-workspace dirty` command with exit-code-based status |
 | `zz-tests_bats/current_version/workspace_repo.bats` | 9 integration tests covering all workspace-repo scenarios |
+| `zz-tests_bats/current_version/check_workspace_dirty.bats` | 5 integration tests for `check-workspace dirty` |
 
 ### Key Types and Interfaces
 
 - **`workspace_config_blobs.V0`** — original workspace config (query, defaults).
   Used by lightweight workspaces.
-- **`workspace_config_blobs.V1`** — embeds V0, adds `ParentPath string`. Used by
-  workspace-repos created with `-experimental-repo`.
+- **`workspace_config_blobs.V1`** — embeds V0, adds `ParentPath`, `SyncTai`,
+  `SyncDigest` strings. Used by workspace-repos created with
+  `-experimental-repo`.
 - **`workspace_config_blobs.ConfigWithParentPath`** — interface with
   `GetParentPath() string`. Used to type-switch between V0/V1 in
   `CreateWorkspace` and `GetWorkspaceConfigTyped`.
