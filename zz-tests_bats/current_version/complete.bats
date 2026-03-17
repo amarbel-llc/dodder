@@ -112,6 +112,7 @@ function complete_subcmd { # @test
 		blob_store-sync
 		blob_store-write
 		cat-alfred
+		check-workspace
 		checkin
 		checkin-blob
 		checkin-json
