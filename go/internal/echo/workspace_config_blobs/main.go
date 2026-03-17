@@ -36,6 +36,12 @@ type (
 		Config
 		GetParentPath() string
 	}
+
+	ConfigWithSyncBaseline interface {
+		Config
+		GetSyncTai() string
+		GetSyncDigest() string
+	}
 )
 
 var (

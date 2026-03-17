@@ -35,6 +35,7 @@ type Env interface {
 	GetDefaults() repo_configs.Defaults
 	CreateWorkspace(workspace_config_blobs.Config) (err error)
 	GetParentPath() string
+	GetSyncBaseline() (tai string, digest string)
 	GetStore() *Store
 
 	// TODO identify users of this and reduce / isolate them
@@ -313,6 +314,14 @@ func (env *env) GetParentPath() string {
 	}
 
 	return ""
+}
+
+func (env *env) GetSyncBaseline() (tai string, digest string) {
+	if sb, ok := env.blob.(workspace_config_blobs.ConfigWithSyncBaseline); ok {
+		return sb.GetSyncTai(), sb.GetSyncDigest()
+	}
+
+	return "", ""
 }
 
 func (env *env) CreateWorkspace(
