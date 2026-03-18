@@ -122,6 +122,37 @@ are stored and transferred the same way regardless of how they are checked out.
 > **Open question:** The store interface contract needs specification (likely a
 > separate RFC). For the experimental phase, only `store_fs` is implemented.
 
+### Zettel ID Provider Linking
+
+Workspace-repos automatically discover and use the parent repo's zettel ID word
+lists (Yin/Yang) when `-yin`/`-yang` flags are not explicitly provided. During
+`init-workspace -experimental-repo`, the init flow:
+
+1. Resolves the parent path to absolute
+2. Checks for Yin/Yang flat files at the parent's known object\_ids directory
+3. If found, passes them to genesis via `BigBang.Yin`/`BigBang.Yang`
+4. Genesis copies the words into the workspace's own store (as blobs and flat
+   files), creating an independent zettel ID index
+
+The workspace's zettel ID index is then populated by:
+- **Reset** — marks all `Yin × Yang` coordinate pairs as available
+- **Pull** — each imported zettel calls `AddZettelId`, removing its ID from the
+  available pool
+- **CreateZettelId** — picks from remaining available IDs
+
+This means workspace repos can create new zettels out of the box without the
+user managing separate word lists.
+
+**Collision risk with filtered clones:** When a workspace is cloned with a tag
+filter (e.g. `project-alpha:z`), it only knows about the pulled zettels' IDs.
+IDs used by unpulled parent zettels remain in the workspace's available pool,
+creating collision risk on push. Unfiltered clones (`+zettel,typ,etikett`) avoid
+this by syncing all parent zettel IDs.
+
+**Explicit flags override:** If `-yin`/`-yang` are explicitly provided, the
+parent's word lists are not used. This preserves backward compatibility and
+allows workspace repos with custom ID spaces.
+
 ### Agent Isolation
 
 The workspace-repo is the mutation boundary for agents and automated tools.
@@ -223,6 +254,9 @@ All core workspace-repo functionality is implemented and tested:
   current inventory list state. Local-only, no parent repo access. Exit codes:
   0 = dirty, 1 = clean, 2 = not in a workspace-repo. Designed for shell prompt
   use (quiet by default).
+- **Zettel ID provider linking** — workspace repos automatically discover and
+  copy the parent's Yin/Yang word lists when `-yin`/`-yang` are not explicitly
+  provided, enabling zettel creation without separate word list management
 
 ### What's NOT Built
 
@@ -246,7 +280,7 @@ These are described in the Design section but not yet implemented:
 | `go/internal/victor/commands_dodder/pull.go` | Wires `ResolveImplicitDirectPath` |
 | `go/internal/victor/commands_dodder/push.go` | Wires `ResolveImplicitDirectPath` |
 | `go/internal/victor/commands_dodder/check_workspace.go` | `check-workspace dirty` command with exit-code-based status |
-| `zz-tests_bats/current_version/workspace_repo.bats` | 9 integration tests covering all workspace-repo scenarios |
+| `zz-tests_bats/current_version/workspace_repo.bats` | 10 integration tests covering all workspace-repo scenarios |
 | `zz-tests_bats/current_version/check_workspace_dirty.bats` | 5 integration tests for `check-workspace dirty` |
 
 ### Key Types and Interfaces
@@ -395,6 +429,20 @@ match).
 A workspace-repo could itself have workspaces, enabling hierarchical filtering
 (e.g. organization repo → team workspace → personal workspace).
 
+### Batch Zettel ID Reservation
+
+To eliminate collision risk between workspace and parent, the workspace could
+reserve a batch of IDs from the parent at init/pull time. The parent marks those
+IDs as consumed; the workspace uses them locally. This enables offline zettel
+creation with guaranteed uniqueness.
+
+### Fast-Forward Pull for Clean Workspaces
+
+When a parent repo pulls from a remote and the workspace has a clean copy of the
+changed objects (no local modifications), the workspace could fast-forward its
+local state without a full pull. This requires tracking which objects are
+unmodified relative to the parent's last sync baseline.
+
 ### Agent Review Workflows
 
 Build on the divergence detection to provide structured review of agent
@@ -422,8 +470,10 @@ The following criteria for `experimental` status are **all met** as of
 
 To advance to `testing`:
 
+- [x] Zettel ID provider linking from parent (workspace can create zettels
+  without explicit `-yin`/`-yang`)
 - [ ] Zettel ID conflict resolution for filtered clones (push back to parent
-  without collisions)
+  without collisions — batch ID reservation or similar)
 - [ ] Divergence detection (workspace HEAD vs parent HEAD baseline comparison)
 - [ ] Real-world validation with a non-trivial object graph (100+ objects)
 

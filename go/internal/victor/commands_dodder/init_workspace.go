@@ -8,7 +8,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
+	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
+	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -171,7 +173,23 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		return
 	}
 
+	// Resolve parent path to absolute early — needed for both zettel ID
+	// provider linking and workspace config storage.
+	absParentPath := cmd.DirectPath
+	if !filepath.IsAbs(absParentPath) {
+		var err error
+
+		if absParentPath, err = filepath.Abs(absParentPath); err != nil {
+			req.Cancel(err)
+			return
+		}
+	}
+
 	cmd.Genesis.BigBang.ExcludeDefaultType = true
+
+	// When no explicit -yin/-yang flags are provided, link the parent repo's
+	// zettel ID word lists so the workspace can create new zettels.
+	cmd.linkParentZettelIdProviders(absParentPath)
 
 	local := cmd.OnTheFirstDay(req, req.PopArg("workspace repo id"))
 
@@ -201,16 +219,6 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		return
 	}
 
-	absParentPath := cmd.DirectPath
-	if !filepath.IsAbs(absParentPath) {
-		var err error
-
-		if absParentPath, err = filepath.Abs(absParentPath); err != nil {
-			req.Cancel(err)
-			return
-		}
-	}
-
 	blob := &workspace_config_blobs.V1{
 		V0: workspace_config_blobs.V0{
 			Query: cmd.DefaultQueryGroup.String(),
@@ -232,6 +240,43 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		local.GetInventoryListStore(),
 	); err != nil {
 		req.Cancel(err)
+	}
+}
+
+// linkParentZettelIdProviders sets BigBang.Yin and BigBang.Yang to the parent
+// repo's word list files when neither flag was explicitly provided. This allows
+// workspace repos to create new zettels using the parent's ID space without
+// requiring the user to maintain separate word lists.
+func (cmd *InitWorkspace) linkParentZettelIdProviders(absParentPath string) {
+	if cmd.Genesis.BigBang.Yin != "" || cmd.Genesis.BigBang.Yang != "" {
+		return
+	}
+
+	// Construct the parent's object_ids directory path using the known XDG
+	// data directory convention: {parent}/.dodder/data/object_ids/
+	parentObjectIdDir := filepath.Join(
+		absParentPath,
+		"."+env_dir.XDGUtilityNameDodder,
+		"data",
+		"object_ids",
+	)
+
+	parentYin := filepath.Join(
+		parentObjectIdDir,
+		zettel_id_provider.FilePathZettelIdYin,
+	)
+
+	parentYang := filepath.Join(
+		parentObjectIdDir,
+		zettel_id_provider.FilePathZettelIdYang,
+	)
+
+	if files.Exists(parentYin) {
+		cmd.Genesis.BigBang.Yin = parentYin
+	}
+
+	if files.Exists(parentYang) {
+		cmd.Genesis.BigBang.Yang = parentYang
 	}
 }
 

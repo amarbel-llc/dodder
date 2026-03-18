@@ -280,6 +280,64 @@ function workspace_repo_init_experimental_repo { # @test
 	assert [ -f .dodder-workspace ]
 }
 
+function workspace_repo_linked_zettel_ids_from_parent { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# --- Create workspace WITHOUT explicit -yin/-yang ---
+	# The workspace should automatically discover and use the parent's word lists
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-repo_id . \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+
+	assert_success
+
+	# Verify workspace has the parent's zettels
+	run_dodder show :z
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[one/dos @blake2b256-.+ !md "second zettel" priority-high project-alpha]
+		\[one/uno @blake2b256-.+ !md "first zettel" project-alpha]
+		\[two/uno @blake2b256-.+ !md "unrelated zettel" project-beta]
+	EOM
+
+	# --- Create a new zettel in the workspace (uses parent's ID space) ---
+	run_dodder new -edit=false - <<-EOM
+		---
+		# workspace zettel via linked ids
+		- project-alpha
+		! md
+		---
+
+		created in workspace without explicit yin/yang
+	EOM
+	assert_success
+
+	# Verify the new zettel exists and got a valid ID
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'workspace zettel via linked ids'
+
+	# --- Push back to parent ---
+	run_dodder push -direct "$parent_path"
+	assert_success
+
+	# Verify parent received the workspace-created zettel
+	pushd "$parent_path" || exit 1
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'workspace zettel via linked ids'
+}
+
 function workspace_repo_implicit_parent_push_pull { # @test
 	parent="parent"
 	bootstrap_parent "$parent"
