@@ -7,9 +7,11 @@ import (
 	"os"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
+	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
 	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
@@ -142,6 +144,11 @@ var readOnlyAnnotations = &protocol.ToolAnnotations{
 	IdempotentHint: protocol.BoolPtr(true),
 }
 
+var writeAnnotations = &protocol.ToolAnnotations{
+	ReadOnlyHint:    protocol.BoolPtr(false),
+	DestructiveHint: protocol.BoolPtr(false),
+}
+
 func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	bridge := MakeBridge(utility)
 	tools := server.NewToolRegistryV1()
@@ -160,7 +167,7 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 		typeBlobCoder: typeBlobCoder,
 	}
 
-	registerTools(tools, bridge, index, tagIdx)
+	registerTools(tools, bridge, repo, index, tagIdx)
 	registerResources(resources, index, tagIdx, bridge)
 
 	prompts := server.NewPromptRegistry()
@@ -182,7 +189,7 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	return srv.Run(context.Background())
 }
 
-func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex, tagIdx *tagIndex) {
+func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_working_copy.Repo, index *typeIndex, tagIdx *tagIndex) {
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_show",
@@ -450,6 +457,149 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 			}, nil
 		},
 	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_new",
+			Description: "Create a new zettel. Returns the created object in box format. Optionally set a description, type, and tags.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"description": {
+						"type": "string",
+						"description": "Description for the new zettel"
+					},
+					"tags": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Tags to apply (e.g. ['todo', 'priority-0_must'])"
+					},
+					"type": {
+						"type": "string",
+						"description": "Object type (e.g. '!md', '!task')"
+					}
+				},
+				"additionalProperties": false
+			}`),
+			Annotations: writeAnnotations,
+		},
+		makeBridgeHandler(bridge, "new", func(args json.RawMessage) ([]string, error) {
+			var p struct {
+				Description string   `json:"description"`
+				Tags        []string `json:"tags"`
+				Type        string   `json:"type"`
+			}
+			if err := json.Unmarshal(args, &p); err != nil {
+				return nil, err
+			}
+			var cliArgs []string
+			if p.Description != "" {
+				cliArgs = append(cliArgs, "-description", p.Description)
+			}
+			if len(p.Tags) > 0 {
+				cliArgs = append(cliArgs, "-tags", strings.Join(p.Tags, ","))
+			}
+			if p.Type != "" {
+				cliArgs = append(cliArgs, "-type", p.Type)
+			}
+			return cliArgs, nil
+		}),
+	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_edit",
+			Description: "Edit an existing dodder object. Updates metadata (description, tags, type) and/or blob content. Fields not provided are left unchanged. When tags is provided, it replaces all existing tags.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"object_id": {
+						"type": "string",
+						"description": "Object identifier (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', or type like '!md')"
+					},
+					"description": {
+						"type": "string",
+						"description": "New description (replaces existing)"
+					},
+					"tags": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "New tag set (replaces all existing tags)"
+					},
+					"type": {
+						"type": "string",
+						"description": "New object type (e.g. '!md', '!task')"
+					},
+					"blob": {
+						"type": "string",
+						"description": "New blob content (replaces existing blob)"
+					}
+				},
+				"required": ["object_id"],
+				"additionalProperties": false
+			}`),
+			Annotations: writeAnnotations,
+		},
+		makeEditHandler(repo, bridge),
+	)
+}
+
+func makeEditHandler(
+	repo *local_working_copy.Repo,
+	bridge Bridge,
+) server.ToolHandlerV1 {
+	return func(
+		ctx context.Context,
+		args json.RawMessage,
+	) (*protocol.ToolCallResultV1, error) {
+		var p struct {
+			ObjectId    string   `json:"object_id"`
+			Description *string  `json:"description"`
+			Tags        []string `json:"tags"`
+			Type        *string  `json:"type"`
+			Blob        *string  `json:"blob"`
+		}
+
+		if err := json.Unmarshal(args, &p); err != nil {
+			return protocol.ErrorResultV1(
+				fmt.Sprintf("Invalid arguments: %v", err),
+			), nil
+		}
+
+		objectId, objectIdRepool, err := ids.MakeObjectId(p.ObjectId)
+		if err != nil {
+			return protocol.ErrorResultV1(
+				fmt.Sprintf("Invalid object ID %q: %v", p.ObjectId, err),
+			), nil
+		}
+
+		defer objectIdRepool()
+
+		op := user_ops.UpdateObject{Repo: repo}
+
+		changes := user_ops.ObjectChanges{
+			Description: p.Description,
+			Tags:        p.Tags,
+			Type:        p.Type,
+			Blob:        p.Blob,
+		}
+
+		if _, err := op.Run(objectId, changes); err != nil {
+			return protocol.ErrorResultV1(formatErrorDetail(err)), nil
+		}
+
+		// Show the updated object via bridge
+		result, err := bridge.RunCommand(ctx, "show", []string{p.ObjectId}, defaultMaxBytes)
+		if err != nil {
+			return protocol.ErrorResultV1(formatErrorDetail(err)), nil
+		}
+
+		return &protocol.ToolCallResultV1{
+			Content: []protocol.ContentBlockV1{
+				protocol.TextContentV1(result.Stdout),
+			},
+		}, nil
+	}
 }
 
 func formatErrorDetail(err error) string {
