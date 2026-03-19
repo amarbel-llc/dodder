@@ -1,7 +1,7 @@
 ---
 status: proposed
 date: 2026-03-19
-promotion-criteria: all local mutation commands (`add`, `checkin`, `organize`, `edit`) migrated to two-stage commit, full test suite passes
+promotion-criteria: "`import_plan.Builder` extended with zettel ID allocation, at least one command migrated from inline plan to Builder + local CommitPlan, full test suite passes"
 ---
 
 # Two-Stage Commit
@@ -198,13 +198,26 @@ migrating other commands, at which point a shared plan builder may be extracted.
 | `go/internal/foxtrot/zettel_id_index/main.go` | `Index` interface — `CreateZettelId`, `AddZettelId`, `Reset`, `Flush`, `PeekZettelIds` |
 | `go/internal/sierra/local_working_copy/lock.go` | `Repo.Lock` / `Repo.Unlock` — acquires/releases `LockSmith`. `Unlock` triggers flush |
 
-## Reusing `import_plan.Builder` for Local Mutations
+## Next Phase: Unify Local and Remote Plans via `import_plan.Builder`
 
-### What Builder Provides (Generic)
+With inline ID pre-allocation proven across all local mutation commands, the
+next step is to consolidate the ad-hoc plan slices into a shared plan type
+backed by `import_plan.Builder`. This unifies local and remote commit paths
+under a single plan abstraction.
+
+### Why Now
+
+Each migrated command independently implements the same pattern: collect objects
+into a slice, pre-allocate IDs, lock, commit each, unlock. The duplication is
+manageable at four call sites but will not scale if new commands or plan-phase
+concerns (dedup, conflict detection, dry-run) are added. Builder already solves
+classification, deduplication, TAI collision resolution, and topological sorting
+for remote transfers — extending it for local mutations avoids reinventing these.
+
+### What Builder Provides
 
 `import_plan.Builder` (`india/import_plan/builder.go`) is a stateful accumulator
-that classifies objects, deduplicates them, resolves TAI collisions, and
-topologically sorts type dependencies. Its core pipeline:
+with a six-stage pipeline:
 
 1. Apply transforms (optional `ObjectTransform` callbacks)
 2. Skip blobless types
@@ -217,78 +230,89 @@ Output is an immutable `Plan` with sorted `Entry` values, each carrying a
 `Classification` enum (`import`, `skip-exists`, `skip-dedup`,
 `resolve-tai-reassign`, etc.).
 
-### What Builder Does NOT Do
+### What Builder Lacks for Local Mutations
 
 - **Zettel ID allocation** — Builder assumes objects already have IDs (they
   arrive from a remote with IDs assigned). Local mutations need
-  `CreateZettelId()` for new objects. This is the central gap.
+  `CreateZettelId()` for new objects.
 - **Blob saving** — handled inside `commitFacilitator.tryPrecommit`, not in the
   plan phase.
 - **Hook execution** — same, inside `tryPrecommit`.
 
-### Why `CommitPlan` Cannot Be Reused
+### Why `CommitPlan` Cannot Be Reused As-Is
 
 `remote_transfer.CommitPlan()` (`romeo/remote_transfer/commit_plan.go`) is
 hardcoded to `remote_transfer.importer` — it casts the `repo.Importer` interface
 to the private `importer` struct and calls private methods for blob copying,
-signature overwriting, and inventory list import. A local commit executor would
-be much simpler: iterate committable entries, call `store.Commit()` with
+signature overwriting, and inventory list import. A local commit executor is
+much simpler: iterate committable entries, call `store.Commit()` with
 pre-populated IDs.
 
-### Assessment: Premature for Initial Migration
+### Unification Path
 
-For the `new` zero-arg path, every object is always classification "import" —
-there is no deduplication, no TAI collision, no type dependency sorting. Wiring
-Builder in would add complexity without value.
+1. **Add a post-classification hook to Builder** for zettel ID allocation —
+   call `CreateZettelId()` on entries classified as "import" with empty IDs.
+   This runs during `Builder.Build()`, before the plan is finalized.
+2. **Write a local `CommitPlan` function** that iterates committable entries and
+   calls `store.Commit()` — no blob copying, no signature overwriting. This
+   replaces the inline `for _, object := range planned` loops in each command.
+3. **The shared `Plan` type becomes the unit of atomicity** for both local and
+   remote mutations. Commands construct a `Builder`, add objects, call
+   `Build()` (which allocates IDs), then pass the resulting `Plan` to the
+   appropriate `CommitPlan` (local or remote).
 
-However, once multiple commands are migrated (`add`, `organize`, `checkin`),
-the pattern may stabilize enough to extract a shared local plan builder. At that
-point, Builder's classification, dedup, and topological sort become valuable.
+### What This Enables
 
-**Decision:** Start with the minimal approach (move `CreateZettelId` before
-`Lock()` in each command). Revisit Builder reuse after 2-3 commands are
-migrated and the local plan shape is clear.
-
-### Future Unification Path
-
-If Builder is extended for local mutations, the likely changes are:
-
-1. Add a post-classification hook or builder option for zettel ID allocation
-   (call `CreateZettelId()` on entries classified as "import" with empty IDs)
-2. Write a local `CommitPlan` function that iterates committable entries and
-   calls `store.Commit()` — no blob copying, no signature overwriting
-3. The shared `Plan` type becomes the unit of atomicity for both local and
-   remote mutations
+- **Dry-run / preview** — `Build()` produces a plan that can be inspected
+  before committing. Commands could gain a `-dry-run` flag that prints the plan
+  without executing phase 2.
+- **Deduplication for local mutations** — `checkin` and `add` can benefit from
+  Builder's content-digest dedup, skipping objects that already exist in the
+  store.
+- **Conflict detection** — the plan phase can detect TAI collisions between
+  concurrent local mutations before acquiring the lock.
+- **Single code path for `tryPrecommit` extraction** — once all mutations flow
+  through `Plan`, moving blob saving and hooks out of the locked section becomes
+  a change to one commit executor, not four.
 
 ## Implementation Status
 
-### What's Built
+### Phase 1: Inline ID Pre-Allocation (Complete)
 
-- `import_plan.Builder` and `import_plan.Plan` — the plan data structure and
-  classification logic (for remote transfers)
-- `remote_transfer.CommitPlan` — batch commit execution under lock (for remote
-  transfers)
-- `commitFacilitator.tryPrecommit` — already separates pre-processing from
-  persistence, but is called per-object inside the locked section
-- `CreateFromPaths.Run` — already partially two-stage: parses files and
-  collects `toCreate` map before locking, then commits under lock. Only zettel
-  ID allocation remains inside the locked section
+All local mutation commands that create new zettels now pre-allocate zettel IDs
+before acquiring `LockSmith`:
 
-### What's NOT Built
+| Command | File | Migration |
+|---------|------|-----------|
+| `new` (zero-arg) | `tango/user_ops/write_new_zettels.go` | `RunMany` collects planned objects with pre-allocated IDs |
+| `new` (with paths) | `tango/user_ops/create_from_paths.go` | Pre-lock loop over `toCreate` map |
+| `new` (with shas) | `tango/user_ops/create_from_shas.go` | Same pattern as paths |
+| `checkin` | `sierra/local_working_copy/op_checkin.go` | Phase 1 loop over untracked Zettel/Blob objects |
 
-- Moving `CreateZettelId` calls to before `Lock()` in `WriteNewZettels.RunMany`
-- Same for `CreateFromPaths.Run` and `CreateFromShas.Run`
-- Shared plan builder for local mutations (extract later if the pattern
-  stabilizes across multiple commands)
+Commands that only update existing objects (`organize`, `edit`) were not
+migrated — they never call `CreateZettelId`.
+
+Remote transfers (`pull`/`clone`) were already two-stage via `import_plan`.
+
+### Phase 2: Builder Unification (Not Started)
+
+- Extend `import_plan.Builder` with zettel ID allocation hook
+- Write local `CommitPlan` function
+- Migrate commands from inline plan slices to `Builder` + `CommitPlan`
 
 ## Rollback Strategy
 
-### Dual-Architecture Period
+The two-stage commit is purely internal — no CLI surface changes. Phase 1
+(inline pre-allocation) and Phase 2 (Builder unification) are independently
+revertable:
 
-The two-stage commit is purely internal — no CLI surface changes. Commands can
-be migrated one at a time. During migration, some commands use the old
-single-stage path while others use the new two-stage path. Both are correct
-under the existing `LockSmith` because:
+- **Revert Phase 1**: Move `CreateZettelId` back inside the lock in each
+  command. No data migration needed — the plan phase produces the same objects
+  as the old path.
+- **Revert Phase 2** (once built): Replace Builder-based plans with the current
+  inline slices. The inline approach is correct under `LockSmith`.
+
+Both phases are correct under the existing `LockSmith` because:
 
 - Pre-allocating IDs then committing produces the same result as allocating
   during commit
@@ -296,16 +320,9 @@ under the existing `LockSmith` because:
   happened
 - No other process can interfere because `LockSmith` is held during phase 2
 
-### Promotion Criteria (exploring -> proposed)
+### Promotion Criteria (proposed → experimental)
 
-- `WriteNewZettels.RunMany` refactored: ID allocation before `Lock()`, commits
-  after `Lock()`
-- `new` BATS tests pass unchanged (both zero-arg and with-paths variants)
-- `just test` passes (full suite, since other commands may depend on `new`
-  behavior)
-
-### Rollback Procedure
-
-Revert `WriteNewZettels.RunMany` to the old single-stage path (move
-`CreateZettelId` back inside the lock). No data migration needed — the plan
-phase produces the same objects as the old path.
+- `import_plan.Builder` extended with zettel ID allocation for local mutations
+- At least one command (`new` zero-arg) migrated from inline plan to
+  `Builder` + local `CommitPlan`
+- Full test suite passes
