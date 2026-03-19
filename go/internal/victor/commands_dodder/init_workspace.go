@@ -252,12 +252,12 @@ func (cmd *InitWorkspace) linkParentZettelIdProviders(absParentPath string) {
 		return
 	}
 
-	// Construct the parent's object_ids directory path using the known XDG
-	// data directory convention: {parent}/.dodder/data/object_ids/
+	// Construct the parent's object_ids directory path. CWD repos use XDG
+	// layout inside the dotdir: {parent}/.dodder/local/share/object_ids/
 	parentObjectIdDir := filepath.Join(
 		absParentPath,
 		"."+env_dir.XDGUtilityNameDodder,
-		"data",
+		"local", "share",
 		"object_ids",
 	)
 
