@@ -472,8 +472,12 @@ To advance to `testing`:
 
 - [x] Zettel ID provider linking from parent (workspace can create zettels
   without explicit `-yin`/`-yang`)
-- [ ] Zettel ID conflict resolution for filtered clones (push back to parent
-  without collisions — batch ID reservation or similar)
+- [ ] Zettel ID conflict resolution for filtered clones — planned approach is a
+  remote zettel ID index that delegates allocation to the parent's index via
+  `flock(2)`, eliminating collisions entirely. Depends on
+  [FDR-0006](0006-two-stage-commit.md) (two-stage commit) and
+  [ADR-0001](../decisions/0001-use-flock-for-fine-grained-resource-locking.md)
+  (per-resource flock locking)
 - [ ] Divergence detection (workspace HEAD vs parent HEAD baseline comparison)
 - [ ] Real-world validation with a non-trivial object graph (100+ objects)
 
