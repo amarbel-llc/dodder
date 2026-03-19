@@ -1,7 +1,7 @@
 ---
 status: exploring
 date: 2026-03-19
-promotion-criteria: at least one command (add or new) refactored to use two-stage commit with zettel ID pre-allocation in the plan phase, BATS tests pass unchanged
+promotion-criteria: `new` command (zero-arg path) refactored to use two-stage commit with zettel ID pre-allocation in the plan phase, BATS tests pass unchanged
 ---
 
 # Two-Stage Commit
@@ -19,10 +19,10 @@ This tight coupling prevents fine-grained locking
 To use per-resource `flock(2)` locks (e.g., one for the zettel ID index, another
 for the inventory list log), each resource's lock must be held only during its
 own I/O — not for the entire operation. But today, zettel ID allocation happens
-mid-commit (line 139 of `papa/store/mutating.go`), interleaved with blob saving,
-hook execution, and finalization. There is no point where "all zettel IDs have
-been allocated" and "no inventory list writes have started" — the two are
-interleaved per-object.
+mid-commit (`papa/store/mutating.go:139`), interleaved with blob saving, hook
+execution, and finalization. There is no point where "all zettel IDs have been
+allocated" and "no inventory list writes have started" — the two are interleaved
+per-object.
 
 The remote transfer path (`pull`/`clone`) already solves this via `import_plan`:
 objects are classified and validated in a plan phase (no lock required), then
@@ -38,91 +38,186 @@ full duration.
 Separate store mutations into two phases:
 
 **Phase 1 — Plan (no lock required):**
-- Save blobs to content-addressable store (idempotent, no lock needed)
-- Run pre-commit hooks and validation
-- Allocate zettel IDs for new objects (acquires zettel ID flock briefly, then
-  releases)
+- Allocate zettel IDs for new objects (in bulk if multiple objects)
 - Classify objects (new vs update vs skip)
-- Produce a commit plan: a list of objects ready to persist
+- Produce a commit plan: a list of objects with pre-allocated IDs, ready to
+  persist
 
-**Phase 2 — Commit (lock per resource):**
-- Acquire inventory list flock
-- Write all objects to the inventory list in a single batch
-- Atomic swap of the inventory list file
-- Release inventory list flock
-- Update stream index, abbreviation index (can use their own flocks or be
-  rebuilt from the inventory list)
+**Phase 2 — Commit (under `LockSmith`, same as today):**
+- Acquire `LockSmith`
+- For each plan entry, call `store.Commit` with the pre-allocated ID already set
+  on the object (skipping the `CreateZettelId` call inside `commit`)
+- Flush (inventory list, stream index, zettel ID index, etc.)
+- Release `LockSmith`
+
+Phase 2 uses the existing `LockSmith` — no `flock(2)` changes yet. The goal of
+this FDR is to separate ID allocation from persistence, not to change the
+locking mechanism. `flock(2)` migration is a follow-up concern
+([ADR-0001](../decisions/0001-use-flock-for-fine-grained-resource-locking.md)).
 
 The plan is the unit of atomicity — either all objects in the plan are committed,
 or none are.
 
 ### Zettel ID Allocation in the Plan Phase
 
-Today, `CreateZettelId` is called inside `commitFacilitator.commit` when an
-object has an empty ID and `AddToInventoryList` is true. In the two-stage model:
+Today, `CreateZettelId` is called inside `commitFacilitator.commit`
+(`papa/store/mutating.go:134-148`) when an object has an empty ID and
+`AddToInventoryList` is true:
+
+```go
+if options.AddToInventoryList && (daughter.GetObjectId().IsEmpty() ||
+    daughter.GetGenre() == genres.Unknown ||
+    daughter.GetGenre() == genres.Blob) {
+    var zettelId *ids.ZettelId
+    if zettelId, err = commitFacilitator.zettelIdIndex.CreateZettelId(); err != nil {
+        // ...
+    }
+    // sets the ID on the object
+}
+```
+
+In the two-stage model, this moves to the plan phase:
 
 1. The plan builder iterates over incoming objects
-2. For each object needing a new ID, it acquires the zettel ID flock, reads the
-   bitset, allocates an ID, writes the bitset, releases the flock
-3. The allocated ID is stored in the plan entry
-4. Phase 2 commits objects using their pre-allocated IDs — no zettel ID index
-   access needed
+2. For each object needing a new ID, it calls `zettelIdIndex.CreateZettelId()`
+   and sets the ID on the object
+3. The plan entry stores the object with its pre-allocated ID
+4. Phase 2 calls `store.Commit` — the empty-ID check at line 134 sees a
+   non-empty ID and skips `CreateZettelId` entirely
 
-This means the zettel ID flock is held only during allocation (phase 1), not
-during the entire commit (phase 2). For bulk operations like `add` with 50
-files, the IDs can be batch-allocated in a single flock acquisition.
+No changes to `store.Commit` are needed. The existing empty-ID check already
+gates `CreateZettelId` — pre-populating the ID is sufficient to bypass it.
 
-### Existing Two-Stage Pattern: import_plan
+For bulk operations (e.g., `new -count 5`), all IDs are allocated in a tight
+loop before any commit work begins. Today they are allocated one at a time,
+interleaved with commits.
 
-`import_plan.Builder` + `remote_transfer.CommitPlan` already implement this
-pattern for remote transfers:
+### Starting Point: `new` Command (Zero-Arg Path)
 
-- `Builder.AddObject` classifies each incoming object (import, skip-exists,
-  skip-dedup, resolve-tai-reassign, error-missing-blob) without holding any lock
-- `Builder.Build` produces a `Plan` with topologically sorted entries
-- `CommitPlan` acquires the lock, iterates committable entries, and commits each
+The `new` command's zero-arg path (create empty zettels) is the simplest
+candidate for migration. It has a clean, traceable call chain:
 
-The gap: `import_plan` does not handle zettel ID allocation (remote objects
-arrive with IDs already assigned). Local commands need a plan builder that also
-allocates IDs.
+```
+new.Run
+  → user_ops.WriteNewZettels.RunMany(proto, count)
+    → op.Lock()                              # acquires LockSmith
+    → for range count:
+        → op.runOneAlreadyLocked(proto)
+          → proto.Make()                     # creates empty Transacted
+          → store.CreateOrUpdateDefaultProto(object, options)
+            → store.CreateOrUpdate(object, options)
+              → store.Commit(object, options)
+                → commitFacilitator.commit(object, options)
+                  → zettelIdIndex.CreateZettelId()  # <-- ID allocated here
+                  → tryPrecommit (blob save, hooks, validation)
+                  → commitTransacted (add to working list)
+    → op.Unlock()                            # flushes + releases LockSmith
+```
 
-### Commands to Migrate
+The two-stage version would be:
 
-| Command | Current path | Notes |
-|---------|-------------|-------|
-| `new` | `store.CreateOrUpdate` | Allocates one zettel ID per call |
-| `add` | `store_fs.SaveBlob` → `store.Commit` | Batch of files, each committed individually |
-| `checkin` | `store_fs` → `store.Commit` | Similar to add |
-| `organize` | `store_workspace` → `store.Commit` | Batch of objects from editor |
-| `edit` | `store.CreateOrUpdate` | Single object |
+```
+new.Run
+  → user_ops.WriteNewZettels.RunMany(proto, count)
+    → Phase 1 (no lock):
+        → for range count:
+            → proto.Make()
+            → zettelIdIndex.CreateZettelId()
+            → set ID on object
+            → append to plan
+    → Phase 2 (under lock):
+        → op.Lock()
+        → for each plan entry:
+            → store.CreateOrUpdateDefaultProto(entry.object, options)
+              → store.Commit sees non-empty ID, skips CreateZettelId
+        → op.Unlock()
+```
+
+### What About `tryPrecommit`?
+
+`tryPrecommit` (`papa/store/mutating.go:44-98`) runs blob saving, applies
+proto, discovers references, and runs pre-commit hooks. It is currently called
+inside `commit`, after ID allocation.
+
+For this first migration, **`tryPrecommit` stays where it is** — inside
+`store.Commit`, under the lock. Only zettel ID allocation moves to the plan
+phase. Moving blob saving and hooks out of the locked section is a future
+optimization that can happen after the ID allocation separation is proven.
+
+### Approach: Modify `WriteNewZettels`, Not `import_plan`
+
+The existing `import_plan.Builder` is designed for remote transfers — it handles
+deduplication, TAI reassignment, topological sorting, and classification of
+already-identified objects. Local mutations have different needs (ID allocation,
+proto application) and simpler classification (always "create").
+
+Rather than extending `import_plan` with local-mutation concerns, the
+recommended approach is to modify `WriteNewZettels` directly:
+
+1. Move the `CreateZettelId` + `Set` calls into a pre-lock loop
+2. Collect the prepared objects into a slice
+3. Lock, commit each, unlock
+
+This is a minimal change to `WriteNewZettels.RunMany` (~20 lines moved). No new
+types or packages needed. If the pattern proves out, it becomes the template for
+migrating other commands, at which point a shared plan builder may be extracted.
+
+### Commands to Migrate (in order)
+
+| Command | Current call chain | Complexity |
+|---------|--------------------|------------|
+| `new` (zero-arg) | `WriteNewZettels.RunMany` → `CreateOrUpdateDefaultProto` → `Commit` | Lowest — single object type, no blob, no hooks that depend on ID |
+| `new` (with paths) | `CreateFromPaths.Run` → `CreateOrUpdateDefaultProto` → `Commit` | Low — already collects objects before locking (`toCreate` map) |
+| `new` (with shas) | `CreateFromShas.Run` → similar | Low — similar to paths |
+| `add` | `store_fs.SaveBlob` → `Commit` | Medium — blob saving interleaved |
+| `checkin` | `store_fs` → `Commit` | Medium — similar to add |
+| `organize` | `store_workspace` → `Commit` | Medium — batch from editor |
+| `edit` | `CreateOrUpdate` | Low — single object, but may have blob |
 | `pull`/`clone` | `import_plan` → `CommitPlan` | Already two-stage |
 
 ### What Does NOT Change
 
 - `import_plan` and `CommitPlan` for remote transfers — already correct
+- `store.Commit` method — it remains the inner commit loop, just receives
+  objects with IDs already set
+- `commitFacilitator.tryPrecommit` — stays inside `commit` for now
 - Object format, blob format, inventory list format
-- The `store.Commit` method itself — it becomes the inner loop of phase 2,
-  called with pre-allocated IDs
 - Content-addressable blob writes — already idempotent and lockless
+- `LockSmith` mechanism — no `flock(2)` changes in this FDR
+
+## Key Files
+
+| File | Role |
+|------|------|
+| `go/internal/victor/commands_dodder/new.go` | `New.Run` — entry point, dispatches to `WriteNewZettels` / `CreateFromPaths` / `CreateFromShas` |
+| `go/internal/tango/user_ops/write_new_zettels.go` | `WriteNewZettels.RunMany` — **primary migration target**. Currently: Lock → loop(Make + CreateOrUpdateDefaultProto) → Unlock |
+| `go/internal/tango/user_ops/create_from_paths.go` | `CreateFromPaths.Run` — secondary target. Already separates parsing (pre-lock) from commit (under lock), but ID allocation is inside commit |
+| `go/internal/papa/store/create.go` | `CreateOrUpdate` / `CreateOrUpdateDefaultProto` — sets `AddToInventoryList = true`, calls `Commit` |
+| `go/internal/papa/store/mutating.go` | `commitFacilitator.commit` — lines 134-148 allocate zettel ID when object ID is empty. Lines 44-98 (`tryPrecommit`) handle blob saving and hooks |
+| `go/internal/foxtrot/zettel_id_index/v0/main.go` | `index.CreateZettelId` — picks from available IDs in `map[int]bool`. `AddZettelId` — removes an ID from available pool |
+| `go/internal/foxtrot/zettel_id_index/main.go` | `Index` interface — `CreateZettelId`, `AddZettelId`, `Reset`, `Flush`, `PeekZettelIds` |
+| `go/internal/sierra/local_working_copy/lock.go` | `Repo.Lock` / `Repo.Unlock` — acquires/releases `LockSmith`. `Unlock` triggers flush |
 
 ## Implementation Status
 
 ### What's Built
 
 - `import_plan.Builder` and `import_plan.Plan` — the plan data structure and
-  classification logic
-- `remote_transfer.CommitPlan` — batch commit execution under lock
+  classification logic (for remote transfers)
+- `remote_transfer.CommitPlan` — batch commit execution under lock (for remote
+  transfers)
 - `commitFacilitator.tryPrecommit` — already separates pre-processing from
-  commit (blob saving, hooks, validation), but is called per-object inside the
-  locked section
+  persistence, but is called per-object inside the locked section
+- `CreateFromPaths.Run` — already partially two-stage: parses files and
+  collects `toCreate` map before locking, then commits under lock. Only zettel
+  ID allocation remains inside the locked section
 
 ### What's NOT Built
 
-- Local command plan builder (extends `import_plan` or new builder that handles
-  zettel ID allocation)
-- Zettel ID batch allocation (acquire flock once, allocate N IDs, release)
-- Migration of `add`, `new`, `organize`, `checkin`, `edit` to two-stage
-- Atomic file swap for the zettel ID index gob file
+- Moving `CreateZettelId` calls to before `Lock()` in `WriteNewZettels.RunMany`
+- Same for `CreateFromPaths.Run` and `CreateFromShas.Run`
+- Shared plan builder for local mutations (extract later if the pattern
+  stabilizes across multiple commands)
 
 ## Rollback Strategy
 
@@ -131,15 +226,24 @@ allocates IDs.
 The two-stage commit is purely internal — no CLI surface changes. Commands can
 be migrated one at a time. During migration, some commands use the old
 single-stage path while others use the new two-stage path. Both are correct
-under the existing `LockSmith`.
+under the existing `LockSmith` because:
+
+- Pre-allocating IDs then committing produces the same result as allocating
+  during commit
+- The zettel ID index is flushed during `Unlock` regardless of when allocation
+  happened
+- No other process can interfere because `LockSmith` is held during phase 2
 
 ### Promotion Criteria (exploring -> proposed)
 
-- At least one local command (`new` or `add`) prototyped with two-stage commit
-- Zettel ID allocation moved to plan phase for that command
-- Existing BATS tests pass unchanged
+- `WriteNewZettels.RunMany` refactored: ID allocation before `Lock()`, commits
+  after `Lock()`
+- `new` BATS tests pass unchanged (both zero-arg and with-paths variants)
+- `just test` passes (full suite, since other commands may depend on `new`
+  behavior)
 
 ### Rollback Procedure
 
-Revert the command's `Run` method to the old single-stage path. No data
-migration needed — the plan phase produces the same objects as the old path.
+Revert `WriteNewZettels.RunMany` to the old single-stage path (move
+`CreateZettelId` back inside the lock). No data migration needed — the plan
+phase produces the same objects as the old path.
