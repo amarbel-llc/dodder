@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type WriteNewZettels struct {
@@ -14,6 +15,31 @@ func (op WriteNewZettels) RunMany(
 	proto sku.Proto,
 	count int,
 ) (results sku.TransactedMutableSet, err error) {
+	zettelIdIndex := op.GetStore().GetZettelIdIndex()
+
+	// Phase 1: allocate zettel IDs and prepare objects before acquiring lock
+	planned := make([]*sku.Transacted, 0, count)
+
+	for range count {
+		object, _ := proto.Make() //repool:owned
+
+		zettelId, idErr := zettelIdIndex.CreateZettelId()
+		if idErr != nil {
+			err = errors.Wrap(idErr)
+			return results, err
+		}
+
+		if err = object.GetObjectIdMutable().SetWithSeq(zettelId.ToSeq()); err != nil {
+			err = errors.Wrap(err)
+			return results, err
+		}
+
+		ui.Log().Printf("pre-allocated zettel id: %s", object.GetObjectId())
+
+		planned = append(planned, object)
+	}
+
+	// Phase 2: commit all planned objects under lock
 	if err = op.Lock(); err != nil {
 		err = errors.Wrap(err)
 		return results, err
@@ -21,16 +47,18 @@ func (op WriteNewZettels) RunMany(
 
 	results = sku.MakeTransactedMutableSet()
 
-	// TODO-P4 modify this to be run once
-	for range count {
-		var zt *sku.Transacted
-
-		if zt, err = op.runOneAlreadyLocked(proto); err != nil {
+	for _, object := range planned {
+		if err = op.GetStore().CreateOrUpdateDefaultProto(
+			object,
+			sku.StoreOptions{
+				ApplyProto: true,
+			},
+		); err != nil {
 			err = errors.Wrap(err)
 			return results, err
 		}
 
-		if err = results.Add(zt); err != nil {
+		if err = results.Add(object); err != nil {
 			err = errors.Wrap(err)
 			return results, err
 		}
@@ -44,41 +72,19 @@ func (op WriteNewZettels) RunMany(
 	return results, err
 }
 
-func (c WriteNewZettels) RunOne(
+func (op WriteNewZettels) RunOne(
 	z sku.Proto,
 ) (result *sku.Transacted, err error) {
-	if err = c.Lock(); err != nil {
-		err = errors.Wrap(err)
+	results, err := op.RunMany(z, 1)
+	if err != nil {
 		return result, err
 	}
 
-	if result, err = c.runOneAlreadyLocked(z); err != nil {
-		err = errors.Wrap(err)
-		return result, err
-	}
-
-	if err = c.Unlock(); err != nil {
-		err = errors.Wrap(err)
-		return result, err
+	for t := range results.All() {
+		result = t
+		break
 	}
 
 	return result, err
 }
 
-func (c WriteNewZettels) runOneAlreadyLocked(
-	proto sku.Proto,
-) (object *sku.Transacted, err error) {
-	object, _ = proto.Make() //repool:owned
-
-	if err = c.GetStore().CreateOrUpdateDefaultProto(
-		object,
-		sku.StoreOptions{
-			ApplyProto: true,
-		},
-	); err != nil {
-		err = errors.Wrap(err)
-		return object, err
-	}
-
-	return object, err
-}
