@@ -1,7 +1,7 @@
 ---
-status: exploring
+status: proposed
 date: 2026-03-19
-promotion-criteria: `new` command (zero-arg path) refactored to use two-stage commit with zettel ID pre-allocation in the plan phase, BATS tests pass unchanged
+promotion-criteria: all local mutation commands (`add`, `checkin`, `organize`, `edit`) migrated to two-stage commit, full test suite passes
 ---
 
 # Two-Stage Commit

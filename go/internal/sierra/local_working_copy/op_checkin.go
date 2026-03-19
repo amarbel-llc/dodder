@@ -15,8 +15,6 @@ func (local *Repo) Checkin(
 	delete bool,
 	refreshCheckout bool,
 ) (processed sku.TransactedMutableSet, err error) {
-	local.Must(errors.MakeFuncContextFromFuncErr(local.Lock))
-
 	processed = sku.MakeTransactedMutableSet()
 	sortedResults := quiter.ElementsSorted(
 		skus,
@@ -24,6 +22,42 @@ func (local *Repo) Checkin(
 			return left.String() < right.String()
 		},
 	)
+
+	// Phase 1: pre-process untracked objects and allocate zettel IDs before
+	// acquiring lock
+	zettelIdIndex := local.GetStore().GetZettelIdIndex()
+
+	for _, co := range sortedResults {
+		if co.GetState() != checked_out_state.Untracked {
+			continue
+		}
+
+		external := co.GetSkuExternal()
+
+		if external.GetGenre() != genres.Zettel && external.GetGenre() != genres.Blob {
+			continue
+		}
+
+		if external.GetMetadata().IsEmpty() {
+			continue
+		}
+
+		external.GetObjectIdMutable().Reset()
+
+		zettelId, idErr := zettelIdIndex.CreateZettelId()
+		if idErr != nil {
+			err = errors.Wrap(idErr)
+			return processed, err
+		}
+
+		if err = external.GetObjectIdMutable().SetWithSeq(zettelId.ToSeq()); err != nil {
+			err = errors.Wrap(err)
+			return processed, err
+		}
+	}
+
+	// Phase 2: commit all objects under lock
+	local.Must(errors.MakeFuncContextFromFuncErr(local.Lock))
 
 	for _, co := range sortedResults {
 		if refreshCheckout {
@@ -38,8 +72,8 @@ func (local *Repo) Checkin(
 		external := co.GetSkuExternal()
 
 		if co.GetState() == checked_out_state.Untracked &&
-			(co.GetSkuExternal().GetGenre() == genres.Zettel ||
-				co.GetSkuExternal().GetGenre() == genres.Blob) {
+			(external.GetGenre() == genres.Zettel ||
+				external.GetGenre() == genres.Blob) {
 			if external.GetMetadata().IsEmpty() {
 				continue
 			}
@@ -54,8 +88,6 @@ func (local *Repo) Checkin(
 					return processed, err
 				}
 			}
-
-			external.GetObjectIdMutable().Reset()
 
 			proto.Apply(external, genres.Zettel)
 
