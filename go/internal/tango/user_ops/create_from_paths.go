@@ -120,6 +120,27 @@ func (op CreateFromPaths) Run(
 
 	results = sku.MakeTransactedMutableSet()
 
+	// Phase 1: pre-allocate zettel IDs before acquiring lock
+	zettelIdIndex := op.GetStore().GetZettelIdIndex()
+
+	for _, object := range toCreate {
+		if object.GetMetadata().IsEmpty() {
+			continue
+		}
+
+		zettelId, idErr := zettelIdIndex.CreateZettelId()
+		if idErr != nil {
+			err = errors.Wrap(idErr)
+			return results, err
+		}
+
+		if err = object.GetObjectIdMutable().SetWithSeq(zettelId.ToSeq()); err != nil {
+			err = errors.Wrap(err)
+			return results, err
+		}
+	}
+
+	// Phase 2: commit all planned objects under lock
 	if err = op.Lock(); err != nil {
 		err = errors.Wrap(err)
 		return results, err
@@ -127,7 +148,7 @@ func (op CreateFromPaths) Run(
 
 	for _, object := range toCreate {
 		if object.GetMetadata().IsEmpty() {
-			return results, err
+			continue
 		}
 
 		op.Proto.Apply(object, genres.Zettel)
