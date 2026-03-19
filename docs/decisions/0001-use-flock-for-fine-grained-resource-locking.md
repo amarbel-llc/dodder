@@ -107,6 +107,14 @@ but it becomes crash-safe.
 * Neutral, because it could be a stepping stone to Option 1 (migrate LockSmith
   first, then decompose into per-resource locks)
 
+## Prerequisites
+
+* [FDR-0006: Two-Stage Commit](../features/0006-two-stage-commit.md) —
+  separating pre-processing (zettel ID allocation, validation) from persistence
+  (inventory list writes) is required before per-resource flocks can be held
+  narrowly. Without two-stage commit, the flock would be held for the entire
+  operation — equivalent to the current repo-wide lock.
+
 ## More Information
 
 * [FDR-0005: Workspace-as-Repo](../features/0005-workspace-as-repo.md) —
