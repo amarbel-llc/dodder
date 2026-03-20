@@ -12,6 +12,7 @@ type Entry struct {
 	Height         int
 	OriginalTai    ids.Tai
 	ErrorCause     string
+	Options        *sku.CommitOptions
 }
 
 func (e *Entry) GetObject() *sku.Transacted {

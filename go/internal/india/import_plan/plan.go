@@ -3,13 +3,15 @@ package import_plan
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 )
 
 type Plan struct {
-	Entries     []Entry
-	SourcePaths []string
-	HasErrors   bool
-	Abbr        ids.Abbr
+	Entries              []Entry
+	SourcePaths          []string
+	HasErrors            bool
+	Abbr                 ids.Abbr
+	DefaultCommitOptions sku.CommitOptions
 }
 
 func (plan *Plan) CountByClassification() map[Classification]int {
