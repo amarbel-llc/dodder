@@ -2,9 +2,9 @@ package user_ops
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type WriteNewZettels struct {
@@ -17,57 +17,32 @@ func (op WriteNewZettels) RunMany(
 ) (results sku.TransactedMutableSet, err error) {
 	zettelIdIndex := op.GetStore().GetZettelIdIndex()
 
-	// Phase 1: allocate zettel IDs and prepare objects before acquiring lock
-	planned := make([]*sku.Transacted, 0, count)
+	builder := import_plan.MakeBuilder(
+		op.GetStore().GetStreamIndex(),
+		"",
+	)
+
+	builder.AddTransform(
+		import_plan.MakeAllocateZettelIdTransform(zettelIdIndex),
+	)
 
 	for range count {
 		object, _ := proto.Make() //repool:owned
 
-		zettelId, idErr := zettelIdIndex.CreateZettelId()
-		if idErr != nil {
-			err = errors.Wrap(idErr)
-			return results, err
-		}
-
-		if err = object.GetObjectIdMutable().SetWithSeq(zettelId.ToSeq()); err != nil {
-			err = errors.Wrap(err)
-			return results, err
-		}
-
-		ui.Log().Printf("pre-allocated zettel id: %s", object.GetObjectId())
-
-		planned = append(planned, object)
+		builder.AddObject(object, 0)
 	}
 
-	// Phase 2: commit all planned objects under lock
-	if err = op.Lock(); err != nil {
-		err = errors.Wrap(err)
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		err = errors.Wrap(buildErr)
 		return results, err
 	}
 
-	results = sku.MakeTransactedMutableSet()
-
-	for _, object := range planned {
-		if err = op.GetStore().CreateOrUpdateDefaultProto(
-			object,
-			sku.StoreOptions{
-				ApplyProto: true,
-			},
-		); err != nil {
-			err = errors.Wrap(err)
-			return results, err
-		}
-
-		if err = results.Add(object); err != nil {
-			err = errors.Wrap(err)
-			return results, err
-		}
-	}
-
-	if err = op.Unlock(); err != nil {
-		err = errors.Wrap(err)
-		return results, err
-	}
+	results, err = CommitPlan(
+		op.Repo,
+		plan,
+		sku.StoreOptions{ApplyProto: true},
+	)
 
 	return results, err
 }
