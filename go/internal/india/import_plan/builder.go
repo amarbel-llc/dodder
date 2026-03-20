@@ -49,6 +49,10 @@ func MakeBuilder(
 	}
 }
 
+func (b *Builder) PeekEntries() []Entry {
+	return b.entries
+}
+
 func (b *Builder) AddTransform(t ObjectTransform) {
 	b.transforms = append(b.transforms, t)
 }
