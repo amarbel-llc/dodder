@@ -27,10 +27,6 @@ func (op CreateFromPaths) Run(
 	toCreate := make(map[string]*sku.Transacted)
 	toDelete := fd.MakeMutableSet()
 
-	commitOptions := sku.CommitOptions{
-		StoreOptions: sku.GetStoreOptionsRealizeWithProto(),
-	}
-
 	digestWithoutTai, digestWithoutTaiRepool := markl.GetId()
 	defer digestWithoutTaiRepool()
 
@@ -53,7 +49,9 @@ func (op CreateFromPaths) Run(
 		}
 
 		if object, err = op.GetEnvWorkspace().GetStoreFS().ReadExternalFromItem(
-			commitOptions,
+			sku.CommitOptions{
+				StoreOptions: sku.GetStoreOptionsRealizeWithProto(),
+			},
 			&fsItem,
 			nil,
 		); err != nil {
@@ -146,16 +144,21 @@ func (op CreateFromPaths) Run(
 		return results, err
 	}
 
-	results, err = CommitPlan(
-		op.Repo,
-		plan,
-		sku.StoreOptions{
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: op.GetStore().GetProtoZettel(),
+		StoreOptions: sku.StoreOptions{
 			LockfileOptions: sku.LockfileOptions{
 				AllowTagFailure: true,
 			},
-			ApplyProto: true,
+			AddToInventoryList: true,
+			UpdateTai:          true,
+			RunHooks:           true,
+			Validate:           true,
+			ApplyProto:         true,
 		},
-	)
+	}
+
+	results, err = op.Repo.ExecutePlan(plan)
 
 	if err != nil {
 		return results, err
