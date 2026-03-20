@@ -198,12 +198,15 @@ migrating other commands, at which point a shared plan builder may be extracted.
 | `go/internal/foxtrot/zettel_id_index/main.go` | `Index` interface — `CreateZettelId`, `AddZettelId`, `Reset`, `Flush`, `PeekZettelIds` |
 | `go/internal/sierra/local_working_copy/lock.go` | `Repo.Lock` / `Repo.Unlock` — acquires/releases `LockSmith`. `Unlock` triggers flush |
 
-## Next Phase: Unify Local and Remote Plans via `import_plan.Builder`
+## Builder Unification Design
 
-With inline ID pre-allocation proven across all local mutation commands, the
-next step is to consolidate the ad-hoc plan slices into a shared plan type
-backed by `import_plan.Builder`. This unifies local and remote commit paths
-under a single plan abstraction.
+> **Status:** Largely implemented — see [Implementation Status](#implementation-status)
+> for current state. Only Checkin remains unmigrated
+> ([#12](https://github.com/amarbel-llc/dodder/issues/12)).
+
+This section describes the design for consolidating the ad-hoc inline plan
+slices (from Phase 1) into a shared plan type backed by `import_plan.Builder`,
+unifying local and remote commit paths under a single plan abstraction.
 
 ### Why Now
 
