@@ -1,7 +1,7 @@
 ---
-status: proposed
-date: 2026-03-19
-promotion-criteria: "`import_plan.Builder` extended with zettel ID allocation, at least one command migrated from inline plan to Builder + local CommitPlan, full test suite passes"
+status: experimental
+date: 2026-03-20
+promotion-criteria: "all local mutation commands migrated from inline plan to Builder + local CommitPlan; full test suite passes; dry-run flag added to at least one command"
 ---
 
 # Two-Stage Commit
@@ -294,11 +294,12 @@ migrated — they never call `CreateZettelId`.
 
 Remote transfers (`pull`/`clone`) were already two-stage via `import_plan`.
 
-### Phase 2: Builder Unification (Not Started)
+### Phase 2: Builder Unification (In Progress)
 
-- Extend `import_plan.Builder` with zettel ID allocation hook
-- Write local `CommitPlan` function
-- Migrate commands from inline plan slices to `Builder` + `CommitPlan`
+- [x] Write `MakeAllocateZettelIdTransform` for zettel ID allocation
+- [x] Write local `CommitPlan` function in `tango/user_ops`
+- [x] Migrate `WriteNewZettels` (`new` zero-arg) to Builder + CommitPlan
+- [ ] Migrate remaining commands (`CreateFromPaths`, `CreateFromShas`, `Checkin`)
 
 ## Rollback Strategy
 
@@ -320,9 +321,9 @@ Both phases are correct under the existing `LockSmith` because:
   happened
 - No other process can interfere because `LockSmith` is held during phase 2
 
-### Promotion Criteria (proposed → experimental)
+### Promotion Criteria (experimental → testing)
 
-- `import_plan.Builder` extended with zettel ID allocation for local mutations
-- At least one command (`new` zero-arg) migrated from inline plan to
-  `Builder` + local `CommitPlan`
+- All local mutation commands migrated from inline plan to Builder + local
+  `CommitPlan`
 - Full test suite passes
+- Dry-run flag added to at least one command
