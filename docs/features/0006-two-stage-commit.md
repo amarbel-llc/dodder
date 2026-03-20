@@ -1,7 +1,7 @@
 ---
 status: experimental
 date: 2026-03-20
-promotion-criteria: "all local mutation commands migrated from inline plan to Builder + local CommitPlan; full test suite passes; dry-run flag added to at least one command"
+promotion-criteria: "store.Store exposes CommitPlan method replacing per-object Commit for plan-based mutations; Checkin migrated; dry-run inspects plan without committing; full test suite passes"
 ---
 
 # Two-Stage Commit
@@ -323,9 +323,26 @@ Both phases are correct under the existing `LockSmith` because:
   happened
 - No other process can interfere because `LockSmith` is held during phase 2
 
+### Phase 3: Store Consumes Plan (Not Started)
+
+Today `CommitPlan` in `tango/user_ops` iterates plan entries and calls
+`store.CreateOrUpdateDefaultProto` per-object — it's a loop around the
+single-commit interface. The store has no concept of "here's a batch of work."
+
+Moving plan consumption into the store enables:
+- **Dry-run as plan inspection** — store receives plan, validates, decides not
+  to flush. No wasted commit work.
+- **File-persisted plan** — store writes the plan as an inventory list before
+  executing, enabling atomic commit and crash recovery
+  ([#9](https://github.com/amarbel-llc/dodder/issues/9)).
+- **Checkin unification** — store handles per-entry dispatch (create vs update
+  checked-out) internally, removing the mixed loop from Checkin
+  ([#12](https://github.com/amarbel-llc/dodder/issues/12)).
+
 ### Promotion Criteria (experimental → testing)
 
-- All local mutation commands migrated from inline plan to Builder + local
-  `CommitPlan`
+- `store.Store` exposes a `CommitPlan(*import_plan.Plan, ...)` method that
+  replaces per-object `Commit` calls for plan-based mutations
+- Checkin migrated to Builder + store-level CommitPlan
+- Dry-run mode inspects the plan without executing commits
 - Full test suite passes
-- Dry-run flag added to at least one command
