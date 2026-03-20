@@ -1,3 +1,11 @@
+---
+date: 2026-03-15
+promotion-criteria: all local mutation callers use ExecutePlan (including
+  organize, remote-add); Commit removed from sku.RepoStore interface; full test
+  suite passes
+status: experimental
+---
+
 # Two-Stage Commit
 
 ## Problem Statement

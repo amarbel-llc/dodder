@@ -1,8 +1,4 @@
-# FDR: Typed Blob References
-
-## Status
-
-Draft
+# Typed Blob References
 
 ## Context
 
