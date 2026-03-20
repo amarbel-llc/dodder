@@ -366,7 +366,7 @@ Remote transfers (`pull`/`clone`) were already two-stage via `import_plan`.
 - [x] Migrate `WriteNewZettels` (`new` zero-arg) to Builder + CommitPlan
 - [x] Migrate `CreateFromShas` (`new -shas`) to Builder + CommitPlan
 - [x] Migrate `CreateFromPaths` (`new` with file args) to Builder + CommitPlan
-- [ ] Migrate `Checkin` (deferred to Phase 3 --- see Checkin decomposition)
+- [x] Migrate `Checkin` (deferred to Phase 3 --- see Checkin decomposition)
 
 ## Rollback Strategy
 
@@ -394,7 +394,7 @@ All phases are correct under the existing `LockSmith` because:
   happened
 - No other process can interfere because `LockSmith` is held during phase 2
 
-### Phase 3: Repo Executes Plan (Not Started)
+### Phase 3: Repo Executes Plan (Complete)
 
 Today `CommitPlan` in `tango/user_ops` iterates plan entries and calls
 `store.CreateOrUpdateDefaultProto` per-object --- it's a loop around the
