@@ -299,7 +299,9 @@ Remote transfers (`pull`/`clone`) were already two-stage via `import_plan`.
 - [x] Write `MakeAllocateZettelIdTransform` for zettel ID allocation
 - [x] Write local `CommitPlan` function in `tango/user_ops`
 - [x] Migrate `WriteNewZettels` (`new` zero-arg) to Builder + CommitPlan
-- [ ] Migrate remaining commands (`CreateFromPaths`, `CreateFromShas`, `Checkin`)
+- [x] Migrate `CreateFromShas` (`new -shas`) to Builder + CommitPlan
+- [x] Migrate `CreateFromPaths` (`new` with file args) to Builder + CommitPlan
+- [ ] Migrate `Checkin` (deferred — mixed update/create loop needs richer commit executor)
 
 ## Rollback Strategy
 
