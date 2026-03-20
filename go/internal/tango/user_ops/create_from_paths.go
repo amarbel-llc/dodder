@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/script_value"
@@ -118,33 +119,16 @@ func (op CreateFromPaths) Run(
 		}
 	}
 
-	results = sku.MakeTransactedMutableSet()
+	builder := import_plan.MakeBuilder(
+		op.GetStore().GetStreamIndex(),
+		"",
+	)
 
-	// Phase 1: pre-allocate zettel IDs before acquiring lock
-	zettelIdIndex := op.GetStore().GetZettelIdIndex()
-
-	for _, object := range toCreate {
-		if object.GetMetadata().IsEmpty() {
-			continue
-		}
-
-		zettelId, idErr := zettelIdIndex.CreateZettelId()
-		if idErr != nil {
-			err = errors.Wrap(idErr)
-			return results, err
-		}
-
-		if err = object.GetObjectIdMutable().SetWithSeq(zettelId.ToSeq()); err != nil {
-			err = errors.Wrap(err)
-			return results, err
-		}
-	}
-
-	// Phase 2: commit all planned objects under lock
-	if err = op.Lock(); err != nil {
-		err = errors.Wrap(err)
-		return results, err
-	}
+	builder.AddTransform(
+		import_plan.MakeAllocateZettelIdTransform(
+			op.GetStore().GetZettelIdIndex(),
+		),
+	)
 
 	for _, object := range toCreate {
 		if object.GetMetadata().IsEmpty() {
@@ -153,21 +137,28 @@ func (op CreateFromPaths) Run(
 
 		op.Proto.Apply(object, genres.Zettel)
 
-		if err = op.GetStore().CreateOrUpdateDefaultProto(
-			object,
-			sku.StoreOptions{
-				LockfileOptions: sku.LockfileOptions{
-					AllowTagFailure: true,
-				},
-				ApplyProto: true,
-			},
-		); err != nil {
-			// TODO-P2 add file for error handling
-			err = errors.Wrap(err)
-			return results, err
-		}
+		builder.AddObject(object, 0)
+	}
 
-		results.Add(object)
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		err = errors.Wrap(buildErr)
+		return results, err
+	}
+
+	results, err = CommitPlan(
+		op.Repo,
+		plan,
+		sku.StoreOptions{
+			LockfileOptions: sku.LockfileOptions{
+				AllowTagFailure: true,
+			},
+			ApplyProto: true,
+		},
+	)
+
+	if err != nil {
+		return results, err
 	}
 
 	for fdToDelete := range toDelete.All() {
@@ -181,11 +172,6 @@ func (op CreateFromPaths) Run(
 
 		// TODO-P2 move to printer
 		op.GetUI().Printf("[%s] (deleted)", pathRel)
-	}
-
-	if err = op.Unlock(); err != nil {
-		err = errors.Wrap(err)
-		return results, err
 	}
 
 	return results, err
