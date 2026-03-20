@@ -88,11 +88,18 @@ func (op CreateFromShas) Run(
 		return results, err
 	}
 
-	results, err = CommitPlan(
-		op.Repo,
-		plan,
-		sku.StoreOptions{ApplyProto: true},
-	)
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: op.GetStore().GetProtoZettel(),
+		StoreOptions: sku.StoreOptions{
+			AddToInventoryList: true,
+			UpdateTai:          true,
+			RunHooks:           true,
+			Validate:           true,
+			ApplyProto:         true,
+		},
+	}
+
+	results, err = op.Repo.ExecutePlan(plan)
 
 	return results, err
 }
