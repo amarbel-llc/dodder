@@ -21,6 +21,16 @@ function new_empty_no_edit { # @test
 	EOM
 }
 
+function new_count_3 { # @test
+  run_dodder new -edit=false -count 3
+  assert_success
+  assert_output - <<-EOM
+		[two/uno !md]
+		[one/tres !md]
+		[two/dos !md]
+	EOM
+}
+
 function new_empty_edit { # @test
   export EDITOR="/bin/bash -c 'echo \"this is the body\" > \"\$0\"'"
   run_dodder new
