@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/november/env_workspace"
@@ -66,4 +67,6 @@ type LocalRepo interface {
 	Unlock() error
 
 	GetEnvWorkspace() env_workspace.Env
+
+	ExecutePlan(plan *import_plan.Plan) (sku.TransactedMutableSet, error)
 }
