@@ -138,8 +138,7 @@ func Encode(hrp string, data []byte) ([]byte, error) {
 	}
 	for p, c := range hrp {
 		if c < 33 || c > 126 {
-			// TODO turn into error type
-			return nil, fmt.Errorf("invalid HRP character: hrp[%d]=%d", p, c)
+			return nil, errInvalidHRPCharacter{pos: p, char: c}
 		}
 	}
 	return encode(hrp, data)
@@ -232,12 +231,7 @@ func EncodeHRPAsData(hrp string, data []byte) ([]byte, error) {
 func validateHRP(hrp string) (err error) {
 	for p, c := range hrp {
 		if c < 33 || c > 126 {
-			// TODO turn into error type
-			return fmt.Errorf(
-				"invalid character human-readable part: s[%d]=%d",
-				p,
-				c,
-			)
+			return errInvalidHRPCharacter{pos: p, char: c}
 		}
 	}
 
@@ -249,8 +243,7 @@ func validateCaseString(s string) (lower bool, err error) {
 	toUpper := strings.ToUpper(s)
 
 	if toLower != s && toUpper != s {
-		// TODO turn into error type
-		err = fmt.Errorf("mixed case")
+		err = ErrMixedCase
 		return lower, err
 	} else {
 		lower = toLower == s
@@ -289,13 +282,11 @@ func validateSeparatorPosition[INPUT bytesOrString](
 	if pos < 1 {
 		return ErrSeparatorMissing
 	} else if pos+dataPortionMinWidth > len(input) {
-		// TODO turn into error type
-		return fmt.Errorf(
-			"separator `-` at invalid position because data+checksum portion is too short. Should be at least %d but was %d (%q)",
-			dataPortionMinWidth,
-			len(input)-(pos+1),
-			input[pos+1:],
-		)
+		return errDataPortionTooShort{
+			expected: dataPortionMinWidth,
+			actual:   len(input) - (pos + 1),
+			data:     string(input[pos+1:]),
+		}
 	}
 
 	return nil
@@ -334,8 +325,7 @@ func DecodeString(input string) (hrp string, data []byte, err error) {
 		data = append(data, byte(d))
 	}
 	if !verifyChecksum(hrp, data) {
-		// TODO turn into error type
-		return "", nil, fmt.Errorf("invalid checksum")
+		return "", nil, ErrInvalidChecksum
 	}
 	data, err = convertBits(data[:len(data)-6], 5, 8, false)
 	if err != nil {
@@ -397,8 +387,7 @@ func decode(hrp string, bites []byte) (data []byte, err error) {
 	}
 
 	if !verifyChecksum(hrp, data) {
-		// TODO turn into error type
-		return nil, fmt.Errorf("invalid checksum")
+		return nil, ErrInvalidChecksum
 	}
 
 	data, err = convertBits(data[:len(data)-6], 5, 8, false)
