@@ -3,7 +3,7 @@ date: 2026-03-15
 promotion-criteria: all local mutation callers use ExecutePlan (including
   organize, remote-add); Commit removed from sku.RepoStore interface; full test
   suite passes
-status: experimental
+status: testing
 ---
 
 # Two-Stage Commit
@@ -570,16 +570,29 @@ in project memory.
 
 ### Phase 3 Out of Scope
 
-- Migrate `LockAndCommitOrganizeResults` (organize) and `remote_add` to
-  `ExecutePlan`
-- Remove `Commit` from `sku.RepoStore` interface
 - File-persisted plans / crash recovery (separate FDR)
 
-### Promotion Criteria (experimental → testing)
+### Phase 4: Remaining Caller Migration (Complete)
 
-Requires completion of Phase 3 plus the out-of-scope follow-up work:
+Migrated four additional command-level callers to `ExecutePlan`:
+
+- `remote_add` (`victor/commands_dodder/remote_add.go`)
+- `edit_config` (`victor/commands_dodder/edit_config.go`)
+- `checkin_blob` (`victor/commands_dodder/checkin_blob.go`)
+- `LockAndCommitOrganizeResults` (`sierra/local_working_copy/organize.go`)
+
+Split `MakeBuilder` into `MakeImportBuilder` (stream index, dedup, Config genre
+skip) and `MakeLocalBuilder` (no index, no dedup, allows Config genre).
+
+Extracted `Commit` from `sku.RepoStore` into a new `StoreCommitter` interface.
+`RepoStore` is now read-only. Internal callers (`store_fs` via `Supplies`,
+`remote_transfer` via `committer`) use `StoreCommitter` explicitly.
+
+### Promotion Criteria (experimental → testing) --- Met
 
 - `LocalRepo` exposes `ExecutePlan` method
-- All local mutation callers use `ExecutePlan` (including organize, remote-add)
-- `Commit` removed from `sku.RepoStore` interface
+- All local mutation callers use `ExecutePlan` (including organize, remote-add,
+  edit-config, checkin-blob)
+- `Commit` removed from `sku.RepoStore` interface (extracted to
+  `StoreCommitter`)
 - Full test suite passes
