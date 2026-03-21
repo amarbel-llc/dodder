@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"github.com/gorilla/mux"
 )
 
@@ -94,8 +94,8 @@ func (s *WebServer) ListenAndServe(network, address string) error {
 	defer listener.Close()
 
 	addr := listener.Addr().(*net.TCPAddr)
-	ui.Log().Printf(
-		"starting HTTP server on port: %q",
+	fmt.Fprintf(os.Stderr,
+		"starting HTTP server on port: %q\n",
 		strconv.Itoa(addr.Port),
 	)
 
