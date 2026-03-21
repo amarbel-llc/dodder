@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -50,8 +51,6 @@ func (local *Repo) LockAndCommitOrganizeResults(
 		return changeResults, err
 	}
 
-	local.Must(errors.MakeFuncContextFromFuncErr(local.Lock))
-
 	count := changeResults.Changed.Len()
 
 	if count > 30 {
@@ -75,22 +74,33 @@ func (local *Repo) LockAndCommitOrganizeResults(
 
 	proto.Metadata.GetTypeMutable().ResetWithType(workspaceType)
 
+	builder := import_plan.MakeLocalBuilder()
+
 	for _, changed := range changeResults.Changed.AllSkuAndIndex() {
-		if err = local.GetStore().CreateOrUpdate(
-			changed.GetSkuExternal(),
-			sku.CommitOptions{
-				Proto: proto,
-				StoreOptions: sku.StoreOptions{
-					MergeCheckedOut: true,
-				},
-			},
-		); err != nil {
-			err = errors.Wrap(err)
-			return changeResults, err
-		}
+		builder.AddObject(changed.GetSkuExternal(), 0)
 	}
 
-	local.Must(errors.MakeFuncContextFromFuncErr(local.Unlock))
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		err = errors.Wrap(buildErr)
+		return changeResults, err
+	}
+
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: proto,
+		StoreOptions: sku.StoreOptions{
+			AddToInventoryList: true,
+			UpdateTai:          true,
+			RunHooks:           true,
+			Validate:           true,
+			MergeCheckedOut:    true,
+		},
+	}
+
+	if _, err = local.ExecutePlan(plan); err != nil {
+		err = errors.Wrap(err)
+		return changeResults, err
+	}
 
 	return changeResults, err
 }
