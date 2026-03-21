@@ -289,6 +289,33 @@ Key files:
 - [ ] Update GC reachability walker
 - [ ] Audit existing untyped blob references
 
+## Future Exploration
+
+### Discovery result caching
+
+`ExploreEdges` (the recursive blob content inspection) runs a discovery script
+for every blob reference whose type declares ref fields. For large graphs with
+repeated blob types, caching results keyed on `(type_id, type_sig, blob_digest)`
+would avoid redundant script invocations. The cache key captures all inputs:
+same type definition at the same version applied to the same blob content should
+produce the same edges.
+
+**Prerequisite:** Discovery scripts must be deterministic given the same type
+definition and blob content. This is not guaranteed today --- scripts can read
+external state, use timestamps, etc. Enforcing or verifying determinism is a
+separate effort.
+
+### Edges memory pooling
+
+The `Edges` struct returned by `ExploreEdges` allocates fresh slices per call.
+For large graphs (thousands of objects, each with a handful of edges), this
+creates GC pressure. Options to explore:
+
+- Pooled `Edges` via `sync.Pool` with `Reset()` method (walker returns after
+  processing each batch)
+- Arena allocator if Go adds arena support for slices
+- Pre-allocated slice capacity hint based on type metadata
+
 ## Limitations
 
 - Builtin types are not locked (there is a TODO to address this).
