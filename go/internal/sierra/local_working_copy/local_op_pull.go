@@ -1,8 +1,10 @@
 package local_working_copy
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
+	"code.linenisgreat.com/dodder/go/internal/papa/store"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/remote_transfer"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -38,9 +40,20 @@ func (local *Repo) pullQueryGroupFromWorkingCopy(
 		return err
 	}
 
-	if err = expandEdges(list, remote.GetObjectStore()); err != nil {
+	explorer := store.MakeEdgeExplorer(
+		remote.GetObjectStore(),
+		remote.GetBlobStore(),
+	)
+
+	edges, err := expandEdges(list, remote.GetObjectStore(), explorer)
+	if err != nil {
 		err = errors.Wrap(err)
 		return err
+	}
+
+	if len(edges.Skipped) > 0 {
+		return errors.Errorf("edge traversal had %d failures: %s",
+			len(edges.Skipped), edges.Skipped[0])
 	}
 
 	importerOptions.CheckedOutPrinter = local.PrinterCheckedOutConflictsForRemoteTransfers()
@@ -71,6 +84,30 @@ func (local *Repo) pullQueryGroupFromWorkingCopy(
 		}
 
 		return err
+	}
+
+	if !importerOptions.ExcludeBlobs && len(edges.Blobs) > 0 {
+		remoteBlobStore := remote.GetBlobStore()
+		localBlobStore := local.GetEnvRepo().GetDefaultBlobStore()
+
+		for _, blobDigest := range edges.Blobs {
+			copyResult := blob_stores.CopyBlobIfNecessary(
+				local.GetEnv(),
+				localBlobStore,
+				remoteBlobStore,
+				blobDigest,
+				nil,
+				localBlobStore.GetDefaultHashType(),
+			)
+
+			if copyErr := copyResult.GetError(); copyErr != nil {
+				if errors.IsErrNotFound(copyErr) {
+					continue
+				}
+
+				return errors.Wrapf(copyErr, "copying additional blob %s", blobDigest.String())
+			}
+		}
 	}
 
 	return err
