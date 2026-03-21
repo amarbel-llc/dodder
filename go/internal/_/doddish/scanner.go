@@ -18,7 +18,9 @@ type Scanner struct {
 	scannedOffset int
 	seq           Seq
 
-	err      error // TODO switch to pkgError
+	// TODO https://github.com/amarbel-llc/dodder/issues/31
+	// Switch to typed pkgError with boundary wrapping
+	err error
 	unscan   *SeqRuneScanner
 	n        int64
 	lastRune rune
@@ -62,7 +64,8 @@ func (scanner *Scanner) ReadRune() (char rune, n int, err error) {
 	return scanner.lastRune, n, err
 }
 
-// TODO remove unread entirely
+// TODO https://github.com/amarbel-llc/dodder/issues/31
+// Remove UnreadRune entirely, replace with different buffering strategy
 func (scanner *Scanner) UnreadRune() (err error) {
 	if scanner.unscan != nil {
 		if err = scanner.unscan.UnreadRune(); err != nil {
@@ -107,7 +110,8 @@ func (scanner *Scanner) ScanSkipSpace() (ok bool) {
 	return ok
 }
 
-// TODO create sequence methods for Scan family
+// TODO https://github.com/amarbel-llc/dodder/issues/31
+// Create sequence-returning methods for Scan family
 func (scanner *Scanner) Scan() (ok bool) {
 	return scanner.scan(true)
 }
@@ -171,7 +175,8 @@ func (scanner *Scanner) scan(dotOperatorAsSplit bool) (hasSeq bool) {
 		isInlineOp := op.isInlineOp()
 
 		switch {
-		// TODO make quotes and backslash operators
+		// TODO https://github.com/amarbel-llc/dodder/issues/31
+		// Make quotes and backslash first-class operators
 		case char == '"' || char == '\'':
 			if !scanner.consumeLiteralOrFieldValue(
 				char,
@@ -260,7 +265,8 @@ func (scanner *Scanner) ConsumeSpacesOrErrorOnFalse() (ok bool) {
 	}
 }
 
-// TODO add support for ellipis
+// TODO https://github.com/amarbel-llc/dodder/issues/31
+// Add support for ellipsis syntax
 func (scanner *Scanner) consumeLiteralOrFieldValue(
 	start rune,
 	tokenType TokenType,
@@ -305,7 +311,8 @@ func (scanner *Scanner) consumeField(start rune) bool {
 	return ok
 }
 
-// TODO add support for ellipsis
+// TODO https://github.com/amarbel-llc/dodder/issues/31
+// Add support for ellipsis syntax
 func (scanner *Scanner) consumeIdentifierLike(
 	tokenType TokenType,
 ) (ok bool) {

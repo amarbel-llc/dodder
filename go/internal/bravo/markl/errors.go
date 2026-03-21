@@ -165,7 +165,6 @@ func (err ErrNotEqualBytes) GetErrorType() pkgErrDisamb {
 
 type errLength[INTEGER constraints.Integer] [2]INTEGER
 
-// TODO add another "wrong hasher" error type
 func MakeErrLength[INTEGER constraints.Integer](
 	expected, actual INTEGER,
 ) error {
@@ -182,6 +181,47 @@ func (err errLength[_]) Error() string {
 		err[0],
 		err[1],
 	)
+}
+
+func (err errLength[_]) Is(target error) bool {
+	type marker interface{ isErrLength() }
+	_, ok := target.(marker)
+	return ok
+}
+
+func (err errLength[_]) isErrLength() {}
+
+func (err errLength[_]) GetErrorType() pkgErrDisamb {
+	return pkgErrDisamb{}
+}
+
+type errWrongHasher struct {
+	expected, actual string
+}
+
+func MakeErrWrongHasher(expected, actual string) error {
+	if expected != actual {
+		return errWrongHasher{expected: expected, actual: actual}
+	}
+
+	return nil
+}
+
+func (err errWrongHasher) Error() string {
+	return fmt.Sprintf(
+		"wrong hash algorithm: expected %q but got %q",
+		err.expected,
+		err.actual,
+	)
+}
+
+func (err errWrongHasher) Is(target error) bool {
+	_, ok := target.(errWrongHasher)
+	return ok
+}
+
+func (err errWrongHasher) GetErrorType() pkgErrDisamb {
+	return pkgErrDisamb{}
 }
 
 func MakeErrWrongType(expected, actual string) error {
