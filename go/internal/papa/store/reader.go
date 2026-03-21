@@ -88,7 +88,7 @@ func (store *Store) ReadTypeObject(
 	return typeObject, err
 }
 
-// TODO transition to a context-based panic / cancel semantic
+// TODO-#27 transition to a context-based panic / cancel semantic
 func (store *Store) ReadOneObjectId(
 	objectId domain_interfaces.ObjectId,
 ) (object *sku.Transacted, err error) {

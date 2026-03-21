@@ -269,7 +269,7 @@ func (ctx *context) Cancel(err error) {
 	ctx.cancel(err)
 }
 
-// TODO add interface for adding stack frames to the cancellation error
+// TODO-#27 add interface for adding stack frames to the cancellation error
 //
 //go:noinline
 func (ctx *context) captureCancelStackFramesIfNecessary(skip int, err error) {

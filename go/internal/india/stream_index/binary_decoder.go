@@ -52,7 +52,7 @@ type binaryDecoder struct {
 	limitedReader io.LimitedReader
 }
 
-// TODO transition to panic semantics
+// TODO-#27 transition to panic semantics
 func (decoder *binaryDecoder) readFormatExactly(
 	readerAt io.ReaderAt,
 	object *objectWithCursorAndSigil,
