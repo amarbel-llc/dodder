@@ -9,7 +9,8 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
 )
 
-// TODO move to collections_slice
+// TODO https://github.com/amarbel-llc/dodder/issues/30
+// Move to collections_slice (requires inlining CollectSlice dependency)
 func SortedValuesBy[ELEMENT any](
 	set interfaces.Collection[ELEMENT],
 	cmp cmp.Func[ELEMENT],
@@ -26,7 +27,8 @@ func SortedValuesBy[ELEMENT any](
 	return out
 }
 
-// TODO move to collections_slice
+// TODO https://github.com/amarbel-llc/dodder/issues/30
+// Move to collections_slice (no quiter dependencies, can move as-is)
 func SortedValues[ELEMENT interfaces.Value](
 	seq interfaces.Seq[ELEMENT],
 ) (out []ELEMENT) {
@@ -58,7 +60,8 @@ func Strings[ELEMENT interfaces.Stringer](
 	}
 }
 
-// TODO move to collections_slice
+// TODO https://github.com/amarbel-llc/dodder/issues/30
+// Move to collections_slice (requires moving Strings helper too)
 func SortedStrings[ELEMENT interfaces.Stringer](
 	collections ...interfaces.Collection[ELEMENT],
 ) (out []string) {

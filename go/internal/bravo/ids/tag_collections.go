@@ -24,7 +24,8 @@ func init() {
 	TagSetEmpty = collections_ptr.MakeValueSetValue[TagStruct](nil)
 }
 
-// TODO move to quiter
+// TODO https://github.com/amarbel-llc/dodder/issues/28
+// Generalize into generic collection clone helper
 func CloneTagSet(tags TagSet) TagSet {
 	clone := MakeTagSetMutable()
 
@@ -35,7 +36,8 @@ func CloneTagSet(tags TagSet) TagSet {
 	return clone
 }
 
-// TODO move to quiter
+// TODO https://github.com/amarbel-llc/dodder/issues/28
+// Generalize into generic collection clone helper
 func CloneTagSetMutable(tags TagSet) TagSetMutable {
 	clone := MakeTagSetMutable()
 
@@ -46,7 +48,8 @@ func CloneTagSetMutable(tags TagSet) TagSetMutable {
 	return clone
 }
 
-// TODO move to quiter
+// TODO https://github.com/amarbel-llc/dodder/issues/28
+// Evaluate whether callers can use collections_ptr directly
 func MakeTagSetFromSlice(tags ...TagStruct) (s TagSet) {
 	if len(tags) == 0 {
 		return TagSetEmpty
@@ -118,12 +121,14 @@ func MakeTagSetFromISlice(itags ...Tag) (s TagSet) {
 	return collections_ptr.MakeValueSetSeq(nil, tags, len(itags))
 }
 
-// TODO move to quiter
+// TODO https://github.com/amarbel-llc/dodder/issues/28
+// Evaluate whether callers can use collections_ptr directly
 func MakeTagSetStrings(tagStrings ...string) (s TagSet, err error) {
 	return collections_ptr.MakeValueSetString[TagStruct](nil, tagStrings...)
 }
 
-// TODO move to quiter
+// TODO https://github.com/amarbel-llc/dodder/issues/28
+// Evaluate whether callers can use collections_ptr directly
 func MakeTagSetMutable(tags ...TagStruct) TagSetMutable {
 	return collections_ptr.MakeMutableValueSetValue(nil, tags...)
 }

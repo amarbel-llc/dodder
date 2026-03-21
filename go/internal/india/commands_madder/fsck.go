@@ -25,7 +25,8 @@ type Fsck struct {
 	command_components_madder.BlobStore
 }
 
-// TODO add completion for blob store id's
+// TODO https://github.com/amarbel-llc/dodder/issues/29
+// Add shell completion for blob store IDs
 
 func (cmd Fsck) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)

@@ -51,7 +51,8 @@ func (cmd *Sync) SetFlagDefinitions(
 	)
 }
 
-// TODO add completion for blob store id's
+// TODO https://github.com/amarbel-llc/dodder/issues/29
+// Add shell completion for blob store IDs
 
 func (cmd Sync) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)
