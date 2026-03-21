@@ -547,14 +547,17 @@ stay outside `ExecutePlan`.
 
 #### Read-then-update commands
 
-`UpdateObject` (`tango/user_ops/update_object.go`) and `Update`
-(`victor/commands_dodder/update.go`) follow a read-then-modify-then-commit
-pattern under the lock: read the current object state, apply changes (tags,
-description, type lock), then commit. Moving the read pre-lock introduces the
-same race as `RefreshCheckedOut` --- the object could change between read and
-lock acquisition. This is accepted for the same reason: single-user CLI tool,
-low contention. Both commands are candidates for `ExecutePlan` migration once
-the pre-lock read race is accepted.
+`UpdateObject` (`tango/user_ops/update_object.go`), `Update`
+(`victor/commands_dodder/update.go`), and `RevertTo`
+(`victor/commands_dodder/revert.go` via `papa/store/create.go:RevertTo`) follow
+a read-then-modify-then-commit pattern under the lock. `UpdateObject` and
+`Update` read the current object state, apply changes (tags, description, type
+lock), then commit. `RevertTo` reads a historical object from the stream index
+by markl ID, then commits it as the new head. Moving the read pre-lock
+introduces the same race as `RefreshCheckedOut` --- the object could change
+between read and lock acquisition. This is accepted for the same reason:
+single-user CLI tool, low contention. All three commands are candidates for
+`ExecutePlan` migration once the pre-lock read race is accepted.
 
 #### Lock/Unlock stays on Repo
 
