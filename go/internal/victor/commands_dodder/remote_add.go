@@ -5,9 +5,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // TODO switch to using compound command pattern from blob_store_init.go
@@ -63,16 +63,26 @@ func (cmd RemoteAdd) Run(req command.Request) {
 
 	cmd.proto.Apply(remoteObject.GetMetadataMutable(), genres.Repo)
 
-	req.Must(errors.MakeFuncContextFromFuncErr(local.Lock))
+	builder := import_plan.MakeLocalBuilder()
+	builder.AddObject(remoteObject, 0)
 
-	if err := local.GetStore().CreateOrUpdateDefaultProto(
-		remoteObject,
-		sku.StoreOptions{
-			ApplyProto: true,
-		},
-	); err != nil {
-		req.Cancel(err)
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		req.Cancel(buildErr)
 	}
 
-	req.Must(errors.MakeFuncContextFromFuncErr(local.Unlock))
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: local.GetStore().GetProtoZettel(),
+		StoreOptions: sku.StoreOptions{
+			AddToInventoryList: true,
+			UpdateTai:          true,
+			RunHooks:           true,
+			Validate:           true,
+			ApplyProto:         true,
+		},
+	}
+
+	if _, err := local.ExecutePlan(plan); err != nil {
+		req.Cancel(err)
+	}
 }
