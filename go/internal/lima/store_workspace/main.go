@@ -16,6 +16,7 @@ import (
 type (
 	Supplies struct {
 		WorkspaceDir string
+		sku.StoreCommitter
 		sku.RepoStore
 		DirCache string
 		env_repo.Env

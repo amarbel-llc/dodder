@@ -121,6 +121,7 @@ func (store *Store) MakeSupplies(
 	repoId ids.RepoId,
 ) (supplies store_workspace.Supplies) {
 	supplies.WorkspaceDir = store.envWorkspace.GetWorkspaceDir()
+	supplies.StoreCommitter = store
 	supplies.RepoStore = store
 
 	supplies.Env = store.GetEnvRepo()

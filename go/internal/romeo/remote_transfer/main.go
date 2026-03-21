@@ -29,6 +29,7 @@ func Make(
 	indexObject sku.Index,
 	storeExternalMergeCheckedOut store_workspace.MergeCheckedOut,
 	storeObject sku.RepoStore,
+	storeCommitter sku.StoreCommitter,
 ) repo.Importer {
 	if options.BlobGenres.IsEmpty() {
 		options.BlobGenres = ids.MakeGenreAll()
@@ -51,7 +52,7 @@ func Make(
 		storeOptions:                storeOptions,
 	}
 
-	importer.committer.initialize(options, envRepo, storeObject)
+	importer.committer.initialize(options, envRepo, storeCommitter)
 
 	if importer.blobCopierDelegate == nil &&
 		importer.remoteBlobStore.BlobStore != nil &&

@@ -9,14 +9,14 @@ import (
 
 type committer struct {
 	options     repo.ImporterOptions
-	storeObject sku.RepoStore
+	storeObject sku.StoreCommitter
 	deduper     deduper
 }
 
 func (committer *committer) initialize(
 	options repo.ImporterOptions,
 	envRepo env_repo.Env,
-	storeObject sku.RepoStore,
+	storeObject sku.StoreCommitter,
 ) {
 	committer.options = options
 	committer.storeObject = storeObject

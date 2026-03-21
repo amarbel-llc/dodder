@@ -47,8 +47,11 @@ type (
 		errors.Flusher
 	}
 
-	RepoStore interface {
+	StoreCommitter interface {
 		Commit(*Transacted, CommitOptions) (err error)
+	}
+
+	RepoStore interface {
 		ReadOneInto(domain_interfaces.ObjectId, *Transacted) (err error)
 		ReadPrimitiveQuery(
 			qg PrimitiveQueryGroup,

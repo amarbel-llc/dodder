@@ -20,5 +20,6 @@ func (local *Repo) MakeImporter(
 		store.GetStreamIndex(),
 		local.GetEnvWorkspace().GetStore(),
 		store,
+		store,
 	)
 }
