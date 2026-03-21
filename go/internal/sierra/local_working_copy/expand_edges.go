@@ -11,12 +11,14 @@ const maxEdgeExpansionDepth = 5
 func expandEdges(
 	list *sku.HeapTransacted,
 	objectStore sku.RepoStore,
-) error {
-	if objectStore == nil {
-		return nil
+	explorer sku.EdgeExplorer,
+) (allEdges sku.Edges, err error) {
+	if explorer == nil {
+		return allEdges, nil
 	}
 
 	seen := make(map[string]struct{})
+	seenBlobs := make(map[string]struct{})
 
 	for object := range list.All() {
 		seen[object.GetObjectId().String()] = struct{}{}
@@ -26,38 +28,28 @@ func expandEdges(
 		var pendingIds []ids.ObjectId
 
 		for object := range list.All() {
-			if typeId := object.GetType(); !typeId.IsEmpty() && !ids.IsBuiltin(typeId) {
-				key := typeId.String()
+			edges, exploreErr := explorer.ExploreEdges(object)
+			if exploreErr != nil {
+				return allEdges, errors.Wrap(exploreErr)
+			}
+
+			for _, oid := range edges.Objects {
+				key := oid.String()
 				if _, ok := seen[key]; !ok {
 					seen[key] = struct{}{}
-					var oid ids.ObjectId
-					if err := oid.SetWithId(typeId); err != nil {
-						return errors.Wrap(err)
-					}
 					pendingIds = append(pendingIds, oid)
 				}
 			}
 
-			for tag := range object.AllTags() {
-				key := tag.String()
-				if _, ok := seen[key]; !ok {
-					seen[key] = struct{}{}
-					var oid ids.ObjectId
-					if err := oid.SetWithId(tag); err != nil {
-						return errors.Wrap(err)
-					}
-					pendingIds = append(pendingIds, oid)
+			for _, blobId := range edges.Blobs {
+				key := blobId.String()
+				if _, ok := seenBlobs[key]; !ok {
+					seenBlobs[key] = struct{}{}
+					allEdges.Blobs = append(allEdges.Blobs, blobId)
 				}
 			}
 
-			for ref := range object.GetMetadata().AllReferencedObjects() {
-				key := ref.String()
-				if _, ok := seen[key]; !ok {
-					seen[key] = struct{}{}
-					refCopy := ref
-					pendingIds = append(pendingIds, refCopy)
-				}
-			}
+			allEdges.Skipped = append(allEdges.Skipped, edges.Skipped...)
 		}
 
 		if len(pendingIds) == 0 {
@@ -67,22 +59,25 @@ func expandEdges(
 		for i := range pendingIds {
 			fetched, repool := sku.GetTransactedPool().GetWithRepool()
 
-			if err := objectStore.ReadOneInto(&pendingIds[i], fetched); err != nil {
+			if err = objectStore.ReadOneInto(&pendingIds[i], fetched); err != nil {
 				repool()
 
 				if errors.IsErrNotFound(err) {
+					err = nil
 					continue
 				}
 
-				return errors.Wrap(err)
+				return allEdges, errors.Wrap(err)
 			}
 
-			if err := list.Add(fetched); err != nil {
+			allEdges.Objects = append(allEdges.Objects, pendingIds[i])
+
+			if err = list.Add(fetched); err != nil {
 				repool()
-				return errors.Wrap(err)
+				return allEdges, errors.Wrap(err)
 			}
 		}
 	}
 
-	return nil
+	return allEdges, nil
 }
