@@ -323,13 +323,6 @@ creates GC pressure. Options to explore:
 
 ## Limitations
 
-- **Blob edge traversal is one level deep.** `expandEdges` runs discovery
-  scripts on blob references in object metadata, collecting nested blob and
-  object refs. But newly discovered blobs are not themselves inspected for
-  further references. Object edge traversal IS recursive (up to 5 levels), but
-  blob→blob→blob chains are not followed. The git bridge workspace (tree blobs
-  referencing subtree blobs) will need this extended to true transitive blob
-  traversal.
 - Builtin types are not locked (there is a TODO to address this).
 - Lock values are not overwritten once set during a commit --- re-committing an
   object does not update its locks unless the lock is explicitly cleared first.

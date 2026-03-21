@@ -61,7 +61,9 @@ func (e *edgeExplorer) ExploreEdges(
 		edges.Objects = append(edges.Objects, refCopy)
 	}
 
-	// 4. Blob reference edges
+	// 4. Blob reference edges (with transitive blob→blob traversal)
+	seen := make(map[string]struct{})
+
 	for blobDigest := range object.GetMetadata().AllBlobReferences() {
 		blobCopy := blobDigest
 		edges.Blobs = append(edges.Blobs, blobCopy)
@@ -72,7 +74,9 @@ func (e *edgeExplorer) ExploreEdges(
 			continue
 		}
 
-		nestedEdges, discoverErr := e.discoverBlobEdges(blobDigest, typeLock)
+		seen[blobDigest.String()] = struct{}{}
+
+		nestedEdges, discoverErr := e.discoverBlobEdges(blobDigest, typeLock, seen)
 		if discoverErr != nil {
 			edges.Skipped = append(edges.Skipped,
 				errors.Wrapf(discoverErr, "blob %s", blobDigest.String()))
@@ -90,6 +94,7 @@ func (e *edgeExplorer) ExploreEdges(
 func (e *edgeExplorer) discoverBlobEdges(
 	blobDigest markl.Id,
 	typeLock markl.Lock[ids.SeqId, *ids.SeqId],
+	seen map[string]struct{},
 ) (edges sku.Edges, err error) {
 	referencesConfig, err := e.getReferencesConfig(typeLock)
 	if err != nil {
@@ -146,6 +151,48 @@ func (e *edgeExplorer) discoverBlobEdges(
 			}
 
 			edges.Blobs = append(edges.Blobs, id)
+
+			blobKey := id.String()
+
+			if _, alreadySeen := seen[blobKey]; alreadySeen {
+				continue
+			}
+
+			seen[blobKey] = struct{}{}
+
+			if ref.TypeId == "" {
+				continue
+			}
+
+			var nestedTypeLock markl.Lock[ids.SeqId, *ids.SeqId]
+
+			marshaler := markl.MakeMutableLockCoderValueNotRequired(
+				&nestedTypeLock,
+			)
+
+			if err = marshaler.Set(ids.MakeTypeString(ref.TypeId)); err != nil {
+				edges.Skipped = append(edges.Skipped,
+					errors.Wrapf(err, "blob %s type lock %q", blobKey, ref.TypeId))
+
+				continue
+			}
+
+			nestedEdges, discoverErr := e.discoverBlobEdges(
+				id,
+				nestedTypeLock,
+				seen,
+			)
+
+			if discoverErr != nil {
+				edges.Skipped = append(edges.Skipped,
+					errors.Wrapf(discoverErr, "blob %s", blobKey))
+
+				continue
+			}
+
+			edges.Objects = append(edges.Objects, nestedEdges.Objects...)
+			edges.Blobs = append(edges.Blobs, nestedEdges.Blobs...)
+			edges.Skipped = append(edges.Skipped, nestedEdges.Skipped...)
 		} else if ref.ObjectId != "" {
 			var oid ids.ObjectId
 

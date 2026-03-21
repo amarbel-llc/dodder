@@ -703,6 +703,93 @@ function pull_direct_multiple_blob_references_transferred { # @test
 	assert_output "$(printf "%s\n" "second referenced blob")"
 }
 
+# bats test_tags=user_story:pull,user_story:referenced_objects
+function pull_direct_transitive_blob_references_transferred { # @test
+	them="$BATS_TEST_TMPDIR/them"
+	mkdir -p "$them"
+
+	pushd "$them" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Write a leaf blob (no further references)
+	run_dodder blob_store-write <(echo "leaf blob content")
+	assert_success
+	leaf_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+
+	# Write an intermediate blob whose content references the leaf blob
+	run_dodder blob_store-write <(echo "tree entry: @${leaf_blob_sha}")
+	assert_success
+	tree_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+
+	# Create treeblob type: its discovery script emits blob refs from content
+	cat >treeblob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'tree'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !treeblob/'"
+	TYPEFILE
+
+	run_dodder checkin -delete treeblob.type
+	assert_success
+
+	# Create refblob type: its discovery script emits blob refs with treeblob type
+	cat >refblob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !treeblob/'"
+	TYPEFILE
+
+	run_dodder checkin -delete refblob.type
+	assert_success
+
+	# Create a zettel whose body references the intermediate (tree) blob
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with transitive blob refs
+		! refblob
+		---
+
+		See tree @${tree_blob_sha} for details.
+	EOM
+	assert_success
+
+	popd || exit 1
+
+	# Set up destination repo
+	us="$BATS_TEST_TMPDIR/us"
+	mkdir -p "$us"
+	pushd "$us" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Pull from source — should transfer the zettel, both blobs transitively
+	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+	assert_success
+
+	# Verify the intermediate tree blob was transferred
+	run_dodder blob_store-cat "$tree_blob_sha"
+	assert_success
+	assert_output "$(printf "%s\n" "tree entry: @${leaf_blob_sha}")"
+
+	# Verify the leaf blob was transferred transitively
+	run_dodder blob_store-cat "$leaf_blob_sha"
+	assert_success
+	assert_output "$(printf "%s\n" "leaf blob content")"
+}
+
 function pull_direct_no_repo_at_path { # @test
 	pushd "$BATS_TEST_TMPDIR" || exit 1
 	run_dodder_init_disable_age
