@@ -223,8 +223,8 @@ func (finalizer finalizer) WriteLockfile(
 		); err != nil {
 			switch err {
 			case ErrBlobReferenceMissingType:
-				// Type not yet provided — skip pinning for this blob reference
-				err = nil
+				err = errors.Wrapf(err, "blob reference requires a type: %s", blobId)
+				return err
 
 			case ErrFailedToReadCurrentLockObject:
 				err = errors.Wrapf(err, "failed to write blob reference type lock for: %s", blobId)

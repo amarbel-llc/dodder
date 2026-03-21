@@ -959,7 +959,7 @@ function show_zettel_with_discovered_blob_references { # @test
 	run_dodder init-workspace
 	assert_success
 
-	# Create a type with reference discovery that finds both object and blob refs
+	# Create a type with reference discovery that outputs typed blob refs
 	cat >ref-blob.type <<-'TYPEFILE'
 		---
 		! toml-type-v1
@@ -970,7 +970,7 @@ function show_zettel_with_discovered_blob_references { # @test
 
 		[references]
 		shell = ['bash', '-c']
-		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//'"
+		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
 	TYPEFILE
 
 	run_dodder checkin -delete ref-blob.type
@@ -987,7 +987,7 @@ function show_zettel_with_discovered_blob_references { # @test
 	EOM
 	assert_success
 
-	# Show the new zettel and verify both reference types appear
+	# Show the new zettel and verify both reference types appear with type lock
 	run_dodder show -format text two/uno:
 	assert_success
 	assert_output --regexp - <<-'EOM'
@@ -996,7 +996,42 @@ function show_zettel_with_discovered_blob_references { # @test
 		@ blake2b256-.+
 		! ref-blob@.+
 		- one/dos@ed25519_sig-.+
-		- @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
+		- @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md@ed25519_sig-.+
 		---
 	EOM
+}
+
+# bats test_tags=user_story:referenced_objects
+function blob_reference_without_type_fails { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type whose reference discovery outputs untyped blob refs
+	cat >ref-untyped.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-untyped.type
+	assert_success
+
+	# Create a zettel with a blob reference — the discovery script outputs
+	# @digest WITHOUT a type, so finalization should fail
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with untyped blob ref
+		! ref-untyped
+		---
+
+		See blob @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd for details.
+	EOM
+	assert_failure
 }
