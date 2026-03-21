@@ -32,10 +32,7 @@ func (local *Repo) Checkin(
 
 	zettelIdIndex := local.GetStore().GetZettelIdIndex()
 
-	builder := import_plan.MakeBuilder(
-		local.GetStore().GetStreamIndex(),
-		"",
-	)
+	builder := import_plan.MakeLocalBuilder()
 
 	for _, co := range sortedResults {
 		if refreshCheckout {

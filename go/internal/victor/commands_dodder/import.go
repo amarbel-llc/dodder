@@ -114,7 +114,7 @@ func (cmd Import) Run(req command.Request) {
 
 	closet := local.GetInventoryListCoderCloset()
 
-	builder := import_plan.MakeBuilder(
+	builder := import_plan.MakeImportBuilder(
 		local.GetStore().GetStreamIndex(),
 		markl.PurposeV5MetadataDigestWithoutTai,
 	)

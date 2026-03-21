@@ -34,7 +34,7 @@ type Builder struct {
 	transforms []ObjectTransform
 }
 
-func MakeBuilder(
+func MakeImportBuilder(
 	index sku.Index,
 	dedupFormatId string,
 ) Builder {
@@ -44,6 +44,16 @@ func MakeBuilder(
 		taiByObjectId: make(map[string]ids.Tai),
 		typeNameToKey: make(map[string]string),
 		dedupFormatId: dedupFormatId,
+		dedupLookup:   make(map[string]struct{}),
+		abbrIndex:     store_abbr.NewInMemoryIndex(),
+	}
+}
+
+func MakeLocalBuilder() Builder {
+	return Builder{
+		objectByKey:   make(map[string]int),
+		taiByObjectId: make(map[string]ids.Tai),
+		typeNameToKey: make(map[string]string),
 		dedupLookup:   make(map[string]struct{}),
 		abbrIndex:     store_abbr.NewInMemoryIndex(),
 	}
@@ -102,7 +112,7 @@ func (b *Builder) AddObject(
 ) {
 	genre := genres.Make(object.GetGenre())
 
-	if genre == genres.Config {
+	if b.index != nil && genre == genres.Config {
 		return
 	}
 

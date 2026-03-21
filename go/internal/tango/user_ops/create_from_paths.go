@@ -117,10 +117,7 @@ func (op CreateFromPaths) Run(
 		}
 	}
 
-	builder := import_plan.MakeBuilder(
-		op.GetStore().GetStreamIndex(),
-		"",
-	)
+	builder := import_plan.MakeLocalBuilder()
 
 	builder.AddTransform(
 		import_plan.MakeAllocateZettelIdTransform(

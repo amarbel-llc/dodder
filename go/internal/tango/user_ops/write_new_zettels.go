@@ -17,10 +17,7 @@ func (op WriteNewZettels) RunMany(
 ) (results sku.TransactedMutableSet, err error) {
 	zettelIdIndex := op.GetStore().GetZettelIdIndex()
 
-	builder := import_plan.MakeBuilder(
-		op.GetStore().GetStreamIndex(),
-		"",
-	)
+	builder := import_plan.MakeLocalBuilder()
 
 	builder.AddTransform(
 		import_plan.MakeAllocateZettelIdTransform(zettelIdIndex),
