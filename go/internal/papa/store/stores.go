@@ -200,7 +200,7 @@ func (store *Store) RunMergeTool(
 
 		defer store.PutCheckedOutLike(checkedOut)
 
-		if err = store.CreateOrUpdateCheckedOut(checkedOut, false); err != nil {
+		if err = store.createOrUpdateCheckedOut(checkedOut, false); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

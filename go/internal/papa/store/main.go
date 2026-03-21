@@ -157,7 +157,7 @@ func (store *Store) SetUIDelegate(ud sku.UIStorePrinters) {
 func (store *Store) UpdateKonfig(
 	blobId domain_interfaces.MarklId,
 ) (kt *sku.Transacted, err error) {
-	return store.CreateOrUpdateBlobDigest(
+	return store.createOrUpdateBlobDigest(
 		ids.Config,
 		blobId,
 	)

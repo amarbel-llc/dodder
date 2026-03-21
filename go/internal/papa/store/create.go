@@ -32,7 +32,7 @@ func (store *Store) CreateOrUpdate(
 	return err
 }
 
-func (store *Store) CreateOrUpdateBlobDigest(
+func (store *Store) createOrUpdateBlobDigest(
 	objectId domain_interfaces.ObjectId,
 	blobDigest domain_interfaces.MarklId,
 ) (object *sku.Transacted, err error) {
@@ -125,7 +125,7 @@ func (store *Store) RevertTo(
 	return err
 }
 
-func (store *Store) CreateOrUpdateCheckedOut(
+func (store *Store) createOrUpdateCheckedOut(
 	object sku.SkuType,
 	updateCheckout bool,
 ) (err error) {
