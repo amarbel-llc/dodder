@@ -12,23 +12,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
-func (store *Store) CreateOrUpdateDefaultProto(
-	external *sku.Transacted,
-	storeOptions sku.StoreOptions,
-) (err error) {
-	options := sku.CommitOptions{
-		Proto:        store.protoZettel,
-		StoreOptions: storeOptions,
-	}
-
-	if err = store.CreateOrUpdate(external, options); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	return err
-}
-
 func (store *Store) CreateOrUpdate(
 	external *sku.Transacted,
 	options sku.CommitOptions,
