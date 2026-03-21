@@ -150,18 +150,18 @@ Aliases with unsafe characters are quoted:
 
 ### Box format
 
-Box format uses `<(...)` grouping because fields are space-delimited within the
-bracket line:
+Box format uses `<` prefix. Blob references with type locks are Go-quoted
+because they contain spaces:
 
     # object ref:
-    <(one/uno@sig) blog-template<(one/uno@sig)
+    <one/uno@sig
 
-    # blob ref:
-    <(@blake2b256-abc... !tree@sig) hero-image<(@blake2b256-def... !image-png@sig)
+    # blob ref (quoted because of internal space):
+    "<@blake2b256-abc... !tree@sig"
 
 Full box line example:
 
-    [one/dos @digest !md@sig project@sig <(one/uno@sig) blog-template<(one/uno@sig) <(@blake2b256-abc... !tree@sig)]
+    [one/dos @digest !md@sig project@sig <one/uno@sig "<@blake2b256-abc... !tree@sig"]
 
 ### Binary index
 
@@ -175,7 +175,7 @@ Per blob reference entry:
 
 ### Inventory list
 
-    [one/dos @digest !md@sig <(one/uno@sig) blog-template<(one/uno@sig) <(@blake2b256-abc...!tree@sig)]
+    [one/dos @digest !md@sig <one/uno@sig "<@blake2b256-abc... !tree@sig"]
 
 ### Format summary
 
@@ -184,11 +184,11 @@ Per blob reference entry:
   -------------- -------------------------- ------------------------------------
   Hyphence       `- alias < ref@sig`        `- alias < @digest !type@sig`
 
-  Box            `alias<(ref@sig)`          `alias<(@digest !type@sig)`
+  Box            `<ref@sig`                 `"<@digest !type@sig"`
 
   Binary index   key + null + fmt + id      key + type lock + alias
 
-  Inventory list `alias<(ref@sig)`          `alias<(@digest !type@sig)`
+  Inventory list `<ref@sig`                 `"<@digest !type@sig"`
   ------------------------------------------------------------------------------
 
 ### Sigil design etymology
@@ -323,12 +323,26 @@ creates GC pressure. Options to explore:
 
 ## Limitations
 
+- **Blob edge traversal is one level deep.** `expandEdges` runs discovery
+  scripts on blob references in object metadata, collecting nested blob and
+  object refs. But newly discovered blobs are not themselves inspected for
+  further references. Object edge traversal IS recursive (up to 5 levels), but
+  blob→blob→blob chains are not followed. The git bridge workspace (tree blobs
+  referencing subtree blobs) will need this extended to true transitive blob
+  traversal.
 - Builtin types are not locked (there is a TODO to address this).
 - Lock values are not overwritten once set during a commit --- re-committing an
   object does not update its locks unless the lock is explicitly cleared first.
 - Reference discovery is covered by a separate design:
   `docs/plans/2026-03-07-object-reference-discovery-design.md`. First
   implementation uses external commands, with Lua hooks as future work.
+
+## Open Issues
+
+- [#35](https://github.com/amarbel-llc/dodder/issues/35) --- hyphenated type
+  names create phantom blobless type object during pull
+- [#36](https://github.com/amarbel-llc/dodder/issues/36) --- moderate test
+  coverage gaps (discovery errors, multi-ref, aliases, GC)
 
 ## More Information
 

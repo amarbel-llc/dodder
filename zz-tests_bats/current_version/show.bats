@@ -1035,3 +1035,65 @@ function blob_reference_without_type_fails { # @test
 	EOM
 	assert_failure
 }
+
+# bats test_tags=user_story:referenced_objects
+function show_box_format_includes_blob_references { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with reference discovery that outputs typed blob refs
+	cat >ref-blob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-blob.type
+	assert_success
+
+	# Create a zettel with both a wiki-link and a blob reference
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with refs
+		! ref-blob
+		---
+
+		See [[one/dos]] and blob @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd for details.
+	EOM
+	assert_success
+
+	# Verify box format includes blob reference with type lock
+	run_dodder show two/uno
+	assert_success
+	assert_output --regexp '"<@blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md@ed25519_sig-.+"'
+}
+
+# bats test_tags=user_story:referenced_objects
+function show_box_format_includes_object_references { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a zettel that references another zettel
+	run_dodder new -edit=false - <<-EOM
+		---
+		# referencing zettel
+		- one/dos
+		! md
+		---
+
+		references one/dos
+	EOM
+	assert_success
+
+	# Verify box format includes object reference
+	run_dodder show two/uno
+	assert_success
+	assert_output --regexp '<one/dos@ed25519_sig-.+'
+}

@@ -633,6 +633,76 @@ function pull_direct_blob_references_transferred { # @test
 	assert_output "$(printf "%s\n" "referenced content")"
 }
 
+# bats test_tags=user_story:pull,user_story:referenced_objects
+function pull_direct_multiple_blob_references_transferred { # @test
+	them="$BATS_TEST_TMPDIR/them"
+	mkdir -p "$them"
+
+	pushd "$them" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Write two standalone blobs to the source store
+	run_dodder blob_store-write <(echo "first referenced blob")
+	assert_success
+	blob_sha_1="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+
+	run_dodder blob_store-write <(echo "second referenced blob")
+	assert_success
+	blob_sha_2="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+
+	# Create a type with reference discovery for blob refs
+	cat >refblob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !refblob/'"
+	TYPEFILE
+
+	run_dodder checkin -delete refblob.type
+	assert_success
+
+	# Create a zettel whose body references both standalone blobs
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with two blob refs
+		! refblob
+		---
+
+		First: @${blob_sha_1}
+		Second: @${blob_sha_2}
+	EOM
+	assert_success
+
+	popd || exit 1
+
+	# Set up destination repo
+	us="$BATS_TEST_TMPDIR/us"
+	mkdir -p "$us"
+	pushd "$us" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Pull from source
+	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+	assert_success
+
+	# Verify both referenced blobs were transferred
+	run_dodder blob_store-cat "$blob_sha_1"
+	assert_success
+	assert_output "$(printf "%s\n" "first referenced blob")"
+
+	run_dodder blob_store-cat "$blob_sha_2"
+	assert_success
+	assert_output "$(printf "%s\n" "second referenced blob")"
+}
+
 function pull_direct_no_repo_at_path { # @test
 	pushd "$BATS_TEST_TMPDIR" || exit 1
 	run_dodder_init_disable_age
