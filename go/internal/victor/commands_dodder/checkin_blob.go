@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -105,20 +106,31 @@ func (cmd CheckinBlob) Run(req command.Request) {
 		}
 	}
 
-	req.Must(errors.MakeFuncContextFromFuncErr(localWorkingCopy.Lock))
+	builder := import_plan.MakeLocalBuilder()
 
 	for _, pair := range pairs {
-		if err := localWorkingCopy.GetStore().CreateOrUpdateDefaultProto(
-			pair.object,
-			sku.StoreOptions{
-				MergeCheckedOut: true,
-			},
-		); err != nil {
-			req.Cancel(err)
-		}
+		builder.AddObject(pair.object, 0)
 	}
 
-	req.Must(errors.MakeFuncContextFromFuncErr(localWorkingCopy.Unlock))
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		req.Cancel(buildErr)
+	}
+
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: localWorkingCopy.GetStore().GetProtoZettel(),
+		StoreOptions: sku.StoreOptions{
+			AddToInventoryList: true,
+			UpdateTai:          true,
+			RunHooks:           true,
+			Validate:           true,
+			MergeCheckedOut:    true,
+		},
+	}
+
+	if _, err := localWorkingCopy.ExecutePlan(plan); err != nil {
+		req.Cancel(err)
+	}
 }
 
 type externalBlobPair struct {
