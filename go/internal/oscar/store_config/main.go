@@ -22,9 +22,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
 
-// TODO remove gob entirely and cleanly separate store functionality (mutation,
-// changes, loading and unloading) from config functionality (reading
-// properties)
 func init() {
 	gob.Register(
 		collections_value.MakeMutableValueSet[values.String](

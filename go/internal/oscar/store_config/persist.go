@@ -1,7 +1,7 @@
 package store_config
 
 import (
-	"encoding/gob" // TODO remove once V13 support dropped
+	"encoding/gob"
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"

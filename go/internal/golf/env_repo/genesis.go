@@ -159,7 +159,6 @@ func (env *Env) writeFile(path string, contents any) {
 			return
 		}
 	} else {
-		// TODO remove gob
 		enc := gob.NewEncoder(file)
 
 		if err := enc.Encode(contents); err != nil {

@@ -10,7 +10,6 @@ type StringerKeyer[
 	T interfaces.Stringer,
 ] struct{}
 
-// TODO remove when removing gob
 func (sk StringerKeyer[T]) RegisterGob() StringerKeyer[T] {
 	gob.Register(sk)
 	return sk

@@ -10,8 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_ptr"
 )
 
-// TODO remove this once gob is removed entirely
-
 var (
 	registerOnce   sync.Once
 	registryLock   *sync.Mutex
