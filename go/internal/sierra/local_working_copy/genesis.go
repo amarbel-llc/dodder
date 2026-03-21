@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
@@ -43,18 +44,13 @@ func Genesis(
 func (local *Repo) initDefaultTypeAndConfig(
 	bigBang env_repo.BigBang,
 ) (err error) {
-	// TODO determine if this lock/unlock is necessary
-	if err = local.Lock(); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	defer errors.Deferred(&err, local.Unlock)
+	builder := import_plan.MakeLocalBuilder()
 
 	var defaultTypeObjectId ids.TypeStruct
 
-	if defaultTypeObjectId, err = local.initDefaultTypeIfNecessaryAfterLock(
+	if defaultTypeObjectId, err = local.prepareDefaultType(
 		bigBang,
+		&builder,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
@@ -68,11 +64,28 @@ func (local *Repo) initDefaultTypeAndConfig(
 
 	blobStores := []blob_store_id.Id{blobStoreId}
 
-	if err = local.initDefaultConfigIfNecessaryAfterLock(
+	if err = local.prepareDefaultConfig(
 		bigBang,
 		blobStores,
 		defaultTypeObjectId,
+		&builder,
 	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		err = errors.Wrap(buildErr)
+		return err
+	}
+
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: local.GetStore().GetProtoZettel(),
+		StoreOptions: sku.GetStoreOptionsCreate(),
+	}
+
+	if _, err = local.ExecutePlan(plan); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -80,8 +93,9 @@ func (local *Repo) initDefaultTypeAndConfig(
 	return err
 }
 
-func (local *Repo) initDefaultTypeIfNecessaryAfterLock(
+func (local *Repo) prepareDefaultType(
 	bigBang env_repo.BigBang,
+	builder *import_plan.Builder,
 ) (objectIdType ids.TypeStruct, err error) {
 	if bigBang.ExcludeDefaultType {
 		return objectIdType, err
@@ -91,17 +105,9 @@ func (local *Repo) initDefaultTypeIfNecessaryAfterLock(
 	tipe := ids.DefaultOrPanic(genres.Type)
 	blob := type_blobs.Default()
 
-	object, objectRepool := sku.GetTransactedPool().GetWithRepool()
-	defer objectRepool()
+	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 	if err = object.GetObjectIdMutable().SetWithId(objectIdType); err != nil {
-		err = errors.Wrap(err)
-		return objectIdType, err
-	}
-
-	var objectId ids.ObjectId
-
-	if err = objectId.SetWithId(objectIdType); err != nil {
 		err = errors.Wrap(err)
 		return objectIdType, err
 	}
@@ -119,21 +125,16 @@ func (local *Repo) initDefaultTypeIfNecessaryAfterLock(
 	object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
 	object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
 
-	if err = local.GetStore().CreateOrUpdateDefaultProto(
-		object,
-		sku.GetStoreOptionsCreate(),
-	); err != nil {
-		err = errors.Wrap(err)
-		return objectIdType, err
-	}
+	builder.AddObject(object, 0)
 
 	return objectIdType, err
 }
 
-func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
+func (local *Repo) prepareDefaultConfig(
 	bigBang env_repo.BigBang,
 	blobStores []blob_store_id.Id,
 	defaultTypeObjectId ids.TypeStruct,
+	builder *import_plan.Builder,
 ) (err error) {
 	if bigBang.ExcludeDefaultConfig {
 		return err
@@ -167,13 +168,7 @@ func (local *Repo) initDefaultConfigIfNecessaryAfterLock(
 
 	newConfig.GetMetadataMutable().GetTypeMutable().ResetWithType(typedBlob.Type)
 
-	if err = local.GetStore().CreateOrUpdateDefaultProto(
-		newConfig,
-		sku.GetStoreOptionsCreate(),
-	); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
+	builder.AddObject(newConfig, 0)
 
 	return err
 }

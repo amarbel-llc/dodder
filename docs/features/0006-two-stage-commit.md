@@ -545,6 +545,17 @@ or the stream index.
 Checkout-store operations (refresh, update, delete) are not commit concerns and
 stay outside `ExecutePlan`.
 
+#### Read-then-update commands
+
+`UpdateObject` (`tango/user_ops/update_object.go`) and `Update`
+(`victor/commands_dodder/update.go`) follow a read-then-modify-then-commit
+pattern under the lock: read the current object state, apply changes (tags,
+description, type lock), then commit. Moving the read pre-lock introduces the
+same race as `RefreshCheckedOut` --- the object could change between read and
+lock acquisition. This is accepted for the same reason: single-user CLI tool,
+low contention. Both commands are candidates for `ExecutePlan` migration once
+the pre-lock read race is accepted.
+
 #### Lock/Unlock stays on Repo
 
 `ExecutePlan` acquires and releases the lock on `local_working_copy.Repo`.
