@@ -15,7 +15,7 @@ type TomlV1Common struct {
 	StoreVersion      store_version.Version     `toml:"store-version"`
 	_                 string                    `toml:"repo-type"`
 	RepoId            ids.RepoId                `toml:"id"`
-	BlobStore         blob_store_configs.TomlV0 `toml:"blob-store"`
+	BlobStore         blob_store_configs.TomlLocalHashBucketedV0 `toml:"blob-store"`
 	InventoryListType string                    `toml:"inventory_list-type"`
 }
 

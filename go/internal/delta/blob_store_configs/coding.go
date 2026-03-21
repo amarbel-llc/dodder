@@ -49,7 +49,7 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Progenitor: func() Config {
-					return &TomlV0{}
+					return &TomlLocalHashBucketedV0{}
 				},
 			},
 			ids.TypeTomlBlobStoreConfigV1: hyphence.CoderToml[
@@ -57,7 +57,7 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Progenitor: func() Config {
-					return &TomlV1{}
+					return &TomlLocalHashBucketedV1{}
 				},
 			},
 			ids.TypeTomlBlobStoreConfigV2: hyphence.CoderToml[
@@ -65,7 +65,7 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Progenitor: func() Config {
-					return &TomlV2{}
+					return &TomlLocalHashBucketedV2{}
 				},
 			},
 			ids.TypeTomlBlobStoreConfigV3: hyphence.CoderToml[

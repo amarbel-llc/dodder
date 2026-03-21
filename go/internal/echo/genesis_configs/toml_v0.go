@@ -55,7 +55,7 @@ func (config *V0Public) GetGenesisConfig() ConfigPublic {
 }
 
 func (config *V0Common) GetBlobIOWrapper() domain_interfaces.BlobIOWrapper {
-	return &blob_store_configs.TomlV0{
+	return &blob_store_configs.TomlLocalHashBucketedV0{
 		AgeEncryption:   *config.GetAgeEncryption(),
 		CompressionType: config.CompressionType,
 	}

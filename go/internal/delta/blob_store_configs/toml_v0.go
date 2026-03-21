@@ -8,10 +8,8 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 )
 
-// TomlV0 is the V0 configuration for the local hash-bucketed blob store.
-// TODO rename to TomlLocalHashBucketedV0 for disambiguation from other
-// blob store config types (e.g., TomlInventoryArchiveV0).
-type TomlV0 struct {
+// TomlLocalHashBucketedV0 is the V0 configuration for the local hash-bucketed blob store.
+type TomlLocalHashBucketedV0 struct {
 	BasePath          string                           `toml:"base-path,omitempty"`
 	AgeEncryption     markl_age_id.Id                  `toml:"age-encryption,omitempty"`
 	CompressionType   compression_type.CompressionType `toml:"compression-type"`
@@ -19,15 +17,15 @@ type TomlV0 struct {
 }
 
 var (
-	_ ConfigLocalHashBucketed = TomlV0{}
-	_ ConfigLocalMutable      = &TomlV0{}
+	_ ConfigLocalHashBucketed = TomlLocalHashBucketedV0{}
+	_ ConfigLocalMutable      = &TomlLocalHashBucketedV0{}
 )
 
-func (TomlV0) GetBlobStoreType() string {
+func (TomlLocalHashBucketedV0) GetBlobStoreType() string {
 	return "local"
 }
 
-func (blobStoreConfig *TomlV0) SetFlagDefinitions(
+func (blobStoreConfig *TomlLocalHashBucketedV0) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
 	blobStoreConfig.CompressionType.SetFlagDefinitions(flagSet)
@@ -46,34 +44,34 @@ func (blobStoreConfig *TomlV0) SetFlagDefinitions(
 	)
 }
 
-func (blobStoreConfig TomlV0) getBasePath() string {
+func (blobStoreConfig TomlLocalHashBucketedV0) getBasePath() string {
 	return blobStoreConfig.BasePath
 }
 
-func (blobStoreConfig TomlV0) GetHashBuckets() []int {
+func (blobStoreConfig TomlLocalHashBucketedV0) GetHashBuckets() []int {
 	return []int{2}
 }
 
-func (blobStoreConfig TomlV0) GetBlobCompression() interfaces.IOWrapper {
+func (blobStoreConfig TomlLocalHashBucketedV0) GetBlobCompression() interfaces.IOWrapper {
 	return &blobStoreConfig.CompressionType
 }
 
-func (blobStoreConfig TomlV0) GetBlobEncryption() domain_interfaces.MarklId {
+func (blobStoreConfig TomlLocalHashBucketedV0) GetBlobEncryption() domain_interfaces.MarklId {
 	return &blobStoreConfig.AgeEncryption
 }
 
-func (blobStoreConfig TomlV0) GetLockInternalFiles() bool {
+func (blobStoreConfig TomlLocalHashBucketedV0) GetLockInternalFiles() bool {
 	return blobStoreConfig.LockInternalFiles
 }
 
-func (blobStoreConfig TomlV0) SupportsMultiHash() bool {
+func (blobStoreConfig TomlLocalHashBucketedV0) SupportsMultiHash() bool {
 	return false
 }
 
-func (blobStoreConfig TomlV0) GetDefaultHashTypeId() string {
+func (blobStoreConfig TomlLocalHashBucketedV0) GetDefaultHashTypeId() string {
 	return markl.FormatIdHashSha256
 }
 
-func (blobStoreConfig *TomlV0) setBasePath(value string) {
+func (blobStoreConfig *TomlLocalHashBucketedV0) setBasePath(value string) {
 	blobStoreConfig.BasePath = value
 }
