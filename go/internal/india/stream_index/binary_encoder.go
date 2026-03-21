@@ -229,6 +229,8 @@ func (encoder *binaryEncoder) writeFieldKey(
 		}
 
 	case key_bytes.BlobReferences:
+		metadataMutable := object.GetMetadataMutable()
+
 		for blobId := range metadata.AllBlobReferences() {
 			bites, marshalErr := blobId.MarshalBinary()
 			if marshalErr != nil {
@@ -249,6 +251,38 @@ func (encoder *binaryEncoder) writeFieldKey(
 			if _, err = ohio.WriteAllOrDieTrying(&encoder.Content, bites); err != nil {
 				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
 				return n, err
+			}
+
+			// Null byte sentinel separates old format from new format with type lock
+			if _, err = ohio.WriteAllOrDieTrying(
+				&encoder.Content, []byte{0},
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			// Write type lock bytes with 2-byte length prefix
+			typeLockMutable := metadataMutable.GetBlobReferenceTypeLockMutable(blobId)
+			typeLockMarshaler := markl.MakeMutableLockCoderValueNotRequired(typeLockMutable)
+			typeLockBytes, marshalErr := typeLockMarshaler.MarshalBinary()
+			if marshalErr != nil {
+				err = errors.Wrap(marshalErr)
+				return n, err
+			}
+
+			if _, err = ohio.WriteFixedUInt16(
+				&encoder.Content,
+				uint16(len(typeLockBytes)),
+			); err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+
+			if len(typeLockBytes) > 0 {
+				if _, err = ohio.WriteAllOrDieTrying(&encoder.Content, typeLockBytes); err != nil {
+					err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+					return n, err
+				}
 			}
 
 			alias := metadata.GetBlobReferenceAlias(blobId)

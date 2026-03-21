@@ -9,6 +9,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
@@ -228,6 +229,9 @@ func (factory formatterComponents) writeBlobReferences(
 
 		alias := metadata.GetBlobReferenceAlias(blobId)
 
+		typeLock := metadata.GetBlobReferenceTypeLock(blobId)
+		typeLockStr := markl.MakeLockCoderValueNotRequired(typeLock).String()
+
 		if alias != "" {
 			if strings.ContainsAny(alias, " \t\"") {
 				alias = fmt.Sprintf("%q", alias)
@@ -236,6 +240,10 @@ func (factory formatterComponents) writeBlobReferences(
 			line = fmt.Sprintf("- %s < @%s", alias, blobId)
 		} else {
 			line = fmt.Sprintf("- @%s", blobId)
+		}
+
+		if typeLockStr != "" {
+			line = fmt.Sprintf("%s %s", line, typeLockStr)
 		}
 
 		var n1 int64

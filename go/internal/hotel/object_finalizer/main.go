@@ -215,6 +215,28 @@ func (finalizer finalizer) WriteLockfile(
 		}
 	}
 
+	for blobId := range metadata.AllBlobReferences() {
+		if err = finalizer.writeBlobReferenceTypeLockIfNecessary(
+			metadata,
+			blobId,
+			funcs...,
+		); err != nil {
+			switch err {
+			case ErrBlobReferenceMissingType:
+				// Type not yet provided — skip pinning for this blob reference
+				err = nil
+
+			case ErrFailedToReadCurrentLockObject:
+				err = errors.Wrapf(err, "failed to write blob reference type lock for: %s", blobId)
+				return err
+
+			default:
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+	}
+
 	return err
 }
 

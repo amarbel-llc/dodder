@@ -2,8 +2,10 @@ package object_finalizer
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func (finalizer finalizer) writeTypeLockIfNecessary(
@@ -95,6 +97,50 @@ func (finalizer finalizer) writeReferencedObjectLockIfNecessary(
 		refLock.GetValueMutable().ResetWithMarklId(refObject.GetMetadataMutable().GetObjectSig())
 	} else {
 		err = ErrFailedToReadCurrentLockObject
+		return err
+	}
+
+	return err
+}
+
+func (finalizer finalizer) writeBlobReferenceTypeLockIfNecessary(
+	metadata objects.MetadataMutable,
+	blobId markl.Id,
+	funcs ...sku.FuncReadOne,
+) (err error) {
+	typeLock := metadata.GetBlobReferenceTypeLockMutable(blobId)
+
+	if typeLock == nil {
+		err = ErrBlobReferenceMissingType
+		return err
+	}
+
+	tipe := typeLock.GetKey()
+
+	if tipe.IsEmpty() {
+		err = ErrBlobReferenceMissingType
+		return err
+	}
+
+	if ids.IsBuiltin(tipe) {
+		return err
+	}
+
+	if !typeLock.GetValue().IsNull() {
+		return err
+	}
+
+	typeObject, repool := sku.GetTransactedPool().GetWithRepool()
+	defer repool()
+
+	if ok := sku.ReadOneObjectIdBespoke(tipe, typeObject, funcs...); ok {
+		typeLock.GetValueMutable().ResetWithMarklId(typeObject.GetMetadataMutable().GetObjectSig())
+	} else {
+		err = errors.Wrapf(
+			ErrFailedToReadCurrentLockObject,
+			"blob reference type: %q",
+			tipe,
+		)
 		return err
 	}
 

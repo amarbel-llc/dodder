@@ -6,6 +6,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -271,6 +272,13 @@ func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
 			value = alias + "<@" + blobId.String()
 		} else {
 			value = "<@" + blobId.String()
+		}
+
+		typeLock := metadata.GetBlobReferenceTypeLock(blobId)
+		typeLockStr := markl.MakeLockCoderValueNotRequired(typeLock).String()
+
+		if typeLockStr != "" {
+			value = value + " " + typeLockStr
 		}
 
 		builder.Contents.Append(string_format_writer.Field{

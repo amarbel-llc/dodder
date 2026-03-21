@@ -21,4 +21,5 @@ var (
 	ErrFailedToReadCurrentLockObject = newPkgError("failed to read current lock object")
 	ErrEmptyLockKey                  = newPkgError("empty type")
 	ErrBuiltinType                   = newPkgError("builtin type")
+	ErrBlobReferenceMissingType      = newPkgError("blob reference missing type")
 )

@@ -17,6 +17,7 @@ import (
 type discoveredReference struct {
 	ObjectId string
 	BlobId   string
+	TypeId   string
 	Alias    string
 }
 
@@ -41,7 +42,20 @@ func parseReferenceOutput(output string) ([]discoveredReference, error) {
 		}
 
 		if strings.HasPrefix(value, "@") {
-			ref.BlobId = strings.TrimPrefix(value, "@")
+			blobValue := strings.TrimPrefix(value, "@")
+
+			// Split off optional !type suffix
+			if spaceIdx := strings.Index(blobValue, " "); spaceIdx != -1 {
+				typeStr := strings.TrimSpace(blobValue[spaceIdx+1:])
+
+				if strings.HasPrefix(typeStr, "!") {
+					ref.TypeId = typeStr
+				}
+
+				blobValue = blobValue[:spaceIdx]
+			}
+
+			ref.BlobId = blobValue
 		} else {
 			ref.ObjectId = value
 		}
@@ -151,7 +165,21 @@ func (store *Store) discoverReferences(
 				return errors.Wrapf(err, "invalid blob reference: %q", ref.BlobId)
 			}
 
-			metadata.AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
+			var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+
+			if ref.TypeId != "" {
+				marshaler := markl.MakeMutableLockCoderValueNotRequired(&typeLock)
+
+				if err = marshaler.Set(ids.MakeTypeString(ref.TypeId)); err != nil {
+					if objectReferences.Optional {
+						continue
+					}
+
+					return errors.Wrapf(err, "invalid blob reference type: %q", ref.TypeId)
+				}
+			}
+
+			metadata.AddBlobReference(blobId, typeLock)
 
 			if ref.Alias != "" {
 				if err = metadata.SetBlobReferenceAlias(blobId, ref.Alias); err != nil {

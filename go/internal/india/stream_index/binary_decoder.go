@@ -397,7 +397,7 @@ func (decoder *binaryDecoder) readFieldKey(
 		}
 
 		idBytes := remaining[:idLen]
-		aliasBytes := remaining[idLen:]
+		remaining = remaining[idLen:]
 
 		var blobId markl.Id
 		if err = blobId.UnmarshalBinary(idBytes); err != nil {
@@ -405,7 +405,54 @@ func (decoder *binaryDecoder) readFieldKey(
 			return err
 		}
 
-		metadata.AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
+		var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+		var aliasBytes []byte
+
+		// Detect format: null byte sentinel means new format with type lock
+		if len(remaining) > 0 && remaining[0] == 0 {
+			// New format: \x00 [2-byte typeLockLen] [typeLockBytes] [aliasBytes]
+			remaining = remaining[1:]
+
+			if len(remaining) >= 2 {
+				var typeLockLen uint16
+				typeLockReader := bytes.NewReader(remaining)
+
+				if _, typeLockLen, err = ohio.ReadFixedUInt16(typeLockReader); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				remaining = remaining[2:]
+
+				if int(typeLockLen) > len(remaining) {
+					err = errors.Errorf(
+						"blob reference type lock length %d exceeds remaining %d",
+						typeLockLen,
+						len(remaining),
+					)
+					return err
+				}
+
+				if typeLockLen > 0 {
+					typeLockBytes := remaining[:typeLockLen]
+					remaining = remaining[typeLockLen:]
+
+					marshaler := markl.MakeMutableLockCoderValueNotRequired(&typeLock)
+
+					if err = marshaler.UnmarshalBinary(typeLockBytes); err != nil {
+						err = errors.Wrap(err)
+						return err
+					}
+				}
+			}
+
+			aliasBytes = remaining
+		} else {
+			// Old format: [aliasBytes]
+			aliasBytes = remaining
+		}
+
+		metadata.AddBlobReference(blobId, typeLock)
 
 		if len(aliasBytes) > 0 {
 			if err = metadata.SetBlobReferenceAlias(

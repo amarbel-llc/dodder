@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/delim_reader"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
@@ -141,29 +142,80 @@ func (parser *textParser2) readBlobReference(
 	}
 
 	var alias string
-	var digestStr string
+	var blobRefPortion string
 
-	if idx := strings.Index(refString, " < @"); idx != -1 {
+	if idx := strings.Index(refString, " < "); idx != -1 {
 		alias = strings.TrimSpace(refString[:idx])
-		digestStr = strings.TrimSpace(refString[idx+4:])
 
 		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
 			alias = alias[1 : len(alias)-1]
 		}
-	} else if strings.HasPrefix(refString, "@") {
-		digestStr = strings.TrimSpace(refString[1:])
+
+		blobRefPortion = strings.TrimSpace(refString[idx+3:])
 	} else {
-		err = errors.Errorf("unsupported blob reference format: %q", refString)
+		blobRefPortion = refString
+	}
+
+	reader, repool := pool.GetStringReader(blobRefPortion)
+	defer repool()
+
+	scanner := doddish.MakeScanner(reader)
+
+	// First seq: @digest
+	if !scanner.ScanDotAllowedInIdentifiers() {
+		err = errors.Errorf("expected @digest in blob reference: %q", refString)
+		return err
+	}
+
+	seq := scanner.GetSeq()
+
+	if !seq.MatchAll(doddish.TokenMatcherBlobDigest...) {
+		err = errors.Errorf("expected @digest, got %q in blob reference: %q", seq, refString)
 		return err
 	}
 
 	var blobId markl.Id
-	if err = blobId.Set(digestStr); err != nil {
+
+	if err = blobId.Set(seq.At(1).String()); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	metadata.AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
+	// Scan optional type lock: space then !type or !type@sig
+	var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+
+	if scanner.ScanDotAllowedInIdentifiers() {
+		spaceSeq := scanner.GetSeq()
+
+		// Skip space seq
+		if spaceSeq.MatchAll(doddish.TokenMatcherOp(' ')) {
+			if scanner.ScanDotAllowedInIdentifiers() {
+				typeSeq := scanner.GetSeq()
+
+				switch {
+				case typeSeq.MatchAll(doddish.TokenMatcherTypeLock...):
+					marshaler := markl.MakeMutableLockCoderValueNotRequired(&typeLock)
+
+					if err = marshaler.Set(typeSeq.String()); err != nil {
+						err = errors.Wrapf(err, "blob reference type lock: %q", refString)
+						return err
+					}
+
+				case typeSeq.MatchAll(doddish.TokenMatcherType...):
+					if err = typeLock.GetKeyMutable().Set(typeSeq.String()); err != nil {
+						err = errors.Wrapf(err, "blob reference type: %q", refString)
+						return err
+					}
+
+				default:
+					err = errors.Errorf("expected !type or !type@sig, got %q in blob reference: %q", typeSeq, refString)
+					return err
+				}
+			}
+		}
+	}
+
+	metadata.AddBlobReference(blobId, typeLock)
 
 	if alias != "" {
 		if err = metadata.SetBlobReferenceAlias(blobId, alias); err != nil {

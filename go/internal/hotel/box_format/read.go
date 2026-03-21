@@ -272,7 +272,12 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			object.GetMetadataMutable().AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
+			var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+			if err = format.scanBlobReferenceTypeLock(scanner, &typeLock); err != nil {
+				return err
+			}
+
+			object.GetMetadataMutable().AddBlobReference(blobId, typeLock)
 
 			alias := seq.At(0).String()
 			if err = object.GetMetadataMutable().SetBlobReferenceAlias(blobId, alias); err != nil {
@@ -288,7 +293,12 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			object.GetMetadataMutable().AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
+			var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+			if err = format.scanBlobReferenceTypeLock(scanner, &typeLock); err != nil {
+				return err
+			}
+
+			object.GetMetadataMutable().AddBlobReference(blobId, typeLock)
 
 			// <ref@sig (referenced object without alias)
 		case seq.MatchAll(doddish.TokenMatcherReferencedObject...):
@@ -415,6 +425,51 @@ func (format *BoxTransacted) parseMarklIdTag(
 	); err != nil {
 		err = errors.Wrapf(err, "Seq: %q", seq)
 		return err
+	}
+
+	return err
+}
+
+// scanBlobReferenceTypeLock looks ahead in the scanner for an optional type lock
+// (!type or !type@sig) following a blob reference. If the next non-space seq is
+// a type lock, it is consumed and parsed into typeLock. Otherwise, the seq is
+// unscanned so the main loop can process it.
+func (format *BoxTransacted) scanBlobReferenceTypeLock(
+	scanner *doddish.Scanner,
+	typeLock *markl.Lock[ids.SeqId, *ids.SeqId],
+) (err error) {
+	if !scanner.Scan() {
+		return err
+	}
+
+	nextSeq := scanner.GetSeq()
+
+	// Skip space
+	if nextSeq.MatchAll(doddish.TokenMatcherOp(' ')) {
+		if !scanner.Scan() {
+			return err
+		}
+
+		nextSeq = scanner.GetSeq()
+	}
+
+	switch {
+	case nextSeq.MatchAll(doddish.TokenMatcherTypeLock...):
+		marshaler := markl.MakeMutableLockCoderValueNotRequired(typeLock)
+
+		if err = marshaler.Set(nextSeq.String()); err != nil {
+			err = errors.Wrapf(err, "blob reference type lock: %q", nextSeq)
+			return err
+		}
+
+	case nextSeq.MatchAll(doddish.TokenMatcherType...):
+		if err = typeLock.GetKeyMutable().Set(nextSeq.String()); err != nil {
+			err = errors.Wrapf(err, "blob reference type: %q", nextSeq)
+			return err
+		}
+
+	default:
+		scanner.Unscan()
 	}
 
 	return err
