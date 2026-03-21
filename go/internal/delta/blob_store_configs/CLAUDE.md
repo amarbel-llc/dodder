@@ -7,12 +7,15 @@ Configuration types and interfaces for blob storage backends.
 - `Config`: Base interface for blob store configurations
 - `ConfigMutable`: Writable configuration interface
 - `ConfigLocalHashBucketed`: Configuration for hash-bucketed local storage
-- `ConfigSFTPUri`, `ConfigSFTPConfigExplicit`: SFTP remote storage configurations
+- `ConfigSFTPUri`, `ConfigSFTPConfigExplicit`: SFTP remote storage
+  configurations
 - `TypedConfig`, `TypedMutableConfig`: Type-safe config wrappers
 
 ## Versions
 
-- `TomlV0`, `TomlV1`, `TomlV2`: Versioned TOML configuration formats
+- `TomlLocalHashBucketedV0`, `TomlLocalHashBucketedV1`,
+  `TomlLocalHashBucketedV2`: Versioned TOML configuration for local
+  hash-bucketed stores
 - `TomlSFTPV0`, `TomlSFTPViaSSHConfigV0`: SFTP-specific configurations
 - `TomlPointerV0`, `TomlUriV0`: Pointer and URI-based configurations
 
