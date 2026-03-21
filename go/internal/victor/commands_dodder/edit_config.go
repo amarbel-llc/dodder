@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
@@ -49,20 +50,27 @@ func (cmd EditConfig) Run(
 		errors.MakeFuncContextFromFuncErr(localWorkingCopy.Reset),
 	)
 
-	localWorkingCopy.Must(
-		errors.MakeFuncContextFromFuncErr(localWorkingCopy.Lock),
-	)
+	builder := import_plan.MakeLocalBuilder()
+	builder.AddObject(sk, 0)
 
-	if err := localWorkingCopy.GetStore().CreateOrUpdateDefaultProto(
-		sk,
-		sku.StoreOptions{},
-	); err != nil {
-		localWorkingCopy.Cancel(err)
+	plan, buildErr := builder.Build()
+	if buildErr != nil {
+		localWorkingCopy.Cancel(buildErr)
 	}
 
-	localWorkingCopy.Must(
-		errors.MakeFuncContextFromFuncErr(localWorkingCopy.Unlock),
-	)
+	plan.DefaultCommitOptions = sku.CommitOptions{
+		Proto: localWorkingCopy.GetStore().GetProtoZettel(),
+		StoreOptions: sku.StoreOptions{
+			AddToInventoryList: true,
+			UpdateTai:          true,
+			RunHooks:           true,
+			Validate:           true,
+		},
+	}
+
+	if _, err := localWorkingCopy.ExecutePlan(plan); err != nil {
+		localWorkingCopy.Cancel(err)
+	}
 }
 
 func (cmd EditConfig) editInVim(
