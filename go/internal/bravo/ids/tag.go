@@ -129,7 +129,8 @@ func (tag tagStruct) IsDodderTag() bool {
 }
 
 func TagIsVirtual(tag Tag) bool {
-	// TODO-#27 panic if tag is not tag
+	// TODO https://github.com/amarbel-llc/dodder/issues/27
+	// Panic if tag is not a tag
 	return strings.HasPrefix(tag.String(), "%")
 }
 

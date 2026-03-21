@@ -35,7 +35,8 @@ func (index *Index) ReadOneMarklId(
 	{
 		var err error
 
-		// TODO-#27 migrate to panic semantics
+		// TODO https://github.com/amarbel-llc/dodder/issues/27
+		// Migrate to panic semantics
 		if loc, err = index.readOneMarklIdLoc(marklId); err != nil {
 			if errors.IsNotExist(err) || errors.IsErrNotFound(err) {
 				return ok
@@ -152,7 +153,8 @@ func (index *Index) ReadManyObjectId(
 	return objects, err
 }
 
-// TODO-#27 switch to empty=not found semantics instead of error
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Switch to empty=not found semantics instead of error
 func (index *Index) ReadOneObjectIdTai(
 	objectId ids.Id,
 	tai ids.Tai,

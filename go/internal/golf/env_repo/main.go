@@ -38,7 +38,8 @@ type Env struct {
 	BlobStoreEnv
 }
 
-// TODO-#27 stop returning error and just cancel context
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Stop returning error and cancel context instead
 func Make(
 	envLocal env_local.Env,
 	options Options,

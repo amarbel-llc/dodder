@@ -125,7 +125,8 @@ func StringMetadataSansTai(object *Transacted) (str string) {
 	return sb.String()
 }
 
-// TODO-#27 switch to using fmt.Fprintf for panic recovery
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Switch to fmt.Fprintf for panic recovery
 func StringMetadataSansTaiMerkle(object *Transacted) (str string) {
 	sb := &strings.Builder{}
 

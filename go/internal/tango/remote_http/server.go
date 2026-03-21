@@ -41,7 +41,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// TODO-#27 use context cancellation for http errors
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Use context cancellation for HTTP errors
 
 type Server struct {
 	EnvLocal  env_local.Env
@@ -57,7 +58,8 @@ func (server *Server) init() (err error) {
 	return err
 }
 
-// TODO-#27 switch to not return error
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Remove error return, use context cancellation
 func (server *Server) InitializeListener(
 	network, address string,
 ) (listener net.Listener, err error) {
@@ -160,7 +162,8 @@ func (server *Server) InitializeHTTP(
 func (server *Server) makeRouter(
 	makeHandler func(handler funcHandler) http.HandlerFunc,
 ) http.Handler {
-	// TODO-#27 add errors/context middleware for capturing errors and panics
+	// TODO https://github.com/amarbel-llc/dodder/issues/27
+	// Add errors/context middleware for capturing errors and panics
 	router := mux.NewRouter().UseEncodedPath()
 
 	router.HandleFunc(
@@ -354,7 +357,8 @@ func (server *Server) panicHandlingMiddleware(next http.Handler) http.Handler {
 	)
 }
 
-// TODO-#27 remove error return and use context
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Remove error return, use context cancellation
 func (server *Server) Serve(listener net.Listener) (err error) {
 	if err = server.init(); err != nil {
 		err = errors.Wrap(err)

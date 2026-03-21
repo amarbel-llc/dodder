@@ -52,7 +52,8 @@ type binaryDecoder struct {
 	limitedReader io.LimitedReader
 }
 
-// TODO-#27 transition to panic semantics
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Transition to panic semantics
 func (decoder *binaryDecoder) readFormatExactly(
 	readerAt io.ReaderAt,
 	object *objectWithCursorAndSigil,
