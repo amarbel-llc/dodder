@@ -1,3 +1,11 @@
+---
+date: 2026-03-15
+promotion-criteria: CheckoutStore interface defined with Compile/Decompile
+  methods; at least one concrete store (CalDAV or filesystem-bridge) passes a
+  round-trip BATS test for a single object type
+status: exploring
+---
+
 # Pluggable Checkout Stores
 
 ## Problem Statement
@@ -47,24 +55,27 @@ A VTODO is not atomic. It contains sub-structures: VALARMs, ATTACHments,
 RELATED-TO references, ATTENDEEs. Dodder's referenced objects and blob
 references (FDR-0001) can decompose these into a normalized object graph:
 
-  -----------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------
   iCalendar construct         Dodder representation
-  --------------------------- -------------------------------------------------------------
-  VTODO itself                `!task` object (summary, status, priority, due, etc. as
-                              type-defined fields; blob is the DESCRIPTION body)
+  --------------------------- -----------------------------------------------------
+  VTODO itself                `!task` object (summary, status, priority, due, etc.
+                              as type-defined fields; blob is the DESCRIPTION body)
 
-  VALARM                      referenced `!alarm` object (trigger, action, description)
+  VALARM                      referenced `!alarm` object (trigger, action,
+                              description)
 
-  ATTACH                      blob reference (`- attachment-name < @blake2b256-...`)
+  ATTACH                      blob reference
+                              (`- attachment-name < @blake2b256-...`)
 
-  RELATED-TO;RELTYPE=PARENT   referenced `!task` object (subtask relationship, already
-                              modeled in the caldav MCP package via `parent_uid`)
+  RELATED-TO;RELTYPE=PARENT   referenced `!task` object (subtask relationship,
+                              already modeled in the caldav MCP package via
+                              `parent_uid`)
 
   ATTENDEE                    referenced `!contact` object or inline metadata field
 
   X-\* extensions, SEQUENCE,  opaque properties preserved in the object's blob
   etc.                        
-  -----------------------------------------------------------------------------------------
+  ---------------------------------------------------------------------------------
 
 On **compilation** (checkout), the workspace walks the task object's references
 and blob references, assembles a VCALENDAR document with the VTODO and its
@@ -246,12 +257,12 @@ a custom per-field merge engine.
 Because sub-structures are separate objects, concurrent edits to different parts
 of a VTODO decompose into independent merges:
 
-  -------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------
   CalDAV side   Dodder side changed   Merge result
   changed                             
-  ------------- --------------------- -------------------------------------------
-  Added VALARM  Changed description   No conflict --- new `!alarm` object + clean
-                                      text merge on task
+  ------------- --------------------- ------------------------------------------
+  Added VALARM  Changed description   No conflict --- new `!alarm` object +
+                                      clean text merge on task
 
   Changed due   Added a tag           No conflict --- different lines in the
   date                                task's hyphence
@@ -264,7 +275,7 @@ of a VTODO decompose into independent merges:
 
   Added ATTACH  Added ATTACH          No conflict --- two new blob references
                 (different file)      
-  -------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------
 
 The hyphence format's line-oriented structure makes text merge viable:
 description is one line, each tag is one line, each metadata field is one line,

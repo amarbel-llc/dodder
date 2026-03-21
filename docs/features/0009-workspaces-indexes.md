@@ -1,3 +1,11 @@
+---
+date: 2026-03-15
+promotion-criteria: ExternalState persisted in binary stream index; cached stat
+  metadata validated on read; dodder show .z returns tracked objects without a
+  filesystem walk when cache is valid
+status: exploring
+---
+
 # External Object Index
 
 ## Problem Statement

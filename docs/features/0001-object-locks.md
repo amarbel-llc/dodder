@@ -4,7 +4,7 @@ promotion-criteria: all three lock kinds (type, tag, referenced object) and
   typed blob references round-trip through text, inventory list, binary, and
   JSON formats; expandEdges follows typed blob refs recursively; migration tests
   pass for stores created before referenced object locks existed
-status: exploring
+status: experimental
 ---
 
 # Object Locks
@@ -179,17 +179,17 @@ Per blob reference entry:
 
 ### Format summary
 
-  --------------------------------------------------------------------------------
-  Format         Object ref                  Blob ref
-  -------------- --------------------------- -------------------------------------
-  Hyphence       `- alias < ref@sig`         `- alias < @digest !type@sig`
+  ------------------------------------------------------------------------------
+  Format         Object ref                 Blob ref
+  -------------- -------------------------- ------------------------------------
+  Hyphence       `- alias < ref@sig`        `- alias < @digest !type@sig`
 
-  Box            `alias<(ref@sig)`           `alias<(@digest !type@sig)`
+  Box            `alias<(ref@sig)`          `alias<(@digest !type@sig)`
 
-  Binary index   key + null + fmt + id       key + type lock + alias
+  Binary index   key + null + fmt + id      key + type lock + alias
 
-  Inventory list `alias<(ref@sig)`           `alias<(@digest !type@sig)`
-  --------------------------------------------------------------------------------
+  Inventory list `alias<(ref@sig)`          `alias<(@digest !type@sig)`
+  ------------------------------------------------------------------------------
 
 ### Sigil design etymology
 
