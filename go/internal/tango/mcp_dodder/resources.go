@@ -8,12 +8,43 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/papa/store"
+	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 )
+
+// ResourceReader provides read-only access to dodder's MCP resource tree.
+type ResourceReader interface {
+	ReadResource(ctx context.Context, uri string) (*protocol.ResourceReadResult, error)
+}
+
+func NewResourceReader(
+	utility command.Utility,
+	repo *local_working_copy.Repo,
+) ResourceReader {
+	bridge := MakeBridge(utility)
+	resources := server.NewResourceRegistry()
+	index := makeTypeIndex(bridge)
+	tagIdx := makeTagIndex(bridge)
+	typeBlobCoder := type_blobs.MakeTypeStore(repo.GetEnvRepo())
+
+	provider := &typeResourceProvider{
+		registry:      resources,
+		index:         index,
+		tagIndex:      tagIdx,
+		bridge:        bridge,
+		store:         repo.GetStore(),
+		typeBlobCoder: typeBlobCoder,
+	}
+
+	registerResources(resources, index, tagIdx, bridge)
+
+	return provider
+}
 
 type typeResourceProvider struct {
 	registry      *server.ResourceRegistry
@@ -41,6 +72,14 @@ func (p *typeResourceProvider) ReadResource(
 	uri string,
 ) (*protocol.ResourceReadResult, error) {
 	switch {
+	case uri == "dodder://objects":
+		return p.registry.ReadResource(ctx, uri)
+
+	case strings.HasPrefix(uri, "dodder://query/"):
+		rest := strings.TrimPrefix(uri, "dodder://query/")
+		terms := strings.Split(rest, "/")
+		return p.readQuery(ctx, terms)
+
 	case strings.HasPrefix(uri, "dodder://objects/"):
 		rest := strings.TrimPrefix(uri, "dodder://objects/")
 
@@ -850,6 +889,25 @@ func (p *typeResourceProvider) readTagMarkl(
 	)
 }
 
+func (p *typeResourceProvider) readQuery(
+	ctx context.Context,
+	terms []string,
+) (*protocol.ResourceReadResult, error) {
+	args := append([]string{"-format", "json"}, terms...)
+	result, err := p.bridge.RunCommand(ctx, "show", args, 500_000)
+	if err != nil {
+		return nil, fmt.Errorf("query %v: %w", terms, err)
+	}
+
+	return &protocol.ResourceReadResult{
+		Contents: []protocol.ResourceContent{{
+			URI:      "dodder://query/" + strings.Join(terms, "/"),
+			MimeType: "application/json",
+			Text:     result.Stdout,
+		}},
+	}, nil
+}
+
 func registerResources(
 	registry *server.ResourceRegistry,
 	index *typeIndex,
@@ -1173,6 +1231,48 @@ func registerResources(
 			URITemplate: "dodder://tags/{tag_id}/markl",
 			Name:        "Tag Markl",
 			Description: "Markl (merkle-tree) integrity fields for a tag. Most queries do not need this.",
+			MimeType:    "application/json",
+		},
+		nil,
+	)
+
+	// Object listing
+
+	registry.RegisterResource(
+		protocol.Resource{
+			URI:         "dodder://objects",
+			Name:        "All Objects",
+			Description: "List of all objects in box format. See server instructions for box format grammar.",
+			MimeType:    "text/plain",
+		},
+		func(ctx context.Context, uri string) (*protocol.ResourceReadResult, error) {
+			result, err := bridge.RunCommand(
+				ctx,
+				"show",
+				[]string{"-format", "box", ":z", ":e", ":t"},
+				500_000,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("list all objects: %w", err)
+			}
+
+			return &protocol.ResourceReadResult{
+				Contents: []protocol.ResourceContent{{
+					URI:      uri,
+					MimeType: "text/plain",
+					Text:     result.Stdout,
+				}},
+			}, nil
+		},
+	)
+
+	// Query
+
+	registry.RegisterTemplate(
+		protocol.ResourceTemplate{
+			URITemplate: "dodder://query/{terms}",
+			Name:        "Query",
+			Description: "Execute a dodder query. Path segments are AND-combined query terms. Returns results in JSON format.",
 			MimeType:    "application/json",
 		},
 		nil,
