@@ -272,7 +272,7 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			object.GetMetadataMutable().AddBlobReference(blobId)
+			object.GetMetadataMutable().AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
 
 			alias := seq.At(0).String()
 			if err = object.GetMetadataMutable().SetBlobReferenceAlias(blobId, alias); err != nil {
@@ -288,7 +288,7 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-			object.GetMetadataMutable().AddBlobReference(blobId)
+			object.GetMetadataMutable().AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
 
 			// <ref@sig (referenced object without alias)
 		case seq.MatchAll(doddish.TokenMatcherReferencedObject...):

@@ -163,7 +163,7 @@ func (parser *textParser2) readBlobReference(
 		return err
 	}
 
-	metadata.AddBlobReference(blobId)
+	metadata.AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
 
 	if alias != "" {
 		if err = metadata.SetBlobReferenceAlias(blobId, alias); err != nil {

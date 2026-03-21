@@ -151,7 +151,7 @@ func (store *Store) discoverReferences(
 				return errors.Wrapf(err, "invalid blob reference: %q", ref.BlobId)
 			}
 
-			metadata.AddBlobReference(blobId)
+			metadata.AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
 
 			if ref.Alias != "" {
 				if err = metadata.SetBlobReferenceAlias(blobId, ref.Alias); err != nil {

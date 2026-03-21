@@ -48,6 +48,7 @@ type (
 
 		AllBlobReferences() interfaces.Seq[markl.Id]
 		GetBlobReferenceAlias(markl.Id) string
+		GetBlobReferenceTypeLock(markl.Id) markl.Lock[ids.SeqId, *ids.SeqId]
 
 		GetBlobDigest() domain_interfaces.MarklId
 		GetObjectDigest() domain_interfaces.MarklId
@@ -85,8 +86,9 @@ type (
 		SetReferenceAlias(ref SeqId, alias string) error
 		GetReferencedObjectLockMutable(SeqId) IdLockMutable
 
-		AddBlobReference(markl.Id)
+		AddBlobReference(markl.Id, markl.Lock[ids.SeqId, *ids.SeqId])
 		SetBlobReferenceAlias(markl.Id, string) error
+		GetBlobReferenceTypeLockMutable(markl.Id) *markl.Lock[ids.SeqId, *ids.SeqId]
 		ResetBlobReferences()
 	}
 

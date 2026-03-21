@@ -405,7 +405,7 @@ func (decoder *binaryDecoder) readFieldKey(
 			return err
 		}
 
-		metadata.AddBlobReference(blobId)
+		metadata.AddBlobReference(blobId, markl.Lock[ids.SeqId, *ids.SeqId]{})
 
 		if len(aliasBytes) > 0 {
 			if err = metadata.SetBlobReferenceAlias(

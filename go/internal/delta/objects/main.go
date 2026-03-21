@@ -295,8 +295,11 @@ func (metadata *metadata) AllBlobReferences() interfaces.Seq[markl.Id] {
 	return metadata.BlobRefs.All()
 }
 
-func (metadata *metadata) AddBlobReference(id markl.Id) {
-	metadata.BlobRefs.Add(id)
+func (metadata *metadata) AddBlobReference(
+	id markl.Id,
+	typeLock markl.Lock[ids.SeqId, *ids.SeqId],
+) {
+	metadata.BlobRefs.Add(id, typeLock)
 }
 
 func (metadata *metadata) SetBlobReferenceAlias(id markl.Id, alias string) error {
@@ -305,6 +308,18 @@ func (metadata *metadata) SetBlobReferenceAlias(id markl.Id, alias string) error
 
 func (metadata *metadata) GetBlobReferenceAlias(id markl.Id) string {
 	return metadata.BlobRefs.GetAlias(id)
+}
+
+func (metadata *metadata) GetBlobReferenceTypeLock(
+	id markl.Id,
+) markl.Lock[ids.SeqId, *ids.SeqId] {
+	return metadata.BlobRefs.GetTypeLock(id)
+}
+
+func (metadata *metadata) GetBlobReferenceTypeLockMutable(
+	id markl.Id,
+) *markl.Lock[ids.SeqId, *ids.SeqId] {
+	return metadata.BlobRefs.GetTypeLockMutable(id)
 }
 
 func (metadata *metadata) ResetBlobReferences() {

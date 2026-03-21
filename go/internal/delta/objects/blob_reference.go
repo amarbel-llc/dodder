@@ -1,6 +1,7 @@
 package objects
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
@@ -8,8 +9,9 @@ import (
 )
 
 type blobReferenceEntry struct {
-	Key   markl.Id
-	Alias string
+	Key      markl.Id
+	TypeLock markl.Lock[ids.SeqId, *ids.SeqId]
+	Alias    string
 }
 
 type BlobReferences struct {
@@ -26,14 +28,17 @@ func (refs BlobReferences) All() interfaces.Seq[markl.Id] {
 	}
 }
 
-func (refs *BlobReferences) Add(id markl.Id) {
+func (refs *BlobReferences) Add(
+	id markl.Id,
+	typeLock markl.Lock[ids.SeqId, *ids.SeqId],
+) {
 	for _, entry := range refs.entries {
 		if markl.Equals(&entry.Key, &id) {
 			return
 		}
 	}
 
-	refs.entries.Append(blobReferenceEntry{Key: id})
+	refs.entries.Append(blobReferenceEntry{Key: id, TypeLock: typeLock})
 }
 
 func (refs *BlobReferences) SetAlias(id markl.Id, alias string) error {
@@ -59,6 +64,32 @@ func (refs BlobReferences) GetAlias(id markl.Id) string {
 	return ""
 }
 
+func (refs BlobReferences) GetTypeLock(
+	id markl.Id,
+) markl.Lock[ids.SeqId, *ids.SeqId] {
+	for _, entry := range refs.entries {
+		if markl.Equals(&entry.Key, &id) {
+			return entry.TypeLock
+		}
+	}
+
+	return markl.Lock[ids.SeqId, *ids.SeqId]{}
+}
+
+func (refs *BlobReferences) GetTypeLockMutable(
+	id markl.Id,
+) *markl.Lock[ids.SeqId, *ids.SeqId] {
+	for index := range refs.entries {
+		entry := &refs.entries[index]
+
+		if markl.Equals(&entry.Key, &id) {
+			return &entry.TypeLock
+		}
+	}
+
+	return nil
+}
+
 func (refs *BlobReferences) Reset() {
 	refs.entries.Reset()
 }
@@ -70,6 +101,7 @@ func (refs *BlobReferences) ResetWith(other BlobReferences) {
 	for entry := range other.entries.All() {
 		var clone blobReferenceEntry
 		clone.Key.ResetWith(entry.Key)
+		clone.TypeLock.ResetWith(entry.TypeLock)
 		clone.Alias = entry.Alias
 		refs.entries.Append(clone)
 	}
