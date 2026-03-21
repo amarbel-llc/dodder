@@ -184,6 +184,29 @@ func getSeqTestCases() []seqTestCase {
 		// 		),
 		// 	},
 		// },
+		// typed blob ref: <@digest !type@sig (two seqs split by space)
+		{
+			input: "<@blake2b256-abc123",
+			expected: [][]TokenMatcher{
+				{
+					TokenMatcherOp('<'),
+					TokenMatcherOp('@'),
+					TokenTypeIdentifier,
+				},
+			},
+		},
+		// type lock: !tree@sig
+		{
+			input: "!tree@ed25519-sig456",
+			expected: [][]TokenMatcher{
+				{
+					TokenMatcherOp('!'),
+					TokenTypeIdentifier,
+					TokenMatcherOp('@'),
+					TokenTypeIdentifier,
+				},
+			},
+		},
 	}
 }
 

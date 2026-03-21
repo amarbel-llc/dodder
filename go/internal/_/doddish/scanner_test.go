@@ -181,6 +181,85 @@ func getScannerTestCases() []scannerTestCase {
 				),
 			},
 		},
+		// typed blob ref without alias: <@digest !type@sig
+		{
+			input: `<@blake2b256-abc123 !tree@ed25519-sig456`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeOperator, "<",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "blake2b256-abc123",
+				),
+				makeTestSeq(TokenTypeOperator, " "),
+				makeTestSeq(
+					TokenTypeOperator, "!",
+					TokenTypeIdentifier, "tree",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "ed25519-sig456",
+				),
+			},
+		},
+		// typed blob ref with alias: alias<@digest !type@sig
+		{
+			input: `hero<@blake2b256-abc123 !image-png@ed25519-sig456`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeIdentifier, "hero",
+					TokenTypeOperator, "<",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "blake2b256-abc123",
+				),
+				makeTestSeq(TokenTypeOperator, " "),
+				makeTestSeq(
+					TokenTypeOperator, "!",
+					TokenTypeIdentifier, "image-png",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "ed25519-sig456",
+				),
+			},
+		},
+		// typed blob ref no sig: <@digest !type
+		{
+			input: `<@blake2b256-abc123 !tree`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeOperator, "<",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "blake2b256-abc123",
+				),
+				makeTestSeq(TokenTypeOperator, " "),
+				makeTestSeq(
+					TokenTypeOperator, "!",
+					TokenTypeIdentifier, "tree",
+				),
+			},
+		},
+		// typed blob ref in box: [id <@digest !type@sig]
+		{
+			input: `[one/dos <@blake2b256-abc123 !tree@ed25519-sig456]`,
+			expected: []testSeq{
+				makeTestSeq(TokenTypeOperator, "["),
+				makeTestSeq(
+					TokenTypeIdentifier, "one",
+					TokenTypeOperator, "/",
+					TokenTypeIdentifier, "dos",
+				),
+				makeTestSeq(TokenTypeOperator, " "),
+				makeTestSeq(
+					TokenTypeOperator, "<",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "blake2b256-abc123",
+				),
+				makeTestSeq(TokenTypeOperator, " "),
+				makeTestSeq(
+					TokenTypeOperator, "!",
+					TokenTypeIdentifier, "tree",
+					TokenTypeOperator, "@",
+					TokenTypeIdentifier, "ed25519-sig456",
+				),
+				makeTestSeq(TokenTypeOperator, "]"),
+			},
+		},
 	}
 }
 
