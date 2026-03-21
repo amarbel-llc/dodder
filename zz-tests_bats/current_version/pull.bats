@@ -572,6 +572,67 @@ function pull_direct_local_path_no_conflicts { # @test
 	try_add_new_after_pull
 }
 
+# bats test_tags=user_story:pull,user_story:referenced_objects
+function pull_direct_blob_references_transferred { # @test
+	them="$BATS_TEST_TMPDIR/them"
+	mkdir -p "$them"
+
+	pushd "$them" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Write a standalone blob to the source store
+	run_dodder blob_store-write <(echo "referenced content")
+	assert_success
+	ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+
+	# Create a type with reference discovery for blob refs
+	cat >refblob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !refblob/'"
+	TYPEFILE
+
+	run_dodder checkin -delete refblob.type
+	assert_success
+
+	# Create a zettel whose body references the standalone blob
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with blob ref
+		! refblob
+		---
+
+		See blob @${ref_blob_sha} for details.
+	EOM
+	assert_success
+
+	popd || exit 1
+
+	# Set up destination repo
+	us="$BATS_TEST_TMPDIR/us"
+	mkdir -p "$us"
+	pushd "$us" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Pull from source
+	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+	assert_success
+
+	# Verify the referenced blob was transferred to the destination
+	run_dodder blob_store-cat "$ref_blob_sha"
+	assert_success
+	assert_output "$(printf "%s\n" "referenced content")"
+}
+
 function pull_direct_no_repo_at_path { # @test
 	pushd "$BATS_TEST_TMPDIR" || exit 1
 	run_dodder_init_disable_age

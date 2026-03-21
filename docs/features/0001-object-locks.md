@@ -4,7 +4,7 @@ promotion-criteria: all three lock kinds (type, tag, referenced object) and
   typed blob references round-trip through text, inventory list, binary, and
   JSON formats; expandEdges follows typed blob refs recursively; migration tests
   pass for stores created before referenced object locks existed
-status: experimental
+status: testing
 ---
 
 # Object Locks
@@ -259,8 +259,10 @@ Key files:
 - `delta/objects/interfaces.go` --- `AllReferencedObjects`, `AddBlobReference`
 - `papa/store/reference_discovery.go` --- script-driven discovery
 - `hotel/type_blobs/references_config.go` --- `[references]` TOML config
-- `sierra/local_working_copy/expand_edges.go` --- edge expansion for filtered
-  pull
+- `golf/sku/edge_explorer.go` --- `EdgeExplorer` interface and `Edges` struct
+- `papa/store/edge_explorer.go` --- concrete `EdgeExplorer` with blob discovery
+- `sierra/local_working_copy/expand_edges.go` --- graph walker using
+  `EdgeExplorer` for filtered pull
 
 ### Phase 2: Untyped Blob References (Complete)
 
@@ -277,17 +279,20 @@ Key files:
 - `foxtrot/object_metadata_fmt_hyphence/text_parser2.go` --- `readBlobReference`
 - `echo/object_metadata_box_builder/main.go` --- `AddBlobReferences`
 
-### Phase 3: Typed Blob References (Proposed)
+### Phase 3: Typed Blob References (Complete)
 
-- [ ] Add `TypeLock` field to `blobReferenceEntry`
-- [ ] Update hyphence parser/formatter for `< @digest !type@sig` syntax
-- [ ] Update box parser/formatter for `<(...)` grouping syntax (both object and
+- [x] Add `TypeLock` field to `blobReferenceEntry`
+- [x] Update hyphence parser/formatter for `< @digest !type@sig` syntax
+- [x] Update box parser/formatter for `<(...)` grouping syntax (both object and
   blob refs)
-- [ ] Update binary encoder/decoder for type lock field
-- [ ] Update reference discovery output format to include type lock
-- [ ] Implement recursive traversal in `expandEdges` for typed blob refs
-- [ ] Update GC reachability walker
-- [ ] Audit existing untyped blob references
+- [x] Update binary encoder/decoder for type lock field
+- [x] Update reference discovery output format to include type lock
+- [x] Implement recursive traversal via `EdgeExplorer` interface
+
+### Phase 4: Remaining Work
+
+- [ ] Update GC reachability walker to follow typed blob reference edges
+- [ ] Audit existing untyped blob references for type annotation
 
 ## Future Exploration
 
