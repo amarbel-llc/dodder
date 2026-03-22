@@ -336,10 +336,20 @@ creates GC pressure. Options to explore:
 
 - [#35](https://github.com/amarbel-llc/dodder/issues/35) --- hyphenated type
   names create phantom blobless type object during pull
-- [#36](https://github.com/amarbel-llc/dodder/issues/36) --- moderate test
-  coverage gaps (discovery errors, multi-ref, aliases, GC)
 - [#39](https://github.com/amarbel-llc/dodder/issues/39) --- FDR: GC
   reachability for typed blob references (depends on Phase 3)
+
+## Closed Issues
+
+- [#36](https://github.com/amarbel-llc/dodder/issues/36) --- moderate test
+  coverage gaps (discovery errors, multi-ref, aliases, GC). All gaps covered
+  except GC reachability (moved to #39).
+- [#40](https://github.com/amarbel-llc/dodder/issues/40) --- blob ref type lock
+  fails for non-builtin types created in prior session (fixed: local checkin no
+  longer skips blobless type objects)
+- [#41](https://github.com/amarbel-llc/dodder/issues/41) --- hyphence parser
+  silently drops blob when blank line separator missing (fixed: strict parsing
+  by default, `AllowMissingSeparator` opt-out)
 
 ## More Information
 
