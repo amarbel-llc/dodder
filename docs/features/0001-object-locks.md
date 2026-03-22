@@ -334,13 +334,14 @@ creates GC pressure. Options to explore:
 
 ## Open Issues
 
-- [#35](https://github.com/amarbel-llc/dodder/issues/35) --- hyphenated type
-  names create phantom blobless type object during pull
 - [#39](https://github.com/amarbel-llc/dodder/issues/39) --- FDR: GC
   reachability for typed blob references (depends on Phase 3)
 
 ## Closed Issues
 
+- [#35](https://github.com/amarbel-llc/dodder/issues/35) --- hyphenated type
+  names create phantom blobless type object during pull (fixed: removed
+  `expansion.ExpanderRight` from type commit path; follow-up in #43)
 - [#36](https://github.com/amarbel-llc/dodder/issues/36) --- moderate test
   coverage gaps (discovery errors, multi-ref, aliases, GC). All gaps covered
   except GC reachability (moved to #39).
