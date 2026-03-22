@@ -695,6 +695,51 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
 }
 
 # bats test_tags=user_story:pull,user_story:referenced_objects
+function pull_direct_blob_reference_alias_survives { # @test
+	them="$BATS_TEST_TMPDIR/them"
+	mkdir -p "$them"
+
+	pushd "$them" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Create a zettel with an aliased blob reference
+	run_dodder new -edit=false - <<-'EOM'
+		---
+		# aliased blob ref
+		- hero-image < @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md
+		! md
+		---
+
+		content
+	EOM
+	assert_success
+
+	# Verify alias exists in source
+	run_dodder show -format text one/uno:
+	assert_success
+	assert_output --partial 'hero-image'
+
+	popd || exit 1
+
+	# Set up destination repo
+	us="$BATS_TEST_TMPDIR/us"
+	mkdir -p "$us"
+	pushd "$us" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Pull from source
+	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+	assert_success
+
+	# Verify alias survived the pull (binary stream index round-trip)
+	run_dodder show -format text one/uno:
+	assert_success
+	assert_output --partial 'hero-image'
+}
+
+# bats test_tags=user_story:pull,user_story:referenced_objects
 function pull_direct_multiple_blob_references_transferred { # @test
 	them="$BATS_TEST_TMPDIR/them"
 	mkdir -p "$them"

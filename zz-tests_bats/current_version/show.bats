@@ -1037,6 +1037,75 @@ function blob_reference_without_type_fails { # @test
 }
 
 # bats test_tags=user_story:referenced_objects
+function discovery_script_crash_required_fails { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Type with required discovery script that exits non-zero
+	cat >crashy.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+
+		[references]
+		shell = ['bash', '-c']
+		script = 'exit 1'
+	TYPEFILE
+
+	run_dodder checkin -delete crashy.type
+	assert_success
+
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with crashy type
+		! crashy
+		---
+
+		content here
+	EOM
+
+	# Required script crash should cause commit failure
+	assert_failure
+}
+
+# bats test_tags=user_story:referenced_objects
+function discovery_script_crash_optional_succeeds { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Type with optional discovery script that exits non-zero
+	cat >crashy-opt.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+
+		[references]
+		optional = true
+		shell = ['bash', '-c']
+		script = 'exit 1'
+	TYPEFILE
+
+	run_dodder checkin -delete crashy-opt.type
+	assert_success
+
+	run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with optional crashy type
+		! crashy-opt
+		---
+
+		content here
+	EOM
+
+	# Optional script crash should succeed silently
+	assert_success
+}
+
+# bats test_tags=user_story:referenced_objects
 function show_box_format_includes_blob_references { # @test
 	run_dodder init-workspace -experimental-repo=false
 	assert_success
@@ -1170,6 +1239,104 @@ function show_blob_references_sorted_in_inventory_list { # @test
 }
 
 # bats test_tags=user_story:referenced_objects
+function blob_ref_type_lock_succeeds_when_type_matches_zettel { # @test
+	testdir="$BATS_TEST_TMPDIR/custom-blobref"
+	mkdir -p "$testdir"
+	pushd "$testdir" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Create a type with discovery that emits blob refs typed as itself
+	cat >img.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !img/'"
+	TYPEFILE
+
+	run_dodder checkin -delete img.type
+	assert_success
+
+	# Blob ref type == zettel type, so !img type object is created as a side
+	# effect of committing the zettel. Type lock resolution succeeds.
+	run_dodder new -edit=false - <<-EOM
+		---
+		# same-type blob ref
+		! img
+		---
+
+		See @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd here.
+	EOM
+	assert_success
+
+	run_dodder show -format text one/uno:
+	assert_success
+	assert_output --regexp '@blake2b256-9ft3.+ !img'
+}
+
+# bats test_tags=user_story:referenced_objects
+# https://github.com/amarbel-llc/dodder/issues/40
+# Bug: checkin -delete of a .type file does NOT create the type as an object
+# in the probe index. The type object only exists when a zettel of that type
+# is committed. Blob reference type lock resolution fails for types that have
+# no zettel using them.
+function blob_ref_type_lock_fails_when_type_has_no_zettel { # @test
+	testdir="$BATS_TEST_TMPDIR/diff-blobref"
+	mkdir -p "$testdir"
+	pushd "$testdir" || exit 1
+
+	run_dodder_init_disable_age
+
+	# Create a custom type for blob references
+	cat >img.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+		file-extension = 'png'
+	TYPEFILE
+
+	run_dodder checkin -delete img.type
+	assert_success
+
+	# !img type object does not exist after checkin — only a config blob
+	run_dodder show '!img'
+	assert_output ''
+
+	# Create a discovery type that emits blob refs typed as !img
+	cat >ref-img.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !img/'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-img.type
+	assert_success
+
+	# Bug #40: new fails because !img type object is not in the probe index
+	run_dodder new -edit=false - <<-EOM
+		---
+		# diff-type blob ref
+		! ref-img
+		---
+
+		See @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd here.
+	EOM
+	assert_failure
+	assert_output --partial 'failed to read current lock object'
+}
+
+# bats test_tags=user_story:referenced_objects
 function show_box_format_includes_object_references { # @test
 	run_dodder init-workspace -experimental-repo=false
 	assert_success
@@ -1240,4 +1407,27 @@ function blob_reference_alias_with_quotes_round_trips { # @test
 
 	# The alias should contain the literal double quotes, properly escaped
 	echo "$output" | grep -F 'say \"hello\"'
+}
+
+# bats test_tags=user_story:referenced_objects
+function blob_reference_alias_round_trips_through_box_format { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a zettel with an aliased blob reference
+	run_dodder new -edit=false - <<-'EOM'
+		---
+		# alias box test
+		- hero-image < @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md
+		! md
+		---
+
+		content
+	EOM
+	assert_success
+
+	# Box format should include the alias
+	run_dodder show two/uno
+	assert_success
+	assert_output --regexp 'hero-image<@blake2b256-9ft3'
 }
