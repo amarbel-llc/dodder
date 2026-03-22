@@ -138,5 +138,91 @@ func TestDecoderBlobTeeWriterCapturesBlobContent(t *testing.T) {
 	}
 }
 
+// https://github.com/amarbel-llc/dodder/issues/41
+// Blob body immediately after closing --- (no blank line) should fail.
+
+func TestReaderMissingNewlineBetweenBoundaryAndBlobShouldFail(t *testing.T) {
+	body := "---\n! toml-type-v1\n---\nfile-extension = 'png'\n"
+
+	var metadata, blob bytes.Buffer
+
+	reader := Reader{
+		Metadata: &metadata,
+		Blob:     &blob,
+	}
+
+	_, err := reader.ReadFrom(strings.NewReader(body))
+	if err == nil && blob.Len() == 0 {
+		t.Fatal("expected error when blob body immediately follows closing --- without blank line separator, but blob was silently dropped")
+	} else if err == nil {
+		t.Fatalf("expected error but blob was parsed as: %q", blob.String())
+	}
+}
+
+func TestDecoderMissingNewlineBetweenBoundaryAndBlobShouldFail(t *testing.T) {
+	// No blank line between closing --- and blob body
+	body := "---\n! toml-type-v1\n---\nfile-extension = 'png'\n"
+
+	var blobCapture bytes.Buffer
+
+	decoder := Decoder[*TypedBlob[struct{}]]{
+		Metadata:      TypedMetadataCoder[struct{}]{},
+		Blob:          testBlobDecoder{},
+		BlobTeeWriter: &blobCapture,
+	}
+
+	typedBlob := &TypedBlob[struct{}]{}
+	reader := bufio.NewReader(strings.NewReader(body))
+
+	_, err := decoder.DecodeFrom(typedBlob, reader)
+	if err == nil {
+		t.Fatal("expected error when blob body immediately follows closing --- without blank line separator")
+	}
+}
+
+func TestReaderAllowMissingSeparatorForwardsBlobContent(t *testing.T) {
+	body := "---\n! toml-type-v1\n---\nfile-extension = 'png'\n"
+
+	var metadata, blob bytes.Buffer
+
+	reader := Reader{
+		Metadata:              &metadata,
+		Blob:                  &blob,
+		AllowMissingSeparator: true,
+	}
+
+	if _, err := reader.ReadFrom(strings.NewReader(body)); err != nil {
+		t.Fatal(err)
+	}
+
+	if blob.String() != "file-extension = 'png'\n" {
+		t.Fatalf("expected blob content forwarded, got %q", blob.String())
+	}
+}
+
+func TestDecoderAllowMissingSeparatorForwardsBlobContent(t *testing.T) {
+	body := "---\n! toml-type-v1\n---\nfile-extension = 'png'\n"
+
+	var blobCapture bytes.Buffer
+
+	decoder := Decoder[*TypedBlob[struct{}]]{
+		Metadata:              TypedMetadataCoder[struct{}]{},
+		Blob:                  testBlobDecoder{},
+		BlobTeeWriter:         &blobCapture,
+		AllowMissingSeparator: true,
+	}
+
+	typedBlob := &TypedBlob[struct{}]{}
+	reader := bufio.NewReader(strings.NewReader(body))
+
+	if _, err := decoder.DecodeFrom(typedBlob, reader); err != nil {
+		t.Fatal(err)
+	}
+
+	if blobCapture.String() != "file-extension = 'png'\n" {
+		t.Fatalf("expected blob content forwarded, got %q", blobCapture.String())
+	}
+}
+
 // Verify that the TypedMetadataCoder implements the expected interface.
 var _ interfaces.CoderBufferedReadWriter[*TypedBlob[struct{}]] = TypedMetadataCoder[struct{}]{}

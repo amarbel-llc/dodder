@@ -10,8 +10,9 @@ import (
 )
 
 type Reader struct {
-	RequireMetadata bool // TODO-P4 add delimiter
-	Metadata, Blob  io.ReaderFrom
+	RequireMetadata      bool // TODO-P4 add delimiter
+	AllowMissingSeparator bool
+	Metadata, Blob       io.ReaderFrom
 }
 
 func (reader *Reader) ReadFrom(ioReader io.Reader) (n int64, err error) {
@@ -109,6 +110,20 @@ LINE_READ_LOOP:
 			}
 
 		case readerStateSecondBoundary:
+			if line != "" {
+				if !reader.AllowMissingSeparator {
+					err = errors.Wrap(errMissingNewlineAfterBoundary)
+					return n, err
+				}
+
+				*ioReader = io.MultiReader(
+					strings.NewReader(rawLine),
+					br,
+				)
+
+				break LINE_READ_LOOP
+			}
+
 			*ioReader = br
 			break LINE_READ_LOOP
 

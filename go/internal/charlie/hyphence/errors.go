@@ -10,3 +10,7 @@ type (
 func newPkgError(text string) pkgError {
 	return errors.NewWithType[pkgErrDisamb](text)
 }
+
+var errMissingNewlineAfterBoundary = newPkgError(
+	"missing blank line after closing boundary --- before blob body",
+)

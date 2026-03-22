@@ -11,9 +11,10 @@ import (
 )
 
 type Decoder[BLOB any] struct {
-	RequireMetadata bool
-	Metadata, Blob  interfaces.DecoderFromBufferedReader[BLOB]
-	BlobTeeWriter   io.Writer
+	RequireMetadata      bool
+	AllowMissingSeparator bool
+	Metadata, Blob       interfaces.DecoderFromBufferedReader[BLOB]
+	BlobTeeWriter        io.Writer
 }
 
 func (decoder *Decoder[BLOB]) DecodeFrom(
@@ -125,8 +126,11 @@ LINE_READ_LOOP:
 					return n, err
 				}
 
-				state += 1
-				break
+				if err = decoder.peekSeparatorLine(bufferedReader); err != nil {
+					return n, err
+				}
+
+				break LINE_READ_LOOP
 			}
 
 			if _, err = metadataPipe.Write([]byte(rawLine)); err != nil {
@@ -135,6 +139,7 @@ LINE_READ_LOOP:
 			}
 
 		case readerStateSecondBoundary:
+			// No opening boundary found — all content is blob
 			break LINE_READ_LOOP
 
 		default:
@@ -144,4 +149,35 @@ LINE_READ_LOOP:
 	}
 
 	return n, err
+}
+
+func (decoder *Decoder[BLOB]) peekSeparatorLine(
+	bufferedReader *bufio.Reader,
+) (err error) {
+	peeked, err := bufferedReader.Peek(1)
+
+	if err == io.EOF {
+		// No blob content — that's fine
+		return nil
+	}
+
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	if peeked[0] == '\n' {
+		// Blank separator line — consume it and continue to blob
+		if _, err = bufferedReader.ReadByte(); err != nil {
+			return errors.Wrap(err)
+		}
+
+		return nil
+	}
+
+	if decoder.AllowMissingSeparator {
+		// Non-strict: leave the line unconsumed for the blob reader
+		return nil
+	}
+
+	return errors.Wrap(errMissingNewlineAfterBoundary)
 }
