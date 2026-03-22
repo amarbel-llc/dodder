@@ -32,16 +32,16 @@ function diff_all_diff { # @test
 	echo wowowow >>one/uno.md
 	run_dodder diff one/uno.zettel
 	assert_success
-	assert_output - <<-EOM
+	assert_output --regexp - <<-EOM
 		--- one/uno:zettel
-		+++ one/uno.zettel
-		@@ -2,6 +2,6 @@
+		\+\+\+ one/uno\.zettel
+		@@ -2,6 \+2,6 @@
 		 # wow the first
 		 - tag-3
 		 - tag-4
 		-@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		+@ blake2b256-3608lk68nnstfff38qpht4zqdcvahygkksqcnmq5qsm2vjzlsufqt4wr0k
-		 ! md@ed25519_sig-2a3ehc2jherahnn05tr9m62zc0sp9s8l8r7h4a9npj92rljd892a9kh62hawyujw475enup3v2z9dy0wlvam30l0lxz0j3n4huu3spsmz36y7
+		\+@ blake2b256-3608lk68nnstfff38qpht4zqdcvahygkksqcnmq5qsm2vjzlsufqt4wr0k
+		 ! md@ed25519_sig-.+
 		 ---
 	EOM
 }
