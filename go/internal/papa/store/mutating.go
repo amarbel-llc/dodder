@@ -11,7 +11,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
@@ -461,21 +460,9 @@ func (commitFacilitator commitFacilitator) addTypeAndExpandedIfNecessary(
 		return err
 	}
 
-	typesExpanded := expansion.ExpandOneIntoIds[ids.SeqId](
-		rootType.String(),
-		expansion.ExpanderRight,
-	)
-
-	for tipe, expandErr := range typesExpanded {
-		if expandErr != nil {
-			err = errors.Wrap(expandErr)
-			return err
-		}
-
-		if err = commitFacilitator.addTypeIfNecessary(tipe); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
+	if err = commitFacilitator.addTypeIfNecessary(rootType); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	return err

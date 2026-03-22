@@ -291,8 +291,10 @@ Key files:
 
 ### Phase 4: Remaining Work
 
-- [ ] Update GC reachability walker to follow typed blob reference edges
 - [ ] Audit existing untyped blob references for type annotation
+- GC reachability for typed blob references is tracked separately:
+  [#39](https://github.com/amarbel-llc/dodder/issues/39) (needs its own FDR,
+  depends on Phase 3)
 
 ## Future Exploration
 
@@ -336,6 +338,8 @@ creates GC pressure. Options to explore:
   names create phantom blobless type object during pull
 - [#36](https://github.com/amarbel-llc/dodder/issues/36) --- moderate test
   coverage gaps (discovery errors, multi-ref, aliases, GC)
+- [#39](https://github.com/amarbel-llc/dodder/issues/39) --- FDR: GC
+  reachability for typed blob references (depends on Phase 3)
 
 ## More Information
 
