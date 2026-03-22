@@ -81,22 +81,29 @@ fixtures) - Adding new tests - Refactoring helpers
 - **ALWAYS use `just test*` recipes** --- never run `bats`, `go test`, or
   fixture generation directly. The just recipes set BATS_BIN_DIR,
   DODDER_VERSION, inject the binary, and ensure fixtures exist.
+
 - **BATS fixture tests** use `$(get_fixture_type_sig)` for signatures (not
   deterministic). Fresh-store tests (`run_dodder_init_disable_age`) use
   `assert_output --regexp` with `! type@.*` patterns instead.
+
 - **NEVER call `errors.Is` when err might be EOF** --- use `errors.IsEOF()`
   guard first. The standard `errors.Is` does not handle the custom EOF wrapping.
+
 - **When bumping store version**, do NOT remove the old version's codec/gob
   support. Old versions must remain decodable for migration.
+
 - **"Lock" has two meanings** --- content locks (metadata on objects, managed by
   the lock command) vs filesystem mutexes (`LockSmith` in `env_repo`). Don't
   confuse them.
+
 - **Trailing whitespace matters** in dodder output assertions. Use `xxd` or
   `cat -A` to debug invisible mismatches in BATS tests.
+
 - **Do not recreate existing formatters.** When dodder already has a formatter
   (e.g., `box_format.BoxTransacted`, `sku_fmt` printers), use it via dependency
   injection or direct import --- never hand-build the same output with
   `fmt.Fprintf`/`strings.Builder`.
+
 - **Adding or changing metadata fields requires binary codec updates
   ([#38](https://github.com/amarbel-llc/dodder/issues/38)).** Any field added to
   `objects.metadata`, `containedObject`, or `blobReferenceEntry` is NOT
@@ -104,6 +111,26 @@ fixtures) - Adding new tests - Refactoring helpers
   `india/stream_index`, the field will be populated during commit but silently
   lost on the next read from the store. See
   `go/internal/india/stream_index/CLAUDE.md` for the 4-file checklist.
+
+- **Hyphence format requires a blank line between closing `---` and blob body
+  ([#41](https://github.com/amarbel-llc/dodder/issues/41)).** Without it, the
+  parser silently drops the blob content, resulting in objects committed without
+  a blob digest. This applies to `.type` files, `.zettel` files, and heredocs in
+  BATS tests.
+
+## Query System
+
+Query syntax: `<predicate><sigil><genre>`. Sigils from `ids.Sigil`: `:`
+(latest), `+` (history), `.` (external/checked-out), `?` (hidden/dormant).
+Sigils can be combined (e.g. `:.` for latest + external).
+
+- **Default genre is zettels.** `show :` lists zettels. `show '!md'` finds
+  zettels whose type is `!md`, NOT the `!md` type object itself.
+- **Genre suffixes filter by genre:** `:z` (zettels), `:t` (types), `:e` (tags).
+  The genre is part of the query term, not a separate argument.
+- **To query a specific type object:** `show '!img:t'` --- the `:t` genre suffix
+  goes on the predicate. NOT `show :t '!img'` (that's two separate terms).
+- **To list all type objects:** `show :t`.
 
 ## Common Issues
 

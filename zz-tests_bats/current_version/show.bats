@@ -1293,6 +1293,7 @@ function blob_ref_type_lock_resolves_heterogeneous_types { # @test
 		---
 		! toml-type-v1
 		---
+
 		file-extension = 'png'
 	TYPEFILE
 

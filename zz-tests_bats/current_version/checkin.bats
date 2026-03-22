@@ -478,6 +478,7 @@ function checkin_type_file_creates_type_object { # @test
 		---
 		! toml-type-v1
 		---
+
 		file-extension = 'png'
 	TYPEFILE
 
@@ -485,7 +486,7 @@ function checkin_type_file_creates_type_object { # @test
 	assert_success
 
 	# The type object !img should exist after checkin
-	run_dodder show '!img'
+	run_dodder show '!img:t'
 	assert_success
 	assert_output --regexp '^\[!img @blake2b256-.+ !toml-type-v1\]$'
 }

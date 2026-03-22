@@ -137,7 +137,11 @@ func (b *Builder) AddObject(
 	tai := object.GetTai()
 	entry.OriginalTai.ResetWith(tai)
 
-	if genre == genres.Type && object.GetBlobDigest().IsNull() {
+	// During import (b.index != nil), skip types whose blob hasn't been
+	// transferred yet — BloblessTypes()/ResolveBloblessTypes() handles them.
+	// During local checkin (b.index == nil), the blob will be written by
+	// SaveBlob during Commit, so don't skip.
+	if b.index != nil && genre == genres.Type && object.GetBlobDigest().IsNull() {
 		entry.Classification = ClassificationSkipBloblessType
 		b.appendEntry(entry)
 		return
