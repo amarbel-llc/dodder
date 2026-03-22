@@ -3,6 +3,7 @@
   nixpkgs-master,
   purse-first ? null,
   bob ? null,
+  just-us,
   gomod2nix,
   system,
 }:
@@ -53,18 +54,19 @@ in
   };
 
   devShells.default = pkgs-master.mkShell {
-    packages =
-      (with pkgs-master; [
-        fish
-        gnumake
-        gum
-        just
-        pandoc
-      ])
-      ++ pkgs-master.lib.optionals (bob != null) [
-        bob.packages.${system}.batman
-        bob.packages.${system}.tap-dancer
-      ];
+    packages = [
+      just-us.packages.${system}.just
+    ]
+    ++ (with pkgs-master; [
+      fish
+      gnumake
+      gum
+      pandoc
+    ])
+    ++ pkgs-master.lib.optionals (bob != null) [
+      bob.packages.${system}.batman
+      bob.packages.${system}.tap-dancer
+    ];
 
     inputsFrom = pkgs-master.lib.optionals (purse-first != null) [
       purse-first.devShells.${system}.go

@@ -23,6 +23,15 @@
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
     };
+
+    just-us = {
+      url = "github:amarbel-llc/just-us";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.purse-first.follows = "purse-first";
+      inputs.bob.follows = "bob";
+    };
   };
 
   outputs =
@@ -34,6 +43,7 @@
       gomod2nix,
       purse-first,
       bob,
+      just-us,
     }:
     (utils.lib.eachDefaultSystem (
       system:
@@ -45,6 +55,7 @@
             gomod2nix
             purse-first
             bob
+            just-us
             system
             ;
         };
