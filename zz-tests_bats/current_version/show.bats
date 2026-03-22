@@ -1281,11 +1281,7 @@ function blob_ref_type_lock_succeeds_when_type_matches_zettel { # @test
 
 # bats test_tags=user_story:referenced_objects
 # https://github.com/amarbel-llc/dodder/issues/40
-# Bug: checkin -delete of a .type file does NOT create the type as an object
-# in the probe index. The type object only exists when a zettel of that type
-# is committed. Blob reference type lock resolution fails for types that have
-# no zettel using them.
-function blob_ref_type_lock_fails_when_type_has_no_zettel { # @test
+function blob_ref_type_lock_resolves_heterogeneous_types { # @test
 	testdir="$BATS_TEST_TMPDIR/diff-blobref"
 	mkdir -p "$testdir"
 	pushd "$testdir" || exit 1
@@ -1303,10 +1299,6 @@ function blob_ref_type_lock_fails_when_type_has_no_zettel { # @test
 	run_dodder checkin -delete img.type
 	assert_success
 
-	# !img type object does not exist after checkin — only a config blob
-	run_dodder show '!img'
-	assert_output ''
-
 	# Create a discovery type that emits blob refs typed as !img
 	cat >ref-img.type <<-'TYPEFILE'
 		---
@@ -1323,7 +1315,9 @@ function blob_ref_type_lock_fails_when_type_has_no_zettel { # @test
 	run_dodder checkin -delete ref-img.type
 	assert_success
 
-	# Bug #40: new fails because !img type object is not in the probe index
+	# Blob ref type (!img) differs from zettel type (!ref-img). Both were
+	# created via checkin -delete, so !img must exist as a type object for
+	# type lock resolution to succeed.
 	run_dodder new -edit=false - <<-EOM
 		---
 		# diff-type blob ref
@@ -1332,8 +1326,11 @@ function blob_ref_type_lock_fails_when_type_has_no_zettel { # @test
 
 		See @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd here.
 	EOM
-	assert_failure
-	assert_output --partial 'failed to read current lock object'
+	assert_success
+
+	run_dodder show -format text one/uno:
+	assert_success
+	assert_output --regexp '@blake2b256-9ft3.+ !img'
 }
 
 # bats test_tags=user_story:referenced_objects
