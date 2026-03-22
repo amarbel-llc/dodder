@@ -19,20 +19,21 @@ import (
 )
 
 type Transacted struct {
-	BlobId          string   `json:"blob-id"`
-	BlobString      string   `json:"blob-string,omitempty"`
-	Date            string   `json:"date"`
-	Description     string   `json:"description"`
-	Lock            Lock     `json:"lock"`
-	MotherObjectSig markl.Id `json:"mother-object-sig"`
-	ObjectDigest    markl.Id `json:"object-digest"`
-	ObjectId        string   `json:"object-id"`
-	RepoPubkey      markl.Id `json:"repo-pub_key"`
-	RepoSig         markl.Id `json:"repo-sig"`
-	Sha             string   `json:"sha"`
-	Tags            []string `json:"tags"`
-	Tai             string   `json:"tai"`
-	Type            string   `json:"type"`
+	BlobId          string                      `json:"blob-id"`
+	BlobReferences  map[string]BlobReference     `json:"blob-references,omitempty"`
+	BlobString      string                      `json:"blob-string,omitempty"`
+	Date            string                      `json:"date"`
+	Description     string                      `json:"description"`
+	Lock            Lock                        `json:"lock"`
+	MotherObjectSig markl.Id                    `json:"mother-object-sig"`
+	ObjectDigest    markl.Id                    `json:"object-digest"`
+	ObjectId        string                      `json:"object-id"`
+	RepoPubkey      markl.Id                    `json:"repo-pub_key"`
+	RepoSig         markl.Id                    `json:"repo-sig"`
+	Sha             string                      `json:"sha"`
+	Tags            []string                    `json:"tags"`
+	Tai             string                      `json:"tai"`
+	Type            string                      `json:"type"`
 }
 
 // TODO make a json factory
@@ -80,6 +81,16 @@ func (json *Transacted) FromObjectIdStringAndMetadata(
 		Type: metadata.GetTypeLock().GetValue().String(),
 	}
 
+	for tag := range metadata.AllTags() {
+		tagLock := metadata.GetTagLock(tag)
+		if tagLock != nil && !tagLock.GetValue().IsEmpty() {
+			if json.Lock.Tags == nil {
+				json.Lock.Tags = make(map[string]string)
+			}
+			json.Lock.Tags[tag.String()] = tagLock.GetValue().String()
+		}
+	}
+
 	for ref := range metadata.AllReferencedObjects() {
 		lock := metadata.GetReferencedObjectLock(ref)
 		if lock != nil && !lock.GetValue().IsEmpty() {
@@ -87,6 +98,33 @@ func (json *Transacted) FromObjectIdStringAndMetadata(
 				json.Lock.References = make(map[string]string)
 			}
 			json.Lock.References[ref.String()] = lock.GetValue().String()
+		}
+
+		alias := metadata.GetReferenceAlias(ref)
+		if alias != "" {
+			if json.Lock.ReferenceAliases == nil {
+				json.Lock.ReferenceAliases = make(map[string]string)
+			}
+			json.Lock.ReferenceAliases[ref.String()] = alias
+		}
+	}
+
+	for blobId := range metadata.AllBlobReferences() {
+		blobRef := BlobReference{
+			Alias: metadata.GetBlobReferenceAlias(blobId),
+		}
+
+		typeLock := metadata.GetBlobReferenceTypeLock(blobId)
+		if !typeLock.IsEmpty() {
+			blobRef.TypeLockKey = typeLock.GetKey().String()
+			blobRef.TypeLockValue = typeLock.GetValue().String()
+		}
+
+		if blobRef != (BlobReference{}) {
+			if json.BlobReferences == nil {
+				json.BlobReferences = make(map[string]BlobReference)
+			}
+			json.BlobReferences[blobId.String()] = blobRef
 		}
 	}
 
@@ -201,6 +239,20 @@ func (json *Transacted) ToTransacted(
 		}
 	}
 
+	for tagStr, sigStr := range json.Lock.Tags {
+		var tag ids.TagStruct
+		if err = tag.Set(tagStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		tagLock := metadata.GetTagLockMutable(&tag)
+		if err = tagLock.GetValueMutable().Set(sigStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	for refIdStr, sigStr := range json.Lock.References {
 		var refId ids.SeqId
 		if err = refId.Set(refIdStr); err != nil {
@@ -217,6 +269,52 @@ func (json *Transacted) ToTransacted(
 		if err = refLock.GetValueMutable().Set(sigStr); err != nil {
 			err = errors.Wrap(err)
 			return err
+		}
+	}
+
+	for refIdStr, alias := range json.Lock.ReferenceAliases {
+		var refId ids.SeqId
+		if err = refId.Set(refIdStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		if err = metadata.SetReferenceAlias(refId, alias); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	for blobIdStr, blobRef := range json.BlobReferences {
+		var blobId markl.Id
+		if err = blobId.Set(blobIdStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+
+		if blobRef.TypeLockKey != "" {
+			if err = typeLock.GetKeyMutable().SetType(blobRef.TypeLockKey); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
+		if blobRef.TypeLockValue != "" {
+			if err = typeLock.GetValueMutable().Set(blobRef.TypeLockValue); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
+		metadata.AddBlobReference(blobId, typeLock)
+
+		if blobRef.Alias != "" {
+			if err = metadata.SetBlobReferenceAlias(blobId, blobRef.Alias); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
 		}
 	}
 
