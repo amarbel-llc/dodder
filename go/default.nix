@@ -1,8 +1,8 @@
 {
   nixpkgs,
   nixpkgs-master,
-  purse-first,
-  bob,
+  purse-first ? null,
+  bob ? null,
   gomod2nix,
   system,
 }:
@@ -60,12 +60,12 @@ in
         gum
         pandoc
       ])
-      ++ [
+      ++ pkgs-master.lib.optionals (bob != null) [
         bob.packages.${system}.batman
         bob.packages.${system}.tap-dancer
       ];
 
-    inputsFrom = [
+    inputsFrom = pkgs-master.lib.optionals (purse-first != null) [
       purse-first.devShells.${system}.go
       purse-first.devShells.${system}.shell
     ];
