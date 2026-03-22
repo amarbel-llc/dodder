@@ -334,8 +334,12 @@ creates GC pressure. Options to explore:
 
 ## Open Issues
 
-- [#39](https://github.com/amarbel-llc/dodder/issues/39) --- FDR: GC
-  reachability for typed blob references (depends on Phase 3)
+- [#44](https://github.com/amarbel-llc/dodder/issues/44) --- JSON inventory list
+  format needs object lock support (blocks promotion to `accepted`)
+
+GC reachability for typed blob references
+([#39](https://github.com/amarbel-llc/dodder/issues/39)) is a madder/dodder
+bridge concern, not scoped to this FDR.
 
 ## Closed Issues
 
