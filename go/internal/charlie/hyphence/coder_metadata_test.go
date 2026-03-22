@@ -224,5 +224,85 @@ func TestDecoderAllowMissingSeparatorForwardsBlobContent(t *testing.T) {
 	}
 }
 
+func TestWriterOutputParsesWithStrictReader(t *testing.T) {
+	var metadataContent bytes.Buffer
+	metadataContent.WriteString("! toml-type-v1\n")
+
+	var blobContent bytes.Buffer
+	blobContent.WriteString("file-extension = 'png'\n")
+
+	writer := Writer{
+		Metadata: &metadataContent,
+		Blob:     &blobContent,
+	}
+
+	var output bytes.Buffer
+	if _, err := writer.WriteTo(&output); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("Writer output: %q", output.String())
+
+	// Now parse with strict Reader
+	var parsedMetadata, parsedBlob bytes.Buffer
+	reader := Reader{
+		Metadata: &parsedMetadata,
+		Blob:     &parsedBlob,
+	}
+
+	if _, err := reader.ReadFrom(strings.NewReader(output.String())); err != nil {
+		t.Fatalf("strict Reader failed on Writer output: %v", err)
+	}
+
+	if parsedBlob.String() != "file-extension = 'png'\n" {
+		t.Fatalf("blob mismatch: got %q", parsedBlob.String())
+	}
+}
+
+type testBlobEncoder struct{}
+
+func (testBlobEncoder) EncodeTo(
+	_ *TypedBlob[struct{}],
+	writer *bufio.Writer,
+) (n int64, err error) {
+	return 0, nil
+}
+
+func TestEncoderOutputParsesWithStrictDecoder(t *testing.T) {
+	original := &TypedBlob[struct{}]{}
+	if err := original.Type.Set("toml-type-v1"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Encode
+	var buf bytes.Buffer
+	encoder := Encoder[*TypedBlob[struct{}]]{
+		Metadata: TypedMetadataCoder[struct{}]{},
+		Blob:     testBlobEncoder{},
+	}
+
+	if _, err := encoder.EncodeTo(original, &buf); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("Encoder output: %q", buf.String())
+
+	// Decode with strict Decoder
+	decoded := &TypedBlob[struct{}]{}
+	decoder := Decoder[*TypedBlob[struct{}]]{
+		Metadata: TypedMetadataCoder[struct{}]{},
+		Blob:     testBlobDecoder{},
+	}
+
+	reader := bufio.NewReader(strings.NewReader(buf.String()))
+	if _, err := decoder.DecodeFrom(decoded, reader); err != nil {
+		t.Fatalf("strict Decoder failed on Encoder output: %v", err)
+	}
+
+	if decoded.Type.String() != original.Type.String() {
+		t.Fatalf("type mismatch: got %q, want %q", decoded.Type, original.Type)
+	}
+}
+
 // Verify that the TypedMetadataCoder implements the expected interface.
 var _ interfaces.CoderBufferedReadWriter[*TypedBlob[struct{}]] = TypedMetadataCoder[struct{}]{}
