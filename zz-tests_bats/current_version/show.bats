@@ -1076,6 +1076,100 @@ function show_box_format_includes_blob_references { # @test
 }
 
 # bats test_tags=user_story:referenced_objects
+function show_blob_references_sorted_in_hyphence { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type whose reference discovery outputs multiple typed blob refs
+	cat >ref-multi.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-multi.type
+	assert_success
+
+	# Content order: qyqs... then 9ft3... — but 9ft3 sorts before qyqs
+	run_dodder new -edit=false - <<-EOM
+		---
+		# multi blob refs
+		! ref-multi
+		---
+
+		First @blake2b256-qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqsk2yde5 and second @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd here.
+	EOM
+	assert_success
+
+	# Show in hyphence (text) format — blob refs must appear sorted
+	run_dodder show -format text two/uno:
+	assert_success
+
+	# 9ft3 sorts before qyqs lexicographically — verify sorted order
+	local line_9ft3 line_qyqs
+	line_9ft3=$(echo "$output" | grep -n '@blake2b256-9ft3' | head -1 | cut -d: -f1)
+	line_qyqs=$(echo "$output" | grep -n '@blake2b256-qyqs' | head -1 | cut -d: -f1)
+
+	[[ -n "$line_9ft3" ]] || fail "blob ref 9ft3 not found in output"
+	[[ -n "$line_qyqs" ]] || fail "blob ref qyqs not found in output"
+	[[ "$line_9ft3" -lt "$line_qyqs" ]] || fail "blob refs not sorted: 9ft3 (line $line_9ft3) should appear before qyqs (line $line_qyqs)"
+}
+
+# bats test_tags=user_story:referenced_objects
+function show_blob_references_sorted_in_inventory_list { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type whose reference discovery outputs multiple typed blob refs
+	cat >ref-multi.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-multi.type
+	assert_success
+
+	# Content order: qyqs... then 9ft3... — but 9ft3 sorts before qyqs
+	run_dodder new -edit=false - <<-EOM
+		---
+		# multi blob refs
+		! ref-multi
+		---
+
+		First @blake2b256-qyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqszqgpqyqsk2yde5 and second @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd here.
+	EOM
+	assert_success
+
+	# Show in box format (default) — blob refs appear as "<@digest !type@sig"
+	run_dodder show two/uno
+	assert_success
+
+	# Verify 9ft3 appears before qyqs in the box format output
+	local pos_9ft3 pos_qyqs
+	pos_9ft3=$(echo "$output" | grep -boP '<@blake2b256-9ft3' | head -1 | cut -d: -f1)
+	pos_qyqs=$(echo "$output" | grep -boP '<@blake2b256-qyqs' | head -1 | cut -d: -f1)
+
+	[[ -n "$pos_9ft3" ]] || fail "blob ref 9ft3 not found in box output"
+	[[ -n "$pos_qyqs" ]] || fail "blob ref qyqs not found in box output"
+	[[ "$pos_9ft3" -lt "$pos_qyqs" ]] || fail "blob refs not sorted in box format: 9ft3 (pos $pos_9ft3) should appear before qyqs (pos $pos_qyqs)"
+}
+
+# bats test_tags=user_story:referenced_objects
 function show_box_format_includes_object_references { # @test
 	run_dodder init-workspace
 	assert_success
