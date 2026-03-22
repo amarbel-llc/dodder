@@ -5,6 +5,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     working-directory: ./go
@@ -23,7 +27,7 @@ jobs:
           determinate: true
       - uses: "DeterminateSystems/flakehub-push@main"
         with:
-          name: "friedenberg/dodder-go"
+          name: "amarbel-llc/dodder"
           rolling: true
           visibility: "public"
           include-output-paths: true
