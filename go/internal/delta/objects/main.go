@@ -268,7 +268,8 @@ func (metadata *metadata) SetReferenceAlias(ref SeqId, alias string) error {
 		}
 
 		if entry.GetKey().String() == ref.String() {
-			return entry.Alias.Set(alias)
+			entry.Alias = alias
+			return nil
 		}
 	}
 
@@ -284,7 +285,7 @@ func (metadata *metadata) GetReferenceAlias(ref SeqId) string {
 		}
 
 		if entry.GetKey().String() == ref.String() {
-			return entry.Alias.String()
+			return entry.Alias
 		}
 	}
 

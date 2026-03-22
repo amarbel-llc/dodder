@@ -25,8 +25,9 @@ const (
 	Comment       = Binary('k')
 	Tai           = Binary('T')
 	Type          = Binary('t')
-	References     = Binary('R')
-	BlobReferences = Binary('b')
+	References          = Binary('R')
+	ReferenceAliases    = Binary('r')
+	BlobReferences      = Binary('b')
 
 	// TODO rename to match purposes
 	SigParentMetadataParentObjectId = Binary('M')

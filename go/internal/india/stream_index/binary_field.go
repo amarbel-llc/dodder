@@ -22,6 +22,7 @@ var binaryFieldOrder = []key_bytes.Binary{
 	key_bytes.Tai,
 	key_bytes.Type,
 	key_bytes.References,
+	key_bytes.ReferenceAliases,
 	key_bytes.BlobReferences,
 	key_bytes.SigParentMetadataParentObjectId,
 	key_bytes.DigestMetadataParentObjectId,

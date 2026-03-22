@@ -369,6 +369,29 @@ func (decoder *binaryDecoder) readFieldKey(
 			return err
 		}
 
+	case key_bytes.ReferenceAliases:
+		contentBytes := decoder.Content.Bytes()
+		nullIdx := bytes.IndexByte(contentBytes, 0)
+
+		if nullIdx == -1 {
+			err = errors.Errorf("invalid reference alias field: no separator")
+			return err
+		}
+
+		refIdStr := string(contentBytes[:nullIdx])
+		alias := string(contentBytes[nullIdx+1:])
+
+		var refId ids.SeqId
+		if err = refId.Set(refIdStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		if err = metadata.SetReferenceAlias(refId, alias); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
 	case key_bytes.BlobReferences:
 		contentBytes := decoder.Content.Bytes()
 

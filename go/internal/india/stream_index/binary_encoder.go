@@ -228,6 +228,41 @@ func (encoder *binaryEncoder) writeFieldKey(
 			n += n1
 		}
 
+	case key_bytes.ReferenceAliases:
+		for refId := range metadata.AllReferencedObjects() {
+			alias := metadata.GetReferenceAlias(refId)
+			if alias == "" {
+				continue
+			}
+
+			if _, err = io.WriteString(
+				&encoder.Content,
+				refId.String(),
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			if _, err = ohio.WriteAllOrDieTrying(
+				&encoder.Content, []byte{0},
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			if _, err = io.WriteString(&encoder.Content, alias); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			var n1 int64
+			if n1, err = encoder.binaryField.WriteTo(&encoder.Buffer); err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+			n += n1
+		}
+
 	case key_bytes.BlobReferences:
 		metadataMutable := object.GetMetadataMutable()
 

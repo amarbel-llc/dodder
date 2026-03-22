@@ -13,7 +13,7 @@ type (
 	// TODO rename maybe to lock entry?
 	containedObject struct {
 		ContainedObjectType containedObjectType
-		Alias               SeqId
+		Alias               string
 		Lock                markl.Lock[SeqId, *SeqId]
 	}
 )

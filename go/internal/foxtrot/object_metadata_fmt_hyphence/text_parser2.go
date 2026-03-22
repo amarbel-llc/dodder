@@ -3,6 +3,7 @@ package object_metadata_fmt_hyphence
 import (
 	"io"
 	"path"
+	"strconv"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/_/doddish"
@@ -148,7 +149,9 @@ func (parser *textParser2) readBlobReference(
 		alias = strings.TrimSpace(refString[:idx])
 
 		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
-			alias = alias[1 : len(alias)-1]
+			if unquoted, err := strconv.Unquote(alias); err == nil {
+				alias = unquoted
+			}
 		}
 
 		blobRefPortion = strings.TrimSpace(refString[idx+3:])
@@ -266,7 +269,9 @@ func (parser *textParser2) readReference(
 		objectRefString = strings.TrimSpace(refString[idx+3:])
 
 		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
-			alias = alias[1 : len(alias)-1]
+			if unquoted, err := strconv.Unquote(alias); err == nil {
+				alias = unquoted
+			}
 		}
 	}
 
