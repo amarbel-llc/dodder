@@ -15,6 +15,14 @@
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
     };
+
+    bob = {
+      url = "github:amarbel-llc/bob";
+      inputs.purse-first.follows = "purse-first";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+    };
   };
 
   outputs =
@@ -25,6 +33,7 @@
       utils,
       gomod2nix,
       purse-first,
+      bob,
     }:
     (utils.lib.eachDefaultSystem (
       system:
@@ -35,6 +44,7 @@
             nixpkgs-master
             gomod2nix
             purse-first
+            bob
             system
             ;
         };

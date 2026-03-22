@@ -33,23 +33,3 @@ jobs:
           include-output-paths: true
           directory: ./go
 
-  build-nix-package:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            system: x86_64-linux
-          - os: macos-15
-            system: aarch64-darwin
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v3
-      - uses: DeterminateSystems/nix-installer-action@main
-        with:
-          determinate: true
-      - uses: DeterminateSystems/flakehub-cache-action@main
-      - run: nix build
-        working-directory: ./go
