@@ -1191,3 +1191,80 @@ function show_box_format_includes_object_references { # @test
 	assert_success
 	assert_output --regexp '<one/dos@ed25519_sig-.+'
 }
+
+# bats test_tags=user_story:referenced_objects
+function object_reference_alias_with_quotes_round_trips { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a zettel with an aliased object reference containing a double quote
+	run_dodder new -edit=false - <<-'EOM'
+		---
+		# alias with quotes
+		- "say \"hello\"" < one/dos
+		! md
+		---
+
+		test content
+	EOM
+	assert_success
+
+	# Show the zettel in text format and verify the alias round-trips
+	run_dodder show -format text two/uno:
+	assert_success
+
+	# The alias should contain the literal double quotes, properly escaped
+	echo "$output" | grep -F 'say \"hello\"'
+}
+
+# bats test_tags=user_story:referenced_objects
+function blob_reference_alias_with_quotes_round_trips { # @test
+	run_dodder init-workspace
+	assert_success
+
+	# Create a type with reference discovery
+	cat >ref-alias.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
+	TYPEFILE
+
+	run_dodder checkin -delete ref-alias.type
+	assert_success
+
+	# Create a zettel with a blob reference
+	run_dodder new -edit=false - <<-EOM
+		---
+		# blob alias test
+		! ref-alias
+		---
+
+		See @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd here.
+	EOM
+	assert_success
+
+	# Set a blob reference alias containing a double quote via checkin with modified metadata
+	# First show current text format
+	run_dodder show -format text two/uno:
+	assert_success
+
+	# Modify the hyphence to add a quoted alias to the blob reference
+	local zettel_text
+	zettel_text=$(echo "$output" | sed 's/^- @blake2b256-9ft3/- "say \\"hello\\"" < @blake2b256-9ft3/')
+
+	# Check in the modified zettel
+	echo "$zettel_text" | run_dodder checkin -delete -
+	assert_success
+
+	# Show again and verify the alias survived the round-trip
+	run_dodder show -format text two/uno:
+	assert_success
+	echo "$output" | grep -F 'say \"hello\"'
+}
