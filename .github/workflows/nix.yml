@@ -39,9 +39,7 @@ jobs:
         include:
           - os: ubuntu-22.04
             system: x86_64-linux
-          - os: macos-13
-            system: x86_64-darwin
-          - os: macos-14
+          - os: macos-15
             system: aarch64-darwin
     runs-on: ${{ matrix.os }}
     permissions:
