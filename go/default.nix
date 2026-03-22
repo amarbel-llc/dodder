@@ -61,6 +61,7 @@ in
       fish
       gnumake
       gum
+      httpie
       pandoc
     ])
     ++ pkgs-master.lib.optionals (bob != null) [
