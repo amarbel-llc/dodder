@@ -161,14 +161,25 @@ func (compiled *compiled) setNeedsRecompile(reason string) {
 func (store *store) loadMutableConfig(
 	envRepo env_repo.Env,
 ) (err error) {
-	if store_version.GreaterOrEqual(
-		envRepo.GetStoreVersion(),
-		store_version.V14,
-	) {
+	if store.streamIndexConfigExists(envRepo) {
 		return store.loadMutableConfigStreamIndex(envRepo)
 	}
 
-	return store.loadMutableConfigGob(envRepo)
+	if !store_version.GreaterOrEqual(
+		envRepo.GetStoreVersion(),
+		store_version.V14,
+	) {
+		return store.loadMutableConfigGob(envRepo)
+	}
+
+	return store.loadMutableConfigStreamIndex(envRepo)
+}
+
+func (store *store) streamIndexConfigExists(
+	envRepo env_repo.Env,
+) bool {
+	_, err := os.Stat(envRepo.FileConfigTags())
+	return err == nil
 }
 
 func (store *store) loadMutableConfigGob(
@@ -368,46 +379,12 @@ func (store *store) flushMutableConfig(
 		return err
 	}
 
-	if store_version.GreaterOrEqual(
-		envRepo.GetStoreVersion(),
-		store_version.V14,
-	) {
-		if err = store.flushMutableConfigStreamIndex(envRepo); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
-	} else {
-		if err = store.flushMutableConfigGob(envRepo); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
+	if err = store.flushMutableConfigStreamIndex(envRepo); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	if err = printerHeader("recompiled konfig"); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	return err
-}
-
-func (store *store) flushMutableConfigGob(
-	envRepo env_repo.Env,
-) (err error) {
-	path := envRepo.FileConfig()
-
-	var file *os.File
-
-	if file, err = files.OpenCreateWriteOnlyTruncate(path); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	defer errors.DeferredCloser(&err, file)
-
-	enc := gob.NewEncoder(file)
-
-	if err = enc.Encode(&store.config.compiled); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
