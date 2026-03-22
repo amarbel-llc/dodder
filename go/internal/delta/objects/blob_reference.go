@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
@@ -16,6 +17,10 @@ type blobReferenceEntry struct {
 
 type BlobReferences struct {
 	entries collections_slice.Slice[blobReferenceEntry]
+}
+
+func blobReferenceEntryCompareKey(left, right blobReferenceEntry) cmp.Result {
+	return cmp.CompareUTF8String(left.Key.String(), right.Key.String(), false)
 }
 
 func (refs BlobReferences) All() interfaces.Seq[markl.Id] {
@@ -39,6 +44,7 @@ func (refs *BlobReferences) Add(
 	}
 
 	refs.entries.Append(blobReferenceEntry{Key: id, TypeLock: typeLock})
+	refs.entries.SortWithComparer(blobReferenceEntryCompareKey)
 }
 
 func (refs *BlobReferences) SetAlias(id markl.Id, alias string) error {
