@@ -1,35 +1,67 @@
-name: Publish every Git push to master to FlakeHub
- 
+name: Build and publish to FlakeHub
+
 on:
   push:
     branches:
       - master
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    working-directory: ./go
-
 jobs:
 
-  flakehub-publish:
-    runs-on: "ubuntu-latest"
+  build-and-test:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            system: x86_64-linux
+          - os: macos-15
+            system: aarch64-darwin
+    runs-on: ${{ matrix.os }}
     permissions:
-      id-token: "write"
-      contents: "read"
+      contents: read
+      id-token: write
     steps:
-      - uses: "actions/checkout@v4"
-      - uses: "DeterminateSystems/nix-installer-action@main"
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
         with:
           determinate: true
-      - uses: "DeterminateSystems/flakehub-push@main"
+      - uses: DeterminateSystems/flakehub-cache-action@main
+      - run: nix develop ./go -c just
+
+  race-detector:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+      - uses: DeterminateSystems/flakehub-cache-action@main
+      - run: nix develop ./go -c just test-bats-race
+
+  flakehub-publish:
+    if: github.ref == 'refs/heads/master'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+      - uses: DeterminateSystems/flakehub-push@main
         with:
           name: "amarbel-llc/dodder"
           rolling: true
           visibility: "public"
           include-output-paths: true
           directory: ./go
-
