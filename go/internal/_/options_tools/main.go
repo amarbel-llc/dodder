@@ -6,6 +6,7 @@ import (
 	"github.com/google/shlex"
 )
 
+//go:generate tommy generate
 type Options struct {
 	Merge []string `toml:"merge"`
 }

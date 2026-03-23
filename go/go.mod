@@ -1,6 +1,6 @@
 module code.linenisgreat.com/dodder/go
 
-go 1.25.5
+go 1.25.6
 
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260307130930-9ae16a0979e6
@@ -19,11 +19,11 @@ require (
 	github.com/pkg/sftp v1.13.10
 	github.com/tetratelabs/wazero v1.11.0
 	github.com/yuin/gopher-lua v1.1.1
-	golang.org/x/crypto v0.48.0
+	golang.org/x/crypto v0.49.0
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
-	golang.org/x/term v0.40.0
-	golang.org/x/text v0.34.0
-	golang.org/x/tools v0.41.0
+	golang.org/x/term v0.41.0
+	golang.org/x/text v0.35.0
+	golang.org/x/tools v0.43.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	tailscale.com v1.94.1
 )
@@ -32,6 +32,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
+	github.com/amarbel-llc/tommy v0.0.0-20260323021814-21665d240a69 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
@@ -72,10 +73,10 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
-	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
 	mvdan.cc/sh/v3 v3.12.0 // indirect
 )

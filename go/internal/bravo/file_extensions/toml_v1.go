@@ -2,6 +2,7 @@ package file_extensions
 
 import "code.linenisgreat.com/dodder/go/lib/alfa/equals"
 
+//go:generate tommy generate
 type TOMLV1 struct {
 	Config   *string `toml:"config"`
 	Conflict *string `toml:"conflict"`

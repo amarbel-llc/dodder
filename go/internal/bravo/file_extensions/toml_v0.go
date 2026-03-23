@@ -2,6 +2,7 @@ package file_extensions
 
 import "code.linenisgreat.com/dodder/go/lib/alfa/equals"
 
+//go:generate tommy generate
 type TOMLV0 struct {
 	Organize *string `toml:"organize"`
 	Repo     *string `toml:"kasten"`
