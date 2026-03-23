@@ -78,7 +78,7 @@ function workspace_repo_clone_pull_push { # @test
 	assert_success
 
 	# Verify workspace has the cloned objects
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder show :z
@@ -158,7 +158,7 @@ function workspace_repo_clone_filtered_by_tag { # @test
 
 	assert_success
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Should have only project-alpha zettels, not project-beta
@@ -199,7 +199,7 @@ function workspace_repo_pull_filtered_by_tag { # @test
 
 	assert_success
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# --- Add both project-alpha and project-beta zettels in parent ---
@@ -251,13 +251,11 @@ function workspace_repo_init_experimental_repo { # @test
 	pushd workspace || exit 1
 
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
 
@@ -291,11 +289,9 @@ function workspace_repo_linked_zettel_ids_from_parent { # @test
 	pushd workspace || exit 1
 
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
 
@@ -348,13 +344,11 @@ function workspace_repo_implicit_parent_push_pull { # @test
 
 	# Create workspace-repo with V1 config storing parent path
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
 
@@ -417,13 +411,11 @@ function workspace_repo_init_experimental_repo_existing_repo { # @test
 	pushd workspace || exit 1
 
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
 
@@ -431,13 +423,11 @@ function workspace_repo_init_experimental_repo_existing_repo { # @test
 
 	# --- Second init should fail (repo already exists) ---
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id-2 \
 		project-alpha:z
 
@@ -453,13 +443,11 @@ function workspace_repo_stale_parent_path { # @test
 	pushd workspace || exit 1
 
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
 
@@ -477,69 +465,27 @@ function workspace_repo_stale_parent_path { # @test
 	assert_failure
 }
 
-function workspace_repo_experimental_repo_implies_cwd { # @test
-	# When -experimental-repo is used, the workspace repo should always be
-	# CWD-based, even without an explicit -repo_id flag. This test sets HOME to
-	# a temp dir with an existing XDG dodder repo, proving that without implicit
-	# CWD routing the command collides with the home repo.
+function workspace_repo_repo_id_rejected_with_experimental_repo { # @test
 	parent="parent"
 	bootstrap_parent "$parent"
 	parent_path="$(realpath "$parent")"
 
-	# Create an existing XDG dodder repo under a fake HOME so the home
-	# directory already has an inventory_lists_log.
-	fake_home="$BATS_TEST_TMPDIR/fake_home"
-	mkdir -p "$fake_home"
-	(
-		export HOME="$fake_home"
-		export XDG_DATA_HOME="$fake_home/.local/share"
-		export XDG_CONFIG_HOME="$fake_home/.config"
-		export XDG_STATE_HOME="$fake_home/.local/state"
-		export XDG_CACHE_HOME="$fake_home/.cache"
-		export XDG_RUNTIME_HOME="$fake_home/.local/runtime"
-		run_dodder init \
-			-yin <(cat_yin) \
-			-yang <(cat_yang) \
-			-encryption none \
-			-lock-internal-files=false \
-			home-repo-id
-		assert_success
-	)
+	mkdir -p workspace
+	pushd workspace || exit 1
 
-	# Now try init-workspace WITHOUT -repo_id from a different directory.
-	# The command should implicitly use CWD, not HOME.
-	mkdir -p workspace_no_flag
-	pushd workspace_no_flag || exit 1
-
-	export HOME="$fake_home"
-	export XDG_DATA_HOME="$fake_home/.local/share"
-	export XDG_CONFIG_HOME="$fake_home/.config"
-	export XDG_STATE_HOME="$fake_home/.local/state"
-	export XDG_CACHE_HOME="$fake_home/.cache"
-	export XDG_RUNTIME_HOME="$fake_home/.local/runtime"
+	# -repo_id should be rejected with -experimental-repo (default)
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-repo_id . \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
 
-	assert_success
-
-	# Verify workspace has the expected objects
-	run_dodder show :z
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
-		\[one/dos @blake2b256-.+ !md "second zettel" priority-high project-alpha]
-		\[one/uno @blake2b256-.+ !md "first zettel" project-alpha]
-	EOM
-
-	# Verify it created a CWD-local repo, not a home repo
-	assert [ -d .dodder ]
-	assert [ -f .dodder-workspace ]
+	assert_failure
+	assert_output --partial 'cannot be used with'
 }
 
 function workspace_repo_init_experimental_repo_empty_query { # @test
@@ -552,13 +498,11 @@ function workspace_repo_init_experimental_repo_empty_query { # @test
 
 	# Query for a tag that doesn't exist — should succeed with empty workspace
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		nonexistent-tag:z
 
@@ -594,7 +538,7 @@ function workspace_repo_push_unfiltered { # @test
 
 	assert_success
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# --- Create zettels with different tags in workspace ---
@@ -630,4 +574,20 @@ function workspace_repo_push_unfiltered { # @test
 	assert_success
 	assert_output --partial 'workspace alpha zettel'
 	assert_output --partial 'workspace gamma zettel'
+}
+
+function workspace_repo_init_missing_parent_fails { # @test
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-lock-internal-files=false \
+		-parent /nonexistent/path \
+		workspace-repo-id
+
+	assert_failure
+	assert_output --partial 'no dodder repo found'
 }

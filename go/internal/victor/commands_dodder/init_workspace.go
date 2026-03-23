@@ -297,7 +297,18 @@ func (cmd InitWorkspace) validateParentRepo(
 	absPath string,
 	isHomeRepo bool,
 ) {
-	inventoryListLog := filepath.Join(absPath, "inventory_lists_log")
+	var inventoryListLog string
+	if isHomeRepo {
+		inventoryListLog = filepath.Join(absPath, "inventory_lists_log")
+	} else {
+		inventoryListLog = filepath.Join(
+			absPath,
+			"."+env_dir.XDGUtilityNameDodder,
+			"local", "share",
+			"inventory_lists_log",
+		)
+	}
+
 	if !files.Exists(inventoryListLog) {
 		if isHomeRepo {
 			req.Cancel(
