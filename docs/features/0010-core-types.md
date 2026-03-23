@@ -268,6 +268,67 @@ validation at commit time.
   Both produce the same output: object references and blob references added to
   metadata.
 
+## Design Decisions
+
+Decisions made during the initial design session (2026-03-22) and their
+rationale:
+
+1.  **`!` over untyped blob references.** Every blob reference carries a type;
+    `!` is the degenerate case. The alternative --- making `TypeLock` optional
+    on `blobReferenceEntry` --- would add nil-checks to every consumer and make
+    graph traversal conditional. `!` preserves the invariant that all blob
+    references are typed.
+
+2.  **GPL-3.0 relicense.** Required to link langlang (GPL-3.0) as a Go library.
+    dodder is single-copyright-holder with no downstream Go consumers of
+    `go/lib/`. GPL does not restrict use, only distribution of modified
+    binaries. Content stored in repos is unaffected.
+
+3.  **langlang runtime VM, not code generation.** The `Matcher` bytecode VM
+    keeps grammars as pure data (blobs). `go generate` would bake the grammar
+    into compiled Go code, losing the content-addressable property. Future: add
+    compiled Go fast path for builtins, keep VM for user-defined grammars.
+
+4.  **`[references]` as oneof, not fallback.** `engine` and `script` are
+    mutually exclusive. Earlier draft had "native with script fallback" but this
+    creates ambiguous dispatch. Presence of both is a validation error.
+
+5.  **Hyphence omits type line for `!`.** User-facing format should not require
+    typing `! !`. Absence of type line implies `!`. Box format always includes
+    `!` (machine-readable, unambiguous).
+
+6.  **Inventory list v3.** v2 rejects bare `!` at three layers
+    (`TokenMatcherType` needs two tokens, `SetType` regex rejects empty string,
+    `String()` outputs `""` not `"!"`). Box writer is configuration-aware ---
+    inventory list codecs configure the writer, the writer does not know about
+    versions.
+
+7.  **rumdl over markdownlint-cli2.** Node.js markdownlint cannot be compiled to
+    a practical static binary (40--90 MB, breaks on dynamic config loading).
+    rumdl is \~4.5 MB, implements all 53 rules + 18 extra, already in nixpkgs.
+
+8.  **Zettel/tag disambiguation in URI scheme.** Zettel IDs always contain `/`,
+    tags never do. No sigil prefix needed in `dodder://` URIs. `konfig` is a
+    reserved tag for repo-local mutable config.
+
+9.  **Embedded binary is Phase 1 expedient.** \~4.5 MB for rumdl alone does not
+    scale. Target is Phase 3: `dodder.net` seed repo distributes tool blobs as
+    regular objects.
+
+## Implementation Order
+
+When picking this up:
+
+1.  `!` support in `bravo/ids/type.go` (Set, String, IsEmpty semantics)
+2.  Box format reader/writer changes (`hotel/box_format/`)
+3.  Hyphence reader/writer changes (omit/imply type line)
+4.  Binary index encoder/decoder
+5.  Inventory list v3 codec with box writer configuration
+6.  langlang Go dependency + `Matcher` integration
+7.  PEG grammar for `dodder://` link extraction
+8.  rumdl binary + config blob shipping via genesis
+9.  `[references]` oneof in type blob TOML v1 (or v2)
+
 ## Open Questions
 
 - Should the engine field (`langlang-vm`) be a string enum or itself a typed
