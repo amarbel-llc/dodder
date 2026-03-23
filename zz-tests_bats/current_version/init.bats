@@ -255,7 +255,7 @@ function init_with_existing_madder_store { # @test
 		\[konfig @blake2b256-[[:alnum:]]+ !toml-config-v2]
 	EOM
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 
 	# Verify dodder last shows the inventory list with the init objects
 	run_dodder last -format inventory_list-sans-tai

@@ -165,7 +165,7 @@ function run_dodder_init_sha256 {
 }
 
 function run_dodder_init_workspace {
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
 }
 
 # Source .fixtures.env for fixture-specific values
@@ -208,7 +208,7 @@ function run_dodder_init_disable_age_xdg {
   assert_success
   assert_output
 
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
 }
 
 function run_dodder_init_disable_age {
@@ -236,7 +236,7 @@ EOM
   assert_success
   assert_output
 
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
 }
 
 function create_test_zettels {

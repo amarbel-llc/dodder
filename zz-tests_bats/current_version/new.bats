@@ -129,7 +129,7 @@ function use_blob_digests { # @test
 # bats file_tags=user_story:workspace
 
 function new_empty_no_edit_workspace { # @test
-  run_dodder init-workspace -tags workspace-tags
+  run_dodder init-workspace -experimental-repo=false -tags workspace-tags
   assert_success
 
   run_dodder new -edit=false
@@ -140,7 +140,7 @@ function new_empty_no_edit_workspace { # @test
 }
 
 function new_empty_edit_workspace { # @test
-  run_dodder init-workspace -tags workspace-tags
+  run_dodder init-workspace -experimental-repo=false -tags workspace-tags
   assert_success
 
   export EDITOR="/bin/bash -c 'echo \"this is the body\" > \"\$0\"'"

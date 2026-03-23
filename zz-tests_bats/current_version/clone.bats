@@ -64,7 +64,7 @@ function run_clone_default_with() {
 }
 
 function try_add_new_after_clone {
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder new -edit=false - <<-EOM

@@ -41,13 +41,11 @@ function bootstrap_workspace_repo {
 	pushd "$workspace" || exit 1
 
 	run_dodder init-workspace \
-		-experimental-repo \
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
 		-lock-internal-files=false \
-		-direct "$parent_path" \
+		-parent "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
 

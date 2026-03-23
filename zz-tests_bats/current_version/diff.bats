@@ -8,7 +8,7 @@ setup() {
 
 	copy_from_version "$DIR"
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder checkout :z,t,e

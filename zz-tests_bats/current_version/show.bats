@@ -30,7 +30,7 @@ function show_simple_one_zettel { # @test
 }
 
 function show_simple_one_zettel_with_description_with_quotes { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder new -edit=false - <<-EOM
@@ -86,7 +86,7 @@ function show_simple_one_zettel_with_sigil_and_genre { # @test
 }
 
 function show_simple_one_zettel_checked_out { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder checkout one/uno
@@ -253,7 +253,7 @@ function show_zettels_with_tag_no_workspace_folder { # @test
 }
 
 function show_zettel_tag_complex { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder checkout o/u
@@ -611,7 +611,7 @@ function show_workspace_default { # @test
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
 	EOM
 
-	run_dodder init-workspace -query tag-5
+	run_dodder init-workspace -experimental-repo=false -query tag-5
 	assert_success
 
 	run_dodder show :
@@ -632,7 +632,7 @@ function show_workspace_exactly_one_zettel { # @test
 		[tag-5]
 	EOM
 
-	run_dodder init-workspace -query tag-3
+	run_dodder init-workspace -experimental-repo=false -query tag-3
 	assert_success
 
 	run_dodder show one/dos
@@ -644,7 +644,7 @@ function show_workspace_exactly_one_zettel { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_zettel_with_referenced_object_lock { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	run_dodder new -edit=false - <<-EOM
@@ -672,7 +672,7 @@ function show_zettel_with_referenced_object_lock { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_zettel_with_discovered_references { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with reference discovery script
@@ -718,7 +718,7 @@ function show_zettel_with_discovered_references { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_zettel_with_pandoc_discovered_references { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with pandoc-based reference discovery
@@ -764,7 +764,7 @@ function show_zettel_with_pandoc_discovered_references { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with pandoc-based reference discovery
@@ -817,7 +817,7 @@ function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
 
 # bats test_tags=user_story:format_stdin
 function format_blob_stdin_resolves_type_with_and_without_lock { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with a pandoc formatter (markdown → plain text)
@@ -865,7 +865,7 @@ function format_blob_stdin_resolves_type_with_and_without_lock { # @test
 
 # bats test_tags=user_story:format_stdin
 function format_blob_stdin_selects_formatter_via_uti_group { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with text-edit and text-render UTI groups pointing to
@@ -916,7 +916,7 @@ function format_blob_stdin_selects_formatter_via_uti_group { # @test
 
 # bats test_tags=user_story:format_stdin
 function format_blob_prefers_text_edit_over_text { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type where text-edit produces html and text produces plain —
@@ -956,7 +956,7 @@ function format_blob_prefers_text_edit_over_text { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_zettel_with_discovered_blob_references { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with reference discovery that outputs typed blob refs
@@ -1003,7 +1003,7 @@ function show_zettel_with_discovered_blob_references { # @test
 
 # bats test_tags=user_story:referenced_objects
 function blob_reference_without_type_fails { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type whose reference discovery outputs untyped blob refs
@@ -1038,7 +1038,7 @@ function blob_reference_without_type_fails { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_box_format_includes_blob_references { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type with reference discovery that outputs typed blob refs
@@ -1077,7 +1077,7 @@ function show_box_format_includes_blob_references { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_blob_references_sorted_in_hyphence { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type whose reference discovery outputs multiple typed blob refs
@@ -1124,7 +1124,7 @@ function show_blob_references_sorted_in_hyphence { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_blob_references_sorted_in_inventory_list { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a type whose reference discovery outputs multiple typed blob refs
@@ -1171,7 +1171,7 @@ function show_blob_references_sorted_in_inventory_list { # @test
 
 # bats test_tags=user_story:referenced_objects
 function show_box_format_includes_object_references { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a zettel that references another zettel
@@ -1194,7 +1194,7 @@ function show_box_format_includes_object_references { # @test
 
 # bats test_tags=user_story:referenced_objects
 function object_reference_alias_with_quotes_round_trips { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a zettel with an aliased object reference containing a double quote
@@ -1219,7 +1219,7 @@ function object_reference_alias_with_quotes_round_trips { # @test
 
 # bats test_tags=user_story:referenced_objects
 function blob_reference_alias_with_quotes_round_trips { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a zettel with an aliased blob reference containing double quotes

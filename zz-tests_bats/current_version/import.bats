@@ -23,7 +23,7 @@ setup() {
     test
   assert_success
 
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
 
   create_test_zettels
 }

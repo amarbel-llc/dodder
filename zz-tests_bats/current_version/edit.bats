@@ -16,7 +16,7 @@ teardown() {
 # bats file_tags=user_story:workspace
 
 function edit_and_change_workspace { # @test
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
   assert_success
 
   export EDITOR="/bin/bash -c 'echo \"this is the body 2\" > \"\$0\"'"
@@ -35,7 +35,7 @@ function edit_and_change_workspace { # @test
 }
 
 function edit_and_dont_change_workspace { # @test
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
   assert_success
 
   export EDITOR="true"

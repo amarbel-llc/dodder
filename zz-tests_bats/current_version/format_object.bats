@@ -75,7 +75,7 @@ EOM
 }
 
 function show_simple_one_zettel_binary { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	echo "binary file" >file.bin

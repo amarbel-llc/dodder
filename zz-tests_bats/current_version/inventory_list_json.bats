@@ -35,7 +35,7 @@ function json_init_and_checkin { # @test
 	EOM
 
   # Initialize workspace
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
   assert_success
 
   # Checkout files
@@ -84,7 +84,7 @@ function json_checkin_multiple_versions { # @test
   assert_success
 
   # Initialize workspace
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
   assert_success
 
   # Create a zettel
@@ -139,7 +139,7 @@ function json_signature_verification { # @test
   assert_success
 
   # Initialize workspace
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
   assert_success
 
   # Checkout

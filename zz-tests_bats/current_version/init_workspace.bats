@@ -22,11 +22,11 @@ function init_workspace_empty { # @test
 		not in a workspace
 	EOM
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 	assert_output ''
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_failure
 	assert_output --partial 'workspace already exists'
 
@@ -50,11 +50,11 @@ function init_workspace { # @test
 		not in a workspace
 	EOM
 
-	run_dodder init-workspace -query "due" -tags today -type task
+	run_dodder init-workspace -experimental-repo=false -query "due" -tags today -type task
 	assert_success
 	assert_output ''
 
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_failure
 	assert_output --partial 'workspace already exists'
 

@@ -16,7 +16,7 @@ teardown() {
 # bats file_tags=user_story:workspace
 
 function workspace_show { # @test
-	run_dodder init-workspace -query tag-3
+	run_dodder init-workspace -experimental-repo=false -query tag-3
 	assert_success
 
 	run_dodder show
@@ -39,7 +39,7 @@ function workspace_show { # @test
 }
 
 function workspace_edit { # @test
-	run_dodder init-workspace -query tag-3
+	run_dodder init-workspace -experimental-repo=false -query tag-3
 	assert_success
 
 	export EDITOR="true"
@@ -58,7 +58,7 @@ function workspace_edit { # @test
 }
 
 function workspace_checkout { # @test
-	run_dodder init-workspace -tags tag-3
+	run_dodder init-workspace -experimental-repo=false -tags tag-3
 	assert_success
 
 	run_dodder checkout
@@ -80,7 +80,7 @@ function workspace_checkout { # @test
 }
 
 function workspace_organize { # @test
-	run_dodder init-workspace -tags tag-3 -query tag-3
+	run_dodder init-workspace -experimental-repo=false -tags tag-3 -query tag-3
 	assert_success
 
 	run_dodder organize -mode output-only
@@ -114,7 +114,7 @@ function workspace_organize { # @test
 }
 
 function workspace_add_no_organize { # @test
-	run_dodder init-workspace -tags tag-3 -query tag-3
+	run_dodder init-workspace -experimental-repo=false -tags tag-3 -query tag-3
 	assert_success
 
 	echo "file to be added" >todo.wow.md
@@ -128,7 +128,7 @@ function workspace_add_no_organize { # @test
 }
 
 function workspace_add_yes_organize { # @test
-	run_dodder init-workspace -tags tag-3 -query tag-3
+	run_dodder init-workspace -experimental-repo=false -tags tag-3 -query tag-3
 	assert_success
 
 	echo "file to be added1" >1.md
@@ -163,7 +163,7 @@ function workspace_add_yes_organize { # @test
 }
 
 function workspace_add_yes_organize_omit_one { # @test
-	run_dodder init-workspace -tags tag-3 -query tag-3
+	run_dodder init-workspace -experimental-repo=false -tags tag-3 -query tag-3
 	assert_success
 
 	echo "file to be added1" >1.md
@@ -192,7 +192,7 @@ function workspace_add_yes_organize_omit_one { # @test
 }
 
 function workspace_parent_directory { # @test
-	run_dodder init-workspace -tags tag-3 -query tag-3
+	run_dodder init-workspace -experimental-repo=false -tags tag-3 -query tag-3
 	assert_success
 
 	run_dodder info-repo xdg
