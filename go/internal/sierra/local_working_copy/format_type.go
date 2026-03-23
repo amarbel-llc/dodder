@@ -93,6 +93,10 @@ var typeFormatters = map[string]FormatTypeFuncConstructorEntry{
 					typeObject.GetType(),
 					typeObject.GetBlobDigest(),
 				); err != nil {
+					if repool != nil {
+						repool()
+					}
+
 					err = errors.Wrap(err)
 					return err
 				}
@@ -134,6 +138,10 @@ var typeFormatters = map[string]FormatTypeFuncConstructorEntry{
 					typeObject.GetType(),
 					typeObject.GetBlobDigest(),
 				); err != nil {
+					if repool != nil {
+						repool()
+					}
+
 					err = errors.Wrap(err)
 					return err
 				}
@@ -196,6 +204,10 @@ var typeFormatters = map[string]FormatTypeFuncConstructorEntry{
 					object.GetType(),
 					object.GetBlobDigest(),
 				); err != nil {
+					if repool != nil {
+						repool()
+					}
+
 					err = errors.Wrap(err)
 					return err
 				}

@@ -174,6 +174,10 @@ func checkVarUsedOnAllPaths(
 	defStmt ast.Node,
 	v *types.Var,
 ) {
+	if hasRepoolSuppressComment(pass, defStmt) {
+		return
+	}
+
 	var g *cfg.CFG
 
 	switch fn := funcNode.(type) {
@@ -338,6 +342,23 @@ func hasRepoolOwnedComment(pass *analysis.Pass, node ast.Node) bool {
 			for _, comment := range c.List {
 				cpos := pass.Fset.Position(comment.Pos())
 				if cpos.Line == pos.Line && strings.Contains(comment.Text, "//repool:owned") {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func hasRepoolSuppressComment(pass *analysis.Pass, node ast.Node) bool {
+	pos := pass.Fset.Position(node.Pos())
+
+	for _, cg := range pass.Files {
+		for _, c := range cg.Comments {
+			for _, comment := range c.List {
+				cpos := pass.Fset.Position(comment.Pos())
+				if cpos.Line == pos.Line && strings.Contains(comment.Text, "//repool:suppress") {
 					return true
 				}
 			}

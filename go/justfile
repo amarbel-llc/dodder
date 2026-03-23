@@ -144,7 +144,11 @@ build-nix: build-nix-gomod
 build-docker: build-nix-gomod
   docker load < "$(nix build ".#docker.x86_64-linux" --print-out-paths)"
 
-build: build-go #build-nix
+build-go-cover:
+  mkdir -p build/cover-bin
+  go build -tags debug -cover -covermode=atomic -o build/cover-bin/ ./cmd/*
+
+build: build-go check-go-repool check-go-seqerror #build-nix
 
 #    ____ _               _
 #   / ___| |__   ___  ___| | __
@@ -202,6 +206,26 @@ test-bats-failed_files $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_B
     grep "#  in test file " | \
     grep -o '[^[:space:]]*\.bats' | \
     sort -u
+
+# Build coverage-instrumented binaries and run bats, writing coverage to build/cover-data.
+# GOCOVERDIR must be under /tmp so sandcastle's allowWrite permits it.
+test-bats-cover: build-go-cover
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
+  export PATH="{{dir_build}}/debug:$PATH"
+  just ../zz-tests_bats/test-generate_fixtures
+  cover_data="/tmp/dodder-cover-$$"
+  rm -rf "$cover_data"
+  mkdir -p "$cover_data"
+  GOCOVERDIR="$cover_data" \
+    BATS_BIN_DIR="{{dir_build}}/cover-bin" \
+    just ../zz-tests_bats/test
+  mkdir -p "{{dir_build}}/cover-data"
+  go tool covdata textfmt -i="$cover_data" -o="{{dir_build}}/cover-data/bats-coverage.out"
+  rm -rf "$cover_data"
+  echo "==> Coverage written to {{dir_build}}/cover-data/bats-coverage.out"
+  echo "    View with: go tool cover -func={{dir_build}}/cover-data/bats-coverage.out"
 
 test-bats-next *args:
   DODDER_BIN=der-next just ../zz-tests_bats/test-generate_fixtures

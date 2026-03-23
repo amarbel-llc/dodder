@@ -20,14 +20,14 @@ func (store *Store) ReadTransactedFromObjectId(
 	object, objectRepool = sku.GetTransactedPool().GetWithRepool()
 
 	if err = store.ReadOneInto(objectId, object); err != nil {
-		if errors.IsErrNotFound(err) {
-			objectRepool()
-			object = nil
-		}
+		objectRepool()
+		object = nil
 
 		err = errors.Wrap(err)
 		return object, err
 	}
+
+	_ = objectRepool //repool:owned — ownership transfers to caller via returned object
 
 	return object, err
 }
@@ -72,7 +72,7 @@ func (store *Store) ReadTypeObject(
 	}
 
 	var typeObjectRepool interfaces.FuncRepool
-	typeObject, typeObjectRepool = sku.GetTransactedPool().GetWithRepool()
+	typeObject, typeObjectRepool = sku.GetTransactedPool().GetWithRepool() //repool:suppress #47 ownership transfer via return
 
 	if !store.streamIndex.ReadOneMarklId(
 		typeLock.GetValue(),

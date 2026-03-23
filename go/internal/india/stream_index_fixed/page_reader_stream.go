@@ -44,7 +44,7 @@ func (index *Index) makeStreamPageReader(
 
 	var repool interfaces.FuncRepool
 
-	pageReader.bufferedReader, repool = pool.GetBufferedReader(
+	pageReader.bufferedReader, repool = pool.GetBufferedReader( //repool:suppress #47 repool stored in returned closure
 		pageReader.blobReader,
 	)
 

@@ -30,6 +30,10 @@ func (local *Repo) GetBlobFormatter(
 		typeObject.GetType(),
 		typeObject.GetBlobDigest(),
 	); err != nil {
+		if repool != nil {
+			repool()
+		}
+
 		err = errors.Wrap(err)
 		return blobFormatter, err
 	}

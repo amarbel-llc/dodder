@@ -57,6 +57,10 @@ func (format formatterTypFormatterUTIGroups) Format(
 		typeObject.GetType(),
 		typeObject.GetBlobDigest(),
 	); err != nil {
+		if repool != nil {
+			repool()
+		}
+
 		err = errors.Wrap(err)
 		return n, err
 	}

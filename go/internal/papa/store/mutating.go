@@ -346,9 +346,13 @@ func (commitFacilitator commitFacilitator) fetchMotherIfNecessary(
 	}
 
 	if err = daughter.SetMother(mother); err != nil {
+		motherRepool()
+		mother = nil
 		err = errors.Wrap(err)
 		return mother, err
 	}
+
+	_ = motherRepool //repool:owned — ownership transfers to caller via returned mother
 
 	return mother, err
 }

@@ -90,13 +90,17 @@ func (store *store) recompileTypes(
 			tipe,
 			tagObject.GetBlobDigest(),
 		); err != nil {
+			if repool != nil {
+				repool()
+			}
+
 			err = errors.Wrap(err)
 			return err
 		}
 
-		defer repool()
-
 		if commonBlob == nil {
+			repool()
+
 			err = errors.ErrorWithStackf(
 				"nil type blob for type: %q. Sku: %s",
 				tipe,
@@ -120,6 +124,7 @@ func (store *store) recompileTypes(
 			inlineTypes.Add(values.MakeString(tagObject.GetObjectId().String()))
 		}
 
+		repool()
 	}
 	return err
 }

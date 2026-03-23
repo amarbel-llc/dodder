@@ -38,6 +38,10 @@ func (store *Store) tryNewHook(
 		typeObject.GetType(),
 		typeObject.GetBlobDigest(),
 	); err != nil {
+		if repool != nil {
+			repool()
+		}
+
 		err = errors.Wrap(err)
 		return err
 	}
@@ -97,6 +101,10 @@ func (store *Store) TryFormatHook(
 		typeObject.GetType(),
 		typeObject.GetBlobDigest(),
 	); err != nil {
+		if repool != nil {
+			repool()
+		}
+
 		err = errors.Wrap(err)
 		return err
 	}
@@ -163,6 +171,10 @@ func (store *Store) tryPreCommitHooks(
 			typeObject.GetType(),
 			typeObject.GetBlobDigest(),
 		); err != nil {
+			if repool != nil {
+				repool()
+			}
+
 			err = errors.Wrap(err)
 			return err
 		}

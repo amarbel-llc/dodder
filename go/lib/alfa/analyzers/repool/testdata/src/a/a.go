@@ -62,3 +62,24 @@ func multipleReturns() {
 	}
 	repool()
 }
+
+func suppressedConditional() {
+	v, repool := pool.GetWithRepool() //repool:suppress ownership transfer
+	if v == "x" {
+		repool()
+	}
+}
+
+func suppressedWithIssueLink() {
+	v, repool := pool.GetWithRepool() //repool:suppress #47 false positive: nil-guarded defer
+	if v == "x" {
+		repool()
+	}
+}
+
+func unsuppressedConditional() {
+	v, repool := pool.GetWithRepool() // want "the repool function is not called on all paths"
+	if v == "y" {
+		repool()
+	}
+}

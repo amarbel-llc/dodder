@@ -101,6 +101,10 @@ func (store *Store) discoverReferences(
 			typeObject.GetType(),
 			typeObject.GetBlobDigest(),
 		); err != nil {
+			if repool != nil {
+				repool()
+			}
+
 			return errors.Wrap(err)
 		}
 

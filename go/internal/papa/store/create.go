@@ -76,9 +76,14 @@ func (store *Store) createOrUpdateBlobDigest(
 		object,
 		sku.CommitOptions{StoreOptions: sku.GetStoreOptionsUpdate()},
 	); err != nil {
+		objectRepool()
+		object = nil
+
 		err = errors.WrapExceptSentinel(err, errors.ErrExists)
 		return object, err
 	}
+
+	_ = objectRepool //repool:owned — ownership transfers to caller via returned object
 
 	return object, err
 }

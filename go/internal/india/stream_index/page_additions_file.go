@@ -132,7 +132,7 @@ func (fb *pageAdditionsFileBacked) All() interfaces.Seq[*sku.Transacted] {
 		})
 
 		for _, rc := range sorted {
-			object, objectRepool := sku.GetTransactedPool().GetWithRepool()
+			object, objectRepool := sku.GetTransactedPool().GetWithRepool() //repool:suppress #47 ownership transfer via yield
 
 			var objectWithCS objectWithCursorAndSigil
 			objectWithCS.Transacted = object

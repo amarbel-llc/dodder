@@ -45,7 +45,7 @@ func (hash *Hash) GetMarklFormat() domain_interfaces.MarklFormat {
 }
 
 func (hash *Hash) GetMarklId() (domain_interfaces.MarklIdMutable, interfaces.FuncRepool) {
-	id, repool := idPool.GetWithRepool()
+	id, repool := idPool.GetWithRepool() //repool:suppress #47 ownership transfer via return
 	id.format = hash.GetMarklFormat()
 	id.allocDataIfNecessary(hash.Size())
 
@@ -60,7 +60,7 @@ func (hash *Hash) GetMarklId() (domain_interfaces.MarklIdMutable, interfaces.Fun
 func (hash *Hash) GetBlobIdForReader(
 	reader io.Reader,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	id, repool := idPool.GetWithRepool()
+	id, repool := idPool.GetWithRepool() //repool:suppress #47 ownership transfer via return
 	id.format = hash.GetMarklFormat()
 	id.allocDataAndSetToCapIfNecessary(hash.Size())
 
@@ -75,7 +75,7 @@ func (hash *Hash) GetBlobIdForReaderAt(
 	reader io.ReaderAt,
 	off int64,
 ) (domain_interfaces.MarklId, interfaces.FuncRepool) {
-	id, repool := idPool.GetWithRepool()
+	id, repool := idPool.GetWithRepool() //repool:suppress #47 ownership transfer via return
 	id.format = hash.GetMarklFormat()
 	id.allocDataAndSetToCapIfNecessary(hash.Size())
 

@@ -49,6 +49,10 @@ func (store *Store) validateIfNecessary(
 			tipe,
 			daughter.GetSku().GetBlobDigest(),
 		); err != nil {
+			if repool != nil {
+				repool()
+			}
+
 			err = errors.Wrap(err)
 			return err
 		}

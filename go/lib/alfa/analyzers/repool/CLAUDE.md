@@ -5,27 +5,40 @@ are properly called.
 
 ## Usage
 
-```sh
+``` sh
 just check-go-repool          # build analyzer + run on all packages
 go vet -vettool=build/repool-analyzer ./...  # run directly
 ```
 
 ## What It Detects
 
-1. **Discarded repool (blank `_`)**: Reports when the repool function is
-   assigned to `_` without a `//repool:owned` suppression comment on the same
-   line.
+1.  **Discarded repool (blank `_`)**: Reports when the repool function is
+    assigned to `_` without a `//repool:owned` suppression comment on the same
+    line.
 
-2. **Incomplete call paths**: Uses CFG analysis to find repool variables that are
-   not called on all code paths before the function returns (potential leaks).
+2.  **Incomplete call paths**: Uses CFG analysis to find repool variables that
+    are not called on all code paths before the function returns (potential
+    leaks).
 
 ## Suppression
+
+### `//repool:owned` --- discarded repool (blank `_`)
 
 Add `//repool:owned` on the assignment line to indicate the caller intentionally
 takes ownership of the element's lifetime:
 
-```go
+``` go
 hash, _ := config.hashFormat.GetHash() //repool:owned
+```
+
+### `//repool:suppress` --- incomplete call paths (false positives)
+
+Add `//repool:suppress <reason>` on the assignment line to silence the "not
+called on all paths" diagnostic when the analyzer cannot prove safety but the
+code is correct. A reason is required (e.g., an issue link or description):
+
+``` go
+v, repool := pool.GetWithRepool() //repool:suppress #47 ownership transfer via return
 ```
 
 ## Implementation
