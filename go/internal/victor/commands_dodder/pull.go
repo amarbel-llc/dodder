@@ -36,7 +36,9 @@ func (cmd Pull) Run(req command.Request) {
 
 	var remote repo.Repo
 
-	if cmd.IsDirectTransfer() {
+	if cmd.IsHomeRepoParent() {
+		remote = cmd.MakeHomeRepoRemote(req)
+	} else if cmd.IsDirectTransfer() {
 		remote = cmd.MakeDirectRemoteFromPath(req, localWorkingCopy)
 	} else {
 		var object *sku.Transacted

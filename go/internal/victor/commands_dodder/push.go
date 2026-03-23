@@ -36,7 +36,9 @@ func (cmd Push) Run(req command.Request) {
 
 	var remote repo.Repo
 
-	if cmd.IsDirectTransfer() {
+	if cmd.IsHomeRepoParent() {
+		remote = cmd.MakeHomeRepoRemote(req)
+	} else if cmd.IsDirectTransfer() {
 		remote = cmd.MakeDirectRemoteFromPath(req, local)
 	} else {
 		var remoteObject *sku.Transacted

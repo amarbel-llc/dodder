@@ -1,6 +1,7 @@
 package command_components_dodder
 
 import (
+	"os"
 	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
@@ -10,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_blobs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
+	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -31,6 +33,7 @@ type Remote struct {
 	LocalWorkingCopy
 
 	DirectPath           string
+	parentIsHomeRepo     bool
 	RemoteConnectionType remote_connection_types.Type
 }
 
@@ -62,7 +65,49 @@ func (cmd *Remote) ResolveImplicitDirectPath(
 	parentPath := local.GetEnvWorkspace().GetParentPath()
 	if parentPath != "" {
 		cmd.DirectPath = parentPath
+		return
 	}
+
+	// Check if this is a V1 workspace (repo-backed) with empty ParentPath,
+	// meaning the parent is the home XDG repo.
+	wsConfig := local.GetEnvWorkspace().GetWorkspaceConfig()
+	if _, ok := wsConfig.(workspace_config_blobs.ConfigWithParentPath); ok {
+		cmd.parentIsHomeRepo = true
+	}
+}
+
+func (cmd Remote) IsHomeRepoParent() bool {
+	return cmd.parentIsHomeRepo
+}
+
+func (cmd Remote) MakeHomeRepoRemote(
+	req command.Request,
+) repo.Repo {
+	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		req.Cancel(err)
+	}
+
+	envDir := env_dir.MakeWithHomeAndInitialize(
+		req,
+		env_dir.XDGUtilityNameDodder,
+		home,
+		config.Debug,
+	)
+
+	envUI := env_ui.Make(
+		req,
+		config,
+		config.Debug,
+		env_ui.Options{},
+	)
+
+	return local_working_copy.Make(
+		env_local.Make(envUI, envDir),
+		local_working_copy.OptionsEmpty,
+	)
 }
 
 func (cmd Remote) MakeDirectRemoteFromPath(
