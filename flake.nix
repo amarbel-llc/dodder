@@ -32,6 +32,12 @@
       inputs.purse-first.follows = "purse-first";
       inputs.bob.follows = "bob";
     };
+
+    tommy = {
+      url = "github:amarbel-llc/tommy";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.utils.follows = "utils";
+    };
   };
 
   outputs =
@@ -44,6 +50,7 @@
       purse-first,
       bob,
       just-us,
+      tommy,
     }:
     (utils.lib.eachDefaultSystem (
       system:
@@ -56,6 +63,7 @@
             purse-first
             bob
             just-us
+            tommy
             system
             ;
         };
