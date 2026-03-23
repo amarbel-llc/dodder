@@ -477,6 +477,71 @@ function workspace_repo_stale_parent_path { # @test
 	assert_failure
 }
 
+function workspace_repo_experimental_repo_implies_cwd { # @test
+	# When -experimental-repo is used, the workspace repo should always be
+	# CWD-based, even without an explicit -repo_id flag. This test sets HOME to
+	# a temp dir with an existing XDG dodder repo, proving that without implicit
+	# CWD routing the command collides with the home repo.
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# Create an existing XDG dodder repo under a fake HOME so the home
+	# directory already has an inventory_lists_log.
+	fake_home="$BATS_TEST_TMPDIR/fake_home"
+	mkdir -p "$fake_home"
+	(
+		export HOME="$fake_home"
+		export XDG_DATA_HOME="$fake_home/.local/share"
+		export XDG_CONFIG_HOME="$fake_home/.config"
+		export XDG_STATE_HOME="$fake_home/.local/state"
+		export XDG_CACHE_HOME="$fake_home/.cache"
+		export XDG_RUNTIME_HOME="$fake_home/.local/runtime"
+		run_dodder init \
+			-yin <(cat_yin) \
+			-yang <(cat_yang) \
+			-encryption none \
+			-lock-internal-files=false \
+			home-repo-id
+		assert_success
+	)
+
+	# Now try init-workspace WITHOUT -repo_id from a different directory.
+	# The command should implicitly use CWD, not HOME.
+	mkdir -p workspace_no_flag
+	pushd workspace_no_flag || exit 1
+
+	export HOME="$fake_home"
+	export XDG_DATA_HOME="$fake_home/.local/share"
+	export XDG_CONFIG_HOME="$fake_home/.config"
+	export XDG_STATE_HOME="$fake_home/.local/state"
+	export XDG_CACHE_HOME="$fake_home/.cache"
+	export XDG_RUNTIME_HOME="$fake_home/.local/runtime"
+	run_dodder init-workspace \
+		-experimental-repo \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-lock-internal-files=false \
+		-direct "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	# Verify workspace has the expected objects
+	run_dodder show :z
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[one/dos @blake2b256-.+ !md "second zettel" priority-high project-alpha]
+		\[one/uno @blake2b256-.+ !md "first zettel" project-alpha]
+	EOM
+
+	# Verify it created a CWD-local repo, not a home repo
+	assert [ -d .dodder ]
+	assert [ -f .dodder-workspace ]
+}
+
 function workspace_repo_init_experimental_repo_empty_query { # @test
 	parent="parent"
 	bootstrap_parent "$parent"

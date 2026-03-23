@@ -7,6 +7,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
@@ -170,6 +171,15 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 				"-direct <parent-path> is required with -experimental-repo",
 			),
 		)
+		return
+	}
+
+	// Experimental workspace repos are always CWD-based — they store their
+	// data in .dodder/ under the current directory, never in the user's home
+	// XDG directory. Force this regardless of -repo_id flag or env var.
+	config := req.Utility.GetConfigAny().(*repo_config_cli.Config)
+	if err := config.RepoId.Set("."); err != nil {
+		req.Cancel(err)
 		return
 	}
 
