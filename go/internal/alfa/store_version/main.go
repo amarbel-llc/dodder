@@ -75,14 +75,6 @@ func (version Version) GetInt() int {
 	return values.Int(version).Int()
 }
 
-func (version Version) MarshalText() ([]byte, error) {
-	return []byte(version.String()), nil
-}
-
-func (version *Version) UnmarshalText(text []byte) error {
-	return version.Set(string(text))
-}
-
 func (version *Version) Set(p string) (err error) {
 	var i uint64
 
