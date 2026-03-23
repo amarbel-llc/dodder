@@ -184,3 +184,80 @@ function json_signature_verification { # @test
   # Just verify we get output with the tag-2
   assert_output --regexp 'tag-2'
 }
+
+# bats test_tags=user_story:referenced_objects
+function json_inventory_list_preserves_all_lock_kinds { # @test
+  # Verify that type locks, tag locks, referenced object locks + aliases,
+  # and blob references + type locks + aliases survive the JSON inventory
+  # list persist→read cycle.
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id . \
+    -encryption generate \
+    -inventory_list-type inventory_list-json-v0 \
+    test-repo-id
+
+  assert_success
+
+  run_dodder init-workspace
+  assert_success
+
+  # Create a type with reference discovery that outputs typed blob refs
+  cat >ref-blob.type <<-'TYPEFILE'
+		---
+		! toml-type-v1
+		---
+
+		file-extension = 'md'
+		vim-syntax-type = 'markdown'
+
+		[references]
+		shell = ['bash', '-c']
+		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
+	TYPEFILE
+
+  run_dodder checkin -delete ref-blob.type
+  assert_success
+
+  # Checkout types so they're available
+  run_dodder checkout :t,e
+  assert_success
+
+  # Create a referenced zettel first (one/uno gets assigned)
+  run_dodder new -edit=false - <<-EOM
+		---
+		# target zettel
+		! md
+		---
+
+		target content
+	EOM
+  assert_success
+
+  # Create a zettel with both a wiki-link reference and a blob reference
+  run_dodder new -edit=false - <<-EOM
+		---
+		# zettel with all lock kinds
+		- test-tag
+		! ref-blob
+		---
+
+		See [[one/uno]] and blob @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd for details.
+	EOM
+  assert_success
+
+  # Show in text format — verify type lock, tag, referenced object, and blob reference
+  run_dodder show -format text one/dos:
+  assert_success
+
+  # Type lock present
+  assert_output --regexp '! ref-blob@ed25519_sig-.+'
+  # Tag present
+  assert_output --partial 'test-tag'
+  # Referenced object with lock
+  assert_output --regexp '- one/uno@ed25519_sig-.+'
+  # Blob reference with type lock
+  assert_output --regexp '@blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md@ed25519_sig-.+'
+}
