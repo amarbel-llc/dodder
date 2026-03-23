@@ -107,7 +107,7 @@ func (compiled *compiled) getTag(
 		expansion.ExpanderRight,
 	)
 
-	for expandedTag := range seq {
+	for expandedTag := range seq { //seq:err-checked
 		if cursor == nil {
 			cursor, _ = compiled.Tags.Get(expandedTag.String())
 			continue
@@ -147,7 +147,7 @@ func (compiled *compiled) getSortedTypesExpanded(
 		expansion.ExpanderRight,
 	)
 
-	for expandedType := range seq {
+	for expandedType := range seq { //seq:err-checked
 		compiled.lock.Lock()
 		typeObject, ok := compiled.Types.Get(expandedType.String())
 		compiled.lock.Unlock()

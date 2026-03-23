@@ -1,6 +1,6 @@
 module code.linenisgreat.com/dodder/go
 
-go 1.25.6
+go 1.25.8
 
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260307130930-9ae16a0979e6

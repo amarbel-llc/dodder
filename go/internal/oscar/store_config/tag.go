@@ -98,7 +98,12 @@ func (compiled *compiled) AccumulateImplicitTags(
 		expansion.ExpanderRight,
 	)
 
-	for expandedTag := range expandedTags {
+	for expandedTag, expandErr := range expandedTags {
+		if expandErr != nil {
+			err = errors.Wrap(expandErr)
+			return err
+		}
+
 		if ids.TagEquals(expandedTag, tag) {
 			continue
 		}

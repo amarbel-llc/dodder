@@ -177,7 +177,7 @@ build-analyzer-seqerror:
   go build -o build/seqerror-analyzer ./lib/alfa/analyzers/seqerror/cmd/
 
 check-go-seqerror: build-analyzer-seqerror
-  go vet -tags test,debug -vettool=build/seqerror-analyzer ./... || true
+  go vet -tags test,debug -vettool=build/seqerror-analyzer ./...
 
 check: check-go-vuln check-go-vet check-go-repool check-go-seqerror
 
