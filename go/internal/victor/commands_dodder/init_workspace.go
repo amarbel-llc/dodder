@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
+	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
@@ -16,6 +17,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
+	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
+	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -31,12 +34,13 @@ func init() {
 
 type InitWorkspace struct {
 	command_components_dodder.Genesis
-	command_components_dodder.RemoteTransfer
+	repo.ImporterOptions
 	command_components_dodder.Query
 
 	complete command_components_dodder.Complete
 
 	ExperimentalRepo  bool
+	ParentPath        string
 	DefaultQueryGroup values.String
 	Proto             sku.Proto
 }
@@ -49,12 +53,19 @@ func (cmd *InitWorkspace) SetFlagDefinitions(
 	flagSet.BoolVar(
 		&cmd.ExperimentalRepo,
 		"experimental-repo",
-		false,
+		true,
 		"create a repo-backed workspace with independent store and commit history",
 	)
 
+	flagSet.StringVar(
+		&cmd.ParentPath,
+		"parent",
+		"",
+		"path to a CWD-scoped parent dodder repository (omit for home repo)",
+	)
+
 	cmd.Genesis.SetFlagDefinitions(flagSet)
-	cmd.RemoteTransfer.SetFlagDefinitions(flagSet)
+	cmd.ImporterOptions.SetFlagDefinitions(flagSet)
 	cmd.Query.SetFlagDefinitions(flagSet)
 
 	flagSet.Var(
@@ -116,6 +127,15 @@ func (cmd InitWorkspace) Complete(
 }
 
 func (cmd InitWorkspace) Run(req command.Request) {
+	if !cmd.ExperimentalRepo && cmd.ParentPath != "" {
+		req.Cancel(
+			errors.BadRequestf(
+				"-parent cannot be used with -experimental-repo=false",
+			),
+		)
+		return
+	}
+
 	if cmd.ExperimentalRepo {
 		cmd.runExperimentalRepo(req)
 		return
@@ -165,45 +185,31 @@ func (cmd InitWorkspace) runLightweight(req command.Request) {
 }
 
 func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
-	if !cmd.IsDirectTransfer() {
+	config := req.Utility.GetConfigAny().(*repo_config_cli.Config)
+
+	if !config.RepoId.IsEmpty() {
 		req.Cancel(
 			errors.BadRequestf(
-				"-direct <parent-path> is required with -experimental-repo",
+				"-repo_id cannot be used with -experimental-repo (workspace repos are always CWD-rooted)",
 			),
 		)
 		return
 	}
 
-	// Experimental workspace repos are always CWD-based — they store their
-	// data in .dodder/ under the current directory, never in the user's home
-	// XDG directory. Force this regardless of -repo_id flag or env var.
-	config := req.Utility.GetConfigAny().(*repo_config_cli.Config)
 	if err := config.RepoId.Set("."); err != nil {
 		req.Cancel(err)
 		return
 	}
 
-	// Resolve parent path to absolute early — needed for both zettel ID
-	// provider linking and workspace config storage.
-	absParentPath := cmd.DirectPath
-	if !filepath.IsAbs(absParentPath) {
-		var err error
-
-		if absParentPath, err = filepath.Abs(absParentPath); err != nil {
-			req.Cancel(err)
-			return
-		}
-	}
+	absParentPath, parentIsHomeRepo := cmd.resolveParentPath(req)
+	cmd.validateParentRepo(req, absParentPath, parentIsHomeRepo)
 
 	cmd.Genesis.BigBang.ExcludeDefaultType = true
-
-	// When no explicit -yin/-yang flags are provided, link the parent repo's
-	// zettel ID word lists so the workspace can create new zettels.
-	cmd.linkParentZettelIdProviders(absParentPath)
+	cmd.linkParentZettelIdProviders(absParentPath, parentIsHomeRepo)
 
 	local := cmd.OnTheFirstDay(req, req.PopArg("workspace repo id"))
 
-	remote := cmd.MakeDirectRemoteFromPath(req, local)
+	remote := cmd.makeParentRemote(req, local, absParentPath, parentIsHomeRepo)
 
 	queryArgs := req.PopArgs()
 
@@ -229,6 +235,11 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		return
 	}
 
+	var parentPathForConfig string
+	if !parentIsHomeRepo {
+		parentPathForConfig = absParentPath
+	}
+
 	blob := &workspace_config_blobs.V1{
 		V0: workspace_config_blobs.V0{
 			Query: cmd.DefaultQueryGroup.String(),
@@ -239,7 +250,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 				),
 			},
 		},
-		ParentPath: absParentPath,
+		ParentPath: parentPathForConfig,
 	}
 
 	if err := local.GetEnvWorkspace().CreateWorkspace(blob); err != nil {
@@ -253,23 +264,121 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 	}
 }
 
+func (cmd InitWorkspace) resolveParentPath(
+	req command.Request,
+) (absPath string, isHomeRepo bool) {
+	if cmd.ParentPath != "" {
+		absPath = cmd.ParentPath
+		if !filepath.IsAbs(absPath) {
+			var err error
+			if absPath, err = filepath.Abs(absPath); err != nil {
+				req.Cancel(err)
+			}
+		}
+		return absPath, false
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		req.Cancel(err)
+	}
+
+	dataHome := os.Getenv("XDG_DATA_HOME")
+	if dataHome == "" {
+		dataHome = filepath.Join(home, ".local", "share")
+	}
+
+	absPath = filepath.Join(dataHome, env_dir.XDGUtilityNameDodder)
+	return absPath, true
+}
+
+func (cmd InitWorkspace) validateParentRepo(
+	req command.Request,
+	absPath string,
+	isHomeRepo bool,
+) {
+	inventoryListLog := filepath.Join(absPath, "inventory_lists_log")
+	if !files.Exists(inventoryListLog) {
+		if isHomeRepo {
+			req.Cancel(
+				errors.BadRequestf(
+					"no dodder repo found at %s; run `dodder init` first",
+					absPath,
+				),
+			)
+		} else {
+			req.Cancel(
+				errors.BadRequestf(
+					"no dodder repo found at -parent path %s",
+					absPath,
+				),
+			)
+		}
+	}
+}
+
+func (cmd InitWorkspace) makeParentRemote(
+	req command.Request,
+	local *local_working_copy.Repo,
+	absParentPath string,
+	isHomeRepo bool,
+) repo.Repo {
+	if isHomeRepo {
+		config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+
+		home, err := os.UserHomeDir()
+		if err != nil {
+			req.Cancel(err)
+		}
+
+		envDir := env_dir.MakeWithHomeAndInitialize(
+			req,
+			env_dir.XDGUtilityNameDodder,
+			home,
+			config.Debug,
+		)
+
+		envUI := env_ui.Make(
+			req,
+			config,
+			config.Debug,
+			env_ui.Options{},
+		)
+
+		return local_working_copy.Make(
+			env_local.Make(envUI, envDir),
+			local_working_copy.OptionsEmpty,
+		)
+	}
+
+	var remote command_components_dodder.Remote
+	remote.DirectPath = absParentPath
+	return remote.MakeDirectRemoteFromPath(req, local)
+}
+
 // linkParentZettelIdProviders sets BigBang.Yin and BigBang.Yang to the parent
 // repo's word list files when neither flag was explicitly provided. This allows
 // workspace repos to create new zettels using the parent's ID space without
 // requiring the user to maintain separate word lists.
-func (cmd *InitWorkspace) linkParentZettelIdProviders(absParentPath string) {
+func (cmd *InitWorkspace) linkParentZettelIdProviders(
+	absParentPath string,
+	isHomeRepo bool,
+) {
 	if cmd.Genesis.BigBang.Yin != "" || cmd.Genesis.BigBang.Yang != "" {
 		return
 	}
 
-	// Construct the parent's object_ids directory path. CWD repos use XDG
-	// layout inside the dotdir: {parent}/.dodder/local/share/object_ids/
-	parentObjectIdDir := filepath.Join(
-		absParentPath,
-		"."+env_dir.XDGUtilityNameDodder,
-		"local", "share",
-		"object_ids",
-	)
+	var parentObjectIdDir string
+	if isHomeRepo {
+		parentObjectIdDir = filepath.Join(absParentPath, "object_ids")
+	} else {
+		parentObjectIdDir = filepath.Join(
+			absParentPath,
+			"."+env_dir.XDGUtilityNameDodder,
+			"local", "share",
+			"object_ids",
+		)
+	}
 
 	parentYin := filepath.Join(
 		parentObjectIdDir,
