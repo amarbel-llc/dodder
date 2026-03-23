@@ -23,6 +23,10 @@ root recipes set BATS_BIN_DIR, DODDER_VERSION, inject the binary via
 `--bin-dir`, and ensure fixtures exist. Running from `zz-tests_bats/` uses the
 system `dodder` binary instead of the freshly built one.
 
+**Capture test output to a file** so you don't need to re-run the suite just to
+read failures: `just test 2>&1 > /tmp/dodder-test.txt`. Then use `grep` to find
+failures and `sed`/`head`/`tail` to read details.
+
 **When a test fails**: run ONLY the failing test file with
 `just test-bats-targets <file>.bats`. Do NOT re-run the entire suite.
 
