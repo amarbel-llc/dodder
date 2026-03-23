@@ -65,25 +65,31 @@ func (d *TomlSFTPV0Document) Encode() ([]byte, error) {
 			return nil, err
 		}
 	}
-	if d.data.Port != 0 || d.cstDoc.HasInContainer(d.cstDoc.Root(), "port") {
+	if d.data.Port != 0 {
 		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "port", d.data.Port); err != nil {
 			return nil, err
 		}
+	} else {
+		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "port")
 	}
 	if d.data.User != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "user") {
 		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "user", d.data.User); err != nil {
 			return nil, err
 		}
 	}
-	if d.data.Password != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "password") {
+	if d.data.Password != "" {
 		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "password", d.data.Password); err != nil {
 			return nil, err
 		}
+	} else {
+		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "password")
 	}
-	if d.data.PrivateKeyPath != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "private-key-path") {
+	if d.data.PrivateKeyPath != "" {
 		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "private-key-path", d.data.PrivateKeyPath); err != nil {
 			return nil, err
 		}
+	} else {
+		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "private-key-path")
 	}
 	if d.data.RemotePath != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "remote-path") {
 		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "remote-path", d.data.RemotePath); err != nil {

@@ -63,10 +63,12 @@ func (d *ScriptConfigDocument) Encode() ([]byte, error) {
 			return nil, err
 		}
 	}
-	if d.data.Script != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "script") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "script", d.data.Script); err != nil {
+	if d.data.Script != "" {
+		if err := d.cstDoc.SetMultilineInContainer(d.cstDoc.Root(), "script", d.data.Script); err != nil {
 			return nil, err
 		}
+	} else {
+		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "script")
 	}
 	if len(d.data.Env) > 0 {
 		tableNode := d.cstDoc.EnsureTable("env")
