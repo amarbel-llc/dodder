@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -134,30 +135,90 @@ func (initArgs InitArgs) makeCwdXDGOverridePath(base string) string {
 	)
 }
 
+func CeilingEnvVarName(utilityName string) string {
+	return fmt.Sprintf(
+		"%s_CEILING_DIRECTORIES",
+		strings.ToUpper(utilityName),
+	)
+}
+
+func ParseCeilingDirectories(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+
+	var ceilings []string
+
+	for _, entry := range filepath.SplitList(raw) {
+		if !filepath.IsAbs(entry) {
+			continue
+		}
+
+		ceilings = append(ceilings, filepath.Clean(entry))
+	}
+
+	return ceilings
+}
+
+func IsAtOrAboveCeiling(dir string, ceilings []string) bool {
+	cleaned := filepath.Clean(dir)
+
+	for _, ceiling := range ceilings {
+		if cleaned == ceiling || isParentOf(cleaned, ceiling) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isParentOf(parent, child string) bool {
+	rel, err := filepath.Rel(parent, child)
+	if err != nil {
+		return false
+	}
+
+	return len(rel) > 0 && rel[0] != '.'
+}
+
+func (initArgs InitArgs) parseCeilingDirectories() []string {
+	return ParseCeilingDirectories(
+		os.Getenv(CeilingEnvVarName(initArgs.UtilityName)),
+	)
+}
+
 func (initArgs InitArgs) getCwdXDGOverridePath() (string, bool) {
 	dir := initArgs.Cwd
-	pathCwdXDGOverride := initArgs.makeCwdXDGOverridePath(dir)
-
-	var exists bool
+	ceilings := initArgs.parseCeilingDirectories()
 
 	var count int
 	for {
-		exists = files.Exists(pathCwdXDGOverride)
+		pathCwdXDGOverride := initArgs.makeCwdXDGOverridePath(dir)
 
-		if exists || dir == string(filepath.Separator) {
+		if files.Exists(pathCwdXDGOverride) {
+			return dir, true
+		}
+
+		if dir == string(filepath.Separator) {
 			break
 		}
 
 		count++
-		dir = filepath.Dir(dir)
-		pathCwdXDGOverride = initArgs.makeCwdXDGOverridePath(dir)
+
+		parent := filepath.Dir(dir)
+
+		if IsAtOrAboveCeiling(parent, ceilings) {
+			break
+		}
+
+		dir = parent
 
 		if count > 100 {
 			panic("too deep")
 		}
 	}
 
-	return dir, exists
+	return dir, false
 }
 
 func (xdg *XDG) InitializeOverriddenIfNecessary(

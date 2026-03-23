@@ -21,6 +21,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
+	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 )
 
 type Env interface {
@@ -173,8 +174,8 @@ func (env *env) findWorkspaceFile(
 	dir string,
 	name string,
 ) (found string) {
-	ceilings := parseCeilingDirectories(
-		os.Getenv(env_repo.EnvCeilingDirectories),
+	ceilings := xdg.ParseCeilingDirectories(
+		os.Getenv(xdg.CeilingEnvVarName(env.GetXDG().UtilityName)),
 	)
 
 	for {
@@ -196,7 +197,7 @@ func (env *env) findWorkspaceFile(
 
 		parent := filepath.Dir(dir)
 
-		if isAtOrAboveCeiling(parent, ceilings) {
+		if xdg.IsAtOrAboveCeiling(parent, ceilings) {
 			return found
 		}
 
@@ -210,46 +211,6 @@ func (env *env) findWorkspaceFile(
 	}
 }
 
-func parseCeilingDirectories(raw string) []string {
-	if raw == "" {
-		return nil
-	}
-
-	var ceilings []string
-
-	for _, entry := range filepath.SplitList(raw) {
-		if !filepath.IsAbs(entry) {
-			continue
-		}
-
-		ceilings = append(ceilings, filepath.Clean(entry))
-	}
-
-	return ceilings
-}
-
-func isAtOrAboveCeiling(dir string, ceilings []string) bool {
-	cleaned := filepath.Clean(dir)
-
-	for _, ceiling := range ceilings {
-		if cleaned == ceiling || isParentOf(cleaned, ceiling) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isParentOf(parent, child string) bool {
-	rel, err := filepath.Rel(parent, child)
-	if err != nil {
-		return false
-	}
-
-	// If the relative path doesn't start with "..", parent is an ancestor of
-	// child (or equal to it), meaning dir is at or above the ceiling.
-	return len(rel) > 0 && rel[0] != '.'
-}
 
 func (env *env) GetWorkspaceDir() string {
 	return env.dir

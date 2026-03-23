@@ -23,8 +23,6 @@ const (
 	// TODO move to mutable config
 	FileWorkspaceTemplate = ".%s-workspace"
 	FileWorkspace         = ".dodder-workspace"
-
-	EnvCeilingDirectories = "DODDER_CEILING_DIRECTORIES"
 )
 
 type Env struct {

@@ -32,7 +32,7 @@ function ceiling_blocks_workspace_discovery { # @test
 
 	run_dodder info-workspace
 	assert_failure
-	assert_output --partial 'not in a workspace'
+	assert_output --partial 'not in a dodder directory'
 }
 
 function ceiling_does_not_block_workspace_in_cwd { # @test
