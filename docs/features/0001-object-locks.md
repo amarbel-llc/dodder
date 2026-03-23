@@ -334,8 +334,7 @@ creates GC pressure. Options to explore:
 
 ## Open Issues
 
-- [#44](https://github.com/amarbel-llc/dodder/issues/44) --- JSON inventory list
-  format needs object lock support (blocks promotion to `accepted`)
+No open issues blocking this FDR.
 
 GC reachability for typed blob references
 ([#39](https://github.com/amarbel-llc/dodder/issues/39)) is a madder/dodder
@@ -355,6 +354,9 @@ bridge concern, not scoped to this FDR.
 - [#41](https://github.com/amarbel-llc/dodder/issues/41) --- hyphence parser
   silently drops blob when blank line separator missing (fixed: strict parsing
   by default, `AllowMissingSeparator` opt-out)
+- [#44](https://github.com/amarbel-llc/dodder/issues/44) --- JSON inventory list
+  format needs object lock support (fixed: tag locks, reference aliases, blob
+  references with type locks and aliases all round-trip through JSON)
 
 ## More Information
 
