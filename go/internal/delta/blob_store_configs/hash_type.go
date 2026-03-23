@@ -45,6 +45,14 @@ func (hashType *HashType) Set(value string) error {
 	return nil
 }
 
+func (hashType HashType) MarshalText() ([]byte, error) {
+	return []byte(hashType.String()), nil
+}
+
+func (hashType *HashType) UnmarshalText(text []byte) error {
+	return hashType.Set(string(text))
+}
+
 func (hashType HashType) GetCLICompletion() map[string]string {
 	return map[string]string{
 		HashTypeBlake2b256.String(): "BLAKE2b-256 (default)",
