@@ -17,7 +17,7 @@ teardown() {
 	chflags_nouchg
 }
 
-# bats file_tags=user_story:serve_web
+# bats file_tags=user_story:serve_web,tcp_bind
 
 function serve_web_types { # @test
 	start_web_server .
