@@ -1,7 +1,10 @@
 package command_components_dodder
 
 import (
+	"bufio"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
@@ -11,6 +14,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type Genesis struct {
@@ -51,7 +56,7 @@ func (cmd *Genesis) SetFlagDefinitions(
 	cmd.BigBang.TypedBlobStoreConfig.Blob.SetFlagDefinitions(flagSet)
 
 	flagSet.Var(
-		&cmd.BigBang.PrivateKey,
+		getFlagValuePrivateKey(&cmd.BigBang.PrivateKey),
 		"private_key",
 		"pre-existing private key markl.Id (use info-ssh_agent to list keys)",
 	)
@@ -111,4 +116,55 @@ func (cmd Genesis) OnTheFirstDay(
 	envRepo.Genesis(cmd.BigBang)
 
 	return local_working_copy.Genesis(cmd.BigBang, envRepo)
+}
+
+func getFlagValuePrivateKey(
+	privateKey *markl.Id,
+) interfaces.FlagValue {
+	return command.FlagValueCompleter{
+		FlagValue: privateKey,
+		FuncCompleter: func(
+			_ command.Request,
+			envLocal env_local.Env,
+			_ command.CommandLineInput,
+		) {
+			bufferedWriter, repool := pool.GetBufferedWriter(
+				envLocal.GetUIFile(),
+			)
+			defer repool()
+
+			defer errors.ContextMustFlush(envLocal, bufferedWriter)
+
+			if keys, err := markl.DiscoverSSHAgentEd25519KeysVerbose(); err == nil {
+				writeDiscoveredKeys(bufferedWriter, keys)
+			}
+
+			if keys, err := markl.DiscoverSSHAgentECDHKeysVerbose(); err == nil {
+				writeDiscoveredKeys(bufferedWriter, keys)
+			}
+		},
+	}
+}
+
+func writeDiscoveredKeys(
+	bufferedWriter *bufio.Writer,
+	keys []markl.DiscoveredKey,
+) {
+	for _, dk := range keys {
+		text, err := dk.Id.MarshalText()
+		if err != nil {
+			continue
+		}
+
+		bufferedWriter.Write(text)
+		bufferedWriter.WriteByte('\t')
+		bufferedWriter.WriteString(dk.KeyType)
+
+		if dk.Comment != "" {
+			bufferedWriter.WriteString(": ")
+			bufferedWriter.WriteString(dk.Comment)
+		}
+
+		bufferedWriter.WriteByte('\n')
+	}
 }
