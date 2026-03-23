@@ -27,7 +27,10 @@ function ceiling_blocks_workspace_discovery { # @test
 	run_dodder info-workspace
 	assert_success
 
-	# With ceiling set to the test tmpdir, workspace discovery stops
+	# With ceiling set to the test tmpdir, both the XDG override walk and the
+	# workspace walk are blocked. set_xdg provides sandbox-safe fallback paths
+	# so dodder can initialize without the override.
+	set_xdg "$BATS_TEST_TMPDIR"
 	export DODDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR"
 
 	run_dodder info-workspace
