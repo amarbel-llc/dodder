@@ -233,6 +233,39 @@ function init_inventory_archive_with_encryption { # @test
 	assert_output --regexp '.+'
 }
 
+function init_with_existing_madder_store { # @test
+	set_xdg "$BATS_TEST_TMPDIR"
+
+	# Create a user-scoped madder blob store before dodder init
+	run_dodder blob_store-init shared
+	assert_success
+
+	# Init dodder with the pre-existing blob store
+	run_dodder init \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-lock-internal-files=false \
+		-encryption none \
+		-blob_store-id shared \
+		test-repo-id
+
+	assert_success
+	assert_output --regexp - <<-'EOM'
+		\[!md @blake2b256-[[:alnum:]]+ !toml-type-v1]
+		\[konfig @blake2b256-[[:alnum:]]+ !toml-config-v2]
+	EOM
+
+	run_dodder init-workspace
+
+	# Verify dodder last shows the inventory list with the init objects
+	run_dodder last -format inventory_list-sans-tai
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[!md @blake2b256-[[:alnum:]]+ .* !toml-type-v1]
+		\[konfig @blake2b256-[[:alnum:]]+ .* !toml-config-v2]
+	EOM
+}
+
 function init_with_json_inventory_list_type { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
