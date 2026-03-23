@@ -354,6 +354,10 @@ func (index *Index) ReadPrimitiveQuery(
 		}
 	}
 
+	// funcIter may mutate shared state (e.g., Store.Commit), so it must be
+	// serialized. Page reads remain parallel — only the callback is gated.
+	var funcIterMu sync.Mutex
+
 	// TODO switch to errors.MakeWaitGroupParallel()
 	for n := range index.pages {
 		waitGroup.Add(1)
@@ -399,7 +403,11 @@ func (index *Index) ReadPrimitiveQuery(
 						return
 					}
 
-					if err1 = funcIter(object); err1 != nil {
+					funcIterMu.Lock()
+					err1 = funcIter(object)
+					funcIterMu.Unlock()
+
+					if err1 != nil {
 						groupBuilder.Add(err1)
 					}
 				}

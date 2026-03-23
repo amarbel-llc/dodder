@@ -1,6 +1,8 @@
 package stream_index
 
 import (
+	"sync"
+
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
@@ -14,6 +16,7 @@ import (
 type probeIndex struct {
 	defaultObjectDigestMarklFormatId string
 	index                            *object_probe_index.Index
+	additionProbesMu                 sync.RWMutex
 	additionProbes                   collections_map.Map[string, *sku.Transacted]
 }
 

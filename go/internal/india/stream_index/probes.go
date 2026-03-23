@@ -14,7 +14,9 @@ func (index *Index) ReadOneMarklIdAdded(
 	marklId domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (ok bool) {
+	index.additionProbesMu.RLock()
 	additionObject, ok := index.additionProbes.Get(string(marklId.GetBytes()))
+	index.additionProbesMu.RUnlock()
 
 	if ok {
 		sku.TransactedResetter.ResetWith(object, additionObject)

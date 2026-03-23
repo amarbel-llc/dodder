@@ -42,12 +42,15 @@ func (pa *pageAdditions) add(object *sku.Transacted) {
 		pa.defaultObjectDigestMarklFormatId,
 	)
 
+	pa.index.probeIndex.additionProbesMu.Lock()
 	additionProbes := pa.index.probeIndex.additionProbes
 
 	for probeId := range seqProbeIds {
 		idBytes := probeId.Id.GetBytes()
 		additionProbes.Set(string(idBytes), objectClone)
 	}
+
+	pa.index.probeIndex.additionProbesMu.Unlock()
 }
 
 func (pa *pageAdditions) hasChanges() bool {

@@ -148,6 +148,10 @@ build-go-cover:
   mkdir -p build/cover-bin
   go build -tags debug -cover -covermode=atomic -o build/cover-bin/ ./cmd/*
 
+build-go-race:
+  mkdir -p build/race
+  go build -tags debug -race -o build/race/ ./cmd/*
+
 build: build-go check-go-repool check-go-seqerror #build-nix
 
 #    ____ _               _
@@ -226,6 +230,16 @@ test-bats-cover: build-go-cover
   rm -rf "$cover_data"
   echo "==> Coverage written to {{dir_build}}/cover-data/bats-coverage.out"
   echo "    View with: go tool cover -func={{dir_build}}/cover-data/bats-coverage.out"
+
+# Build race-instrumented binaries and run bats to detect data races.
+test-bats-race: build-go-race
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
+  export PATH="{{dir_build}}/debug:$PATH"
+  just ../zz-tests_bats/test-generate_fixtures
+  BATS_BIN_DIR="{{dir_build}}/race" \
+    just ../zz-tests_bats/test
 
 test-bats-next *args:
   DODDER_BIN=der-next just ../zz-tests_bats/test-generate_fixtures
