@@ -106,6 +106,17 @@ func (keys EncryptionKeys) GetIOWrapper() (
 		return nil, nil
 	}
 
+	// Single key: return its IOWrapper directly, regardless of type.
+	if len(nonNullKeys) == 1 {
+		ioWrapper, err = nonNullKeys[0].GetIOWrapper()
+		if err != nil {
+			err = errors.Wrap(err)
+		}
+
+		return ioWrapper, err
+	}
+
+	// Multiple keys: aggregate into age MultiIdentity (age-only).
 	identities := make([]age.Identity, 0, len(nonNullKeys))
 
 	for _, key := range nonNullKeys {
@@ -119,7 +130,10 @@ func (keys EncryptionKeys) GetIOWrapper() (
 		ageIdentity, ok := keyWrapper.(*age.Identity)
 
 		if !ok {
-			err = errors.Errorf("expected *age.Identity, got %T", keyWrapper)
+			err = errors.Errorf(
+				"multiple encryption keys only supported for age identities, got %T",
+				keyWrapper,
+			)
 			return ioWrapper, err
 		}
 
