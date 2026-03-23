@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
+//go:generate tommy generate
 type ScriptConfig struct {
 	Description string            `toml:"description"`
 	Shell       []string          `toml:"shell,omitempty"`

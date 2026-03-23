@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
+//go:generate tommy generate
 type TomlSFTPV0 struct {
 	// TODO replace the below with a url scheme
 	Host           string `toml:"host"`

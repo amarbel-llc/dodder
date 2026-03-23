@@ -19,6 +19,7 @@ type V2 struct {
 	PrintUnchanged          *bool `toml:"print-unchanged"`
 }
 
+//go:generate tommy generate
 type abbreviationsV2 struct {
 	ZettelIds *bool `toml:"zettel_ids"`
 	MarklIds  *bool `toml:"merkle_ids"`

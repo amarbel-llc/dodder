@@ -12,6 +12,7 @@ type V0 struct {
 	PrintInventoryLists *bool `toml:"print-bestandsaufnahme"`
 }
 
+//go:generate tommy generate
 type abbreviationsV0 struct {
 	ZettelIds *bool `toml:"hinweisen"`
 	Shas      *bool `toml:"shas"`
