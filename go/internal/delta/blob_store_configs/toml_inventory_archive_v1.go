@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 )
 
+//go:generate tommy generate
 type SignatureConfig struct {
 	Type         string `toml:"type"`
 	SignatureLen int    `toml:"signature-len"`
@@ -17,6 +18,7 @@ type SignatureConfig struct {
 	MaxChunkSize int    `toml:"max-chunk-size"`
 }
 
+//go:generate tommy generate
 type SelectorConfig struct {
 	Type        string `toml:"type"`
 	Bands       int    `toml:"bands"`
@@ -26,6 +28,7 @@ type SelectorConfig struct {
 }
 
 // DeltaConfig holds configuration for delta compression in inventory archives.
+//go:generate tommy generate
 type DeltaConfig struct {
 	Enabled     bool            `toml:"enabled"`
 	Algorithm   string          `toml:"algorithm"`

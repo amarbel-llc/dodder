@@ -4,6 +4,7 @@
   purse-first ? null,
   bob ? null,
   just-us,
+  tommy,
   gomod2nix,
   system,
 }:
@@ -56,6 +57,7 @@ in
   devShells.default = pkgs-master.mkShell {
     packages = [
       just-us.packages.${system}.just
+      tommy.packages.${system}.default
     ]
     ++ (with pkgs-master; [
       fish
