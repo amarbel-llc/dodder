@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
+//go:generate tommy generate
 type TomlPointerV0 struct {
 	Id         blob_store_id.Id `toml:"id"`
 	BasePath   string           `toml:"base-path"`

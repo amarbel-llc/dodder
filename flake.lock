@@ -460,7 +460,7 @@
       "inputs": {
         "flake-utils": "flake-utils_2",
         "nixpkgs": [
-          "nixpkgs"
+          "nixpkgs-master"
         ]
       },
       "locked": {
@@ -739,6 +739,22 @@
         "owner": "NixOS",
         "repo": "nixpkgs",
         "rev": "3e20095fe3c6cbb1ddcef89b26969a69a1570776",
+        "type": "github"
+      }
+    },
+    "nixpkgs_7": {
+      "locked": {
+        "lastModified": 1774244481,
+        "narHash": "sha256-4XfMXU0DjN83o6HWZoKG9PegCvKvIhNUnRUI19vzTcQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4590696c8693fea477850fe379a01544293ca4e2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4590696c8693fea477850fe379a01544293ca4e2",
         "type": "github"
       }
     },
@@ -1147,9 +1163,7 @@
       "inputs": {
         "bob": "bob_2",
         "gomod2nix": "gomod2nix_6",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
+        "nixpkgs": "nixpkgs_7",
         "nixpkgs-master": "nixpkgs-master_3",
         "utils": [
           "utils"

@@ -6,7 +6,7 @@
 
     gomod2nix = {
       url = "github:nix-community/gomod2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-master";
     };
 
     purse-first = {
@@ -35,7 +35,6 @@
 
     tommy = {
       url = "github:amarbel-llc/tommy";
-      inputs.nixpkgs.follows = "nixpkgs";
       inputs.utils.follows = "utils";
     };
   };
@@ -60,7 +59,6 @@
             nixpkgs
             nixpkgs-master
             gomod2nix
-            purse-first
             bob
             just-us
             tommy

@@ -60,6 +60,14 @@ func (compressionType CompressionType) String() string {
 	return string(compressionType)
 }
 
+func (compressionType CompressionType) MarshalText() ([]byte, error) {
+	return []byte(compressionType), nil
+}
+
+func (compressionType *CompressionType) UnmarshalText(text []byte) error {
+	return compressionType.Set(string(text))
+}
+
 func (compressionType *CompressionType) Set(value string) (err error) {
 	valueClean := CompressionType(strings.TrimSpace(strings.ToLower(value)))
 

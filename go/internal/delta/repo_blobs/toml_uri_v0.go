@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 )
 
+//go:generate tommy generate
 type TomlUriV0 struct {
 	PublicKey markl.Id   `toml:"public-key"`
 	Uri       values.Uri `toml:"uri"`

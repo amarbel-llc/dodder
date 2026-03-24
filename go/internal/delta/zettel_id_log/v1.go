@@ -7,6 +7,7 @@ import (
 
 var _ Entry = V1{}
 
+//go:generate tommy generate
 type V1 struct {
 	Side      Side     `toml:"side"`
 	Tai       ids.Tai  `toml:"tai"`

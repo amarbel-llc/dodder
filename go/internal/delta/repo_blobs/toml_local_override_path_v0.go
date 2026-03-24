@@ -5,6 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 )
 
+//go:generate tommy generate
 type TomlLocalOverridePathV0 struct {
 	PublicKey    markl.Id `toml:"public-key"`
 	OverridePath string   `toml:"override-path"`

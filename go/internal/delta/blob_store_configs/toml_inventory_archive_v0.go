@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 )
 
+//go:generate tommy generate
 type TomlInventoryArchiveV0 struct {
 	HashTypeId       HashType                         `toml:"hash_type-id"`
 	CompressionType  compression_type.CompressionType `toml:"compression-type"`

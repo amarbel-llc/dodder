@@ -1,7 +1,6 @@
 {
   nixpkgs,
   nixpkgs-master,
-  purse-first ? null,
   bob ? null,
   just-us,
   tommy,
@@ -56,24 +55,34 @@ in
 
   devShells.default = pkgs-master.mkShell {
     packages = [
+      gomod2nix.packages.${system}.default
       just-us.packages.${system}.just
       tommy.packages.${system}.default
     ]
     ++ (with pkgs-master; [
+      bats
+      bash-language-server
+      delve
       fish
       gnumake
+      go_1_26
+      gofumpt
+      golangci-lint
+      golines
+      gopls
+      gotools
+      govulncheck
       gum
       httpie
       pandoc
+      shellcheck
+      shfmt
     ])
     ++ pkgs-master.lib.optionals (bob != null) [
       bob.packages.${system}.batman
       bob.packages.${system}.tap-dancer
     ];
 
-    inputsFrom = pkgs-master.lib.optionals (purse-first != null) [
-      purse-first.devShells.${system}.go
-      purse-first.devShells.${system}.shell
-    ];
+    GOTOOLCHAIN = "local";
   };
 }

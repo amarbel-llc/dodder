@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 )
 
+//go:generate tommy generate
 type TomlXDGV0 struct {
 	PublicKey markl.Id `toml:"public-key"`
 	Data      string   `toml:"data"`
