@@ -47,7 +47,7 @@ func (idx *tagIndex) build() error {
 
 	idx.words = make(map[string][]tagSummary)
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -93,7 +93,7 @@ func (idx *tagIndex) build() error {
 
 		addWords(obj.ObjectId)
 
-		for _, word := range strings.Fields(obj.Description) {
+		for word := range strings.FieldsSeq(obj.Description) {
 			addWords(strings.ToLower(word))
 		}
 

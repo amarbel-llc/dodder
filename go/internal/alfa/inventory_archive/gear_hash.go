@@ -25,7 +25,7 @@ func GearCDCChunks(
 
 	chunkStart := 0
 
-	for i := 0; i < len(data); i++ {
+	for i := range data {
 		fp = (fp << 1) + gearTable[data[i]]
 
 		chunkLen := i - chunkStart + 1

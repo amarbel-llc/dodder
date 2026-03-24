@@ -13,7 +13,7 @@ type ItemPool struct {
 func MakeItemPool() ItemPool {
 	return ItemPool{
 		inner: &sync.Pool{
-			New: func() interface{} {
+			New: func() any {
 				return &Item{
 					Match: &catgut.String{},
 					Mods:  make(map[string]Mod),

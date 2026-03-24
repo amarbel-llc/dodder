@@ -140,13 +140,13 @@ provenance.
 `
 
 var readOnlyAnnotations = &protocol.ToolAnnotations{
-	ReadOnlyHint:   protocol.BoolPtr(true),
-	IdempotentHint: protocol.BoolPtr(true),
+	ReadOnlyHint:   new(true),
+	IdempotentHint: new(true),
 }
 
 var writeAnnotations = &protocol.ToolAnnotations{
-	ReadOnlyHint:    protocol.BoolPtr(false),
-	DestructiveHint: protocol.BoolPtr(false),
+	ReadOnlyHint:    new(false),
+	DestructiveHint: new(false),
 }
 
 func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
@@ -613,20 +613,18 @@ func formatErrorDetail(err error) string {
 		if group, ok := current.(unwrapMany); ok {
 			children := group.Unwrap()
 			const maxErrors = 3
-			n := len(children)
-			if n > maxErrors {
-				n = maxErrors
-			}
+			n := min(len(children), maxErrors)
 
-			msg := fmt.Sprintf("%s (type: %T)", err.Error(), err)
+			var msg strings.Builder
+			msg.WriteString(fmt.Sprintf("%s (type: %T)", err.Error(), err))
 			for i := 0; i < n; i++ {
-				msg += "\n  - " + describeError(children[i])
+				msg.WriteString("\n  - " + describeError(children[i]))
 			}
 			if len(children) > maxErrors {
-				msg += fmt.Sprintf("\n  ... and %d more", len(children)-maxErrors)
+				msg.WriteString(fmt.Sprintf("\n  ... and %d more", len(children)-maxErrors))
 			}
 
-			return msg
+			return msg.String()
 		}
 
 		type unwrapOne interface {
@@ -646,16 +644,17 @@ func formatErrorDetail(err error) string {
 func describeError(err error) string {
 	var tree *stack_frame.ErrorTree
 	if ok := errors.As(err, &tree); ok {
-		msg := err.Error()
+		var msg strings.Builder
+		msg.WriteString(err.Error())
 		frames := tree.GetErrorsAndFrames()
 		for i, ef := range frames {
 			if i >= 5 {
-				msg += fmt.Sprintf("\n    ... and %d more frames", len(frames)-5)
+				msg.WriteString(fmt.Sprintf("\n    ... and %d more frames", len(frames)-5))
 				break
 			}
-			msg += fmt.Sprintf("\n    %s: %s", ef.Frame, ef.Err)
+			msg.WriteString(fmt.Sprintf("\n    %s: %s", ef.Frame, ef.Err))
 		}
-		return msg
+		return msg.String()
 	}
 
 	return fmt.Sprintf("[%T] %s", err, err.Error())

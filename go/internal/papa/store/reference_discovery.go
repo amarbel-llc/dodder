@@ -24,7 +24,7 @@ type discoveredReference struct {
 func parseReferenceOutput(output string) ([]discoveredReference, error) {
 	var refs []discoveredReference
 
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		line = strings.TrimSpace(line)
 
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -34,15 +34,15 @@ func parseReferenceOutput(output string) ([]discoveredReference, error) {
 		var ref discoveredReference
 		var value string
 
-		if idx := strings.Index(line, " = "); idx != -1 {
-			ref.Alias = strings.TrimSpace(line[:idx])
-			value = strings.TrimSpace(line[idx+3:])
+		if before, after, ok := strings.Cut(line, " = "); ok {
+			ref.Alias = strings.TrimSpace(before)
+			value = strings.TrimSpace(after)
 		} else {
 			value = line
 		}
 
-		if strings.HasPrefix(value, "@") {
-			blobValue := strings.TrimPrefix(value, "@")
+		if after, ok := strings.CutPrefix(value, "@"); ok {
+			blobValue := after
 
 			// Split off optional !type suffix
 			if spaceIdx := strings.Index(blobValue, " "); spaceIdx != -1 {

@@ -51,7 +51,7 @@ func TestModulePoolReuse(t *testing.T) {
 	}
 
 	// Borrow, use, return, borrow again -- verify pool reuse works.
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		func() {
 			mod, repool := pool.GetWithRepool()
 			defer repool()

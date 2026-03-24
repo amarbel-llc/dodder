@@ -24,7 +24,7 @@ func expandEdges(
 		seen[object.GetObjectId().String()] = struct{}{}
 	}
 
-	for depth := 0; depth < maxEdgeExpansionDepth; depth++ {
+	for range maxEdgeExpansionDepth {
 		var pendingIds []ids.ObjectId
 
 		for object := range list.All() {

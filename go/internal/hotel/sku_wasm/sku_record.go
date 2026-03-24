@@ -81,7 +81,7 @@ func adjustSkuPointers(buf []byte, recordOffset, basePtr uint32) {
 		listPtrLocal := listPtrAbsolute - basePtr
 		count := binary.LittleEndian.Uint32(buf[countOff:])
 
-		for i := uint32(0); i < count; i++ {
+		for i := range count {
 			elemOff := listPtrLocal + i*8
 			v := binary.LittleEndian.Uint32(buf[elemOff:])
 			binary.LittleEndian.PutUint32(buf[elemOff:], v+basePtr)

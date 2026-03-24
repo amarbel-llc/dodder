@@ -47,7 +47,7 @@ func (idx *typeIndex) build() error {
 
 	idx.words = make(map[string][]typeSummary)
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -88,7 +88,7 @@ func (idx *typeIndex) build() error {
 
 		addWords(strings.TrimPrefix(obj.ObjectId, "!"))
 
-		for _, word := range strings.Fields(obj.Description) {
+		for word := range strings.FieldsSeq(obj.Description) {
 			addWords(strings.ToLower(word))
 		}
 

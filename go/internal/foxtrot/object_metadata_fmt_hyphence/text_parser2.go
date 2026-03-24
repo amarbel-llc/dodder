@@ -127,7 +127,7 @@ func isBlobReference(value string) bool {
 		return true
 	}
 
-	if idx := strings.Index(value, " < @"); idx != -1 {
+	if found := strings.Contains(value, " < @"); found {
 		return true
 	}
 
@@ -145,8 +145,8 @@ func (parser *textParser2) readBlobReference(
 	var alias string
 	var blobRefPortion string
 
-	if idx := strings.Index(refString, " < "); idx != -1 {
-		alias = strings.TrimSpace(refString[:idx])
+	if before, after, ok := strings.Cut(refString, " < "); ok {
+		alias = strings.TrimSpace(before)
 
 		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
 			if unquoted, err := strconv.Unquote(alias); err == nil {
@@ -154,7 +154,7 @@ func (parser *textParser2) readBlobReference(
 			}
 		}
 
-		blobRefPortion = strings.TrimSpace(refString[idx+3:])
+		blobRefPortion = strings.TrimSpace(after)
 	} else {
 		blobRefPortion = refString
 	}
@@ -264,9 +264,9 @@ func (parser *textParser2) readReference(
 	var alias string
 	objectRefString := refString
 
-	if idx := strings.Index(refString, " = "); idx != -1 {
-		alias = strings.TrimSpace(refString[:idx])
-		objectRefString = strings.TrimSpace(refString[idx+3:])
+	if before, after, ok := strings.Cut(refString, " = "); ok {
+		alias = strings.TrimSpace(before)
+		objectRefString = strings.TrimSpace(after)
 
 		if len(alias) >= 2 && alias[0] == '"' && alias[len(alias)-1] == '"' {
 			if unquoted, err := strconv.Unquote(alias); err == nil {
@@ -278,8 +278,8 @@ func (parser *textParser2) readReference(
 	var refId ids.SeqId
 
 	objectIdStr := objectRefString
-	if atIdx := strings.Index(objectRefString, "@"); atIdx != -1 {
-		objectIdStr = objectRefString[:atIdx]
+	if before, _, ok := strings.Cut(objectRefString, "@"); ok {
+		objectIdStr = before
 	}
 
 	if err = refId.Set(objectIdStr); err != nil {

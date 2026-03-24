@@ -455,10 +455,7 @@ func (store inventoryArchiveV1) packChunkArchiveV1(
 
 	results := make([]deltaResult, len(orderedAssignments))
 
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(orderedAssignments) {
-		numWorkers = len(orderedAssignments)
-	}
+	numWorkers := min(runtime.NumCPU(), len(orderedAssignments))
 
 	if len(orderedAssignments) > 0 {
 		sem := make(chan struct{}, numWorkers)

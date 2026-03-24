@@ -15,7 +15,7 @@ func MinHashSignature(features []uint32, k int) []uint32 {
 	coeffA, coeffB := minhashCoefficients(k)
 
 	for _, f := range features {
-		for i := 0; i < k; i++ {
+		for i := range k {
 			h := minhashUniversalHash(f, coeffA[i], coeffB[i])
 
 			if h < sig[i] {
@@ -64,7 +64,7 @@ func minhashCoefficients(k int) ([]uint64, []uint64) {
 
 	state := uint64(0x5F3759DF)
 
-	for i := 0; i < k; i++ {
+	for i := range k {
 		state = state*6364136223846793005 + 1442695040888963407
 		coeffA[i] = (state % (minhashPrime - 1)) + 1
 

@@ -1,6 +1,6 @@
 module code.linenisgreat.com/dodder/go
 
-go 1.25.8
+go 1.26
 
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260307130930-9ae16a0979e6
@@ -8,6 +8,7 @@ require (
 	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4
+	github.com/amarbel-llc/tommy v0.0.0-20260323110248-9270210b8342
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -32,7 +33,6 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
-	github.com/amarbel-llc/tommy v0.0.0-20260323110248-9270210b8342 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect

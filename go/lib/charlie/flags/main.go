@@ -197,11 +197,11 @@ func newTextValue(
 	p encoding.TextUnmarshaler,
 ) textValue {
 	ptrVal := reflect.ValueOf(p)
-	if ptrVal.Kind() != reflect.Ptr {
+	if ptrVal.Kind() != reflect.Pointer {
 		panic("variable value type must be a pointer")
 	}
 	defVal := reflect.ValueOf(val)
-	if defVal.Kind() == reflect.Ptr {
+	if defVal.Kind() == reflect.Pointer {
 		defVal = defVal.Elem()
 	}
 	if defVal.Type() != ptrVal.Type().Elem() {

@@ -90,10 +90,7 @@ func collectBlobMetasParallel(
 	// Phase 1b: Parallel size lookups.
 	metas = make([]packedBlobMeta, len(candidates))
 
-	numWorkers := runtime.NumCPU()
-	if numWorkers > len(candidates) {
-		numWorkers = len(candidates)
-	}
+	numWorkers := min(runtime.NumCPU(), len(candidates))
 
 	sem := make(chan struct{}, numWorkers)
 

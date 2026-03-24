@@ -9,11 +9,11 @@ type Item struct {
 	Arg          string         `json:"arg,omitempty"`
 	Subtitle     string         `json:"subtitle,omitempty"`
 	Match        *catgut.String `json:"match,omitempty"`
-	Icon         ItemIcon       `json:"icon,omitempty"`
+	Icon         ItemIcon       `json:"icon"`
 	Uid          string         `json:"uid,omitempty"`
 	ItemType     string         `json:"type,omitempty"`
 	QuicklookUrl string         `json:"quicklookurl,omitempty"`
-	Text         ItemText       `json:"text,omitempty"`
+	Text         ItemText       `json:"text"`
 	Mods         map[string]Mod `json:"mods,omitempty"`
 	// Valid        bool     `json:"valid,omitempty"`
 }

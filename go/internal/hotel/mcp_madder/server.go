@@ -16,18 +16,18 @@ const defaultMaxBytes = 100_000
 
 var (
 	readOnlyAnnotations = &protocol.ToolAnnotations{
-		ReadOnlyHint:   protocol.BoolPtr(true),
-		IdempotentHint: protocol.BoolPtr(true),
+		ReadOnlyHint:   new(true),
+		IdempotentHint: new(true),
 	}
 
 	writeAnnotations = &protocol.ToolAnnotations{
-		ReadOnlyHint:    protocol.BoolPtr(false),
-		DestructiveHint: protocol.BoolPtr(false),
+		ReadOnlyHint:    new(false),
+		DestructiveHint: new(false),
 	}
 
 	destructiveAnnotations = &protocol.ToolAnnotations{
-		ReadOnlyHint:    protocol.BoolPtr(false),
-		DestructiveHint: protocol.BoolPtr(true),
+		ReadOnlyHint:    new(false),
+		DestructiveHint: new(true),
 	}
 )
 

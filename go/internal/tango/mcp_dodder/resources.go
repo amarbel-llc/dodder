@@ -83,9 +83,9 @@ func (p *typeResourceProvider) ReadResource(
 	case strings.HasPrefix(uri, "dodder://objects/"):
 		rest := strings.TrimPrefix(uri, "dodder://objects/")
 
-		if idx := strings.Index(rest, "/blob/formats/"); idx >= 0 {
-			objectId := rest[:idx]
-			formatId := rest[idx+len("/blob/formats/"):]
+		if before, after, ok := strings.Cut(rest, "/blob/formats/"); ok {
+			objectId := before
+			formatId := after
 			return p.readObjectBlob(ctx, objectId, formatId)
 		}
 
@@ -106,29 +106,29 @@ func (p *typeResourceProvider) ReadResource(
 	case strings.HasPrefix(uri, "dodder://types/"):
 		rest := strings.TrimPrefix(uri, "dodder://types/")
 
-		if strings.HasSuffix(rest, "/objects/facets") {
-			id := strings.TrimSuffix(rest, "/objects/facets")
+		if before, ok := strings.CutSuffix(rest, "/objects/facets"); ok {
+			id := before
 			return p.readTypeObjectFacets(ctx, id)
 		}
 
-		if strings.HasSuffix(rest, "/objects") {
-			id := strings.TrimSuffix(rest, "/objects")
+		if before, ok := strings.CutSuffix(rest, "/objects"); ok {
+			id := before
 			return p.readTypeObjects(ctx, id)
 		}
 
-		if strings.HasSuffix(rest, "/markl") {
-			id := strings.TrimSuffix(rest, "/markl")
+		if before, ok := strings.CutSuffix(rest, "/markl"); ok {
+			id := before
 			return p.readTypeMarkl(ctx, id)
 		}
 
-		if idx := strings.Index(rest, "/blob/formats/"); idx >= 0 {
-			id := rest[:idx]
-			format := rest[idx+len("/blob/formats/"):]
+		if before, after, ok := strings.Cut(rest, "/blob/formats/"); ok {
+			id := before
+			format := after
 			return p.readTypeBlobFormatted(ctx, id, format)
 		}
 
-		if strings.HasSuffix(rest, "/blob") {
-			id := strings.TrimSuffix(rest, "/blob")
+		if before, ok := strings.CutSuffix(rest, "/blob"); ok {
+			id := before
 			return p.readTypeBlob(ctx, id)
 		}
 
@@ -137,18 +137,18 @@ func (p *typeResourceProvider) ReadResource(
 	case strings.HasPrefix(uri, "dodder://tags/"):
 		rest := strings.TrimPrefix(uri, "dodder://tags/")
 
-		if strings.HasSuffix(rest, "/objects/facets") {
-			id := strings.TrimSuffix(rest, "/objects/facets")
+		if before, ok := strings.CutSuffix(rest, "/objects/facets"); ok {
+			id := before
 			return p.readTagObjectFacets(ctx, id)
 		}
 
-		if strings.HasSuffix(rest, "/objects") {
-			id := strings.TrimSuffix(rest, "/objects")
+		if before, ok := strings.CutSuffix(rest, "/objects"); ok {
+			id := before
 			return p.readTagObjects(ctx, id)
 		}
 
-		if strings.HasSuffix(rest, "/markl") {
-			id := strings.TrimSuffix(rest, "/markl")
+		if before, ok := strings.CutSuffix(rest, "/markl"); ok {
+			id := before
 			return p.readTagMarkl(ctx, id)
 		}
 
@@ -220,7 +220,7 @@ func (p *typeResourceProvider) readTypeBlob(
 		return nil, fmt.Errorf("show type blob %s: %w", id, err)
 	}
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -291,7 +291,7 @@ func (p *typeResourceProvider) readTypeObjectFacets(
 	tagCounts := make(map[string]int)
 	prefixGroups := make(map[string]map[string]int)
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -426,7 +426,7 @@ func (p *typeResourceProvider) readMarkl(
 		return nil, fmt.Errorf("show markl %s: %w", queryId, err)
 	}
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -502,7 +502,7 @@ func (p *typeResourceProvider) readObject(
 		return nil, fmt.Errorf("show object %s: %w", objectId, err)
 	}
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -782,7 +782,7 @@ func (p *typeResourceProvider) readTagObjectFacets(
 	tagCounts := make(map[string]int)
 	prefixGroups := make(map[string]map[string]int)
 
-	for _, line := range strings.Split(result.Stdout, "\n") {
+	for line := range strings.SplitSeq(result.Stdout, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue

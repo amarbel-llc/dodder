@@ -15,7 +15,7 @@ type TomlV0 struct {
 	FormatterUTIGroups map[string]UTIGroup                       `toml:"formatter-uti-groups"`
 	Formatters         map[string]script_config.WithOutputFormat `toml:"formatters,omitempty"`
 	Actions            map[string]script_config.ScriptConfig     `toml:"actions,omitempty"`
-	Hooks              interface{}                               `toml:"hooks"`
+	Hooks              any                                       `toml:"hooks"`
 }
 
 func (blob *TomlV0) Reset() {

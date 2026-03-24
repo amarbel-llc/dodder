@@ -79,7 +79,7 @@ func ReadStringList(
 	listPtr, count uint32,
 ) []string {
 	result := make([]string, count)
-	for i := uint32(0); i < count; i++ {
+	for i := range count {
 		offset := listPtr + i*8
 		ptr := binary.LittleEndian.Uint32(memory[offset:])
 		length := binary.LittleEndian.Uint32(memory[offset+4:])
