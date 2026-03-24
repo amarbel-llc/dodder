@@ -92,3 +92,7 @@ dodder show :konfig >/dev/null 2>&1 || {
 }
 
 popd >/dev/null
+
+# Force-add fixture directories that may be excluded by global gitignore
+# (e.g. ~/.config/git/ignore contains .dodder/).
+git add -f "$d/.dodder" "$d/.madder" "$d/.fixtures.env"
