@@ -201,7 +201,7 @@ function json_inventory_list_preserves_all_lock_kinds { # @test
 
   assert_success
 
-  run_dodder init-workspace
+  run_dodder init-workspace -experimental-repo=false
   assert_success
 
   # Create a type with reference discovery that outputs typed blob refs

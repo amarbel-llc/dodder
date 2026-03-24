@@ -1038,7 +1038,7 @@ function blob_reference_without_type_fails { # @test
 
 # bats test_tags=user_story:referenced_objects
 function discovery_script_crash_required_fails { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Type with required discovery script that exits non-zero
@@ -1072,7 +1072,7 @@ function discovery_script_crash_required_fails { # @test
 
 # bats test_tags=user_story:referenced_objects
 function discovery_script_crash_optional_succeeds { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Type with optional discovery script that exits non-zero
@@ -1409,7 +1409,7 @@ function blob_reference_alias_with_quotes_round_trips { # @test
 
 # bats test_tags=user_story:referenced_objects
 function blob_reference_alias_round_trips_through_box_format { # @test
-	run_dodder init-workspace
+	run_dodder init-workspace -experimental-repo=false
 	assert_success
 
 	# Create a zettel with an aliased blob reference
