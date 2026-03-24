@@ -114,7 +114,7 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
   current_version="v$(dodder info store-version)"
   fixture_dir="zz-tests_bats/previous_versions/$current_version"
 
-  if [[ -d "$fixture_dir/.dodder" ]]; then
+  if [[ -d "$fixture_dir/.dodder" ]] && [[ -s "$fixture_dir/.fixtures.env" ]]; then
     echo "==> Fixtures up-to-date (store version $current_version), skipping generation"
   else
     echo "==> Generating fixtures for store version $current_version..."
