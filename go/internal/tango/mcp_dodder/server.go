@@ -137,6 +137,29 @@ Examples:
 Markl resources contain repo signatures, public keys, and object digests.
 Most queries do not need this data — use only when verifying integrity or
 provenance.
+
+## Workspace Tools
+
+When dodder runs inside a workspace (directory with .dodder-workspace config),
+these tools operate on checked-out objects:
+
+- dodder_status — list checked-out objects with state (Recognized = modified,
+  Untracked = new, Conflicted = merge conflict)
+- dodder_diff — show internal vs external differences
+- dodder_read_checked_out — read working copy file content
+- dodder_checkin — commit working copy changes to the store
+
+### Workspace Workflow
+
+Inspect what changed:
+  → dodder_status() → see all checked-out objects and their state
+  → dodder_diff() → see what changed in modified objects
+
+Read working copy content:
+  → dodder_read_checked_out(object_id) → get current file content
+
+Commit changes:
+  → dodder_checkin(query) → commit matching objects to the store
 `
 
 var readOnlyAnnotations = &protocol.ToolAnnotations{
@@ -542,6 +565,129 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		},
 		makeEditHandler(repo, bridge),
 	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_status",
+			Description: "List checked-out objects in the workspace with their state (CheckedOut, Recognized, Untracked, Conflicted). Requires an active workspace. Returns box format with state headers.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Optional query terms to filter objects. Defaults to all checked-out objects."
+					}
+				},
+				"additionalProperties": false
+			}`),
+			Annotations: readOnlyAnnotations,
+		},
+		makeWorkspaceBridgeHandler(bridge, "status", func(args json.RawMessage) ([]string, error) {
+			var p struct {
+				Query []string `json:"query"`
+			}
+			if err := json.Unmarshal(args, &p); err != nil {
+				return nil, err
+			}
+			return p.Query, nil
+		}),
+	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_checkin",
+			Description: "Commit working copy changes to the store. Checks in objects matching the query from the workspace. Requires an active workspace.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Query terms selecting which objects to check in (e.g. [':z'] for all zettels, ['ceroplastes/midtown'] for a specific object)"
+					}
+				},
+				"required": ["query"],
+				"additionalProperties": false
+			}`),
+			Annotations: writeAnnotations,
+		},
+		makeWorkspaceBridgeHandler(bridge, "checkin", func(args json.RawMessage) ([]string, error) {
+			var p struct {
+				Query []string `json:"query"`
+			}
+			if err := json.Unmarshal(args, &p); err != nil {
+				return nil, err
+			}
+			return p.Query, nil
+		}),
+	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_diff",
+			Description: "Show differences between internal (store) and external (working copy) versions of checked-out objects. Requires an active workspace.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Optional query terms to filter objects. Defaults to all checked-out objects."
+					}
+				},
+				"additionalProperties": false
+			}`),
+			Annotations: readOnlyAnnotations,
+		},
+		makeWorkspaceBridgeHandler(bridge, "diff", func(args json.RawMessage) ([]string, error) {
+			var p struct {
+				Query []string `json:"query"`
+			}
+			if err := json.Unmarshal(args, &p); err != nil {
+				return nil, err
+			}
+			return p.Query, nil
+		}),
+	)
+
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "dodder_read_checked_out",
+			Description: "Read the working copy file content of a checked-out object. Returns the external (filesystem) version, not the store version. Requires an active workspace.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"object_id": {
+						"type": "string",
+						"description": "Object identifier (e.g. 'ceroplastes/midtown')"
+					},
+					"format_id": {
+						"type": "string",
+						"description": "Formatter ID to use (optional, uses type default if omitted)"
+					}
+				},
+				"required": ["object_id"],
+				"additionalProperties": false
+			}`),
+			Annotations: readOnlyAnnotations,
+		},
+		makeWorkspaceBridgeHandler(bridge, "format-blob", func(args json.RawMessage) ([]string, error) {
+			var p struct {
+				ObjectId string `json:"object_id"`
+				FormatId string `json:"format_id"`
+			}
+			if err := json.Unmarshal(args, &p); err != nil {
+				return nil, err
+			}
+			// Prefix with . sigil to read external (working copy) version
+			cliArgs := []string{"." + p.ObjectId}
+			if p.FormatId != "" {
+				cliArgs = append(cliArgs, p.FormatId)
+			}
+			return cliArgs, nil
+		}),
+	)
 }
 
 func makeEditHandler(
@@ -683,6 +829,56 @@ func makeBridgeHandler(
 		}
 
 		result, err := bridge.RunCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
+		if err != nil {
+			errMsg := formatErrorDetail(err)
+			if result.Stderr != "" {
+				errMsg += "\n\nstderr:\n" + result.Stderr
+			}
+			return protocol.ErrorResultV1(errMsg), nil
+		}
+
+		output := result.Stdout
+		if result.Truncated {
+			output += fmt.Sprintf(
+				"\n\n[truncated: showed %d of %d bytes]",
+				len(result.Stdout),
+				result.BytesSeen,
+			)
+		}
+
+		if result.Stderr != "" {
+			output += "\n\nstderr:\n" + result.Stderr
+		}
+
+		return &protocol.ToolCallResultV1{
+			Content: []protocol.ContentBlockV1{
+				protocol.TextContentV1(output),
+			},
+		}, nil
+	}
+}
+
+func makeWorkspaceBridgeHandler(
+	bridge Bridge,
+	cmdName string,
+	translate paramTranslator,
+) server.ToolHandlerV1 {
+	return func(
+		ctx context.Context,
+		args json.RawMessage,
+	) (*protocol.ToolCallResultV1, error) {
+		var cliArgs []string
+
+		if translate != nil {
+			var err error
+			if cliArgs, err = translate(args); err != nil {
+				return protocol.ErrorResultV1(
+					fmt.Sprintf("Invalid arguments: %v", err),
+				), nil
+			}
+		}
+
+		result, err := bridge.RunWorkspaceCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
 		if err != nil {
 			errMsg := formatErrorDetail(err)
 			if result.Stderr != "" {
