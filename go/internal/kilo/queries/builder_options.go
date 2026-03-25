@@ -175,6 +175,17 @@ func (option builderOptionDebug) Apply(builder *Builder) *Builder {
 	return builder
 }
 
+type builderOptionSkipWorkspaceResolution struct{}
+
+func BuilderOptionSkipWorkspaceResolution() builderOptionSkipWorkspaceResolution {
+	return builderOptionSkipWorkspaceResolution{}
+}
+
+func (option builderOptionSkipWorkspaceResolution) Apply(builder *Builder) *Builder {
+	builder.skipWorkspaceResolution = true
+	return builder
+}
+
 type builderOptionRepoId ids.RepoId
 
 func BuilderOptionRepoId(repoId ids.RepoId) builderOptionRepoId {

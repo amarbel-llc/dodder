@@ -32,14 +32,16 @@ type buildState struct {
 	workspaceStore          store_workspace.Store
 
 	workspaceStoreAcceptedQueryComponent bool
+	skipWorkspaceResolution              bool
 
 	scanner doddish.Scanner
 }
 
 func (src *buildState) copy() (dst *buildState) {
 	dst = &buildState{
-		options: src.options,
-		builder: src.builder,
+		options:                 src.options,
+		builder:                src.builder,
+		skipWorkspaceResolution: src.skipWorkspaceResolution,
 	}
 
 	if src.luaVMPoolBuilder != nil {
@@ -78,7 +80,7 @@ func (buildState *buildState) build(
 	// TODO switch to collections_slice
 	var remaining []string
 
-	if buildState.workspaceStore == nil {
+	if buildState.workspaceStore == nil || buildState.skipWorkspaceResolution {
 		remaining = values
 	} else {
 		for _, value := range values {
