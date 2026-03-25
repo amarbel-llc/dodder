@@ -60,10 +60,6 @@ test-bats-tags *tags: build
 test-bats-no-sandbox: build
   DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
 
-# Run bats tests requiring localhost TCP binding.
-test-bats-local-binding: build
-  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-local-binding tcp_bind
-
 # Run bats with race-instrumented binary to detect data races in pool reuse.
 test-bats-race: build
   just go/test-bats-race
@@ -126,4 +122,3 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
 _test-bats-run:
   @echo "==> Running bats integration tests..."
   DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test
-  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-local-binding tcp_bind

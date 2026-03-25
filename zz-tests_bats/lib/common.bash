@@ -311,28 +311,3 @@ function start_server {
 		EOM
   fi
 }
-
-function start_web_server {
-  dir="$1"
-
-  coproc web_server {
-    if [[ -n $dir ]]; then
-      cd "$dir"
-    fi
-
-    # shellcheck disable=SC2068
-    "$DODDER_BIN" serve-web ${cmd_dodder_def[@]} tcp :0 2>&1
-  }
-
-  # shellcheck disable=SC2154
-  read -r output <&"${web_server[0]}"
-
-  if [[ $output =~ (starting HTTP server on port: \"([0-9]+)\") ]]; then
-    export web_port="${BASH_REMATCH[2]}"
-  else
-    fail <<-EOM
-			unable to get port info from dodder serve-web.
-			server output: $output
-		EOM
-  fi
-}

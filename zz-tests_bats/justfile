@@ -2,8 +2,7 @@ set output-format := "tap"
 
 bin_dir := env("BATS_BIN_DIR", "")
 # Exclude af_unix-tagged files; they need --no-sandbox (see test-tags-no-sandbox).
-# Exclude tcp_bind-tagged files; they need --allow-local-binding (see test-tags-local-binding).
-_sandboxed_bats := `grep -L -e 'file_tags=.*af_unix' -e 'file_tags=.*tcp_bind' current_version/*.bats | tr '\n' ' '`
+_sandboxed_bats := `grep -L -e 'file_tags=.*af_unix' current_version/*.bats | tr '\n' ' '`
 _bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
 
 export DODDER_XDG_UTILITY_OVERRIDE := ""
@@ -81,12 +80,6 @@ test-tags *tags:
 test-tags-no-sandbox *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
     bats {{_bin_dir_arg}} --no-sandbox --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
-
-# runs specific bats test tags with localhost TCP binding allowed
-[group("test")]
-test-tags-local-binding *tags:
-  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats {{_bin_dir_arg}} --allow-local-binding --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
 
 [group("test")]
 test-integration: (test-targets "current_version/*.bats")

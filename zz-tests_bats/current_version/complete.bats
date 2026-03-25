@@ -163,7 +163,6 @@ function complete_subcmd { # @test
 		revert
 		save
 		serve
-		serve-web
 		show
 		status
 		update

@@ -8,43 +8,12 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/papa/store"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 )
-
-// ResourceReader provides read-only access to dodder's MCP resource tree.
-type ResourceReader interface {
-	ReadResource(ctx context.Context, uri string) (*protocol.ResourceReadResult, error)
-}
-
-func NewResourceReader(
-	utility command.Utility,
-	repo *local_working_copy.Repo,
-) ResourceReader {
-	bridge := MakeBridge(utility)
-	resources := server.NewResourceRegistry()
-	index := makeTypeIndex(bridge)
-	tagIdx := makeTagIndex(bridge)
-	typeBlobCoder := type_blobs.MakeTypeStore(repo.GetEnvRepo())
-
-	provider := &typeResourceProvider{
-		registry:      resources,
-		index:         index,
-		tagIndex:      tagIdx,
-		bridge:        bridge,
-		store:         repo.GetStore(),
-		typeBlobCoder: typeBlobCoder,
-	}
-
-	registerResources(resources, index, tagIdx, bridge)
-
-	return provider
-}
 
 type typeResourceProvider struct {
 	registry      *server.ResourceRegistry

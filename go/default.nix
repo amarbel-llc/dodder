@@ -60,7 +60,6 @@ in
       tommy.packages.${system}.default
     ]
     ++ (with pkgs-master; [
-      bats
       bash-language-server
       delve
       fish
