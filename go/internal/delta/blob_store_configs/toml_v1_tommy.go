@@ -116,3 +116,85 @@ func (d *TomlLocalHashBucketedV1Document) Encode() ([]byte, error) {
 func (d *TomlLocalHashBucketedV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlLocalHashBucketedV1Into(data *TomlLocalHashBucketedV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[[]int](doc, container, "hash-buckets"); err == nil {
+		data.HashBuckets = values.IntSlice(v)
+		consumed[keyPrefix+"hash-buckets"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "base-path"); err == nil {
+		data.BasePath = v
+		consumed[keyPrefix+"base-path"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "hash_type-id"); err == nil {
+		if err := data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("hash_type-id: %w", err)
+		}
+		consumed[keyPrefix+"hash_type-id"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "encryption"); err == nil {
+		if err := data.Encryption.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("encryption: %w", err)
+		}
+		consumed[keyPrefix+"encryption"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "compression-type"); err == nil {
+		if err := data.CompressionType.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("compression-type: %w", err)
+		}
+		consumed[keyPrefix+"compression-type"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "lock-internal-files"); err == nil {
+		data.LockInternalFiles = v
+		consumed[keyPrefix+"lock-internal-files"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlLocalHashBucketedV1From(data *TomlLocalHashBucketedV1, doc *document.Document, container *cst.Node) error {
+	if err := doc.SetInContainer(container, "hash-buckets", []int(data.HashBuckets)); err != nil {
+		return err
+	}
+	if data.BasePath != "" {
+		if err := doc.SetInContainer(container, "base-path", data.BasePath); err != nil {
+			return err
+		}
+	} else {
+		_ = doc.DeleteFromContainer(container, "base-path")
+	}
+	{
+		v, err := data.HashTypeId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("hash_type-id: %w", err)
+		}
+		if err := doc.SetInContainer(container, "hash_type-id", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.Encryption.MarshalText()
+		if err != nil {
+			return fmt.Errorf("encryption: %w", err)
+		}
+		if err := doc.SetInContainer(container, "encryption", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.CompressionType.MarshalText()
+		if err != nil {
+			return fmt.Errorf("compression-type: %w", err)
+		}
+		if err := doc.SetInContainer(container, "compression-type", string(v)); err != nil {
+			return err
+		}
+	}
+	if data.LockInternalFiles != false || doc.HasInContainer(container, "lock-internal-files") {
+		if err := doc.SetInContainer(container, "lock-internal-files", data.LockInternalFiles); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

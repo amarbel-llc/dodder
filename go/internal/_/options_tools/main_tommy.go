@@ -50,3 +50,20 @@ func (d *OptionsDocument) Encode() ([]byte, error) {
 func (d *OptionsDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeOptionsInto(data *Options, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[[]string](doc, container, "merge"); err == nil {
+		data.Merge = v
+		consumed[keyPrefix+"merge"] = true
+	}
+
+	return nil
+}
+
+func EncodeOptionsFrom(data *Options, doc *document.Document, container *cst.Node) error {
+	if err := doc.SetInContainer(container, "merge", data.Merge); err != nil {
+		return err
+	}
+
+	return nil
+}

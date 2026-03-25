@@ -111,3 +111,81 @@ func (d *WithOutputFormatDocument) Encode() ([]byte, error) {
 func (d *WithOutputFormatDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeWithOutputFormatInto(data *WithOutputFormat, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "description"); err == nil {
+		data.Description = v
+		consumed[keyPrefix+"description"] = true
+	}
+	if v, err := document.GetFromContainer[[]string](doc, container, "shell"); err == nil {
+		data.Shell = v
+		consumed[keyPrefix+"shell"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "script"); err == nil {
+		data.Script = v
+		consumed[keyPrefix+"script"] = true
+	}
+	if tableNode := doc.FindTable("env"); tableNode != nil {
+		data.Env = document.GetStringMapFromTable(tableNode)
+		consumed[keyPrefix+"env"] = true
+		document.MarkAllConsumed(tableNode, "env", consumed)
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "uti"); err == nil {
+		data.UTI = v
+		consumed[keyPrefix+"uti"] = true
+	}
+	if v, err := document.GetFromContainer[[]string](doc, container, "utis"); err == nil {
+		data.UTIS = v
+		consumed[keyPrefix+"utis"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "file-extension"); err == nil {
+		data.FileExtension = v
+		consumed[keyPrefix+"file-extension"] = true
+	}
+
+	return nil
+}
+
+func EncodeWithOutputFormatFrom(data *WithOutputFormat, doc *document.Document, container *cst.Node) error {
+	if data.Description != "" || doc.HasInContainer(container, "description") {
+		if err := doc.SetInContainer(container, "description", data.Description); err != nil {
+			return err
+		}
+	}
+	if len(data.Shell) > 0 || doc.HasInContainer(container, "shell") {
+		if err := doc.SetInContainer(container, "shell", data.Shell); err != nil {
+			return err
+		}
+	}
+	if data.Script != "" {
+		if err := doc.SetMultilineInContainer(container, "script", data.Script); err != nil {
+			return err
+		}
+	} else {
+		_ = doc.DeleteFromContainer(container, "script")
+	}
+	if len(data.Env) > 0 {
+		tableNode := doc.EnsureTable("env")
+		document.DeleteAllInContainer(tableNode)
+		for k, v := range data.Env {
+			if err := doc.SetInContainer(tableNode, k, v); err != nil {
+				return err
+			}
+		}
+	}
+	if data.UTI != "" || doc.HasInContainer(container, "uti") {
+		if err := doc.SetInContainer(container, "uti", data.UTI); err != nil {
+			return err
+		}
+	}
+	if err := doc.SetInContainer(container, "utis", data.UTIS); err != nil {
+		return err
+	}
+	if data.FileExtension != "" || doc.HasInContainer(container, "file-extension") {
+		if err := doc.SetInContainer(container, "file-extension", data.FileExtension); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

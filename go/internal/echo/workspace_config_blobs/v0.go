@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 )
 
+//go:generate tommy generate
 type V0 struct {
 	Defaults repo_configs.DefaultsV1OmitEmpty `toml:"defaults,omitempty"`
 	// FileExtensions file_extensions.V1    `toml:"file-extensions"`

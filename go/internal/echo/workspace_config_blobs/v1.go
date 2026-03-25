@@ -1,5 +1,6 @@
 package workspace_config_blobs
 
+//go:generate tommy generate
 type V1 struct {
 	V0
 	ParentPath string `toml:"parent-path,omitempty"`

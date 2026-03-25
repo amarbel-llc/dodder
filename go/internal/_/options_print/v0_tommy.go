@@ -186,6 +186,158 @@ func (d *V0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if tableNode := doc.FindTableInContainer(container, "abbreviations"); tableNode != nil {
+		consumed[keyPrefix+"abbreviations"] = true
+		abbreviationsVal := &abbreviationsV0{}
+		if v, err := document.GetFromContainer[bool](doc, tableNode, "hinweisen"); err == nil {
+			abbreviationsVal.ZettelIds = &v
+			consumed[keyPrefix+"abbreviations.hinweisen"] = true
+		}
+		if v, err := document.GetFromContainer[bool](doc, tableNode, "shas"); err == nil {
+			abbreviationsVal.Shas = &v
+			consumed[keyPrefix+"abbreviations.shas"] = true
+		}
+		data.Abbreviations = abbreviationsVal
+	} else {
+		abbreviationsVal := &abbreviationsV0{}
+		found := false
+		if v, err := document.GetFromContainer[bool](doc, container, "hinweisen"); err == nil {
+			abbreviationsVal.ZettelIds = &v
+			found = true
+			consumed[keyPrefix+"hinweisen"] = true
+		}
+		if v, err := document.GetFromContainer[bool](doc, container, "shas"); err == nil {
+			abbreviationsVal.Shas = &v
+			found = true
+			consumed[keyPrefix+"shas"] = true
+		}
+		if found {
+			data.Abbreviations = abbreviationsVal
+		}
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-include-description"); err == nil {
+		data.PrintIncludeDescription = &v
+		consumed[keyPrefix+"print-include-description"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-time"); err == nil {
+		data.PrintTime = &v
+		consumed[keyPrefix+"print-time"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-etiketten-always"); err == nil {
+		data.PrintTagsAlways = &v
+		consumed[keyPrefix+"print-etiketten-always"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-empty-shas"); err == nil {
+		data.PrintEmptyShas = &v
+		consumed[keyPrefix+"print-empty-shas"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-include-typen"); err == nil {
+		data.PrintIncludeTypes = &v
+		consumed[keyPrefix+"print-include-typen"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-matched-archiviert"); err == nil {
+		data.PrintMatchedDormant = &v
+		consumed[keyPrefix+"print-matched-archiviert"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-shas"); err == nil {
+		data.PrintShas = &v
+		consumed[keyPrefix+"print-shas"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-flush"); err == nil {
+		data.PrintFlush = &v
+		consumed[keyPrefix+"print-flush"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-unchanged"); err == nil {
+		data.PrintUnchanged = &v
+		consumed[keyPrefix+"print-unchanged"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-colors"); err == nil {
+		data.PrintColors = &v
+		consumed[keyPrefix+"print-colors"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "print-bestandsaufnahme"); err == nil {
+		data.PrintInventoryLists = &v
+		consumed[keyPrefix+"print-bestandsaufnahme"] = true
+	}
+
+	return nil
+}
+
+func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
+	if data.Abbreviations != nil {
+		if tableNode := doc.FindTableInContainer(container, "abbreviations"); tableNode != nil {
+			if data.Abbreviations.ZettelIds != nil {
+				if err := doc.SetInContainer(tableNode, "hinweisen", *data.Abbreviations.ZettelIds); err != nil {
+					return err
+				}
+			}
+			if data.Abbreviations.Shas != nil {
+				if err := doc.SetInContainer(tableNode, "shas", *data.Abbreviations.Shas); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if data.PrintIncludeDescription != nil {
+		if err := doc.SetInContainer(container, "print-include-description", *data.PrintIncludeDescription); err != nil {
+			return err
+		}
+	}
+	if data.PrintTime != nil {
+		if err := doc.SetInContainer(container, "print-time", *data.PrintTime); err != nil {
+			return err
+		}
+	}
+	if data.PrintTagsAlways != nil {
+		if err := doc.SetInContainer(container, "print-etiketten-always", *data.PrintTagsAlways); err != nil {
+			return err
+		}
+	}
+	if data.PrintEmptyShas != nil {
+		if err := doc.SetInContainer(container, "print-empty-shas", *data.PrintEmptyShas); err != nil {
+			return err
+		}
+	}
+	if data.PrintIncludeTypes != nil {
+		if err := doc.SetInContainer(container, "print-include-typen", *data.PrintIncludeTypes); err != nil {
+			return err
+		}
+	}
+	if data.PrintMatchedDormant != nil {
+		if err := doc.SetInContainer(container, "print-matched-archiviert", *data.PrintMatchedDormant); err != nil {
+			return err
+		}
+	}
+	if data.PrintShas != nil {
+		if err := doc.SetInContainer(container, "print-shas", *data.PrintShas); err != nil {
+			return err
+		}
+	}
+	if data.PrintFlush != nil {
+		if err := doc.SetInContainer(container, "print-flush", *data.PrintFlush); err != nil {
+			return err
+		}
+	}
+	if data.PrintUnchanged != nil {
+		if err := doc.SetInContainer(container, "print-unchanged", *data.PrintUnchanged); err != nil {
+			return err
+		}
+	}
+	if data.PrintColors != nil {
+		if err := doc.SetInContainer(container, "print-colors", *data.PrintColors); err != nil {
+			return err
+		}
+	}
+	if data.PrintInventoryLists != nil {
+		if err := doc.SetInContainer(container, "print-bestandsaufnahme", *data.PrintInventoryLists); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type abbreviationsV0Document struct {
 	data     abbreviationsV0
 	cstDoc   *document.Document
@@ -231,4 +383,32 @@ func (d *abbreviationsV0Document) Encode() ([]byte, error) {
 
 func (d *abbreviationsV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func DecodeabbreviationsV0Into(data *abbreviationsV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[bool](doc, container, "hinweisen"); err == nil {
+		data.ZettelIds = &v
+		consumed[keyPrefix+"hinweisen"] = true
+	}
+	if v, err := document.GetFromContainer[bool](doc, container, "shas"); err == nil {
+		data.Shas = &v
+		consumed[keyPrefix+"shas"] = true
+	}
+
+	return nil
+}
+
+func EncodeabbreviationsV0From(data *abbreviationsV0, doc *document.Document, container *cst.Node) error {
+	if data.ZettelIds != nil {
+		if err := doc.SetInContainer(container, "hinweisen", *data.ZettelIds); err != nil {
+			return err
+		}
+	}
+	if data.Shas != nil {
+		if err := doc.SetInContainer(container, "shas", *data.Shas); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

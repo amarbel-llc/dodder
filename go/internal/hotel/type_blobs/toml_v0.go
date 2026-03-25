@@ -5,7 +5,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 
-//go:generate tommy generate
 type TomlV0 struct {
 	InlineBlob    bool                        `toml:"inline-akte,omitempty"`
 	Archived      bool                        `toml:"archived,omitempty"`

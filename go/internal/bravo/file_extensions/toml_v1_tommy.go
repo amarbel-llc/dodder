@@ -115,3 +115,85 @@ func (d *TOMLV1Document) Encode() ([]byte, error) {
 func (d *TOMLV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTOMLV1Into(data *TOMLV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "config"); err == nil {
+		data.Config = &v
+		consumed[keyPrefix+"config"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "conflict"); err == nil {
+		data.Conflict = &v
+		consumed[keyPrefix+"conflict"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "lockfile"); err == nil {
+		data.Lockfile = &v
+		consumed[keyPrefix+"lockfile"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "organize"); err == nil {
+		data.Organize = &v
+		consumed[keyPrefix+"organize"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "repo"); err == nil {
+		data.Repo = &v
+		consumed[keyPrefix+"repo"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "tag"); err == nil {
+		data.Tag = &v
+		consumed[keyPrefix+"tag"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "type"); err == nil {
+		data.Type = &v
+		consumed[keyPrefix+"type"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "zettel"); err == nil {
+		data.Zettel = &v
+		consumed[keyPrefix+"zettel"] = true
+	}
+
+	return nil
+}
+
+func EncodeTOMLV1From(data *TOMLV1, doc *document.Document, container *cst.Node) error {
+	if data.Config != nil {
+		if err := doc.SetInContainer(container, "config", *data.Config); err != nil {
+			return err
+		}
+	}
+	if data.Conflict != nil {
+		if err := doc.SetInContainer(container, "conflict", *data.Conflict); err != nil {
+			return err
+		}
+	}
+	if data.Lockfile != nil {
+		if err := doc.SetInContainer(container, "lockfile", *data.Lockfile); err != nil {
+			return err
+		}
+	}
+	if data.Organize != nil {
+		if err := doc.SetInContainer(container, "organize", *data.Organize); err != nil {
+			return err
+		}
+	}
+	if data.Repo != nil {
+		if err := doc.SetInContainer(container, "repo", *data.Repo); err != nil {
+			return err
+		}
+	}
+	if data.Tag != nil {
+		if err := doc.SetInContainer(container, "tag", *data.Tag); err != nil {
+			return err
+		}
+	}
+	if data.Type != nil {
+		if err := doc.SetInContainer(container, "type", *data.Type); err != nil {
+			return err
+		}
+	}
+	if data.Zettel != nil {
+		if err := doc.SetInContainer(container, "zettel", *data.Zettel); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

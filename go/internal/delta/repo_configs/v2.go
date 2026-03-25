@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 )
 
+//go:generate tommy generate
 type V2 struct {
 	BlobStores     []blob_store_id.Id     `toml:"blob-stores"`
 	Defaults       DefaultsV1             `toml:"defaults"`

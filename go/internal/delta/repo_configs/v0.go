@@ -23,6 +23,7 @@ func (defaults DefaultsV0) GetDefaultTags() collections_slice.Slice[ids.TagStruc
 	return collections_slice.Slice[ids.TagStruct](defaults.Etiketten)
 }
 
+//go:generate tommy generate
 type V0 struct {
 	Defaults        DefaultsV0                            `toml:"defaults"`
 	HiddenEtiketten []ids.TagStruct                       `toml:"hidden-etiketten"`

@@ -88,3 +88,58 @@ func (d *TOMLV0Document) Encode() ([]byte, error) {
 func (d *TOMLV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTOMLV0Into(data *TOMLV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "organize"); err == nil {
+		data.Organize = &v
+		consumed[keyPrefix+"organize"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "kasten"); err == nil {
+		data.Repo = &v
+		consumed[keyPrefix+"kasten"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "etikett"); err == nil {
+		data.Tag = &v
+		consumed[keyPrefix+"etikett"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "typ"); err == nil {
+		data.Type = &v
+		consumed[keyPrefix+"typ"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "zettel"); err == nil {
+		data.Zettel = &v
+		consumed[keyPrefix+"zettel"] = true
+	}
+
+	return nil
+}
+
+func EncodeTOMLV0From(data *TOMLV0, doc *document.Document, container *cst.Node) error {
+	if data.Organize != nil {
+		if err := doc.SetInContainer(container, "organize", *data.Organize); err != nil {
+			return err
+		}
+	}
+	if data.Repo != nil {
+		if err := doc.SetInContainer(container, "kasten", *data.Repo); err != nil {
+			return err
+		}
+	}
+	if data.Tag != nil {
+		if err := doc.SetInContainer(container, "etikett", *data.Tag); err != nil {
+			return err
+		}
+	}
+	if data.Type != nil {
+		if err := doc.SetInContainer(container, "typ", *data.Type); err != nil {
+			return err
+		}
+	}
+	if data.Zettel != nil {
+		if err := doc.SetInContainer(container, "zettel", *data.Zettel); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -5,6 +5,9 @@ package repo_configs
 import (
 	"fmt"
 
+	"code.linenisgreat.com/dodder/go/internal/_/options_print"
+	"code.linenisgreat.com/dodder/go/internal/_/options_tools"
+	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
@@ -82,6 +85,53 @@ func (d *DefaultsV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func DecodeDefaultsV1Into(data *DefaultsV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "type"); err == nil {
+		if err := data.Type.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("type: %w", err)
+		}
+		consumed[keyPrefix+"type"] = true
+	}
+	if v, err := document.GetFromContainer[[]string](doc, container, "tags"); err == nil {
+		data.Tags = make([]ids.TagStruct, len(v))
+		for i, s := range v {
+			if err := data.Tags[i].UnmarshalText([]byte(s)); err != nil {
+				return fmt.Errorf("tags[%d]: %w", i, err)
+			}
+		}
+		consumed[keyPrefix+"tags"] = true
+	}
+
+	return nil
+}
+
+func EncodeDefaultsV1From(data *DefaultsV1, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.Type.MarshalText()
+		if err != nil {
+			return fmt.Errorf("type: %w", err)
+		}
+		if err := doc.SetInContainer(container, "type", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		vals := make([]string, len(data.Tags))
+		for i, item := range data.Tags {
+			v, err := item.MarshalText()
+			if err != nil {
+				return fmt.Errorf("tags[%d]: %w", i, err)
+			}
+			vals[i] = string(v)
+		}
+		if err := doc.SetInContainer(container, "tags", vals); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 type DefaultsV1OmitEmptyDocument struct {
 	data     DefaultsV1OmitEmpty
 	cstDoc   *document.Document
@@ -146,4 +196,240 @@ func (d *DefaultsV1OmitEmptyDocument) Encode() ([]byte, error) {
 
 func (d *DefaultsV1OmitEmptyDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func DecodeDefaultsV1OmitEmptyInto(data *DefaultsV1OmitEmpty, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "type"); err == nil {
+		if err := data.Type.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("type: %w", err)
+		}
+		consumed[keyPrefix+"type"] = true
+	}
+	if v, err := document.GetFromContainer[[]string](doc, container, "tags"); err == nil {
+		data.Tags = make([]ids.TagStruct, len(v))
+		for i, s := range v {
+			if err := data.Tags[i].UnmarshalText([]byte(s)); err != nil {
+				return fmt.Errorf("tags[%d]: %w", i, err)
+			}
+		}
+		consumed[keyPrefix+"tags"] = true
+	}
+
+	return nil
+}
+
+func EncodeDefaultsV1OmitEmptyFrom(data *DefaultsV1OmitEmpty, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.Type.MarshalText()
+		if err != nil {
+			return fmt.Errorf("type: %w", err)
+		}
+		if err := doc.SetInContainer(container, "type", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		vals := make([]string, len(data.Tags))
+		for i, item := range data.Tags {
+			v, err := item.MarshalText()
+			if err != nil {
+				return fmt.Errorf("tags[%d]: %w", i, err)
+			}
+			vals[i] = string(v)
+		}
+		if err := doc.SetInContainer(container, "tags", vals); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type V1Document struct {
+	data     V1
+	cstDoc   *document.Document
+	consumed map[string]bool
+}
+
+func DecodeV1(input []byte) (*V1Document, error) {
+	doc, err := document.Parse(input)
+	if err != nil {
+		return nil, err
+	}
+
+	d := &V1Document{cstDoc: doc, consumed: make(map[string]bool)}
+
+	if tableNode := d.cstDoc.FindTable("defaults"); tableNode != nil {
+		d.consumed["defaults"] = true
+		if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "type"); err == nil {
+			if err := d.data.Defaults.Type.UnmarshalText([]byte(v)); err != nil {
+				return nil, fmt.Errorf("type: %w", err)
+			}
+			d.consumed["defaults.type"] = true
+		}
+		if v, err := document.GetFromContainer[[]string](d.cstDoc, tableNode, "tags"); err == nil {
+			d.data.Defaults.Tags = make([]ids.TagStruct, len(v))
+			for i, s := range v {
+				if err := d.data.Defaults.Tags[i].UnmarshalText([]byte(s)); err != nil {
+					return nil, fmt.Errorf("tags[%d]: %w", i, err)
+				}
+			}
+			d.consumed["defaults.tags"] = true
+		}
+	}
+	if tableNode := d.cstDoc.FindTable("file-extensions"); tableNode != nil {
+		d.consumed["file-extensions"] = true
+		if err := file_extensions.DecodeTOMLV1Into(&d.data.FileExtensions, d.cstDoc, tableNode, d.consumed, "file-extensions."); err != nil {
+			return nil, fmt.Errorf("file-extensions: %w", err)
+		}
+	}
+	if tableNode := d.cstDoc.FindTable("cli-output"); tableNode != nil {
+		d.consumed["cli-output"] = true
+		if err := options_print.DecodeV1Into(&d.data.PrintOptions, d.cstDoc, tableNode, d.consumed, "cli-output."); err != nil {
+			return nil, fmt.Errorf("cli-output: %w", err)
+		}
+	}
+	if tableNode := d.cstDoc.FindTable("tools"); tableNode != nil {
+		d.consumed["tools"] = true
+		if err := options_tools.DecodeOptionsInto(&d.data.Tools, d.cstDoc, tableNode, d.consumed, "tools."); err != nil {
+			return nil, fmt.Errorf("tools: %w", err)
+		}
+	}
+
+	return d, nil
+}
+
+func (d *V1Document) Data() *V1 { return &d.data }
+
+func (d *V1Document) Encode() ([]byte, error) {
+	if tableNode := d.cstDoc.FindTable("defaults"); tableNode != nil {
+		{
+			v, err := d.data.Defaults.Type.MarshalText()
+			if err != nil {
+				return nil, fmt.Errorf("type: %w", err)
+			}
+			if err := d.cstDoc.SetInContainer(tableNode, "type", string(v)); err != nil {
+				return nil, err
+			}
+		}
+		{
+			vals := make([]string, len(d.data.Defaults.Tags))
+			for i, item := range d.data.Defaults.Tags {
+				v, err := item.MarshalText()
+				if err != nil {
+					return nil, fmt.Errorf("tags[%d]: %w", i, err)
+				}
+				vals[i] = string(v)
+			}
+			if err := d.cstDoc.SetInContainer(tableNode, "tags", vals); err != nil {
+				return nil, err
+			}
+		}
+	}
+	if tableNode := d.cstDoc.FindTable("file-extensions"); tableNode != nil {
+		if err := file_extensions.EncodeTOMLV1From(&d.data.FileExtensions, d.cstDoc, tableNode); err != nil {
+			return nil, fmt.Errorf("file-extensions: %w", err)
+		}
+	}
+	if tableNode := d.cstDoc.FindTable("cli-output"); tableNode != nil {
+		if err := options_print.EncodeV1From(&d.data.PrintOptions, d.cstDoc, tableNode); err != nil {
+			return nil, fmt.Errorf("cli-output: %w", err)
+		}
+	}
+	if tableNode := d.cstDoc.FindTable("tools"); tableNode != nil {
+		if err := options_tools.EncodeOptionsFrom(&d.data.Tools, d.cstDoc, tableNode); err != nil {
+			return nil, fmt.Errorf("tools: %w", err)
+		}
+	}
+
+	return d.cstDoc.Bytes(), nil
+}
+
+func (d *V1Document) Undecoded() []string {
+	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
+		consumed[keyPrefix+"defaults"] = true
+		if v, err := document.GetFromContainer[string](doc, tableNode, "type"); err == nil {
+			if err := data.Defaults.Type.UnmarshalText([]byte(v)); err != nil {
+				return fmt.Errorf("type: %w", err)
+			}
+			consumed[keyPrefix+"defaults.type"] = true
+		}
+		if v, err := document.GetFromContainer[[]string](doc, tableNode, "tags"); err == nil {
+			data.Defaults.Tags = make([]ids.TagStruct, len(v))
+			for i, s := range v {
+				if err := data.Defaults.Tags[i].UnmarshalText([]byte(s)); err != nil {
+					return fmt.Errorf("tags[%d]: %w", i, err)
+				}
+			}
+			consumed[keyPrefix+"defaults.tags"] = true
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "file-extensions"); tableNode != nil {
+		consumed[keyPrefix+"file-extensions"] = true
+		if err := file_extensions.DecodeTOMLV1Into(&data.FileExtensions, doc, tableNode, consumed, "file-extensions."); err != nil {
+			return fmt.Errorf("file-extensions: %w", err)
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "cli-output"); tableNode != nil {
+		consumed[keyPrefix+"cli-output"] = true
+		if err := options_print.DecodeV1Into(&data.PrintOptions, doc, tableNode, consumed, "cli-output."); err != nil {
+			return fmt.Errorf("cli-output: %w", err)
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "tools"); tableNode != nil {
+		consumed[keyPrefix+"tools"] = true
+		if err := options_tools.DecodeOptionsInto(&data.Tools, doc, tableNode, consumed, "tools."); err != nil {
+			return fmt.Errorf("tools: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
+	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
+		{
+			v, err := data.Defaults.Type.MarshalText()
+			if err != nil {
+				return fmt.Errorf("type: %w", err)
+			}
+			if err := doc.SetInContainer(tableNode, "type", string(v)); err != nil {
+				return err
+			}
+		}
+		{
+			vals := make([]string, len(data.Defaults.Tags))
+			for i, item := range data.Defaults.Tags {
+				v, err := item.MarshalText()
+				if err != nil {
+					return fmt.Errorf("tags[%d]: %w", i, err)
+				}
+				vals[i] = string(v)
+			}
+			if err := doc.SetInContainer(tableNode, "tags", vals); err != nil {
+				return err
+			}
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "file-extensions"); tableNode != nil {
+		if err := file_extensions.EncodeTOMLV1From(&data.FileExtensions, doc, tableNode); err != nil {
+			return fmt.Errorf("file-extensions: %w", err)
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "cli-output"); tableNode != nil {
+		if err := options_print.EncodeV1From(&data.PrintOptions, doc, tableNode); err != nil {
+			return fmt.Errorf("cli-output: %w", err)
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "tools"); tableNode != nil {
+		if err := options_tools.EncodeOptionsFrom(&data.Tools, doc, tableNode); err != nil {
+			return fmt.Errorf("tools: %w", err)
+		}
+	}
+
+	return nil
 }

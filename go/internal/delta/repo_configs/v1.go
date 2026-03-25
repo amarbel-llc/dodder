@@ -38,6 +38,7 @@ func (defaults DefaultsV1OmitEmpty) GetDefaultTags() collections_slice.Slice[ids
 	return collections_slice.Slice[ids.TagStruct](defaults.Tags)
 }
 
+//go:generate tommy generate
 type V1 struct {
 	Defaults       DefaultsV1             `toml:"defaults"`
 	FileExtensions file_extensions.TOMLV1 `toml:"file-extensions"`

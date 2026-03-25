@@ -5,7 +5,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 
-//go:generate tommy generate
 type TomlV1 struct {
 	Binary        bool                                      `toml:"binary,omitempty"`
 	FileExtension string                                    `toml:"file-extension,omitempty"`
