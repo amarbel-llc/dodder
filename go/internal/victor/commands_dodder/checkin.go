@@ -112,7 +112,7 @@ func (cmd *Checkin) Complete(
 }
 
 func (cmd Checkin) Run(dep command.Request) {
-	localWorkingCopy, queryGroup := cmd.MakeLocalWorkingCopyAndQueryGroup(
+	localWorkingCopy, queryGroup := cmd.MakeLocalWorkingCopyAndQueryGroupResolvingFilenames(
 		dep,
 		queries.BuilderOptions(
 			queries.BuilderOptionRequireNonEmptyQuery(),

@@ -67,7 +67,7 @@ func (c *Clean) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 }
 
 func (cmd Clean) Run(req command.Request) {
-	localWorkingCopy, queryGroup := cmd.MakeLocalWorkingCopyAndQueryGroup(
+	localWorkingCopy, queryGroup := cmd.MakeLocalWorkingCopyAndQueryGroupResolvingFilenames(
 		req,
 		queries.BuilderOptions(
 			queries.BuilderOptionHidden(nil),

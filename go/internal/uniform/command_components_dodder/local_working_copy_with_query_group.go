@@ -34,3 +34,19 @@ func (cmd LocalWorkingCopyWithQueryGroup) MakeLocalWorkingCopyAndQueryGroup(
 
 	return localWorkingCopy, queryGroup
 }
+
+func (cmd LocalWorkingCopyWithQueryGroup) MakeLocalWorkingCopyAndQueryGroupResolvingFilenames(
+	req command.Request,
+	builderOptions queries.BuilderOption,
+) (*local_working_copy.Repo, *queries.Query) {
+	localWorkingCopy := cmd.MakeLocalWorkingCopy(req)
+
+	queryGroup := cmd.MakeQueryResolvingFilenames(
+		req,
+		builderOptions,
+		localWorkingCopy,
+		req.PopArgs(),
+	)
+
+	return localWorkingCopy, queryGroup
+}

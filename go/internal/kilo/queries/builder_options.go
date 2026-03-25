@@ -186,6 +186,24 @@ func (option builderOptionSkipWorkspaceResolution) Apply(builder *Builder) *Buil
 	return builder
 }
 
+type builderOptionPinnedExternalObjectIds struct {
+	ids []sku.ExternalObjectId
+}
+
+func BuilderOptionPinnedExternalObjectIds(
+	ids []sku.ExternalObjectId,
+) builderOptionPinnedExternalObjectIds {
+	return builderOptionPinnedExternalObjectIds{ids: ids}
+}
+
+func (option builderOptionPinnedExternalObjectIds) Apply(builder *Builder) *Builder {
+	builder.pinnedExternalObjectIds = append(
+		builder.pinnedExternalObjectIds,
+		option.ids...,
+	)
+	return builder
+}
+
 type builderOptionRepoId ids.RepoId
 
 func BuilderOptionRepoId(repoId ids.RepoId) builderOptionRepoId {

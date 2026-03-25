@@ -41,6 +41,61 @@ func (cmd Query) MakeQueryIncludingWorkspace(
 	)
 }
 
+func (cmd Query) MakeQueryResolvingFilenames(
+	req command.Request,
+	options pkg_query.BuilderOption,
+	repo *local_working_copy.Repo,
+	args []string,
+) (query *pkg_query.Query) {
+	var resolved []sku.ExternalObjectId
+	var remaining []string
+
+	if store, ok := repo.GetWorkspaceStoreForQuery(cmd.RepoId); ok {
+		for _, arg := range args {
+			if arg == "." {
+				// "." means all external objects. Resolve via workspace
+				// store for pinned IDs and pass to parser to set
+				// dotOperatorActive.
+				if externalIds, err := store.GetObjectIdsForString(arg); err == nil {
+					resolved = append(resolved, externalIds...)
+				}
+
+				remaining = append(remaining, arg)
+
+				continue
+			}
+
+			if externalIds, err := store.GetObjectIdsForString(arg); err == nil {
+				resolved = append(resolved, externalIds...)
+			} else {
+				remaining = append(remaining, arg)
+			}
+		}
+	} else {
+		remaining = args
+	}
+
+	if len(resolved) > 0 {
+		options = pkg_query.BuilderOptions(
+			options,
+			pkg_query.BuilderOptionPinnedExternalObjectIds(resolved),
+		)
+	}
+
+	options = pkg_query.BuilderOptions(
+		options,
+		pkg_query.BuilderOptionWorkspace(repo),
+		pkg_query.BuilderOptionSkipWorkspaceResolution(),
+	)
+
+	return cmd.MakeQuery(
+		req,
+		options,
+		repo,
+		remaining,
+	)
+}
+
 func (cmd Query) MakeQuery(
 	req command.Request,
 	options pkg_query.BuilderOption,

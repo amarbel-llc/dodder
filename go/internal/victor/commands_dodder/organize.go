@@ -96,11 +96,10 @@ func (cmd Organize) Complete(
 func (cmd *Organize) Run(req command.Request) {
 	repo := cmd.MakeLocalWorkingCopy(req)
 
-	queryGroup := cmd.MakeQueryIncludingWorkspace(
+	queryGroup := cmd.MakeQueryResolvingFilenames(
 		req,
 		queries.BuilderOptions(
 			queries.BuilderOptionRequireNonEmptyQuery(),
-			queries.BuilderOptionWorkspace(repo),
 			queries.BuilderOptionDefaultGenres(genres.Zettel),
 			queries.BuilderOptionDefaultSigil(ids.SigilLatest),
 		),
