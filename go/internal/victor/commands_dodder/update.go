@@ -39,6 +39,7 @@ func (cmd Update) Run(req command.Request) {
 		pkg_query.BuilderOptions(
 			pkg_query.BuilderOptionWorkspace(localWorkingCopy),
 			pkg_query.BuilderOptionDefaultGenres(genres.Zettel),
+			pkg_query.BuilderOptionSkipWorkspaceResolution(),
 		),
 		localWorkingCopy,
 		args,

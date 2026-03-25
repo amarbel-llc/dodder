@@ -221,6 +221,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 				ids.SigilHidden,
 			),
 			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 		local,
 		queryArgs,

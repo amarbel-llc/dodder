@@ -55,6 +55,7 @@ func (cmd CatAlfred) Run(dep command.Request) {
 				genres.Type,
 				genres.Zettel,
 			),
+			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 	)
 

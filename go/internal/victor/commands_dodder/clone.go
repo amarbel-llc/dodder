@@ -59,6 +59,7 @@ func (cmd Clone) Run(req command.Request) {
 				ids.SigilHidden,
 			),
 			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 		local,
 		req.PopArgs(),

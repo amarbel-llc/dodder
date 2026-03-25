@@ -43,6 +43,7 @@ func (cmd *PullBlobStore) Run(
 				ids.SigilHidden,
 			),
 			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 	)
 

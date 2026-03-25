@@ -64,6 +64,7 @@ func (cmd Pull) Run(req command.Request) {
 				ids.SigilHidden,
 			),
 			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 		localWorkingCopy,
 		req.PopArgs(),

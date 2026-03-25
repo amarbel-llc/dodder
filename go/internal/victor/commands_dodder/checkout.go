@@ -51,6 +51,7 @@ func (cmd Checkout) Run(req command.Request) {
 			queries.BuilderOptionRequireNonEmptyQuery(),
 			queries.BuilderOptionWorkspace(repo),
 			queries.BuilderOptionDefaultGenres(genres.Zettel),
+			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 		repo,
 		req.PopArgs(),
