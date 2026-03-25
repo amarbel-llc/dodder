@@ -18,14 +18,6 @@ var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
 					return &TomlV2Private{}
 				},
 			},
-			ids.TypeTomlConfigImmutableV1: hyphence.CoderToml[
-				ConfigPrivate,
-				*ConfigPrivate,
-			]{
-				Progenitor: func() ConfigPrivate {
-					return &TomlV1Private{}
-				},
-			},
 		},
 	),
 }
@@ -40,14 +32,6 @@ var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
 			]{
 				Progenitor: func() ConfigPublic {
 					return &TomlV2Public{}
-				},
-			},
-			ids.TypeTomlConfigImmutableV1: hyphence.CoderToml[
-				ConfigPublic,
-				*ConfigPublic,
-			]{
-				Progenitor: func() ConfigPublic {
-					return &TomlV1Public{}
 				},
 			},
 		},

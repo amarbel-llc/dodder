@@ -129,8 +129,7 @@ type (
 var (
 	_ ConfigSFTPRemotePath = &TomlSFTPV0{}
 	_ ConfigSFTPRemotePath = &TomlSFTPViaSSHConfigV0{}
-	_ ConfigMutable        = &TomlLocalHashBucketedV0{}
-	_ ConfigMutable        = &TomlSFTPV0{}
+	_ ConfigMutable = &TomlSFTPV0{}
 )
 
 var DefaultHashBuckets []int = []int{2}

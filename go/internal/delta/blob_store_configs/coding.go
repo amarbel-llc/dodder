@@ -44,14 +44,6 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 	Metadata: hyphence.TypedMetadataCoder[Config]{},
 	Blob: hyphence.CoderTypeMapWithoutType[Config](
 		map[string]interfaces.CoderBufferedReadWriter[*Config]{
-			ids.TypeTomlBlobStoreConfigV0: hyphence.CoderToml[
-				Config,
-				*Config,
-			]{
-				Progenitor: func() Config {
-					return &TomlLocalHashBucketedV0{}
-				},
-			},
 			ids.TypeTomlBlobStoreConfigV1: hyphence.CoderToml[
 				Config,
 				*Config,

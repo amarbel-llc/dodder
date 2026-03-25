@@ -28,8 +28,7 @@ const (
 	TypeZettelIdLogVCurrent                         = TypeZettelIdLogV1
 	TypeTomlBlobStoreConfigSftpExplicitV0           = "!toml-blob_store_config_sftp-explicit-v0"
 	TypeTomlBlobStoreConfigSftpViaSSHConfigV0       = "!toml-blob_store_config_sftp-ssh_config-v0"
-	TypeTomlBlobStoreConfigV0                       = "!toml-blob_store_config-v0"
-	TypeTomlBlobStoreConfigV1                       = "!toml-blob_store_config-v1"
+	TypeTomlBlobStoreConfigV1 = "!toml-blob_store_config-v1"
 	TypeTomlBlobStoreConfigV2                       = "!toml-blob_store_config-v2"
 	TypeTomlBlobStoreConfigV3                       = "!toml-blob_store_config-v3"
 	TypeTomlBlobStoreConfigPointerV0                = "!toml-blob_store_config-pointer-v0"
@@ -38,8 +37,7 @@ const (
 	TypeTomlBlobStoreConfigInventoryArchiveV2       = "!toml-blob_store_config-inventory_archive-v2"
 	TypeTomlBlobStoreConfigInventoryArchiveVCurrent = TypeTomlBlobStoreConfigInventoryArchiveV2
 	TypeTomlBlobStoreConfigVCurrent                 = TypeTomlBlobStoreConfigV3
-	TypeTomlConfigImmutableV1                       = "!toml-config-immutable-v1" // Deprecated
-	TypeTomlConfigImmutableV2                       = "!toml-config-immutable-v2"
+	TypeTomlConfigImmutableV2 = "!toml-config-immutable-v2"
 	TypeTomlConfigV0                                = "!toml-config-v0" // Deprecated
 	TypeTomlConfigV1                                = "!toml-config-v1"
 	TypeTomlConfigV2                                = "!toml-config-v2"
@@ -87,7 +85,6 @@ func init() {
 	registerBuiltinTypeString(TypeLuaTagV1, genres.Tag, false)
 	registerBuiltinTypeString(TypeLuaTagV2, genres.Tag, false)
 	registerBuiltinTypeString(TypeWasmTagV1, genres.Tag, false)
-	registerBuiltinTypeString(TypeTomlBlobStoreConfigV0, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV2, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlBlobStoreConfigV3, genres.Unknown, false)
@@ -121,7 +118,6 @@ func init() {
 		genres.Unknown,
 		false,
 	)
-	registerBuiltinTypeString(TypeTomlConfigImmutableV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlConfigImmutableV2, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlConfigV0, genres.Config, false)
 	registerBuiltinTypeString(TypeTomlConfigV1, genres.Config, false)
