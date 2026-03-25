@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 )
 
+//go:generate tommy generate
 type TomlV3 struct {
 	HashBuckets values.IntSlice `toml:"hash_buckets"`
 	BasePath    string          `toml:"base_path,omitempty"`

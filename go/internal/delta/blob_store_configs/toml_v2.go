@@ -10,6 +10,7 @@ import (
 )
 
 // TomlLocalHashBucketedV2 is the V2 configuration for the local hash-bucketed blob store.
+//go:generate tommy generate
 type TomlLocalHashBucketedV2 struct {
 	HashBuckets values.IntSlice `toml:"hash_buckets"`
 	BasePath    string          `toml:"base_path,omitempty"`

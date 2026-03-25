@@ -27,7 +27,7 @@ type V0 struct {
 	Defaults        DefaultsV0                            `toml:"defaults"`
 	HiddenEtiketten []ids.TagStruct                       `toml:"hidden-etiketten"`
 	FileExtensions  file_extensions.TOMLV0                `toml:"file-extensions"`
-	RemoteScripts   map[string]script_config.RemoteScript `toml:"remote-scripts"`
+	RemoteScripts   map[string]script_config.RemoteScript `toml:"-"`
 	Actions         map[string]script_config.ScriptConfig `toml:"actions,omitempty"`
 	PrintOptions    options_print.V1                      `toml:"cli-output"`
 	Tools           options_tools.Options                 `toml:"tools"`
