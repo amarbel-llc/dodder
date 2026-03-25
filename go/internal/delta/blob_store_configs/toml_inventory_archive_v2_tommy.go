@@ -69,7 +69,7 @@ func DecodeTomlInventoryArchiveV2(input []byte) (*TomlInventoryArchiveV2Document
 			d.data.Delta.SizeRatio = v
 			d.consumed["delta.size-ratio"] = true
 		}
-		if tableNode := d.cstDoc.FindTable("signature"); tableNode != nil {
+		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "signature"); tableNode != nil {
 			d.consumed["delta.signature"] = true
 			if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "type"); err == nil {
 				d.data.Delta.Signature.Type = v
@@ -92,7 +92,7 @@ func DecodeTomlInventoryArchiveV2(input []byte) (*TomlInventoryArchiveV2Document
 				d.consumed["delta.signature.max-chunk-size"] = true
 			}
 		}
-		if tableNode := d.cstDoc.FindTable("selector"); tableNode != nil {
+		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "selector"); tableNode != nil {
 			d.consumed["delta.selector"] = true
 			if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "type"); err == nil {
 				d.data.Delta.Selector.Type = v
@@ -180,7 +180,7 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 				return nil, err
 			}
 		}
-		if tableNode := d.cstDoc.FindTable("signature"); tableNode != nil {
+		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "signature"); tableNode != nil {
 			if d.data.Delta.Signature.Type != "" || d.cstDoc.HasInContainer(tableNode, "type") {
 				if err := d.cstDoc.SetInContainer(tableNode, "type", d.data.Delta.Signature.Type); err != nil {
 					return nil, err
@@ -207,7 +207,7 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 				}
 			}
 		}
-		if tableNode := d.cstDoc.FindTable("selector"); tableNode != nil {
+		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "selector"); tableNode != nil {
 			if d.data.Delta.Selector.Type != "" || d.cstDoc.HasInContainer(tableNode, "type") {
 				if err := d.cstDoc.SetInContainer(tableNode, "type", d.data.Delta.Selector.Type); err != nil {
 					return nil, err
