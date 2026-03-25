@@ -31,7 +31,7 @@ func (b Bridge) RunCommand(
 	cliArgs []string,
 	maxBytes int,
 ) (BridgeResult, error) {
-	return b.runCommand(ctx, cmdName, cliArgs, maxBytes, true)
+	return b.runCommand(ctx, cmdName, cliArgs, maxBytes, false)
 }
 
 func (b Bridge) RunWorkspaceCommand(
