@@ -47,8 +47,7 @@ type Builder struct {
 	debug                   bool
 	requireNonEmptyQuery    bool
 	defaultQuery            string
-	workspaceEnabled        bool
-	skipWorkspaceResolution bool
+	workspaceEnabled bool
 
 	options options
 }
@@ -154,13 +153,10 @@ func (builder *Builder) BuildQueryGroupWithRepoId(
 	state := builder.makeState()
 
 	if builder.workspaceEnabled {
-		ok := false
-
-		state.workspaceStore, ok = builder.workspaceStoreGetter.GetWorkspaceStoreForQuery(
+		_, ok := builder.workspaceStoreGetter.GetWorkspaceStoreForQuery(
 			externalQueryOptions.RepoId,
 		)
 
-		state.skipWorkspaceResolution = builder.skipWorkspaceResolution
 		state.group.RepoId = externalQueryOptions.RepoId
 		state.group.ExternalQueryOptions = externalQueryOptions
 

@@ -88,7 +88,6 @@ func (cmd Edit) Run(req command.Request) {
 				genres.Type,
 				genres.Repo,
 			),
-			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 		repo,
 		req.PopArgs(),

@@ -175,17 +175,6 @@ func (option builderOptionDebug) Apply(builder *Builder) *Builder {
 	return builder
 }
 
-type builderOptionSkipWorkspaceResolution struct{}
-
-func BuilderOptionSkipWorkspaceResolution() builderOptionSkipWorkspaceResolution {
-	return builderOptionSkipWorkspaceResolution{}
-}
-
-func (option builderOptionSkipWorkspaceResolution) Apply(builder *Builder) *Builder {
-	builder.skipWorkspaceResolution = true
-	return builder
-}
-
 type builderOptionPinnedExternalObjectIds struct {
 	ids []sku.ExternalObjectId
 }

@@ -50,7 +50,6 @@ func (cmd Revert) Run(dep command.Request) {
 				genres.Type,
 				genres.Repo,
 			),
-			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 	)
 

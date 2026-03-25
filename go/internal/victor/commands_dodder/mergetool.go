@@ -30,7 +30,6 @@ func (cmd Mergetool) Run(req command.Request) {
 		req,
 		queries.BuilderOptions(
 			queries.BuilderOptionDefaultGenres(genres.All()...),
-			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 	)
 

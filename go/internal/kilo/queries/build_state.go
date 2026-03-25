@@ -4,7 +4,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/doddish"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/tag_blobs"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
@@ -29,19 +28,14 @@ type buildState struct {
 	luaVMPoolBuilder        *lua.VMPoolBuilder
 	pinnedObjectIds         []pinnedObjectId
 	pinnedExternalObjectIds []sku.ExternalObjectId
-	workspaceStore          store_workspace.Store
-
-	workspaceStoreAcceptedQueryComponent bool
-	skipWorkspaceResolution              bool
 
 	scanner doddish.Scanner
 }
 
 func (src *buildState) copy() (dst *buildState) {
 	dst = &buildState{
-		options:                 src.options,
-		builder:                src.builder,
-		skipWorkspaceResolution: src.skipWorkspaceResolution,
+		options: src.options,
+		builder: src.builder,
 	}
 
 	if src.luaVMPoolBuilder != nil {
@@ -78,51 +72,9 @@ func (buildState *buildState) build(
 	latent = errors.MakeGroupBuilder()
 
 	// TODO switch to collections_slice
-	var remaining []string
+	remainingWithSpaces := make([]string, 0, len(values)*2)
 
-	if buildState.workspaceStore == nil || buildState.skipWorkspaceResolution {
-		remaining = values
-	} else {
-		for _, value := range values {
-			if value == "." {
-				buildState.group.dotOperatorActive = true
-				remaining = append(remaining, value)
-			}
-
-			var externalObjectIds []sku.ExternalObjectId
-
-			if externalObjectIds, err = buildState.workspaceStore.GetObjectIdsForString(
-				value,
-			); err != nil {
-				if value != "." {
-					remaining = append(remaining, value)
-				}
-
-				latent.Add(errors.Wrap(err))
-				err = nil
-
-				continue
-			}
-
-			buildState.workspaceStoreAcceptedQueryComponent = true
-
-			for _, externalObjectId := range externalObjectIds {
-				if externalObjectId.GetGenre() == genres.Unknown {
-					err = errors.ErrorWithStackf("id with empty genre: %q", externalObjectId)
-					return err, latent
-				}
-
-				buildState.pinnedExternalObjectIds = append(
-					buildState.pinnedExternalObjectIds,
-					externalObjectId,
-				)
-			}
-		}
-	}
-
-	remainingWithSpaces := make([]string, 0, len(remaining)*2)
-
-	for index, value := range remaining {
+	for index, value := range values {
 		if index > 0 {
 			remainingWithSpaces = append(remainingWithSpaces, " ")
 		}
@@ -182,10 +134,6 @@ func (buildState *buildState) addDefaultsIfNecessary() {
 	}
 
 	if buildState.builder.requireNonEmptyQuery && buildState.group.isEmpty() {
-		return
-	}
-
-	if buildState.workspaceStoreAcceptedQueryComponent {
 		return
 	}
 

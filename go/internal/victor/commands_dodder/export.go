@@ -54,7 +54,6 @@ func (cmd Export) Run(req command.Request) {
 			queries.BuilderOptionDefaultGenres(
 				genres.InventoryList,
 			),
-			queries.BuilderOptionSkipWorkspaceResolution(),
 		),
 	)
 

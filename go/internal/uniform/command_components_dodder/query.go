@@ -85,7 +85,6 @@ func (cmd Query) MakeQueryResolvingFilenames(
 	options = pkg_query.BuilderOptions(
 		options,
 		pkg_query.BuilderOptionWorkspace(repo),
-		pkg_query.BuilderOptionSkipWorkspaceResolution(),
 	)
 
 	return cmd.MakeQuery(
