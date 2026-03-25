@@ -5,6 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 
+//go:generate tommy generate
 type TomlV1 struct {
 	Binary        bool                                      `toml:"binary,omitempty"`
 	FileExtension string                                    `toml:"file-extension,omitempty"`
@@ -14,8 +15,7 @@ type TomlV1 struct {
 	UTIGroups     map[string]UTIGroup                       `toml:"uti-groups"`
 	Formatters    map[string]script_config.WithOutputFormat `toml:"formatters,omitempty"`
 
-	// TODO migrate to properly-typed hooks
-	Hooks            any                     `toml:"hooks"`
+	Hooks            string                  `toml:"hooks"`
 	References *ReferencesConfig `toml:"references,omitempty"`
 }
 
@@ -28,7 +28,7 @@ func (blob *TomlV1) Reset() {
 
 	blob.UTIGroups = reset.Map(blob.UTIGroups)
 	blob.Formatters = reset.Map(blob.Formatters)
-	blob.Hooks = nil
+	blob.Hooks = ""
 	blob.References = nil
 }
 
@@ -57,8 +57,7 @@ func (blob *TomlV1) GetFormatterUTIGroups() map[string]UTIGroup {
 }
 
 func (blob *TomlV1) GetStringLuaHooks() string {
-	hooks, _ := blob.Hooks.(string)
-	return hooks
+	return blob.Hooks
 }
 
 func (blob *TomlV1) GetReferences() *ReferencesConfig {
