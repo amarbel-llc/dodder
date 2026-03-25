@@ -15,6 +15,177 @@ var (
 	_ cst.NodeKind
 )
 
+type V1Document struct {
+	data     V1
+	cstDoc   *document.Document
+	consumed map[string]bool
+}
+
+func DecodeV1(input []byte) (*V1Document, error) {
+	doc, err := document.Parse(input)
+	if err != nil {
+		return nil, err
+	}
+
+	d := &V1Document{cstDoc: doc, consumed: make(map[string]bool)}
+
+	if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "abbreviations"); tableNode != nil {
+		d.consumed["abbreviations"] = true
+		abbreviationsVal := &abbreviationsV1{}
+		if v, err := document.GetFromContainer[bool](d.cstDoc, tableNode, "zettel-ids"); err == nil {
+			abbreviationsVal.ZettelIds = &v
+			d.consumed["abbreviations.zettel-ids"] = true
+		}
+		if v, err := document.GetFromContainer[bool](d.cstDoc, tableNode, "shas"); err == nil {
+			abbreviationsVal.MarklIds = &v
+			d.consumed["abbreviations.shas"] = true
+		}
+		d.data.Abbreviations = abbreviationsVal
+	} else {
+		abbreviationsVal := &abbreviationsV1{}
+		found := false
+		if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "zettel-ids"); err == nil {
+			abbreviationsVal.ZettelIds = &v
+			found = true
+			d.consumed["zettel-ids"] = true
+		}
+		if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "shas"); err == nil {
+			abbreviationsVal.MarklIds = &v
+			found = true
+			d.consumed["shas"] = true
+		}
+		if found {
+			d.data.Abbreviations = abbreviationsVal
+		}
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-include-description"); err == nil {
+		d.data.PrintIncludeDescription = &v
+		d.consumed["print-include-description"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-time"); err == nil {
+		d.data.PrintTime = &v
+		d.consumed["print-time"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-etiketten-always"); err == nil {
+		d.data.PrintTagsAlways = &v
+		d.consumed["print-etiketten-always"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-empty-shas"); err == nil {
+		d.data.PrintEmptyShas = &v
+		d.consumed["print-empty-shas"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-include-typen"); err == nil {
+		d.data.PrintIncludeTypes = &v
+		d.consumed["print-include-typen"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-matched-dormant"); err == nil {
+		d.data.PrintMatchedDormant = &v
+		d.consumed["print-matched-dormant"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-shas"); err == nil {
+		d.data.PrintShas = &v
+		d.consumed["print-shas"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-flush"); err == nil {
+		d.data.PrintFlush = &v
+		d.consumed["print-flush"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-unchanged"); err == nil {
+		d.data.PrintUnchanged = &v
+		d.consumed["print-unchanged"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-colors"); err == nil {
+		d.data.PrintColors = &v
+		d.consumed["print-colors"] = true
+	}
+	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "print-inventory_lists"); err == nil {
+		d.data.PrintInventoryLists = &v
+		d.consumed["print-inventory_lists"] = true
+	}
+
+	return d, nil
+}
+
+func (d *V1Document) Data() *V1 { return &d.data }
+
+func (d *V1Document) Encode() ([]byte, error) {
+	if d.data.Abbreviations != nil {
+		if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "abbreviations"); tableNode != nil {
+			if d.data.Abbreviations.ZettelIds != nil {
+				if err := d.cstDoc.SetInContainer(tableNode, "zettel-ids", *d.data.Abbreviations.ZettelIds); err != nil {
+					return nil, err
+				}
+			}
+			if d.data.Abbreviations.MarklIds != nil {
+				if err := d.cstDoc.SetInContainer(tableNode, "shas", *d.data.Abbreviations.MarklIds); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+	if d.data.PrintIncludeDescription != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-include-description", *d.data.PrintIncludeDescription); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintTime != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-time", *d.data.PrintTime); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintTagsAlways != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-etiketten-always", *d.data.PrintTagsAlways); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintEmptyShas != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-empty-shas", *d.data.PrintEmptyShas); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintIncludeTypes != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-include-typen", *d.data.PrintIncludeTypes); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintMatchedDormant != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-matched-dormant", *d.data.PrintMatchedDormant); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintShas != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-shas", *d.data.PrintShas); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintFlush != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-flush", *d.data.PrintFlush); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintUnchanged != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-unchanged", *d.data.PrintUnchanged); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintColors != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-colors", *d.data.PrintColors); err != nil {
+			return nil, err
+		}
+	}
+	if d.data.PrintInventoryLists != nil {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "print-inventory_lists", *d.data.PrintInventoryLists); err != nil {
+			return nil, err
+		}
+	}
+
+	return d.cstDoc.Bytes(), nil
+}
+
+func (d *V1Document) Undecoded() []string {
+	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
 type abbreviationsV1Document struct {
 	data     abbreviationsV1
 	cstDoc   *document.Document

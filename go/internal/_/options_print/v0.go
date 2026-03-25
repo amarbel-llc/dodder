@@ -1,5 +1,6 @@
 package options_print
 
+//go:generate tommy generate
 type V0 struct {
 	Abbreviations *abbreviationsV0 `toml:"abbreviations"`
 	boxV0
