@@ -103,3 +103,73 @@ func (d *TomlXDGV0Document) Encode() ([]byte, error) {
 func (d *TomlXDGV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlXDGV0Into(data *TomlXDGV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
+		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("public-key: %w", err)
+		}
+		consumed[keyPrefix+"public-key"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "data"); err == nil {
+		data.Data = v
+		consumed[keyPrefix+"data"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "config"); err == nil {
+		data.Config = v
+		consumed[keyPrefix+"config"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "state"); err == nil {
+		data.State = v
+		consumed[keyPrefix+"state"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "cache"); err == nil {
+		data.Cache = v
+		consumed[keyPrefix+"cache"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "runtime"); err == nil {
+		data.Runtime = v
+		consumed[keyPrefix+"runtime"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlXDGV0From(data *TomlXDGV0, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.PublicKey.MarshalText()
+		if err != nil {
+			return fmt.Errorf("public-key: %w", err)
+		}
+		if err := doc.SetInContainer(container, "public-key", string(v)); err != nil {
+			return err
+		}
+	}
+	if data.Data != "" || doc.HasInContainer(container, "data") {
+		if err := doc.SetInContainer(container, "data", data.Data); err != nil {
+			return err
+		}
+	}
+	if data.Config != "" || doc.HasInContainer(container, "config") {
+		if err := doc.SetInContainer(container, "config", data.Config); err != nil {
+			return err
+		}
+	}
+	if data.State != "" || doc.HasInContainer(container, "state") {
+		if err := doc.SetInContainer(container, "state", data.State); err != nil {
+			return err
+		}
+	}
+	if data.Cache != "" || doc.HasInContainer(container, "cache") {
+		if err := doc.SetInContainer(container, "cache", data.Cache); err != nil {
+			return err
+		}
+	}
+	if data.Runtime != "" || doc.HasInContainer(container, "runtime") {
+		if err := doc.SetInContainer(container, "runtime", data.Runtime); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

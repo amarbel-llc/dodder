@@ -247,3 +247,217 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 func (d *TomlInventoryArchiveV2Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlInventoryArchiveV2Into(data *TomlInventoryArchiveV2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "hash_type-id"); err == nil {
+		if err := data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("hash_type-id: %w", err)
+		}
+		consumed[keyPrefix+"hash_type-id"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "compression-type"); err == nil {
+		if err := data.CompressionType.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("compression-type: %w", err)
+		}
+		consumed[keyPrefix+"compression-type"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "encryption"); err == nil {
+		if err := data.Encryption.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("encryption: %w", err)
+		}
+		consumed[keyPrefix+"encryption"] = true
+	}
+	if tableNode := doc.FindTableInContainer(container, "delta"); tableNode != nil {
+		consumed[keyPrefix+"delta"] = true
+		if v, err := document.GetFromContainer[bool](doc, tableNode, "enabled"); err == nil {
+			data.Delta.Enabled = v
+			consumed[keyPrefix+"delta.enabled"] = true
+		}
+		if v, err := document.GetFromContainer[string](doc, tableNode, "algorithm"); err == nil {
+			data.Delta.Algorithm = v
+			consumed[keyPrefix+"delta.algorithm"] = true
+		}
+		if v, err := document.GetFromContainer[uint64](doc, tableNode, "min-blob-size"); err == nil {
+			data.Delta.MinBlobSize = v
+			consumed[keyPrefix+"delta.min-blob-size"] = true
+		}
+		if v, err := document.GetFromContainer[uint64](doc, tableNode, "max-blob-size"); err == nil {
+			data.Delta.MaxBlobSize = v
+			consumed[keyPrefix+"delta.max-blob-size"] = true
+		}
+		if v, err := document.GetFromContainer[float64](doc, tableNode, "size-ratio"); err == nil {
+			data.Delta.SizeRatio = v
+			consumed[keyPrefix+"delta.size-ratio"] = true
+		}
+		if tableNode := doc.FindTableInContainer(tableNode, "signature"); tableNode != nil {
+			consumed[keyPrefix+"delta.signature"] = true
+			if v, err := document.GetFromContainer[string](doc, tableNode, "type"); err == nil {
+				data.Delta.Signature.Type = v
+				consumed[keyPrefix+"delta.signature.type"] = true
+			}
+			if v, err := document.GetFromContainer[int](doc, tableNode, "signature-len"); err == nil {
+				data.Delta.Signature.SignatureLen = v
+				consumed[keyPrefix+"delta.signature.signature-len"] = true
+			}
+			if v, err := document.GetFromContainer[int](doc, tableNode, "avg-chunk-size"); err == nil {
+				data.Delta.Signature.AvgChunkSize = v
+				consumed[keyPrefix+"delta.signature.avg-chunk-size"] = true
+			}
+			if v, err := document.GetFromContainer[int](doc, tableNode, "min-chunk-size"); err == nil {
+				data.Delta.Signature.MinChunkSize = v
+				consumed[keyPrefix+"delta.signature.min-chunk-size"] = true
+			}
+			if v, err := document.GetFromContainer[int](doc, tableNode, "max-chunk-size"); err == nil {
+				data.Delta.Signature.MaxChunkSize = v
+				consumed[keyPrefix+"delta.signature.max-chunk-size"] = true
+			}
+		}
+		if tableNode := doc.FindTableInContainer(tableNode, "selector"); tableNode != nil {
+			consumed[keyPrefix+"delta.selector"] = true
+			if v, err := document.GetFromContainer[string](doc, tableNode, "type"); err == nil {
+				data.Delta.Selector.Type = v
+				consumed[keyPrefix+"delta.selector.type"] = true
+			}
+			if v, err := document.GetFromContainer[int](doc, tableNode, "bands"); err == nil {
+				data.Delta.Selector.Bands = v
+				consumed[keyPrefix+"delta.selector.bands"] = true
+			}
+			if v, err := document.GetFromContainer[int](doc, tableNode, "rows-per-band"); err == nil {
+				data.Delta.Selector.RowsPerBand = v
+				consumed[keyPrefix+"delta.selector.rows-per-band"] = true
+			}
+			if v, err := document.GetFromContainer[uint64](doc, tableNode, "min-blob-size"); err == nil {
+				data.Delta.Selector.MinBlobSize = v
+				consumed[keyPrefix+"delta.selector.min-blob-size"] = true
+			}
+			if v, err := document.GetFromContainer[uint64](doc, tableNode, "max-blob-size"); err == nil {
+				data.Delta.Selector.MaxBlobSize = v
+				consumed[keyPrefix+"delta.selector.max-blob-size"] = true
+			}
+		}
+	}
+	if v, err := document.GetFromContainer[uint64](doc, container, "max-pack-size"); err == nil {
+		data.MaxPackSize = v
+		consumed[keyPrefix+"max-pack-size"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlInventoryArchiveV2From(data *TomlInventoryArchiveV2, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.HashTypeId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("hash_type-id: %w", err)
+		}
+		if err := doc.SetInContainer(container, "hash_type-id", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.CompressionType.MarshalText()
+		if err != nil {
+			return fmt.Errorf("compression-type: %w", err)
+		}
+		if err := doc.SetInContainer(container, "compression-type", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.Encryption.MarshalText()
+		if err != nil {
+			return fmt.Errorf("encryption: %w", err)
+		}
+		if err := doc.SetInContainer(container, "encryption", string(v)); err != nil {
+			return err
+		}
+	}
+	if tableNode := doc.FindTableInContainer(container, "delta"); tableNode != nil {
+		if data.Delta.Enabled != false || doc.HasInContainer(tableNode, "enabled") {
+			if err := doc.SetInContainer(tableNode, "enabled", data.Delta.Enabled); err != nil {
+				return err
+			}
+		}
+		if data.Delta.Algorithm != "" || doc.HasInContainer(tableNode, "algorithm") {
+			if err := doc.SetInContainer(tableNode, "algorithm", data.Delta.Algorithm); err != nil {
+				return err
+			}
+		}
+		if data.Delta.MinBlobSize != 0 || doc.HasInContainer(tableNode, "min-blob-size") {
+			if err := doc.SetInContainer(tableNode, "min-blob-size", data.Delta.MinBlobSize); err != nil {
+				return err
+			}
+		}
+		if data.Delta.MaxBlobSize != 0 || doc.HasInContainer(tableNode, "max-blob-size") {
+			if err := doc.SetInContainer(tableNode, "max-blob-size", data.Delta.MaxBlobSize); err != nil {
+				return err
+			}
+		}
+		if data.Delta.SizeRatio != 0.0 || doc.HasInContainer(tableNode, "size-ratio") {
+			if err := doc.SetInContainer(tableNode, "size-ratio", data.Delta.SizeRatio); err != nil {
+				return err
+			}
+		}
+		if tableNode := doc.FindTableInContainer(tableNode, "signature"); tableNode != nil {
+			if data.Delta.Signature.Type != "" || doc.HasInContainer(tableNode, "type") {
+				if err := doc.SetInContainer(tableNode, "type", data.Delta.Signature.Type); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Signature.SignatureLen != 0 || doc.HasInContainer(tableNode, "signature-len") {
+				if err := doc.SetInContainer(tableNode, "signature-len", data.Delta.Signature.SignatureLen); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Signature.AvgChunkSize != 0 || doc.HasInContainer(tableNode, "avg-chunk-size") {
+				if err := doc.SetInContainer(tableNode, "avg-chunk-size", data.Delta.Signature.AvgChunkSize); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Signature.MinChunkSize != 0 || doc.HasInContainer(tableNode, "min-chunk-size") {
+				if err := doc.SetInContainer(tableNode, "min-chunk-size", data.Delta.Signature.MinChunkSize); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Signature.MaxChunkSize != 0 || doc.HasInContainer(tableNode, "max-chunk-size") {
+				if err := doc.SetInContainer(tableNode, "max-chunk-size", data.Delta.Signature.MaxChunkSize); err != nil {
+					return err
+				}
+			}
+		}
+		if tableNode := doc.FindTableInContainer(tableNode, "selector"); tableNode != nil {
+			if data.Delta.Selector.Type != "" || doc.HasInContainer(tableNode, "type") {
+				if err := doc.SetInContainer(tableNode, "type", data.Delta.Selector.Type); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Selector.Bands != 0 || doc.HasInContainer(tableNode, "bands") {
+				if err := doc.SetInContainer(tableNode, "bands", data.Delta.Selector.Bands); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Selector.RowsPerBand != 0 || doc.HasInContainer(tableNode, "rows-per-band") {
+				if err := doc.SetInContainer(tableNode, "rows-per-band", data.Delta.Selector.RowsPerBand); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Selector.MinBlobSize != 0 || doc.HasInContainer(tableNode, "min-blob-size") {
+				if err := doc.SetInContainer(tableNode, "min-blob-size", data.Delta.Selector.MinBlobSize); err != nil {
+					return err
+				}
+			}
+			if data.Delta.Selector.MaxBlobSize != 0 || doc.HasInContainer(tableNode, "max-blob-size") {
+				if err := doc.SetInContainer(tableNode, "max-blob-size", data.Delta.Selector.MaxBlobSize); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if data.MaxPackSize != 0 || doc.HasInContainer(container, "max-pack-size") {
+		if err := doc.SetInContainer(container, "max-pack-size", data.MaxPackSize); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

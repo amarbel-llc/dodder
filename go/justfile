@@ -121,8 +121,7 @@ update: update-go
 #
 
 build-go-generate:
-  # TODO determine the build tags
-  go generate ./...
+  nix develop '../#' -c go generate ./...
 
 
 build-go-binary tags output:

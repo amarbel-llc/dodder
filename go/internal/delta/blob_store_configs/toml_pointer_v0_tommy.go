@@ -76,3 +76,46 @@ func (d *TomlPointerV0Document) Encode() ([]byte, error) {
 func (d *TomlPointerV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlPointerV0Into(data *TomlPointerV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "id"); err == nil {
+		if err := data.Id.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("id: %w", err)
+		}
+		consumed[keyPrefix+"id"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "base-path"); err == nil {
+		data.BasePath = v
+		consumed[keyPrefix+"base-path"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "config-path"); err == nil {
+		data.ConfigPath = v
+		consumed[keyPrefix+"config-path"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlPointerV0From(data *TomlPointerV0, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.Id.MarshalText()
+		if err != nil {
+			return fmt.Errorf("id: %w", err)
+		}
+		if err := doc.SetInContainer(container, "id", string(v)); err != nil {
+			return err
+		}
+	}
+	if data.BasePath != "" || doc.HasInContainer(container, "base-path") {
+		if err := doc.SetInContainer(container, "base-path", data.BasePath); err != nil {
+			return err
+		}
+	}
+	if data.ConfigPath != "" || doc.HasInContainer(container, "config-path") {
+		if err := doc.SetInContainer(container, "config-path", data.ConfigPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

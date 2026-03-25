@@ -67,3 +67,37 @@ func (d *TomlLocalOverridePathV0Document) Encode() ([]byte, error) {
 func (d *TomlLocalOverridePathV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlLocalOverridePathV0Into(data *TomlLocalOverridePathV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
+		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("public-key: %w", err)
+		}
+		consumed[keyPrefix+"public-key"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "override-path"); err == nil {
+		data.OverridePath = v
+		consumed[keyPrefix+"override-path"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlLocalOverridePathV0From(data *TomlLocalOverridePathV0, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.PublicKey.MarshalText()
+		if err != nil {
+			return fmt.Errorf("public-key: %w", err)
+		}
+		if err := doc.SetInContainer(container, "public-key", string(v)); err != nil {
+			return err
+		}
+	}
+	if data.OverridePath != "" || doc.HasInContainer(container, "override-path") {
+		if err := doc.SetInContainer(container, "override-path", data.OverridePath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

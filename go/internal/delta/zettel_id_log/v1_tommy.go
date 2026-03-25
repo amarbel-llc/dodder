@@ -97,3 +97,67 @@ func (d *V1Document) Encode() ([]byte, error) {
 func (d *V1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "side"); err == nil {
+		if err := data.Side.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("side: %w", err)
+		}
+		consumed[keyPrefix+"side"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "tai"); err == nil {
+		if err := data.Tai.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("tai: %w", err)
+		}
+		consumed[keyPrefix+"tai"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "markl-id"); err == nil {
+		if err := data.MarklId.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("markl-id: %w", err)
+		}
+		consumed[keyPrefix+"markl-id"] = true
+	}
+	if v, err := document.GetFromContainer[int](doc, container, "word-count"); err == nil {
+		data.WordCount = v
+		consumed[keyPrefix+"word-count"] = true
+	}
+
+	return nil
+}
+
+func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.Side.MarshalText()
+		if err != nil {
+			return fmt.Errorf("side: %w", err)
+		}
+		if err := doc.SetInContainer(container, "side", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.Tai.MarshalText()
+		if err != nil {
+			return fmt.Errorf("tai: %w", err)
+		}
+		if err := doc.SetInContainer(container, "tai", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.MarklId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("markl-id: %w", err)
+		}
+		if err := doc.SetInContainer(container, "markl-id", string(v)); err != nil {
+			return err
+		}
+	}
+	if data.WordCount != 0 || doc.HasInContainer(container, "word-count") {
+		if err := doc.SetInContainer(container, "word-count", data.WordCount); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -103,3 +103,73 @@ func (d *TomlSFTPV0Document) Encode() ([]byte, error) {
 func (d *TomlSFTPV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlSFTPV0Into(data *TomlSFTPV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "host"); err == nil {
+		data.Host = v
+		consumed[keyPrefix+"host"] = true
+	}
+	if v, err := document.GetFromContainer[int](doc, container, "port"); err == nil {
+		data.Port = v
+		consumed[keyPrefix+"port"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "user"); err == nil {
+		data.User = v
+		consumed[keyPrefix+"user"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "password"); err == nil {
+		data.Password = v
+		consumed[keyPrefix+"password"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "private-key-path"); err == nil {
+		data.PrivateKeyPath = v
+		consumed[keyPrefix+"private-key-path"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "remote-path"); err == nil {
+		data.RemotePath = v
+		consumed[keyPrefix+"remote-path"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlSFTPV0From(data *TomlSFTPV0, doc *document.Document, container *cst.Node) error {
+	if data.Host != "" || doc.HasInContainer(container, "host") {
+		if err := doc.SetInContainer(container, "host", data.Host); err != nil {
+			return err
+		}
+	}
+	if data.Port != 0 {
+		if err := doc.SetInContainer(container, "port", data.Port); err != nil {
+			return err
+		}
+	} else {
+		_ = doc.DeleteFromContainer(container, "port")
+	}
+	if data.User != "" || doc.HasInContainer(container, "user") {
+		if err := doc.SetInContainer(container, "user", data.User); err != nil {
+			return err
+		}
+	}
+	if data.Password != "" {
+		if err := doc.SetInContainer(container, "password", data.Password); err != nil {
+			return err
+		}
+	} else {
+		_ = doc.DeleteFromContainer(container, "password")
+	}
+	if data.PrivateKeyPath != "" {
+		if err := doc.SetInContainer(container, "private-key-path", data.PrivateKeyPath); err != nil {
+			return err
+		}
+	} else {
+		_ = doc.DeleteFromContainer(container, "private-key-path")
+	}
+	if data.RemotePath != "" || doc.HasInContainer(container, "remote-path") {
+		if err := doc.SetInContainer(container, "remote-path", data.RemotePath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

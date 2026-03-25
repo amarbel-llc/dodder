@@ -73,3 +73,43 @@ func (d *TomlUriV0Document) Encode() ([]byte, error) {
 func (d *TomlUriV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlUriV0Into(data *TomlUriV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
+		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("public-key: %w", err)
+		}
+		consumed[keyPrefix+"public-key"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "uri"); err == nil {
+		if err := data.Uri.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("uri: %w", err)
+		}
+		consumed[keyPrefix+"uri"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlUriV0From(data *TomlUriV0, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.PublicKey.MarshalText()
+		if err != nil {
+			return fmt.Errorf("public-key: %w", err)
+		}
+		if err := doc.SetInContainer(container, "public-key", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.Uri.MarshalText()
+		if err != nil {
+			return fmt.Errorf("uri: %w", err)
+		}
+		if err := doc.SetInContainer(container, "uri", string(v)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

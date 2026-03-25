@@ -103,3 +103,73 @@ func (d *TomlInventoryArchiveV0Document) Encode() ([]byte, error) {
 func (d *TomlInventoryArchiveV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
+func DecodeTomlInventoryArchiveV0Into(data *TomlInventoryArchiveV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
+	if v, err := document.GetFromContainer[string](doc, container, "hash_type-id"); err == nil {
+		if err := data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("hash_type-id: %w", err)
+		}
+		consumed[keyPrefix+"hash_type-id"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "compression-type"); err == nil {
+		if err := data.CompressionType.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("compression-type: %w", err)
+		}
+		consumed[keyPrefix+"compression-type"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "loose-blob-store-id"); err == nil {
+		if err := data.LooseBlobStoreId.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("loose-blob-store-id: %w", err)
+		}
+		consumed[keyPrefix+"loose-blob-store-id"] = true
+	}
+	if v, err := document.GetFromContainer[string](doc, container, "encryption"); err == nil {
+		if err := data.Encryption.UnmarshalText([]byte(v)); err != nil {
+			return fmt.Errorf("encryption: %w", err)
+		}
+		consumed[keyPrefix+"encryption"] = true
+	}
+
+	return nil
+}
+
+func EncodeTomlInventoryArchiveV0From(data *TomlInventoryArchiveV0, doc *document.Document, container *cst.Node) error {
+	{
+		v, err := data.HashTypeId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("hash_type-id: %w", err)
+		}
+		if err := doc.SetInContainer(container, "hash_type-id", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.CompressionType.MarshalText()
+		if err != nil {
+			return fmt.Errorf("compression-type: %w", err)
+		}
+		if err := doc.SetInContainer(container, "compression-type", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.LooseBlobStoreId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("loose-blob-store-id: %w", err)
+		}
+		if err := doc.SetInContainer(container, "loose-blob-store-id", string(v)); err != nil {
+			return err
+		}
+	}
+	{
+		v, err := data.Encryption.MarshalText()
+		if err != nil {
+			return fmt.Errorf("encryption: %w", err)
+		}
+		if err := doc.SetInContainer(container, "encryption", string(v)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
