@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 
+//go:generate tommy generate
 type DefaultsV0 struct {
 	Typ       ids.TypeStruct  `toml:"typ"`
 	Etiketten []ids.TagStruct `toml:"etiketten"`

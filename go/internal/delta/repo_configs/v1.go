@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 
+//go:generate tommy generate
 type DefaultsV1 struct {
 	Type ids.TypeStruct  `toml:"type,omitempty"`
 	Tags []ids.TagStruct `toml:"tags"`
@@ -23,6 +24,7 @@ func (defaults DefaultsV1) GetDefaultTags() collections_slice.Slice[ids.TagStruc
 	return collections_slice.Slice[ids.TagStruct](defaults.Tags)
 }
 
+//go:generate tommy generate
 type DefaultsV1OmitEmpty struct {
 	Type ids.TypeStruct  `toml:"type,omitempty"`
 	Tags []ids.TagStruct `toml:"tags,omitempty"`

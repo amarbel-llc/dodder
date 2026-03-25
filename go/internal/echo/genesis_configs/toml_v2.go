@@ -10,25 +10,25 @@ import (
 )
 
 // must be public for toml coding to function
-type (
-	TomlV2Common struct {
-		StoreVersion      store_version.Version `toml:"store-version"`
-		_                 string                `toml:"repo-type"`
-		RepoId            ids.RepoId            `toml:"id"`
-		InventoryListType string                `toml:"inventory_list-type"`
-		ObjectSigType     string                `toml:"object-sig-type"`
-	}
+type TomlV2Common struct {
+	StoreVersion      store_version.Version `toml:"store-version"`
+	_                 string                `toml:"repo-type"`
+	RepoId            ids.RepoId            `toml:"id"`
+	InventoryListType string                `toml:"inventory_list-type"`
+	ObjectSigType     string                `toml:"object-sig-type"`
+}
 
-	TomlV2Private struct {
-		PrivateKey markl.Id `toml:"private-key"`
-		TomlV2Common
-	}
+//go:generate tommy generate
+type TomlV2Private struct {
+	PrivateKey markl.Id `toml:"private-key"`
+	TomlV2Common
+}
 
-	TomlV2Public struct {
-		PublicKey markl.Id `toml:"public-key"`
-		TomlV2Common
-	}
-)
+//go:generate tommy generate
+type TomlV2Public struct {
+	PublicKey markl.Id `toml:"public-key"`
+	TomlV2Common
+}
 
 var (
 	_ ConfigPublic         = &TomlV2Public{}
