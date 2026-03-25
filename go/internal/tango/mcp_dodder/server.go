@@ -640,7 +640,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 			}`),
 			Annotations: readOnlyAnnotations,
 		},
-		makeWorkspaceBridgeHandler(bridge, "diff", func(args json.RawMessage) ([]string, error) {
+		makeWorkspaceBridgeHandlerEmptyMessage(bridge, "diff", "no differences", func(args json.RawMessage) ([]string, error) {
 			var p struct {
 				Query []string `json:"query"`
 			}
@@ -661,10 +661,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 					"object_id": {
 						"type": "string",
 						"description": "Object identifier (e.g. 'ceroplastes/midtown')"
-					},
-					"format_id": {
-						"type": "string",
-						"description": "Formatter ID to use (optional, uses type default if omitted)"
 					}
 				},
 				"required": ["object_id"],
@@ -672,20 +668,15 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 			}`),
 			Annotations: readOnlyAnnotations,
 		},
-		makeWorkspaceBridgeHandler(bridge, "format-blob", func(args json.RawMessage) ([]string, error) {
+		makeWorkspaceBridgeHandler(bridge, "show", func(args json.RawMessage) ([]string, error) {
 			var p struct {
 				ObjectId string `json:"object_id"`
-				FormatId string `json:"format_id"`
 			}
 			if err := json.Unmarshal(args, &p); err != nil {
 				return nil, err
 			}
-			// Prefix with . sigil to read external (working copy) version
-			cliArgs := []string{"." + p.ObjectId}
-			if p.FormatId != "" {
-				cliArgs = append(cliArgs, p.FormatId)
-			}
-			return cliArgs, nil
+			// . sigil as separate arg selects external (working copy) version
+			return []string{"-format", "text", ".", p.ObjectId}, nil
 		}),
 	)
 }
@@ -855,6 +846,30 @@ func makeBridgeHandler(
 				protocol.TextContentV1(output),
 			},
 		}, nil
+	}
+}
+
+func makeWorkspaceBridgeHandlerEmptyMessage(
+	bridge Bridge,
+	cmdName string,
+	emptyMessage string,
+	translate paramTranslator,
+) server.ToolHandlerV1 {
+	inner := makeWorkspaceBridgeHandler(bridge, cmdName, translate)
+	return func(
+		ctx context.Context,
+		args json.RawMessage,
+	) (*protocol.ToolCallResultV1, error) {
+		result, err := inner(ctx, args)
+		if err != nil {
+			return result, err
+		}
+
+		if len(result.Content) == 1 && result.Content[0].Text == "" {
+			result.Content[0].Text = emptyMessage
+		}
+
+		return result, nil
 	}
 }
 
