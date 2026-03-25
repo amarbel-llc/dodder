@@ -2,6 +2,7 @@ package script_config
 
 import "code.linenisgreat.com/dodder/go/lib/_/equality"
 
+//go:generate tommy generate
 type WithOutputFormat struct {
 	ScriptConfig
 	UTI           string   `toml:"uti"` // deprecated
