@@ -87,6 +87,7 @@ func (cmd Show) Run(req command.Request) {
 		pkg_query.BuilderOptions(
 			pkg_query.BuilderOptionWorkspace(repo),
 			pkg_query.BuilderOptionDefaultGenres(genres.Zettel),
+			pkg_query.BuilderOptionSkipWorkspaceResolution(),
 		),
 		repo,
 		args,
