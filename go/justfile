@@ -192,7 +192,10 @@ build-analyzer-seqerror:
 check-go-seqerror: build-analyzer-seqerror
   go vet -tags test,debug -vettool=build/seqerror-analyzer ./...
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror
+check-go-versions:
+  go run ./lib/alfa/analyzers/versions
+
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-versions
 
 #   _____         _
 #  |_   _|__  ___| |_
