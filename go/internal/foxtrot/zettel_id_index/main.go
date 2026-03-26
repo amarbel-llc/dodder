@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
-	"code.linenisgreat.com/dodder/go/internal/echo/genesis_configs"
+	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	hinweis_index_v0 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v0"
 	hinweis_index_v1 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v1"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"

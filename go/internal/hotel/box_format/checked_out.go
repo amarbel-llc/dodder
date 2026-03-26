@@ -1,8 +1,8 @@
 package box_format
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"

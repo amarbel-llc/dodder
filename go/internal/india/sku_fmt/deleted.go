@@ -2,7 +2,7 @@ package sku_fmt
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"

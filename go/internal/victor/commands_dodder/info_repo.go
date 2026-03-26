@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
-	"code.linenisgreat.com/dodder/go/internal/echo/genesis_configs"
+	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"

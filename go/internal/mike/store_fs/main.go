@@ -9,8 +9,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/_/doddish"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"

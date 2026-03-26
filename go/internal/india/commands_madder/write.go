@@ -6,8 +6,8 @@ import (
 	"os"
 	"sync/atomic"
 
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"

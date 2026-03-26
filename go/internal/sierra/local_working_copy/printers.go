@@ -1,7 +1,7 @@
 package local_working_copy
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"

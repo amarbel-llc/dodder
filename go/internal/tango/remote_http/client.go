@@ -9,7 +9,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
-	"code.linenisgreat.com/dodder/go/internal/echo/genesis_configs"
+	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/log_remote_inventory_lists"
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_coders"

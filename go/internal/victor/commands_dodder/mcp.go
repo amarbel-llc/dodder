@@ -2,8 +2,8 @@ package commands_dodder
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"code.linenisgreat.com/dodder/go/internal/tango/mcp_dodder"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
+	"code.linenisgreat.com/dodder/go/internal/uniform/mcp_dodder"
 )
 
 func init() {

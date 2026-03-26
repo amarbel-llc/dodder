@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"

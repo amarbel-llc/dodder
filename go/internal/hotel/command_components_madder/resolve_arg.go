@@ -1,8 +1,8 @@
 package command_components_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

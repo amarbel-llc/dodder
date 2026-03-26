@@ -1,7 +1,7 @@
 package command_components_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"

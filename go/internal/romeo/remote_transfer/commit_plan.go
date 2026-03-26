@@ -5,8 +5,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
-	"code.linenisgreat.com/dodder/go/internal/echo/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/papa/env_box"

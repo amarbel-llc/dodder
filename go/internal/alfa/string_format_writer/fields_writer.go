@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"

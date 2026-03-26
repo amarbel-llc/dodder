@@ -1,7 +1,7 @@
 package descriptions
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )

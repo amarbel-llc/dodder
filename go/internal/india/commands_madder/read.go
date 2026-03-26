@@ -5,8 +5,8 @@ import (
 	"io"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"

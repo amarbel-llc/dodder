@@ -8,7 +8,7 @@ import (
 
 	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"

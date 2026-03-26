@@ -1,9 +1,9 @@
 package repo_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
 	"code.linenisgreat.com/dodder/go/internal/_/options_tools"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"

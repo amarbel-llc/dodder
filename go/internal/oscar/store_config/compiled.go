@@ -3,14 +3,14 @@ package store_config
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
+	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
+	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
-	"code.linenisgreat.com/dodder/go/internal/echo/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
