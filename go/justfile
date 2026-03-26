@@ -165,7 +165,7 @@ build-go-race:
   mkdir -p build/race
   go build -tags debug -race -o build/race/ ./cmd/*
 
-build: build-go check-go-repool check-go-seqerror #build-nix
+build: build-go check-go-repool check-go-seqerror check-go-versions #build-nix
 
 #    ____ _               _
 #   / ___| |__   ___  ___| | __
