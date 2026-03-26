@@ -54,21 +54,21 @@ function generate { # @test
 		! toml-config-v2
 		---
 
-		blob-stores = ['.default']
+		blob-stores = [".default"]
 
 		[defaults]
-		type = '!md'
+		type = "!md"
 		tags = []
 
 		[file-extensions]
-		config = 'konfig'
-		conflict = 'conflict'
-		lockfile = 'object-lockfile'
-		organize = 'md'
-		repo = 'repo'
-		tag = 'tag'
-		type = 'type'
-		zettel = 'zettel'
+		config = "konfig"
+		conflict = "conflict"
+		lockfile = "object-lockfile"
+		organize = "md"
+		repo = "repo"
+		tag = "tag"
+		type = "type"
+		zettel = "zettel"
 
 		[cli-output]
 		print-blob_digests = true
@@ -88,7 +88,7 @@ function generate { # @test
 		merkle_ids = true
 
 		[tools]
-		merge = ['vimdiff']
+		merge = ["vimdiff"]
 	EOM
 
   create_test_zettels

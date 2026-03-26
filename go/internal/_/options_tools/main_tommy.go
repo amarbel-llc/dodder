@@ -51,6 +51,22 @@ func (d *OptionsDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *OptionsDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *OptionsDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *OptionsDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *OptionsDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeOptionsInto(data *Options, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[[]string](doc, container, "merge"); err == nil {
 		data.Merge = v

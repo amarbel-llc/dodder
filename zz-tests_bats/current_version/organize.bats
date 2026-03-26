@@ -1239,7 +1239,7 @@ function tags_with_extended_tags_noop { # @test
 function organize_new_objects_default_tags { # @test
   # shellcheck disable=SC2317
   function editor() (
-    sed -i "s/tags = \\[]/tags = ['zz-inbox']/" "$0"
+    sed -i "s/tags = \\[]/tags = [\"zz-inbox\"]/" "$0"
     # sed -i "/type = '!md'/a tags = 'hello'" "$0"
   )
 
@@ -1249,7 +1249,7 @@ function organize_new_objects_default_tags { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-xgxcf8wamkwz5g0mlp0tn44lawfe6scuv09lpdkfjen5a3fjgczqqczfgn !toml-config-v2]
+		[konfig @blake2b256-2naaxn80x7cjwzttnual6r9rfupztyfrvkgelvl6zgepvatkyths409myg !toml-config-v2]
 	EOM
 
   run_dodder organize -mode output-only
@@ -1301,7 +1301,7 @@ function organize_checked_out { # @test
   run_dodder checkout :z,e,t
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [md.type @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		      checked out [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
@@ -1348,7 +1348,7 @@ function organize_untracked_fs_blob_with_spaces() { # @test
 function organize_default_tags_workspace { # @test
   # shellcheck disable=SC2317
   function editor() (
-    sed -i "s/tags = \\[]/tags = ['zz-inbox']/" "$0"
+    sed -i "s/tags = \\[]/tags = [\"zz-inbox\"]/" "$0"
     # sed -i "/type = '!md'/a tags = 'hello'" "$0"
   )
 
@@ -1358,7 +1358,7 @@ function organize_default_tags_workspace { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-xgxcf8wamkwz5g0mlp0tn44lawfe6scuv09lpdkfjen5a3fjgczqqczfgn !toml-config-v2]
+		[konfig @blake2b256-2naaxn80x7cjwzttnual6r9rfupztyfrvkgelvl6zgepvatkyths409myg !toml-config-v2]
 	EOM
 
   cat >.dodder-workspace <<-EOM
@@ -1408,7 +1408,7 @@ function organize_dot_operator_workspace_delete_files { # @test
   skip
   # shellcheck disable=SC2317
   function editor() (
-    sed -i "s/tags = \\[]/tags = ['zz-inbox']/" "$0"
+    sed -i "s/tags = \\[]/tags = [\"zz-inbox\"]/" "$0"
     # sed -i "/type = '!md'/a tags = 'hello'" "$0"
   )
 

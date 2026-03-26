@@ -33,14 +33,14 @@ function info_config_immutable { # @test
 			! toml-config-immutable-v1
 			---
 
-			public-key = 'dodder-repo-public_key-v1.*'
+			public-key = "dodder-repo-public_key-v1.*"
 			store-version = $storeVersionCurrent
-			repo-type = 'working-copy'
-			id = 'test-repo-id'
-			inventory_list-type = '!inventory_list-v2'
+			repo-type = "working-copy"
+			id = "test-repo-id"
+			inventory_list-type = "!inventory_list-v2"
 
 			\[blob-store]
-			compression-type = 'zstd'
+			compression-type = "zstd"
 			lock-internal-files = false
 		EOM
 	else

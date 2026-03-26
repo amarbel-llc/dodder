@@ -451,7 +451,7 @@ function pull_history_default_no_conflict { # @test
 	run_dodder show +?z,t,e
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
@@ -466,7 +466,7 @@ function pull_history_default_no_conflict { # @test
 	run_dodder show !md:t
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 	EOM
 
 	run_dodder show !task:t
@@ -592,11 +592,11 @@ function pull_direct_blob_references_transferred { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !refblob/'"
 	TYPEFILE
 
@@ -653,11 +653,11 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !ref-blob/'"
 	TYPEFILE
 
@@ -763,11 +763,11 @@ function pull_direct_multiple_blob_references_transferred { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !refblob/'"
 	TYPEFILE
 
@@ -834,10 +834,10 @@ function pull_direct_transitive_blob_references_transferred { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'tree'
+		file-extension = "tree"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !treeblob/'"
 	TYPEFILE
 
@@ -850,11 +850,11 @@ function pull_direct_transitive_blob_references_transferred { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !treeblob/'"
 	TYPEFILE
 

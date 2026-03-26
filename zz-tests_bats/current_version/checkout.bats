@@ -136,7 +136,7 @@ function checkout_simple_type { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		      checked out [bin.type @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v1]
-		      checked out [md.type @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		      checked out [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 		      checked out [txt.type @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
 	EOM
 }
@@ -204,7 +204,7 @@ function checkout_builtin_type { # @test
   run_dodder checkout !toml-type-v1:t
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [md.type @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		      checked out [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 		      checked out [txt.type @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
 		      checked out [bin.type @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v1]
 	EOM

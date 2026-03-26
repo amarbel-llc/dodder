@@ -29,10 +29,6 @@ func (coder CoderTommy[BLOB, BLOB_PTR]) DecodeFrom(
 
 	n = int64(len(input))
 
-	if len(input) == 0 {
-		return n, err
-	}
-
 	var decoded BLOB
 
 	if decoded, err = coder.Decode(input); err != nil {

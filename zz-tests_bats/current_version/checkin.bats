@@ -406,7 +406,7 @@ function checkin_dot_organize_include_untracked_fs_blob_with_spaces() { # @test
 function checkin_explicit_workspace_delete_files { # @test
   # shellcheck disable=SC2317
   function editor() (
-    sed -i "s/tags = \\[]/tags = ['zz-inbox']/" "$0"
+    sed -i "s/tags = \\[]/tags = [\"zz-inbox\"]/" "$0"
     # sed -i "/type = '!md'/a tags = 'hello'" "$0"
   )
 
@@ -416,7 +416,7 @@ function checkin_explicit_workspace_delete_files { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-xgxcf8wamkwz5g0mlp0tn44lawfe6scuv09lpdkfjen5a3fjgczqqczfgn !toml-config-v2]
+		[konfig @blake2b256-2naaxn80x7cjwzttnual6r9rfupztyfrvkgelvl6zgepvatkyths409myg !toml-config-v2]
 	EOM
 
   cat >.dodder-workspace <<-EOM
@@ -479,7 +479,7 @@ function checkin_type_file_creates_type_object { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'png'
+		file-extension = "png"
 	TYPEFILE
 
 	run_dodder checkin -delete img.type

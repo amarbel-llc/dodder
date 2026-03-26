@@ -322,17 +322,16 @@ function show_simple_all { # @test
 	run_dodder show -format blob :z,t
 	assert_success
 	assert_output_unsorted - <<-EOM
-		file-extension = 'md'
-		hooks = ''
+		file-extension = "md"
 		last time
 		not another one
-		vim-syntax-type = 'markdown'
+		vim-syntax-type = "markdown"
 	EOM
 
 	run_dodder show -format sku-metadata-sans-tai :z,t
 	assert_success
 	assert_output_unsorted - <<-EOM
-		Type !md blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1
+		Type !md blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1
 		Zettel one/dos blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
 		Zettel one/uno blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
 	EOM
@@ -390,21 +389,21 @@ function show_konfig { # @test
 		! toml-config-v2
 		---
 
-		blob-stores = ['.default']
+		blob-stores = [".default"]
 
 		[defaults]
-		type = '!md'
+		type = "!md"
 		tags = []
 
 		[file-extensions]
-		config = 'konfig'
-		conflict = 'conflict'
-		lockfile = 'object-lockfile'
-		organize = 'md'
-		repo = 'repo'
-		tag = 'tag'
-		type = 'type'
-		zettel = 'zettel'
+		config = "konfig"
+		conflict = "conflict"
+		lockfile = "object-lockfile"
+		organize = "md"
+		repo = "repo"
+		tag = "tag"
+		type = "type"
+		zettel = "zettel"
 
 		[cli-output]
 		print-blob_digests = true
@@ -424,7 +423,7 @@ function show_konfig { # @test
 		merkle_ids = true
 
 		[tools]
-		merge = ['vimdiff']
+		merge = ["vimdiff"]
 	EOM
 }
 
@@ -596,9 +595,8 @@ function show_builtin_type_md { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
-		hooks = ''
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 	EOM
 }
 
@@ -683,11 +681,11 @@ function show_zettel_with_discovered_references { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '\\[\\[(.+?)\\]\\]' | sed 's/\\[\\[//;s/\\]\\]//'"
 	TYPEFILE
 
@@ -729,12 +727,12 @@ function show_zettel_with_pandoc_discovered_references { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['pandoc', '--from', 'markdown+wikilinks_title_after_pipe', '--to']
-		script = '$DIR/../zz-pandoc-refs/discover-refs.lua'
+		shell = ["pandoc", "--from", "markdown+wikilinks_title_after_pipe", "--to"]
+		script = "$DIR/../zz-pandoc-refs/discover-refs.lua"
 	TYPEFILE
 
 	run_dodder checkin -delete ref-pandoc-md.type
@@ -775,12 +773,12 @@ function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['pandoc', '--from', 'markdown+wikilinks_title_after_pipe', '--to']
-		script = '$DIR/../zz-pandoc-refs/discover-refs.lua'
+		shell = ["pandoc", "--from", "markdown+wikilinks_title_after_pipe", "--to"]
+		script = "$DIR/../zz-pandoc-refs/discover-refs.lua"
 	TYPEFILE
 
 	run_dodder checkin -delete ref-pandoc-cb.type
@@ -828,10 +826,10 @@ function format_blob_stdin_resolves_type_with_and_without_lock { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'txt'
+		file-extension = "txt"
 
 		[formatters.text]
-		shell = ['pandoc', '-f', 'markdown', '-t', 'plain', '--wrap=none']
+		shell = ["pandoc", "-f", "markdown", "-t", "plain", "--wrap=none"]
 	TYPEFILE
 
 	run_dodder checkin -delete fmt-test.type
@@ -879,7 +877,7 @@ function format_blob_stdin_selects_formatter_via_uti_group { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'txt'
+		file-extension = "txt"
 
 		[uti-groups.text-edit]
 		"public.utf8-plain-text" = "edit-fmt"
@@ -888,13 +886,13 @@ function format_blob_stdin_selects_formatter_via_uti_group { # @test
 		"public.utf8-plain-text" = "render-fmt"
 
 		[formatters.text]
-		shell = ['pandoc', '-f', 'markdown', '-t', 'markdown', '--wrap=none']
+		shell = ["pandoc", "-f", "markdown", "-t", "markdown", "--wrap=none"]
 
 		[formatters.edit-fmt]
-		shell = ['pandoc', '-f', 'markdown', '-t', 'html', '--wrap=none']
+		shell = ["pandoc", "-f", "markdown", "-t", "html", "--wrap=none"]
 
 		[formatters.render-fmt]
-		shell = ['pandoc', '-f', 'markdown', '-t', 'plain', '--wrap=none']
+		shell = ["pandoc", "-f", "markdown", "-t", "plain", "--wrap=none"]
 	TYPEFILE
 
 	run_dodder checkin -delete uti-test.type
@@ -928,13 +926,13 @@ function format_blob_prefers_text_edit_over_text { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'txt'
+		file-extension = "txt"
 
 		[formatters.text]
-		shell = ['pandoc', '-f', 'markdown', '-t', 'plain', '--wrap=none']
+		shell = ["pandoc", "-f", "markdown", "-t", "plain", "--wrap=none"]
 
 		[formatters.text-edit]
-		shell = ['pandoc', '-f', 'markdown', '-t', 'html', '--wrap=none']
+		shell = ["pandoc", "-f", "markdown", "-t", "html", "--wrap=none"]
 	TYPEFILE
 
 	run_dodder checkin -delete edit-pref.type
@@ -967,11 +965,11 @@ function show_zettel_with_discovered_blob_references { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
 	TYPEFILE
 
@@ -1014,11 +1012,11 @@ function blob_reference_without_type_fails { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+'"
 	TYPEFILE
 
@@ -1049,11 +1047,11 @@ function discovery_script_crash_required_fails { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
+		file-extension = "md"
 
 		[references]
-		shell = ['bash', '-c']
-		script = 'exit 1'
+		shell = ["bash", "-c"]
+		script = "exit 1"
 	TYPEFILE
 
 	run_dodder checkin -delete crashy.type
@@ -1083,12 +1081,12 @@ function discovery_script_crash_optional_succeeds { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
+		file-extension = "md"
 
 		[references]
 		optional = true
-		shell = ['bash', '-c']
-		script = 'exit 1'
+		shell = ["bash", "-c"]
+		script = "exit 1"
 	TYPEFILE
 
 	run_dodder checkin -delete crashy-opt.type
@@ -1118,11 +1116,11 @@ function show_box_format_includes_blob_references { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
 	TYPEFILE
 
@@ -1157,11 +1155,11 @@ function show_blob_references_sorted_in_hyphence { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
 	TYPEFILE
 
@@ -1204,11 +1202,11 @@ function show_blob_references_sorted_in_inventory_list { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
 	TYPEFILE
 
@@ -1254,10 +1252,10 @@ function blob_ref_type_lock_succeeds_when_type_matches_zettel { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
+		file-extension = "md"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !img/'"
 	TYPEFILE
 
@@ -1296,7 +1294,7 @@ function blob_ref_type_lock_resolves_heterogeneous_types { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'png'
+		file-extension = "png"
 	TYPEFILE
 
 	run_dodder checkin -delete img.type
@@ -1308,10 +1306,10 @@ function blob_ref_type_lock_resolves_heterogeneous_types { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
+		file-extension = "md"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !img/'"
 	TYPEFILE
 

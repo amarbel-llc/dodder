@@ -210,11 +210,11 @@ function json_inventory_list_preserves_all_lock_kinds { # @test
 		! toml-type-v1
 		---
 
-		file-extension = 'md'
-		vim-syntax-type = 'markdown'
+		file-extension = "md"
+		vim-syntax-type = "markdown"
 
 		[references]
-		shell = ['bash', '-c']
+		shell = ["bash", "-c"]
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !md/'"
 	TYPEFILE
 

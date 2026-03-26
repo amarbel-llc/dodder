@@ -12,23 +12,49 @@ var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
 	Metadata: hyphence.TypedMetadataCoder[Blob]{},
 	Blob: hyphence.CoderTypeMapWithoutType[Blob](
 		map[string]interfaces.CoderBufferedReadWriter[*Blob]{
-			ids.TypeTomlTypeV0: hyphence.CoderToml[
+			ids.TypeTomlTypeV0: hyphence.CoderTommy[
 				Blob,
 				*Blob,
 			]{
-				Progenitor: func() Blob {
-					return &TomlV0{}
+				Decode: func(b []byte) (Blob, error) {
+					doc, err := DecodeTomlV0(b)
+					if err != nil {
+						return &TomlV0{}, nil
+					}
+					return doc.Data(), nil
 				},
-				IgnoreDecodeErrors: true,
+				Encode: func(blob Blob) ([]byte, error) {
+					doc, err := DecodeTomlV0(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := blob.(*TomlV0); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
+				},
 			},
-			ids.TypeTomlTypeV1: hyphence.CoderToml[
+			ids.TypeTomlTypeV1: hyphence.CoderTommy[
 				Blob,
 				*Blob,
 			]{
-				Progenitor: func() Blob {
-					return &TomlV1{}
+				Decode: func(b []byte) (Blob, error) {
+					doc, err := DecodeTomlV1(b)
+					if err != nil {
+						return &TomlV1{}, nil
+					}
+					return doc.Data(), nil
 				},
-				IgnoreDecodeErrors: true,
+				Encode: func(blob Blob) ([]byte, error) {
+					doc, err := DecodeTomlV1(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := blob.(*TomlV1); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
+				},
 			},
 		},
 	),

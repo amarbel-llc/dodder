@@ -82,9 +82,8 @@ function reindex_after_changes { # @test
 		run_dodder show -format blob !md+t
 		assert_success
 		assert_output - <<-EOM
-			file-extension = 'md'
-			vim-syntax-type = 'markdown'
-			hooks = ''
+			file-extension = "md"
+			vim-syntax-type = "markdown"
 			inline-akte = false
 			vim-syntax-type = "test"
 		EOM

@@ -30,15 +30,15 @@ create_inventory_archive_v1_config() {
 
 	cat >>"${config_dir}/dodder-blob_store-config" <<-EOM
 
-		hash_type-id = 'blake2b256'
-		compression-type = 'zstd'
-		loose-blob-store-id = '.default'
-		encryption = ''
+		hash_type-id = "blake2b256"
+		compression-type = "zstd"
+		loose-blob-store-id = ".default"
+		encryption = ""
 		max-pack-size = 0
 
 		[delta]
 		enabled = ${delta_enabled}
-		algorithm = 'bsdiff'
+		algorithm = "bsdiff"
 		min-blob-size = 0
 		max-blob-size = 0
 		size-ratio = 0.0

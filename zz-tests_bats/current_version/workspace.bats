@@ -212,11 +212,10 @@ function workspace_parent_directory { # @test
 		! toml-workspace_config-v0
 		---
 
-		query = 'tag-3'
-		dry-run = false
+		query = "tag-3"
 
 		[defaults]
-		tags = ['tag-3']
+		tags = ["tag-3"]
 	EOM
 	run test -f .dodder-workspace
 
@@ -242,10 +241,9 @@ function workspace_parent_directory { # @test
 		! toml-workspace_config-v0
 		---
 
-		query = 'tag-3'
-		dry-run = false
+		query = "tag-3"
 
 		[defaults]
-		tags = ['tag-3']
+		tags = ["tag-3"]
 	EOM
 }

@@ -110,16 +110,15 @@ func (d *V1Document) Data() *V1 { return &d.data }
 
 func (d *V1Document) Encode() ([]byte, error) {
 	if d.data.Abbreviations != nil {
-		if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "abbreviations"); tableNode != nil {
-			if d.data.Abbreviations.ZettelIds != nil {
-				if err := d.cstDoc.SetInContainer(tableNode, "zettel-ids", *d.data.Abbreviations.ZettelIds); err != nil {
-					return nil, err
-				}
+		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "abbreviations")
+		if d.data.Abbreviations.ZettelIds != nil {
+			if err := d.cstDoc.SetInContainer(tableNode, "zettel-ids", *d.data.Abbreviations.ZettelIds); err != nil {
+				return nil, err
 			}
-			if d.data.Abbreviations.MarklIds != nil {
-				if err := d.cstDoc.SetInContainer(tableNode, "shas", *d.data.Abbreviations.MarklIds); err != nil {
-					return nil, err
-				}
+		}
+		if d.data.Abbreviations.MarklIds != nil {
+			if err := d.cstDoc.SetInContainer(tableNode, "shas", *d.data.Abbreviations.MarklIds); err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -184,6 +183,22 @@ func (d *V1Document) Encode() ([]byte, error) {
 
 func (d *V1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *V1Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *V1Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *V1Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *V1Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
@@ -266,16 +281,15 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 
 func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 	if data.Abbreviations != nil {
-		if tableNode := doc.FindTableInContainer(container, "abbreviations"); tableNode != nil {
-			if data.Abbreviations.ZettelIds != nil {
-				if err := doc.SetInContainer(tableNode, "zettel-ids", *data.Abbreviations.ZettelIds); err != nil {
-					return err
-				}
+		tableNode := doc.EnsureTableInContainer(container, "abbreviations")
+		if data.Abbreviations.ZettelIds != nil {
+			if err := doc.SetInContainer(tableNode, "zettel-ids", *data.Abbreviations.ZettelIds); err != nil {
+				return err
 			}
-			if data.Abbreviations.MarklIds != nil {
-				if err := doc.SetInContainer(tableNode, "shas", *data.Abbreviations.MarklIds); err != nil {
-					return err
-				}
+		}
+		if data.Abbreviations.MarklIds != nil {
+			if err := doc.SetInContainer(tableNode, "shas", *data.Abbreviations.MarklIds); err != nil {
+				return err
 			}
 		}
 	}
@@ -383,6 +397,22 @@ func (d *abbreviationsV1Document) Encode() ([]byte, error) {
 
 func (d *abbreviationsV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *abbreviationsV1Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *abbreviationsV1Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *abbreviationsV1Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *abbreviationsV1Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeabbreviationsV1Into(data *abbreviationsV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {

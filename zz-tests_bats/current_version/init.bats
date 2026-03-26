@@ -28,14 +28,14 @@ function init_compression { # @test
 				! toml-config-immutable-v1
 				---
 
-				public-key = 'dodder-repo-public_key-v1.*'
+				public-key = "dodder-repo-public_key-v1.*"
 				store-version = $storeVersionCurrent
-				repo-type = 'working-copy'
-				id = 'test-repo-id'
-				inventory_list-type = '!inventory_list-v2'
+				repo-type = "working-copy"
+				id = "test-repo-id"
+				inventory_list-type = "!inventory_list-v2"
 
 				\[blob-store]
-				compression-type = 'zstd'
+				compression-type = "zstd"
 				lock-internal-files = false
 			EOM
 		else
@@ -210,7 +210,7 @@ function init_with_age { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
@@ -277,7 +277,7 @@ function init_with_json_inventory_list_type { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
