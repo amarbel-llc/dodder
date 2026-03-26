@@ -8,7 +8,7 @@ require (
 	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4
-	github.com/amarbel-llc/tommy v0.0.0-20260326185239-89a43b3e490e
+	github.com/amarbel-llc/tommy v0.0.0-20260326193534-35616df2821f
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v0.8.0
 	github.com/charmbracelet/lipgloss v1.1.0

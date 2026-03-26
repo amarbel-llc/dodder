@@ -34,8 +34,8 @@ schema = 3
     hash = 'sha256-xEmWi8sABzRWp8fbPavpZKznx943HWqVcLv6pckTP+k='
 
   [mod.'github.com/amarbel-llc/tommy']
-    version = 'v0.0.0-20260326185239-89a43b3e490e'
-    hash = 'sha256-5g0z2Bsw/5RP07yE0p+9wwKgXRLI2dL/Z0e1i2v1aL0='
+    version = 'v0.0.0-20260326193534-35616df2821f'
+    hash = 'sha256-WgkoiauDmcvQ9jnkRfr0CLOb/xOSVndk36rvwQmaBBs='
 
   [mod.'github.com/atotto/clipboard']
     version = 'v0.1.4'
