@@ -6,6 +6,25 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
+func colorForType(t fields.Type) string {
+	switch t {
+	case fields.TypeId:
+		return colorBlue
+	case fields.TypeHash:
+		return colorItalic
+	case fields.TypeError:
+		return colorRed
+	case fields.TypeType:
+		return colorYellow
+	case fields.TypeUserData:
+		return colorCyan
+	case fields.TypeHeading:
+		return colorRed
+	default:
+		return colorNone
+	}
+}
+
 type color[T any] struct {
 	options            ColorOptions
 	color              fields.Type
@@ -37,7 +56,7 @@ func (f *color[T]) EncodeStringTo(
 
 	var n1 int
 
-	n1, err = sw.WriteString(string(f.color))
+	n1, err = sw.WriteString(colorForType(f.color))
 	n += int64(n1)
 
 	if err != nil {

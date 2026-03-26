@@ -196,7 +196,7 @@ func (f *boxStringEncoder) writeStringFormatField(
 		}
 	}
 
-	preColor, postColor, ellipsis := field.Type, colorReset, ""
+	preColor, postColor, ellipsis := colorForType(field.Type), colorReset, ""
 
 	if f.OffEntirely {
 		preColor, postColor = "", ""

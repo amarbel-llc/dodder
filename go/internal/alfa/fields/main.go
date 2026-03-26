@@ -1,15 +1,15 @@
 package fields
 
-type Type string
+type Type byte
 
 const (
-	TypeNormal   Type = ""
-	TypeId       Type = "\u001b[34m"
-	TypeHash     Type = "\u001b[3m"
-	TypeError    Type = "\u001b[31m"
-	TypeType     Type = "\u001b[33m"
-	TypeUserData Type = "\u001b[36m"
-	TypeHeading  Type = "\u001b[31m"
+	TypeNormal   Type = iota
+	TypeId            // object and zettel identifiers
+	TypeHash          // content-addressable digests and signatures
+	TypeError         // error messages
+	TypeType          // object type identifiers
+	TypeUserData      // user-provided content (descriptions, tags values)
+	TypeHeading       // section headings
 )
 
 type Field struct {
