@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
+//go:generate tommy generate
 type TomlV1 struct {
 	sku_lua.LuaVMPoolV1
 	Filter string `toml:"filter"`
