@@ -111,6 +111,18 @@ update-go:
   env GOPROXY=direct go get -u -t ./...
   go mod tidy
 
+update-flake-input input:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  nix flake update "{{input}}" --flake ..
+  git add ../flake.lock
+  # If the input is a Go module, update go.mod to match the locked rev
+  rev=$(jq -r '.nodes["{{input}}"].locked.rev // empty' ../flake.lock)
+  if [[ -n "${rev}" ]] && grep -q "amarbel-llc/{{input}}" go.mod 2>/dev/null; then
+    GOPROXY=direct go get "github.com/amarbel-llc/{{input}}@${rev}"
+    go mod tidy
+  fi
+
 update: update-go
 
 #   ____        _ _     _
@@ -121,7 +133,8 @@ update: update-go
 #
 
 build-go-generate:
-  nix develop '../#' -c go generate ./...
+  go generate ./lib/...
+  go generate ./internal/...
 
 
 build-go-binary tags output:
@@ -138,10 +151,10 @@ build-nix-gomod:
 
 # TODO improve performance of this
 build-nix: build-nix-gomod
-  nix build
+  nix build ..
 
 build-docker: build-nix-gomod
-  docker load < "$(nix build ".#docker.x86_64-linux" --print-out-paths)"
+  docker load < "$(nix build "../#docker.x86_64-linux" --print-out-paths)"
 
 build-go-cover:
   mkdir -p build/cover-bin

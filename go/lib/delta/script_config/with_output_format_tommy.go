@@ -112,6 +112,22 @@ func (d *WithOutputFormatDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *WithOutputFormatDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *WithOutputFormatDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *WithOutputFormatDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *WithOutputFormatDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeWithOutputFormatInto(data *WithOutputFormat, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "description"); err == nil {
 		data.Description = v

@@ -3,7 +3,6 @@
 ---
 
 hash_buckets = [2]
-hash_type-id = 'blake2b256'
+hash_type-id = "blake2b256"
 encryption = []
-compression-type = 'zstd'
-lock-internal-files = false
+compression-type = "zstd"

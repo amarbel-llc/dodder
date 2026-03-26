@@ -154,7 +154,8 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 			return nil, err
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("delta"); tableNode != nil {
+	{
+		tableNode := d.cstDoc.EnsureTable("delta")
 		if d.data.Delta.Enabled != false || d.cstDoc.HasInContainer(tableNode, "enabled") {
 			if err := d.cstDoc.SetInContainer(tableNode, "enabled", d.data.Delta.Enabled); err != nil {
 				return nil, err
@@ -180,7 +181,8 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 				return nil, err
 			}
 		}
-		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "signature"); tableNode != nil {
+		{
+			tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "signature")
 			if d.data.Delta.Signature.Type != "" || d.cstDoc.HasInContainer(tableNode, "type") {
 				if err := d.cstDoc.SetInContainer(tableNode, "type", d.data.Delta.Signature.Type); err != nil {
 					return nil, err
@@ -207,7 +209,8 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 				}
 			}
 		}
-		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "selector"); tableNode != nil {
+		{
+			tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "selector")
 			if d.data.Delta.Selector.Type != "" || d.cstDoc.HasInContainer(tableNode, "type") {
 				if err := d.cstDoc.SetInContainer(tableNode, "type", d.data.Delta.Selector.Type); err != nil {
 					return nil, err
@@ -246,6 +249,22 @@ func (d *TomlInventoryArchiveV2Document) Encode() ([]byte, error) {
 
 func (d *TomlInventoryArchiveV2Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *TomlInventoryArchiveV2Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlInventoryArchiveV2Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlInventoryArchiveV2Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlInventoryArchiveV2Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeTomlInventoryArchiveV2Into(data *TomlInventoryArchiveV2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
@@ -372,7 +391,8 @@ func EncodeTomlInventoryArchiveV2From(data *TomlInventoryArchiveV2, doc *documen
 			return err
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "delta"); tableNode != nil {
+	{
+		tableNode := doc.EnsureTableInContainer(container, "delta")
 		if data.Delta.Enabled != false || doc.HasInContainer(tableNode, "enabled") {
 			if err := doc.SetInContainer(tableNode, "enabled", data.Delta.Enabled); err != nil {
 				return err
@@ -398,7 +418,8 @@ func EncodeTomlInventoryArchiveV2From(data *TomlInventoryArchiveV2, doc *documen
 				return err
 			}
 		}
-		if tableNode := doc.FindTableInContainer(tableNode, "signature"); tableNode != nil {
+		{
+			tableNode := doc.EnsureTableInContainer(tableNode, "signature")
 			if data.Delta.Signature.Type != "" || doc.HasInContainer(tableNode, "type") {
 				if err := doc.SetInContainer(tableNode, "type", data.Delta.Signature.Type); err != nil {
 					return err
@@ -425,7 +446,8 @@ func EncodeTomlInventoryArchiveV2From(data *TomlInventoryArchiveV2, doc *documen
 				}
 			}
 		}
-		if tableNode := doc.FindTableInContainer(tableNode, "selector"); tableNode != nil {
+		{
+			tableNode := doc.EnsureTableInContainer(tableNode, "selector")
 			if data.Delta.Selector.Type != "" || doc.HasInContainer(tableNode, "type") {
 				if err := doc.SetInContainer(tableNode, "type", data.Delta.Selector.Type); err != nil {
 					return err

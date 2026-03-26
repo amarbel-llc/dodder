@@ -102,6 +102,22 @@ func (d *TomlV2PrivateDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *TomlV2PrivateDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlV2PrivateDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlV2PrivateDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlV2PrivateDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeTomlV2PrivateInto(data *TomlV2Private, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "private-key"); err == nil {
 		if err := data.PrivateKey.UnmarshalText([]byte(v)); err != nil {
@@ -253,6 +269,22 @@ func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
 
 func (d *TomlV2PublicDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *TomlV2PublicDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlV2PublicDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlV2PublicDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlV2PublicDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeTomlV2PublicInto(data *TomlV2Public, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {

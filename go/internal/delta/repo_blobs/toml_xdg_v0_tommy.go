@@ -104,6 +104,22 @@ func (d *TomlXDGV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *TomlXDGV0Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlXDGV0Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlXDGV0Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlXDGV0Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeTomlXDGV0Into(data *TomlXDGV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
 		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {

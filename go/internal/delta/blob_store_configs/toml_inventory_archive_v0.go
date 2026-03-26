@@ -21,9 +21,29 @@ var (
 	_ ConfigInventoryArchive = TomlInventoryArchiveV0{}
 	_ ConfigUpgradeable      = TomlInventoryArchiveV0{}
 	_ ConfigMutable          = &TomlInventoryArchiveV0{}
-	_                        = registerToml[TomlInventoryArchiveV0](
+	_ = registerTommy(
 		Coder.Blob,
 		ids.TypeTomlBlobStoreConfigInventoryArchiveV0,
+		func(b []byte) (Config, error) {
+			doc, err := DecodeTomlInventoryArchiveV0(b)
+			if err != nil {
+				return nil, err
+			}
+			return doc.Data(), nil
+		},
+		func(cfg Config) ([]byte, error) {
+			doc, err := DecodeTomlInventoryArchiveV0(nil)
+			if err != nil {
+				return nil, err
+			}
+			switch v := cfg.(type) {
+			case *TomlInventoryArchiveV0:
+				*doc.Data() = *v
+			case TomlInventoryArchiveV0:
+				*doc.Data() = v
+			}
+			return doc.Encode()
+		},
 	)
 )
 

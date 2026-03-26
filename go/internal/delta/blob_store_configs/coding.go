@@ -8,14 +8,11 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
-// TODO transition to using this for all registrations instead of map literal
-// below
-func registerToml[CONFIG Config, CONFIG_PTR interface {
-	ConfigMutable
-	interfaces.Ptr[CONFIG]
-}](
+func registerTommy(
 	typeMap hyphence.CoderTypeMapWithoutType[Config],
 	typeString string,
+	decode func([]byte) (Config, error),
+	encode func(Config) ([]byte, error),
 ) struct{} {
 	if existing, ok := typeMap[typeString]; ok {
 		panic(
@@ -27,14 +24,12 @@ func registerToml[CONFIG Config, CONFIG_PTR interface {
 		)
 	}
 
-	typeMap[typeString] = hyphence.CoderToml[
+	typeMap[typeString] = hyphence.CoderTommy[
 		Config,
 		*Config,
 	]{
-		Progenitor: func() Config {
-			var config CONFIG
-			return CONFIG_PTR(&config)
-		},
+		Decode: decode,
+		Encode: encode,
 	}
 
 	return struct{}{}
@@ -44,36 +39,101 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 	Metadata: hyphence.TypedMetadataCoder[Config]{},
 	Blob: hyphence.CoderTypeMapWithoutType[Config](
 		map[string]interfaces.CoderBufferedReadWriter[*Config]{
-			ids.TypeTomlBlobStoreConfigV1: hyphence.CoderToml[
+			ids.TypeTomlBlobStoreConfigV1: hyphence.CoderTommy[
 				Config,
 				*Config,
 			]{
-				Progenitor: func() Config {
-					return &TomlLocalHashBucketedV1{}
+				Decode: func(b []byte) (Config, error) {
+					doc, err := DecodeTomlLocalHashBucketedV1(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := DecodeTomlLocalHashBucketedV1(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlLocalHashBucketedV1:
+						*doc.Data() = *v
+					case TomlLocalHashBucketedV1:
+						*doc.Data() = v
+					}
+					return doc.Encode()
 				},
 			},
-			ids.TypeTomlBlobStoreConfigV2: hyphence.CoderToml[
+			ids.TypeTomlBlobStoreConfigV2: hyphence.CoderTommy[
 				Config,
 				*Config,
 			]{
-				Progenitor: func() Config {
-					return &TomlLocalHashBucketedV2{}
+				Decode: func(b []byte) (Config, error) {
+					doc, err := DecodeTomlLocalHashBucketedV2(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := DecodeTomlLocalHashBucketedV2(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlLocalHashBucketedV2:
+						*doc.Data() = *v
+					case TomlLocalHashBucketedV2:
+						*doc.Data() = v
+					}
+					return doc.Encode()
 				},
 			},
-			ids.TypeTomlBlobStoreConfigV3: hyphence.CoderToml[
+			ids.TypeTomlBlobStoreConfigV3: hyphence.CoderTommy[
 				Config,
 				*Config,
 			]{
-				Progenitor: func() Config {
-					return &TomlV3{}
+				Decode: func(b []byte) (Config, error) {
+					doc, err := DecodeTomlV3(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := DecodeTomlV3(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlV3:
+						*doc.Data() = *v
+					case TomlV3:
+						*doc.Data() = v
+					}
+					return doc.Encode()
 				},
 			},
-			ids.TypeTomlBlobStoreConfigSftpExplicitV0: hyphence.CoderToml[
+			ids.TypeTomlBlobStoreConfigSftpExplicitV0: hyphence.CoderTommy[
 				Config,
 				*Config,
 			]{
-				Progenitor: func() Config {
-					return &TomlSFTPV0{}
+				Decode: func(b []byte) (Config, error) {
+					doc, err := DecodeTomlSFTPV0(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := DecodeTomlSFTPV0(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := cfg.(*TomlSFTPV0); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
 				},
 			},
 			ids.TypeTomlBlobStoreConfigSftpViaSSHConfigV0: hyphence.CoderToml[

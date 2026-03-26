@@ -51,7 +51,8 @@ func DecodeV0(input []byte) (*V0Document, error) {
 func (d *V0Document) Data() *V0 { return &d.data }
 
 func (d *V0Document) Encode() ([]byte, error) {
-	if tableNode := d.cstDoc.FindTable("defaults"); tableNode != nil {
+	{
+		tableNode := d.cstDoc.EnsureTable("defaults")
 		if err := repo_configs.EncodeDefaultsV1OmitEmptyFrom(&d.data.Defaults, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("defaults: %w", err)
 		}
@@ -76,6 +77,22 @@ func (d *V0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *V0Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *V0Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *V0Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *V0Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
 		consumed[keyPrefix+"defaults"] = true
@@ -96,7 +113,8 @@ func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consume
 }
 
 func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
-	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
+	{
+		tableNode := doc.EnsureTableInContainer(container, "defaults")
 		if err := repo_configs.EncodeDefaultsV1OmitEmptyFrom(&data.Defaults, doc, tableNode); err != nil {
 			return fmt.Errorf("defaults: %w", err)
 		}

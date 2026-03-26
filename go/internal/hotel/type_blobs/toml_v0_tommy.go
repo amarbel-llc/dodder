@@ -173,10 +173,9 @@ func (d *TomlV0Document) Encode() ([]byte, error) {
 		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "file-extension")
 	}
 	if d.data.ExecCommand != nil {
-		if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "exec-command"); tableNode != nil {
-			if err := script_config.EncodeScriptConfigFrom(d.data.ExecCommand, d.cstDoc, tableNode); err != nil {
-				return nil, fmt.Errorf("exec-command: %w", err)
-			}
+		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "exec-command")
+		if err := script_config.EncodeScriptConfigFrom(d.data.ExecCommand, d.cstDoc, tableNode); err != nil {
+			return nil, fmt.Errorf("exec-command: %w", err)
 		}
 	}
 	if d.data.VimSyntaxType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "vim-syntax-type") {
@@ -281,6 +280,22 @@ func (d *TomlV0Document) Encode() ([]byte, error) {
 
 func (d *TomlV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *TomlV0Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlV0Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlV0Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlV0Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeTomlV0Into(data *TomlV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
@@ -425,10 +440,9 @@ func EncodeTomlV0From(data *TomlV0, doc *document.Document, container *cst.Node)
 		_ = doc.DeleteFromContainer(container, "file-extension")
 	}
 	if data.ExecCommand != nil {
-		if tableNode := doc.FindTableInContainer(container, "exec-command"); tableNode != nil {
-			if err := script_config.EncodeScriptConfigFrom(data.ExecCommand, doc, tableNode); err != nil {
-				return fmt.Errorf("exec-command: %w", err)
-			}
+		tableNode := doc.EnsureTableInContainer(container, "exec-command")
+		if err := script_config.EncodeScriptConfigFrom(data.ExecCommand, doc, tableNode); err != nil {
+			return fmt.Errorf("exec-command: %w", err)
 		}
 	}
 	if data.VimSyntaxType != "" || doc.HasInContainer(container, "vim-syntax-type") {

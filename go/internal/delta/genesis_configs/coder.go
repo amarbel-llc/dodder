@@ -22,12 +22,13 @@ var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigPrivate) ([]byte, error) {
-					concrete := cfg.(*TomlV2Private)
-					doc, err := DecodeTomlV2Private([]byte{})
+					doc, err := DecodeTomlV2Private(nil)
 					if err != nil {
 						return nil, err
 					}
-					*doc.Data() = *concrete
+					if v, ok := cfg.(*TomlV2Private); ok {
+						*doc.Data() = *v
+					}
 					return doc.Encode()
 				},
 			},
@@ -51,12 +52,13 @@ var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigPublic) ([]byte, error) {
-					concrete := cfg.(*TomlV2Public)
-					doc, err := DecodeTomlV2Public([]byte{})
+					doc, err := DecodeTomlV2Public(nil)
 					if err != nil {
 						return nil, err
 					}
-					*doc.Data() = *concrete
+					if v, ok := cfg.(*TomlV2Public); ok {
+						*doc.Data() = *v
+					}
 					return doc.Encode()
 				},
 			},

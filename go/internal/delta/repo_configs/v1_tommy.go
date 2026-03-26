@@ -85,6 +85,22 @@ func (d *DefaultsV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *DefaultsV1Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *DefaultsV1Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *DefaultsV1Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *DefaultsV1Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeDefaultsV1Into(data *DefaultsV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "type"); err == nil {
 		if err := data.Type.UnmarshalText([]byte(v)); err != nil {
@@ -198,6 +214,22 @@ func (d *DefaultsV1OmitEmptyDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *DefaultsV1OmitEmptyDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *DefaultsV1OmitEmptyDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *DefaultsV1OmitEmptyDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *DefaultsV1OmitEmptyDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeDefaultsV1OmitEmptyInto(data *DefaultsV1OmitEmpty, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "type"); err == nil {
 		if err := data.Type.UnmarshalText([]byte(v)); err != nil {
@@ -302,7 +334,8 @@ func DecodeV1(input []byte) (*V1Document, error) {
 func (d *V1Document) Data() *V1 { return &d.data }
 
 func (d *V1Document) Encode() ([]byte, error) {
-	if tableNode := d.cstDoc.FindTable("defaults"); tableNode != nil {
+	{
+		tableNode := d.cstDoc.EnsureTable("defaults")
 		{
 			v, err := d.data.Defaults.Type.MarshalText()
 			if err != nil {
@@ -326,17 +359,20 @@ func (d *V1Document) Encode() ([]byte, error) {
 			}
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("file-extensions"); tableNode != nil {
+	{
+		tableNode := d.cstDoc.EnsureTable("file-extensions")
 		if err := file_extensions.EncodeTOMLV1From(&d.data.FileExtensions, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("file-extensions: %w", err)
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("cli-output"); tableNode != nil {
+	{
+		tableNode := d.cstDoc.EnsureTable("cli-output")
 		if err := options_print.EncodeV1From(&d.data.PrintOptions, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("cli-output: %w", err)
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("tools"); tableNode != nil {
+	{
+		tableNode := d.cstDoc.EnsureTable("tools")
 		if err := options_tools.EncodeOptionsFrom(&d.data.Tools, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("tools: %w", err)
 		}
@@ -347,6 +383,22 @@ func (d *V1Document) Encode() ([]byte, error) {
 
 func (d *V1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *V1Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *V1Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *V1Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *V1Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
@@ -391,7 +443,8 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 }
 
 func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
-	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
+	{
+		tableNode := doc.EnsureTableInContainer(container, "defaults")
 		{
 			v, err := data.Defaults.Type.MarshalText()
 			if err != nil {
@@ -415,17 +468,20 @@ func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 			}
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "file-extensions"); tableNode != nil {
+	{
+		tableNode := doc.EnsureTableInContainer(container, "file-extensions")
 		if err := file_extensions.EncodeTOMLV1From(&data.FileExtensions, doc, tableNode); err != nil {
 			return fmt.Errorf("file-extensions: %w", err)
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "cli-output"); tableNode != nil {
+	{
+		tableNode := doc.EnsureTableInContainer(container, "cli-output")
 		if err := options_print.EncodeV1From(&data.PrintOptions, doc, tableNode); err != nil {
 			return fmt.Errorf("cli-output: %w", err)
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "tools"); tableNode != nil {
+	{
+		tableNode := doc.EnsureTableInContainer(container, "tools")
 		if err := options_tools.EncodeOptionsFrom(&data.Tools, doc, tableNode); err != nil {
 			return fmt.Errorf("tools: %w", err)
 		}

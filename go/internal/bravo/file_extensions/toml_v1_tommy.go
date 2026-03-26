@@ -116,6 +116,22 @@ func (d *TOMLV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *TOMLV1Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TOMLV1Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TOMLV1Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TOMLV1Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeTOMLV1Into(data *TOMLV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "config"); err == nil {
 		data.Config = &v

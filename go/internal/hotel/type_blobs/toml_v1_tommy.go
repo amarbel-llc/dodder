@@ -190,10 +190,9 @@ func (d *TomlV1Document) Encode() ([]byte, error) {
 		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "mime-type")
 	}
 	if d.data.ExecCommand != nil {
-		if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "exec-command"); tableNode != nil {
-			if err := script_config.EncodeScriptConfigFrom(d.data.ExecCommand, d.cstDoc, tableNode); err != nil {
-				return nil, fmt.Errorf("exec-command: %w", err)
-			}
+		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "exec-command")
+		if err := script_config.EncodeScriptConfigFrom(d.data.ExecCommand, d.cstDoc, tableNode); err != nil {
+			return nil, fmt.Errorf("exec-command: %w", err)
 		}
 	}
 	if d.data.VimSyntaxType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "vim-syntax-type") {
@@ -262,40 +261,39 @@ func (d *TomlV1Document) Encode() ([]byte, error) {
 		}
 	}
 	if d.data.References != nil {
-		if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "references"); tableNode != nil {
-			if d.data.References.Description != "" || d.cstDoc.HasInContainer(tableNode, "description") {
-				if err := d.cstDoc.SetInContainer(tableNode, "description", d.data.References.Description); err != nil {
+		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "references")
+		if d.data.References.Description != "" || d.cstDoc.HasInContainer(tableNode, "description") {
+			if err := d.cstDoc.SetInContainer(tableNode, "description", d.data.References.Description); err != nil {
+				return nil, err
+			}
+		}
+		if len(d.data.References.Shell) > 0 || d.cstDoc.HasInContainer(tableNode, "shell") {
+			if err := d.cstDoc.SetInContainer(tableNode, "shell", d.data.References.Shell); err != nil {
+				return nil, err
+			}
+		}
+		if d.data.References.Script != "" {
+			if err := d.cstDoc.SetMultilineInContainer(tableNode, "script", d.data.References.Script); err != nil {
+				return nil, err
+			}
+		} else {
+			_ = d.cstDoc.DeleteFromContainer(tableNode, "script")
+		}
+		if len(d.data.References.Env) > 0 {
+			tableNode := d.cstDoc.EnsureTable("env")
+			document.DeleteAllInContainer(tableNode)
+			for k, v := range d.data.References.Env {
+				if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
 					return nil, err
 				}
 			}
-			if len(d.data.References.Shell) > 0 || d.cstDoc.HasInContainer(tableNode, "shell") {
-				if err := d.cstDoc.SetInContainer(tableNode, "shell", d.data.References.Shell); err != nil {
-					return nil, err
-				}
+		}
+		if d.data.References.Optional != false {
+			if err := d.cstDoc.SetInContainer(tableNode, "optional", d.data.References.Optional); err != nil {
+				return nil, err
 			}
-			if d.data.References.Script != "" {
-				if err := d.cstDoc.SetMultilineInContainer(tableNode, "script", d.data.References.Script); err != nil {
-					return nil, err
-				}
-			} else {
-				_ = d.cstDoc.DeleteFromContainer(tableNode, "script")
-			}
-			if len(d.data.References.Env) > 0 {
-				tableNode := d.cstDoc.EnsureTable("env")
-				document.DeleteAllInContainer(tableNode)
-				for k, v := range d.data.References.Env {
-					if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
-						return nil, err
-					}
-				}
-			}
-			if d.data.References.Optional != false {
-				if err := d.cstDoc.SetInContainer(tableNode, "optional", d.data.References.Optional); err != nil {
-					return nil, err
-				}
-			} else {
-				_ = d.cstDoc.DeleteFromContainer(tableNode, "optional")
-			}
+		} else {
+			_ = d.cstDoc.DeleteFromContainer(tableNode, "optional")
 		}
 	}
 
@@ -304,6 +302,22 @@ func (d *TomlV1Document) Encode() ([]byte, error) {
 
 func (d *TomlV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
+}
+
+func (d *TomlV1Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlV1Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlV1Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlV1Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
 }
 
 func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
@@ -465,10 +479,9 @@ func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node)
 		_ = doc.DeleteFromContainer(container, "mime-type")
 	}
 	if data.ExecCommand != nil {
-		if tableNode := doc.FindTableInContainer(container, "exec-command"); tableNode != nil {
-			if err := script_config.EncodeScriptConfigFrom(data.ExecCommand, doc, tableNode); err != nil {
-				return fmt.Errorf("exec-command: %w", err)
-			}
+		tableNode := doc.EnsureTableInContainer(container, "exec-command")
+		if err := script_config.EncodeScriptConfigFrom(data.ExecCommand, doc, tableNode); err != nil {
+			return fmt.Errorf("exec-command: %w", err)
 		}
 	}
 	if data.VimSyntaxType != "" || doc.HasInContainer(container, "vim-syntax-type") {
@@ -537,40 +550,39 @@ func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node)
 		}
 	}
 	if data.References != nil {
-		if tableNode := doc.FindTableInContainer(container, "references"); tableNode != nil {
-			if data.References.Description != "" || doc.HasInContainer(tableNode, "description") {
-				if err := doc.SetInContainer(tableNode, "description", data.References.Description); err != nil {
+		tableNode := doc.EnsureTableInContainer(container, "references")
+		if data.References.Description != "" || doc.HasInContainer(tableNode, "description") {
+			if err := doc.SetInContainer(tableNode, "description", data.References.Description); err != nil {
+				return err
+			}
+		}
+		if len(data.References.Shell) > 0 || doc.HasInContainer(tableNode, "shell") {
+			if err := doc.SetInContainer(tableNode, "shell", data.References.Shell); err != nil {
+				return err
+			}
+		}
+		if data.References.Script != "" {
+			if err := doc.SetMultilineInContainer(tableNode, "script", data.References.Script); err != nil {
+				return err
+			}
+		} else {
+			_ = doc.DeleteFromContainer(tableNode, "script")
+		}
+		if len(data.References.Env) > 0 {
+			tableNode := doc.EnsureTable("env")
+			document.DeleteAllInContainer(tableNode)
+			for k, v := range data.References.Env {
+				if err := doc.SetInContainer(tableNode, k, v); err != nil {
 					return err
 				}
 			}
-			if len(data.References.Shell) > 0 || doc.HasInContainer(tableNode, "shell") {
-				if err := doc.SetInContainer(tableNode, "shell", data.References.Shell); err != nil {
-					return err
-				}
+		}
+		if data.References.Optional != false {
+			if err := doc.SetInContainer(tableNode, "optional", data.References.Optional); err != nil {
+				return err
 			}
-			if data.References.Script != "" {
-				if err := doc.SetMultilineInContainer(tableNode, "script", data.References.Script); err != nil {
-					return err
-				}
-			} else {
-				_ = doc.DeleteFromContainer(tableNode, "script")
-			}
-			if len(data.References.Env) > 0 {
-				tableNode := doc.EnsureTable("env")
-				document.DeleteAllInContainer(tableNode)
-				for k, v := range data.References.Env {
-					if err := doc.SetInContainer(tableNode, k, v); err != nil {
-						return err
-					}
-				}
-			}
-			if data.References.Optional != false {
-				if err := doc.SetInContainer(tableNode, "optional", data.References.Optional); err != nil {
-					return err
-				}
-			} else {
-				_ = doc.DeleteFromContainer(tableNode, "optional")
-			}
+		} else {
+			_ = doc.DeleteFromContainer(tableNode, "optional")
 		}
 	}
 

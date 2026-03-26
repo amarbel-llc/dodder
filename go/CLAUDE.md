@@ -25,10 +25,16 @@ All commands should be run from the `go/` directory.
   `./lib/path/to/package`)
 - **Clean**: `just clean` (clears Go caches)
 - **Check**: `just check` (vulnerability scan + vet)
-- **Generate**: `just build-go-generate` (runs `go generate ./...` inside the
-  nix devshell). **Never run `go generate` directly** --- the devshell ensures
-  the correct `tommy` binary is on PATH. Running `go generate` outside the
-  devshell may use a stale system `tommy` and produce incorrect codegen.
+- **Generate**: `just build-go-generate` (deletes stale tommy codegen, then runs
+  `go generate` in NATO tier order: `lib/` then `internal/`). **Never run
+  `go generate ./...` directly** --- the NATO ordering ensures packages compile
+  incrementally as their tommy codegen is regenerated.
+- **Update flake input**: `just update-flake-input <input>` (e.g.,
+  `just update-flake-input tommy`). **Always use this recipe** to update flake
+  inputs --- never run `nix flake update` or `go get` directly. The recipe
+  updates the flake lock, stages it for nix (which reads staged content in dirty
+  git trees), and updates `go.mod` if the input is also a Go module dependency.
+  The project has a single flake at the repo root; there is no `go/flake.nix`.
 
 ### Code Quality
 

@@ -10,12 +10,29 @@ var Coder = hyphence.CoderToTypedBlob[Entry]{
 	Metadata: hyphence.TypedMetadataCoder[Entry]{},
 	Blob: hyphence.CoderTypeMapWithoutType[Entry](
 		map[string]interfaces.CoderBufferedReadWriter[*Entry]{
-			ids.TypeZettelIdLogV1: hyphence.CoderToml[
+			ids.TypeZettelIdLogV1: hyphence.CoderTommy[
 				Entry,
 				*Entry,
 			]{
-				Progenitor: func() Entry {
-					return &V1{}
+				Decode: func(b []byte) (Entry, error) {
+					doc, err := DecodeV1(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(entry Entry) ([]byte, error) {
+					doc, err := DecodeV1(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := entry.(type) {
+					case *V1:
+						*doc.Data() = *v
+					case V1:
+						*doc.Data() = v
+					}
+					return doc.Encode()
 				},
 			},
 		},

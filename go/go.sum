@@ -24,6 +24,8 @@ github.com/amarbel-llc/tommy v0.0.0-20260325163345-06da70869306 h1:Go/NYgQkgh0hl
 github.com/amarbel-llc/tommy v0.0.0-20260325163345-06da70869306/go.mod h1:qw75yzHf7ROXVU3o7OvQ2bRNIgU+biQJ6n+By+Tmmiw=
 github.com/amarbel-llc/tommy v0.0.0-20260325172042-ccc76718eb51 h1:sV7pZ3V5I8ReNj4a61JBBazzRYotMsbSmHcQgg4LUM4=
 github.com/amarbel-llc/tommy v0.0.0-20260325172042-ccc76718eb51/go.mod h1:qw75yzHf7ROXVU3o7OvQ2bRNIgU+biQJ6n+By+Tmmiw=
+github.com/amarbel-llc/tommy v0.0.0-20260326120546-169a30b0e4c8 h1:KiS8Cp4MvTbgRwu6prYds6e9WWW/lC5BxFNkxH2Wch4=
+github.com/amarbel-llc/tommy v0.0.0-20260326120546-169a30b0e4c8/go.mod h1:qw75yzHf7ROXVU3o7OvQ2bRNIgU+biQJ6n+By+Tmmiw=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=

@@ -17,9 +17,29 @@ type TomlPointerV0 struct {
 var (
 	_ ConfigPointer = TomlPointerV0{}
 	_ ConfigMutable = &TomlPointerV0{}
-	_               = registerToml[TomlPointerV0](
+	_ = registerTommy(
 		Coder.Blob,
 		ids.TypeTomlBlobStoreConfigPointerV0,
+		func(b []byte) (Config, error) {
+			doc, err := DecodeTomlPointerV0(b)
+			if err != nil {
+				return nil, err
+			}
+			return doc.Data(), nil
+		},
+		func(cfg Config) ([]byte, error) {
+			doc, err := DecodeTomlPointerV0(nil)
+			if err != nil {
+				return nil, err
+			}
+			switch v := cfg.(type) {
+			case *TomlPointerV0:
+				*doc.Data() = *v
+			case TomlPointerV0:
+				*doc.Data() = v
+			}
+			return doc.Encode()
+		},
 	)
 )
 

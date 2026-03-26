@@ -46,8 +46,12 @@ function remote_add_dotenv_xdg { # @test
 		! toml-repo-local_override_path-v0
 		---
 
-		public-key = 'dodder-repo-public_key-v1.*'
-		override-path = '.+/them'
+		---
+		! toml-repo-local_override_path-v0
+		---
+
+		public-key = ["']dodder-repo-public_key-v1.*["']
+		override-path = ["'].+/them["']
 	EOM
 }
 
@@ -83,7 +87,11 @@ function remote_add_local_path { # @test
 		! toml-repo-local_override_path-v0
 		---
 
-		public-key = 'dodder-repo-public_key-v1.*'
-		override-path = '.+/them'
+		---
+		! toml-repo-local_override_path-v0
+		---
+
+		public-key = ["']dodder-repo-public_key-v1.*["']
+		override-path = ["'].+/them["']
 	EOM
 }

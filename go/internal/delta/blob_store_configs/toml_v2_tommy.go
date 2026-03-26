@@ -117,6 +117,22 @@ func (d *TomlLocalHashBucketedV2Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *TomlLocalHashBucketedV2Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlLocalHashBucketedV2Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlLocalHashBucketedV2Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlLocalHashBucketedV2Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeTomlLocalHashBucketedV2Into(data *TomlLocalHashBucketedV2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[[]int](doc, container, "hash_buckets"); err == nil {
 		data.HashBuckets = values.IntSlice(v)

@@ -104,6 +104,22 @@ func (d *TomlInventoryArchiveV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *TomlInventoryArchiveV0Document) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *TomlInventoryArchiveV0Document) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *TomlInventoryArchiveV0Document) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *TomlInventoryArchiveV0Document) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeTomlInventoryArchiveV0Into(data *TomlInventoryArchiveV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "hash_type-id"); err == nil {
 		if err := data.HashTypeId.UnmarshalText([]byte(v)); err != nil {

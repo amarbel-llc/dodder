@@ -98,6 +98,22 @@ func (d *ReferencesConfigDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *ReferencesConfigDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *ReferencesConfigDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *ReferencesConfigDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *ReferencesConfigDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeReferencesConfigInto(data *ReferencesConfig, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "description"); err == nil {
 		data.Description = v

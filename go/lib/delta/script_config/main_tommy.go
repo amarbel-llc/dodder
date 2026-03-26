@@ -87,6 +87,22 @@ func (d *ScriptConfigDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
 
+func (d *ScriptConfigDocument) Comment(key string) string {
+	return d.cstDoc.GetComment(key)
+}
+
+func (d *ScriptConfigDocument) SetComment(key, comment string) {
+	d.cstDoc.SetComment(key, comment)
+}
+
+func (d *ScriptConfigDocument) InlineComment(key string) string {
+	return d.cstDoc.GetInlineComment(key)
+}
+
+func (d *ScriptConfigDocument) SetInlineComment(key, comment string) {
+	d.cstDoc.SetInlineComment(key, comment)
+}
+
 func DecodeScriptConfigInto(data *ScriptConfig, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if v, err := document.GetFromContainer[string](doc, container, "description"); err == nil {
 		data.Description = v
