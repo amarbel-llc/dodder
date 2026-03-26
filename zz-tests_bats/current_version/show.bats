@@ -323,6 +323,7 @@ function show_simple_all { # @test
 	assert_success
 	assert_output_unsorted - <<-EOM
 		file-extension = 'md'
+		hooks = ''
 		last time
 		not another one
 		vim-syntax-type = 'markdown'
@@ -331,7 +332,7 @@ function show_simple_all { # @test
 	run_dodder show -format sku-metadata-sans-tai :z,t
 	assert_success
 	assert_output_unsorted - <<-EOM
-		Type !md blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1
+		Type !md blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1
 		Zettel one/dos blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
 		Zettel one/uno blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
 	EOM
@@ -597,6 +598,7 @@ function show_builtin_type_md { # @test
 
 		file-extension = 'md'
 		vim-syntax-type = 'markdown'
+		hooks = ''
 	EOM
 }
 

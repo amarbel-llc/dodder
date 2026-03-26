@@ -44,11 +44,11 @@ function init_compression { # @test
 				! toml-config-immutable-v2
 				---
 
-				public-key = 'dodder-repo-public_key-v1.*'
+				public-key = "dodder-repo-public_key-v1.*"
 				store-version = $storeVersionCurrent
-				id = 'test-repo-id'
-				inventory_list-type = '!inventory_list-v2'
-				object-sig-type = 'dodder-object-sig-v2'
+				id = "test-repo-id"
+				inventory_list-type = "!inventory_list-v2"
+				object-sig-type = "dodder-object-sig-v2"
 			EOM
 		fi
 	}
@@ -210,7 +210,7 @@ function init_with_age { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
@@ -277,7 +277,7 @@ function init_with_json_inventory_list_type { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 

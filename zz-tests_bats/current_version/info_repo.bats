@@ -49,11 +49,11 @@ function info_config_immutable { # @test
 			! toml-config-immutable-v2
 			---
 
-			public-key = 'dodder-repo-public_key-v1.*'
+			public-key = "dodder-repo-public_key-v1.*"
 			store-version = $storeVersionCurrent
-			id = 'test-repo-id'
-			inventory_list-type = '!inventory_list-v2'
-			object-sig-type = 'dodder-object-sig-v2'
+			id = "test-repo-id"
+			inventory_list-type = "!inventory_list-v2"
+			object-sig-type = "dodder-object-sig-v2"
 		EOM
 	fi
 }

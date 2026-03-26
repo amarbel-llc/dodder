@@ -94,13 +94,13 @@ function clone_history_zettel_type_tag { # @test
 
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		\[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		\[konfig @blake2b256-.* !toml-config-v2]
 		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc \(5 B)
-		copied Blob blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m \(51 B)
+		copied Blob blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz \(62 B)
 	EOM
 
 	try_add_new_after_clone
@@ -118,13 +118,13 @@ function clone_history_zettel_type_tag_stdio_local { # @test
 
 	assert_success
 	assert_output_unsorted --regexp - <<-EOM
-		\[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		\[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		\[konfig @blake2b256-.+ !toml-config-v2]
 		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc \(5 B)
-		copied Blob blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m \(51 B)
+		copied Blob blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz \(62 B)
 	EOM
 
 	try_add_new_after_clone
@@ -161,13 +161,13 @@ function clone_history_zettel_type_tag_stdio_ssh { # @test
 
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		\[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		\[konfig @blake2b256-.+ !toml-config-v2]
 		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc \(5 B)
-		copied Blob blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m \(51 B)
+		copied Blob blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz \(62 B)
 	EOM
 
 	try_add_new_after_clone
@@ -187,7 +187,7 @@ function clone_history_default_allow_conflicts { # @test
 	run_dodder show +?z,t,e
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
@@ -216,7 +216,7 @@ function clone_history_zettel_type_tag_port { # @test
 
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[konfig @b2c9398d2585afe1be26ed36a13703c051311256dc9dab03cf826b377ba237a6 !toml-config-v2]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
@@ -224,7 +224,7 @@ function clone_history_zettel_type_tag_port { # @test
 		[this_is_the_second]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
-		copied Blob blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m (51 B)
+		copied Blob blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz (51 B)
 	EOM
 
 	try_add_new_after_clone
@@ -241,13 +241,13 @@ function clone_direct_local_path { # @test
 
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		\[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		\[konfig @blake2b256-.* !toml-config-v2]
 		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc \(5 B)
-		copied Blob blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m \(51 B)
+		copied Blob blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz \(62 B)
 	EOM
 
 	try_add_new_after_clone

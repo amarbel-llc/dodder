@@ -451,7 +451,7 @@ function pull_history_default_no_conflict { # @test
 	run_dodder show +?z,t,e
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
@@ -466,7 +466,7 @@ function pull_history_default_no_conflict { # @test
 	run_dodder show !md:t
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 	EOM
 
 	run_dodder show !task:t

@@ -193,7 +193,7 @@ function push_history_default { # @test
 
 	run_dodder show +?z,e,t
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
@@ -203,7 +203,7 @@ function push_history_default { # @test
 	run_dodder show +zettel,typ,konfig,etikett #,repo
 	assert_output_unsorted - <<-EOM
 		[konfig @$(get_konfig_sha) !toml-config-v2]
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
@@ -238,7 +238,7 @@ function push_history_default_only_blobs { # @test
 
 	run_dodder show +?z,e,t
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
@@ -378,7 +378,7 @@ function push_history_default_stdio_twice { # @test
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
-		\[!md @blake2b256-3kj7xgch6rjkq64aa36pnjtn9mdnl89k8pdhtlh33cjfpzy8ek4qnufx0m !toml-type-v1]
+		\[!md @blake2b256-c95pgue34rt25aenq4trdxjv3vld79svy5wd2c2uxtnqdjt9cvxshw08sz !toml-type-v1]
 		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]

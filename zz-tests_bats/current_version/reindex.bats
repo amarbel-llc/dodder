@@ -84,6 +84,7 @@ function reindex_after_changes { # @test
 		assert_output - <<-EOM
 			file-extension = 'md'
 			vim-syntax-type = 'markdown'
+			hooks = ''
 			inline-akte = false
 			vim-syntax-type = "test"
 		EOM
