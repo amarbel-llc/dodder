@@ -121,6 +121,7 @@ update-flake-input input:
   if [[ -n "${rev}" ]] && grep -q "amarbel-llc/{{input}}" go.mod 2>/dev/null; then
     GOPROXY=direct go get "github.com/amarbel-llc/{{input}}@${rev}"
     go mod tidy
+    gomod2nix
   fi
 
 update: update-go

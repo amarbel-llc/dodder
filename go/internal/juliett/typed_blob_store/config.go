@@ -26,8 +26,25 @@ func MakeConfigStore(
 		toml_v0: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[repo_configs.V0](),
-				toml.TomlBlobEncoder[repo_configs.V0, *repo_configs.V0]{},
+				toml.TommyBlobDecoder[repo_configs.V0, *repo_configs.V0]{
+					Decode: func(b []byte) (repo_configs.V0, error) {
+						doc, err := repo_configs.DecodeV0(b)
+						if err != nil {
+							return repo_configs.V0{}, err
+						}
+						return *doc.Data(), nil
+					},
+				},
+				toml.TommyBlobEncoder[repo_configs.V0, *repo_configs.V0]{
+					Encode: func(v repo_configs.V0) ([]byte, error) {
+						doc, err := repo_configs.DecodeV0(nil)
+						if err != nil {
+							return nil, err
+						}
+						*doc.Data() = v
+						return doc.Encode()
+					},
+				},
 				envRepo.GetDefaultBlobStore(),
 			),
 			func(a *repo_configs.V0) {
@@ -37,8 +54,25 @@ func MakeConfigStore(
 		toml_v1: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[repo_configs.V1](),
-				toml.TomlBlobEncoder[repo_configs.V1, *repo_configs.V1]{},
+				toml.TommyBlobDecoder[repo_configs.V1, *repo_configs.V1]{
+					Decode: func(b []byte) (repo_configs.V1, error) {
+						doc, err := repo_configs.DecodeV1(b)
+						if err != nil {
+							return repo_configs.V1{}, err
+						}
+						return *doc.Data(), nil
+					},
+				},
+				toml.TommyBlobEncoder[repo_configs.V1, *repo_configs.V1]{
+					Encode: func(v repo_configs.V1) ([]byte, error) {
+						doc, err := repo_configs.DecodeV1(nil)
+						if err != nil {
+							return nil, err
+						}
+						*doc.Data() = v
+						return doc.Encode()
+					},
+				},
 				envRepo.GetDefaultBlobStore(),
 			),
 			func(a *repo_configs.V1) {
