@@ -72,7 +72,7 @@ func (store *Store) ReadTypeObject(
 	}
 
 	var typeObjectRepool interfaces.FuncRepool
-	typeObject, typeObjectRepool = sku.GetTransactedPool().GetWithRepool() //repool:suppress #47 ownership transfer via return
+	typeObject, typeObjectRepool = sku.GetTransactedPool().GetWithRepool() //repool:suppress ownership transfer via return
 
 	if !store.streamIndex.ReadOneMarklId(
 		typeLock.GetValue(),

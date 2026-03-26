@@ -57,7 +57,7 @@ func expandEdges(
 		}
 
 		for i := range pendingIds {
-			fetched, repool := sku.GetTransactedPool().GetWithRepool() //repool:suppress #47 ownership transfer to list
+			fetched, repool := sku.GetTransactedPool().GetWithRepool() //repool:suppress ownership transfer to list
 
 			if err = objectStore.ReadOneInto(&pendingIds[i], fetched); err != nil {
 				repool()

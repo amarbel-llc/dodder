@@ -393,7 +393,7 @@ func (server *Server) readMCPResourceObject(
 		{
 			var err error
 
-			if typeBlob, repoolTypeBlob, _, err = repo.GetTypedBlobStore().Type.ParseTypedBlob( //repool:suppress #47 nil-guarded defer with goto bypass
+			if typeBlob, repoolTypeBlob, _, err = repo.GetTypedBlobStore().Type.ParseTypedBlob(
 				typeObject.GetType(),
 				typeObject.GetBlobDigest(),
 			); err != nil {
