@@ -74,15 +74,8 @@ func (sp *VMPool) PrepareVM(
 
 	if sp.Searcher != nil {
 		packageTable := vm.GetGlobal("package").(*LTable)
-
-		if true { // lua <= 5.1
-			loaderTable := vm.GetField(packageTable, "loaders").(*LTable)
-			loaderTable.Insert(1, vm.NewFunction(sp.Searcher))
-		} else {
-			searcherTable, _ := vm.PoolPtr.GetWithRepool() //repool:owned
-			packageTable.Insert(1, searcherTable)
-			searcherTable.Insert(1, vm.NewFunction(sp.Searcher))
-		}
+		loaderTable := vm.GetField(packageTable, "loaders").(*LTable)
+		loaderTable.Insert(1, vm.NewFunction(sp.Searcher))
 	}
 
 	if apply != nil {
