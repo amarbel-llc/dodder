@@ -7,39 +7,22 @@ import (
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 
-// TODO https://github.com/amarbel-llc/dodder/issues/30
-// Move to collections_slice (requires inlining CollectSlice dependency)
+// Deprecated: use collections_slice.SortedValuesBy
 func SortedValuesBy[ELEMENT any](
 	set interfaces.Collection[ELEMENT],
 	cmp cmp.Func[ELEMENT],
-) (out []ELEMENT) {
-	out = CollectSlice(set)
-
-	sort.Slice(
-		out,
-		func(left, right int) bool {
-			return cmp(out[left], out[right]).IsLess()
-		},
-	)
-
-	return out
+) []ELEMENT {
+	return collections_slice.SortedValuesBy(set, cmp)
 }
 
-// TODO https://github.com/amarbel-llc/dodder/issues/30
-// Move to collections_slice (no quiter dependencies, can move as-is)
+// Deprecated: use collections_slice.SortedValues
 func SortedValues[ELEMENT interfaces.Value](
 	seq interfaces.Seq[ELEMENT],
-) (out []ELEMENT) {
-	out = slices.Collect(seq)
-
-	sort.Slice(
-		out,
-		func(i, j int) bool { return out[i].String() < out[j].String() },
-	)
-
-	return out
+) []ELEMENT {
+	return collections_slice.SortedValues(seq)
 }
 
 func Strings[ELEMENT interfaces.Stringer](
@@ -60,8 +43,6 @@ func Strings[ELEMENT interfaces.Stringer](
 	}
 }
 
-// TODO https://github.com/amarbel-llc/dodder/issues/30
-// Move to collections_slice (requires moving Strings helper too)
 func SortedStrings[ELEMENT interfaces.Stringer](
 	collections ...interfaces.Collection[ELEMENT],
 ) (out []string) {
