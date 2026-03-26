@@ -241,6 +241,24 @@ function complete_init_workspace { # @test
 	assert_output_unsorted --regexp -- '-type.*type used for new objects in `new` and `organize`'
 }
 
+function complete_blob_store_fsck { # @test
+	run_dodder complete blob_store-fsck
+	assert_success
+	assert_output --regexp '\.default'
+}
+
+function complete_blob_store_sync { # @test
+	run_dodder complete blob_store-sync
+	assert_success
+	assert_output --regexp '\.default'
+}
+
+function complete_repo_fsck { # @test
+	run_dodder complete repo-fsck
+	assert_success
+	assert_output --regexp '\.default'
+}
+
 function complete_checkin { # @test
 	touch wow.md
 	run_dodder complete checkin -organize -delete

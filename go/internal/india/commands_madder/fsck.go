@@ -9,6 +9,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
@@ -25,8 +26,17 @@ type Fsck struct {
 	command_components_madder.BlobStore
 }
 
-// TODO https://github.com/amarbel-llc/dodder/issues/29
-// Add shell completion for blob store IDs
+func (cmd Fsck) Complete(
+	req command.Request,
+	envLocal env_local.Env,
+	commandLine command.CommandLineInput,
+) {
+	envBlobStore := cmd.MakeEnvBlobStore(req)
+
+	for id, blobStore := range envBlobStore.GetBlobStores() {
+		envLocal.GetOut().Printf("%s\t%s", id, blobStore.GetBlobStoreDescription())
+	}
+}
 
 func (cmd Fsck) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)

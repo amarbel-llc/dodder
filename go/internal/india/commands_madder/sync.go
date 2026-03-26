@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
@@ -51,8 +52,17 @@ func (cmd *Sync) SetFlagDefinitions(
 	)
 }
 
-// TODO https://github.com/amarbel-llc/dodder/issues/29
-// Add shell completion for blob store IDs
+func (cmd Sync) Complete(
+	req command.Request,
+	envLocal env_local.Env,
+	commandLine command.CommandLineInput,
+) {
+	envBlobStore := cmd.MakeEnvBlobStore(req)
+
+	for id, blobStore := range envBlobStore.GetBlobStores() {
+		envLocal.GetOut().Printf("%s\t%s", id, blobStore.GetBlobStoreDescription())
+	}
+}
 
 func (cmd Sync) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)
