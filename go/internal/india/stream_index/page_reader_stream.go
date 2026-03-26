@@ -59,7 +59,9 @@ func makeSeqObjectWithCursorAndSigilFromReader(
 		decoder := makeBinaryWithQueryGroup(queryGroup, ids.SigilHistory)
 
 		var object objectWithCursorAndSigil
-		object.Transacted, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+		var repool interfaces.FuncRepool
+		object.Transacted, repool = sku.GetTransactedPool().GetWithRepool()
+		defer repool()
 
 		for {
 			sku.TransactedResetter.Reset(object.Transacted)
@@ -109,8 +111,9 @@ func (pageReader *streamPageReader) readFrom(
 		decoder := makeBinaryWithQueryGroup(queryGroup, ids.SigilHistory)
 
 		var object objectWithCursorAndSigil
-
-		object.Transacted, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+		var repool interfaces.FuncRepool
+		object.Transacted, repool = sku.GetTransactedPool().GetWithRepool()
+		defer repool()
 
 		for {
 			sku.TransactedResetter.Reset(object.Transacted)
