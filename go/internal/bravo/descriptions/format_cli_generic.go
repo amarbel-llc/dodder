@@ -1,6 +1,7 @@
 package descriptions
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
@@ -26,7 +27,7 @@ func MakeCliFormatStringer(
 		stringFormatWriter: string_format_writer.MakeColor(
 			co,
 			sfw,
-			string_format_writer.ColorTypeUserData,
+			fields.TypeUserData,
 		),
 	}
 }

@@ -1,20 +1,21 @@
 package string_format_writer
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type color[T any] struct {
 	options            ColorOptions
-	color              ColorType
+	color              fields.Type
 	stringFormatWriter interfaces.StringEncoderTo[T]
 }
 
 func MakeColor[T any](
 	o ColorOptions,
 	fsw interfaces.StringEncoderTo[T],
-	c ColorType,
+	c fields.Type,
 ) interfaces.StringEncoderTo[T] {
 	if o.OffEntirely {
 		return fsw

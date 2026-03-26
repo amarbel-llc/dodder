@@ -1,6 +1,7 @@
 package id_fmts
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -19,7 +20,7 @@ func MakeFDCliFormat(
 		stringFormatWriter: string_format_writer.MakeColor[string](
 			co,
 			relativePathStringFormatWriter,
-			string_format_writer.ColorTypeId,
+			fields.TypeId,
 		),
 	}
 }

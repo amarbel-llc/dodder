@@ -1,6 +1,7 @@
 package string_format_writer
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
@@ -12,7 +13,7 @@ func MakeIndentedHeader(
 		stringFormatWriter: MakeColor[string](
 			o,
 			MakeRightAligned(),
-			ColorTypeHeading,
+			fields.TypeHeading,
 		),
 	}
 }

@@ -1,10 +1,6 @@
 package string_format_writer
 
-import "code.linenisgreat.com/dodder/go/internal/alfa/fields"
-
 type (
-	ColorType = fields.Type
-
 	ColorOptions struct {
 		OffEntirely bool
 	}
