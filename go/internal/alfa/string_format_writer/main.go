@@ -1,5 +1,7 @@
 package string_format_writer
 
+import "code.linenisgreat.com/dodder/go/internal/alfa/fields"
+
 const (
 	StringDRArrow         = "↳"
 	StringNew             = "new"
@@ -34,11 +36,11 @@ const (
 	colorItalic  = "\u001b[3m"
 	colorNone    = ""
 
-	ColorTypeNormal   = ColorType(colorNone)
-	ColorTypeId       = ColorType(colorBlue)
-	ColorTypeHash     = ColorType(colorItalic)
-	ColorTypeError    = ColorType(colorRed)
-	ColorTypeType     = ColorType(colorYellow)
-	ColorTypeUserData = ColorType(colorCyan)
-	ColorTypeHeading  = ColorType(colorRed)
+	ColorTypeNormal   = fields.TypeNormal
+	ColorTypeId       = fields.TypeId
+	ColorTypeHash     = fields.TypeHash
+	ColorTypeError    = fields.TypeError
+	ColorTypeType     = fields.TypeType
+	ColorTypeUserData = fields.TypeUserData
+	ColorTypeHeading  = fields.TypeHeading
 )

@@ -80,7 +80,7 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 				error: err,
 				ObjectWithList: sku.ObjectWithList{
 					Object: func() *sku.Transacted { c, _ := objectWithList.Object.CloneTransacted(); return c }(), //repool:owned
-					List: func() *sku.Transacted { c, _ := objectWithList.List.CloneTransacted(); return c }(), //repool:owned
+					List:   func() *sku.Transacted { c, _ := objectWithList.List.CloneTransacted(); return c }(),   //repool:owned
 				},
 			}
 

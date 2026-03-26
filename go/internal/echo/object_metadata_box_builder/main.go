@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -37,9 +38,11 @@ func (builder *Builder) AddBlobDigestIfNecessary(
 		return
 	}
 
-	field := string_format_writer.Field{
-		Value:      "@" + value,
-		ColorType:  string_format_writer.ColorTypeHash,
+	field := string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: "@" + value,
+			Type:  fields.TypeHash,
+		},
 		NoTruncate: true,
 	}
 
@@ -100,7 +103,7 @@ func (builder *Builder) addMarklIdIfNotNull(id domain_interfaces.MarklId) {
 }
 
 func (builder *Builder) addMarklId(id domain_interfaces.MarklId) {
-	builder.addMarklIdWithColorType(id, id.GetPurposeId(), string_format_writer.ColorTypeHash)
+	builder.addMarklIdWithColorType(id, id.GetPurposeId(), fields.TypeHash)
 }
 
 func (builder *Builder) addMarklIdAbbreviated(
@@ -122,19 +125,21 @@ func (builder *Builder) addMarklIdAbbreviated(
 		}
 	}
 
-	builder.Contents.Append(string_format_writer.Field{
-		Key:        id.GetPurposeId(),
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Key:   id.GetPurposeId(),
+			Value: value,
+			Type:  fields.TypeHash,
+		},
 		Separator:  '@',
-		Value:      value,
 		NoTruncate: true,
-		ColorType:  string_format_writer.ColorTypeHash,
 	})
 }
 
 func (builder *Builder) addMarklIdLockWithColorType(
 	key string,
 	value domain_interfaces.MarklId,
-	colorType string_format_writer.ColorType,
+	colorType fields.Type,
 ) {
 	builder.addMarklIdWithColorType(value, key, colorType)
 }
@@ -142,18 +147,20 @@ func (builder *Builder) addMarklIdLockWithColorType(
 func (builder *Builder) addMarklIdWithColorType(
 	value domain_interfaces.MarklId,
 	key string,
-	colorType string_format_writer.ColorType,
+	colorType fields.Type,
 ) {
 	if key == "" {
 		panic(fmt.Sprintf("empty key for markl id: %q", value))
 	}
 
-	builder.Contents.Append(string_format_writer.Field{
-		Key:        key,
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Key:   key,
+			Value: value.String(),
+			Type:  colorType,
+		},
 		Separator:  '@',
-		Value:      value.String(),
 		NoTruncate: true,
-		ColorType:  colorType,
 	})
 }
 
@@ -163,20 +170,24 @@ func (builder *Builder) AddError(err error) {
 	if errors.As(err, &errorGroup) {
 		for _, err := range errorGroup {
 			builder.Contents.Append(
-				string_format_writer.Field{
-					Key:        "error",
-					Value:      err.Error(),
-					ColorType:  string_format_writer.ColorTypeUserData,
+				string_format_writer.FormattedField{
+					Field: fields.Field{
+						Key:   "error",
+						Value: err.Error(),
+						Type:  fields.TypeUserData,
+					},
 					NoTruncate: true,
 				},
 			)
 		}
 	} else {
 		builder.Contents.Append(
-			string_format_writer.Field{
-				Key:        "error",
-				Value:      err.Error(),
-				ColorType:  string_format_writer.ColorTypeUserData,
+			string_format_writer.FormattedField{
+				Field: fields.Field{
+					Key:   "error",
+					Value: err.Error(),
+					Type:  fields.TypeUserData,
+				},
 				NoTruncate: true,
 			},
 		)
@@ -184,18 +195,22 @@ func (builder *Builder) AddError(err error) {
 }
 
 func (builder *Builder) AddTai(metadata objects.MetadataMutable) {
-	builder.Contents.Append(string_format_writer.Field{
-		Value:     metadata.GetTai().String(),
-		ColorType: string_format_writer.ColorTypeHash,
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetTai().String(),
+			Type:  fields.TypeHash,
+		},
 	})
 }
 
 func (builder *Builder) AddType(
 	metadata objects.MetadataMutable,
 ) {
-	builder.Contents.Append(string_format_writer.Field{
-		Value:     metadata.GetType().String(),
-		ColorType: string_format_writer.ColorTypeType,
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetType().String(),
+			Type:  fields.TypeType,
+		},
 	})
 }
 
@@ -210,7 +225,7 @@ func (builder *Builder) AddTypeAndLock(
 		builder.addMarklIdLockWithColorType(
 			typeLock.GetKey().String(),
 			typeLock.GetValue(),
-			string_format_writer.ColorTypeType,
+			fields.TypeType,
 		)
 	}
 }
@@ -220,8 +235,10 @@ func (builder *Builder) AddTags(metadata objects.MetadataMutable) {
 	builder.Contents.Grow(tagCount)
 
 	for tag := range metadata.AllTags() {
-		builder.Contents.Append(string_format_writer.Field{
-			Value: tag.String(),
+		builder.Contents.Append(string_format_writer.FormattedField{
+			Field: fields.Field{
+				Value: tag.String(),
+			},
 		})
 	}
 
@@ -249,15 +266,17 @@ func (builder *Builder) AddReferencedObjectsAndLocks(metadata objects.MetadataMu
 		}
 
 		if lockValue.IsEmpty() {
-			builder.Contents.Append(string_format_writer.Field{
-				Value:     key,
-				ColorType: string_format_writer.ColorTypeId,
+			builder.Contents.Append(string_format_writer.FormattedField{
+				Field: fields.Field{
+					Value: key,
+					Type:  fields.TypeId,
+				},
 			})
 		} else {
 			builder.addMarklIdLockWithColorType(
 				key,
 				lockValue,
-				string_format_writer.ColorTypeId,
+				fields.TypeId,
 			)
 		}
 	}
@@ -281,17 +300,21 @@ func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
 			value = value + " " + typeLockStr
 		}
 
-		builder.Contents.Append(string_format_writer.Field{
-			Value:      value,
-			ColorType:  string_format_writer.ColorTypeId,
+		builder.Contents.Append(string_format_writer.FormattedField{
+			Field: fields.Field{
+				Value: value,
+				Type:  fields.TypeId,
+			},
 			NoTruncate: true,
 		})
 	}
 }
 
 func (builder *Builder) AddDescription(metadata objects.MetadataMutable) {
-	builder.Contents.Append(string_format_writer.Field{
-		Value:     metadata.GetDescription().StringWithoutNewlines(),
-		ColorType: string_format_writer.ColorTypeUserData,
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetDescription().StringWithoutNewlines(),
+			Type:  fields.TypeUserData,
+		},
 	})
 }

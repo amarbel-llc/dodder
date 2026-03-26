@@ -1,9 +1,8 @@
 package sku_fmt
 
 import (
-	"slices"
-
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -28,7 +27,7 @@ func MakeItemDeletedStringWriterFormat(
 		idStringFormatWriter: string_format_writer.MakeColor(
 			co,
 			string_format_writer.MakeString[string](),
-			string_format_writer.ColorTypeId,
+			fields.TypeId,
 		),
 		fieldsFormatWriter: fieldsFormatWriter,
 	}
@@ -65,10 +64,13 @@ func (f *itemDeletedStringFormatWriter) EncodeStringTo(
 		return n, err
 	}
 
+	var box string_format_writer.Box
+	for field := range object.GetMetadata().GetIndex().GetFields() {
+		box.Contents.Append(string_format_writer.FormattedField{Field: field})
+	}
+
 	n2, err = f.fieldsFormatWriter.EncodeStringTo(
-		string_format_writer.Box{
-			Contents: slices.Collect(object.GetMetadata().GetIndex().GetFields()),
-		},
+		box,
 		stringWriter,
 	)
 	n += n2

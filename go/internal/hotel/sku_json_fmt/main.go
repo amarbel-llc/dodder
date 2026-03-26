@@ -19,21 +19,21 @@ import (
 )
 
 type Transacted struct {
-	BlobId          string                      `json:"blob-id"`
-	BlobReferences  map[string]BlobReference     `json:"blob-references,omitempty"`
-	BlobString      string                      `json:"blob-string,omitempty"`
-	Date            string                      `json:"date"`
-	Description     string                      `json:"description"`
-	Lock            Lock                        `json:"lock"`
-	MotherObjectSig markl.Id                    `json:"mother-object-sig"`
-	ObjectDigest    markl.Id                    `json:"object-digest"`
-	ObjectId        string                      `json:"object-id"`
-	RepoPubkey      markl.Id                    `json:"repo-pub_key"`
-	RepoSig         markl.Id                    `json:"repo-sig"`
-	Sha             string                      `json:"sha"`
-	Tags            []string                    `json:"tags"`
-	Tai             string                      `json:"tai"`
-	Type            string                      `json:"type"`
+	BlobId          string                   `json:"blob-id"`
+	BlobReferences  map[string]BlobReference `json:"blob-references,omitempty"`
+	BlobString      string                   `json:"blob-string,omitempty"`
+	Date            string                   `json:"date"`
+	Description     string                   `json:"description"`
+	Lock            Lock                     `json:"lock"`
+	MotherObjectSig markl.Id                 `json:"mother-object-sig"`
+	ObjectDigest    markl.Id                 `json:"object-digest"`
+	ObjectId        string                   `json:"object-id"`
+	RepoPubkey      markl.Id                 `json:"repo-pub_key"`
+	RepoSig         markl.Id                 `json:"repo-sig"`
+	Sha             string                   `json:"sha"`
+	Tags            []string                 `json:"tags"`
+	Tai             string                   `json:"tai"`
+	Type            string                   `json:"type"`
 }
 
 // TODO make a json factory

@@ -20,7 +20,7 @@ type Scanner struct {
 
 	// TODO https://github.com/amarbel-llc/dodder/issues/31
 	// Switch to typed pkgError with boundary wrapping
-	err error
+	err      error
 	unscan   *SeqRuneScanner
 	n        int64
 	lastRune rune

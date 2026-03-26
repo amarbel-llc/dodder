@@ -4,8 +4,8 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/_/doddish"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -334,12 +334,12 @@ LOOP_AFTER_OBJECT_ID:
 		case seq.MatchStart(doddish.TokenMatcherKeyValue...) || seq.MatchStart(doddish.TokenMatcherKeyValueLiteral...):
 			value := seq[2:]
 
-			field := string_format_writer.Field{
+			field := fields.Field{
 				Key:   string(seq.At(0).Contents),
 				Value: value.String(),
+				Type:  fields.TypeUserData,
 			}
 
-			field.ColorType = string_format_writer.ColorTypeUserData
 			object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable().Append(field)
 
 		case seq.MatchAll(

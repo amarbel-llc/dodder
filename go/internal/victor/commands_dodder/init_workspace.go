@@ -409,4 +409,3 @@ func (cmd *InitWorkspace) linkParentZettelIdProviders(
 		cmd.Genesis.BigBang.Yang = parentYang
 	}
 }
-

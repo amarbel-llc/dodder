@@ -11,10 +11,10 @@ import (
 )
 
 type Decoder[BLOB any] struct {
-	RequireMetadata      bool
+	RequireMetadata       bool
 	AllowMissingSeparator bool
-	Metadata, Blob       interfaces.DecoderFromBufferedReader[BLOB]
-	BlobTeeWriter        io.Writer
+	Metadata, Blob        interfaces.DecoderFromBufferedReader[BLOB]
+	BlobTeeWriter         io.Writer
 }
 
 func (decoder *Decoder[BLOB]) DecodeFrom(

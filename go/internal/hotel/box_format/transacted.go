@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -14,7 +15,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 )
 
 func MakeBoxTransactedArchive(
@@ -132,9 +132,11 @@ func (format *BoxTransacted) EncodeStringTo(
 	if !format.optionsPrint.BoxDescriptionInBox && !b.IsEmpty() {
 		box.Trailer = append(
 			box.Trailer,
-			string_format_writer.Field{
-				Value:              b.StringWithoutNewlines(),
-				ColorType:          string_format_writer.ColorTypeUserData,
+			string_format_writer.FormattedField{
+				Field: fields.Field{
+					Value: b.StringWithoutNewlines(),
+					Type:  fields.TypeUserData,
+				},
 				DisableValueQuotes: true,
 			},
 		)
@@ -150,9 +152,11 @@ func (format *BoxTransacted) EncodeStringTo(
 
 func (format *BoxTransacted) makeFieldExternalObjectIdsIfNecessary(
 	object *sku.Transacted,
-) (field string_format_writer.Field, err error) {
-	field = string_format_writer.Field{
-		ColorType: string_format_writer.ColorTypeId,
+) (field string_format_writer.FormattedField, err error) {
+	field = string_format_writer.FormattedField{
+		Field: fields.Field{
+			Type: fields.TypeId,
+		},
 	}
 
 	if !object.GetExternalObjectId().IsEmpty() {
@@ -166,7 +170,7 @@ func (format *BoxTransacted) makeFieldExternalObjectIdsIfNecessary(
 
 func (format *BoxTransacted) makeFieldObjectId(
 	object *sku.Transacted,
-) (field string_format_writer.Field, empty bool, err error) {
+) (field string_format_writer.FormattedField, empty bool, err error) {
 	objectId := object.GetObjectId()
 
 	empty = objectId.IsEmpty()
@@ -183,10 +187,12 @@ func (format *BoxTransacted) makeFieldObjectId(
 		}
 	}
 
-	field = string_format_writer.Field{
-		Value:              objectIdString,
+	field = string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: objectIdString,
+			Type:  fields.TypeId,
+		},
 		DisableValueQuotes: true,
-		ColorType:          string_format_writer.ColorTypeId,
 	}
 
 	return field, empty, err
@@ -196,7 +202,7 @@ func (format *BoxTransacted) addFieldsObjectIds(
 	object *sku.Transacted,
 	builder *object_metadata_box_builder.Builder,
 ) (err error) {
-	var external string_format_writer.Field
+	var external string_format_writer.FormattedField
 
 	if external, err = format.makeFieldExternalObjectIdsIfNecessary(
 		object,
@@ -205,7 +211,7 @@ func (format *BoxTransacted) addFieldsObjectIds(
 		return err
 	}
 
-	var internal string_format_writer.Field
+	var internal string_format_writer.FormattedField
 	var externalEmpty bool
 
 	if internal, externalEmpty, err = format.makeFieldObjectId(object); err != nil {
@@ -281,7 +287,9 @@ func (format *BoxTransacted) addFieldsMetadata(
 	builder.AddBlobReferences(metadata)
 
 	if !options.BoxExcludeFields && !format.isArchive {
-		quiter.AppendSeq(&builder.Contents, metadata.GetIndex().GetFields())
+		for field := range metadata.GetIndex().GetFields() {
+			builder.Contents.Append(string_format_writer.FormattedField{Field: field})
+		}
 	}
 
 	return err

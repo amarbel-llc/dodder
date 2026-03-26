@@ -2,6 +2,7 @@ package box_format
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
@@ -12,7 +13,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 )
 
 func MakeBoxCheckedOut(
@@ -89,9 +89,11 @@ func (format *BoxCheckedOut) EncodeStringTo(
 	b := external.GetMetadata().GetDescription()
 
 	if !format.optionsPrint.BoxDescriptionInBox && !b.IsEmpty() {
-		box.Trailer.Append(string_format_writer.Field{
-			Value:              b.StringWithoutNewlines(),
-			ColorType:          string_format_writer.ColorTypeUserData,
+		box.Trailer.Append(string_format_writer.FormattedField{
+			Field: fields.Field{
+				Value: b.StringWithoutNewlines(),
+				Type:  fields.TypeUserData,
+			},
 			DisableValueQuotes: true,
 		})
 	}
@@ -162,7 +164,7 @@ func (format *BoxCheckedOut) addFieldsExternalWithFSItem(
 
 func (format *BoxCheckedOut) makeFieldObjectId(
 	object *sku.Transacted,
-) (field string_format_writer.Field, empty bool, err error) {
+) (field string_format_writer.FormattedField, empty bool, err error) {
 	objectId := object.GetObjectId()
 
 	empty = objectId.IsEmpty()
@@ -177,9 +179,11 @@ func (format *BoxCheckedOut) makeFieldObjectId(
 		}
 	}
 
-	field = string_format_writer.Field{
-		Value:     oidString,
-		ColorType: string_format_writer.ColorTypeId,
+	field = string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: oidString,
+			Type:  fields.TypeId,
+		},
 	}
 
 	return field, empty, err
@@ -190,7 +194,7 @@ func (format *BoxTransacted) addFieldsObjectIdsWithFSItem(
 	builder *object_metadata_box_builder.Builder,
 	preferExternal bool,
 ) (err error) {
-	var external string_format_writer.Field
+	var external string_format_writer.FormattedField
 
 	if external, err = format.makeFieldExternalObjectIdsIfNecessary(
 		object,
@@ -199,7 +203,7 @@ func (format *BoxTransacted) addFieldsObjectIdsWithFSItem(
 		return err
 	}
 
-	var internal string_format_writer.Field
+	var internal string_format_writer.FormattedField
 	var internalEmpty bool
 
 	if internal, internalEmpty, err = format.makeFieldObjectId(object); err != nil {
@@ -260,7 +264,9 @@ func (format *BoxCheckedOut) addFieldsMetadataWithFSItem(
 
 	if !options.BoxExcludeFields &&
 		(item == nil || item.FDs.Len() == 0) {
-		quiter.AppendSeq(&builder.Contents, metadata.GetIndex().GetFields())
+		for field := range metadata.GetIndex().GetFields() {
+			builder.Contents.Append(string_format_writer.FormattedField{Field: field})
+		}
 	}
 
 	return err
@@ -300,7 +306,7 @@ func (format *BoxCheckedOut) addFieldsFS(
 		return err
 	}
 
-	var id string_format_writer.Field
+	var id string_format_writer.FormattedField
 
 	switch {
 	case mode.IsBlobOnly() || mode.IsBlobRecognized():
@@ -319,7 +325,7 @@ func (format *BoxCheckedOut) addFieldsFS(
 		}
 	}
 
-	id.ColorType = string_format_writer.ColorTypeId
+	id.Type = fields.TypeId
 	builder.Contents.Append(id)
 
 	if checkedOut.GetState() == checked_out_state.Conflicted {
@@ -380,9 +386,11 @@ func (format *BoxTransacted) addFieldFSBlob(
 	builder *object_metadata_box_builder.Builder,
 ) (err error) {
 	builder.Contents.Append(
-		string_format_writer.Field{
-			Value:        format.relativePath.Rel(fd.GetPath()),
-			ColorType:    string_format_writer.ColorTypeId,
+		string_format_writer.FormattedField{
+			Field: fields.Field{
+				Value: format.relativePath.Rel(fd.GetPath()),
+				Type:  fields.TypeId,
+			},
 			NeedsNewline: true,
 		},
 	)
@@ -438,7 +446,7 @@ func (format *BoxTransacted) addFieldsRecognized(
 	item *sku.FSItem,
 	op options_print.Options,
 ) (err error) {
-	var id string_format_writer.Field
+	var id string_format_writer.FormattedField
 
 	if id, _, err = format.makeFieldObjectId(
 		co.GetSkuExternal(),
@@ -447,7 +455,7 @@ func (format *BoxTransacted) addFieldsRecognized(
 		return err
 	}
 
-	id.ColorType = string_format_writer.ColorTypeId
+	id.Type = fields.TypeId
 	builder.Contents.Append(id)
 
 	if err = format.addFieldsMetadata(

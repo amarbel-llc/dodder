@@ -63,8 +63,8 @@ func MakeLuaTablePoolV2(vm *lua.VM) LuaTablePoolV2 {
 	return pool.Make(
 		func() (t *LuaTableV2) {
 			transacted, _ := vm.PoolPtr.GetWithRepool()   //repool:owned
-			tags, _ := vm.PoolPtr.GetWithRepool()          //repool:owned
-			tagsImplicit, _ := vm.PoolPtr.GetWithRepool()  //repool:owned
+			tags, _ := vm.PoolPtr.GetWithRepool()         //repool:owned
+			tagsImplicit, _ := vm.PoolPtr.GetWithRepool() //repool:owned
 
 			t = &LuaTableV2{
 				Transacted:   transacted,

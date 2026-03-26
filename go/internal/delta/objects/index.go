@@ -2,7 +2,7 @@ package objects
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tag_paths"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	Field = string_format_writer.Field
+	Field = fields.Field
 
 	Index interface {
 		GetFields() interfaces.Seq[Field]

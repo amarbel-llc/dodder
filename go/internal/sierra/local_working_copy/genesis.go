@@ -81,7 +81,7 @@ func (local *Repo) initDefaultTypeAndConfig(
 	}
 
 	plan.DefaultCommitOptions = sku.CommitOptions{
-		Proto: local.GetStore().GetProtoZettel(),
+		Proto:        local.GetStore().GetProtoZettel(),
 		StoreOptions: sku.GetStoreOptionsCreate(),
 	}
 

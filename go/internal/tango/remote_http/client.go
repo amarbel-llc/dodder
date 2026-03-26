@@ -187,7 +187,6 @@ func (client *client) MakeInventoryList(
 	return list, err
 }
 
-
 func (client *client) PullQueryGroupFromRemote(
 	remote repo.Repo,
 	queryGroup *queries.Query,

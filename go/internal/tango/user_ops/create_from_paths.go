@@ -156,7 +156,6 @@ func (op CreateFromPaths) Run(
 	}
 
 	results, err = op.Repo.ExecutePlan(plan)
-
 	if err != nil {
 		return results, err
 	}

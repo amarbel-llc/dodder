@@ -82,7 +82,7 @@ func (local *Repo) Checkin(
 			proto.Apply(external, genres.Zettel)
 
 			untrackedOptions := sku.CommitOptions{
-				Proto: proto,
+				Proto:        proto,
 				StoreOptions: sku.GetStoreOptionsCreate(),
 			}
 

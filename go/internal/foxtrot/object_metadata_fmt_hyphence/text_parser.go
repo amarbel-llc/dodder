@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -73,10 +73,10 @@ func (parser textParser) ParseMetadata(
 		return n, err
 	} else if !parser2.Blob.GetDigest().IsNull() {
 		metadata.GetIndexMutable().GetFieldsMutable().Append(
-			string_format_writer.Field{
-				Key:       "blob",
-				Value:     parser2.Blob.GetPath(),
-				ColorType: string_format_writer.ColorTypeId,
+			fields.Field{
+				Key:   "blob",
+				Value: parser2.Blob.GetPath(),
+				Type:  fields.TypeId,
 			},
 		)
 

@@ -28,6 +28,7 @@ type SelectorConfig struct {
 }
 
 // DeltaConfig holds configuration for delta compression in inventory archives.
+//
 //go:generate tommy generate
 type DeltaConfig struct {
 	Enabled     bool            `toml:"enabled"`
@@ -41,6 +42,7 @@ type DeltaConfig struct {
 
 // TomlInventoryArchiveV1 is the V1 configuration for the inventory archive
 // blob store. Adds delta compression settings.
+//
 //go:generate tommy generate
 type TomlInventoryArchiveV1 struct {
 	HashTypeId       HashType                         `toml:"hash_type-id"`

@@ -6,6 +6,7 @@ import (
 )
 
 // TODO move to a config_common package
+//
 //go:generate tommy generate
 type TomlUriV0 struct {
 	Uri values.Uri `toml:"uri"`

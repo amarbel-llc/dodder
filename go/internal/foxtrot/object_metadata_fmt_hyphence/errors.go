@@ -84,7 +84,7 @@ func MakeErrHasInlineBlobAndMetadataBlobId(
 ) (err *ErrHasInlineBlobAndMetadataDigest) {
 	err = &ErrHasInlineBlobAndMetadataDigest{}
 	err.metadata, _ = markl.Clone(metadata) //repool:owned
-	err.Inline, _ = markl.Clone(inline)    //repool:owned
+	err.Inline, _ = markl.Clone(inline)     //repool:owned
 	return err
 }
 

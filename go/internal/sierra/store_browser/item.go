@@ -8,8 +8,8 @@ import (
 
 	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -129,19 +129,19 @@ func (item *Item) WriteToExternal(object *sku.Transacted) (err error) {
 		}
 	} else if item.Title != "" && object.GetMetadata().GetDescription().String() != item.Title {
 		object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable().Append(
-			string_format_writer.Field{
-				Key:       "title",
-				Value:     item.Title,
-				ColorType: string_format_writer.ColorTypeUserData,
+			fields.Field{
+				Key:   "title",
+				Value: item.Title,
+				Type:  fields.TypeUserData,
 			},
 		)
 	}
 
 	object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable().Append(
-		string_format_writer.Field{
-			Key:       "url",
-			Value:     item.Url.String(),
-			ColorType: string_format_writer.ColorTypeUserData,
+		fields.Field{
+			Key:   "url",
+			Value: item.Url.String(),
+			Type:  fields.TypeUserData,
 		},
 	)
 

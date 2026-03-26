@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/_/doddish"
 	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
-	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
@@ -500,8 +500,8 @@ func (store *Store) WriteFSItemToExternal(
 
 	for _, fdee := range fdees {
 		field := objects.Field{
-			Value:     fdee.GetPath(),
-			ColorType: string_format_writer.ColorTypeId,
+			Value: fdee.GetPath(),
+			Type:  fields.TypeId,
 		}
 
 		switch {

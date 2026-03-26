@@ -47,7 +47,7 @@ type Builder struct {
 	debug                   bool
 	requireNonEmptyQuery    bool
 	defaultQuery            string
-	workspaceEnabled bool
+	workspaceEnabled        bool
 
 	options options
 }

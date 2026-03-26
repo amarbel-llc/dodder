@@ -3,6 +3,7 @@ package object_metadata_fmt
 import (
 	"sort"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -10,19 +11,21 @@ import (
 
 func MetadataFieldError(
 	err error,
-) []string_format_writer.Field {
+) []string_format_writer.FormattedField {
 	var errorGroup errors.Group
 
 	if errors.As(err, &errorGroup) {
-		out := make([]string_format_writer.Field, 0, errorGroup.Len())
+		out := make([]string_format_writer.FormattedField, 0, errorGroup.Len())
 
 		for _, e := range errorGroup {
 			out = append(
 				out,
-				string_format_writer.Field{
-					Key:        "error",
-					Value:      e.Error(),
-					ColorType:  string_format_writer.ColorTypeUserData,
+				string_format_writer.FormattedField{
+					Field: fields.Field{
+						Key:   "error",
+						Value: e.Error(),
+						Type:  fields.TypeUserData,
+					},
 					NoTruncate: true,
 				},
 			)
@@ -30,11 +33,13 @@ func MetadataFieldError(
 
 		return out
 	} else {
-		return []string_format_writer.Field{
+		return []string_format_writer.FormattedField{
 			{
-				Key:        "error",
-				Value:      err.Error(),
-				ColorType:  string_format_writer.ColorTypeUserData,
+				Field: fields.Field{
+					Key:   "error",
+					Value: err.Error(),
+					Type:  fields.TypeUserData,
+				},
 				NoTruncate: true,
 			},
 		}
@@ -43,32 +48,38 @@ func MetadataFieldError(
 
 func MetadataFieldTai(
 	metadata objects.MetadataMutable,
-) string_format_writer.Field {
-	return string_format_writer.Field{
-		Value:     metadata.GetTai().String(),
-		ColorType: string_format_writer.ColorTypeHash,
+) string_format_writer.FormattedField {
+	return string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetTai().String(),
+			Type:  fields.TypeHash,
+		},
 	}
 }
 
 func MetadataFieldType(
 	metadata objects.MetadataMutable,
-) string_format_writer.Field {
-	return string_format_writer.Field{
-		Value:     metadata.GetType().String(),
-		ColorType: string_format_writer.ColorTypeType,
+) string_format_writer.FormattedField {
+	return string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetType().String(),
+			Type:  fields.TypeType,
+		},
 	}
 }
 
 func MetadataFieldTags(
 	metadata objects.MetadataMutable,
-) []string_format_writer.Field {
-	tags := make([]string_format_writer.Field, 0, metadata.GetTags().Len())
+) []string_format_writer.FormattedField {
+	tags := make([]string_format_writer.FormattedField, 0, metadata.GetTags().Len())
 
 	for t := range metadata.AllTags() {
 		tags = append(
 			tags,
-			string_format_writer.Field{
-				Value: t.String(),
+			string_format_writer.FormattedField{
+				Field: fields.Field{
+					Value: t.String(),
+				},
 			},
 		)
 	}
@@ -82,9 +93,11 @@ func MetadataFieldTags(
 
 func MetadataFieldDescription(
 	metadata objects.MetadataMutable,
-) string_format_writer.Field {
-	return string_format_writer.Field{
-		Value:     metadata.GetDescription().StringWithoutNewlines(),
-		ColorType: string_format_writer.ColorTypeUserData,
+) string_format_writer.FormattedField {
+	return string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetDescription().StringWithoutNewlines(),
+			Type:  fields.TypeUserData,
+		},
 	}
 }

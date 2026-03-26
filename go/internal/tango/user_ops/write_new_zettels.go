@@ -66,4 +66,3 @@ func (op WriteNewZettels) RunOne(
 
 	return result, err
 }
-

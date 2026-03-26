@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
-type Field struct {
-	ColorType
-	Separator rune
-	// TODO switch to using io.StringWriter instead of key and value
-	Key, Value         string
+type FormattedField struct {
+	fields.Field
+	Separator          rune
 	DisableValueQuotes bool
 	NoTruncate         bool
 	NeedsNewline       bool
@@ -30,8 +29,8 @@ type HeaderWriter[T any] interface {
 
 type Box struct {
 	Header                   BoxHeader
-	Contents                 collections_slice.Slice[Field]
-	Trailer                  collections_slice.Slice[Field]
+	Contents                 collections_slice.Slice[FormattedField]
+	Trailer                  collections_slice.Slice[FormattedField]
 	EachFieldOnANewline      bool
 	IdFieldsSeparatedByLines bool
 }
@@ -80,9 +79,11 @@ func (encoder *boxStringEncoder) EncodeStringTo(
 
 	n1, err = encoder.writeStringFormatField(
 		writer,
-		Field{
-			Value:     "[",
-			ColorType: ColorTypeNormal,
+		FormattedField{
+			Field: fields.Field{
+				Value: "[",
+				Type:  fields.TypeNormal,
+			},
 		},
 	)
 	n += n1
@@ -140,9 +141,11 @@ func (encoder *boxStringEncoder) EncodeStringTo(
 
 	n1, err = encoder.writeStringFormatField(
 		writer,
-		Field{
-			Value:     closingBracket,
-			ColorType: ColorTypeNormal,
+		FormattedField{
+			Field: fields.Field{
+				Value: closingBracket,
+				Type:  fields.TypeNormal,
+			},
 		},
 	)
 	n += n1
@@ -175,7 +178,7 @@ func (encoder *boxStringEncoder) EncodeStringTo(
 
 func (f *boxStringEncoder) writeStringFormatField(
 	w interfaces.WriterAndStringWriter,
-	field Field,
+	field FormattedField,
 ) (n int64, err error) {
 	var n1 int
 
@@ -193,7 +196,7 @@ func (f *boxStringEncoder) writeStringFormatField(
 		}
 	}
 
-	preColor, postColor, ellipsis := field.ColorType, colorReset, ""
+	preColor, postColor, ellipsis := field.Type, colorReset, ""
 
 	if f.OffEntirely {
 		preColor, postColor = "", ""
@@ -212,7 +215,7 @@ func (f *boxStringEncoder) writeStringFormatField(
 
 	format := "%s%s%s%s"
 
-	if (strings.ContainsRune(field.Value, ' ') || field.ColorType == ColorTypeUserData) &&
+	if (strings.ContainsRune(field.Value, ' ') || field.Type == fields.TypeUserData) &&
 		!field.DisableValueQuotes {
 		format = "%s%q%s%s"
 	}

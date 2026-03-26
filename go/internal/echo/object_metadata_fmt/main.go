@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
@@ -11,7 +12,7 @@ import (
 )
 
 func AddBlobDigestIfNecessary(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	digest domain_interfaces.MarklId,
 	funcAbbreviate domain_interfaces.FuncAbbreviateString,
 ) {
@@ -34,9 +35,11 @@ func AddBlobDigestIfNecessary(
 		return
 	}
 
-	field := string_format_writer.Field{
-		Value:      "@" + value,
-		ColorType:  string_format_writer.ColorTypeHash,
+	field := string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: "@" + value,
+			Type:  fields.TypeHash,
+		},
 		NoTruncate: true,
 	}
 
@@ -44,7 +47,7 @@ func AddBlobDigestIfNecessary(
 }
 
 func AddRepoPubKey(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	metadata objects.MetadataMutable,
 ) {
 	addMarklIdIfNotNull(
@@ -54,7 +57,7 @@ func AddRepoPubKey(
 }
 
 func AddObjectSig(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	metadata objects.MetadataMutable,
 ) {
 	boxContents.Append(
@@ -63,7 +66,7 @@ func AddObjectSig(
 }
 
 func AddMotherSigIfNecessary(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	metadata objects.MetadataMutable,
 ) {
 	addMarklIdIfNotNull(
@@ -73,7 +76,7 @@ func AddMotherSigIfNecessary(
 }
 
 func AddReferencedObject(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	metadata objects.MetadataMutable,
 ) {
 	boxContents.Append(
@@ -82,7 +85,7 @@ func AddReferencedObject(
 }
 
 func addMarklIdIfNotNull(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	id domain_interfaces.MarklId,
 ) {
 	if id.IsNull() {
@@ -93,7 +96,7 @@ func addMarklIdIfNotNull(
 }
 
 func addMarklId(
-	boxContents collections_slice.Slice[string_format_writer.Field],
+	boxContents collections_slice.Slice[string_format_writer.FormattedField],
 	id domain_interfaces.MarklId,
 ) {
 	boxContents.Append(
@@ -103,16 +106,18 @@ func addMarklId(
 
 func makeMarklIdField(
 	id domain_interfaces.MarklId,
-) string_format_writer.Field {
+) string_format_writer.FormattedField {
 	if id.GetPurposeId() == "" {
 		panic(fmt.Sprintf("empty format for markl id: %q", id))
 	}
 
-	return string_format_writer.Field{
-		Key:        id.GetPurposeId(),
+	return string_format_writer.FormattedField{
+		Field: fields.Field{
+			Key:   id.GetPurposeId(),
+			Value: id.String(),
+			Type:  fields.TypeHash,
+		},
 		Separator:  '@',
-		Value:      id.String(),
 		NoTruncate: true,
-		ColorType:  string_format_writer.ColorTypeHash,
 	}
 }

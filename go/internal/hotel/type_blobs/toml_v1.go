@@ -15,7 +15,7 @@ type TomlV1 struct {
 	UTIGroups     map[string]UTIGroup                       `toml:"uti-groups"`
 	Formatters    map[string]script_config.WithOutputFormat `toml:"formatters,omitempty"`
 
-	Hooks            string                  `toml:"hooks"`
+	Hooks      string            `toml:"hooks"`
 	References *ReferencesConfig `toml:"references,omitempty"`
 }
 
