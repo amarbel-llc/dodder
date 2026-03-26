@@ -1170,11 +1170,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1774554976,
-        "narHash": "sha256-7ZAcS56xS6VXOly1wWcGjN9IrGuzkzYO4cQhR0iD08k=",
+        "lastModified": 1774557318,
+        "narHash": "sha256-X0Q2E/jREtcOoq22q0/QBGRyHyuN0G9qFU+qDXPsSbM=",
         "owner": "amarbel-llc",
         "repo": "tommy",
-        "rev": "1e3aa70b25d0824585302eb26cc0a20add5e9427",
+        "rev": "8ebebb5d275967e973a64c0fd2bd8b69031e0f95",
         "type": "github"
       },
       "original": {
