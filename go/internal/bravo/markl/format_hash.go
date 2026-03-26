@@ -152,13 +152,6 @@ func (formatHash FormatHash) GetMarklIdForMarklId(
 	return hash.GetMarklId()
 }
 
-func (formatHash FormatHash) FromStringContent(
-	input string,
-) domain_interfaces.MarklId {
-	id, _ := formatHash.GetMarklIdForString(input) //repool:owned
-	return id
-}
-
 func (formatHash FormatHash) GetMarklIdFromStringFormat(
 	format string,
 	args ...any,

@@ -204,7 +204,8 @@ func TestMakeBlobReaderNullIdReturnsNopReader(t *testing.T) {
 	}
 
 	// A null markl ID (zero hash) should return an empty reader
-	nullId := hashFormat.FromStringContent("")
+	nullId, repoolNullId := hashFormat.GetMarklIdForString("")
+	defer repoolNullId()
 
 	if !nullId.IsNull() {
 		t.Fatal("test setup: expected null ID")
