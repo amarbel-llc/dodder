@@ -4,6 +4,7 @@ package type_blobs
 
 import (
 	"fmt"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 	"github.com/amarbel-llc/tommy/pkg/cst"
@@ -14,6 +15,7 @@ import (
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlV1Document struct {
@@ -75,36 +77,13 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 			d.data.Formatters = make(map[string]script_config.WithOutputFormat)
 			for _, subTable := range subTables {
 				mapKey := document.SubTableKey(subTable, "formatters")
+				if strings.Contains(mapKey, ".") {
+					continue
+				}
 				d.consumed["formatters"+"."+mapKey] = true
 				var entry script_config.WithOutputFormat
-				if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "description"); err == nil {
-					entry.Description = v
-					d.consumed["formatters.\" + mapKey + \".description"] = true
-				}
-				if v, err := document.GetFromContainer[[]string](d.cstDoc, subTable, "shell"); err == nil {
-					entry.Shell = v
-					d.consumed["formatters.\" + mapKey + \".shell"] = true
-				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "script"); err == nil {
-					entry.Script = v
-					d.consumed["formatters.\" + mapKey + \".script"] = true
-				}
-				if tableNode := d.cstDoc.FindTable("env"); tableNode != nil {
-					entry.Env = document.GetStringMapFromTable(tableNode)
-					d.consumed["formatters.\" + mapKey + \".env"] = true
-					document.MarkAllConsumed(tableNode, "formatters.\" + mapKey + \".env", d.consumed)
-				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "uti"); err == nil {
-					entry.UTI = v
-					d.consumed["formatters.\" + mapKey + \".uti"] = true
-				}
-				if v, err := document.GetFromContainer[[]string](d.cstDoc, subTable, "utis"); err == nil {
-					entry.UTIS = v
-					d.consumed["formatters.\" + mapKey + \".utis"] = true
-				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "file-extension"); err == nil {
-					entry.FileExtension = v
-					d.consumed["formatters.\" + mapKey + \".file-extension"] = true
+				if err := script_config.DecodeWithOutputFormatInto(&entry, d.cstDoc, subTable, d.consumed, "formatters"+"."+mapKey+"."); err != nil {
+					return nil, fmt.Errorf("formatters.%s: %w", mapKey, err)
 				}
 				d.data.Formatters[mapKey] = entry
 			}
@@ -214,44 +193,8 @@ func (d *TomlV1Document) Encode() ([]byte, error) {
 	if len(d.data.Formatters) > 0 {
 		for mapKey, mapVal := range d.data.Formatters {
 			subTable := d.cstDoc.EnsureSubTable("formatters", mapKey)
-			if mapVal.Description != "" || d.cstDoc.HasInContainer(subTable, "description") {
-				if err := d.cstDoc.SetInContainer(subTable, "description", mapVal.Description); err != nil {
-					return nil, err
-				}
-			}
-			if len(mapVal.Shell) > 0 || d.cstDoc.HasInContainer(subTable, "shell") {
-				if err := d.cstDoc.SetInContainer(subTable, "shell", mapVal.Shell); err != nil {
-					return nil, err
-				}
-			}
-			if mapVal.Script != "" {
-				if err := d.cstDoc.SetMultilineInContainer(subTable, "script", mapVal.Script); err != nil {
-					return nil, err
-				}
-			} else {
-				_ = d.cstDoc.DeleteFromContainer(subTable, "script")
-			}
-			if len(mapVal.Env) > 0 {
-				tableNode := d.cstDoc.EnsureTable("env")
-				document.DeleteAllInContainer(tableNode)
-				for k, v := range mapVal.Env {
-					if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
-						return nil, err
-					}
-				}
-			}
-			if mapVal.UTI != "" || d.cstDoc.HasInContainer(subTable, "uti") {
-				if err := d.cstDoc.SetInContainer(subTable, "uti", mapVal.UTI); err != nil {
-					return nil, err
-				}
-			}
-			if err := d.cstDoc.SetInContainer(subTable, "utis", mapVal.UTIS); err != nil {
-				return nil, err
-			}
-			if mapVal.FileExtension != "" || d.cstDoc.HasInContainer(subTable, "file-extension") {
-				if err := d.cstDoc.SetInContainer(subTable, "file-extension", mapVal.FileExtension); err != nil {
-					return nil, err
-				}
+			if err := script_config.EncodeWithOutputFormatFrom(&mapVal, d.cstDoc, subTable); err != nil {
+				return nil, fmt.Errorf("formatters.%s: %w", mapKey, err)
 			}
 		}
 	}
@@ -366,36 +309,13 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 			data.Formatters = make(map[string]script_config.WithOutputFormat)
 			for _, subTable := range subTables {
 				mapKey := document.SubTableKey(subTable, "formatters")
+				if strings.Contains(mapKey, ".") {
+					continue
+				}
 				consumed[keyPrefix+"formatters"+"."+mapKey] = true
 				var entry script_config.WithOutputFormat
-				if v, err := document.GetFromContainer[string](doc, subTable, "description"); err == nil {
-					entry.Description = v
-					consumed[keyPrefix+"formatters.\" + mapKey + \".description"] = true
-				}
-				if v, err := document.GetFromContainer[[]string](doc, subTable, "shell"); err == nil {
-					entry.Shell = v
-					consumed[keyPrefix+"formatters.\" + mapKey + \".shell"] = true
-				}
-				if v, err := document.GetFromContainer[string](doc, subTable, "script"); err == nil {
-					entry.Script = v
-					consumed[keyPrefix+"formatters.\" + mapKey + \".script"] = true
-				}
-				if tableNode := doc.FindTable("env"); tableNode != nil {
-					entry.Env = document.GetStringMapFromTable(tableNode)
-					consumed[keyPrefix+"formatters.\" + mapKey + \".env"] = true
-					document.MarkAllConsumed(tableNode, "formatters.\" + mapKey + \".env", consumed)
-				}
-				if v, err := document.GetFromContainer[string](doc, subTable, "uti"); err == nil {
-					entry.UTI = v
-					consumed[keyPrefix+"formatters.\" + mapKey + \".uti"] = true
-				}
-				if v, err := document.GetFromContainer[[]string](doc, subTable, "utis"); err == nil {
-					entry.UTIS = v
-					consumed[keyPrefix+"formatters.\" + mapKey + \".utis"] = true
-				}
-				if v, err := document.GetFromContainer[string](doc, subTable, "file-extension"); err == nil {
-					entry.FileExtension = v
-					consumed[keyPrefix+"formatters.\" + mapKey + \".file-extension"] = true
+				if err := script_config.DecodeWithOutputFormatInto(&entry, doc, subTable, consumed, keyPrefix+"formatters"+"."+mapKey+"."); err != nil {
+					return fmt.Errorf("formatters.%s: %w", mapKey, err)
 				}
 				data.Formatters[mapKey] = entry
 			}
@@ -503,44 +423,8 @@ func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node)
 	if len(data.Formatters) > 0 {
 		for mapKey, mapVal := range data.Formatters {
 			subTable := doc.EnsureSubTable("formatters", mapKey)
-			if mapVal.Description != "" || doc.HasInContainer(subTable, "description") {
-				if err := doc.SetInContainer(subTable, "description", mapVal.Description); err != nil {
-					return err
-				}
-			}
-			if len(mapVal.Shell) > 0 || doc.HasInContainer(subTable, "shell") {
-				if err := doc.SetInContainer(subTable, "shell", mapVal.Shell); err != nil {
-					return err
-				}
-			}
-			if mapVal.Script != "" {
-				if err := doc.SetMultilineInContainer(subTable, "script", mapVal.Script); err != nil {
-					return err
-				}
-			} else {
-				_ = doc.DeleteFromContainer(subTable, "script")
-			}
-			if len(mapVal.Env) > 0 {
-				tableNode := doc.EnsureTable("env")
-				document.DeleteAllInContainer(tableNode)
-				for k, v := range mapVal.Env {
-					if err := doc.SetInContainer(tableNode, k, v); err != nil {
-						return err
-					}
-				}
-			}
-			if mapVal.UTI != "" || doc.HasInContainer(subTable, "uti") {
-				if err := doc.SetInContainer(subTable, "uti", mapVal.UTI); err != nil {
-					return err
-				}
-			}
-			if err := doc.SetInContainer(subTable, "utis", mapVal.UTIS); err != nil {
-				return err
-			}
-			if mapVal.FileExtension != "" || doc.HasInContainer(subTable, "file-extension") {
-				if err := doc.SetInContainer(subTable, "file-extension", mapVal.FileExtension); err != nil {
-					return err
-				}
+			if err := script_config.EncodeWithOutputFormatFrom(&mapVal, doc, subTable); err != nil {
+				return fmt.Errorf("formatters.%s: %w", mapKey, err)
 			}
 		}
 	}

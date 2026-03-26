@@ -4,6 +4,7 @@ package repo_configs
 
 import (
 	"fmt"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
 	"code.linenisgreat.com/dodder/go/internal/_/options_tools"
@@ -18,6 +19,7 @@ import (
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type DefaultsV0Document struct {
@@ -203,24 +205,13 @@ func DecodeV0(input []byte) (*V0Document, error) {
 			d.data.Actions = make(map[string]script_config.ScriptConfig)
 			for _, subTable := range subTables {
 				mapKey := document.SubTableKey(subTable, "actions")
+				if strings.Contains(mapKey, ".") {
+					continue
+				}
 				d.consumed["actions"+"."+mapKey] = true
 				var entry script_config.ScriptConfig
-				if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "description"); err == nil {
-					entry.Description = v
-					d.consumed["actions.\" + mapKey + \".description"] = true
-				}
-				if v, err := document.GetFromContainer[[]string](d.cstDoc, subTable, "shell"); err == nil {
-					entry.Shell = v
-					d.consumed["actions.\" + mapKey + \".shell"] = true
-				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "script"); err == nil {
-					entry.Script = v
-					d.consumed["actions.\" + mapKey + \".script"] = true
-				}
-				if tableNode := d.cstDoc.FindTable("env"); tableNode != nil {
-					entry.Env = document.GetStringMapFromTable(tableNode)
-					d.consumed["actions.\" + mapKey + \".env"] = true
-					document.MarkAllConsumed(tableNode, "actions.\" + mapKey + \".env", d.consumed)
+				if err := script_config.DecodeScriptConfigInto(&entry, d.cstDoc, subTable, d.consumed, "actions"+"."+mapKey+"."); err != nil {
+					return nil, fmt.Errorf("actions.%s: %w", mapKey, err)
 				}
 				d.data.Actions[mapKey] = entry
 			}
@@ -297,31 +288,8 @@ func (d *V0Document) Encode() ([]byte, error) {
 	if len(d.data.Actions) > 0 {
 		for mapKey, mapVal := range d.data.Actions {
 			subTable := d.cstDoc.EnsureSubTable("actions", mapKey)
-			if mapVal.Description != "" || d.cstDoc.HasInContainer(subTable, "description") {
-				if err := d.cstDoc.SetInContainer(subTable, "description", mapVal.Description); err != nil {
-					return nil, err
-				}
-			}
-			if len(mapVal.Shell) > 0 || d.cstDoc.HasInContainer(subTable, "shell") {
-				if err := d.cstDoc.SetInContainer(subTable, "shell", mapVal.Shell); err != nil {
-					return nil, err
-				}
-			}
-			if mapVal.Script != "" {
-				if err := d.cstDoc.SetMultilineInContainer(subTable, "script", mapVal.Script); err != nil {
-					return nil, err
-				}
-			} else {
-				_ = d.cstDoc.DeleteFromContainer(subTable, "script")
-			}
-			if len(mapVal.Env) > 0 {
-				tableNode := d.cstDoc.EnsureTable("env")
-				document.DeleteAllInContainer(tableNode)
-				for k, v := range mapVal.Env {
-					if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
-						return nil, err
-					}
-				}
+			if err := script_config.EncodeScriptConfigFrom(&mapVal, d.cstDoc, subTable); err != nil {
+				return nil, fmt.Errorf("actions.%s: %w", mapKey, err)
 			}
 		}
 	}
@@ -411,24 +379,13 @@ func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consume
 			data.Actions = make(map[string]script_config.ScriptConfig)
 			for _, subTable := range subTables {
 				mapKey := document.SubTableKey(subTable, "actions")
+				if strings.Contains(mapKey, ".") {
+					continue
+				}
 				consumed[keyPrefix+"actions"+"."+mapKey] = true
 				var entry script_config.ScriptConfig
-				if v, err := document.GetFromContainer[string](doc, subTable, "description"); err == nil {
-					entry.Description = v
-					consumed[keyPrefix+"actions.\" + mapKey + \".description"] = true
-				}
-				if v, err := document.GetFromContainer[[]string](doc, subTable, "shell"); err == nil {
-					entry.Shell = v
-					consumed[keyPrefix+"actions.\" + mapKey + \".shell"] = true
-				}
-				if v, err := document.GetFromContainer[string](doc, subTable, "script"); err == nil {
-					entry.Script = v
-					consumed[keyPrefix+"actions.\" + mapKey + \".script"] = true
-				}
-				if tableNode := doc.FindTable("env"); tableNode != nil {
-					entry.Env = document.GetStringMapFromTable(tableNode)
-					consumed[keyPrefix+"actions.\" + mapKey + \".env"] = true
-					document.MarkAllConsumed(tableNode, "actions.\" + mapKey + \".env", consumed)
+				if err := script_config.DecodeScriptConfigInto(&entry, doc, subTable, consumed, keyPrefix+"actions"+"."+mapKey+"."); err != nil {
+					return fmt.Errorf("actions.%s: %w", mapKey, err)
 				}
 				data.Actions[mapKey] = entry
 			}
@@ -503,31 +460,8 @@ func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 	if len(data.Actions) > 0 {
 		for mapKey, mapVal := range data.Actions {
 			subTable := doc.EnsureSubTable("actions", mapKey)
-			if mapVal.Description != "" || doc.HasInContainer(subTable, "description") {
-				if err := doc.SetInContainer(subTable, "description", mapVal.Description); err != nil {
-					return err
-				}
-			}
-			if len(mapVal.Shell) > 0 || doc.HasInContainer(subTable, "shell") {
-				if err := doc.SetInContainer(subTable, "shell", mapVal.Shell); err != nil {
-					return err
-				}
-			}
-			if mapVal.Script != "" {
-				if err := doc.SetMultilineInContainer(subTable, "script", mapVal.Script); err != nil {
-					return err
-				}
-			} else {
-				_ = doc.DeleteFromContainer(subTable, "script")
-			}
-			if len(mapVal.Env) > 0 {
-				tableNode := doc.EnsureTable("env")
-				document.DeleteAllInContainer(tableNode)
-				for k, v := range mapVal.Env {
-					if err := doc.SetInContainer(tableNode, k, v); err != nil {
-						return err
-					}
-				}
+			if err := script_config.EncodeScriptConfigFrom(&mapVal, doc, subTable); err != nil {
+				return fmt.Errorf("actions.%s: %w", mapKey, err)
 			}
 		}
 	}

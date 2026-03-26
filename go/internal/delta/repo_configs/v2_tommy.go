@@ -106,8 +106,12 @@ func (d *V2Document) Encode() ([]byte, error) {
 			if err != nil {
 				return nil, fmt.Errorf("type: %w", err)
 			}
-			if err := d.cstDoc.SetInContainer(tableNode, "type", string(v)); err != nil {
-				return nil, err
+			if len(v) > 0 {
+				if err := d.cstDoc.SetInContainer(tableNode, "type", string(v)); err != nil {
+					return nil, err
+				}
+			} else {
+				_ = d.cstDoc.DeleteFromContainer(tableNode, "type")
 			}
 		}
 		{
@@ -237,8 +241,12 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 			if err != nil {
 				return fmt.Errorf("type: %w", err)
 			}
-			if err := doc.SetInContainer(tableNode, "type", string(v)); err != nil {
-				return err
+			if len(v) > 0 {
+				if err := doc.SetInContainer(tableNode, "type", string(v)); err != nil {
+					return err
+				}
+			} else {
+				_ = doc.DeleteFromContainer(tableNode, "type")
 			}
 		}
 		{
