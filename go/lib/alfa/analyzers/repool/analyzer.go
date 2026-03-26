@@ -178,6 +178,15 @@ func checkVarUsedOnAllPaths(
 		return
 	}
 
+	// If any defer in the function body references v, it covers all exit
+	// paths (including panic). This handles the nil-guarded defer pattern:
+	//   var repool FuncRepool
+	//   defer func() { if repool != nil { repool() } }()
+	//   _, repool = pool.GetWithRepool()
+	if deferUsesVar(pass, funcNode, v) {
+		return
+	}
+
 	var g *cfg.CFG
 
 	switch fn := funcNode.(type) {
@@ -217,8 +226,10 @@ outer:
 
 	// Does the defining block have no successors (implicit return)?
 	if len(defblock.Succs) == 0 {
-		pass.ReportRangef(defStmt,
-			"the repool function is not called on all paths (possible pool leak)")
+		if !blockEndsPanic(defblock) {
+			pass.ReportRangef(defStmt,
+				"the repool function is not called on all paths (possible pool leak)")
+		}
 		return
 	}
 
@@ -242,8 +253,12 @@ func searchUnused(pass *analysis.Pass, v *types.Var, blocks []*cfg.Block, seen m
 		}
 
 		// Block doesn't use v. If it's a terminal block (no successors),
-		// we found a path to exit without calling the repool function.
+		// we found a path to exit without calling the repool function —
+		// unless the block ends with panic (program terminates, no leak).
 		if len(b.Succs) == 0 {
+			if blockEndsPanic(b) {
+				continue
+			}
 			return b
 		}
 
@@ -278,6 +293,72 @@ func usesVar(pass *analysis.Pass, v *types.Var, stmts []ast.Node) bool {
 
 func blockUsesVar(pass *analysis.Pass, v *types.Var, b *cfg.Block) bool {
 	return usesVar(pass, v, b.Nodes)
+}
+
+func blockEndsPanic(b *cfg.Block) bool {
+	if len(b.Nodes) == 0 {
+		return false
+	}
+
+	last := b.Nodes[len(b.Nodes)-1]
+
+	exprStmt, ok := last.(*ast.ExprStmt)
+	if !ok {
+		return false
+	}
+
+	call, ok := exprStmt.X.(*ast.CallExpr)
+	if !ok {
+		return false
+	}
+
+	id, ok := call.Fun.(*ast.Ident)
+
+	return ok && id.Name == "panic"
+}
+
+func deferUsesVar(pass *analysis.Pass, funcNode ast.Node, v *types.Var) bool {
+	var body *ast.BlockStmt
+
+	switch fn := funcNode.(type) {
+	case *ast.FuncDecl:
+		body = fn.Body
+	case *ast.FuncLit:
+		body = fn.Body
+	}
+
+	if body == nil {
+		return false
+	}
+
+	for _, stmt := range body.List {
+		deferStmt, ok := stmt.(*ast.DeferStmt)
+		if !ok {
+			continue
+		}
+
+		found := false
+
+		ast.Inspect(deferStmt.Call, func(n ast.Node) bool {
+			if found {
+				return false
+			}
+
+			if id, ok := n.(*ast.Ident); ok {
+				if pass.TypesInfo.Uses[id] == v {
+					found = true
+				}
+			}
+
+			return !found
+		})
+
+		if found {
+			return true
+		}
+	}
+
+	return false
 }
 
 // repoolResultIndex returns the index within the result tuple that is

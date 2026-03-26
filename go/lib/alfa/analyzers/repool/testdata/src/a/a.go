@@ -83,3 +83,47 @@ func unsuppressedConditional() {
 		repool()
 	}
 }
+
+// Pattern 1: panic terminates — no leak possible
+func panicOnErrorPath() {
+	_, repool := pool.GetWithRepool()
+	if true {
+		repool()
+		return
+	}
+	panic("unreachable")
+}
+
+// Pattern 2: repool captured in returned closure
+func returnedInClosure() (string, func()) {
+	v, repool := pool.GetWithRepool()
+	return v, func() {
+		repool()
+	}
+}
+
+// Pattern 1b: panic on SOME paths but return without repool on others — still a leak
+func panicOnSomePathsButNotAll() {
+	v, repool := pool.GetWithRepool() // want "the repool function is not called on all paths"
+	if v == "x" {
+		repool()
+		return
+	}
+	if v == "y" {
+		panic("error")
+	}
+	// implicit return without repool — leak
+}
+
+// Pattern 3: nil-guarded defer before assignment
+func nilGuardedDefer() {
+	var repool interfaces.FuncRepool
+
+	defer func() {
+		if repool != nil {
+			repool()
+		}
+	}()
+
+	_, repool = pool.GetWithRepool()
+}
