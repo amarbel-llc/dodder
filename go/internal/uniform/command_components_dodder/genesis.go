@@ -66,6 +66,13 @@ func (cmd *Genesis) SetFlagDefinitions(
 		"blob_store-id",
 		"The name of the existing madder blob store to use",
 	)
+
+	flagSet.BoolVar(
+		&cmd.BigBang.IncludeDefaultPandocTools,
+		"include-default-pandoc-tools",
+		false,
+		"Include pandoc Lua filters and defaults as blob references on the default type",
+	)
 }
 
 func (cmd Genesis) OnTheFirstDay(
