@@ -149,6 +149,21 @@ func (cmd *FormatBlob) Run(dep command.Request) {
 		}
 	}
 
+	var blobTreeDir string
+
+	{
+		var cleanup func()
+		var err error
+
+		if blobTreeDir, cleanup, err = localWorkingCopy.MaterializeBlobTree(
+			typeObject,
+		); err != nil {
+			localWorkingCopy.Cancel(err)
+		}
+
+		defer cleanup()
+	}
+
 	format := typed_blob_store.MakeTextFormatterWithBlobFormatter(
 		localWorkingCopy.GetEnvRepo(),
 		checkout_options.TextFormatterOptions{
@@ -156,6 +171,7 @@ func (cmd *FormatBlob) Run(dep command.Request) {
 		},
 		localWorkingCopy.GetConfig(),
 		blobFormatter,
+		blobTreeDir,
 		checkout_mode.Make(),
 	)
 
@@ -226,11 +242,32 @@ func (cmd *FormatBlob) FormatFromStdin(
 		u.Cancel(err)
 	}
 
+	var blobTreeDir string
+
+	{
+		var cleanup func()
+
+		if blobTreeDir, cleanup, err = u.MaterializeBlobTree(
+			typeObject,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		defer cleanup()
+	}
+
+	env := u.GetEnvRepo().MakeCommonEnv()
+
+	if blobTreeDir != "" {
+		env["DODDER_BLOB_TREE"] = blobTreeDir
+	}
+
 	var wt io.WriterTo
 
 	if wt, err = script_config.MakeWriterToWithStdin(
 		blobFormatter,
-		u.GetEnvRepo().MakeCommonEnv(),
+		env,
 		u.GetInFile(),
 	); err != nil {
 		err = errors.Wrap(err)

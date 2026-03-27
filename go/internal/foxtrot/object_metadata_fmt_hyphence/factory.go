@@ -10,6 +10,7 @@ type Factory struct {
 	EnvDir        env_dir.Env
 	BlobStore     domain_interfaces.BlobStore
 	BlobFormatter script_config.RemoteScript
+	BlobTreeDir   string
 
 	AllowMissingTypeSig bool
 }

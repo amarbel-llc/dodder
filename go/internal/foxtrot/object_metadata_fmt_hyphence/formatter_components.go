@@ -321,9 +321,15 @@ func (factory formatterComponents) writeBlob(
 	if factory.BlobFormatter != nil {
 		var writerTo io.WriterTo
 
+		env := factory.EnvDir.MakeCommonEnv()
+
+		if factory.BlobTreeDir != "" {
+			env["DODDER_BLOB_TREE"] = factory.BlobTreeDir
+		}
+
 		if writerTo, err = script_config.MakeWriterToWithStdin(
 			factory.BlobFormatter,
-			factory.EnvDir.MakeCommonEnv(),
+			env,
 			blobReader,
 		); err != nil {
 			err = errors.Wrap(err)

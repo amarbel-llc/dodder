@@ -23,6 +23,7 @@ func MakeTextFormatter(
 		options,
 		inlineTypeChecker,
 		nil,
+		"",
 		checkoutMode,
 	)
 }
@@ -32,6 +33,7 @@ func MakeTextFormatterWithBlobFormatter(
 	options checkout_options.TextFormatterOptions,
 	inlineTypeChecker ids.InlineTypeChecker,
 	formatter script_config.RemoteScript,
+	blobTreeDir string,
 	checkoutMode checkout_mode.Mode,
 ) textFormatter {
 	return textFormatter{
@@ -41,6 +43,7 @@ func MakeTextFormatterWithBlobFormatter(
 			EnvDir:        envRepo,
 			BlobStore:     envRepo.GetDefaultBlobStore(),
 			BlobFormatter: formatter,
+			BlobTreeDir:   blobTreeDir,
 		}.MakeFormatterFamily(),
 		checkoutMode: checkoutMode,
 	}
