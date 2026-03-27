@@ -190,3 +190,55 @@ additive (no existing behavior changes).
     # No ~/.local/share/pandoc/ dependency required
     $ dodder show :t
     # Shows: !md, !pandoc-defaults, !pandoc-lua_filter
+
+## Implementation Status (2026-03-27)
+
+### Completed (branch `vivid-cherry`)
+
+1.  Builtin type registration for `!pandoc-defaults` and `!pandoc-lua_filter`
+2.  Type blob constructors (`DefaultPandocDefaults`, `DefaultPandocLuaFilter`,
+    `DefaultWithPandocFormatter`)
+3.  Embedded pandoc files via `go:embed` in
+    `sierra/local_working_copy/embedded/`
+4.  Genesis expansion gated behind `-include-default-pandoc-tools` flag
+5.  Blob tree materializer (`MaterializeBlobTree` on `local_working_copy.Repo`)
+6.  Formatter pipeline wiring --- `DODDER_BLOB_TREE` env var injected into
+    pandoc process in both `format-object` and `format-blob` commands
+7.  Context-managed cleanup via `errors.Context.After` (no manual defer at call
+    sites)
+8.  Fixed `dodder-common.lua` --- replaced `require("url")` with inline
+    `url_unescape()` (pandoc's Lua runtime has no third-party modules)
+9.  Integration tests: genesis creates tool types + end-to-end
+    `format-blob -stdin` with absolute assertions
+
+### Design Issues Identified
+
+The prototype works but the wiring is hardcoded:
+
+- Call sites unconditionally call `MaterializeBlobTree` and inject
+  `DODDER_BLOB_TREE` --- materialization should be driven by the type config
+- The env var name `DODDER_BLOB_TREE` is baked into Go code in two places
+
+### Next Steps (issues)
+
+- **#66** --- `[formatters.*.fs]` in type blob config. The formatter declares
+  which blob reference aliases it needs materialized and at what paths.
+  `DODDER_SANDBOX` env var set to tmpdir root only when `fs` entries are
+  present. Replaces hardcoded `MaterializeBlobTree` + `DODDER_BLOB_TREE`.
+
+  ``` toml
+  [formatters.text]
+  script = 'pandoc --data-dir="$DODDER_SANDBOX" --defaults=dodder-edit'
+
+  [formatters.text.fs]
+  "filters/dodder-common.lua" = "filters/dodder-common.lua"
+  "filters/dodder-edit.lua" = "filters/dodder-edit.lua"
+  "defaults/dodder-edit.yaml" = "defaults/dodder-edit.yaml"
+  ```
+
+- **#67** --- Type type (`!toml-type-v1`) validation: `ParseTypedBlob` should
+  validate that `fs` alias values exist as blob reference aliases on the type
+  object's metadata.
+
+- Lua library import mechanism --- filters must inline third-party Lua until we
+  add blob-tree-aware `require()` resolution (TODO in `dodder-common.lua`).
