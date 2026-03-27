@@ -411,6 +411,11 @@ func resolveTypeRef(
 			if err != nil {
 				return nil
 			}
+			// Only treat string literals starting with "!" as type strings.
+			// Other map[string] keys (e.g. formatter IDs) are not type references.
+			if !strings.HasPrefix(s, "!") {
+				return nil
+			}
 			return &coderEntry{typeString: s, rawKey: s, file: file}
 		}
 	case *ast.SelectorExpr:
