@@ -6,7 +6,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
 type JsonWithUrl struct {
@@ -24,10 +23,13 @@ func MakeJsonTomlBookmark(
 		return json, err
 	}
 
-	if err = toml.Unmarshal([]byte(json.BlobString), &json.TomlBookmark); err != nil {
-		err = errors.Wrapf(err, "%q", json.BlobString)
+	doc, decErr := DecodeTomlBookmark([]byte(json.BlobString))
+	if decErr != nil {
+		err = errors.Wrapf(decErr, "%q", json.BlobString)
 		return json, err
 	}
+
+	json.TomlBookmark = *doc.Data()
 
 	if _, err = url.Parse(json.Url); err != nil {
 		err = errors.Wrap(err)

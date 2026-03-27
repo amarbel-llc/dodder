@@ -3,7 +3,7 @@
 package store_browser
 
 import (
-	"bufio"
+	"io"
 	"net/url"
 	"sync"
 
@@ -24,7 +24,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
 const DefaultTimeout = 2e9
@@ -140,13 +139,17 @@ func (store *Store) getUrl(object *sku.Transacted) (u *url.URL, err error) {
 
 	defer errors.DeferredCloser(&err, blobReader)
 
-	var tomlBookmark sku_json_fmt.TomlBookmark
+	var b []byte
 
-	dec := toml.NewDecoder(blobReader)
+	if b, err = io.ReadAll(blobReader); err != nil {
+		err = errors.Wrap(err)
+		return u, err
+	}
 
-	if err = dec.Decode(&tomlBookmark); err != nil {
+	doc, decErr := sku_json_fmt.DecodeTomlBookmark(b)
+	if decErr != nil {
 		err = errors.Wrapf(
-			err,
+			decErr,
 			"Sha: %s, Object Id: %s",
 			object.GetBlobDigest(),
 			object.GetObjectId(),
@@ -154,7 +157,7 @@ func (store *Store) getUrl(object *sku.Transacted) (u *url.URL, err error) {
 		return u, err
 	}
 
-	if u, err = url.Parse(tomlBookmark.Url); err != nil {
+	if u, err = url.Parse(doc.Data().Url); err != nil {
 		err = errors.Wrap(err)
 		return u, err
 	}
@@ -297,12 +300,22 @@ func (store *Store) SaveBlob(object sku.ExternalLike) (err error) {
 	}
 
 	func() {
-		bw := bufio.NewWriter(blobWriter)
-		defer errors.DeferredFlusher(&err, bw)
+		doc, decErr := sku_json_fmt.DecodeTomlBookmark(nil)
+		if decErr != nil {
+			err = errors.Wrap(decErr)
+			return
+		}
 
-		enc := toml.NewEncoder(bw)
+		*doc.Data() = tomlBookmark
 
-		if err = enc.Encode(tomlBookmark); err != nil {
+		var b []byte
+
+		if b, err = doc.Encode(); err != nil {
+			err = errors.Wrap(err)
+			return
+		}
+
+		if _, err = blobWriter.Write(b); err != nil {
 			err = errors.Wrap(err)
 			return
 		}

@@ -25,7 +25,8 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"code.linenisgreat.com/dodder/go/lib/delta/delim_io"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
+	"code.linenisgreat.com/dodder/go/lib/delta/tommy_util"
+	"github.com/amarbel-llc/tommy/pkg/document"
 )
 
 type (
@@ -679,9 +680,8 @@ var formatters = map[string]FormatFuncConstructorEntry{
 					return err
 				}
 
-				if err = toml.Unmarshal(
+				if jsonRep.Blob, err = tommy_util.BytesToMap(
 					[]byte(jsonRep.Transacted.BlobString),
-					&jsonRep.Blob,
 				); err != nil {
 					err = nil
 
@@ -1112,8 +1112,6 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			e := json.NewEncoder(writer)
 
 			return func(object *sku.Transacted) (err error) {
-				var a map[string]any
-
 				var readCloser domain_interfaces.BlobReader
 
 				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
@@ -1125,20 +1123,17 @@ var formatters = map[string]FormatFuncConstructorEntry{
 
 				defer errors.Deferred(&err, readCloser.Close)
 
-				d := toml.NewDecoder(readCloser)
+				if a, mapErr := tommy_util.ReaderToMap(readCloser); mapErr != nil {
+					ui.Err().Printf("%s: %s", object, mapErr)
+					return nil
+				} else {
+					a["description"] = object.GetMetadata().GetDescription().String()
+					a["identifier"] = object.GetObjectId().String()
 
-				if err = d.Decode(&a); err != nil {
-					ui.Err().Printf("%s: %s", object, err)
-					err = nil
-					return err
-				}
-
-				a["description"] = object.GetMetadata().GetDescription().String()
-				a["identifier"] = object.GetObjectId().String()
-
-				if err = e.Encode(&a); err != nil {
-					err = errors.Wrap(err)
-					return err
+					if err = e.Encode(&a); err != nil {
+						err = errors.Wrap(err)
+						return err
+					}
 				}
 
 				return err
@@ -1152,7 +1147,6 @@ var formatters = map[string]FormatFuncConstructorEntry{
 		) interfaces.FuncIter[*sku.Transacted] {
 			return func(object *sku.Transacted) (err error) {
 				ui.TodoP3("limit to only zettels supporting toml")
-				var a map[string]any
 
 				var readCloser domain_interfaces.BlobReader
 
@@ -1165,20 +1159,23 @@ var formatters = map[string]FormatFuncConstructorEntry{
 
 				defer errors.DeferredCloser(&err, readCloser)
 
-				d := toml.NewDecoder(readCloser)
+				doc, parseErr := document.ParseReader(readCloser)
+				if parseErr != nil {
+					ui.Err().Printf("%s: %s", object, parseErr)
+					return nil
+				}
 
-				if err = d.Decode(&a); err != nil {
-					ui.Err().Printf("%s: %s", object, err)
-					err = nil
+				if setErr := doc.Set("description", object.GetMetadata().GetDescription().String()); setErr != nil {
+					err = errors.Wrap(setErr)
 					return err
 				}
 
-				a["description"] = object.GetMetadata().GetDescription().String()
-				a["identifier"] = object.GetObjectId().String()
+				if setErr := doc.Set("identifier", object.GetObjectId().String()); setErr != nil {
+					err = errors.Wrap(setErr)
+					return err
+				}
 
-				e := toml.NewEncoder(writer)
-
-				if err = e.Encode(&a); err != nil {
+				if _, err = writer.Write(doc.Bytes()); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}

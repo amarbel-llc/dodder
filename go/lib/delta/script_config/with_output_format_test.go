@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
 func TestToml(t1 *testing.T) {
@@ -19,12 +18,10 @@ cat
 """
   `
 
-	var sut WithOutputFormat
+	doc, err := DecodeWithOutputFormat([]byte(strToml))
+	t.AssertNoError(err)
 
-	{
-		err := toml.Unmarshal([]byte(strToml), &sut)
-		t.AssertNoError(err)
-	}
+	sut := doc.Data()
 
 	if sut.Description != "wow" {
 		t.Errorf("expected Description 'wow' but got %q", sut.Description)

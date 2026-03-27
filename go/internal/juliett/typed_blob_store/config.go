@@ -5,13 +5,13 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/blob_library"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
 type Config struct {
@@ -26,7 +26,7 @@ func MakeConfigStore(
 		toml_v0: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.TommyBlobDecoder[repo_configs.V0, *repo_configs.V0]{
+				hyphence.TommyBlobDecoder[repo_configs.V0, *repo_configs.V0]{
 					Decode: func(b []byte) (repo_configs.V0, error) {
 						doc, err := repo_configs.DecodeV0(b)
 						if err != nil {
@@ -35,7 +35,7 @@ func MakeConfigStore(
 						return *doc.Data(), nil
 					},
 				},
-				toml.TommyBlobEncoder[repo_configs.V0, *repo_configs.V0]{
+				hyphence.TommyBlobEncoder[repo_configs.V0, *repo_configs.V0]{
 					Encode: func(v repo_configs.V0) ([]byte, error) {
 						doc, err := repo_configs.DecodeV0(nil)
 						if err != nil {
@@ -54,7 +54,7 @@ func MakeConfigStore(
 		toml_v1: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.TommyBlobDecoder[repo_configs.V1, *repo_configs.V1]{
+				hyphence.TommyBlobDecoder[repo_configs.V1, *repo_configs.V1]{
 					Decode: func(b []byte) (repo_configs.V1, error) {
 						doc, err := repo_configs.DecodeV1(b)
 						if err != nil {
@@ -63,7 +63,7 @@ func MakeConfigStore(
 						return *doc.Data(), nil
 					},
 				},
-				toml.TommyBlobEncoder[repo_configs.V1, *repo_configs.V1]{
+				hyphence.TommyBlobEncoder[repo_configs.V1, *repo_configs.V1]{
 					Encode: func(v repo_configs.V1) ([]byte, error) {
 						doc, err := repo_configs.DecodeV1(nil)
 						if err != nil {

@@ -2,9 +2,11 @@ package typed_blob_store
 
 import (
 	"context"
+	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/blob_library"
@@ -16,7 +18,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/lua"
 	"code.linenisgreat.com/dodder/go/lib/charlie/wasm"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
 type Tag struct {
@@ -42,8 +43,8 @@ func MakeTagStore(
 		toml_v0: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.MakeTomlDecoderIgnoreTomlErrors[tag_blobs.V0](),
-				toml.TomlBlobEncoder[tag_blobs.V0, *tag_blobs.V0]{},
+				noopBlobDecoder[tag_blobs.V0, *tag_blobs.V0]{},
+				noopBlobEncoder[tag_blobs.V0, *tag_blobs.V0]{},
 				envRepo.GetDefaultBlobStore(),
 			),
 			func(a *tag_blobs.V0) {
@@ -53,7 +54,7 @@ func MakeTagStore(
 		toml_v1: blob_library.MakeBlobStore(
 			envRepo,
 			blob_library.MakeBlobFormat(
-				toml.TommyBlobDecoder[tag_blobs.TomlV1, *tag_blobs.TomlV1]{
+				hyphence.TommyBlobDecoder[tag_blobs.TomlV1, *tag_blobs.TomlV1]{
 					Decode: func(b []byte) (tag_blobs.TomlV1, error) {
 						doc, err := tag_blobs.DecodeTomlV1(b)
 						if err != nil {
@@ -62,7 +63,7 @@ func MakeTagStore(
 						return *doc.Data(), nil
 					},
 				},
-				toml.TommyBlobEncoder[tag_blobs.TomlV1, *tag_blobs.TomlV1]{
+				hyphence.TommyBlobEncoder[tag_blobs.TomlV1, *tag_blobs.TomlV1]{
 					Encode: func(v tag_blobs.TomlV1) ([]byte, error) {
 						doc, err := tag_blobs.DecodeTomlV1(nil)
 						if err != nil {
@@ -244,4 +245,34 @@ func (store Tag) GetBlob(
 	}
 
 	return blobGeneric, repool, err
+}
+
+type noopBlobDecoder[
+	BLOB any,
+	BLOB_PTR interfaces.Ptr[BLOB],
+] struct{}
+
+func (noopBlobDecoder[BLOB, BLOB_PTR]) DecodeFrom(
+	blob BLOB_PTR,
+	reader io.Reader,
+) (n int64, err error) {
+	n, err = io.Copy(io.Discard, reader)
+
+	if err != nil {
+		err = errors.Wrap(err)
+	}
+
+	return
+}
+
+type noopBlobEncoder[
+	BLOB any,
+	BLOB_PTR interfaces.Ptr[BLOB],
+] struct{}
+
+func (noopBlobEncoder[BLOB, BLOB_PTR]) EncodeTo(
+	blob BLOB_PTR,
+	writer io.Writer,
+) (n int64, err error) {
+	return
 }

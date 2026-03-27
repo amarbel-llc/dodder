@@ -1,7 +1,6 @@
 package sku_json_fmt
 
 import (
-	"bytes"
 	"io"
 	"net/url"
 
@@ -9,9 +8,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/toml"
 )
 
+//go:generate tommy generate
 type TomlBookmark struct {
 	Url string `toml:"url"`
 }
@@ -29,19 +28,20 @@ func TomlBookmarkUrl(
 
 	defer errors.DeferredCloser(&err, reader)
 
-	var buffer bytes.Buffer
+	var b []byte
 
-	if _, err = io.Copy(&buffer, reader); err != nil {
+	if b, err = io.ReadAll(reader); err != nil {
 		err = errors.Wrap(err)
 		return ur, err
 	}
 
-	var tb TomlBookmark
-
-	if err = toml.Unmarshal(buffer.Bytes(), &tb); err != nil {
-		err = errors.Wrapf(err, "%q", buffer.String())
+	doc, decErr := DecodeTomlBookmark(b)
+	if decErr != nil {
+		err = errors.Wrapf(decErr, "%q", string(b))
 		return ur, err
 	}
+
+	tb := doc.Data()
 
 	if ur, err = url.Parse(tb.Url); err != nil {
 		err = errors.Wrapf(err, "%q", tb.Url)

@@ -2,6 +2,7 @@ package blob_store_configs
 
 import "code.linenisgreat.com/dodder/go/lib/_/interfaces"
 
+//go:generate tommy generate
 type TomlSFTPViaSSHConfigV0 struct {
 	TomlUriV0
 }

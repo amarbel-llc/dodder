@@ -136,12 +136,26 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 					return doc.Encode()
 				},
 			},
-			ids.TypeTomlBlobStoreConfigSftpViaSSHConfigV0: hyphence.CoderToml[
+			ids.TypeTomlBlobStoreConfigSftpViaSSHConfigV0: hyphence.CoderTommy[
 				Config,
 				*Config,
 			]{
-				Progenitor: func() Config {
-					return &TomlSFTPViaSSHConfigV0{}
+				Decode: func(b []byte) (Config, error) {
+					doc, err := DecodeTomlSFTPViaSSHConfigV0(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := DecodeTomlSFTPViaSSHConfigV0(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := cfg.(*TomlSFTPViaSSHConfigV0); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
 				},
 			},
 		},
