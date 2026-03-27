@@ -7,6 +7,13 @@ import (
 func Default() TomlV1 {
 	return TomlV1{
 		FileExtension: "md",
+		VimSyntaxType: "markdown",
+	}
+}
+
+func DefaultWithPandocFormatter() TomlV1 {
+	return TomlV1{
+		FileExtension: "md",
 		Formatters: map[string]script_config.WithOutputFormat{
 			"text": {
 				ScriptConfig: script_config.ScriptConfig{

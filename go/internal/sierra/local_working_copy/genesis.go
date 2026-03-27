@@ -46,14 +46,16 @@ func (local *Repo) initDefaultTypeAndConfig(
 ) (err error) {
 	builder := import_plan.MakeLocalBuilder()
 
-	if err = local.prepareToolTypes(&builder); err != nil {
-		return errors.Wrap(err)
-	}
-
 	var toolBlobs toolBlobDigests
 
-	if toolBlobs, err = local.prepareToolBlobs(); err != nil {
-		return errors.Wrap(err)
+	if bigBang.IncludeDefaultPandocTools {
+		if err = local.prepareToolTypes(&builder); err != nil {
+			return errors.Wrap(err)
+		}
+
+		if toolBlobs, err = local.prepareToolBlobs(); err != nil {
+			return errors.Wrap(err)
+		}
 	}
 
 	var defaultTypeObjectId ids.TypeStruct
@@ -115,7 +117,13 @@ func (local *Repo) prepareDefaultType(
 
 	objectIdType = ids.MustTypeStruct("md")
 	tipe := ids.DefaultOrPanic(genres.Type)
-	blob := type_blobs.Default()
+
+	var blob type_blobs.TomlV1
+	if bigBang.IncludeDefaultPandocTools {
+		blob = type_blobs.DefaultWithPandocFormatter()
+	} else {
+		blob = type_blobs.Default()
+	}
 
 	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
@@ -137,25 +145,27 @@ func (local *Repo) prepareDefaultType(
 	object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
 	object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
 
-	if err = addToolBlobReference(
-		object, toolBlobs.commonFilter,
-		"pandoc-lua_filter", "filters/dodder-common.lua",
-	); err != nil {
-		return objectIdType, errors.Wrap(err)
-	}
+	if bigBang.IncludeDefaultPandocTools {
+		if err = addToolBlobReference(
+			object, toolBlobs.commonFilter,
+			"pandoc-lua_filter", "filters/dodder-common.lua",
+		); err != nil {
+			return objectIdType, errors.Wrap(err)
+		}
 
-	if err = addToolBlobReference(
-		object, toolBlobs.editFilter,
-		"pandoc-lua_filter", "filters/dodder-edit.lua",
-	); err != nil {
-		return objectIdType, errors.Wrap(err)
-	}
+		if err = addToolBlobReference(
+			object, toolBlobs.editFilter,
+			"pandoc-lua_filter", "filters/dodder-edit.lua",
+		); err != nil {
+			return objectIdType, errors.Wrap(err)
+		}
 
-	if err = addToolBlobReference(
-		object, toolBlobs.editDefaults,
-		"pandoc-defaults", "defaults/dodder-edit.yaml",
-	); err != nil {
-		return objectIdType, errors.Wrap(err)
+		if err = addToolBlobReference(
+			object, toolBlobs.editDefaults,
+			"pandoc-defaults", "defaults/dodder-edit.yaml",
+		); err != nil {
+			return objectIdType, errors.Wrap(err)
+		}
 	}
 
 	builder.AddObject(object, 0)

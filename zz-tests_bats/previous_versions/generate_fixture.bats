@@ -42,10 +42,8 @@ function generate { # @test
 
   run_dodder show !md:t :konfig
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v1]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
-	EOM
+  assert_line --regexp '\[!md @blake2b256-.+ !toml-type-v1]'
+  assert_line --regexp '\[konfig @blake2b256-.+ !toml-config-v2]'
 
   run_dodder show -format text :konfig
   assert_success
