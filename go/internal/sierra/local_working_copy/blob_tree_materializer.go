@@ -12,15 +12,12 @@ import (
 
 // MaterializeBlobTree writes all blob references from a type object into a
 // temporary directory tree, using each blob reference's alias as the file
-// path (e.g., "filters/dodder-common.lua"). Returns the tmpdir path and a
-// cleanup function.
-//
-// TODO use context.AfterFunc for cleanup instead of manual defer at call sites.
+// path (e.g., "filters/dodder-common.lua"). Returns the tmpdir path; cleanup
+// is registered via the Repo's context.After so the tmpdir is removed when the
+// context completes.
 func (local *Repo) MaterializeBlobTree(
 	typeObject *sku.Transacted,
-) (blobTreeDir string, cleanup func(), err error) {
-	cleanup = func() {}
-
+) (blobTreeDir string, err error) {
 	metadata := typeObject.GetMetadata()
 
 	hasBlobRefs := false
@@ -30,17 +27,19 @@ func (local *Repo) MaterializeBlobTree(
 	}
 
 	if !hasBlobRefs {
-		return blobTreeDir, cleanup, err
+		return blobTreeDir, err
 	}
 
 	if blobTreeDir, err = os.MkdirTemp("", "dodder-blob-tree-*"); err != nil {
 		err = errors.Wrap(err)
-		return blobTreeDir, cleanup, err
+		return blobTreeDir, err
 	}
 
-	cleanup = func() {
-		os.RemoveAll(blobTreeDir)
-	}
+	local.After(
+		errors.MakeFuncContextFromFuncErr(
+			func() error { return os.RemoveAll(blobTreeDir) },
+		),
+	)
 
 	blobStore := local.GetEnvRepo().GetDefaultBlobStore()
 
@@ -58,11 +57,11 @@ func (local *Repo) MaterializeBlobTree(
 			alias,
 		); err != nil {
 			err = errors.Wrapf(err, "blob reference alias: %q", alias)
-			return blobTreeDir, cleanup, err
+			return blobTreeDir, err
 		}
 	}
 
-	return blobTreeDir, cleanup, err
+	return blobTreeDir, err
 }
 
 func materializeOneBlob(

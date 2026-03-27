@@ -152,16 +152,13 @@ func (cmd *FormatBlob) Run(dep command.Request) {
 	var blobTreeDir string
 
 	{
-		var cleanup func()
 		var err error
 
-		if blobTreeDir, cleanup, err = localWorkingCopy.MaterializeBlobTree(
+		if blobTreeDir, err = localWorkingCopy.MaterializeBlobTree(
 			typeObject,
 		); err != nil {
 			localWorkingCopy.Cancel(err)
 		}
-
-		defer cleanup()
 	}
 
 	format := typed_blob_store.MakeTextFormatterWithBlobFormatter(
@@ -244,17 +241,11 @@ func (cmd *FormatBlob) FormatFromStdin(
 
 	var blobTreeDir string
 
-	{
-		var cleanup func()
-
-		if blobTreeDir, cleanup, err = u.MaterializeBlobTree(
-			typeObject,
-		); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
-
-		defer cleanup()
+	if blobTreeDir, err = u.MaterializeBlobTree(
+		typeObject,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	env := u.GetEnvRepo().MakeCommonEnv()
