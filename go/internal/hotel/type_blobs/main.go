@@ -7,8 +7,30 @@ import (
 func Default() TomlV1 {
 	return TomlV1{
 		FileExtension: "md",
-		Formatters:    make(map[string]script_config.WithOutputFormat),
+		Formatters: map[string]script_config.WithOutputFormat{
+			"text": {
+				ScriptConfig: script_config.ScriptConfig{
+					Description: "Normalize markdown with pandoc",
+					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit`,
+				},
+				FileExtension: "md",
+			},
+		},
 		VimSyntaxType: "markdown",
+	}
+}
+
+func DefaultPandocDefaults() TomlV1 {
+	return TomlV1{
+		FileExtension: "yaml",
+		Formatters:    make(map[string]script_config.WithOutputFormat),
+	}
+}
+
+func DefaultPandocLuaFilter() TomlV1 {
+	return TomlV1{
+		FileExtension: "lua",
+		Formatters:    make(map[string]script_config.WithOutputFormat),
 	}
 }
 
