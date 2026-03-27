@@ -136,6 +136,13 @@ Sigils can be combined (e.g. `:.` for latest + external).
   goes on the predicate. NOT `show :t '!img'` (that's two separate terms).
 - **To list all type objects:** `show :t`.
 
+## Formatting
+
+- **Markdown files are formatted by pandoc on save** (via lux filetype config).
+  Pandoc converts GFM pipe tables to column-aligned plain text and fenced code
+  blocks to indented blocks. Write markdown accordingly --- don't expect GFM
+  table syntax to survive.
+
 ## Common Issues
 
 - **"dodder: command not found"** --- run `just build` first, or ensure you're
