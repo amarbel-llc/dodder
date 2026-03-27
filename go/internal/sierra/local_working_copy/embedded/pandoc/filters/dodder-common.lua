@@ -1,5 +1,13 @@
 local pandoc = require("pandoc")
-local url = require("url")
+
+-- TODO pandoc's embedded Lua has no package manager and no module search path
+-- into the blob tree. Filters that need third-party Lua libraries (e.g. the
+-- original `url` module) must inline their functionality until we add a
+-- mechanism for resolving Lua requires from blob-stored modules.
+local function url_unescape(s)
+  return s:gsub("%%(%x%x)", function(x) return string.char(tonumber(x, 16)) end)
+end
+
 local P = {}
 
 ---@diagnostic disable-next-line: undefined-global
@@ -8,7 +16,7 @@ function P.is_binary()
 end
 
 function P.format_object_image(imgSrc, format)
-  local objectID = url.unescape(imgSrc)
+  local objectID = url_unescape(imgSrc)
   return pandoc.pipe("dodder", { "format-object", objectID, format }, ""), objectID
 end
 
@@ -39,7 +47,7 @@ local function try_to_replace_src_with_new_or_added_object(
     tipe = mimeTypeMapping[mime]
   else
     -- TODO modify this to do `add` instead of `new`
-    local path = url.unescape(urlOrFileEscaped)
+    local path = url_unescape(urlOrFileEscaped)
     local f = io.open(path, "rb")
 
     if f == nil then
@@ -170,7 +178,7 @@ end
 
 function P.unescape_if_sku(table, key)
   local el = table[key]
-  local unescaped = url.unescape(el)
+  local unescaped = url_unescape(el)
 
   if not P.is_sku(unescaped) then
     return
