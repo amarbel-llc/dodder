@@ -167,7 +167,7 @@ build-go-race:
   mkdir -p build/race
   go build -tags debug -race -o build/race/ ./cmd/*
 
-build: build-go check-go-repool check-go-seqerror check-go-versions #build-nix
+build: build-go check-go-repool check-go-seqerror check-go-defererr check-go-versions #build-nix
 
 #    ____ _               _
 #   / ___| |__   ___  ___| | __
@@ -194,10 +194,16 @@ build-analyzer-seqerror:
 check-go-seqerror: build-analyzer-seqerror
   go vet -tags test,debug -vettool=build/seqerror-analyzer ./...
 
+build-analyzer-defererr:
+  go build -o build/defererr-analyzer ./lib/alfa/analyzers/defererr/cmd/
+
+check-go-defererr: build-analyzer-defererr
+  go vet -tags test,debug -vettool=build/defererr-analyzer ./...
+
 check-go-versions:
   go run ./lib/alfa/analyzers/versions
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-versions
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions
 
 #   _____         _
 #  |_   _|__  ___| |_

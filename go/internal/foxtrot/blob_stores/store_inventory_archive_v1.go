@@ -18,6 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
+	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 type archiveEntryV1 struct {
@@ -120,7 +121,7 @@ func (store *inventoryArchiveV1) tryReadCache() (
 		return nil, false
 	}
 
-	defer file.Close()
+	defer files.CloseReadOnly(file)
 
 	info, err := file.Stat()
 	if err != nil {

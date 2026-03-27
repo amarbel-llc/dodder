@@ -125,7 +125,7 @@ func (index *index) readIfNecessary() (err error) {
 		return err
 	}
 
-	defer namedBlobReader.Close()
+	defer errors.DeferredCloser(&err, namedBlobReader)
 
 	r := bufio.NewReader(namedBlobReader)
 

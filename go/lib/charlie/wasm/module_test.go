@@ -16,7 +16,7 @@ func TestModulePoolBuilderRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rt.Close(ctx)
+	defer rt.Close(ctx) //defer:err-checked
 
 	builder := MakeModulePoolBuilder(rt)
 
@@ -41,7 +41,7 @@ func TestModulePoolReuse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rt.Close(ctx)
+	defer rt.Close(ctx) //defer:err-checked
 
 	builder := MakeModulePoolBuilder(rt)
 

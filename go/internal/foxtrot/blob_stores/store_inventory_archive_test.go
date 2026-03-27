@@ -97,7 +97,7 @@ func TestMakeBlobReaderFromArchive(t *testing.T) {
 		t.Fatalf("MakeBlobReader: %v", err)
 	}
 
-	defer reader.Close()
+	defer reader.Close() //defer:err-checked
 
 	got, err := io.ReadAll(reader)
 	if err != nil {
@@ -187,7 +187,7 @@ func TestMakeBlobReaderFallsBackToLoose(t *testing.T) {
 		t.Fatalf("MakeBlobReader: %v", err)
 	}
 
-	defer reader.Close()
+	defer reader.Close() //defer:err-checked
 
 	if !stub.makeBlobReaderCalled {
 		t.Fatal("expected MakeBlobReader to delegate to loose blob store")
@@ -216,7 +216,7 @@ func TestMakeBlobReaderNullIdReturnsNopReader(t *testing.T) {
 		t.Fatalf("MakeBlobReader for null: %v", err)
 	}
 
-	defer reader.Close()
+	defer reader.Close() //defer:err-checked
 
 	got, err := io.ReadAll(reader)
 	if err != nil {
@@ -295,7 +295,7 @@ func TestMakeBlobReaderFromArchiveZstd(t *testing.T) {
 		t.Fatalf("MakeBlobReader: %v", err)
 	}
 
-	defer reader.Close()
+	defer reader.Close() //defer:err-checked
 
 	got, err := io.ReadAll(reader)
 	if err != nil {
@@ -597,7 +597,7 @@ func TestPack(t *testing.T) {
 		t.Fatalf("MakeBlobReader for id1 after pack: %v", err)
 	}
 
-	defer reader1.Close()
+	defer reader1.Close() //defer:err-checked
 
 	got1, err := io.ReadAll(reader1)
 	if err != nil {
@@ -613,7 +613,7 @@ func TestPack(t *testing.T) {
 		t.Fatalf("MakeBlobReader for id2 after pack: %v", err)
 	}
 
-	defer reader2.Close()
+	defer reader2.Close() //defer:err-checked
 
 	got2, err := io.ReadAll(reader2)
 	if err != nil {
@@ -770,7 +770,7 @@ func TestPackDeleteLoose(t *testing.T) {
 		t.Fatalf("MakeBlobReader for id1 after delete: %v", err)
 	}
 
-	defer reader1.Close()
+	defer reader1.Close() //defer:err-checked
 
 	got1, err := io.ReadAll(reader1)
 	if err != nil {

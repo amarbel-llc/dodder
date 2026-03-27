@@ -21,7 +21,7 @@ func TestWasmVMPoolV1GetWithRepool(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rt.Close(ctx)
+	defer rt.Close(ctx) //defer:err-checked
 
 	modulePool, err := wasm.MakeModulePoolBuilder(rt).
 		WithBytes(alwaysTrueWasm).
@@ -47,7 +47,7 @@ func TestGenreFilterAcceptsZettel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rt.Close(ctx)
+	defer rt.Close(ctx) //defer:err-checked
 
 	pool, err := wasm.MakeModulePoolBuilder(rt).WithBytes(genreFilterWasm).Build(ctx)
 	if err != nil {
@@ -84,7 +84,7 @@ func TestGenreFilterRejectsNonZettel(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer rt.Close(ctx)
+	defer rt.Close(ctx) //defer:err-checked
 
 	pool, err := wasm.MakeModulePoolBuilder(rt).WithBytes(genreFilterWasm).Build(ctx)
 	if err != nil {

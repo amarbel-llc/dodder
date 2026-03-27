@@ -91,7 +91,7 @@ func (s *ScriptValue) Run(input string) (r io.Reader, err error) {
 
 func (s *ScriptValue) Close() (err error) {
 	ui.Log().Print("closing script")
-	defer ui.Log().Print("done closing script")
+	defer errors.Deferred(&err, func() error { return ui.Log().Print("done closing script") })
 
 	if s.file != nil {
 		ui.Log().Print("closing file")

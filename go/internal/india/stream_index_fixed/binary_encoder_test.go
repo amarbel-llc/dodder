@@ -66,8 +66,8 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 		t.Fatalf("failed to create overflow temp file: %s", err)
 	}
 
-	defer os.Remove(overflowTempFile.Name())
-	defer overflowTempFile.Close()
+	defer os.Remove(overflowTempFile.Name()) //defer:err-checked
+	defer overflowTempFile.Close()           //defer:err-checked
 
 	overflowW := makeOverflowWriterForTempFile(overflowTempFile)
 

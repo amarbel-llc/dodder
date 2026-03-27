@@ -11,7 +11,7 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
-func listAgentKeys(socketEnvVar string) ([]*agent.Key, error) {
+func listAgentKeys(socketEnvVar string) (_ []*agent.Key, err error) {
 	socket := os.Getenv(socketEnvVar)
 	if socket == "" {
 		return nil, errors.Errorf("%s not set", socketEnvVar)
@@ -21,7 +21,7 @@ func listAgentKeys(socketEnvVar string) ([]*agent.Key, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to connect to agent at %s", socketEnvVar)
 	}
-	defer conn.Close()
+	defer errors.DeferredCloser(&err, conn)
 
 	keys, err := agent.NewClient(conn).List()
 	if err != nil {

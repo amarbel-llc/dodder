@@ -232,6 +232,15 @@ func Close(f *os.File) error {
 	return f.Close()
 }
 
+// CloseReadOnly closes a read-only file descriptor, intentionally
+// discarding the error. close(2) errors on read-only fds are about
+// flushing writes (EIO, ENOSPC, EDQUOT) which cannot occur when no
+// writes were performed. The fd is always freed on Linux and macOS
+// regardless of the error. Go's own os.ReadFile uses this same pattern.
+func CloseReadOnly(f *os.File) {
+	f.Close() //defer:err-checked
+}
+
 func CombinedOutput(c *exec.Cmd) ([]byte, error) {
 	return c.CombinedOutput()
 }
@@ -243,7 +252,7 @@ func ReadAllString(s ...string) (o string, err error) {
 		return o, err
 	}
 
-	defer Close(f)
+	defer errors.DeferredCloser(&err, f)
 
 	var b []byte
 
