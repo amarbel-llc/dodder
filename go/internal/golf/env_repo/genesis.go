@@ -1,7 +1,6 @@
 package env_repo
 
 import (
-	"encoding/gob"
 	"io"
 	"os"
 	"path/filepath"
@@ -134,7 +133,7 @@ func (env *Env) writeConfig(bigBang BigBang) {
 	}
 }
 
-func (env *Env) writeFile(path string, contents any) {
+func (env *Env) writeFile(path string, contents string) {
 	var file *os.File
 
 	{
@@ -153,18 +152,9 @@ func (env *Env) writeFile(path string, contents any) {
 
 	defer errors.ContextMustClose(env, file)
 
-	if value, ok := contents.(string); ok {
-		if _, err := io.WriteString(file, value); err != nil {
-			env.Cancel(err)
-			return
-		}
-	} else {
-		enc := gob.NewEncoder(file)
-
-		if err := enc.Encode(contents); err != nil {
-			env.Cancel(err)
-			return
-		}
+	if _, err := io.WriteString(file, contents); err != nil {
+		env.Cancel(err)
+		return
 	}
 }
 

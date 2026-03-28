@@ -2,7 +2,7 @@ package zettel_id_index
 
 import (
 	"bufio"
-	"encoding/gob"
+	"encoding/binary"
 	"io"
 	"math/rand"
 	"sync"
@@ -89,11 +89,16 @@ func (index *index) Flush() (err error) {
 
 	defer errors.DeferredFlusher(&err, w)
 
-	enc := gob.NewEncoder(w)
-
-	if err = enc.Encode(index.encodedIds); err != nil {
-		err = errors.Wrapf(err, "failed to write encoded object id")
+	if err = binary.Write(w, binary.BigEndian, uint32(len(index.AvailableIds))); err != nil {
+		err = errors.Wrapf(err, "failed to write encoded object id count")
 		return err
+	}
+
+	for k := range index.AvailableIds {
+		if err = binary.Write(w, binary.BigEndian, uint32(k)); err != nil {
+			err = errors.Wrapf(err, "failed to write encoded object id key")
+			return err
+		}
 	}
 
 	return err
@@ -129,11 +134,32 @@ func (index *index) readIfNecessary() (err error) {
 
 	r := bufio.NewReader(namedBlobReader)
 
-	dec := gob.NewDecoder(r)
+	var count uint32
 
-	if err = dec.Decode(&index.encodedIds); err != nil {
-		err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+	if err = binary.Read(r, binary.BigEndian, &count); err != nil {
+		if err == io.EOF {
+			err = nil
+		} else {
+			ui.Log().Printf("failed to read zettel id cache (stale format?), rebuilding: %s", err)
+			err = nil
+		}
+
 		return err
+	}
+
+	index.AvailableIds = make(map[int]bool, count)
+
+	for i := uint32(0); i < count; i++ {
+		var key uint32
+
+		if err = binary.Read(r, binary.BigEndian, &key); err != nil {
+			ui.Log().Printf("failed to read zettel id cache entry (stale format?), rebuilding: %s", err)
+			index.AvailableIds = make(map[int]bool)
+			err = nil
+			return err
+		}
+
+		index.AvailableIds[int(key)] = true
 	}
 
 	return err

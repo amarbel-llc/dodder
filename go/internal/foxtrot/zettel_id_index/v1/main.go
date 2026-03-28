@@ -2,7 +2,8 @@ package zettel_id_index
 
 import (
 	"bufio"
-	"encoding/gob"
+	"encoding"
+	"io"
 	"math/rand"
 	"sync"
 	"time"
@@ -85,9 +86,16 @@ func (index *index) Flush() (err error) {
 
 	defer errors.Deferred(&err, w.Flush)
 
-	enc := gob.NewEncoder(w)
+	marshaler := index.bitset.(encoding.BinaryMarshaler)
 
-	if err = enc.Encode(index.bitset); err != nil {
+	var bs []byte
+
+	if bs, err = marshaler.MarshalBinary(); err != nil {
+		err = errors.Wrapf(err, "failed to write encoded zettel id")
+		return err
+	}
+
+	if _, err = w.Write(bs); err != nil {
 		err = errors.Wrapf(err, "failed to write encoded zettel id")
 		return err
 	}
@@ -130,11 +138,18 @@ func (index *index) readIfNecessary() (err error) {
 
 	r := bufio.NewReader(namedBlobReader)
 
-	dec := gob.NewDecoder(r)
+	var bs []byte
 
-	if err = dec.Decode(index.bitset); err != nil {
+	if bs, err = io.ReadAll(r); err != nil {
 		err = errors.Wrap(err)
 		return err
+	}
+
+	unmarshaler := index.bitset.(encoding.BinaryUnmarshaler)
+
+	if err = unmarshaler.UnmarshalBinary(bs); err != nil {
+		ui.Log().Printf("failed to read zettel id cache (stale format?), rebuilding: %s", err)
+		err = nil
 	}
 
 	return err
