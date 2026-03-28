@@ -11,7 +11,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/hotel/log_remote_inventory_lists"
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
@@ -49,7 +48,6 @@ type client struct {
 	repo                     *local_working_copy.Repo
 	inventoryListCoderCloset inventory_list_coders.Closet
 
-	logRemoteInventoryLists log_remote_inventory_lists.Log
 }
 
 func (client *client) Initialize() {
@@ -91,10 +89,6 @@ func (client *client) Initialize() {
 		)
 	}
 
-	client.logRemoteInventoryLists = log_remote_inventory_lists.Make(
-		client.repo.GetEnvRepo(),
-		client.repo.GetEnvRepo(),
-	)
 }
 
 func (client *client) GetEnv() env_ui.Env {

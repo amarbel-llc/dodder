@@ -1,7 +1,9 @@
 ---
-status: accepted
 date: 2026-03-15
-promotion-criteria: BATS tests pass for direct push, pull, and clone between two local repos without a stored remote object; existing remote-add-based push/pull/clone still works unchanged
+promotion-criteria: BATS tests pass for direct push, pull, and clone between two
+  local repos without a stored remote object; existing remote-add-based
+  push/pull/clone still works unchanged
+status: accepted
 ---
 
 # Bindingless Local Repo Transfer
@@ -17,7 +19,7 @@ tracked remote object.
 This matters because the end goal is to unify workspaces and repos. Workspaces
 will be backed by full repos filtered to the query provided at initialization
 time, enabling independent commit history. Push/pull between a workspace-repo
-and its parent must be lightweight and not require pre-registration — the
+and its parent must be lightweight and not require pre-registration --- the
 relationship is implicit (parent contains child directory).
 
 ## Interface
@@ -26,20 +28,18 @@ relationship is implicit (parent contains child directory).
 
 **New flag:** `-direct <path>` on `push`, `pull`, and `clone`.
 
-When set:
-- `<path>` is resolved to an absolute path
-- A `TomlLocalOverridePathV0` blob is constructed inline with the resolved path
-  and no public key
-- `MakeRemoteFromBlob` is called (not `MakeRemoteFromBlobAndSetPublicKey` — no
-  config fetch or key exchange)
-- Push/pull skip the `repo-id` positional arg entirely
-- Clone skips `MakeRemoteAndObject` and its type-arg pop
+When set: - `<path>` is resolved to an absolute path - A
+`TomlLocalOverridePathV0` blob is constructed inline with the resolved path and
+no public key - `MakeRemoteFromBlob` is called (not
+`MakeRemoteFromBlobAndSetPublicKey` --- no config fetch or key exchange) -
+Push/pull skip the `repo-id` positional arg entirely - Clone skips
+`MakeRemoteAndObject` and its type-arg pop
 
 When not set: existing behavior is unchanged.
 
 **Examples:**
 
-```sh
+``` sh
 # Pull from a local repo
 dodder pull -direct /path/to/other/repo
 
@@ -54,32 +54,33 @@ dodder clone -direct /path/to/source/repo new-repo-id
 
 If the target path does not contain an initialized dodder repository,
 `env_repo.Make` returns `ErrNotInDodderDir` with the expected config path
-(e.g. "not in a dodder directory. Looking for `<path>/.local/share/dodder/Konfig`").
-If the path does not exist or is not writable, XDG initialization fails with
-a filesystem error before reaching the config check.
+(e.g. "not in a dodder directory. Looking for
+`<path>/.local/share/dodder/Konfig`"). If the path does not exist or is not
+writable, XDG initialization fails with a filesystem error before reaching the
+config check.
 
-No separate pre-flight check — the construction chain already validates repo
-existence. The `-direct` path appears in the error's expected config path,
-which is sufficient to identify the target.
+No separate pre-flight check --- the construction chain already validates repo
+existence. The `-direct` path appears in the error's expected config path, which
+is sufficient to identify the target.
 
 ## Implementation
 
 ### Changes to Existing Code
 
-**`command_components_dodder.Remote`** — Add a `DirectPath` string field.
+**`command_components_dodder.Remote`** --- Add a `DirectPath` string field.
 Register `-direct` flag in `SetFlagDefinitions`. Add
-`MakeDirectRemoteFromPath(req, local)` method that:
-1. Resolves the path to absolute
-2. Constructs `repo_blobs.TomlLocalOverridePathV0{OverridePath: absPath}`
-3. Calls `MakeRemoteFromBlob`
+`MakeDirectRemoteFromPath(req, local)` method that: 1. Resolves the path to
+absolute 2. Constructs
+`repo_blobs.TomlLocalOverridePathV0{OverridePath: absPath}` 3. Calls
+`MakeRemoteFromBlob`
 
-**`push.go`** — Branch on `DirectPath != ""`: if set, call
+**`push.go`** --- Branch on `DirectPath != ""`: if set, call
 `MakeDirectRemoteFromPath`; otherwise, existing `GetObjectFromObjectId` +
 `MakeRemote` path.
 
-**`pull.go`** — Same branching pattern.
+**`pull.go`** --- Same branching pattern.
 
-**`clone.go`** — Same branching pattern, skipping `MakeRemoteAndObject`.
+**`clone.go`** --- Same branching pattern, skipping `MakeRemoteAndObject`.
 
 ### What Does NOT Change
 
@@ -100,21 +101,40 @@ terms). Deferred until the ergonomics of `-direct` are validated.
 
 ### Workspace-as-Repo
 
-The motivating use case. `init-workspace` would create a full dodder repo
-(with its own store, inventory lists, signing key, commit history) filtered to
-the query provided at initialization time. The workspace repo lives inside the
+The motivating use case. `init-workspace` would create a full dodder repo (with
+its own store, inventory lists, signing key, commit history) filtered to the
+query provided at initialization time. The workspace repo lives inside the
 parent repo's working directory. Checkin/checkout between workspace and parent
 become push/pull using the `-direct` (or its successor) mechanism.
 
 This gives workspaces independent commit history while maintaining the
 parent-child relationship through local transfers.
 
+## Transfer Deduplication (Deferred)
+
+`hotel/log_remote_inventory_lists` contains a transfer log that was intended to
+deduplicate inventory list exchanges during push/pull. It hashes
+`(direction, publicKey, objectId, blobDigest)` tuples into a tridex so
+subsequent transfers can skip already-sent items.
+
+As of `b99a919d0`, this code is initialized in `tango/remote_http/client.go:94`
+but never called --- `Append`, `Exists`, and `Key` have zero callers. The v0
+implementation uses `encoding/gob` for persistence (part of the gob removal
+tracked in #26).
+
+When the remote transfer protocol is redesigned (#19), transfer deduplication
+should be revisited. The log's design (keying on content-addressed tuples,
+lazy-loaded tridex cache) is sound but needs to be wired into the actual
+transfer paths. The current implementation can be examined at commit `ea28c38e`
+(pre-NATO-compaction location) or the current
+`hotel/log_remote_inventory_lists/` path.
+
 ## Rollback Strategy
 
 ### Dual-Architecture Period
 
 The `-direct` flag is purely additive. Existing remote-add-based push/pull/clone
-is completely unchanged. Both paths coexist — users choose which to use per
+is completely unchanged. Both paths coexist --- users choose which to use per
 invocation.
 
 ### Promotion Criteria
@@ -126,5 +146,5 @@ invocation.
 ### Rollback Procedure
 
 Remove the `-direct` flag registration, the `DirectPath` field, and the
-`MakeDirectRemoteFromPath` method. No persistent state is affected — `-direct`
+`MakeDirectRemoteFromPath` method. No persistent state is affected --- `-direct`
 is a runtime mechanism, nothing is written to disk.
