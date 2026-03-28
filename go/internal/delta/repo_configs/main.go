@@ -8,15 +8,33 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
-	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
+)
+
+type (
+	Defaults            = charlie_rc.Defaults
+	DefaultsGetter      = charlie_rc.DefaultsGetter
+	DefaultsV0          = charlie_rc.DefaultsV0
+	DefaultsV1          = charlie_rc.DefaultsV1
+	DefaultsV1OmitEmpty = charlie_rc.DefaultsV1OmitEmpty
+	V0                  = charlie_rc.V0
+	V0Document          = charlie_rc.V0Document
+	V1                  = charlie_rc.V1
+	V1Document          = charlie_rc.V1Document
+	V2                  = charlie_rc.V2
+	V2Document          = charlie_rc.V2Document
+)
+
+var (
+	DecodeV0                       = charlie_rc.DecodeV0
+	DecodeV1                       = charlie_rc.DecodeV1
+	DecodeV2                       = charlie_rc.DecodeV2
+	DecodeDefaultsV1OmitEmptyInto  = charlie_rc.DecodeDefaultsV1OmitEmptyInto
+	EncodeDefaultsV1OmitEmptyFrom  = charlie_rc.EncodeDefaultsV1OmitEmptyFrom
 )
 
 type (
 	TypedBlob = hyphence.TypedBlob[ConfigOverlay]
-
-	DefaultsGetter interface {
-		GetDefaults() Defaults
-	}
 
 	ConfigOverlay interface {
 		DefaultsGetter
@@ -29,11 +47,12 @@ type (
 		ConfigOverlay
 		GetBlobStores() []blob_store_id.Id
 	}
+)
 
-	Defaults interface {
-		GetDefaultType() ids.TypeStruct
-		GetDefaultTags() collections_slice.Slice[ids.TagStruct]
-	}
+var (
+	_ ConfigOverlay  = V0{}
+	_ ConfigOverlay  = V1{}
+	_ ConfigOverlay2 = V2{}
 )
 
 func Default(defaultType ids.Type) Config {

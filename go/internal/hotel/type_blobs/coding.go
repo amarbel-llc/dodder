@@ -3,6 +3,7 @@ package type_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	golf_tb "code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
@@ -17,14 +18,14 @@ var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
 				*Blob,
 			]{
 				Decode: func(b []byte) (Blob, error) {
-					doc, err := DecodeTomlV0(b)
+					doc, err := golf_tb.DecodeTomlV0(b)
 					if err != nil {
 						return &TomlV0{}, nil
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(blob Blob) ([]byte, error) {
-					doc, err := DecodeTomlV0(nil)
+					doc, err := golf_tb.DecodeTomlV0(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -39,14 +40,14 @@ var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
 				*Blob,
 			]{
 				Decode: func(b []byte) (Blob, error) {
-					doc, err := DecodeTomlV1(b)
+					doc, err := golf_tb.DecodeTomlV1(b)
 					if err != nil {
 						return &TomlV1{}, nil
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(blob Blob) ([]byte, error) {
-					doc, err := DecodeTomlV1(nil)
+					doc, err := golf_tb.DecodeTomlV1(nil)
 					if err != nil {
 						return nil, err
 					}

@@ -12,17 +12,17 @@ synchronization capabilities.
 
 ## Build and Development Commands
 
-All commands should be run from the `go/` directory.
+All commands should be run from the `go/` directory. **Never use `go build`,
+`go test`, or `go generate` directly** --- always use the `just` recipes below.
+They set up the correct environment (PATH, binary injection, build tags, NATO
+tier ordering).
 
 ### Core Development Tasks
 
 - **Build**: `just build` (builds debug and release binaries to `build/`)
 - **Test**: `just test` (runs Go unit tests + BATS integration tests)
-- **Unit Tests Only**: `just test-go-unit` or
-  `go test -v -tags test,debug ./...`
-- **Single Package Test**:
-  `go test -v -tags test,debug ./internal/path/to/package` (or
-  `./lib/path/to/package`)
+- **Unit Tests Only**: `just test-go-unit`
+- **Single Package Test**: `just test-go-unit` with package path filter
 - **Clean**: `just clean` (clears Go caches)
 - **Check**: `just check` (vulnerability scan + vet)
 - **Generate**: `just build-go-generate` (deletes stale tommy codegen, then runs

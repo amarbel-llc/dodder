@@ -3,6 +3,7 @@ package repo_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	charlie_rb "code.linenisgreat.com/dodder/go/internal/charlie/repo_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
@@ -17,14 +18,14 @@ var Coder = hyphence.CoderToTypedBlob[Blob]{
 				*Blob,
 			]{
 				Decode: func(b []byte) (Blob, error) {
-					doc, err := DecodeTomlLocalOverridePathV0(b)
+					doc, err := charlie_rb.DecodeTomlLocalOverridePathV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(blob Blob) ([]byte, error) {
-					doc, err := DecodeTomlLocalOverridePathV0(nil)
+					doc, err := charlie_rb.DecodeTomlLocalOverridePathV0(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -42,14 +43,14 @@ var Coder = hyphence.CoderToTypedBlob[Blob]{
 				*Blob,
 			]{
 				Decode: func(b []byte) (Blob, error) {
-					doc, err := DecodeTomlXDGV0(b)
+					doc, err := charlie_rb.DecodeTomlXDGV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(blob Blob) ([]byte, error) {
-					doc, err := DecodeTomlXDGV0(nil)
+					doc, err := charlie_rb.DecodeTomlXDGV0(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -67,14 +68,14 @@ var Coder = hyphence.CoderToTypedBlob[Blob]{
 				*Blob,
 			]{
 				Decode: func(b []byte) (Blob, error) {
-					doc, err := DecodeTomlUriV0(b)
+					doc, err := charlie_rb.DecodeTomlUriV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(blob Blob) ([]byte, error) {
-					doc, err := DecodeTomlUriV0(nil)
+					doc, err := charlie_rb.DecodeTomlUriV0(nil)
 					if err != nil {
 						return nil, err
 					}

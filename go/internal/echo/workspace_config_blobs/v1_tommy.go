@@ -5,7 +5,7 @@ package workspace_config_blobs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
 )

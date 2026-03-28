@@ -3,6 +3,7 @@ package repo_configs
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
@@ -15,14 +16,14 @@ var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{
 				*ConfigOverlay,
 			]{
 				Decode: func(b []byte) (ConfigOverlay, error) {
-					doc, err := DecodeV0(b)
+					doc, err := charlie_rc.DecodeV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigOverlay) ([]byte, error) {
-					doc, err := DecodeV0(nil)
+					doc, err := charlie_rc.DecodeV0(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -40,14 +41,14 @@ var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{
 				*ConfigOverlay,
 			]{
 				Decode: func(b []byte) (ConfigOverlay, error) {
-					doc, err := DecodeV1(b)
+					doc, err := charlie_rc.DecodeV1(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigOverlay) ([]byte, error) {
-					doc, err := DecodeV1(nil)
+					doc, err := charlie_rc.DecodeV1(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -65,14 +66,14 @@ var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{
 				*ConfigOverlay,
 			]{
 				Decode: func(b []byte) (ConfigOverlay, error) {
-					doc, err := DecodeV2(b)
+					doc, err := charlie_rc.DecodeV2(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigOverlay) ([]byte, error) {
-					doc, err := DecodeV2(nil)
+					doc, err := charlie_rc.DecodeV2(nil)
 					if err != nil {
 						return nil, err
 					}

@@ -1,46 +1,20 @@
 package zettel_id_log
 
 import (
-	"fmt"
-
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	charlie_zil "code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
 )
 
-type Side uint8
+type (
+	Side = charlie_zil.Side
+	V1   = charlie_zil.V1
+)
 
 const (
-	SideYin Side = iota
-	SideYang
+	SideYin  = charlie_zil.SideYin
+	SideYang = charlie_zil.SideYang
 )
-
-func (s Side) String() string {
-	switch s {
-	case SideYin:
-		return "yin"
-	case SideYang:
-		return "yang"
-	default:
-		return fmt.Sprintf("side(%d)", s)
-	}
-}
-
-func (s Side) MarshalText() ([]byte, error) {
-	return []byte(s.String()), nil
-}
-
-func (s *Side) UnmarshalText(text []byte) error {
-	switch string(text) {
-	case "yin":
-		*s = SideYin
-	case "yang":
-		*s = SideYang
-	default:
-		return fmt.Errorf("unknown zettel id log side: %q", text)
-	}
-
-	return nil
-}
 
 type Entry interface {
 	GetSide() Side
@@ -48,3 +22,5 @@ type Entry interface {
 	GetMarklId() markl.Id
 	GetWordCount() int
 }
+
+var _ Entry = V1{}

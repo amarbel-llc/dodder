@@ -3,11 +3,20 @@ package repo_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/_/remote_connection_types"
+	charlie_rb "code.linenisgreat.com/dodder/go/internal/charlie/repo_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 )
+
+type (
+	TomlLocalOverridePathV0 = charlie_rb.TomlLocalOverridePathV0
+	TomlXDGV0               = charlie_rb.TomlXDGV0
+	TomlUriV0               = charlie_rb.TomlUriV0
+)
+
+var TomlXDGV0FromXDG = charlie_rb.TomlXDGV0FromXDG
 
 type (
 	Blob interface {
@@ -34,6 +43,15 @@ type (
 		Blob
 		GetUri() values.Uri
 	}
+)
+
+var (
+	_ BlobOverridePath = TomlLocalOverridePathV0{}
+	_ BlobMutable      = &TomlLocalOverridePathV0{}
+	_ BlobXDG          = TomlXDGV0{}
+	_ BlobMutable      = &TomlXDGV0{}
+	_ BlobUri          = TomlUriV0{}
+	_ BlobMutable      = &TomlUriV0{}
 )
 
 func GetSupportedConnectionTypes(

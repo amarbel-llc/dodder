@@ -1,76 +1,35 @@
 package type_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
+	golf_tb "code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 )
 
-func Default() TomlV1 {
-	return TomlV1{
-		FileExtension: "md",
-		VimSyntaxType: "markdown",
-	}
-}
+type (
+	Blob                   = golf_tb.Blob
+	WithFormatters         = golf_tb.WithFormatters
+	WithFormatterUTIGroups = golf_tb.WithFormatterUTIGroups
+	WithStringLuaHooks     = golf_tb.WithStringLuaHooks
+	WithReferences         = golf_tb.WithReferences
+	UTIGroup               = golf_tb.UTIGroup
+	ReferencesConfig       = golf_tb.ReferencesConfig
+	TomlV0                 = golf_tb.TomlV0
+	TomlV1                 = golf_tb.TomlV1
+)
 
-func DefaultWithPandocFormatter() TomlV1 {
-	return TomlV1{
-		FileExtension: "md",
-		Formatters: map[string]script_config.WithOutputFormat{
-			"text": {
-				ScriptConfig: script_config.ScriptConfig{
-					Description: "Normalize markdown with pandoc",
-					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit`,
-				},
-				FileExtension: "md",
-			},
-		},
-		VimSyntaxType: "markdown",
-	}
-}
-
-func DefaultPandocDefaults() TomlV1 {
-	return TomlV1{
-		FileExtension: "yaml",
-		Formatters:    make(map[string]script_config.WithOutputFormat),
-	}
-}
-
-func DefaultPandocLuaFilter() TomlV1 {
-	return TomlV1{
-		FileExtension: "lua",
-		Formatters:    make(map[string]script_config.WithOutputFormat),
-	}
-}
-
-type Blob interface {
-	GetFileExtension() string
-	GetBinary() bool
-	GetMimeType() string
-	GetVimSyntaxType() string
-
-	WithFormatters
-	WithFormatterUTIGroups
-	WithStringLuaHooks
-	WithReferences
-}
+var (
+	Default                    = golf_tb.Default
+	DefaultWithPandocFormatter = golf_tb.DefaultWithPandocFormatter
+	DefaultPandocDefaults      = golf_tb.DefaultPandocDefaults
+	DefaultPandocLuaFilter     = golf_tb.DefaultPandocLuaFilter
+)
 
 var (
 	_ Blob = &TomlV0{}
 	_ Blob = &TomlV1{}
 )
 
-type WithFormatters interface {
-	GetFormatters() map[string]script_config.WithOutputFormat
-}
-
-type WithFormatterUTIGroups interface {
-	GetFormatterUTIGroups() map[string]UTIGroup
-}
-
-// TODO make typed hooks
-type WithStringLuaHooks interface {
-	GetStringLuaHooks() string
-}
-
-type WithReferences interface {
-	GetReferences() *ReferencesConfig
-}
+var (
+	DecodeTomlV0           = golf_tb.DecodeTomlV0
+	DecodeTomlV1           = golf_tb.DecodeTomlV1
+	DecodeReferencesConfig = golf_tb.DecodeReferencesConfig
+)

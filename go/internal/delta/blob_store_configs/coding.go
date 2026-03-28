@@ -1,39 +1,11 @@
 package blob_store_configs
 
 import (
-	"fmt"
-
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	charlie_bsc "code.linenisgreat.com/dodder/go/internal/charlie/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
-
-func registerTommy(
-	typeMap hyphence.CoderTypeMapWithoutType[Config],
-	typeString string,
-	decode func([]byte) (Config, error),
-	encode func(Config) ([]byte, error),
-) struct{} {
-	if existing, ok := typeMap[typeString]; ok {
-		panic(
-			fmt.Sprintf(
-				"coder for type %q registered more than once! first registration: %#v",
-				typeString,
-				existing,
-			),
-		)
-	}
-
-	typeMap[typeString] = hyphence.CoderTommy[
-		Config,
-		*Config,
-	]{
-		Decode: decode,
-		Encode: encode,
-	}
-
-	return struct{}{}
-}
 
 var Coder = hyphence.CoderToTypedBlob[Config]{
 	Metadata: hyphence.TypedMetadataCoder[Config]{},
@@ -44,14 +16,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeTomlLocalHashBucketedV1(b)
+					doc, err := charlie_bsc.DecodeTomlLocalHashBucketedV1(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeTomlLocalHashBucketedV1(nil)
+					doc, err := charlie_bsc.DecodeTomlLocalHashBucketedV1(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -69,14 +41,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeTomlLocalHashBucketedV2(b)
+					doc, err := charlie_bsc.DecodeTomlLocalHashBucketedV2(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeTomlLocalHashBucketedV2(nil)
+					doc, err := charlie_bsc.DecodeTomlLocalHashBucketedV2(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -94,14 +66,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeTomlV3(b)
+					doc, err := charlie_bsc.DecodeTomlV3(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeTomlV3(nil)
+					doc, err := charlie_bsc.DecodeTomlV3(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -119,14 +91,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeTomlSFTPV0(b)
+					doc, err := charlie_bsc.DecodeTomlSFTPV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeTomlSFTPV0(nil)
+					doc, err := charlie_bsc.DecodeTomlSFTPV0(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -141,19 +113,119 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeTomlSFTPViaSSHConfigV0(b)
+					doc, err := charlie_bsc.DecodeTomlSFTPViaSSHConfigV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeTomlSFTPViaSSHConfigV0(nil)
+					doc, err := charlie_bsc.DecodeTomlSFTPViaSSHConfigV0(nil)
 					if err != nil {
 						return nil, err
 					}
 					if v, ok := cfg.(*TomlSFTPViaSSHConfigV0); ok {
 						*doc.Data() = *v
+					}
+					return doc.Encode()
+				},
+			},
+			ids.TypeTomlBlobStoreConfigPointerV0: hyphence.CoderTommy[
+				Config,
+				*Config,
+			]{
+				Decode: func(b []byte) (Config, error) {
+					doc, err := charlie_bsc.DecodeTomlPointerV0(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := charlie_bsc.DecodeTomlPointerV0(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlPointerV0:
+						*doc.Data() = *v
+					case TomlPointerV0:
+						*doc.Data() = v
+					}
+					return doc.Encode()
+				},
+			},
+			ids.TypeTomlBlobStoreConfigInventoryArchiveV0: hyphence.CoderTommy[
+				Config,
+				*Config,
+			]{
+				Decode: func(b []byte) (Config, error) {
+					doc, err := charlie_bsc.DecodeTomlInventoryArchiveV0(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := charlie_bsc.DecodeTomlInventoryArchiveV0(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlInventoryArchiveV0:
+						*doc.Data() = *v
+					case TomlInventoryArchiveV0:
+						*doc.Data() = v
+					}
+					return doc.Encode()
+				},
+			},
+			ids.TypeTomlBlobStoreConfigInventoryArchiveV1: hyphence.CoderTommy[
+				Config,
+				*Config,
+			]{
+				Decode: func(b []byte) (Config, error) {
+					doc, err := charlie_bsc.DecodeTomlInventoryArchiveV1(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := charlie_bsc.DecodeTomlInventoryArchiveV1(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlInventoryArchiveV1:
+						*doc.Data() = *v
+					case TomlInventoryArchiveV1:
+						*doc.Data() = v
+					}
+					return doc.Encode()
+				},
+			},
+			ids.TypeTomlBlobStoreConfigInventoryArchiveV2: hyphence.CoderTommy[
+				Config,
+				*Config,
+			]{
+				Decode: func(b []byte) (Config, error) {
+					doc, err := charlie_bsc.DecodeTomlInventoryArchiveV2(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg Config) ([]byte, error) {
+					doc, err := charlie_bsc.DecodeTomlInventoryArchiveV2(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *TomlInventoryArchiveV2:
+						*doc.Data() = *v
+					case TomlInventoryArchiveV2:
+						*doc.Data() = v
 					}
 					return doc.Encode()
 				},
