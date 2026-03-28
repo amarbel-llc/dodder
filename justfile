@@ -50,15 +50,15 @@ test-bats-quick: build _test-bats-run
 
 # Run specific bats test files.
 test-bats-targets *targets: build
-  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
+  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
 
 # Run bats tests filtered by tag.
 test-bats-tags *tags: build
-  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
+  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
 
 # Run bats tests requiring Unix sockets (no sandbox).
 test-bats-no-sandbox: build
-  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
+  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
 
 # Run bats with race-instrumented binary to detect data races in pool reuse.
 test-bats-race: build
@@ -118,7 +118,8 @@ _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
   fi
 
 # Run bats tests (no build, no fixture generation).
+# GOMEMLIMIT caps each dodder process at 512 MiB to prevent OOM on leak (#68).
 [private]
 _test-bats-run:
   @echo "==> Running bats integration tests..."
-  DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test
+  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test

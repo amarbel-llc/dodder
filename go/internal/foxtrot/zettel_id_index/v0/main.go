@@ -147,6 +147,24 @@ func (index *index) readIfNecessary() (err error) {
 		return err
 	}
 
+	// Validate count against the maximum possible IDs to detect stale cache
+	// formats (e.g., gob-encoded data whose first 4 bytes misparse as a huge
+	// uint32, causing a multi-GB map allocation — see #68).
+	if index.oldZettelIdStore != nil {
+		l := index.oldZettelIdStore.Left().Len()
+		r := index.oldZettelIdStore.Right().Len()
+
+		if l > 0 && r > 0 && count > uint32(l*r) {
+			ui.Log().Printf(
+				"zettel id cache count %d exceeds maximum %d (stale format?), rebuilding",
+				count,
+				l*r,
+			)
+
+			return err
+		}
+	}
+
 	index.AvailableIds = make(map[int]bool, count)
 
 	for i := uint32(0); i < count; i++ {
