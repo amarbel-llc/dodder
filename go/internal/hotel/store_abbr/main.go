@@ -1,7 +1,8 @@
 package store_abbr
 
 import (
-	"encoding/gob"
+	"encoding"
+	"encoding/binary"
 	"io"
 	"sync"
 
@@ -100,11 +101,35 @@ func (index *indexAbbr) Flush() (err error) {
 
 	defer errors.DeferredFlusher(&err, bufferedWriter)
 
-	enc := gob.NewEncoder(bufferedWriter)
+	tridexes := []interfaces.TridexMutable{
+		index.SeenIds[genres.Repo],
+		index.SeenIds[genres.Tag],
+		index.SeenIds[genres.Type],
+		index.SeenIds[genres.Zettel],
+		index.MarklIds.ObjectIds,
+		index.ZettelId.Heads,
+		index.ZettelId.Tails,
+	}
 
-	if err = enc.Encode(index.indexCodable); err != nil {
-		err = errors.Wrapf(err, "failed to write encoded object id")
-		return err
+	for _, t := range tridexes {
+		marshaler := t.(encoding.BinaryMarshaler)
+
+		var bs []byte
+
+		if bs, err = marshaler.MarshalBinary(); err != nil {
+			err = errors.Wrapf(err, "failed to marshal tridex")
+			return err
+		}
+
+		if err = binary.Write(bufferedWriter, binary.BigEndian, uint32(len(bs))); err != nil {
+			err = errors.Wrapf(err, "failed to write tridex length")
+			return err
+		}
+
+		if _, err = bufferedWriter.Write(bs); err != nil {
+			err = errors.Wrapf(err, "failed to write tridex data")
+			return err
+		}
 	}
 
 	return err
@@ -138,15 +163,50 @@ func (index *indexAbbr) readIfNecessary() (err error) {
 			bufferedReader, repool := pool.GetBufferedReader(namedBlobReader)
 			defer repool()
 
-			dec := gob.NewDecoder(bufferedReader)
-
 			ui.Log().Print("starting decode")
 
-			if err = dec.Decode(&index.indexCodable); err != nil {
-				ui.Log().Print("finished decode unsuccessfully")
-				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
-				return
+			tridexes := []interfaces.TridexMutable{
+				index.SeenIds[genres.Repo],
+				index.SeenIds[genres.Tag],
+				index.SeenIds[genres.Type],
+				index.SeenIds[genres.Zettel],
+				index.MarklIds.ObjectIds,
+				index.ZettelId.Heads,
+				index.ZettelId.Tails,
 			}
+
+			for _, t := range tridexes {
+				var length uint32
+
+				if err = binary.Read(bufferedReader, binary.BigEndian, &length); err != nil {
+					if err == io.EOF {
+						err = nil
+					} else {
+						ui.Log().Printf("failed to read abbr cache (stale format?), rebuilding: %s", err)
+						err = nil
+					}
+
+					return
+				}
+
+				bs := make([]byte, length)
+
+				if _, err = io.ReadFull(bufferedReader, bs); err != nil {
+					ui.Log().Printf("failed to read abbr cache data (stale format?), rebuilding: %s", err)
+					err = nil
+					return
+				}
+
+				unmarshaler := t.(encoding.BinaryUnmarshaler)
+
+				if err = unmarshaler.UnmarshalBinary(bs); err != nil {
+					ui.Log().Printf("failed to unmarshal abbr cache (stale format?), rebuilding: %s", err)
+					err = nil
+					return
+				}
+			}
+
+			ui.Log().Print("finished decode")
 		},
 	)
 

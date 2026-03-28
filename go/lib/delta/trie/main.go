@@ -1,8 +1,6 @@
 package trie
 
 import (
-	"bytes"
-	"encoding/gob"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -164,16 +162,4 @@ func (n node) Abbreviate(v string, loc int) string {
 	}
 }
 
-func (t Trie) GobEncode() (by []byte, err error) {
-	bu := &bytes.Buffer{}
-	enc := gob.NewEncoder(bu)
-	err = enc.Encode(t.root)
-	by = bu.Bytes()
-	return by, err
-}
 
-func (t *Trie) GobDecode(b []byte) error {
-	bu := bytes.NewBuffer(b)
-	dec := gob.NewDecoder(bu)
-	return dec.Decode(&t.root)
-}

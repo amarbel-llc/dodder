@@ -1,7 +1,6 @@
 package tridex
 
 import (
-	"encoding/gob"
 	"sort"
 	"strings"
 	"sync"
@@ -9,10 +8,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
-
-func init() {
-	gob.Register(&Tridex{})
-}
 
 // TODO-P4 make generic
 // TODO-P4 recycle nodes
