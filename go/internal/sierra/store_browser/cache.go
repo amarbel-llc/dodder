@@ -3,7 +3,7 @@
 package store_browser
 
 import (
-	"encoding/gob"
+	"encoding/json"
 	"net/http"
 	"os"
 	"path"
@@ -47,7 +47,7 @@ func (store *Store) initializeCache() (err error) {
 	bufferedReader, repool := pool.GetBufferedReader(file)
 	defer repool()
 
-	dec := gob.NewDecoder(bufferedReader)
+	dec := json.NewDecoder(bufferedReader)
 
 	if err = dec.Decode(&store.tabCache); err != nil {
 		ui.Err().Printf("browser tab cache parse failed: %s", err)
@@ -111,9 +111,9 @@ func (store *Store) flushCache() (err error) {
 
 	defer errors.DeferredFlusher(&err, bufferedWriter)
 
-	dec := gob.NewEncoder(bufferedWriter)
+	enc := json.NewEncoder(bufferedWriter)
 
-	if err = dec.Encode(&store.tabCache); err != nil {
+	if err = enc.Encode(&store.tabCache); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
