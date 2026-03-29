@@ -33,7 +33,7 @@ func (builder *builder) WithDescription(
 	descriptionString string,
 ) *builder {
 	builder.checkReuse()
-	builder.metadata.Description.ResetWith(descriptions.Make(descriptionString))
+	builder.metadata.description.ResetWith(descriptions.Make(descriptionString))
 	return builder
 }
 

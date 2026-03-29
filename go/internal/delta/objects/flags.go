@@ -34,7 +34,7 @@ func (metadata *metadata) SetFlagSetDescription(
 	usage string,
 ) {
 	flagDefs.Var(
-		&metadata.Description,
+		&metadata.description,
 		"description",
 		usage,
 	)
@@ -48,7 +48,7 @@ func (metadata *metadata) SetFlagSetTags(
 	fes := flags.MakeWithPolicy(
 		flag_policy.FlagPolicyAppend,
 		func() string {
-			return metadata.Index.TagPaths.String()
+			return metadata.idx.TagPaths.String()
 		},
 		func(value string) (err error) {
 			values := strings.SplitSeq(value, ",")

@@ -3,11 +3,11 @@ package objects
 import "code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 
 func (metadata *metadata) GetBlobDigest() domain_interfaces.MarklId {
-	return &metadata.DigBlob
+	return &metadata.digBlob
 }
 
 func (metadata *metadata) GetBlobDigestMutable() domain_interfaces.MarklIdMutable {
-	return &metadata.DigBlob
+	return &metadata.digBlob
 }
 
 func (metadata *metadata) GetObjectDigest() domain_interfaces.MarklId {

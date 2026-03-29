@@ -12,7 +12,7 @@ func StringSansTai(metadata *metadata) string {
 	stringBuilder := &strings.Builder{}
 
 	stringBuilder.WriteString(" ")
-	stringBuilder.WriteString(metadata.DigBlob.String())
+	stringBuilder.WriteString(metadata.digBlob.String())
 
 	tipe := metadata.GetType()
 

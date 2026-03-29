@@ -13,7 +13,7 @@ import (
 func SetTags[TAG ids.Tag](metadata MetadataMutable, otherTags ids.Set[TAG]) {
 	{
 		metadata := metadata.(*MetadataStruct)
-		metadata.Contents.ResetTags()
+		metadata.contents.ResetTags()
 
 		if otherTags == nil {
 			return

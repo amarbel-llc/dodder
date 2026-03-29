@@ -7,15 +7,15 @@ type resetter struct{}
 func (resetter) Reset(metadatuh MetadataMutable) {
 	{
 		metadata := metadatuh.(*metadata)
-		metadata.Description.Reset()
+		metadata.description.Reset()
 		metadata.sigRepo.Reset()
 		metadata.pubRepo.Reset()
-		metadata.Contents.Reset()
-		metadata.BlobRefs.Reset()
-		resetIndex(&metadata.Index)
-		metadata.Type.Reset()
-		metadata.Tai.Reset()
-		metadata.DigBlob.Reset()
+		metadata.contents.Reset()
+		metadata.blobRefs.Reset()
+		resetIndex(&metadata.idx)
+		metadata.typ.Reset()
+		metadata.tai.Reset()
+		metadata.digBlob.Reset()
 		metadata.digSelf.Reset()
 		metadata.sigMother.Reset()
 	}
@@ -26,20 +26,20 @@ func (resetter) ResetWithExceptFields(dst MetadataMutable, src Metadata) {
 		dst := dst.(*metadata)
 		src := src.(*metadata)
 
-		dst.Description = src.Description
+		dst.description = src.description
 
-		dst.Contents.GetSliceMutable().ResetWith(src.Contents.GetSlice())
-		dst.BlobRefs.ResetWith(src.BlobRefs)
+		dst.contents.GetSliceMutable().ResetWith(src.contents.GetSlice())
+		dst.blobRefs.ResetWith(src.blobRefs)
 
-		resetIndexWith(&dst.Index, &src.Index)
+		resetIndexWith(&dst.idx, &src.idx)
 
 		dst.sigRepo.ResetWith(src.sigRepo)
 		dst.pubRepo.ResetWith(src.pubRepo)
 
-		dst.Type.ResetWith(src.Type)
-		dst.Tai = src.Tai
+		dst.typ.ResetWith(src.typ)
+		dst.tai = src.tai
 
-		dst.DigBlob.ResetWith(src.DigBlob)
+		dst.digBlob.ResetWith(src.digBlob)
 		dst.digSelf.ResetWith(src.digSelf)
 		dst.sigMother.ResetWith(src.sigMother)
 	}
@@ -50,7 +50,7 @@ func (resetter resetter) ResetWith(dst MetadataMutable, src Metadata) {
 		dst := dst.(*metadata)
 		src := src.(*metadata)
 		resetter.ResetWithExceptFields(dst, src)
-		dst.Index.Fields.ResetWith(src.Index.Fields)
+		dst.idx.Fields.ResetWith(src.idx.Fields)
 	}
 }
 

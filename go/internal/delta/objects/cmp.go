@@ -24,23 +24,23 @@ func (equaler equaler) Equals(a, b Metadata) bool {
 		a := a.(*metadata)
 		b := b.(*metadata)
 
-		if equaler.includeTai && !a.Tai.Equals(b.Tai) {
+		if equaler.includeTai && !a.tai.Equals(b.tai) {
 			if debug {
-				ui.Debug().Print(&a.Tai, "->", &b.Tai)
+				ui.Debug().Print(&a.tai, "->", &b.tai)
 			}
 			return false
 		}
 
-		if !markl.Equals(&a.DigBlob, &b.DigBlob) {
+		if !markl.Equals(&a.digBlob, &b.digBlob) {
 			if debug {
-				ui.Debug().Print(&a.DigBlob, "->", &b.DigBlob)
+				ui.Debug().Print(&a.digBlob, "->", &b.digBlob)
 			}
 			return false
 		}
 
 		if !markl.LockEquals(a.GetTypeLock(), b.GetTypeLock()) {
 			if debug {
-				ui.Debug().Print(&a.Type, "->", &b.Type)
+				ui.Debug().Print(&a.typ, "->", &b.typ)
 			}
 			return false
 		}
@@ -88,21 +88,21 @@ func (equaler equaler) Equals(a, b Metadata) bool {
 			return false
 		}
 
-		for aRef := range a.Contents.AllReferences() {
-			if _, ok := b.Contents.getLock(aRef.String()); !ok {
+		for aRef := range a.contents.AllReferences() {
+			if _, ok := b.contents.getLock(aRef.String()); !ok {
 				return false
 			}
 		}
 
-		for bRef := range b.Contents.AllReferences() {
-			if _, ok := a.Contents.getLock(bRef.String()); !ok {
+		for bRef := range b.contents.AllReferences() {
+			if _, ok := a.contents.getLock(bRef.String()); !ok {
 				return false
 			}
 		}
 
-		if !a.Description.Equals(b.Description) {
+		if !a.description.Equals(b.description) {
 			if debug {
-				ui.Debug().Print(a.Description, "->", b.Description)
+				ui.Debug().Print(a.description, "->", b.description)
 			}
 			return false
 		}
@@ -116,5 +116,5 @@ var Lessor lessor
 type lessor struct{}
 
 func (lessor) Less(a, b *metadata) bool {
-	return a.Tai.Less(b.Tai)
+	return a.tai.Less(b.tai)
 }
