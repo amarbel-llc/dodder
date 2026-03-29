@@ -125,6 +125,152 @@ func TestBitset7Each(t1 *testing.T) {
 	}
 }
 
+func TestBitsetBinaryRoundTripSingle(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(20)
+	sut.Add(12)
+
+	bs, err := sut.(*bitset).MarshalBinary()
+	if err != nil {
+		t.Fatalf("marshal failed: %s", err)
+	}
+
+	sut2 := MakeBitset(0)
+	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
+		t.Fatalf("unmarshal failed: %s", err)
+	}
+
+	if !sut.Equals(sut2) {
+		t.Errorf("expected equality after round-trip")
+	}
+
+	if sut2.CountOn() != 1 {
+		t.Errorf("expected CountOn=1 but got %d", sut2.CountOn())
+	}
+}
+
+func TestBitsetBinaryRoundTripMultiple(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(200)
+	sut.Add(0)
+	sut.Add(31)
+	sut.Add(32)
+	sut.Add(63)
+	sut.Add(100)
+	sut.Add(199)
+
+	bs, err := sut.(*bitset).MarshalBinary()
+	if err != nil {
+		t.Fatalf("marshal failed: %s", err)
+	}
+
+	sut2 := MakeBitset(0)
+	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
+		t.Fatalf("unmarshal failed: %s", err)
+	}
+
+	if !sut.Equals(sut2) {
+		t.Errorf("expected equality after round-trip")
+	}
+
+	if sut2.CountOn() != 6 {
+		t.Errorf("expected CountOn=6 but got %d", sut2.CountOn())
+	}
+
+	for _, idx := range []int{0, 31, 32, 63, 100, 199} {
+		if !sut2.Get(idx) {
+			t.Errorf("expected bit %d to be set after round-trip", idx)
+		}
+	}
+}
+
+func TestBitsetBinaryRoundTripEmpty(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(20)
+
+	bs, err := sut.(*bitset).MarshalBinary()
+	if err != nil {
+		t.Fatalf("marshal failed: %s", err)
+	}
+
+	sut2 := MakeBitset(0)
+	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
+		t.Fatalf("unmarshal failed: %s", err)
+	}
+
+	if sut2.CountOn() != 0 {
+		t.Errorf("expected CountOn=0 but got %d", sut2.CountOn())
+	}
+}
+
+func TestBitsetBinaryRoundTripAllOn(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitsetOn(200)
+
+	bs, err := sut.(*bitset).MarshalBinary()
+	if err != nil {
+		t.Fatalf("marshal failed: %s", err)
+	}
+
+	sut2 := MakeBitset(0)
+	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
+		t.Fatalf("unmarshal failed: %s", err)
+	}
+
+	if !sut.Equals(sut2) {
+		t.Errorf("expected equality after round-trip")
+	}
+
+	if sut2.CountOn() != 200 {
+		t.Errorf("expected CountOn=200 but got %d", sut2.CountOn())
+	}
+}
+
+func TestBitsetBinarySize(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(64)
+	sut.Add(0)
+	sut.Add(63)
+
+	bs, err := sut.(*bitset).MarshalBinary()
+	if err != nil {
+		t.Fatalf("marshal failed: %s", err)
+	}
+
+	// 64 bits = 2 uint32s = 8 bytes
+	if len(bs) != 8 {
+		t.Errorf("expected 8 bytes for 64-bit bitset, got %d", len(bs))
+	}
+}
+
+func TestBitsetBinaryCountOnAfterUnmarshal(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(100)
+	for i := 0; i < 50; i++ {
+		sut.Add(i * 2) // add 50 even-numbered bits
+	}
+
+	bs, err := sut.(*bitset).MarshalBinary()
+	if err != nil {
+		t.Fatalf("marshal failed: %s", err)
+	}
+
+	sut2 := MakeBitset(0)
+	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
+		t.Fatalf("unmarshal failed: %s", err)
+	}
+
+	if sut2.CountOn() != 50 {
+		t.Errorf("expected CountOn=50 but got %d (countOn accumulation bug?)", sut2.CountOn())
+	}
+}
+
 func BenchmarkAdd(b *testing.B) {
 	sut := MakeBitset(int(b.N))
 

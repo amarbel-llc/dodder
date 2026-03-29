@@ -34,7 +34,7 @@ const (
 	// For compatibility with 32 bit systems
 	// storageInt = uint32
 	intSize     = 32
-	bytesPerInt = intSize / 4
+	bytesPerInt = intSize / 8
 )
 
 // TODO-P4 consider using ranges
@@ -288,7 +288,7 @@ func (b *bitset) UnmarshalBinary(bs []byte) (err error) {
 
 	for i := range b.slice {
 		n := binary.BigEndian.Uint32(bs[bytesPerInt*i:])
-		b.countOn = bits.OnesCount32(n)
+		b.countOn += bits.OnesCount32(n)
 		b.slice[i] = n
 	}
 
