@@ -1,7 +1,6 @@
 package store_config
 
 import (
-	"encoding/gob"
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
@@ -21,23 +20,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
-
-func init() {
-	gob.Register(
-		collections_value.MakeMutableValueSet[values.String](
-			nil,
-		),
-	)
-
-	gob.Register(
-		collections_value.MakeValueSetFromSlice[values.String](
-			nil,
-		),
-	)
-
-	gob.Register(quiter.StringerKeyer[values.String]{})
-	gob.Register(quiter.StringerKeyerPtr[ids.SeqId, *ids.SeqId]{})
-}
 
 type (
 	ApproximatedType = typed_blob_store.ApproximatedType

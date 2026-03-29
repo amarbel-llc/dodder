@@ -1,11 +1,9 @@
 package store_config
 
 import (
-	"encoding/gob"
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
@@ -21,11 +19,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
-
-func init() {
-	gob.Register(repo_configs.V1{})
-	gob.Register(repo_configs.V0{})
-}
 
 func (store *store) recompile(
 	blobStore typed_blob_store.Stores,
@@ -166,58 +159,11 @@ func (compiled *compiled) setNeedsRecompile(reason string) {
 func (store *store) loadMutableConfig(
 	envRepo env_repo.Env,
 ) (err error) {
-	if store.streamIndexConfigExists(envRepo) {
-		return store.loadMutableConfigStreamIndex(envRepo)
-	}
-
-	if !store_version.GreaterOrEqual(
-		envRepo.GetStoreVersion(),
-		store_version.V14,
-	) {
-		return store.loadMutableConfigGob(envRepo)
-	}
-
-	return store.loadMutableConfigStreamIndex(envRepo)
-}
-
-func (store *store) streamIndexConfigExists(
-	envRepo env_repo.Env,
-) bool {
-	_, err := os.Stat(envRepo.FileConfigTags())
-	return err == nil
-}
-
-func (store *store) loadMutableConfigGob(
-	envRepo env_repo.Env,
-) (err error) {
-	var file *os.File
-
-	path := envRepo.FileConfig()
-
-	if file, err = files.Open(path); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	defer errors.DeferredCloser(&err, file)
-
-	dec := gob.NewDecoder(file)
-
-	if err = dec.Decode(&store.config.compiled); err != nil {
-		if errors.IsEOF(err) {
-			err = nil
-		} else {
-			err = errors.Wrap(err)
-		}
-
-		return err
-	}
-
-	if err = store.loadMutableConfigBlob(
-		store.config.Sku.GetType().ToType(),
-		store.config.Sku.GetBlobDigest(),
-	); err != nil {
-		err = errors.Wrap(err)
+	if err = store.loadMutableConfigStreamIndex(envRepo); err != nil {
+		err = errors.Wrapf(
+			err,
+			"failed to load store config (stale format?), try running 'dodder reindex'",
+		)
 		return err
 	}
 
