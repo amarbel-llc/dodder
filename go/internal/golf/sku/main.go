@@ -1,17 +1,11 @@
 package sku
 
 import (
-	"encoding/gob"
-
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/_/external_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
-
-func init() {
-	gob.Register(Transacted{})
-}
 
 type (
 	Config interface {

@@ -1,7 +1,6 @@
 package store_fs
 
 import (
-	"encoding/gob"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -24,10 +23,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
-
-func init() {
-	gob.Register(sku.Transacted{})
-}
 
 func Make(
 	config sku.Config,

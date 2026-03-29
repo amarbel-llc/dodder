@@ -1,8 +1,6 @@
 package sku
 
 import (
-	"encoding/gob"
-
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
@@ -17,8 +15,6 @@ type Collection interfaces.Collection[*Transacted]
 
 func init() {
 	TransactedSetEmpty = MakeTransactedSet()
-	gob.Register(TransactedSetEmpty)
-	gob.Register(MakeTransactedMutableSet())
 }
 
 type (

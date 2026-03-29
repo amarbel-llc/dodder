@@ -3,13 +3,7 @@ package ids
 import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_ptr"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
-	"code.linenisgreat.com/dodder/go/lib/echo/thyme"
 )
-
-func init() {
-	collections_value.RegisterGobValue[thyme.Time](nil)
-}
 
 type (
 	TypeSet        = interfaces.Set[TypeStruct]

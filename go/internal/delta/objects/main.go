@@ -1,8 +1,6 @@
 package objects
 
 import (
-	_ "encoding/gob"
-
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"

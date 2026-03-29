@@ -17,7 +17,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 	"code.linenisgreat.com/dodder/go/lib/delta/delim_io"
 	"code.linenisgreat.com/dodder/go/lib/echo/thyme"
 	chai "github.com/brandondube/tai"
@@ -27,7 +26,6 @@ type tai = chai.TAI
 
 func init() {
 	register(Tai{})
-	collections_value.RegisterGobValue[Tai](nil)
 }
 
 type Tai struct {

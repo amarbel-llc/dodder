@@ -1,7 +1,6 @@
 package sku
 
 import (
-	_ "encoding/gob"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"

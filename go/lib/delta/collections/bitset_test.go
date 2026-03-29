@@ -1,8 +1,6 @@
 package collections
 
 import (
-	"bytes"
-	"encoding/gob"
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -63,32 +61,6 @@ func TestBitset3WouldGrowTooLarge(t1 *testing.T) {
 	sut := MakeBitset(20)
 	toAdd := int(MaxBitsetIdx + 1)
 	sut.Add(toAdd)
-}
-
-func TestBitset4Gob(t1 *testing.T) {
-	t := ui.T{T: t1}
-
-	sut := MakeBitset(20)
-	toAdd := 12
-	sut.Add(toAdd)
-
-	bytes := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(bytes)
-
-	if err := enc.Encode(sut); err != nil {
-		t.Errorf("expected gob.Encode to succeed: %s", err)
-	}
-
-	sut2 := MakeBitset(20)
-	dec := gob.NewDecoder(bytes)
-
-	if err := dec.Decode(sut2); err != nil {
-		t.Errorf("expected gob.Decode to succeed: %s", err)
-	}
-
-	if !sut.Equals(sut2) {
-		t.Errorf("expected equality")
-	}
 }
 
 func TestBitset5Equals(t1 *testing.T) {

@@ -1,7 +1,6 @@
 package collections_value
 
 import (
-	"encoding/gob"
 	"slices"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -13,7 +12,6 @@ func MakeValueSetValue[ELEMENT interfaces.Stringer](
 	keyer interfaces.StringKeyer[ELEMENT],
 	elements ...ELEMENT,
 ) (set Set[ELEMENT]) {
-	gob.Register(set)
 	set.E = make(map[string]ELEMENT, len(elements))
 
 	if keyer == nil {
@@ -35,7 +33,6 @@ func MakeValueSet[ELEMENT interfaces.Stringer](
 	keyer interfaces.StringKeyer[ELEMENT],
 	seq interfaces.Seq[ELEMENT],
 ) (set Set[ELEMENT]) {
-	gob.Register(set)
 	set.E = make(map[string]ELEMENT, 0)
 
 	if keyer == nil {
@@ -55,7 +52,6 @@ func MakeValueSetFromSlice[ELEMENT interfaces.Stringer](
 	keyer interfaces.StringKeyer[ELEMENT],
 	elements ...ELEMENT,
 ) (set Set[ELEMENT]) {
-	gob.Register(set)
 	set.E = make(map[string]ELEMENT, len(elements))
 
 	if keyer == nil {
@@ -76,7 +72,6 @@ func MakeSet[ELEMENT any](
 	keyer interfaces.StringKeyer[ELEMENT],
 	elements ...ELEMENT,
 ) (set Set[ELEMENT]) {
-	gob.Register(set)
 	set.E = make(map[string]ELEMENT, len(elements))
 
 	if keyer == nil {
@@ -110,7 +105,6 @@ func MakeMutableSet[ELEMENT any](
 	count int,
 	seq interfaces.Seq[ELEMENT],
 ) (set MutableSet[ELEMENT]) {
-	gob.Register(set)
 	set.E = make(map[string]ELEMENT, count)
 
 	if keyer == nil {

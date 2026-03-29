@@ -8,12 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
-
-func init() {
-	collections_value.RegisterGobValue[*tag](nil)
-}
 
 type implicitTagMap map[string]ids.TagSetMutable
 

@@ -1,8 +1,6 @@
 package sku
 
 import (
-	"encoding/gob"
-
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
@@ -12,10 +10,6 @@ var (
 	externalLikeKeyerObjectId = GetExternalLikeKeyer[ExternalLike]()
 	CheckedOutKeyerObjectId   = GetExternalLikeKeyer[*CheckedOut]()
 )
-
-func init() {
-	gob.Register(transactedKeyerObjectId)
-}
 
 func GetExternalLikeKeyer[
 	ELEMENT interface {

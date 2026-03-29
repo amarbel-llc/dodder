@@ -5,10 +5,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
 
-func init() {
-	collections_value.RegisterGobValue[*FD](nil)
-}
-
 type (
 	Set        = interfaces.Set[*FD]
 	MutableSet = interfaces.SetMutable[*FD]

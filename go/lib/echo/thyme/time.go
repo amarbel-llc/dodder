@@ -1,7 +1,6 @@
 package thyme
 
 import (
-	"encoding/gob"
 	"strconv"
 	tyme "time"
 
@@ -10,7 +9,6 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 )
 
 const (
@@ -26,8 +24,6 @@ var (
 
 func init() {
 	ui.TodoP1("refactor into common")
-	gob.Register(Time{})
-	collections_value.RegisterGobValue[Time](nil)
 }
 
 type Time struct {

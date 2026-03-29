@@ -1,13 +1,11 @@
 package ids
 
 import (
-	"encoding/gob"
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_ptr"
 )
 
 var (
@@ -26,9 +24,6 @@ func register[T Id, TPtr interface {
 	Id
 }](id T,
 ) {
-	gob.Register(&id)
-	gob.Register(collections_ptr.MakeMutableValueSet[T, TPtr](nil))
-	gob.Register(collections_ptr.MakeValueSet[T, TPtr](nil))
 	registerOnce.Do(once)
 
 	registryLock.Lock()

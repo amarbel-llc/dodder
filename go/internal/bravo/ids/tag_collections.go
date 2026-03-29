@@ -1,7 +1,6 @@
 package ids
 
 import (
-	_ "encoding/gob"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -20,7 +19,6 @@ type (
 var TagSetEmpty TagSet
 
 func init() {
-	collections_ptr.RegisterGobValue[TagStruct](nil)
 	TagSetEmpty = collections_ptr.MakeValueSetValue[TagStruct](nil)
 }
 
