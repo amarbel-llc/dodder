@@ -5,6 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
@@ -70,7 +71,8 @@ func (formatter textFormatter) EncodeStringTo(
 		n, err = formatter.MetadataOnly.FormatMetadata(writer, context)
 
 	default:
-		if object.GetGenre().IsConfig() {
+		genre := object.GetGenre()
+		if genre.IsConfig() || genre == genres.Repo {
 			n, err = formatter.BlobOnly.FormatMetadata(writer, context)
 		} else if formatter.InlineTypeChecker.IsInlineType(object.GetType()) {
 			n, err = formatter.InlineBlob.FormatMetadata(writer, context)
@@ -92,7 +94,8 @@ func (tf textFormatter) WriteStringFormatWithMode(
 		FormatterOptions: tf.options,
 	}
 
-	if object.GetGenre().IsConfig() ||
+	genre := object.GetGenre()
+	if genre.IsConfig() || genre == genres.Repo ||
 		mode.IsBlobOnly() {
 		n, err = tf.BlobOnly.FormatMetadata(writer, ctx)
 	} else if tf.InlineTypeChecker.IsInlineType(object.GetType()) {
