@@ -24,128 +24,90 @@ func validCoordinateIds(lMax, rMax int) map[int]bool {
 	return ids
 }
 
-// maxCoordinateId returns the largest coordinate ID for the given bounds.
-func maxCoordinateId(lMax, rMax int) int {
-	maxId := 0
+// makeBitsetFromCoordinates builds a bitset the same way Reset() should.
+func makeBitsetFromCoordinates(lMax, rMax int) collections.Bitset {
+	maxCoord := coordinates.ZettelIdCoordinate{
+		Left:  coordinates.Int(lMax),
+		Right: coordinates.Int(rMax),
+	}
+	bs := collections.MakeBitset(int(maxCoord.Id()) + 1)
+
 	for l := 0; l <= lMax; l++ {
 		for r := 0; r <= rMax; r++ {
 			k := coordinates.ZettelIdCoordinate{
 				Left:  coordinates.Int(l),
 				Right: coordinates.Int(r),
 			}
-			id := int(k.Id())
-			if id > maxId {
-				maxId = id
-			}
+			bs.Add(int(k.Id()))
 		}
 	}
-	return maxId
+
+	return bs
 }
 
-func TestResetBitsetSizeTooSmall(t1 *testing.T) {
+// --- Regression tests: prove the OLD MakeBitsetOn approach was wrong ---
+
+func TestOldResetBitsetSizeTooSmall(t1 *testing.T) {
 	t := ui.T{T: t1}
 
-	// Simulate small word lists: 4 left words, 3 right words
 	lMax := 3
 	rMax := 2
 
-	// v1 currently computes: lMax * rMax = 6 bits
-	v1Size := lMax * rMax
+	oldSize := lMax * rMax
 
-	// The actual max coordinate ID for (3, 2):
-	// (3, 2) → level 6, Id = Extrema(6).Left + 3 = 16 + 3 = 19
-	actualMaxId := maxCoordinateId(lMax, rMax)
+	maxCoord := coordinates.ZettelIdCoordinate{
+		Left:  coordinates.Int(lMax),
+		Right: coordinates.Int(rMax),
+	}
+	actualMaxId := int(maxCoord.Id())
 
-	if v1Size >= actualMaxId {
+	if oldSize >= actualMaxId {
 		t.Fatalf(
-			"expected v1 bitset size %d to be smaller than max coordinate ID %d",
-			v1Size,
+			"expected old bitset size %d to be smaller than max coordinate ID %d",
+			oldSize,
 			actualMaxId,
 		)
 	}
 
 	t.Logf(
-		"v1 allocates %d bits but max coordinate ID is %d — %d IDs unreachable",
-		v1Size,
+		"old approach allocates %d bits but max coordinate ID is %d",
+		oldSize,
 		actualMaxId,
-		actualMaxId-v1Size,
 	)
 }
 
-func TestResetMissesValidIds(t1 *testing.T) {
+func TestOldResetMissesValidIds(t1 *testing.T) {
 	t := ui.T{T: t1}
 
 	lMax := 3
 	rMax := 2
 
-	// What v1 currently does: all bits ON in a bitset of size lMax*rMax
-	v1Bitset := collections.MakeBitsetOn(lMax * rMax)
-
-	// What v0 does: compute all valid coordinate IDs
+	oldBitset := collections.MakeBitsetOn(lMax * rMax)
 	validIds := validCoordinateIds(lMax, rMax)
 
-	// Count how many valid IDs v1's bitset can't even represent via Get()
 	missing := 0
 	for id := range validIds {
-		if !v1Bitset.Get(id) {
+		if !oldBitset.Get(id) {
 			missing++
 		}
 	}
 
 	if missing == 0 {
-		t.Fatalf("expected some valid coordinate IDs to be missing from v1's bitset")
+		t.Fatalf("expected some valid coordinate IDs to be missing from old bitset")
 	}
 
-	t.Logf(
-		"v1 bitset is missing %d of %d valid coordinate IDs",
-		missing,
-		len(validIds),
-	)
-}
-
-func TestResetIncludesInvalidIds(t1 *testing.T) {
-	t := ui.T{T: t1}
-
-	lMax := 3
-	rMax := 2
-
-	// What v1 currently does: sequential bits 0..5 are ON
-	v1Bitset := collections.MakeBitsetOn(lMax * rMax)
-
-	// What v0 does: specific coordinate IDs are valid
-	validIds := validCoordinateIds(lMax, rMax)
-
-	// Check how many ON bits in v1 correspond to invalid coordinate IDs
-	invalid := 0
-	v1Bitset.EachOn(func(bit int) error {
-		if !validIds[bit] {
-			invalid++
-		}
-		return nil
-	})
-
-	if invalid == 0 {
-		t.Fatalf("expected some v1 bitset ON bits to not be valid coordinate IDs")
-	}
-
-	t.Logf(
-		"v1 bitset has %d ON bits that are NOT valid coordinate IDs",
-		invalid,
-	)
+	t.Logf("old bitset is missing %d of %d valid coordinate IDs", missing, len(validIds))
 }
 
 func TestCoordinateIdsAreNotSequential(t1 *testing.T) {
 	t := ui.T{T: t1}
 
-	// Prove that coordinate IDs are not 0, 1, 2, ... N-1
-	// The triangular mapping produces gaps
 	lMax := 3
 	rMax := 2
 
 	validIds := validCoordinateIds(lMax, rMax)
 	totalValid := len(validIds)
 
-	// If IDs were sequential 0..N-1, all would be < totalValid
 	outOfSequentialRange := 0
 	for id := range validIds {
 		if id >= totalValid {
@@ -162,5 +124,115 @@ func TestCoordinateIdsAreNotSequential(t1 *testing.T) {
 		outOfSequentialRange,
 		totalValid,
 		totalValid,
+	)
+}
+
+// --- Correctness tests: verify the fixed coordinate-aware Reset ---
+
+func TestFixedResetContainsAllValidIds(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	lMax := 3
+	rMax := 2
+
+	bs := makeBitsetFromCoordinates(lMax, rMax)
+	validIds := validCoordinateIds(lMax, rMax)
+
+	for id := range validIds {
+		if !bs.Get(id) {
+			t.Errorf("valid coordinate ID %d is not set in bitset", id)
+		}
+	}
+
+	if bs.CountOn() != len(validIds) {
+		t.Errorf(
+			"expected CountOn=%d but got %d",
+			len(validIds),
+			bs.CountOn(),
+		)
+	}
+}
+
+func TestFixedResetContainsNoInvalidIds(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	lMax := 3
+	rMax := 2
+
+	bs := makeBitsetFromCoordinates(lMax, rMax)
+	validIds := validCoordinateIds(lMax, rMax)
+
+	invalid := 0
+	bs.EachOn(func(bit int) error {
+		if !validIds[bit] {
+			invalid++
+			t.Errorf("bit %d is ON but is not a valid coordinate ID", bit)
+		}
+		return nil
+	})
+
+	if invalid > 0 {
+		t.Errorf("%d ON bits are not valid coordinate IDs", invalid)
+	}
+}
+
+func TestFixedResetRoundTripCoordinates(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	lMax := 5
+	rMax := 4
+
+	bs := makeBitsetFromCoordinates(lMax, rMax)
+	validIds := validCoordinateIds(lMax, rMax)
+
+	// Every ON bit should round-trip back to valid (l, r) coordinates
+	bs.EachOn(func(id int) error {
+		k := &coordinates.ZettelIdCoordinate{}
+		k.SetInt(coordinates.Int(id))
+
+		if int(k.Left) > lMax || int(k.Right) > rMax {
+			t.Errorf(
+				"ID %d maps to (%d, %d) which is outside bounds (%d, %d)",
+				id, k.Left, k.Right, lMax, rMax,
+			)
+		}
+
+		roundTripped := int(k.Id())
+		if roundTripped != id {
+			t.Errorf("ID %d round-trips to %d", id, roundTripped)
+		}
+
+		return nil
+	})
+
+	if bs.CountOn() != len(validIds) {
+		t.Errorf("expected %d ON bits but got %d", len(validIds), bs.CountOn())
+	}
+}
+
+func TestFixedResetRealisticSize(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	// Realistic word list sizes (dodder ships ~100 left, ~50 right words)
+	lMax := 99
+	rMax := 49
+
+	bs := makeBitsetFromCoordinates(lMax, rMax)
+	expectedCount := (lMax + 1) * (rMax + 1)
+
+	if bs.CountOn() != expectedCount {
+		t.Errorf("expected %d available IDs but got %d", expectedCount, bs.CountOn())
+	}
+
+	maxCoord := coordinates.ZettelIdCoordinate{
+		Left:  coordinates.Int(lMax),
+		Right: coordinates.Int(rMax),
+	}
+
+	t.Logf(
+		"realistic bitset: %d available IDs, max coordinate ID %d, bitset capacity %d bits",
+		bs.CountOn(),
+		maxCoord.Id(),
+		bs.Len(),
 	)
 }

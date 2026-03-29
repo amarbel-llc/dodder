@@ -26,7 +26,7 @@ func MakeIndex(
 	directoryLayout directory_layout.RepoMutable,
 	cacheIOFactory domain_interfaces.NamedBlobAccess,
 ) (i Index, err error) {
-	if false {
+	if true {
 		if i, err = hinweis_index_v1.MakeIndex(
 			configCli,
 			directoryLayout,

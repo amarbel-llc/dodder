@@ -168,7 +168,24 @@ func (index *index) Reset() (err error) {
 		return err
 	}
 
-	index.bitset = collections.MakeBitsetOn(lMax * rMax)
+	// Compute the max coordinate ID to size the bitset. Coordinate IDs use
+	// triangular number mapping, so the max ID is much larger than lMax*rMax.
+	maxCoord := coordinates.ZettelIdCoordinate{
+		Left:  coordinates.Int(lMax),
+		Right: coordinates.Int(rMax),
+	}
+	index.bitset = collections.MakeBitset(int(maxCoord.Id()) + 1)
+
+	// Set only valid coordinate IDs as available (ON).
+	for l := 0; l <= lMax; l++ {
+		for r := 0; r <= rMax; r++ {
+			k := coordinates.ZettelIdCoordinate{
+				Left:  coordinates.Int(l),
+				Right: coordinates.Int(r),
+			}
+			index.bitset.Add(int(k.Id()))
+		}
+	}
 
 	index.hasChanges = true
 
