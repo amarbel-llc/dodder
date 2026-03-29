@@ -6,7 +6,6 @@ import (
 	"io"
 	"math/rand"
 	"sync"
-	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/_/coordinates"
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
@@ -235,13 +234,6 @@ func (index *index) CreateZettelId() (h *ids.ZettelId, err error) {
 		return h, err
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
-	if index.bitset.CountOn() == 0 {
-		err = errors.Wrap(zettel_id_provider.ErrZettelIdsExhausted{})
-		return h, err
-	}
-
 	ri := 0
 
 	if index.bitset.CountOn() > 1 {
@@ -251,7 +243,7 @@ func (index *index) CreateZettelId() (h *ids.ZettelId, err error) {
 	m := 0
 	j := 0
 
-	if err = index.bitset.EachOff(
+	if err = index.bitset.EachOn(
 		func(n int) (err error) {
 			if index.nonRandomSelection {
 				if m == 0 {
@@ -319,9 +311,8 @@ func (index *index) PeekZettelIds(m int) (hs []*ids.ZettelId, err error) {
 	hs = make([]*ids.ZettelId, 0, m)
 	j := 0
 
-	if err = index.bitset.EachOff(
+	if err = index.bitset.EachOn(
 		func(n int) (err error) {
-			n += 1
 			k := &coordinates.ZettelIdCoordinate{}
 			k.SetInt(coordinates.Int(n))
 

@@ -10,7 +10,6 @@ import (
 	hinweis_index_v1 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v1"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type Index interface {
@@ -28,7 +27,6 @@ func MakeIndex(
 	cacheIOFactory domain_interfaces.NamedBlobAccess,
 ) (i Index, err error) {
 	if false {
-		ui.TodoP3("investigate using bitsets")
 		if i, err = hinweis_index_v1.MakeIndex(
 			configCli,
 			directoryLayout,

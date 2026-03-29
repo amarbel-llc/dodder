@@ -36,6 +36,16 @@ tier ordering).
   git trees), and updates `go.mod` if the input is also a Go module dependency.
   The project has a single flake at the repo root; there is no `go/flake.nix`.
 
+### Unit Test Conventions
+
+- **Always use `ui.T{T: t1}` in tests** --- never use bare `*testing.T`. The
+  `ui.T` wrapper is part of the test infrastructure.
+- **Tests require the `test` build tag** --- this is why `just` recipes must be
+  used instead of bare `go test`. The recipes pass `-tags test,debug`.
+- **Single package tests**: `just test-go-pkg ./path/to/package/` for a tight
+  dev loop. Accepts additional flags:
+  `just test-go-pkg ./path/to/package/ -run TestName`
+
 ### Code Quality
 
 - **Format**: `just codemod-go-fmt` (runs goimports + gofumpt)

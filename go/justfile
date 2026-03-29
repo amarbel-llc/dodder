@@ -215,6 +215,9 @@ check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-def
 test-go-unit *flags:
   tap-dancer go-test {{flags}} -skip-empty -count=1 -tags test,debug ./...
 
+test-go-pkg pkg *flags:
+  go test -tags test,debug -v -count=1 {{flags}} {{pkg}}
+
 test-go: test-go-unit
 
 test-bats-generate $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
