@@ -23,6 +23,7 @@ type Bitset interface {
 	CountOff() int
 	EachOn(interfaces.FuncIter[int]) error
 	EachOff(interfaces.FuncIter[int]) error
+	NthOn(int) (int, bool)
 
 	Add(int)
 	Del(int)
@@ -59,13 +60,15 @@ func MakeBitsetOn(n int) Bitset {
 		b.slice[i] = ^uint32(0)
 	}
 
-	last := n / intSize
-	lastBitsOn := (n % intSize)
+	lastBitsOn := n % intSize
 
-	b.slice[last] = 0
+	if lastBitsOn > 0 {
+		last := n / intSize
+		b.slice[last] = 0
 
-	for i := 0; i < lastBitsOn; i++ {
-		b.slice[last] |= (uint32(1) << i)
+		for i := 0; i < lastBitsOn; i++ {
+			b.slice[last] |= (uint32(1) << i)
+		}
 	}
 
 	return b
@@ -173,6 +176,37 @@ func (b bitset) EachOn(f interfaces.FuncIter[int]) (err error) {
 	}
 
 	return err
+}
+
+// NthOn returns the bit index of the nth set bit (0-indexed), using
+// popcount to skip entire uint32 words. Returns (index, true) if found,
+// or (0, false) if n >= CountOn().
+func (b bitset) NthOn(n int) (int, bool) {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+
+	remaining := n
+
+	for i, word := range b.slice {
+		count := bits.OnesCount32(word)
+
+		if remaining >= count {
+			remaining -= count
+			continue
+		}
+
+		// The target bit is in this word — find the exact position
+		for j := 0; j < intSize; j++ {
+			if word&(1<<j) != 0 {
+				if remaining == 0 {
+					return i*intSize + j, true
+				}
+				remaining--
+			}
+		}
+	}
+
+	return 0, false
 }
 
 func (a bitset) Equals(b Bitset) bool {

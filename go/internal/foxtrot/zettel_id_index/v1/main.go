@@ -251,42 +251,17 @@ func (index *index) CreateZettelId() (h *ids.ZettelId, err error) {
 		return h, err
 	}
 
-	ri := 0
+	var ri int
 
-	if index.bitset.CountOn() > 1 {
-		ri = rand.Intn(index.bitset.CountOn() - 1)
+	if index.nonRandomSelection {
+		ri = 0
+	} else if index.bitset.CountOn() > 1 {
+		ri = rand.Intn(index.bitset.CountOn())
 	}
 
-	m := 0
-	j := 0
-
-	if err = index.bitset.EachOn(
-		func(n int) (err error) {
-			if index.nonRandomSelection {
-				if m == 0 {
-					m = n
-					return err
-				}
-
-				if n > m {
-					return err
-				}
-
-				m = n
-			} else {
-				j++
-				m = n
-
-				if j == ri {
-					err = errors.MakeErrStopIteration()
-					return err
-				}
-			}
-
-			return err
-		},
-	); err != nil {
-		err = errors.Wrap(err)
+	m, ok := index.bitset.NthOn(ri)
+	if !ok {
+		err = errors.Wrap(zettel_id_provider.ErrZettelIdsExhausted{})
 		return h, err
 	}
 

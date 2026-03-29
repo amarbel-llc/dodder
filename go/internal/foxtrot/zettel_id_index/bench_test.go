@@ -126,7 +126,7 @@ func BenchmarkCreateZettelIdV0MapIterate(b *testing.B) {
 	}
 }
 
-func BenchmarkCreateZettelIdV1BitsetIterate(b *testing.B) {
+func BenchmarkCreateZettelIdV1BitsetNthOn(b *testing.B) {
 	maxCoord := coordinates.ZettelIdCoordinate{
 		Left:  coordinates.Int(benchLMax),
 		Right: coordinates.Int(benchRMax),
@@ -142,13 +142,11 @@ func BenchmarkCreateZettelIdV1BitsetIterate(b *testing.B) {
 		}
 	}
 
+	target := bs.CountOn() / 2
+
 	b.ResetTimer()
 	for range b.N {
-		// v1 iterates bitset to find first ON bit
-		bs.EachOn(func(n int) error {
-			_ = n
-			return nil // would normally stop after random offset
-		})
+		bs.NthOn(target)
 	}
 }
 

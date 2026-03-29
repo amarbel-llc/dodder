@@ -3,6 +3,7 @@ package collections
 import (
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
@@ -269,6 +270,135 @@ func TestBitsetBinaryCountOnAfterUnmarshal(t1 *testing.T) {
 	if sut2.CountOn() != 50 {
 		t.Errorf("expected CountOn=50 but got %d (countOn accumulation bug?)", sut2.CountOn())
 	}
+}
+
+func TestNthOnBasic(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(200)
+	sut.Add(0)
+	sut.Add(31)
+	sut.Add(32)
+	sut.Add(63)
+	sut.Add(100)
+	sut.Add(199)
+
+	expected := []int{0, 31, 32, 63, 100, 199}
+	for i, ex := range expected {
+		idx, ok := sut.NthOn(i)
+		if !ok {
+			t.Errorf("NthOn(%d) returned not found", i)
+			continue
+		}
+		if idx != ex {
+			t.Errorf("NthOn(%d) = %d, want %d", i, idx, ex)
+		}
+	}
+
+	_, ok := sut.NthOn(6)
+	if ok {
+		t.Errorf("NthOn(6) should return not found for 6-element bitset")
+	}
+}
+
+func TestNthOnAllOn(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitsetOn(100)
+
+	for i := 0; i < 100; i++ {
+		idx, ok := sut.NthOn(i)
+		if !ok {
+			t.Fatalf("NthOn(%d) returned not found", i)
+		}
+		if idx != i {
+			t.Errorf("NthOn(%d) = %d, want %d", i, idx, i)
+		}
+	}
+}
+
+func TestNthOnEmpty(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	sut := MakeBitset(100)
+
+	_, ok := sut.NthOn(0)
+	if ok {
+		t.Errorf("NthOn(0) should return not found for empty bitset")
+	}
+}
+
+func TestNthOnSparse(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	// Set bits at word boundaries to test cross-word skipping
+	sut := MakeBitset(1000)
+	sut.Add(33)
+	sut.Add(500)
+	sut.Add(999)
+
+	cases := []struct {
+		n    int
+		want int
+	}{
+		{0, 33},
+		{1, 500},
+		{2, 999},
+	}
+
+	for _, c := range cases {
+		idx, ok := sut.NthOn(c.n)
+		if !ok {
+			t.Errorf("NthOn(%d) returned not found", c.n)
+			continue
+		}
+		if idx != c.want {
+			t.Errorf("NthOn(%d) = %d, want %d", c.n, idx, c.want)
+		}
+	}
+}
+
+func BenchmarkNthOnPopcount(b *testing.B) {
+	sut := MakeBitsetOn(11136) // realistic zettel_id_index size
+	// Remove ~half the bits to simulate partially used index
+	for i := 0; i < 5000; i += 2 {
+		sut.Del(i)
+	}
+
+	target := sut.CountOn() / 2
+
+	b.ResetTimer()
+	for range b.N {
+		sut.NthOn(target)
+	}
+}
+
+func BenchmarkNthOnVsEachOn(b *testing.B) {
+	sut := MakeBitsetOn(11136)
+	for i := 0; i < 5000; i += 2 {
+		sut.Del(i)
+	}
+
+	target := sut.CountOn() / 2
+
+	b.Run("NthOn", func(b *testing.B) {
+		for range b.N {
+			sut.NthOn(target)
+		}
+	})
+
+	b.Run("EachOn", func(b *testing.B) {
+		for range b.N {
+			j := 0
+			sut.EachOn(func(n int) error {
+				j++
+				if j == target {
+					return errors.MakeErrStopIteration()
+				}
+				return nil
+			})
+		}
+	})
 }
 
 func BenchmarkAdd(b *testing.B) {
