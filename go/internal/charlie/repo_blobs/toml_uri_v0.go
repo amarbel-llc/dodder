@@ -20,9 +20,6 @@ func (config *TomlUriV0) SetPublicKey(id domain_interfaces.MarklId) {
 	config.PublicKey.ResetWithMarklId(id)
 }
 
-func (b TomlUriV0) GetRepoType() {
-}
-
 func (a *TomlUriV0) Reset() {
 	a.Uri = values.Uri{}
 }
