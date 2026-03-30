@@ -1,0 +1,115 @@
+@startuml dodder-dependency-graph
+
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+skinparam legendBackgroundColor #FEFECE
+
+title Dodder Issue & FDR Dependency Graph
+
+legend top left
+  |= Color |= Meaning |
+  | <#90EE90> | Accepted / Testing |
+  | <#FFD700> | Exploring |
+  | <#87CEEB> | Open Issue |
+  | <#DDA0DD> | User Goal |
+  | <#D3D3D3> | External Project |
+endlegend
+
+' ── User Goals ──────────────────────────────────────────
+
+package "Goals" <<Rectangle>> #FFFFFF {
+  rectangle "CalDAV\nTODO sync" as goal_caldav #DDA0DD
+  rectangle "NewsBlur\narticle ingest" as goal_nebulous #DDA0DD
+  rectangle "Chrest\nbookmark sync" as goal_chrest #DDA0DD
+  rectangle "Replace\nGitHub Issues" as goal_issues #DDA0DD
+  rectangle "Multi-host\nremote sync" as goal_remote #DDA0DD
+}
+
+' ── Accepted / Testing FDRs (foundations) ───────────────
+
+rectangle "FDR-0001\nObject Locks\n(testing)" as fdr1 #90EE90
+rectangle "FDR-0002\nTwo-Phase Import\n(testing)" as fdr2 #90EE90
+rectangle "FDR-0003\nRepo Disambiguation\n(accepted)" as fdr3 #90EE90
+rectangle "FDR-0004\nBindingless Local Transfer\n(accepted)" as fdr4 #90EE90
+rectangle "FDR-0005\nWorkspace-as-Repo\n(experimental)" as fdr5 #90EE90
+rectangle "FDR-0006\nTwo-Stage Commit\n(accepted)" as fdr6 #90EE90
+
+' ── Exploring FDRs ──────────────────────────────────────
+
+rectangle "FDR-0007\nCheckout Bridges\n(exploring)" as fdr7 #FFD700
+rectangle "FDR-0009\nExternal Object Index\n(exploring)" as fdr9 #FFD700
+rectangle "FDR-0010\nCore Types / Null Type\n(exploring)" as fdr10 #FFD700
+rectangle "FDR-0011\nSecret Store\n(exploring)" as fdr11 #FFD700
+
+' ── Issues ──────────────────────────────────────────────
+
+rectangle "#13\nCalDAV store\ntype spec" as i13 #87CEEB
+rectangle "#16\nMerge algorithm\nfor workspaces" as i16 #87CEEB
+rectangle "#19\nRedesign\nremote_transfer" as i19 #87CEEB
+rectangle "#23\nResearch sync\nuse cases" as i23 #87CEEB
+rectangle "#46\nTyped blob locks\nas tool refs" as i46 #87CEEB
+rectangle "#39\nGC reachability\nfor blob refs" as i39 #87CEEB
+rectangle "#66\n[formatters.*.fs]\ndeclarative blobs" as i66 #87CEEB
+rectangle "#67\nValidate fs aliases\nvs metadata" as i67 #87CEEB
+rectangle "#63\nBuiltin !toml\ntype" as i63 #87CEEB
+rectangle "#10\nGit pack file\nformat" as i10 #87CEEB
+rectangle "#43\nType inheritance\ndesign" as i43 #87CEEB
+rectangle "#17\nGenres via\ntype hierarchy" as i17 #87CEEB
+
+' ── Architecture (not on critical path) ─────────────────
+
+rectangle "#18\nDodder/madder\nboundary" as i18 #D3D3D3
+rectangle "#34\nExtract madder\ninto own repo" as i34 #D3D3D3
+rectangle "#33\nWASM modules" as i33 #D3D3D3
+
+' ── External Projects ───────────────────────────────────
+
+rectangle "nebulous\n(NewsBlur MCP)" as nebulous #D3D3D3
+rectangle "chrest\n(browser MCP)" as chrest #D3D3D3
+
+' ── Critical Path 1: Type System × Workspaces ──────────
+
+fdr5 --> fdr7 : workspace\nfoundation
+fdr6 --> fdr7 : commit\nmodel
+i13 --> fdr7 : store type\nspec
+i16 --> fdr7 : merge\nalgorithm
+
+fdr7 --> goal_caldav : CalDAV\nCheckoutStore
+fdr7 --> goal_nebulous : NewsBlur\nCheckoutStore
+fdr7 --> goal_chrest : Chrest\nCheckoutStore
+
+fdr10 --> i46 : null type\nenables tool blobs
+fdr10 --> i63 : type system\nfoundation
+fdr1 --> i46 : lock\ninfrastructure
+i46 --> i39 : typed refs\nenable GC walk
+fdr10 --> i66 : type config\ndrives materialization
+i66 --> i67 : fs entries\nneed validation
+fdr10 --> goal_issues : rich !task\ntype definition
+fdr7 --> goal_issues : workspace\nfor task mgmt
+
+fdr9 --> fdr7 : performance\nat scale
+
+' ── Critical Path 2: Remote Transfers ───────────────────
+
+i23 --> i19 : use cases\nfeed design
+i19 --> goal_remote : protocol\nimplementation
+i19 --> i10 : transport\noptimization
+fdr4 --> i19 : local transfer\npatterns inform
+
+' ── Architecture (parallel, not blocking) ───────────────
+
+i18 --> i34 : boundary\nprerequisite
+i34 --> i33 : clean API\nfor WASM
+
+' ── External project connections ────────────────────────
+
+nebulous ..> goal_nebulous : stories\nas zettels
+chrest ..> goal_chrest : bookmarks\nas zettels
+
+' ── Cross-path connections ──────────────────────────────
+
+goal_remote ..> goal_caldav : sync TODOs\nacross hosts
+goal_remote ..> goal_chrest : sync bookmarks\nacross hosts
+i43 --> i17 : inheritance\nenables genres
+
+@enduml
