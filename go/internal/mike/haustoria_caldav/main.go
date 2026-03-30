@@ -105,3 +105,15 @@ func (s *Store) Delete(externalId string) error {
 	href := s.calendarHref + externalId + ".ics"
 	return s.client.DeleteTask(href, "")
 }
+
+func (s *Store) Status() (haustoria.StatusResult, error) {
+	resources, err := s.Discover()
+	if err != nil {
+		return haustoria.StatusResult{}, err
+	}
+
+	return haustoria.StatusResult{
+		StoreType:         "caldav",
+		ExternalResources: resources,
+	}, nil
+}

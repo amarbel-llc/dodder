@@ -1,6 +1,8 @@
 package commands_dodder
 
 import (
+	"fmt"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
@@ -50,5 +52,37 @@ func (cmd Status) Run(req command.Request) {
 		},
 	); err != nil {
 		localWorkingCopy.Cancel(err)
+	}
+
+	h := localWorkingCopy.GetEnvWorkspace().GetHaustoria()
+	if h == nil {
+		return
+	}
+
+	result, err := h.Status()
+	if err != nil {
+		localWorkingCopy.GetUI().Printf("haustoria: %s", err)
+		return
+	}
+
+	ui := localWorkingCopy.GetUI()
+
+	ui.Printf("")
+	ui.Printf("[Haustoria: %s]", result.StoreType)
+
+	if len(result.ExternalResources) == 0 {
+		ui.Printf("  (no external resources)")
+		return
+	}
+
+	ui.Printf("  %d external resource(s):", len(result.ExternalResources))
+
+	for _, r := range result.ExternalResources {
+		ui.Printf(
+			"  %s  !%s  %s",
+			r.ExternalId,
+			r.TypeId,
+			fmt.Sprintf("%q", r.Description),
+		)
 	}
 }

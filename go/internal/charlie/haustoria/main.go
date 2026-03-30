@@ -22,6 +22,18 @@ type Haustoria interface {
 
 	// Delete removes an external resource by its external identifier.
 	Delete(externalId string) error
+
+	// Status returns a read-only summary of the external store's state.
+	Status() (StatusResult, error)
+}
+
+// StatusResult summarizes the external store for display in `dodder status`.
+type StatusResult struct {
+	// StoreType identifies the haustoria implementation (e.g. "caldav").
+	StoreType string
+
+	// ExternalResources lists all resources in the external store.
+	ExternalResources []ExternalResource
 }
 
 // CompileRequest contains the dodder object data to compile to the external
