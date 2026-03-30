@@ -1,7 +1,7 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/3e20095fe3c6cbb1ddcef89b26969a69a1570776";
-    nixpkgs-master.url = "github:NixOS/nixpkgs/c4b21248f8a010f0a5e089c54c5f3d357fdce67d";
+    nixpkgs.url = "github:NixOS/nixpkgs/4590696c8693fea477850fe379a01544293ca4e2";
+    nixpkgs-master.url = "github:NixOS/nixpkgs/e2dde111aea2c0699531dc616112a96cd55ab8b5";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
     gomod2nix = {
@@ -46,10 +46,10 @@
       nixpkgs-master,
       utils,
       gomod2nix,
-      purse-first,
       bob,
       just-us,
       tommy,
+      ...
     }:
     (utils.lib.eachDefaultSystem (
       system:
