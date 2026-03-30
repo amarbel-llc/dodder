@@ -42,6 +42,11 @@ type (
 		GetSyncTai() string
 		GetSyncDigest() string
 	}
+
+	ConfigWithHaustoria interface {
+		Config
+		GetHaustoriaConfig() HaustoriaConfig
+	}
 )
 
 var (
