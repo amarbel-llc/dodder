@@ -41,6 +41,7 @@ type InitWorkspace struct {
 
 	ExperimentalRepo  bool
 	ParentPath        string
+	Haustoria         string
 	DefaultQueryGroup values.String
 	Proto             sku.Proto
 }
@@ -62,6 +63,13 @@ func (cmd *InitWorkspace) SetFlagDefinitions(
 		"parent",
 		"",
 		"path to a CWD-scoped parent dodder repository (omit for home repo)",
+	)
+
+	flagSet.StringVar(
+		&cmd.Haustoria,
+		"haustoria",
+		"",
+		"haustoria store type for external sync (caldav)",
 	)
 
 	cmd.Genesis.SetFlagDefinitions(flagSet)
@@ -240,7 +248,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		parentPathForConfig = absParentPath
 	}
 
-	blob := &workspace_config_blobs.V1{
+	v1 := workspace_config_blobs.V1{
 		V0: workspace_config_blobs.V0{
 			Query: cmd.DefaultQueryGroup.String(),
 			Defaults: repo_configs.DefaultsV1OmitEmpty{
@@ -251,6 +259,14 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 			},
 		},
 		ParentPath: parentPathForConfig,
+	}
+
+	var blob workspace_config_blobs.Config
+
+	if cmd.Haustoria != "" {
+		blob = cmd.makeHaustoriaConfig(req, v1)
+	} else {
+		blob = &v1
 	}
 
 	if err := local.GetEnvWorkspace().CreateWorkspace(blob); err != nil {
@@ -371,6 +387,53 @@ func (cmd InitWorkspace) makeParentRemote(
 // repo's word list files when neither flag was explicitly provided. This allows
 // workspace repos to create new zettels using the parent's ID space without
 // requiring the user to maintain separate word lists.
+func (cmd InitWorkspace) makeHaustoriaConfig(
+	req command.Request,
+	v1 workspace_config_blobs.V1,
+) *workspace_config_blobs.V2 {
+	switch cmd.Haustoria {
+	case "caldav":
+		cfg := workspace_config_blobs.CalDAVConfig{}
+
+		// Read from env vars as defaults; the config can override later.
+		resolved, err := cfg.Resolve()
+		if err != nil {
+			req.Cancel(
+				errors.BadRequestf(
+					"CalDAV configuration incomplete: %s", err,
+				),
+			)
+			return nil
+		}
+
+		// Store URL and username in config; password stays in env only.
+		cfg.URL = resolved.URL
+		cfg.Username = resolved.Username
+		cfg.Calendar = resolved.Calendar
+
+		return &workspace_config_blobs.V2{
+			V1: v1,
+			Haustoria: workspace_config_blobs.HaustoriaConfig{
+				Type:   "caldav",
+				CalDAV: &cfg,
+				Mappings: map[string]workspace_config_blobs.TypeMapping{
+					"!task":  {Component: "VTODO"},
+					"!event": {Component: "VEVENT"},
+				},
+			},
+		}
+
+	default:
+		req.Cancel(
+			errors.BadRequestf(
+				"unknown haustoria type: %s (supported: caldav)",
+				cmd.Haustoria,
+			),
+		)
+		return nil
+	}
+}
+
 func (cmd *InitWorkspace) linkParentZettelIdProviders(
 	absParentPath string,
 	isHomeRepo bool,

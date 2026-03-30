@@ -17,6 +17,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
+	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
+	"code.linenisgreat.com/dodder/go/internal/hotel/caldav"
+	"code.linenisgreat.com/dodder/go/internal/mike/haustoria_caldav"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -39,6 +42,7 @@ type Env interface {
 	GetSyncBaseline() (tai string, digest string)
 	UpdateSyncBaseline(inventoryListStore sku.InventoryListStore) error
 	GetStore() *Store
+	GetHaustoria() haustoria.Haustoria
 
 	// TODO identify users of this and reduce / isolate them
 	GetStoreFS() *store_fs.Store
@@ -147,6 +151,30 @@ func Make(
 
 	outputEnv.store.StoreLike = outputEnv.storeFS
 
+	if cfg, ok := outputEnv.blob.(workspace_config_blobs.ConfigWithHaustoria); ok {
+		hCfg := cfg.GetHaustoriaConfig()
+		if hCfg.Type == "caldav" && hCfg.CalDAV != nil {
+			resolved, resolveErr := hCfg.CalDAV.Resolve()
+			if resolveErr == nil {
+				caldavCfg := &caldav.Config{
+					URL:      resolved.URL,
+					Username: resolved.Username,
+					Password: resolved.Password,
+				}
+
+				calendarHref := resolved.Calendar
+				if calendarHref == "" {
+					calendarHref = resolved.URL
+				}
+
+				outputEnv.haustoriaStore = haustoria_caldav.MakeStore(
+					caldavCfg,
+					calendarHref,
+				)
+			}
+		}
+	}
+
 	return outputEnv, err
 }
 
@@ -166,8 +194,9 @@ type env struct {
 	blob          workspace_config_blobs.Config
 	defaults      repo_configs.DefaultsV1
 
-	storeFS *store_fs.Store
-	store   Store
+	storeFS    *store_fs.Store
+	store      Store
+	haustoriaStore haustoria.Haustoria
 }
 
 func (env *env) findWorkspaceFile(
@@ -241,7 +270,9 @@ func (env *env) IsTemporary() bool {
 
 func (env *env) GetWorkspaceConfigTyped() workspace_config_blobs.TypedConfig {
 	typeString := ids.TypeTomlWorkspaceConfigV0
-	if _, ok := env.blob.(workspace_config_blobs.ConfigWithParentPath); ok {
+	if _, ok := env.blob.(workspace_config_blobs.ConfigWithHaustoria); ok {
+		typeString = ids.TypeTomlWorkspaceConfigV2
+	} else if _, ok := env.blob.(workspace_config_blobs.ConfigWithParentPath); ok {
 		typeString = ids.TypeTomlWorkspaceConfigV1
 	}
 
@@ -263,6 +294,10 @@ func (env *env) GetDefaults() repo_configs.Defaults {
 
 func (env *env) GetStore() *Store {
 	return &env.store
+}
+
+func (env *env) GetHaustoria() haustoria.Haustoria {
+	return env.haustoriaStore
 }
 
 func (env *env) GetStoreFS() *store_fs.Store {
@@ -327,7 +362,9 @@ func (env *env) CreateWorkspace(
 	env.blob = blob
 
 	typeString := ids.TypeTomlWorkspaceConfigV0
-	if _, ok := blob.(workspace_config_blobs.ConfigWithParentPath); ok {
+	if _, ok := blob.(workspace_config_blobs.ConfigWithHaustoria); ok {
+		typeString = ids.TypeTomlWorkspaceConfigV2
+	} else if _, ok := blob.(workspace_config_blobs.ConfigWithParentPath); ok {
 		typeString = ids.TypeTomlWorkspaceConfigV1
 	}
 
