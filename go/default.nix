@@ -74,7 +74,9 @@ in
       govulncheck
       gum
       httpie
+      lsof
       pandoc
+      radicale
       shellcheck
       shfmt
     ])
