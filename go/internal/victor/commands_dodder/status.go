@@ -79,7 +79,7 @@ func (cmd Status) Run(req command.Request) {
 
 	for _, r := range result.ExternalResources {
 		ui.Printf(
-			"  %s  !%s  %s",
+			"  %s  %s  %s",
 			r.ExternalId,
 			r.TypeId,
 			fmt.Sprintf("%q", r.Description),

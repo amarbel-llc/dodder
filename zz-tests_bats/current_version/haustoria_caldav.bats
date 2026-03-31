@@ -149,10 +149,13 @@ function status_shows_caldav_resources { # @test
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
   run_dodder status
   assert_success
-  assert_output --partial "[Haustoria: caldav]"
-  assert_output --partial "2 external resource(s)"
-  assert_output --partial "Buy groceries"
-  assert_output --partial "Call dentist"
+  assert_output_unsorted - <<-EOM
+
+		[Haustoria: caldav]
+		  2 external resource(s):
+		  task-1  !task  "Buy groceries"
+		  task-2  !task  "Call dentist"
+	EOM
   popd || return 1
 }
 
@@ -169,11 +172,10 @@ function checkin_creates_zettels_from_caldav { # @test
 
   run_dodder show :
   assert_success
-  assert_output --partial "!task"
-  assert_output --partial "Write report"
-  assert_output --partial "Fix bike"
-  assert_output --partial "work"
-  assert_output --partial "errands"
+  assert_output_unsorted - <<-EOM
+		[one/dos !task "Write report" work]
+		[one/uno !task "Fix bike" errands]
+	EOM
   popd || return 1
 }
 
