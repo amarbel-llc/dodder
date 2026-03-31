@@ -44,11 +44,15 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 			)
 		}
 
-		object, err := op.makeObjectFromDecompileResult(result)
-		if err != nil {
-			return nil, errors.Wrapf(err,
-				"make object from %s", resource.ExternalId,
-			)
+		proto := op.makeProtoFromDecompileResult(result)
+		object, _ := proto.Make() //repool:owned
+
+		if len(result.Blob) > 0 {
+			if err = op.writeBlob(object, result.Blob); err != nil {
+				return nil, errors.Wrapf(err,
+					"write blob for %s", resource.ExternalId,
+				)
+			}
 		}
 
 		builder.AddObject(object, 0)
@@ -75,39 +79,22 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 	return results, err
 }
 
-func (op CheckinHaustoria) makeObjectFromDecompileResult(
+func (op CheckinHaustoria) makeProtoFromDecompileResult(
 	result haustoria.DecompileResult,
-) (object *sku.Transacted, err error) {
-	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+) sku.Proto {
+	proto := sku.MakeProto(nil)
 
-	metadata := object.GetMetadataMutable()
-
-	if err = metadata.GetDescriptionMutable().Set(result.Description); err != nil {
-		err = errors.Wrap(err)
-		return nil, err
-	}
+	proto.Metadata.GetDescriptionMutable().Set(result.Description)
 
 	if result.TypeId != "" {
-		if err = metadata.GetTypeMutable().SetType(result.TypeId); err != nil {
-			err = errors.Wrap(err)
-			return nil, err
-		}
+		proto.Metadata.GetTypeMutable().SetType(result.TypeId)
 	}
 
 	for _, tagStr := range result.Tags {
-		if err = metadata.AddTagString(tagStr); err != nil {
-			err = errors.Wrap(err)
-			return nil, err
-		}
+		proto.Metadata.AddTagString(tagStr)
 	}
 
-	if len(result.Blob) > 0 {
-		if err = op.writeBlob(object, result.Blob); err != nil {
-			return nil, err
-		}
-	}
-
-	return object, nil
+	return proto
 }
 
 func (op CheckinHaustoria) writeBlob(

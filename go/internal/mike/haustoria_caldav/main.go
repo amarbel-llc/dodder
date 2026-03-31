@@ -73,7 +73,7 @@ func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileRe
 			Description: twm.Task.Summary,
 			Blob:        []byte(twm.Task.Description),
 			Tags:        twm.Task.Categories,
-			TypeId:      "task",
+			TypeId:      "!task",
 			ETag:        twm.Task.ETag,
 		}, nil
 	}
@@ -93,7 +93,7 @@ func (s *Store) Discover() ([]haustoria.ExternalResource, error) {
 	for _, twm := range result.Tasks {
 		resources = append(resources, haustoria.ExternalResource{
 			ExternalId:  twm.Task.UID,
-			TypeId:      "task",
+			TypeId:      "!task",
 			Description: twm.Task.Summary,
 		})
 	}
