@@ -16,9 +16,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
-	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/hotel/caldav"
+	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/mike/haustoria_caldav"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -42,7 +41,6 @@ type Env interface {
 	GetSyncBaseline() (tai string, digest string)
 	UpdateSyncBaseline(inventoryListStore sku.InventoryListStore) error
 	GetStore() *Store
-	GetHaustoria() haustoria.Haustoria
 
 	// TODO identify users of this and reduce / isolate them
 	GetStoreFS() *store_fs.Store
@@ -149,8 +147,6 @@ func Make(
 		return outputEnv, err
 	}
 
-	outputEnv.store.StoreLike = outputEnv.storeFS
-
 	if cfg, ok := outputEnv.blob.(workspace_config_blobs.ConfigWithHaustoria); ok {
 		hCfg := cfg.GetHaustoriaConfig()
 		if hCfg.Type == "caldav" && hCfg.CalDAV != nil {
@@ -167,12 +163,16 @@ func Make(
 					calendarHref = resolved.URL
 				}
 
-				outputEnv.haustoriaStore = haustoria_caldav.MakeStore(
+				outputEnv.store.StoreLike = haustoria_caldav.MakeStore(
 					caldavCfg,
 					calendarHref,
 				)
 			}
 		}
+	}
+
+	if outputEnv.store.StoreLike == nil {
+		outputEnv.store.StoreLike = outputEnv.storeFS
 	}
 
 	return outputEnv, err
@@ -194,9 +194,8 @@ type env struct {
 	blob          workspace_config_blobs.Config
 	defaults      repo_configs.DefaultsV1
 
-	storeFS    *store_fs.Store
-	store      Store
-	haustoriaStore haustoria.Haustoria
+	storeFS *store_fs.Store
+	store   Store
 }
 
 func (env *env) findWorkspaceFile(
@@ -294,10 +293,6 @@ func (env *env) GetDefaults() repo_configs.Defaults {
 
 func (env *env) GetStore() *Store {
 	return &env.store
-}
-
-func (env *env) GetHaustoria() haustoria.Haustoria {
-	return env.haustoriaStore
 }
 
 func (env *env) GetStoreFS() *store_fs.Store {

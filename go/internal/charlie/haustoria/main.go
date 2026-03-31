@@ -6,39 +6,57 @@ package haustoria
 //
 // A Haustoria implementation translates between dodder's internal object
 // representation and an external system's format (CalDAV VTODOs, browser
-// bookmarks, WebDAV files, etc.). Checkout is compilation (dodder → external);
-// checkin is decompilation (external → dodder).
+// bookmarks, WebDAV files, etc.).
+//
+// Compile = external → dodder (like compiling source into an executable).
+// Decompile = dodder → external (like decompiling back to source).
 type Haustoria interface {
-	// Compile writes a dodder object to the external store.
-	// Returns the external identifier (e.g. CalDAV UID).
+	// Compile reads an external resource and returns dodder-compatible fields.
+	// external → dodder
 	Compile(CompileRequest) (CompileResult, error)
 
-	// Decompile reads an external resource and returns dodder-compatible fields.
+	// Decompile writes a dodder object to the external store.
+	// dodder → external
 	Decompile(DecompileRequest) (DecompileResult, error)
 
-	// Discover returns external resources that have no dodder binding
-	// (created externally since last sync).
+	// Discover returns external resources in the store.
 	Discover() ([]ExternalResource, error)
 
 	// Delete removes an external resource by its external identifier.
 	Delete(externalId string) error
-
-	// Status returns a read-only summary of the external store's state.
-	Status() (StatusResult, error)
 }
 
-// StatusResult summarizes the external store for display in `dodder status`.
-type StatusResult struct {
-	// StoreType identifies the haustoria implementation (e.g. "caldav").
-	StoreType string
-
-	// ExternalResources lists all resources in the external store.
-	ExternalResources []ExternalResource
-}
-
-// CompileRequest contains the dodder object data to compile to the external
-// store.
+// CompileRequest identifies an external resource to compile into dodder.
 type CompileRequest struct {
+	// ExternalId is the external system's identifier.
+	ExternalId string
+}
+
+// CompileResult contains the dodder-compatible fields extracted from an
+// external resource.
+type CompileResult struct {
+	// ExternalId is the external system's identifier.
+	ExternalId string
+
+	// Description maps to the dodder object description.
+	Description string
+
+	// Blob is the compiled blob content.
+	Blob []byte
+
+	// Tags are compiled tag identifiers.
+	Tags []string
+
+	// TypeId is the inferred dodder type (e.g. "!task" from VTODO).
+	TypeId string
+
+	// ETag is the external resource's current ETag.
+	ETag string
+}
+
+// DecompileRequest contains the dodder object data to decompile to the
+// external store.
+type DecompileRequest struct {
 	// ObjectId is the dodder object identifier.
 	ObjectId string
 
@@ -51,7 +69,7 @@ type CompileRequest struct {
 	// Tags are the object's tag identifiers.
 	Tags []string
 
-	// TypeId is the object's type identifier (e.g. "task", "event").
+	// TypeId is the object's type identifier (e.g. "!task").
 	TypeId string
 
 	// ExternalId is the existing external identifier, if updating.
@@ -62,8 +80,8 @@ type CompileRequest struct {
 	ETag string
 }
 
-// CompileResult contains the result of a Compile operation.
-type CompileResult struct {
+// DecompileResult contains the result of a Decompile operation.
+type DecompileResult struct {
 	// ExternalId is the external system's identifier for the resource.
 	ExternalId string
 
@@ -71,36 +89,7 @@ type CompileResult struct {
 	ETag string
 }
 
-// DecompileRequest identifies an external resource to decompile.
-type DecompileRequest struct {
-	// ExternalId is the external system's identifier.
-	ExternalId string
-}
-
-// DecompileResult contains the dodder-compatible fields extracted from an
-// external resource.
-type DecompileResult struct {
-	// ExternalId is the external system's identifier.
-	ExternalId string
-
-	// Description maps to the dodder object description.
-	Description string
-
-	// Blob is the decompiled blob content.
-	Blob []byte
-
-	// Tags are decompiled tag identifiers.
-	Tags []string
-
-	// TypeId is the inferred dodder type (e.g. "task" from VTODO).
-	TypeId string
-
-	// ETag is the external resource's current ETag.
-	ETag string
-}
-
-// ExternalResource represents an external resource discovered during sync
-// that has no corresponding dodder object.
+// ExternalResource represents an external resource discovered during sync.
 type ExternalResource struct {
 	// ExternalId is the external system's identifier.
 	ExternalId string

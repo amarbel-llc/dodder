@@ -33,18 +33,18 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 	)
 
 	for _, resource := range resources {
-		result, decompileErr := op.Haustoria.Decompile(
-			haustoria.DecompileRequest{
+		result, compileErr := op.Haustoria.Compile(
+			haustoria.CompileRequest{
 				ExternalId: resource.ExternalId,
 			},
 		)
-		if decompileErr != nil {
-			return nil, errors.Wrapf(decompileErr,
-				"decompile %s", resource.ExternalId,
+		if compileErr != nil {
+			return nil, errors.Wrapf(compileErr,
+				"compile %s", resource.ExternalId,
 			)
 		}
 
-		proto := op.makeProtoFromDecompileResult(result)
+		proto := op.makeProtoFromCompileResult(result)
 		object, _ := proto.Make() //repool:owned
 
 		if len(result.Blob) > 0 {
@@ -79,8 +79,8 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 	return results, err
 }
 
-func (op CheckinHaustoria) makeProtoFromDecompileResult(
-	result haustoria.DecompileResult,
+func (op CheckinHaustoria) makeProtoFromCompileResult(
+	result haustoria.CompileResult,
 ) sku.Proto {
 	proto := sku.MakeProto(nil)
 

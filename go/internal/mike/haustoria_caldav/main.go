@@ -4,17 +4,30 @@ import (
 	"fmt"
 	"time"
 
+	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
+	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/caldav"
+	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
+	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
-// Store implements haustoria.Haustoria for CalDAV servers.
+// Store implements both haustoria.Haustoria and store_workspace.StoreLike
+// for CalDAV servers.
 type Store struct {
 	client       *caldav.Client
 	calendarHref string
+	supplies     store_workspace.Supplies
 }
 
-var _ haustoria.Haustoria = &Store{}
+var (
+	_ haustoria.Haustoria       = &Store{}
+	_ store_workspace.StoreLike = &Store{}
+)
 
 func MakeStore(cfg *caldav.Config, calendarHref string) *Store {
 	return &Store{
@@ -23,7 +36,124 @@ func MakeStore(cfg *caldav.Config, calendarHref string) *Store {
 	}
 }
 
+// --- StoreLike interface ---
+
+func (s *Store) Initialize(supplies store_workspace.Supplies) error {
+	s.supplies = supplies
+	return nil
+}
+
+func (s *Store) QueryCheckedOut(
+	queryGroup *queries.Query,
+	output interfaces.FuncIter[sku.SkuType],
+) (err error) {
+	resources, err := s.Discover()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	for _, resource := range resources {
+		result, compileErr := s.Compile(haustoria.CompileRequest{
+			ExternalId: resource.ExternalId,
+		})
+		if compileErr != nil {
+			return errors.Wrapf(compileErr,
+				"compile %s", resource.ExternalId,
+			)
+		}
+
+		co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
+
+		external := co.GetSkuExternal()
+		metadata := external.GetMetadataMutable()
+
+		if err = metadata.GetDescriptionMutable().Set(
+			result.Description,
+		); err != nil {
+			return errors.Wrap(err)
+		}
+
+		if result.TypeId != "" {
+			if err = metadata.GetTypeMutable().SetType(
+				result.TypeId,
+			); err != nil {
+				return errors.Wrap(err)
+			}
+		}
+
+		for _, tagStr := range result.Tags {
+			if err = metadata.AddTagString(tagStr); err != nil {
+				return errors.Wrap(err)
+			}
+		}
+
+		if err = external.GetExternalObjectIdMutable().SetWithGenre(
+			resource.ExternalId,
+			genres.Zettel,
+		); err != nil {
+			return errors.Wrap(err)
+		}
+
+		// Set genre on internal too — query filter checks internal genre.
+		co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)
+
+		co.SetState(checked_out_state.Untracked)
+
+		if err = output(co); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) ReadAllExternalItems() error {
+	return nil
+}
+
+func (s *Store) Flush() error {
+	return nil
+}
+
+func (s *Store) GetObjectIdsForString(
+	v string,
+) ([]domain_interfaces.ExternalObjectId, error) {
+	return nil, nil
+}
+
+// --- Haustoria interface ---
+
+// Compile reads a CalDAV VTODO and returns dodder-compatible fields.
+// external → dodder
 func (s *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResult, error) {
+	result, err := s.client.ListTasks(s.calendarHref)
+	if err != nil {
+		return haustoria.CompileResult{}, fmt.Errorf("compile from CalDAV: %w", err)
+	}
+
+	for _, twm := range result.Tasks {
+		if twm.Task.UID != req.ExternalId {
+			continue
+		}
+
+		return haustoria.CompileResult{
+			ExternalId:  twm.Task.UID,
+			Description: twm.Task.Summary,
+			Blob:        []byte(twm.Task.Description),
+			Tags:        twm.Task.Categories,
+			TypeId:      "!task",
+			ETag:        twm.Task.ETag,
+		}, nil
+	}
+
+	return haustoria.CompileResult{}, fmt.Errorf(
+		"CalDAV task not found: %s", req.ExternalId,
+	)
+}
+
+// Decompile writes a dodder object to CalDAV as a VTODO.
+// dodder → external
+func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileResult, error) {
 	task := caldav.Task{
 		UID:         req.ExternalId,
 		Summary:     req.Description,
@@ -41,46 +171,20 @@ func (s *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResult, 
 
 	err := s.client.PutTask(href, ical, req.ETag)
 	if err != nil {
-		return haustoria.CompileResult{}, fmt.Errorf("compile to CalDAV: %w", err)
+		return haustoria.DecompileResult{}, fmt.Errorf("decompile to CalDAV: %w", err)
 	}
 
 	meta, err := s.client.GetTask(href)
 	if err != nil {
-		return haustoria.CompileResult{
+		return haustoria.DecompileResult{
 			ExternalId: task.UID,
 		}, nil
 	}
 
-	return haustoria.CompileResult{
+	return haustoria.DecompileResult{
 		ExternalId: task.UID,
 		ETag:       meta.Task.ETag,
 	}, nil
-}
-
-func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileResult, error) {
-	result, err := s.client.ListTasks(s.calendarHref)
-	if err != nil {
-		return haustoria.DecompileResult{}, fmt.Errorf("decompile from CalDAV: %w", err)
-	}
-
-	for _, twm := range result.Tasks {
-		if twm.Task.UID != req.ExternalId {
-			continue
-		}
-
-		return haustoria.DecompileResult{
-			ExternalId:  twm.Task.UID,
-			Description: twm.Task.Summary,
-			Blob:        []byte(twm.Task.Description),
-			Tags:        twm.Task.Categories,
-			TypeId:      "!task",
-			ETag:        twm.Task.ETag,
-		}, nil
-	}
-
-	return haustoria.DecompileResult{}, fmt.Errorf(
-		"CalDAV task not found: %s", req.ExternalId,
-	)
 }
 
 func (s *Store) Discover() ([]haustoria.ExternalResource, error) {
@@ -104,16 +208,4 @@ func (s *Store) Discover() ([]haustoria.ExternalResource, error) {
 func (s *Store) Delete(externalId string) error {
 	href := s.calendarHref + externalId + ".ics"
 	return s.client.DeleteTask(href, "")
-}
-
-func (s *Store) Status() (haustoria.StatusResult, error) {
-	resources, err := s.Discover()
-	if err != nil {
-		return haustoria.StatusResult{}, err
-	}
-
-	return haustoria.StatusResult{
-		StoreType:         "caldav",
-		ExternalResources: resources,
-	}, nil
 }

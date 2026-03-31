@@ -5,6 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -123,7 +124,7 @@ func (cmd Checkin) Run(dep command.Request) {
 
 	workspace := localWorkingCopy.GetEnvWorkspace()
 
-	if h := workspace.GetHaustoria(); h != nil {
+	if h, ok := workspace.GetStore().StoreLike.(haustoria.Haustoria); ok {
 		op := user_ops.CheckinHaustoria{
 			Repo:      localWorkingCopy,
 			Haustoria: h,

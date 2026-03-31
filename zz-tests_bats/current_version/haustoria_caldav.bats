@@ -149,12 +149,9 @@ function status_shows_caldav_resources { # @test
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
   run_dodder status
   assert_success
-  assert_output_unsorted - <<-EOM
-
-		[Haustoria: caldav]
-		  2 external resource(s):
-		  task-1  !task  "Buy groceries"
-		  task-2  !task  "Call dentist"
+  assert_output_unsorted - <<-'EOM'
+		        untracked [task-1 !task "Buy groceries" errands shopping]
+		        untracked [task-2 !task "Call dentist" health]
 	EOM
   popd || return 1
 }
