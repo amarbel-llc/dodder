@@ -102,6 +102,87 @@ test-bats-snapshot-version: build
   echo "==> Snapshot complete: $dest"
   echo "Now bump VCurrent, run 'just test-bats-update-fixtures', and commit."
 
+#   _____            _
+#  | ____|_  ___ __ | | ___  _ __ ___
+#  |  _| \ \/ / '_ \| |/ _ \| '__/ _ \
+#  | |___ >  <| |_) | | (_) | | |  __/
+#  |_____/_/\_\ .__/|_|\___/|_|  \___|
+#             |_|
+
+# Start a local Radicale CalDAV server for haustoria prototyping.
+# Data stored in /tmp/radicale-dodder/. Runs in foreground (Ctrl-C to stop).
+[group('explore')]
+explore-radicale:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  data_dir="/tmp/radicale-dodder"
+  mkdir -p "$data_dir"
+
+  cat > /tmp/radicale-dodder.toml <<TOML
+  [server]
+  hosts = 127.0.0.1:5232
+
+  [auth]
+  type = none
+
+  [storage]
+  filesystem_folder = $data_dir/collections
+  TOML
+
+  echo "==> Radicale CalDAV server at http://127.0.0.1:5232"
+  echo "==> Data dir: $data_dir"
+  echo "==> No auth — any username/password works"
+  echo ""
+  echo "Export for dodder:"
+  echo "  export CALDAV_URL=http://127.0.0.1:5232/dodder/tasks.ics/"
+  echo "  export CALDAV_USERNAME=dodder"
+  echo "  export CALDAV_PASSWORD=dodder"
+  echo ""
+  nix run nixpkgs#radicale -- --config /tmp/radicale-dodder.toml
+
+# Create a haustoria workspace pointing at local Radicale.
+# Requires Radicale running (just explore-radicale) and env vars set.
+# Creates a parent repo + workspace in /tmp/dodder-haustoria-explore/.
+[group('explore')]
+explore-haustoria-init: build
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export PATH="{{dir_build}}/debug:$PATH"
+
+  if [[ -z "${CALDAV_URL:-}" ]]; then
+    echo "Set CALDAV_URL, CALDAV_USERNAME, CALDAV_PASSWORD first."
+    echo "See: just explore-radicale"
+    exit 1
+  fi
+
+  base="/tmp/dodder-haustoria-explore"
+  rm -rf "$base"
+  mkdir -p "$base/parent" "$base/workspace"
+
+  # Create parent repo
+  cd "$base/parent"
+  dodder init -repo_id .
+
+  # Create workspace with haustoria
+  cd "$base/workspace"
+  dodder init-workspace -haustoria caldav -parent "$base/parent" haustoria-ws
+
+  echo ""
+  echo "==> Parent repo: $base/parent"
+  echo "==> Workspace:   $base/workspace"
+  echo "==> Run:"
+  echo "  cd $base/workspace && dodder status"
+  echo "  cd $base/workspace && dodder new -type '!task' 'buy groceries'"
+
+# Show haustoria status for the explore workspace.
+[group('explore')]
+explore-haustoria-status: build
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export PATH="{{dir_build}}/debug:$PATH"
+  cd /tmp/dodder-haustoria-explore/workspace
+  dodder status
+
 # Smart fixture generation: skip if fixtures exist for current store version.
 [private]
 _test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):

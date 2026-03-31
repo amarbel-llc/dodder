@@ -122,6 +122,20 @@ func (cmd Checkin) Run(dep command.Request) {
 	)
 
 	workspace := localWorkingCopy.GetEnvWorkspace()
+
+	if h := workspace.GetHaustoria(); h != nil {
+		op := user_ops.CheckinHaustoria{
+			Repo:      localWorkingCopy,
+			Haustoria: h,
+		}
+
+		if _, err := op.Run(); err != nil {
+			dep.Cancel(err)
+		}
+
+		return
+	}
+
 	workspaceTags := workspace.GetDefaults().GetDefaultTags()
 
 	for tag := range workspaceTags.All() {
