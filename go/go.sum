@@ -18,8 +18,8 @@ github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a48
 github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327/go.mod h1:D9DuJd5WV27RaeNxXGmZMKFH2tuSAg/y5coGd1ZHfJo=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4 h1:Xyq57MegLHgS/UU/IYWZUdQ4oiMA3Ggr7fY4w0N0zVM=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4/go.mod h1:l/5fqg8ZEzjVxK8OqdiN9vxsz1gVUGQaYd6rgFIOU7I=
-github.com/amarbel-llc/tommy v0.0.0-20260326203518-8ebebb5d2759 h1:be5OzRofz/A/dusLRHr6AdO2E26+J5T8Dp3cynSE0hQ=
-github.com/amarbel-llc/tommy v0.0.0-20260326203518-8ebebb5d2759/go.mod h1:qw75yzHf7ROXVU3o7OvQ2bRNIgU+biQJ6n+By+Tmmiw=
+github.com/amarbel-llc/tommy v0.0.0-20260331114349-8413c162cd0d h1:nRfPzzmp7C8jhhCQGv8jE1rm0X6jfxqGqXV6ZKlTUOY=
+github.com/amarbel-llc/tommy v0.0.0-20260331114349-8413c162cd0d/go.mod h1:qw75yzHf7ROXVU3o7OvQ2bRNIgU+biQJ6n+By+Tmmiw=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=

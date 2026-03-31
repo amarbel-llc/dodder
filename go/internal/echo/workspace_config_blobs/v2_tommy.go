@@ -101,12 +101,12 @@ func DecodeV2(input []byte) (*V2Document, error) {
 			}
 		}
 		{
-			subTables := d.cstDoc.FindSubTables("mappings")
+			subTables := d.cstDoc.FindSubTablesInContainer(tableNode, "mappings")
 			if len(subTables) > 0 {
 				d.consumed["haustoria.mappings"] = true
 				d.data.Haustoria.Mappings = make(map[string]TypeMapping)
 				for _, subTable := range subTables {
-					mapKey := document.SubTableKey(subTable, "mappings")
+					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "mappings")
 					d.consumed["haustoria.mappings"+"."+mapKey] = true
 					var entry TypeMapping
 					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "component"); err == nil {
@@ -193,7 +193,7 @@ func (d *V2Document) Encode() ([]byte, error) {
 		}
 		if len(d.data.Haustoria.Mappings) > 0 {
 			for mapKey, mapVal := range d.data.Haustoria.Mappings {
-				subTable := d.cstDoc.EnsureSubTable("mappings", mapKey)
+				subTable := d.cstDoc.EnsureSubTableInContainer(tableNode, "mappings", mapKey)
 				if mapVal.Component != "" || d.cstDoc.HasInContainer(subTable, "component") {
 					if err := d.cstDoc.SetInContainer(subTable, "component", mapVal.Component); err != nil {
 						return nil, err
@@ -298,12 +298,12 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 			}
 		}
 		{
-			subTables := doc.FindSubTables("mappings")
+			subTables := doc.FindSubTablesInContainer(tableNode, "mappings")
 			if len(subTables) > 0 {
 				consumed[keyPrefix+"haustoria.mappings"] = true
 				data.Haustoria.Mappings = make(map[string]TypeMapping)
 				for _, subTable := range subTables {
-					mapKey := document.SubTableKey(subTable, "mappings")
+					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "mappings")
 					consumed[keyPrefix+"haustoria.mappings"+"."+mapKey] = true
 					var entry TypeMapping
 					if v, err := document.GetFromContainer[string](doc, subTable, "component"); err == nil {
@@ -388,7 +388,7 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 		}
 		if len(data.Haustoria.Mappings) > 0 {
 			for mapKey, mapVal := range data.Haustoria.Mappings {
-				subTable := doc.EnsureSubTable("mappings", mapKey)
+				subTable := doc.EnsureSubTableInContainer(tableNode, "mappings", mapKey)
 				if mapVal.Component != "" || doc.HasInContainer(subTable, "component") {
 					if err := doc.SetInContainer(subTable, "component", mapVal.Component); err != nil {
 						return err
