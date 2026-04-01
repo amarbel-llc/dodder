@@ -55,11 +55,12 @@ A VTODO is not atomic. It contains sub-structures: VALARMs, ATTACHments,
 RELATED-TO references, ATTENDEEs. Dodder's referenced objects and blob
 references (FDR-0001) can decompose these into a normalized object graph:
 
-  ---------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------
   iCalendar construct         Dodder representation
-  --------------------------- -----------------------------------------------------
-  VTODO itself                `!task` object (summary, status, priority, due, etc.
-                              as type-defined fields; blob is the DESCRIPTION body)
+  --------------------------- -------------------------------------------------
+  VTODO itself                `!task` object (summary, status, priority, due,
+                              etc. as type-defined fields; blob is the
+                              DESCRIPTION body)
 
   VALARM                      referenced `!alarm` object (trigger, action,
                               description)
@@ -71,17 +72,19 @@ references (FDR-0001) can decompose these into a normalized object graph:
                               already modeled in the caldav MCP package via
                               `parent_uid`)
 
-  ATTENDEE                    referenced `!contact` object or inline metadata field
+  ATTENDEE                    referenced `!contact` object or inline metadata
+                              field
 
   X-\* extensions, SEQUENCE,  opaque properties preserved in the object's blob
   etc.                        
-  ---------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------
 
-On **compilation** (checkout), the workspace walks the task object's references
-and blob references, assembles a VCALENDAR document with the VTODO and its
-VALARMs, ATTACHments, etc. On **decompilation** (checkin), the VTODO is parsed,
-sub-structures are split back into their respective objects, references are
-wired up, and new sub-objects are created in the workspace-repo as needed.
+On **decompilation** (checkout to external), the workspace walks the task
+object's references and blob references, assembles a VCALENDAR document with the
+VTODO and its VALARMs, ATTACHments, etc. On **compilation** (checkin from
+external), the VTODO is parsed, sub-structures are split back into their
+respective objects, references are wired up, and new sub-objects are created in
+the workspace-repo as needed.
 
 The graph decomposition also gives per-sub-object merge granularity (see
 Three-Way Merge below).
@@ -185,7 +188,7 @@ Sync is bidirectional. The workspace-repo is the source of truth for dodder
 metadata (locks, tags, type, commit history). The external store is the source
 of truth for user-facing mutations made through external clients.
 
-**Checkout (compilation: dodder → external):**
+**Checkout (decompilation: dodder → external):**
 
 1.  For each object matching the workspace query whose type has a mapping:
 2.  Walk the object's references and blob references to build the sub-object
@@ -198,7 +201,7 @@ of truth for user-facing mutations made through external clients.
     `If-Match: <etag>`)
 6.  Store the hyphence text of each dodder object in the graph as the sync base
 
-**Checkin (decompilation: external → dodder):**
+**Checkin (compilation: external → dodder):**
 
 1.  Detect changed external resources (CalDAV sync-token / CTAG, or ETag
     comparison per resource)
@@ -257,10 +260,10 @@ a custom per-field merge engine.
 Because sub-structures are separate objects, concurrent edits to different parts
 of a VTODO decompose into independent merges:
 
-  ------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------
   CalDAV side   Dodder side changed   Merge result
   changed                             
-  ------------- --------------------- ------------------------------------------
+  ------------- --------------------- -----------------------------------------
   Added VALARM  Changed description   No conflict --- new `!alarm` object +
                                       clean text merge on task
 
@@ -275,7 +278,7 @@ of a VTODO decompose into independent merges:
 
   Added ATTACH  Added ATTACH          No conflict --- two new blob references
                 (different file)      
-  ------------------------------------------------------------------------------
+  -----------------------------------------------------------------------------
 
 The hyphence format's line-oriented structure makes text merge viable:
 description is one line, each tag is one line, each metadata field is one line,
@@ -364,50 +367,73 @@ Sub-object tracking in the manifest records which dodder objects were created by
 decompilation, so that a deleted VALARM on the CalDAV side can be traced back to
 the specific `!alarm` object to remove.
 
-### Checkout Store Interface
+### Haustoria Interface and StoreLike Integration
 
-The checkout store is a Go interface, not an MCP connection. MCP adds latency
-and serialization overhead that make sense for remote tool invocation but not
-for a tight sync loop processing hundreds of objects. The caldav MCP server
-(`packages/caldav` in `amarbel-llc/bob`) and the checkout store share the same
+The checkout store is called **Haustoria** --- named after the organ through
+which parasitic plants tap into host organisms. A Haustoria implementation
+translates between dodder's internal object representation and an external
+system's format.
+
+**Terminology:**
+
+- **Compile** = external → dodder (like compiling source into an executable)
+- **Decompile** = dodder → external (like decompiling back to source)
+
+Haustoria implementations plug into the workspace as `StoreLike`, replacing
+`store_fs` entirely when configured. This means all commands (`status`, `show`,
+`checkin`) work through the unified query path --- no command-level branching.
+CalDAV resources appear as `CheckedOut` objects with box format and state
+headers, just like filesystem-checked-out objects.
+
+The haustoria is a Go interface, not an MCP connection. MCP adds latency and
+serialization overhead that make sense for remote tool invocation but not for a
+tight sync loop processing hundreds of objects. The caldav MCP server
+(`packages/caldav` in `amarbel-llc/bob`) and the haustoria share the same
 `internal/caldav` client package --- they are two consumers of the same CalDAV
 client, not layered on top of each other.
 
 ``` go
-// CheckoutStore is the interface a workspace checkout medium must implement.
-type CheckoutStore interface {
-    // Compile writes a dodder object graph to the external store.
-    // graph contains the root object and all referenced sub-objects.
-    // Returns the external UID (new or existing).
-    Compile(ctx context.Context, graph *ObjectGraph, mapping *TypeMapping) (externalUID string, err error)
+// Haustoria is the interface a workspace checkout medium must implement.
+// Implementations also implement store_workspace.StoreLike for query integration.
+type Haustoria interface {
+    // Compile reads an external resource and returns dodder-compatible fields.
+    // external → dodder
+    Compile(CompileRequest) (CompileResult, error)
 
-    // Decompile reads the external resource and returns the object graph
-    // as a set of hyphence texts keyed by role (root, alarm, attachment, etc.).
-    Decompile(ctx context.Context, externalUID string, mapping *TypeMapping) (*ObjectGraphDiff, error)
+    // Decompile writes a dodder object to the external store.
+    // dodder → external
+    Decompile(DecompileRequest) (DecompileResult, error)
 
-    // Discover returns external resources that have no dodder binding
-    // (created externally since last sync).
-    Discover(ctx context.Context, mapping *TypeMapping) ([]ExternalResource, error)
+    // Discover returns external resources in the store.
+    Discover() ([]ExternalResource, error)
 
     // Delete removes an external resource.
-    Delete(ctx context.Context, externalUID string) error
-
-    // SyncToken returns the current sync token for change detection.
-    // Returns empty string if the store doesn't support sync tokens.
-    SyncToken(ctx context.Context) (string, error)
-
-    // Changes returns resources changed since the given sync token.
-    Changes(ctx context.Context, syncToken string) ([]ChangedResource, error)
+    Delete(externalId string) error
 }
 ```
 
-`ObjectGraph` contains the root object and its referenced sub-objects (alarms,
-attachments), resolved from the workspace-repo's store. `ObjectGraphDiff`
-contains hyphence texts for new, updated, and deleted objects in the graph,
-ready for three-way merge.
+**StoreLike integration:** Each Haustoria implementation also implements
+`store_workspace.StoreLike` (`Initialize`, `QueryCheckedOut`, `Flush`,
+`GetObjectIdsForString`, `ReadAllExternalItems`). The `QueryCheckedOut`
+implementation calls `Discover` + `Compile` to produce `CheckedOut` objects that
+flow through the normal query and display pipeline.
 
-Implementations: `store_fs` (existing, adapted to the interface), `store_caldav`
-(new, wraps `internal/caldav.Client`), future `store_webdav`, `store_git`, etc.
+**Detection:** Commands that need haustoria-specific behavior (e.g., `checkin`)
+use a type assertion on `StoreLike`:
+
+``` go
+if h, ok := workspace.GetStore().StoreLike.(haustoria.Haustoria); ok {
+    // haustoria-specific path
+}
+```
+
+**Future direction:** `store_fs` will eventually become a Haustoria
+implementation too, unifying all checkout stores under the Haustoria interface.
+`StoreLike` will fold into Haustoria.
+
+Implementations: `haustoria_caldav` (CalDAV/VTODO, first implementation), future
+`haustoria_fs` (filesystem, replacing `store_fs`), `haustoria_chrest` (browser
+bookmarks), `haustoria_nebulous` (NewsBlur articles).
 
 ### Interaction with Workspace-Repo Isolation
 
