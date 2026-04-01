@@ -182,6 +182,43 @@ function checkin_creates_zettels_from_caldav { # @test
   popd || return 1
 }
 
+function checkout_decompiles_zettels_to_caldav { # @test
+  # First: create VTODOs on CalDAV and checkin to create dodder objects
+  put_vtodo "task-1" "Deploy v2.0" "ops" "rollback plan ready"
+  put_vtodo "task-2" "Update docs" "docs"
+
+  bootstrap_haustoria_workspace
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder checkin :
+  assert_success
+
+  # Delete the CalDAV tasks so checkout has to recreate them
+  curl -s -X DELETE \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    "${CALDAV_URL}task-1.ics" >/dev/null 2>&1
+  curl -s -X DELETE \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    "${CALDAV_URL}task-2.ics" >/dev/null 2>&1
+
+  # Verify CalDAV is now empty
+  run_dodder status
+  assert_success
+  assert_output ""
+
+  # Checkout decompiles dodder objects back to CalDAV
+  run_dodder checkout :z
+  assert_success
+
+  # Verify VTODOs were recreated on CalDAV
+  run_dodder status
+  assert_success
+  assert_output --partial "Deploy v2.0"
+  assert_output --partial "Update docs"
+  popd || return 1
+}
+
 function checkin_empty_calendar_no_error { # @test
   bootstrap_haustoria_workspace
 

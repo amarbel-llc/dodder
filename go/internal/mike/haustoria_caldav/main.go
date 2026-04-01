@@ -3,9 +3,11 @@ package haustoria_caldav
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
@@ -112,6 +114,77 @@ func (s *Store) QueryCheckedOut(
 	}
 
 	return nil
+}
+
+func (s *Store) CheckoutOne(
+	options checkout_options.Options,
+	transactedGetter sku.TransactedGetter,
+) (checkedOut sku.SkuType, err error) {
+	object := transactedGetter.GetSku()
+
+	description := object.GetMetadata().GetDescription().String()
+	typeId := object.GetMetadata().GetType().String()
+
+	var tags []string
+	for tag := range object.GetMetadata().GetTags().All() {
+		tags = append(tags, tag.String())
+	}
+
+	var blob []byte
+	if !object.GetBlobDigest().IsNull() {
+		if blob, err = s.readBlob(object); err != nil {
+			return nil, errors.Wrapf(err,
+				"read blob for %s", object.GetObjectId(),
+			)
+		}
+	}
+
+	result, err := s.Decompile(haustoria.DecompileRequest{
+		Description: description,
+		Blob:        blob,
+		Tags:        tags,
+		TypeId:      typeId,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err,
+			"decompile %s to CalDAV", object.GetObjectId(),
+		)
+	}
+
+	co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
+
+	sku.TransactedResetter.ResetWith(co.GetSku(), object)
+
+	external := co.GetSkuExternal()
+	sku.TransactedResetter.ResetWith(external, object)
+
+	if err = external.GetExternalObjectIdMutable().SetWithGenre(
+		result.ExternalId,
+		genres.Zettel,
+	); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	co.SetState(checked_out_state.CheckedOut)
+
+	return co, nil
+}
+
+func (s *Store) readBlob(object *sku.Transacted) (content []byte, err error) {
+	blobReader, err := s.supplies.Env.GetDefaultBlobStore().MakeBlobReader(
+		object.GetBlobDigest(),
+	)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	defer errors.DeferredCloser(&err, blobReader)
+
+	if content, err = io.ReadAll(blobReader); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return content, nil
 }
 
 func (s *Store) ReadAllExternalItems() error {
