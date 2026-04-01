@@ -219,6 +219,36 @@ function checkout_decompiles_zettels_to_caldav { # @test
   popd || return 1
 }
 
+function new_creates_zettel_and_decompiles_to_caldav { # @test
+  bootstrap_haustoria_workspace
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# Review PR
+		- work
+		! task
+		---
+
+		check for regressions
+	EOM
+  assert_success
+
+  # Verify zettel was created in dodder store
+  run_dodder show :
+  assert_success
+  assert_output --partial "Review PR"
+  assert_output --partial "!task"
+  assert_output --partial "work"
+
+  # Verify VTODO was created on CalDAV
+  run_dodder status
+  assert_success
+  assert_output --partial "Review PR"
+  popd || return 1
+}
+
 function checkin_empty_calendar_no_error { # @test
   bootstrap_haustoria_workspace
 

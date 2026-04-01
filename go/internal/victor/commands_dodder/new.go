@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -73,6 +74,56 @@ func (cmd *New) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.Checkout.SetFlagDefinitions(flagSet)
 }
 
+func (cmd New) runHaustoria(
+	repo *local_working_copy.Repo,
+	h haustoria.Haustoria,
+	format object_metadata_fmt_hyphence.Format,
+	args []string,
+) sku.TransactedMutableSet {
+	if len(args) == 0 {
+		emptyOp := user_ops.WriteNewZettels{
+			Repo: repo,
+		}
+
+		objects, err := emptyOp.RunMany(cmd.Proto, cmd.Count)
+		if err != nil {
+			repo.Cancel(err)
+		}
+
+		// Decompile empty objects to external store
+		for object := range objects.All() {
+			var tags []string
+			for tag := range object.GetMetadata().GetTags().All() {
+				tags = append(tags, tag.String())
+			}
+
+			if _, err := h.Decompile(haustoria.DecompileRequest{
+				Description: object.GetMetadata().GetDescription().String(),
+				Tags:        tags,
+				TypeId:      object.GetMetadata().GetType().String(),
+			}); err != nil {
+				repo.Cancel(err)
+			}
+		}
+
+		return objects
+	}
+
+	op := user_ops.NewHaustoria{
+		Repo:       repo,
+		Haustoria:  h,
+		TextParser: format,
+		Proto:      cmd.Proto,
+	}
+
+	objects, err := op.Run(args...)
+	if err != nil {
+		repo.Cancel(err)
+	}
+
+	return objects
+}
+
 func (cmd New) ValidateFlagsAndArgs(
 	repo *local_working_copy.Repo,
 	args ...string,
@@ -104,7 +155,9 @@ func (cmd *New) Run(req command.Request) {
 
 	var objects sku.TransactedMutableSet
 
-	if len(args) == 0 {
+	if h, ok := repo.GetEnvWorkspace().GetStore().StoreLike.(haustoria.Haustoria); ok {
+		objects = cmd.runHaustoria(repo, h, format, args)
+	} else if len(args) == 0 {
 		emptyOp := user_ops.WriteNewZettels{
 			Repo: repo,
 		}
