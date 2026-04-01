@@ -91,6 +91,7 @@ function put_vtodo {
   local uid="$1"
   local summary="$2"
   local categories="${3:-}"
+  local description="${4:-}"
 
   local ical="BEGIN:VCALENDAR
 VERSION:2.0
@@ -103,6 +104,11 @@ STATUS:NEEDS-ACTION"
   if [[ -n $categories ]]; then
     ical="$ical
 CATEGORIES:$categories"
+  fi
+
+  if [[ -n $description ]]; then
+    ical="$ical
+DESCRIPTION:$description"
   fi
 
   ical="$ical
@@ -141,8 +147,8 @@ function bootstrap_haustoria_workspace {
 }
 
 function status_shows_caldav_resources { # @test
-  put_vtodo "task-1" "Buy groceries" "errands,shopping"
-  put_vtodo "task-2" "Call dentist" "health"
+  put_vtodo "task-1" "Buy groceries" "errands,shopping" "milk eggs bread"
+  put_vtodo "task-2" "Call dentist" "health" "schedule cleaning"
 
   bootstrap_haustoria_workspace
 
@@ -150,8 +156,8 @@ function status_shows_caldav_resources { # @test
   run_dodder status
   assert_success
   assert_output_unsorted - <<-'EOM'
-		        untracked [task-1 !task "Buy groceries" errands shopping]
-		        untracked [task-2 !task "Call dentist" health]
+		        untracked [task-1 @blake2b256-sfghaeqe5dwr74mqpkttk402jua5um9ql3jgcdgpmvqx6znsf0ws8scpua !task "Buy groceries" errands shopping]
+		        untracked [task-2 @blake2b256-eac5sj9j602ktwhy9zv355rm7nt82gqsyn525fkj2wxvqe4vuevqcy9n57 !task "Call dentist" health]
 	EOM
   popd || return 1
 }

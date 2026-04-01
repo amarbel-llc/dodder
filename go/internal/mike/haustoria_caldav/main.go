@@ -1,6 +1,7 @@
 package haustoria_caldav
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
@@ -87,6 +88,12 @@ func (s *Store) QueryCheckedOut(
 			}
 		}
 
+		if len(result.Blob) > 0 {
+			if err = s.writeBlob(external, result.Blob); err != nil {
+				return errors.Wrapf(err, "write blob for %s", resource.ExternalId)
+			}
+		}
+
 		if err = external.GetExternalObjectIdMutable().SetWithGenre(
 			resource.ExternalId,
 			genres.Zettel,
@@ -119,6 +126,28 @@ func (s *Store) GetObjectIdsForString(
 	v string,
 ) ([]domain_interfaces.ExternalObjectId, error) {
 	return nil, nil
+}
+
+func (s *Store) writeBlob(
+	object *sku.Transacted,
+	content []byte,
+) (err error) {
+	blobWriter, err := s.supplies.Env.GetDefaultBlobStore().MakeBlobWriter(nil)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	defer errors.DeferredCloser(&err, blobWriter)
+
+	if _, err = bytes.NewReader(content).WriteTo(blobWriter); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if err = object.SetBlobDigest(blobWriter.GetMarklId()); err != nil {
+		return errors.Wrap(err)
+	}
+
+	return nil
 }
 
 // --- Haustoria interface ---
