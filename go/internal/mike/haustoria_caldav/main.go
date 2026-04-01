@@ -50,19 +50,20 @@ func (s *Store) QueryCheckedOut(
 	queryGroup *queries.Query,
 	output interfaces.FuncIter[sku.SkuType],
 ) (err error) {
-	resources, err := s.Discover()
+	// Fetch all tasks in a single request to avoid N+1 queries.
+	taskResult, err := s.client.ListTasks(s.calendarHref)
 	if err != nil {
-		return errors.Wrap(err)
+		return errors.Wrapf(err, "list CalDAV tasks")
 	}
 
-	for _, resource := range resources {
-		result, compileErr := s.Compile(haustoria.CompileRequest{
-			ExternalId: resource.ExternalId,
-		})
-		if compileErr != nil {
-			return errors.Wrapf(compileErr,
-				"compile %s", resource.ExternalId,
-			)
+	for _, twm := range taskResult.Tasks {
+		result := haustoria.CompileResult{
+			ExternalId:  twm.Task.UID,
+			Description: twm.Task.Summary,
+			Blob:        []byte(twm.Task.Description),
+			Tags:        twm.Task.Categories,
+			TypeId:      "!task",
+			ETag:        twm.Task.ETag,
 		}
 
 		co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
@@ -85,19 +86,21 @@ func (s *Store) QueryCheckedOut(
 		}
 
 		for _, tagStr := range result.Tags {
-			if err = metadata.AddTagString(tagStr); err != nil {
-				return errors.Wrap(err)
+			if addErr := metadata.AddTagString(tagStr); addErr != nil {
+				// Skip tags that aren't valid dodder tags (e.g. CalDAV
+				// categories with spaces like "_ inbox").
+				continue
 			}
 		}
 
 		if len(result.Blob) > 0 {
 			if err = s.writeBlob(external, result.Blob); err != nil {
-				return errors.Wrapf(err, "write blob for %s", resource.ExternalId)
+				return errors.Wrapf(err, "write blob for %s", result.ExternalId)
 			}
 		}
 
 		if err = external.GetExternalObjectIdMutable().SetWithGenre(
-			resource.ExternalId,
+			result.ExternalId,
 			genres.Zettel,
 		); err != nil {
 			return errors.Wrap(err)
