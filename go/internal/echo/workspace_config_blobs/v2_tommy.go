@@ -73,10 +73,6 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				calDAVVal.Username = v
 				d.consumed["haustoria.caldav.username"] = true
 			}
-			if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "calendar"); err == nil {
-				calDAVVal.Calendar = v
-				d.consumed["haustoria.caldav.calendar"] = true
-			}
 			d.data.Haustoria.CalDAV = calDAVVal
 		} else {
 			calDAVVal := &CalDAVConfig{}
@@ -91,29 +87,32 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				found = true
 				d.consumed["haustoria.username"] = true
 			}
-			if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "calendar"); err == nil {
-				calDAVVal.Calendar = v
-				found = true
-				d.consumed["haustoria.calendar"] = true
-			}
 			if found {
 				d.data.Haustoria.CalDAV = calDAVVal
 			}
 		}
 		{
-			subTables := d.cstDoc.FindSubTablesInContainer(tableNode, "mappings")
+			subTables := d.cstDoc.FindSubTablesInContainer(tableNode, "calendars")
 			if len(subTables) > 0 {
-				d.consumed["haustoria.mappings"] = true
-				d.data.Haustoria.Mappings = make(map[string]TypeMapping)
+				d.consumed["haustoria.calendars"] = true
+				d.data.Haustoria.Calendars = make(map[string]CalendarConfig)
 				for _, subTable := range subTables {
-					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "mappings")
-					d.consumed["haustoria.mappings"+"."+mapKey] = true
-					var entry TypeMapping
-					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "component"); err == nil {
-						entry.Component = v
-						d.consumed["haustoria.mappings.\" + mapKey + \".component"] = true
+					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "calendars")
+					d.consumed["haustoria.calendars"+"."+mapKey] = true
+					var entry CalendarConfig
+					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "url"); err == nil {
+						entry.URL = v
+						d.consumed["haustoria.calendars.\" + mapKey + \".url"] = true
 					}
-					d.data.Haustoria.Mappings[mapKey] = entry
+					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "type"); err == nil {
+						entry.Type = v
+						d.consumed["haustoria.calendars.\" + mapKey + \".type"] = true
+					}
+					if v, err := document.GetFromContainer[[]string](d.cstDoc, subTable, "tags"); err == nil {
+						entry.Tags = v
+						d.consumed["haustoria.calendars.\" + mapKey + \".tags"] = true
+					}
+					d.data.Haustoria.Calendars[mapKey] = entry
 				}
 			}
 		}
@@ -183,19 +182,22 @@ func (d *V2Document) Encode() ([]byte, error) {
 					return nil, err
 				}
 			}
-			if d.data.Haustoria.CalDAV.Calendar != "" {
-				if err := d.cstDoc.SetInContainer(tableNode, "calendar", d.data.Haustoria.CalDAV.Calendar); err != nil {
-					return nil, err
-				}
-			} else {
-				_ = d.cstDoc.DeleteFromContainer(tableNode, "calendar")
-			}
 		}
-		if len(d.data.Haustoria.Mappings) > 0 {
-			for mapKey, mapVal := range d.data.Haustoria.Mappings {
-				subTable := d.cstDoc.EnsureSubTableInContainer(tableNode, "mappings", mapKey)
-				if mapVal.Component != "" || d.cstDoc.HasInContainer(subTable, "component") {
-					if err := d.cstDoc.SetInContainer(subTable, "component", mapVal.Component); err != nil {
+		if len(d.data.Haustoria.Calendars) > 0 {
+			for mapKey, mapVal := range d.data.Haustoria.Calendars {
+				subTable := d.cstDoc.EnsureSubTableInContainer(tableNode, "calendars", mapKey)
+				if mapVal.URL != "" || d.cstDoc.HasInContainer(subTable, "url") {
+					if err := d.cstDoc.SetInContainer(subTable, "url", mapVal.URL); err != nil {
+						return nil, err
+					}
+				}
+				if mapVal.Type != "" || d.cstDoc.HasInContainer(subTable, "type") {
+					if err := d.cstDoc.SetInContainer(subTable, "type", mapVal.Type); err != nil {
+						return nil, err
+					}
+				}
+				if len(mapVal.Tags) > 0 || d.cstDoc.HasInContainer(subTable, "tags") {
+					if err := d.cstDoc.SetInContainer(subTable, "tags", mapVal.Tags); err != nil {
 						return nil, err
 					}
 				}
@@ -270,10 +272,6 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				calDAVVal.Username = v
 				consumed[keyPrefix+"haustoria.caldav.username"] = true
 			}
-			if v, err := document.GetFromContainer[string](doc, tableNode, "calendar"); err == nil {
-				calDAVVal.Calendar = v
-				consumed[keyPrefix+"haustoria.caldav.calendar"] = true
-			}
 			data.Haustoria.CalDAV = calDAVVal
 		} else {
 			calDAVVal := &CalDAVConfig{}
@@ -288,29 +286,32 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				found = true
 				consumed[keyPrefix+"haustoria.username"] = true
 			}
-			if v, err := document.GetFromContainer[string](doc, tableNode, "calendar"); err == nil {
-				calDAVVal.Calendar = v
-				found = true
-				consumed[keyPrefix+"haustoria.calendar"] = true
-			}
 			if found {
 				data.Haustoria.CalDAV = calDAVVal
 			}
 		}
 		{
-			subTables := doc.FindSubTablesInContainer(tableNode, "mappings")
+			subTables := doc.FindSubTablesInContainer(tableNode, "calendars")
 			if len(subTables) > 0 {
-				consumed[keyPrefix+"haustoria.mappings"] = true
-				data.Haustoria.Mappings = make(map[string]TypeMapping)
+				consumed[keyPrefix+"haustoria.calendars"] = true
+				data.Haustoria.Calendars = make(map[string]CalendarConfig)
 				for _, subTable := range subTables {
-					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "mappings")
-					consumed[keyPrefix+"haustoria.mappings"+"."+mapKey] = true
-					var entry TypeMapping
-					if v, err := document.GetFromContainer[string](doc, subTable, "component"); err == nil {
-						entry.Component = v
-						consumed[keyPrefix+"haustoria.mappings.\" + mapKey + \".component"] = true
+					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "calendars")
+					consumed[keyPrefix+"haustoria.calendars"+"."+mapKey] = true
+					var entry CalendarConfig
+					if v, err := document.GetFromContainer[string](doc, subTable, "url"); err == nil {
+						entry.URL = v
+						consumed[keyPrefix+"haustoria.calendars.\" + mapKey + \".url"] = true
 					}
-					data.Haustoria.Mappings[mapKey] = entry
+					if v, err := document.GetFromContainer[string](doc, subTable, "type"); err == nil {
+						entry.Type = v
+						consumed[keyPrefix+"haustoria.calendars.\" + mapKey + \".type"] = true
+					}
+					if v, err := document.GetFromContainer[[]string](doc, subTable, "tags"); err == nil {
+						entry.Tags = v
+						consumed[keyPrefix+"haustoria.calendars.\" + mapKey + \".tags"] = true
+					}
+					data.Haustoria.Calendars[mapKey] = entry
 				}
 			}
 		}
@@ -378,19 +379,22 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 					return err
 				}
 			}
-			if data.Haustoria.CalDAV.Calendar != "" {
-				if err := doc.SetInContainer(tableNode, "calendar", data.Haustoria.CalDAV.Calendar); err != nil {
-					return err
-				}
-			} else {
-				_ = doc.DeleteFromContainer(tableNode, "calendar")
-			}
 		}
-		if len(data.Haustoria.Mappings) > 0 {
-			for mapKey, mapVal := range data.Haustoria.Mappings {
-				subTable := doc.EnsureSubTableInContainer(tableNode, "mappings", mapKey)
-				if mapVal.Component != "" || doc.HasInContainer(subTable, "component") {
-					if err := doc.SetInContainer(subTable, "component", mapVal.Component); err != nil {
+		if len(data.Haustoria.Calendars) > 0 {
+			for mapKey, mapVal := range data.Haustoria.Calendars {
+				subTable := doc.EnsureSubTableInContainer(tableNode, "calendars", mapKey)
+				if mapVal.URL != "" || doc.HasInContainer(subTable, "url") {
+					if err := doc.SetInContainer(subTable, "url", mapVal.URL); err != nil {
+						return err
+					}
+				}
+				if mapVal.Type != "" || doc.HasInContainer(subTable, "type") {
+					if err := doc.SetInContainer(subTable, "type", mapVal.Type); err != nil {
+						return err
+					}
+				}
+				if len(mapVal.Tags) > 0 || doc.HasInContainer(subTable, "tags") {
+					if err := doc.SetInContainer(subTable, "tags", mapVal.Tags); err != nil {
 						return err
 					}
 				}

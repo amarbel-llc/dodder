@@ -19,12 +19,21 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
+// CalendarMapping associates a CalDAV calendar URL with a dodder type and
+// optional tags.
+type CalendarMapping struct {
+	URL    string
+	TypeId string
+	Tags   []string
+}
+
 // Store implements both haustoria.Haustoria and store_workspace.StoreLike
-// for CalDAV servers.
+// for CalDAV servers. Supports multiple calendars with per-calendar type
+// and tag mappings.
 type Store struct {
-	client       *caldav.Client
-	calendarHref string
-	supplies     store_workspace.Supplies
+	client    *caldav.Client
+	calendars []CalendarMapping
+	supplies  store_workspace.Supplies
 }
 
 var (
@@ -32,10 +41,10 @@ var (
 	_ store_workspace.StoreLike = &Store{}
 )
 
-func MakeStore(cfg *caldav.Config, calendarHref string) *Store {
+func MakeStore(cfg *caldav.Config, calendars []CalendarMapping) *Store {
 	return &Store{
-		client:       caldav.NewClient(cfg),
-		calendarHref: calendarHref,
+		client:    caldav.NewClient(cfg),
+		calendars: calendars,
 	}
 }
 
@@ -50,65 +59,72 @@ func (s *Store) QueryCheckedOut(
 	queryGroup *queries.Query,
 	output interfaces.FuncIter[sku.SkuType],
 ) (err error) {
-	// Fetch all tasks in a single request to avoid N+1 queries.
-	taskResult, err := s.client.ListTasks(s.calendarHref)
+	for _, cal := range s.calendars {
+		if err = s.queryCheckedOutForCalendar(cal, output); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Store) queryCheckedOutForCalendar(
+	cal CalendarMapping,
+	output interfaces.FuncIter[sku.SkuType],
+) (err error) {
+	taskResult, err := s.client.ListTasks(cal.URL)
 	if err != nil {
-		return errors.Wrapf(err, "list CalDAV tasks")
+		return errors.Wrapf(err, "list CalDAV tasks from %s", cal.URL)
 	}
 
 	for _, twm := range taskResult.Tasks {
-		result := haustoria.CompileResult{
-			ExternalId:  twm.Task.UID,
-			Description: twm.Task.Summary,
-			Blob:        []byte(twm.Task.Description),
-			Tags:        twm.Task.Categories,
-			TypeId:      "!task",
-			ETag:        twm.Task.ETag,
-		}
-
 		co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
 
 		external := co.GetSkuExternal()
 		metadata := external.GetMetadataMutable()
 
 		if err = metadata.GetDescriptionMutable().Set(
-			result.Description,
+			twm.Task.Summary,
 		); err != nil {
 			return errors.Wrap(err)
 		}
 
-		if result.TypeId != "" {
+		if cal.TypeId != "" {
 			if err = metadata.GetTypeMutable().SetType(
-				result.TypeId,
+				cal.TypeId,
 			); err != nil {
 				return errors.Wrap(err)
 			}
 		}
 
-		for _, tagStr := range result.Tags {
+		// Add per-calendar tags from the mapping.
+		for _, tagStr := range cal.Tags {
 			if addErr := metadata.AddTagString(tagStr); addErr != nil {
-				// Skip tags that aren't valid dodder tags (e.g. CalDAV
-				// categories with spaces like "_ inbox").
 				continue
 			}
 		}
 
-		if len(result.Blob) > 0 {
-			if err = s.writeBlob(external, result.Blob); err != nil {
-				return errors.Wrapf(err, "write blob for %s", result.ExternalId)
+		// Add tags from CalDAV CATEGORIES.
+		for _, tagStr := range twm.Task.Categories {
+			if addErr := metadata.AddTagString(tagStr); addErr != nil {
+				continue
+			}
+		}
+
+		if twm.Task.Description != "" {
+			if err = s.writeBlob(external, []byte(twm.Task.Description)); err != nil {
+				return errors.Wrapf(err, "write blob for %s", twm.Task.UID)
 			}
 		}
 
 		if err = external.GetExternalObjectIdMutable().SetWithGenre(
-			result.ExternalId,
+			twm.Task.UID,
 			genres.Zettel,
 		); err != nil {
 			return errors.Wrap(err)
 		}
 
-		// Set genre on internal too — query filter checks internal genre.
 		co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)
-
 		co.SetState(checked_out_state.Untracked)
 
 		if err = output(co); err != nil {
@@ -143,6 +159,7 @@ func (s *Store) CheckoutOne(
 	}
 
 	result, err := s.Decompile(haustoria.DecompileRequest{
+		ObjectId:    object.GetObjectId().String(),
 		Description: description,
 		Blob:        blob,
 		Tags:        tags,
@@ -231,24 +248,26 @@ func (s *Store) writeBlob(
 // Compile reads a CalDAV VTODO and returns dodder-compatible fields.
 // external → dodder
 func (s *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResult, error) {
-	result, err := s.client.ListTasks(s.calendarHref)
-	if err != nil {
-		return haustoria.CompileResult{}, fmt.Errorf("compile from CalDAV: %w", err)
-	}
-
-	for _, twm := range result.Tasks {
-		if twm.Task.UID != req.ExternalId {
+	for _, cal := range s.calendars {
+		result, err := s.client.ListTasks(cal.URL)
+		if err != nil {
 			continue
 		}
 
-		return haustoria.CompileResult{
-			ExternalId:  twm.Task.UID,
-			Description: twm.Task.Summary,
-			Blob:        []byte(twm.Task.Description),
-			Tags:        twm.Task.Categories,
-			TypeId:      "!task",
-			ETag:        twm.Task.ETag,
-		}, nil
+		for _, twm := range result.Tasks {
+			if twm.Task.UID != req.ExternalId {
+				continue
+			}
+
+			return haustoria.CompileResult{
+				ExternalId:  twm.Task.UID,
+				Description: twm.Task.Summary,
+				Blob:        []byte(twm.Task.Description),
+				Tags:        twm.Task.Categories,
+				TypeId:      cal.TypeId,
+				ETag:        twm.Task.ETag,
+			}, nil
+		}
 	}
 
 	return haustoria.CompileResult{}, fmt.Errorf(
@@ -259,6 +278,13 @@ func (s *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResult, 
 // Decompile writes a dodder object to CalDAV as a VTODO.
 // dodder → external
 func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileResult, error) {
+	cal := s.calendarForType(req.TypeId)
+	if cal == nil {
+		return haustoria.DecompileResult{}, fmt.Errorf(
+			"no calendar mapping for type %s", req.TypeId,
+		)
+	}
+
 	task := caldav.Task{
 		UID:         req.ExternalId,
 		Summary:     req.Description,
@@ -272,7 +298,7 @@ func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileRe
 	}
 
 	ical := caldav.TaskToIcal(&task)
-	href := s.calendarHref + task.UID + ".ics"
+	href := cal.URL + task.UID + ".ics"
 
 	err := s.client.PutTask(href, ical, req.ETag)
 	if err != nil {
@@ -293,24 +319,48 @@ func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileRe
 }
 
 func (s *Store) Discover() ([]haustoria.ExternalResource, error) {
-	result, err := s.client.ListTasks(s.calendarHref)
-	if err != nil {
-		return nil, fmt.Errorf("discover CalDAV tasks: %w", err)
-	}
+	var resources []haustoria.ExternalResource
 
-	resources := make([]haustoria.ExternalResource, 0, len(result.Tasks))
-	for _, twm := range result.Tasks {
-		resources = append(resources, haustoria.ExternalResource{
-			ExternalId:  twm.Task.UID,
-			TypeId:      "!task",
-			Description: twm.Task.Summary,
-		})
+	for _, cal := range s.calendars {
+		result, err := s.client.ListTasks(cal.URL)
+		if err != nil {
+			return nil, fmt.Errorf("discover CalDAV tasks from %s: %w", cal.URL, err)
+		}
+
+		for _, twm := range result.Tasks {
+			resources = append(resources, haustoria.ExternalResource{
+				ExternalId:  twm.Task.UID,
+				TypeId:      cal.TypeId,
+				Description: twm.Task.Summary,
+			})
+		}
 	}
 
 	return resources, nil
 }
 
 func (s *Store) Delete(externalId string) error {
-	href := s.calendarHref + externalId + ".ics"
-	return s.client.DeleteTask(href, "")
+	for _, cal := range s.calendars {
+		href := cal.URL + externalId + ".ics"
+		if err := s.client.DeleteTask(href, ""); err == nil {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("CalDAV task not found for delete: %s", externalId)
+}
+
+func (s *Store) calendarForType(typeId string) *CalendarMapping {
+	for i := range s.calendars {
+		if s.calendars[i].TypeId == typeId {
+			return &s.calendars[i]
+		}
+	}
+
+	// Fall back to first calendar.
+	if len(s.calendars) > 0 {
+		return &s.calendars[0]
+	}
+
+	return nil
 }

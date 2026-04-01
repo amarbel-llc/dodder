@@ -158,14 +158,29 @@ func Make(
 					Password: resolved.Password,
 				}
 
-				calendarHref := resolved.Calendar
-				if calendarHref == "" {
-					calendarHref = resolved.URL
+				var calendars []haustoria_caldav.CalendarMapping
+
+				if len(hCfg.Calendars) > 0 {
+					for _, cal := range hCfg.Calendars {
+						calendars = append(calendars, haustoria_caldav.CalendarMapping{
+							URL:    cal.URL,
+							TypeId: cal.Type,
+							Tags:   cal.Tags,
+						})
+					}
+				}
+
+				if len(calendars) == 0 {
+					// Backwards compat: single URL from caldav config
+					calendars = []haustoria_caldav.CalendarMapping{{
+						URL:    resolved.URL,
+						TypeId: "!task",
+					}}
 				}
 
 				outputEnv.store.StoreLike = haustoria_caldav.MakeStore(
 					caldavCfg,
-					calendarHref,
+					calendars,
 				)
 			}
 		}

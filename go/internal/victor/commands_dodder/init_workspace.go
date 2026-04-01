@@ -409,16 +409,17 @@ func (cmd InitWorkspace) makeHaustoriaConfig(
 		// Store URL and username in config; password stays in env only.
 		cfg.URL = resolved.URL
 		cfg.Username = resolved.Username
-		cfg.Calendar = resolved.Calendar
 
 		return &workspace_config_blobs.V2{
 			V1: v1,
 			Haustoria: workspace_config_blobs.HaustoriaConfig{
 				Type:   "caldav",
 				CalDAV: &cfg,
-				Mappings: map[string]workspace_config_blobs.TypeMapping{
-					"!task":  {Component: "VTODO"},
-					"!event": {Component: "VEVENT"},
+				Calendars: map[string]workspace_config_blobs.CalendarConfig{
+					"default": {
+						URL:  resolved.URL,
+						Type: "!task",
+					},
 				},
 			},
 		}

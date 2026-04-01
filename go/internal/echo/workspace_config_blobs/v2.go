@@ -12,26 +12,31 @@ type V2 struct {
 }
 
 type HaustoriaConfig struct {
-	Type     string                 `toml:"type"`
-	CalDAV   *CalDAVConfig          `toml:"caldav,omitempty"`
-	Mappings map[string]TypeMapping `toml:"mappings,omitempty"`
+	Type      string                        `toml:"type"`
+	CalDAV    *CalDAVConfig                 `toml:"caldav,omitempty"`
+	Calendars map[string]CalendarConfig     `toml:"calendars,omitempty"`
 }
 
 type CalDAVConfig struct {
 	URL      string `toml:"url"`
 	Username string `toml:"username"`
-	Calendar string `toml:"calendar,omitempty"`
+}
+
+// CalendarConfig maps a CalDAV calendar to a dodder type and optional tags.
+type CalendarConfig struct {
+	URL  string   `toml:"url"`
+	Type string   `toml:"type"`
+	Tags []string `toml:"tags,omitempty"`
 }
 
 // Resolve merges TOML config values with environment variables.
 // TOML values take precedence; env vars are the fallback.
-// Env vars: CALDAV_URL, CALDAV_USERNAME, CALDAV_PASSWORD, CALDAV_CALENDAR.
+// Env vars: CALDAV_URL, CALDAV_USERNAME, CALDAV_PASSWORD.
 // Password is always from CALDAV_PASSWORD (never stored in config).
 func (c CalDAVConfig) Resolve() (ResolvedCalDAVConfig, error) {
 	resolved := ResolvedCalDAVConfig{
 		URL:      c.URL,
 		Username: c.Username,
-		Calendar: c.Calendar,
 	}
 
 	if resolved.URL == "" {
@@ -39,9 +44,6 @@ func (c CalDAVConfig) Resolve() (ResolvedCalDAVConfig, error) {
 	}
 	if resolved.Username == "" {
 		resolved.Username = os.Getenv("CALDAV_USERNAME")
-	}
-	if resolved.Calendar == "" {
-		resolved.Calendar = os.Getenv("CALDAV_CALENDAR")
 	}
 
 	resolved.Password = os.Getenv("CALDAV_PASSWORD")
@@ -63,11 +65,6 @@ type ResolvedCalDAVConfig struct {
 	URL      string
 	Username string
 	Password string
-	Calendar string
-}
-
-type TypeMapping struct {
-	Component string `toml:"component"`
 }
 
 func (blob V2) GetHaustoriaConfig() HaustoriaConfig {
