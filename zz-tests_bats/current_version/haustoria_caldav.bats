@@ -249,6 +249,59 @@ function new_creates_zettel_and_decompiles_to_caldav { # @test
   popd || return 1
 }
 
+function checkin_idempotent_no_duplicates { # @test
+  put_vtodo "task-1" "Idempotent task" "test"
+
+  bootstrap_haustoria_workspace
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  # First checkin creates the zettel
+  run_dodder checkin :
+  assert_success
+
+  run_dodder show :
+  assert_success
+  assert_output --partial "Idempotent task"
+  local first_output="$output"
+
+  # Second checkin should NOT create a duplicate
+  run_dodder checkin :
+  assert_success
+
+  run_dodder show :
+  assert_success
+  assert_output - <<-EOM
+		[one/uno !task "Idempotent task" test]
+	EOM
+  popd || return 1
+}
+
+function status_shows_checked_out_after_checkin { # @test
+  put_vtodo "task-1" "Bound task" "test"
+
+  bootstrap_haustoria_workspace
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  # Before checkin: Untracked
+  run_dodder status
+  assert_success
+  assert_output --partial "untracked"
+
+  # Checkin binds the CalDAV UID to a dodder object
+  run_dodder checkin :
+  assert_success
+
+  # After checkin: should show as checked out, not untracked
+  run_dodder status
+  assert_success
+  assert_output - <<-EOM
+		          changed [ !task "Bound task" test]
+	EOM
+  popd || return 1
+}
+
 function checkin_empty_calendar_no_error { # @test
   bootstrap_haustoria_workspace
 

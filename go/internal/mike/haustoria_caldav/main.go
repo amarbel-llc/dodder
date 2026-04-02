@@ -59,8 +59,29 @@ func (s *Store) QueryCheckedOut(
 	queryGroup *queries.Query,
 	output interfaces.FuncIter[sku.SkuType],
 ) (err error) {
+	// Build a lookup of existing bindings: ExternalObjectId string → Transacted.
+	// This enables detecting which CalDAV resources already have dodder objects
+	// (CheckedOut) vs which are new (Untracked).
+	bindings := make(map[string]*sku.Transacted)
+
+	if err = s.supplies.ReadPrimitiveQuery(
+		nil,
+		func(object *sku.Transacted) error {
+			eoid := object.GetExternalObjectId()
+			if eoid.IsEmpty() {
+				return nil
+			}
+
+			cloned, _ := object.CloneTransacted() //repool:owned
+			bindings[eoid.String()] = cloned
+			return nil
+		},
+	); err != nil {
+		return errors.Wrap(err)
+	}
+
 	for _, cal := range s.calendars {
-		if err = s.queryCheckedOutForCalendar(cal, output); err != nil {
+		if err = s.queryCheckedOutForCalendar(cal, bindings, output); err != nil {
 			return err
 		}
 	}
@@ -70,6 +91,7 @@ func (s *Store) QueryCheckedOut(
 
 func (s *Store) queryCheckedOutForCalendar(
 	cal CalendarMapping,
+	bindings map[string]*sku.Transacted,
 	output interfaces.FuncIter[sku.SkuType],
 ) (err error) {
 	taskResult, err := s.client.ListTasks(cal.URL)
@@ -124,8 +146,14 @@ func (s *Store) queryCheckedOutForCalendar(
 			return errors.Wrap(err)
 		}
 
-		co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)
-		co.SetState(checked_out_state.Untracked)
+		// Check if this CalDAV resource has an existing dodder binding.
+		if bound, ok := bindings[twm.Task.UID]; ok {
+			sku.TransactedResetter.ResetWith(co.GetSku(), bound)
+			co.SetState(checked_out_state.CheckedOut)
+		} else {
+			co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)
+			co.SetState(checked_out_state.Untracked)
+		}
 
 		if err = output(co); err != nil {
 			return errors.Wrap(err)

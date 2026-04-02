@@ -3,6 +3,7 @@ package user_ops
 import (
 	"bytes"
 
+	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
@@ -48,6 +49,11 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 	)
 
 	for _, co := range checkedOut {
+		// Skip already-bound resources — only create objects for new ones.
+		if co.GetState() != checked_out_state.Untracked {
+			continue
+		}
+
 		external := co.GetSkuExternal()
 
 		proto := op.makeProtoFromExternal(external)
@@ -59,6 +65,12 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 				return nil, errors.Wrap(err)
 			}
 		}
+
+		// Bind the dodder object to the CalDAV UID so subsequent queries
+		// can look up the binding and avoid creating duplicates.
+		object.GetExternalObjectIdMutable().ResetWith(
+			external.GetExternalObjectIdMutable(),
+		)
 
 		if err = builder.AddObject(object, 0); err != nil {
 			return nil, errors.Wrap(err)

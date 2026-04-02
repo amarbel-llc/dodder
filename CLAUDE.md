@@ -69,6 +69,14 @@ fixtures) - Adding new tests - Refactoring helpers
 
 ## Bats Test Assertions
 
+- **Prefer full multi-line `assert_output` or `assert_output_unsorted` over
+  `assert_output --partial`.** Partial assertions hide regressions. Use
+  `assert_output_unsorted - <<-EOM` for output with non-deterministic line
+  order. Use `assert_output --regexp -` when lines contain dynamic values.
+- **Two-pass assertion strategy:** When writing new assertions, first use
+  `assert_output "WRONG"` to intentionally fail and capture the actual output
+  from the test runner. Then replace with the real assertion matching the
+  captured output. This avoids guessing at output format.
 - **Fixture-specific values** (signatures, config SHA, type SHA) live in
   `previous_versions/$VERSION/.fixtures.env`, auto-generated during fixture
   creation. Access via helpers: `$(get_konfig_sha)`, `$(get_type_blob_sha)`,
