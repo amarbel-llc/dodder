@@ -512,6 +512,14 @@ func (decoder *binaryDecoder) readFieldKey(
 			return err
 		}
 
+	case key_bytes.ExternalObjectId:
+		if err = object.GetExternalObjectIdMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
 	case key_bytes.CacheTagImplicit:
 		var tag ids.TagStruct
 

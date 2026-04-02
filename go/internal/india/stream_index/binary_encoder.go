@@ -366,6 +366,18 @@ func (encoder *binaryEncoder) writeFieldKey(
 			return n, err
 		}
 
+	case key_bytes.ExternalObjectId:
+		eoid := object.GetExternalObjectIdMutable()
+
+		if eoid.IsEmpty() {
+			return n, err
+		}
+
+		if n, err = encoder.writeFieldBinaryMarshaler(eoid); err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+
 	case key_bytes.CacheTagImplicit:
 		tags := metadata.GetIndex().GetImplicitTags()
 
