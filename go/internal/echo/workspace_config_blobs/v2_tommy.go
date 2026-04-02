@@ -112,6 +112,11 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						entry.Tags = v
 						d.consumed["haustoria.calendars.tags"] = true
 					}
+					if tableNode := d.cstDoc.FindTableInContainer(subTable, "status-tags"); tableNode != nil {
+						entry.StatusTags = document.GetStringMapFromTable(tableNode)
+						d.consumed["haustoria.calendars.status-tags"] = true
+						document.MarkAllConsumed(tableNode, "haustoria.calendars.status-tags", d.consumed)
+					}
 					d.data.Haustoria.Calendars[mapKey] = entry
 				}
 			}
@@ -199,6 +204,15 @@ func (d *V2Document) Encode() ([]byte, error) {
 				if len(mapVal.Tags) > 0 || d.cstDoc.HasInContainer(subTable, "tags") {
 					if err := d.cstDoc.SetInContainer(subTable, "tags", mapVal.Tags); err != nil {
 						return nil, err
+					}
+				}
+				if len(mapVal.StatusTags) > 0 {
+					tableNode := d.cstDoc.EnsureTableInContainer(subTable, "status-tags")
+					document.DeleteAllInContainer(tableNode)
+					for k, v := range mapVal.StatusTags {
+						if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
+							return nil, err
+						}
 					}
 				}
 			}
@@ -311,6 +325,11 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						entry.Tags = v
 						consumed[keyPrefix+"haustoria.calendars.tags"] = true
 					}
+					if tableNode := doc.FindTableInContainer(subTable, "status-tags"); tableNode != nil {
+						entry.StatusTags = document.GetStringMapFromTable(tableNode)
+						consumed[keyPrefix+"haustoria.calendars.status-tags"] = true
+						document.MarkAllConsumed(tableNode, keyPrefix+"haustoria.calendars.status-tags", consumed)
+					}
 					data.Haustoria.Calendars[mapKey] = entry
 				}
 			}
@@ -396,6 +415,15 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 				if len(mapVal.Tags) > 0 || doc.HasInContainer(subTable, "tags") {
 					if err := doc.SetInContainer(subTable, "tags", mapVal.Tags); err != nil {
 						return err
+					}
+				}
+				if len(mapVal.StatusTags) > 0 {
+					tableNode := doc.EnsureTableInContainer(subTable, "status-tags")
+					document.DeleteAllInContainer(tableNode)
+					for k, v := range mapVal.StatusTags {
+						if err := doc.SetInContainer(tableNode, k, v); err != nil {
+							return err
+						}
 					}
 				}
 			}

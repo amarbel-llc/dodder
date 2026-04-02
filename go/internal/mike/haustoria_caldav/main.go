@@ -22,9 +22,10 @@ import (
 // CalendarMapping associates a CalDAV calendar URL with a dodder type and
 // optional tags.
 type CalendarMapping struct {
-	URL    string
-	TypeId string
-	Tags   []string
+	URL        string
+	TypeId     string
+	Tags       []string
+	StatusTags map[string]string // CalDAV STATUS → dodder tag
 }
 
 // Store implements both haustoria.Haustoria and store_workspace.StoreLike
@@ -130,6 +131,13 @@ func (s *Store) queryCheckedOutForCalendar(
 		for _, tagStr := range twm.Task.Categories {
 			if addErr := metadata.AddTagString(tagStr); addErr != nil {
 				continue
+			}
+		}
+
+		// Map CalDAV STATUS to a dodder tag via config.
+		if tag, ok := cal.StatusTags[twm.Task.Status]; ok {
+			if addErr := metadata.AddTagString(tag); addErr != nil {
+				// skip invalid tag
 			}
 		}
 

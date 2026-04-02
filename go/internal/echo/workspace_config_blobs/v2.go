@@ -12,9 +12,9 @@ type V2 struct {
 }
 
 type HaustoriaConfig struct {
-	Type      string                        `toml:"type"`
-	CalDAV    *CalDAVConfig                 `toml:"caldav,omitempty"`
-	Calendars map[string]CalendarConfig     `toml:"calendars,omitempty"`
+	Type      string                    `toml:"type"`
+	CalDAV    *CalDAVConfig             `toml:"caldav,omitempty"`
+	Calendars map[string]CalendarConfig `toml:"calendars,omitempty"`
 }
 
 type CalDAVConfig struct {
@@ -24,9 +24,10 @@ type CalDAVConfig struct {
 
 // CalendarConfig maps a CalDAV calendar to a dodder type and optional tags.
 type CalendarConfig struct {
-	URL  string   `toml:"url"`
-	Type string   `toml:"type"`
-	Tags []string `toml:"tags,omitempty"`
+	URL        string            `toml:"url"`
+	Type       string            `toml:"type"`
+	Tags       []string          `toml:"tags,omitempty"`
+	StatusTags map[string]string `toml:"status-tags,omitempty"`
 }
 
 // Resolve merges TOML config values with environment variables.
