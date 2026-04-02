@@ -6,6 +6,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
+	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
+	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
@@ -13,15 +15,28 @@ import (
 type CheckinHaustoria struct {
 	*local_working_copy.Repo
 	Haustoria haustoria.Haustoria
+	StoreLike store_workspace.StoreLike
+	Query     *queries.Query
 }
 
 func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
-	resources, err := op.Haustoria.Discover()
-	if err != nil {
+	// Use QueryCheckedOut which does single-fetch per calendar and applies
+	// query filtering. This avoids the N+1 problem of Discover + per-resource
+	// Compile.
+	var checkedOut []sku.SkuType
+
+	if err = op.StoreLike.QueryCheckedOut(
+		op.Query,
+		func(co sku.SkuType) error {
+			cloned, _ := co.Clone() //repool:owned
+			checkedOut = append(checkedOut, cloned)
+			return nil
+		},
+	); err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	if len(resources) == 0 {
+	if len(checkedOut) == 0 {
 		return sku.MakeTransactedMutableSet(), nil
 	}
 
@@ -32,26 +47,16 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 		import_plan.MakeAllocateZettelIdTransform(zettelIdIndex),
 	)
 
-	for _, resource := range resources {
-		result, compileErr := op.Haustoria.Compile(
-			haustoria.CompileRequest{
-				ExternalId: resource.ExternalId,
-			},
-		)
-		if compileErr != nil {
-			return nil, errors.Wrapf(compileErr,
-				"compile %s", resource.ExternalId,
-			)
-		}
+	for _, co := range checkedOut {
+		external := co.GetSkuExternal()
 
-		proto := op.makeProtoFromCompileResult(result)
+		proto := op.makeProtoFromExternal(external)
 		object, _ := proto.Make() //repool:owned
 
-		if len(result.Blob) > 0 {
-			if err = op.writeBlob(object, result.Blob); err != nil {
-				return nil, errors.Wrapf(err,
-					"write blob for %s", resource.ExternalId,
-				)
+		blobDigest := external.GetMetadata().GetBlobDigest()
+		if !blobDigest.IsNull() {
+			if err = object.SetBlobDigest(blobDigest); err != nil {
+				return nil, errors.Wrap(err)
 			}
 		}
 
@@ -79,19 +84,22 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 	return results, err
 }
 
-func (op CheckinHaustoria) makeProtoFromCompileResult(
-	result haustoria.CompileResult,
+func (op CheckinHaustoria) makeProtoFromExternal(
+	external *sku.Transacted,
 ) sku.Proto {
 	proto := sku.MakeProto(nil)
 
-	proto.Metadata.GetDescriptionMutable().Set(result.Description)
+	proto.Metadata.GetDescriptionMutable().Set(
+		external.GetMetadata().GetDescription().String(),
+	)
 
-	if result.TypeId != "" {
-		proto.Metadata.GetTypeMutable().SetType(result.TypeId)
+	typeStr := external.GetMetadata().GetType().String()
+	if typeStr != "" {
+		proto.Metadata.GetTypeMutable().SetType(typeStr)
 	}
 
-	for _, tagStr := range result.Tags {
-		proto.Metadata.AddTagString(tagStr)
+	for tag := range external.GetMetadata().GetTags().All() {
+		proto.Metadata.AddTagPtr(tag)
 	}
 
 	return proto

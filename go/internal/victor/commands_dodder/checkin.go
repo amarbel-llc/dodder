@@ -128,6 +128,8 @@ func (cmd Checkin) Run(dep command.Request) {
 		op := user_ops.CheckinHaustoria{
 			Repo:      localWorkingCopy,
 			Haustoria: h,
+			StoreLike: workspace.GetStore().StoreLike,
+			Query:     queryGroup,
 		}
 
 		if _, err := op.Run(); err != nil {
