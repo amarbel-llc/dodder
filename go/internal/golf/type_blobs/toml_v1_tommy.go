@@ -108,7 +108,7 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 			referencesVal.Script = v
 			d.consumed["references.script"] = true
 		}
-		if tableNode := d.cstDoc.FindTable("env"); tableNode != nil {
+		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "env"); tableNode != nil {
 			referencesVal.Env = document.GetStringMapFromTable(tableNode)
 			d.consumed["references.env"] = true
 			document.MarkAllConsumed(tableNode, "references.env", d.consumed)
@@ -126,10 +126,19 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 			found = true
 			d.consumed["description"] = true
 		}
+		if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "shell"); err == nil {
+			referencesVal.Shell = v
+			d.consumed["shell"] = true
+		}
 		if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "script"); err == nil {
 			referencesVal.Script = v
 			found = true
 			d.consumed["script"] = true
+		}
+		if tableNode := d.cstDoc.FindTable("env"); tableNode != nil {
+			referencesVal.Env = document.GetStringMapFromTable(tableNode)
+			d.consumed["env"] = true
+			document.MarkAllConsumed(tableNode, "env", d.consumed)
 		}
 		if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "optional"); err == nil {
 			referencesVal.Optional = v
@@ -223,7 +232,7 @@ func (d *TomlV1Document) Encode() ([]byte, error) {
 			_ = d.cstDoc.DeleteFromContainer(tableNode, "script")
 		}
 		if len(d.data.References.Env) > 0 {
-			tableNode := d.cstDoc.EnsureTable("env")
+			tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "env")
 			document.DeleteAllInContainer(tableNode)
 			for k, v := range d.data.References.Env {
 				if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
@@ -279,7 +288,7 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 	if tableNode := doc.FindTableInContainer(container, "exec-command"); tableNode != nil {
 		consumed[keyPrefix+"exec-command"] = true
 		execCommandVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(execCommandVal, doc, tableNode, consumed, "exec-command."); err != nil {
+		if err := script_config.DecodeScriptConfigInto(execCommandVal, doc, tableNode, consumed, keyPrefix+"exec-command."); err != nil {
 			return fmt.Errorf("exec-command: %w", err)
 		}
 		data.ExecCommand = execCommandVal
@@ -297,18 +306,18 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 				mapKey := document.SubTableKey(subTable, "uti-groups")
 				consumed[keyPrefix+"uti-groups"+"."+mapKey] = true
 				inner := document.GetStringMapFromTable(subTable)
-				document.MarkAllConsumed(subTable, "uti-groups"+"."+mapKey, consumed)
+				document.MarkAllConsumed(subTable, keyPrefix+"uti-groups"+"."+mapKey, consumed)
 				data.UTIGroups[mapKey] = UTIGroup(inner)
 			}
 		}
 	}
 	{
-		subTables := doc.FindSubTables("formatters")
+		subTables := doc.FindSubTablesInContainer(container, "formatters")
 		if len(subTables) > 0 {
 			consumed[keyPrefix+"formatters"] = true
 			data.Formatters = make(map[string]script_config.WithOutputFormat)
 			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "formatters")
+				mapKey := document.SubTableKeyInContainer(subTable, container, "formatters")
 				if strings.Contains(mapKey, ".") {
 					continue
 				}
@@ -340,10 +349,10 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 			referencesVal.Script = v
 			consumed[keyPrefix+"references.script"] = true
 		}
-		if tableNode := doc.FindTable("env"); tableNode != nil {
+		if tableNode := doc.FindTableInContainer(tableNode, "env"); tableNode != nil {
 			referencesVal.Env = document.GetStringMapFromTable(tableNode)
 			consumed[keyPrefix+"references.env"] = true
-			document.MarkAllConsumed(tableNode, "references.env", consumed)
+			document.MarkAllConsumed(tableNode, keyPrefix+"references.env", consumed)
 		}
 		if v, err := document.GetFromContainer[bool](doc, tableNode, "optional"); err == nil {
 			referencesVal.Optional = v
@@ -358,10 +367,19 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 			found = true
 			consumed[keyPrefix+"description"] = true
 		}
+		if v, err := document.GetFromContainer[[]string](doc, container, "shell"); err == nil {
+			referencesVal.Shell = v
+			consumed[keyPrefix+"shell"] = true
+		}
 		if v, err := document.GetFromContainer[string](doc, container, "script"); err == nil {
 			referencesVal.Script = v
 			found = true
 			consumed[keyPrefix+"script"] = true
+		}
+		if tableNode := doc.FindTableInContainer(container, "env"); tableNode != nil {
+			referencesVal.Env = document.GetStringMapFromTable(tableNode)
+			consumed[keyPrefix+"env"] = true
+			document.MarkAllConsumed(tableNode, keyPrefix+"env", consumed)
 		}
 		if v, err := document.GetFromContainer[bool](doc, container, "optional"); err == nil {
 			referencesVal.Optional = v
@@ -422,7 +440,7 @@ func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node)
 	}
 	if len(data.Formatters) > 0 {
 		for mapKey, mapVal := range data.Formatters {
-			subTable := doc.EnsureSubTable("formatters", mapKey)
+			subTable := doc.EnsureSubTableInContainer(container, "formatters", mapKey)
 			if err := script_config.EncodeWithOutputFormatFrom(&mapVal, doc, subTable); err != nil {
 				return fmt.Errorf("formatters.%s: %w", mapKey, err)
 			}
@@ -453,7 +471,7 @@ func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node)
 			_ = doc.DeleteFromContainer(tableNode, "script")
 		}
 		if len(data.References.Env) > 0 {
-			tableNode := doc.EnsureTable("env")
+			tableNode := doc.EnsureTableInContainer(tableNode, "env")
 			document.DeleteAllInContainer(tableNode)
 			for k, v := range data.References.Env {
 				if err := doc.SetInContainer(tableNode, k, v); err != nil {

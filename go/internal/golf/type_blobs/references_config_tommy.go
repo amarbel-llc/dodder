@@ -127,10 +127,10 @@ func DecodeReferencesConfigInto(data *ReferencesConfig, doc *document.Document, 
 		data.Script = v
 		consumed[keyPrefix+"script"] = true
 	}
-	if tableNode := doc.FindTable("env"); tableNode != nil {
+	if tableNode := doc.FindTableInContainer(container, "env"); tableNode != nil {
 		data.Env = document.GetStringMapFromTable(tableNode)
 		consumed[keyPrefix+"env"] = true
-		document.MarkAllConsumed(tableNode, "env", consumed)
+		document.MarkAllConsumed(tableNode, keyPrefix+"env", consumed)
 	}
 	if v, err := document.GetFromContainer[bool](doc, container, "optional"); err == nil {
 		data.Optional = v
@@ -159,7 +159,7 @@ func EncodeReferencesConfigFrom(data *ReferencesConfig, doc *document.Document, 
 		_ = doc.DeleteFromContainer(container, "script")
 	}
 	if len(data.Env) > 0 {
-		tableNode := doc.EnsureTable("env")
+		tableNode := doc.EnsureTableInContainer(container, "env")
 		document.DeleteAllInContainer(tableNode)
 		for k, v := range data.Env {
 			if err := doc.SetInContainer(tableNode, k, v); err != nil {

@@ -442,19 +442,19 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 	}
 	if tableNode := doc.FindTableInContainer(container, "file-extensions"); tableNode != nil {
 		consumed[keyPrefix+"file-extensions"] = true
-		if err := file_extensions.DecodeTOMLV1Into(&data.FileExtensions, doc, tableNode, consumed, "file-extensions."); err != nil {
+		if err := file_extensions.DecodeTOMLV1Into(&data.FileExtensions, doc, tableNode, consumed, keyPrefix+"file-extensions."); err != nil {
 			return fmt.Errorf("file-extensions: %w", err)
 		}
 	}
 	if tableNode := doc.FindTableInContainer(container, "cli-output"); tableNode != nil {
 		consumed[keyPrefix+"cli-output"] = true
-		if err := options_print.DecodeV1Into(&data.PrintOptions, doc, tableNode, consumed, "cli-output."); err != nil {
+		if err := options_print.DecodeV1Into(&data.PrintOptions, doc, tableNode, consumed, keyPrefix+"cli-output."); err != nil {
 			return fmt.Errorf("cli-output: %w", err)
 		}
 	}
 	if tableNode := doc.FindTableInContainer(container, "tools"); tableNode != nil {
 		consumed[keyPrefix+"tools"] = true
-		if err := options_tools.DecodeOptionsInto(&data.Tools, doc, tableNode, consumed, "tools."); err != nil {
+		if err := options_tools.DecodeOptionsInto(&data.Tools, doc, tableNode, consumed, keyPrefix+"tools."); err != nil {
 			return fmt.Errorf("tools: %w", err)
 		}
 	}

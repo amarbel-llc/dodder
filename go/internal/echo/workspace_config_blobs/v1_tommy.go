@@ -129,7 +129,7 @@ func (d *V1Document) SetInlineComment(key, comment string) {
 func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
 		consumed[keyPrefix+"defaults"] = true
-		if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&data.Defaults, doc, tableNode, consumed, "defaults."); err != nil {
+		if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&data.Defaults, doc, tableNode, consumed, keyPrefix+"defaults."); err != nil {
 			return fmt.Errorf("defaults: %w", err)
 		}
 	}

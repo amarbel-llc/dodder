@@ -223,7 +223,7 @@ func DecodeTomlV0Into(data *TomlV0, doc *document.Document, container *cst.Node,
 	if tableNode := doc.FindTableInContainer(container, "exec-command"); tableNode != nil {
 		consumed[keyPrefix+"exec-command"] = true
 		execCommandVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(execCommandVal, doc, tableNode, consumed, "exec-command."); err != nil {
+		if err := script_config.DecodeScriptConfigInto(execCommandVal, doc, tableNode, consumed, keyPrefix+"exec-command."); err != nil {
 			return fmt.Errorf("exec-command: %w", err)
 		}
 		data.ExecCommand = execCommandVal
@@ -241,18 +241,18 @@ func DecodeTomlV0Into(data *TomlV0, doc *document.Document, container *cst.Node,
 				mapKey := document.SubTableKey(subTable, "formatter-uti-groups")
 				consumed[keyPrefix+"formatter-uti-groups"+"."+mapKey] = true
 				inner := document.GetStringMapFromTable(subTable)
-				document.MarkAllConsumed(subTable, "formatter-uti-groups"+"."+mapKey, consumed)
+				document.MarkAllConsumed(subTable, keyPrefix+"formatter-uti-groups"+"."+mapKey, consumed)
 				data.FormatterUTIGroups[mapKey] = UTIGroup(inner)
 			}
 		}
 	}
 	{
-		subTables := doc.FindSubTables("formatters")
+		subTables := doc.FindSubTablesInContainer(container, "formatters")
 		if len(subTables) > 0 {
 			consumed[keyPrefix+"formatters"] = true
 			data.Formatters = make(map[string]script_config.WithOutputFormat)
 			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "formatters")
+				mapKey := document.SubTableKeyInContainer(subTable, container, "formatters")
 				if strings.Contains(mapKey, ".") {
 					continue
 				}
@@ -266,12 +266,12 @@ func DecodeTomlV0Into(data *TomlV0, doc *document.Document, container *cst.Node,
 		}
 	}
 	{
-		subTables := doc.FindSubTables("actions")
+		subTables := doc.FindSubTablesInContainer(container, "actions")
 		if len(subTables) > 0 {
 			consumed[keyPrefix+"actions"] = true
 			data.Actions = make(map[string]script_config.ScriptConfig)
 			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "actions")
+				mapKey := document.SubTableKeyInContainer(subTable, container, "actions")
 				if strings.Contains(mapKey, ".") {
 					continue
 				}
@@ -338,7 +338,7 @@ func EncodeTomlV0From(data *TomlV0, doc *document.Document, container *cst.Node)
 	}
 	if len(data.Formatters) > 0 {
 		for mapKey, mapVal := range data.Formatters {
-			subTable := doc.EnsureSubTable("formatters", mapKey)
+			subTable := doc.EnsureSubTableInContainer(container, "formatters", mapKey)
 			if err := script_config.EncodeWithOutputFormatFrom(&mapVal, doc, subTable); err != nil {
 				return fmt.Errorf("formatters.%s: %w", mapKey, err)
 			}
@@ -346,7 +346,7 @@ func EncodeTomlV0From(data *TomlV0, doc *document.Document, container *cst.Node)
 	}
 	if len(data.Actions) > 0 {
 		for mapKey, mapVal := range data.Actions {
-			subTable := doc.EnsureSubTable("actions", mapKey)
+			subTable := doc.EnsureSubTableInContainer(container, "actions", mapKey)
 			if err := script_config.EncodeScriptConfigFrom(&mapVal, doc, subTable); err != nil {
 				return fmt.Errorf("actions.%s: %w", mapKey, err)
 			}

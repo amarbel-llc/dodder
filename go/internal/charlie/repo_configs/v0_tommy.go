@@ -368,17 +368,17 @@ func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consume
 	}
 	if tableNode := doc.FindTableInContainer(container, "file-extensions"); tableNode != nil {
 		consumed[keyPrefix+"file-extensions"] = true
-		if err := file_extensions.DecodeTOMLV0Into(&data.FileExtensions, doc, tableNode, consumed, "file-extensions."); err != nil {
+		if err := file_extensions.DecodeTOMLV0Into(&data.FileExtensions, doc, tableNode, consumed, keyPrefix+"file-extensions."); err != nil {
 			return fmt.Errorf("file-extensions: %w", err)
 		}
 	}
 	{
-		subTables := doc.FindSubTables("actions")
+		subTables := doc.FindSubTablesInContainer(container, "actions")
 		if len(subTables) > 0 {
 			consumed[keyPrefix+"actions"] = true
 			data.Actions = make(map[string]script_config.ScriptConfig)
 			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "actions")
+				mapKey := document.SubTableKeyInContainer(subTable, container, "actions")
 				if strings.Contains(mapKey, ".") {
 					continue
 				}
@@ -393,20 +393,20 @@ func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consume
 	}
 	if tableNode := doc.FindTableInContainer(container, "cli-output"); tableNode != nil {
 		consumed[keyPrefix+"cli-output"] = true
-		if err := options_print.DecodeV1Into(&data.PrintOptions, doc, tableNode, consumed, "cli-output."); err != nil {
+		if err := options_print.DecodeV1Into(&data.PrintOptions, doc, tableNode, consumed, keyPrefix+"cli-output."); err != nil {
 			return fmt.Errorf("cli-output: %w", err)
 		}
 	}
 	if tableNode := doc.FindTableInContainer(container, "tools"); tableNode != nil {
 		consumed[keyPrefix+"tools"] = true
-		if err := options_tools.DecodeOptionsInto(&data.Tools, doc, tableNode, consumed, "tools."); err != nil {
+		if err := options_tools.DecodeOptionsInto(&data.Tools, doc, tableNode, consumed, keyPrefix+"tools."); err != nil {
 			return fmt.Errorf("tools: %w", err)
 		}
 	}
-	if tableNode := doc.FindTable("filters"); tableNode != nil {
+	if tableNode := doc.FindTableInContainer(container, "filters"); tableNode != nil {
 		data.Filters = document.GetStringMapFromTable(tableNode)
 		consumed[keyPrefix+"filters"] = true
-		document.MarkAllConsumed(tableNode, "filters", consumed)
+		document.MarkAllConsumed(tableNode, keyPrefix+"filters", consumed)
 	}
 
 	return nil
@@ -459,7 +459,7 @@ func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 	}
 	if len(data.Actions) > 0 {
 		for mapKey, mapVal := range data.Actions {
-			subTable := doc.EnsureSubTable("actions", mapKey)
+			subTable := doc.EnsureSubTableInContainer(container, "actions", mapKey)
 			if err := script_config.EncodeScriptConfigFrom(&mapVal, doc, subTable); err != nil {
 				return fmt.Errorf("actions.%s: %w", mapKey, err)
 			}
@@ -478,7 +478,7 @@ func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 		}
 	}
 	if len(data.Filters) > 0 {
-		tableNode := doc.EnsureTable("filters")
+		tableNode := doc.EnsureTableInContainer(container, "filters")
 		document.DeleteAllInContainer(tableNode)
 		for k, v := range data.Filters {
 			if err := doc.SetInContainer(tableNode, k, v); err != nil {
