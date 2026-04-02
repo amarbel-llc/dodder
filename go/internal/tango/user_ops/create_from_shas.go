@@ -76,7 +76,10 @@ func (op CreateFromShas) Run(
 	)
 
 	for _, object := range toCreate {
-		builder.AddObject(object, 0)
+		if err = builder.AddObject(object, 0); err != nil {
+			err = errors.Wrap(err)
+			return results, err
+		}
 	}
 
 	plan, buildErr := builder.Build()

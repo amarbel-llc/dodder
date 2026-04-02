@@ -86,7 +86,10 @@ func (local *Repo) Checkin(
 				StoreOptions: sku.GetStoreOptionsCreate(),
 			}
 
-			builder.AddObject(external, 0)
+			if err = builder.AddObject(external, 0); err != nil {
+				err = errors.Wrap(err)
+				return processed, err
+			}
 
 			// Set per-entry options after AddObject appends the entry
 			entries := builder.PeekEntries()
@@ -96,7 +99,10 @@ func (local *Repo) Checkin(
 				StoreOptions: sku.GetStoreOptionsCreate(),
 			}
 
-			builder.AddObject(external, 0)
+			if err = builder.AddObject(external, 0); err != nil {
+				err = errors.Wrap(err)
+				return processed, err
+			}
 
 			entries := builder.PeekEntries()
 			entries[len(entries)-1].Options = &trackedOptions

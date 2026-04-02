@@ -60,7 +60,9 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 			}
 		}
 
-		builder.AddObject(object, 0)
+		if err = builder.AddObject(object, 0); err != nil {
+			return nil, errors.Wrap(err)
+		}
 	}
 
 	plan, buildErr := builder.Build()

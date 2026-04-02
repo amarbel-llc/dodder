@@ -132,7 +132,10 @@ func (op CreateFromPaths) Run(
 
 		op.Proto.Apply(object, genres.Zettel)
 
-		builder.AddObject(object, 0)
+		if err = builder.AddObject(object, 0); err != nil {
+			err = errors.Wrap(err)
+			return results, err
+		}
 	}
 
 	plan, buildErr := builder.Build()

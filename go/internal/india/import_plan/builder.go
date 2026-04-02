@@ -109,21 +109,21 @@ func (b *Builder) nextAvailableTai(
 func (b *Builder) AddObject(
 	object *sku.Transacted,
 	sourceIndex int,
-) {
+) error {
 	genre := genres.Make(object.GetGenre())
 
 	if b.index != nil && genre == genres.Config {
-		return
+		return nil
 	}
 
 	for _, transform := range b.transforms {
 		keep, err := transform(object)
 		if err != nil {
-			return
+			return errors.Wrapf(err, "transform failed for %s", object.GetObjectId())
 		}
 
 		if !keep {
-			return
+			return nil
 		}
 	}
 
@@ -144,7 +144,7 @@ func (b *Builder) AddObject(
 	if b.index != nil && genre == genres.Type && object.GetBlobDigest().IsNull() {
 		entry.Classification = ClassificationSkipBloblessType
 		b.appendEntry(entry)
-		return
+		return nil
 	}
 
 	if b.dedupFormatId != "" {
@@ -160,7 +160,7 @@ func (b *Builder) AddObject(
 			if _, seen := b.dedupLookup[digestKey]; seen {
 				entry.Classification = ClassificationSkipDedup
 				b.appendEntry(entry)
-				return
+				return nil
 			}
 
 			b.dedupLookup[digestKey] = struct{}{}
@@ -177,7 +177,7 @@ func (b *Builder) AddObject(
 		entry.Classification = ClassificationResolveTaiReassign
 		key = entryKey(objectIdString, newTai)
 		b.appendEntryWithKey(entry, key)
-		return
+		return nil
 	}
 
 	if b.index != nil {
@@ -193,7 +193,7 @@ func (b *Builder) AddObject(
 			if localBlobDigest == remoteBlobDigest {
 				entry.Classification = ClassificationSkipExists
 				b.appendEntry(entry)
-				return
+				return nil
 			}
 
 			newTai := b.nextAvailableTai(object.GetObjectId(), tai)
@@ -201,16 +201,17 @@ func (b *Builder) AddObject(
 			entry.Classification = ClassificationResolveTaiReassign
 			key = entryKey(objectIdString, newTai)
 			b.appendEntryWithKey(entry, key)
-			return
+			return nil
 		} else if !errors.IsErrNotFound(err) {
 			entry.Classification = ClassificationErrorMissingBlob
 			b.appendEntry(entry)
-			return
+			return nil
 		}
 	}
 
 	entry.Classification = ClassificationImport
 	b.appendEntryWithKey(entry, key)
+	return nil
 }
 
 func (b *Builder) appendEntry(entry Entry) {

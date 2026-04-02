@@ -168,7 +168,10 @@ func (local *Repo) prepareDefaultType(
 		}
 	}
 
-	builder.AddObject(object, 0)
+	if err = builder.AddObject(object, 0); err != nil {
+		err = errors.Wrap(err)
+		return objectIdType, err
+	}
 
 	return objectIdType, err
 }
@@ -211,7 +214,10 @@ func (local *Repo) prepareDefaultConfig(
 
 	newConfig.GetMetadataMutable().GetTypeMutable().ResetWithType(typedBlob.Type)
 
-	builder.AddObject(newConfig, 0)
+	if err = builder.AddObject(newConfig, 0); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
 
 	return err
 }

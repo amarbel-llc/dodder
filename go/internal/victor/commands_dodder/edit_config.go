@@ -51,7 +51,9 @@ func (cmd EditConfig) Run(
 	)
 
 	builder := import_plan.MakeLocalBuilder()
-	builder.AddObject(sk, 0)
+	if err := builder.AddObject(sk, 0); err != nil {
+		localWorkingCopy.Cancel(err)
+	}
 
 	plan, buildErr := builder.Build()
 	if buildErr != nil {

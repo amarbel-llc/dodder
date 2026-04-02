@@ -26,7 +26,10 @@ func (op WriteNewZettels) RunMany(
 	for range count {
 		object, _ := proto.Make() //repool:owned
 
-		builder.AddObject(object, 0)
+		if err = builder.AddObject(object, 0); err != nil {
+			err = errors.Wrap(err)
+			return results, err
+		}
 	}
 
 	plan, buildErr := builder.Build()

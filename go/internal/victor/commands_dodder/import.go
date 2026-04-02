@@ -145,7 +145,10 @@ func (cmd Import) Run(req command.Request) {
 				return
 			}
 
-			builder.AddObject(object, i)
+			if err := builder.AddObject(object, i); err != nil {
+				local.Cancel(errors.Wrap(err))
+				return
+			}
 		}
 	}
 

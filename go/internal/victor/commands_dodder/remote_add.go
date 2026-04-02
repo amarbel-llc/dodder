@@ -64,7 +64,9 @@ func (cmd RemoteAdd) Run(req command.Request) {
 	cmd.proto.Apply(remoteObject.GetMetadataMutable(), genres.Repo)
 
 	builder := import_plan.MakeLocalBuilder()
-	builder.AddObject(remoteObject, 0)
+	if err := builder.AddObject(remoteObject, 0); err != nil {
+		req.Cancel(err)
+	}
 
 	plan, buildErr := builder.Build()
 	if buildErr != nil {

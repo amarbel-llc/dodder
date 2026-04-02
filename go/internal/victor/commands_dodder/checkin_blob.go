@@ -109,7 +109,9 @@ func (cmd CheckinBlob) Run(req command.Request) {
 	builder := import_plan.MakeLocalBuilder()
 
 	for _, pair := range pairs {
-		builder.AddObject(pair.object, 0)
+		if err := builder.AddObject(pair.object, 0); err != nil {
+			req.Cancel(err)
+		}
 	}
 
 	plan, buildErr := builder.Build()

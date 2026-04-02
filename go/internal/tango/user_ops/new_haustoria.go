@@ -50,7 +50,9 @@ func (op NewHaustoria) Run(
 
 		op.Proto.Apply(object, genres.Zettel)
 
-		builder.AddObject(object, 0)
+		if err = builder.AddObject(object, 0); err != nil {
+			return nil, errors.Wrap(err)
+		}
 	}
 
 	plan, buildErr := builder.Build()

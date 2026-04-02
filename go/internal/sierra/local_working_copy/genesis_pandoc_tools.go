@@ -43,7 +43,9 @@ func (local *Repo) prepareToolTypes(
 		object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
 		object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
 
-		builder.AddObject(object, 0)
+		if err := builder.AddObject(object, 0); err != nil {
+			return errors.Wrap(err)
+		}
 
 		return nil
 	}

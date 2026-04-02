@@ -77,7 +77,10 @@ func (local *Repo) LockAndCommitOrganizeResults(
 	builder := import_plan.MakeLocalBuilder()
 
 	for _, changed := range changeResults.Changed.AllSkuAndIndex() {
-		builder.AddObject(changed.GetSkuExternal(), 0)
+		if err = builder.AddObject(changed.GetSkuExternal(), 0); err != nil {
+			err = errors.Wrap(err)
+			return changeResults, err
+		}
 	}
 
 	plan, buildErr := builder.Build()
