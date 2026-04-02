@@ -102,15 +102,15 @@ func DecodeV2(input []byte) (*V2Document, error) {
 					var entry CalendarConfig
 					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "url"); err == nil {
 						entry.URL = v
-						d.consumed["haustoria.calendars.\" + mapKey + \".url"] = true
+						d.consumed["haustoria.calendars.url"] = true
 					}
 					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "type"); err == nil {
 						entry.Type = v
-						d.consumed["haustoria.calendars.\" + mapKey + \".type"] = true
+						d.consumed["haustoria.calendars.type"] = true
 					}
 					if v, err := document.GetFromContainer[[]string](d.cstDoc, subTable, "tags"); err == nil {
 						entry.Tags = v
-						d.consumed["haustoria.calendars.\" + mapKey + \".tags"] = true
+						d.consumed["haustoria.calendars.tags"] = true
 					}
 					d.data.Haustoria.Calendars[mapKey] = entry
 				}
@@ -231,7 +231,7 @@ func (d *V2Document) SetInlineComment(key, comment string) {
 func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
 		consumed[keyPrefix+"defaults"] = true
-		if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&data.Defaults, doc, tableNode, consumed, "defaults."); err != nil {
+		if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&data.Defaults, doc, tableNode, consumed, keyPrefix+"defaults."); err != nil {
 			return fmt.Errorf("defaults: %w", err)
 		}
 	}
@@ -301,15 +301,15 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 					var entry CalendarConfig
 					if v, err := document.GetFromContainer[string](doc, subTable, "url"); err == nil {
 						entry.URL = v
-						consumed[keyPrefix+"haustoria.calendars.\" + mapKey + \".url"] = true
+						consumed[keyPrefix+"haustoria.calendars.url"] = true
 					}
 					if v, err := document.GetFromContainer[string](doc, subTable, "type"); err == nil {
 						entry.Type = v
-						consumed[keyPrefix+"haustoria.calendars.\" + mapKey + \".type"] = true
+						consumed[keyPrefix+"haustoria.calendars.type"] = true
 					}
 					if v, err := document.GetFromContainer[[]string](doc, subTable, "tags"); err == nil {
 						entry.Tags = v
-						consumed[keyPrefix+"haustoria.calendars.\" + mapKey + \".tags"] = true
+						consumed[keyPrefix+"haustoria.calendars.tags"] = true
 					}
 					data.Haustoria.Calendars[mapKey] = entry
 				}
