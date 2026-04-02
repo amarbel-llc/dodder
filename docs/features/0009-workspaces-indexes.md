@@ -337,6 +337,49 @@ CalDAV workspace status:
       bombyx/downtown: new VALARM added externally
     untracked:           1 task (created in tasks.org)
 
+## Haustoria MVP: ExternalObjectId as Binding Key
+
+The full ExternalState + binary index persistence is the long-term solution. For
+the haustoria MVP, a simpler binding mechanism unblocks daily use:
+
+**The binding problem:** Without sync state, `checkin` creates duplicates on
+re-run (no way to know which CalDAV tasks already have dodder objects), and
+`status` shows everything as Untracked (never CheckedOut).
+
+**MVP approach:** Use `ExternalObjectId` (already on every Transacted) as the
+binding key. During `QueryCheckedOut`, the haustoria checks whether the stream
+index already has an object whose `ExternalObjectId` matches the CalDAV UID. If
+so, the CheckedOut object gets state `CheckedOut` (not `Untracked`) and its
+internal side is populated from the stored object.
+
+This requires:
+
+1.  **Writing ExternalObjectId to the stream index during checkin.** When
+    `CheckinHaustoria` commits a new object, set its `ExternalObjectId` to the
+    CalDAV UID. The stream index already persists `ExternalObjectId` for
+    `.`-sigiled entries.
+
+2.  **Looking up by ExternalObjectId during QueryCheckedOut.** For each CalDAV
+    resource, search the index for an object with matching `ExternalObjectId`.
+    This is a scan (not indexed lookup), but acceptable for \<1000 objects.
+
+3.  **Setting state based on lookup result:**
+
+    - Found + digest matches → `CheckedOut` (clean)
+    - Found + digest differs → `CheckedOut` (modified)
+    - Not found → `Untracked` (new external resource)
+
+This MVP doesn't need binary index changes, new key types, or ExternalState. It
+reuses existing infrastructure (`ExternalObjectId`, stream index scan) to
+provide the binding that prevents duplicates and enables proper state display.
+
+**Limitations of the MVP:** - No ETag caching --- every `status` fetches all
+CalDAV resources - No incremental sync --- full fetch per calendar each time -
+ExternalObjectId scan is O(n) per resource - No sync base for three-way merge
+
+These limitations are acceptable for \<1000 objects and are exactly what the
+full ExternalState solves when promoted.
+
 ## Open Questions
 
 - **Should `.`-sigiled entries be separate index entries or annotations on
