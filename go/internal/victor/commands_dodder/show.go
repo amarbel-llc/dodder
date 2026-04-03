@@ -41,6 +41,12 @@ type Show struct {
 
 var _ interfaces.CommandComponentWriter = (*Show)(nil)
 
+func (cmd Show) GetDescription() command.Description {
+	return command.Description{
+		Short: "display objects from the store",
+	}
+}
+
 func (cmd *Show) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopy.SetFlagDefinitions(flagSet)
 	cmd.Query.SetFlagDefinitions(flagSet)

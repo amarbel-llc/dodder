@@ -22,6 +22,12 @@ type InfoRepo struct {
 	command_components_madder.BlobStore
 }
 
+func (cmd InfoRepo) GetDescription() command.Description {
+	return command.Description{
+		Short: "display blob store configuration",
+	}
+}
+
 func (cmd InfoRepo) Run(req command.Request) {
 	env := cmd.MakeEnvBlobStore(req)
 

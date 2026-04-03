@@ -15,6 +15,12 @@ func init() {
 	utility.AddCmd("status", &Status{})
 }
 
+func (cmd Status) GetDescription() command.Description {
+	return command.Description{
+		Short: "show workspace object state",
+	}
+}
+
 type Status struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 }

@@ -29,6 +29,12 @@ func init() {
 	})
 }
 
+func (cmd Last) GetDescription() command.Description {
+	return command.Description{
+		Short: "display the most recently committed objects",
+	}
+}
+
 type Last struct {
 	command_components_dodder.InventoryLists
 	command_components_dodder.LocalWorkingCopy

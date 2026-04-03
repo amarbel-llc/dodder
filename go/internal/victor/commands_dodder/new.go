@@ -22,6 +22,12 @@ func init() {
 	utility.AddCmd("new", &New{})
 }
 
+func (cmd New) GetDescription() command.Description {
+	return command.Description{
+		Short: "create new zettels",
+	}
+}
+
 type New struct {
 	command_components_dodder.LocalWorkingCopy
 

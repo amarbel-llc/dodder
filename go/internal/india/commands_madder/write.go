@@ -35,6 +35,12 @@ type Write struct {
 
 var _ interfaces.CommandComponentWriter = (*Write)(nil)
 
+func (cmd Write) GetDescription() command.Description {
+	return command.Description{
+		Short: "write blobs to a store",
+	}
+}
+
 func (cmd Write) Complete(
 	req command.Request,
 	envLocal env_local.Env,

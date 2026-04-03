@@ -11,6 +11,12 @@ func init() {
 
 type InstallMcp struct{}
 
+func (cmd InstallMcp) GetDescription() command.Description {
+	return command.Description{
+		Short: "install MCP server configuration",
+	}
+}
+
 func (cmd InstallMcp) Run(req command.Request) {
 	app := gomcp_command.NewApp("madder", "Blob store MCP server")
 	app.MCPArgs = []string{"mcp"}

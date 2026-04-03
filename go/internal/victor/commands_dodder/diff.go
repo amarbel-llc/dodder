@@ -28,6 +28,12 @@ type Diff struct {
 
 var _ interfaces.CommandComponentWriter = (*Diff)(nil)
 
+func (cmd Diff) GetDescription() command.Description {
+	return command.Description{
+		Short: "show differences between workspace and store",
+	}
+}
+
 func (cmd *Diff) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopyWithQueryGroup.SetFlagDefinitions(f)
 }

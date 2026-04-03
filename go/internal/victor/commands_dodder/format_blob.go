@@ -24,6 +24,12 @@ func init() {
 	utility.AddCmd("format-blob", &FormatBlob{})
 }
 
+func (cmd FormatBlob) GetDescription() command.Description {
+	return command.Description{
+		Short: "format an object's blob content",
+	}
+}
+
 type FormatBlob struct {
 	command_components_dodder.LocalWorkingCopy
 

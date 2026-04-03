@@ -19,6 +19,12 @@ type CatIds struct {
 	command_components_madder.BlobStore
 }
 
+func (cmd CatIds) GetDescription() command.Description {
+	return command.Description{
+		Short: "output object ids from a blob",
+	}
+}
+
 func (cmd CatIds) Complete(
 	req command.Request,
 	envLocal env_local.Env,

@@ -32,6 +32,12 @@ type Clean struct {
 
 var _ interfaces.CommandComponentWriter = (*Clean)(nil)
 
+func (cmd Clean) GetDescription() command.Description {
+	return command.Description{
+		Short: "remove checked-out objects from the workspace",
+	}
+}
+
 func (c *Clean) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	c.LocalWorkingCopyWithQueryGroup.SetFlagDefinitions(f)
 

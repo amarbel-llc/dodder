@@ -19,6 +19,12 @@ func init() {
 	utility.AddCmd("cat-alfred", &CatAlfred{})
 }
 
+func (cmd CatAlfred) GetDescription() command.Description {
+	return command.Description{
+		Short: "output objects in Alfred workflow format",
+	}
+}
+
 type CatAlfred struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 

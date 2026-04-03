@@ -11,6 +11,12 @@ func init() {
 	utility.AddCmd("dormant-remove", &DormantRemove{})
 }
 
+func (cmd DormantRemove) GetDescription() command.Description {
+	return command.Description{
+		Short: "remove tags from the dormant index",
+	}
+}
+
 type DormantRemove struct {
 	command_components_dodder.LocalWorkingCopy
 }

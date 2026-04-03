@@ -17,6 +17,12 @@ func init() {
 
 type InfoSSHAgent struct{}
 
+func (cmd InfoSSHAgent) GetDescription() command.Description {
+	return command.Description{
+		Short: "list keys in the SSH agent",
+	}
+}
+
 func (cmd InfoSSHAgent) Run(req command.Request) {
 	ed25519Keys, err := markl.DiscoverSSHAgentEd25519KeysVerbose()
 	if err != nil {

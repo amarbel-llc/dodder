@@ -17,6 +17,12 @@ func init() {
 	utility.AddCmd("revert", &Revert{})
 }
 
+func (cmd Revert) GetDescription() command.Description {
+	return command.Description{
+		Short: "revert objects to their stored state",
+	}
+}
+
 type Revert struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 

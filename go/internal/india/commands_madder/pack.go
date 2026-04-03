@@ -30,6 +30,12 @@ type Pack struct {
 
 var _ interfaces.CommandComponentWriter = (*Pack)(nil)
 
+func (cmd Pack) GetDescription() command.Description {
+	return command.Description{
+		Short: "pack objects into a blob",
+	}
+}
+
 func (cmd Pack) Complete(
 	req command.Request,
 	envLocal env_local.Env,

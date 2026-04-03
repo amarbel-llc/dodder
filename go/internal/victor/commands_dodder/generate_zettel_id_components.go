@@ -21,6 +21,12 @@ func init() {
 
 type GenerateZettelIdComponents struct{}
 
+func (cmd GenerateZettelIdComponents) GetDescription() command.Description {
+	return command.Description{
+		Short: "extract unique zettel id components from stdin",
+	}
+}
+
 func (cmd GenerateZettelIdComponents) Run(req command.Request) {
 	reader := bufio.NewReader(os.Stdin)
 	var lines []string

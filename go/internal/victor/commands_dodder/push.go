@@ -15,6 +15,12 @@ func init() {
 	utility.AddCmd("push", &Push{})
 }
 
+func (cmd Push) GetDescription() command.Description {
+	return command.Description{
+		Short: "push objects to a remote repository",
+	}
+}
+
 type Push struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.RemoteTransfer

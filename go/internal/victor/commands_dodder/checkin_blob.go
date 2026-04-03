@@ -26,6 +26,12 @@ func init() {
 		})
 }
 
+func (cmd CheckinBlob) GetDescription() command.Description {
+	return command.Description{
+		Short: "commit blob changes with metadata updates",
+	}
+}
+
 type CheckinBlob struct {
 	command_components_dodder.LocalWorkingCopy
 

@@ -31,6 +31,12 @@ type Clone struct {
 
 var _ interfaces.CommandComponentWriter = (*Clone)(nil)
 
+func (cmd Clone) GetDescription() command.Description {
+	return command.Description{
+		Short: "clone a remote repository",
+	}
+}
+
 func (cmd *Clone) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,
 ) {

@@ -31,6 +31,12 @@ type Checkout struct {
 
 var _ interfaces.CommandComponentWriter = (*Checkout)(nil)
 
+func (cmd Checkout) GetDescription() command.Description {
+	return command.Description{
+		Short: "check out objects to the workspace",
+	}
+}
+
 func (cmd *Checkout) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,
 ) {

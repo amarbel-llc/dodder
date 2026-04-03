@@ -21,6 +21,12 @@ type Read struct {
 	command_components_madder.EnvBlobStore
 }
 
+func (cmd Read) GetDescription() command.Description {
+	return command.Description{
+		Short: "read blobs from JSON on stdin",
+	}
+}
+
 type readBlobEntry struct {
 	Blob  string `json:"blob"`
 	Store string `json:"store,omitempty"`

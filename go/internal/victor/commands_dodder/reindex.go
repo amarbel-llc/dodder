@@ -12,6 +12,12 @@ func init() {
 	utility.AddCmd("reindex", &Reindex{})
 }
 
+func (cmd Reindex) GetDescription() command.Description {
+	return command.Description{
+		Short: "rebuild store indices",
+	}
+}
+
 type Reindex struct {
 	command_components_dodder.LocalWorkingCopy
 }

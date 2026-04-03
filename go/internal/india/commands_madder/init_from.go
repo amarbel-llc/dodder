@@ -27,6 +27,12 @@ type InitFrom struct {
 
 var _ interfaces.CommandComponentWriter = (*InitFrom)(nil)
 
+func (cmd InitFrom) GetDescription() command.Description {
+	return command.Description{
+		Short: "initialize a blob store from a configuration",
+	}
+}
+
 func (cmd *InitFrom) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,
 ) {

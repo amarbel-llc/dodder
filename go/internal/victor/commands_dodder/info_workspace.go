@@ -18,6 +18,12 @@ type InfoWorkspace struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+func (cmd InfoWorkspace) GetDescription() command.Description {
+	return command.Description{
+		Short: "display workspace configuration",
+	}
+}
+
 func (cmd InfoWorkspace) Run(req command.Request) {
 	repo := cmd.MakeLocalWorkingCopy(req)
 	envWorkspace := repo.GetEnvWorkspace()

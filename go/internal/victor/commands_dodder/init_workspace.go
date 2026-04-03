@@ -48,6 +48,12 @@ type InitWorkspace struct {
 
 var _ interfaces.CommandComponentWriter = (*InitWorkspace)(nil)
 
+func (cmd InitWorkspace) GetDescription() command.Description {
+	return command.Description{
+		Short: "initialize a workspace directory",
+	}
+}
+
 func (cmd *InitWorkspace) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {

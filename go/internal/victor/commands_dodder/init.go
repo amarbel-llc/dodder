@@ -24,6 +24,12 @@ type Init struct {
 
 var _ interfaces.CommandComponentWriter = (*Init)(nil)
 
+func (cmd Init) GetDescription() command.Description {
+	return command.Description{
+		Short: "initialize a new repository",
+	}
+}
+
 func (cmd *Init) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.Genesis.SetFlagDefinitions(flagSet)
 }

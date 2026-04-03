@@ -10,6 +10,12 @@ func init() {
 	utility.AddCmd("mcp", &Mcp{})
 }
 
+func (cmd Mcp) GetDescription() command.Description {
+	return command.Description{
+		Short: "start the MCP server",
+	}
+}
+
 type Mcp struct {
 	command_components_dodder.LocalWorkingCopy
 }

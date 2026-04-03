@@ -33,6 +33,12 @@ type PackBlobs struct {
 
 var _ interfaces.CommandComponentWriter = (*PackBlobs)(nil)
 
+func (cmd PackBlobs) GetDescription() command.Description {
+	return command.Description{
+		Short: "pack blobs into an archive",
+	}
+}
+
 func (cmd PackBlobs) Complete(
 	req command.Request,
 	envLocal env_local.Env,

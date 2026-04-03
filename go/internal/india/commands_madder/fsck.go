@@ -9,8 +9,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -24,6 +24,12 @@ func init() {
 type Fsck struct {
 	command_components_madder.EnvBlobStore
 	command_components_madder.BlobStore
+}
+
+func (cmd Fsck) GetDescription() command.Description {
+	return command.Description{
+		Short: "verify blob store integrity",
+	}
 }
 
 func (cmd Fsck) Complete(

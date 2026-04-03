@@ -52,6 +52,12 @@ type Fsck struct {
 	TryV14Index   bool
 }
 
+func (cmd Fsck) GetDescription() command.Description {
+	return command.Description{
+		Short: "verify object integrity across stores",
+	}
+}
+
 var _ interfaces.CommandComponentWriter = (*Fsck)(nil)
 
 func (cmd *Fsck) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {

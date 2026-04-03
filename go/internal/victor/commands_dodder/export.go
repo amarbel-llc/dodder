@@ -36,6 +36,12 @@ type Export struct {
 
 var _ interfaces.CommandComponentWriter = (*Export)(nil)
 
+func (cmd Export) GetDescription() command.Description {
+	return command.Description{
+		Short: "export objects to an inventory list archive",
+	}
+}
+
 func (cmd *Export) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopyWithQueryGroup.SetFlagDefinitions(f)
 

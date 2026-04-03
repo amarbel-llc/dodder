@@ -22,6 +22,12 @@ type Exec struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+func (cmd Exec) GetDescription() command.Description {
+	return command.Description{
+		Short: "execute a script stored as a blob",
+	}
+}
+
 func (cmd Exec) Run(dep command.Request) {
 	args := dep.PopArgs()
 

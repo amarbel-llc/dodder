@@ -18,6 +18,12 @@ func init() {
 	utility.AddCmd("serve", &Serve{})
 }
 
+func (cmd Serve) GetDescription() command.Description {
+	return command.Description{
+		Short: "start the HTTP server",
+	}
+}
+
 type Serve struct {
 	command_components.Env
 	command_components_dodder.EnvRepo

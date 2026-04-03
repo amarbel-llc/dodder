@@ -8,6 +8,12 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
 
+func (cmd DebugPrintProbeIndex) GetDescription() command.Description {
+	return command.Description{
+		Short: "print stream index probes",
+	}
+}
+
 type DebugPrintProbeIndex struct {
 	command_components_dodder.LocalWorkingCopy
 }

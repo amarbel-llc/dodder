@@ -2,6 +2,7 @@ package commands_dodder
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -33,6 +34,12 @@ func init() {
 		side:         zettel_id_log.SideYang,
 		flatFileName: zettel_id_provider.FilePathZettelIdYang,
 	})
+}
+
+func (cmd AddZettelIds) GetDescription() command.Description {
+	return command.Description{
+		Short: fmt.Sprintf("add %s words to the zettel id pool", cmd.side),
+	}
 }
 
 type AddZettelIds struct {

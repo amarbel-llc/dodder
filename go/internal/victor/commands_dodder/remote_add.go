@@ -17,6 +17,12 @@ func init() {
 		&RemoteAdd{})
 }
 
+func (cmd RemoteAdd) GetDescription() command.Description {
+	return command.Description{
+		Short: "add a remote repository",
+	}
+}
+
 type RemoteAdd struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.RemoteTransfer

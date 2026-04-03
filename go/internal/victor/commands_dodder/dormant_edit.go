@@ -23,6 +23,12 @@ func init() {
 	utility.AddCmd("dormant-edit", &DormantEdit{})
 }
 
+func (cmd DormantEdit) GetDescription() command.Description {
+	return command.Description{
+		Short: "edit dormant tags in an editor",
+	}
+}
+
 type DormantEdit struct {
 	command_components_dodder.LocalWorkingCopy
 }

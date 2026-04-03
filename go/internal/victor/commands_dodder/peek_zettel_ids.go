@@ -14,6 +14,12 @@ func init() {
 	utility.AddCmd("peek-zettel-ids", &PeekZettelIds{})
 }
 
+func (cmd PeekZettelIds) GetDescription() command.Description {
+	return command.Description{
+		Short: "preview available zettel ids",
+	}
+}
+
 type PeekZettelIds struct {
 	command_components_dodder.LocalWorkingCopy
 }

@@ -11,6 +11,12 @@ func init() {
 	utility.AddCmd("dormant-add", &DormantAdd{})
 }
 
+func (cmd DormantAdd) GetDescription() command.Description {
+	return command.Description{
+		Short: "add tags to the dormant index",
+	}
+}
+
 type DormantAdd struct {
 	command_components_dodder.LocalWorkingCopy
 }

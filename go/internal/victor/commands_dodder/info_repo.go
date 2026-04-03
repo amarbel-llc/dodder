@@ -22,6 +22,12 @@ type InfoRepo struct {
 	command_components_dodder.EnvRepo
 }
 
+func (cmd InfoRepo) GetDescription() command.Description {
+	return command.Description{
+		Short: "display repository configuration",
+	}
+}
+
 var repoSpecialKeys = []string{
 	"config-immutable",
 	"id",

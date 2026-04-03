@@ -18,6 +18,12 @@ func init() {
 	utility.AddCmd("pull-blob-store", &PullBlobStore{})
 }
 
+func (cmd PullBlobStore) GetDescription() command.Description {
+	return command.Description{
+		Short: "pull blobs from a remote blob store",
+	}
+}
+
 type PullBlobStore struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 	command_components_madder.BlobStore

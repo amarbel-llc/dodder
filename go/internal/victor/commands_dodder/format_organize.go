@@ -24,6 +24,12 @@ func init() {
 		})
 }
 
+func (cmd FormatOrganize) GetDescription() command.Description {
+	return command.Description{
+		Short: "format an organize file",
+	}
+}
+
 type FormatOrganize struct {
 	command_components_dodder.LocalWorkingCopy
 

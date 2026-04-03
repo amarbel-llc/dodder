@@ -27,12 +27,21 @@ let
     subPackages = [
       "cmd/der"
       "cmd/dodder"
+      "cmd/dodder-gen_man"
       "cmd/mad"
       "cmd/madder"
+      "cmd/madder-gen_man"
     ];
     modules = ./gomod2nix.toml;
     go = pkgs-master.go_1_26;
     GOTOOLCHAIN = "local";
+
+    postInstall = ''
+      mkdir -p $out/share/man/man1
+      $out/bin/dodder-gen_man $out/share/man/man1
+      $out/bin/madder-gen_man $out/share/man/man1
+      rm $out/bin/dodder-gen_man $out/bin/madder-gen_man
+    '';
   };
 in
 {

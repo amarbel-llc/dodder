@@ -25,6 +25,12 @@ func init() {
 	utility.AddCmd("migrate-zettel-ids", &MigrateZettelIds{})
 }
 
+func (cmd MigrateZettelIds) GetDescription() command.Description {
+	return command.Description{
+		Short: "migrate zettel id flat files to log format",
+	}
+}
+
 type MigrateZettelIds struct {
 	command_components_dodder.LocalWorkingCopy
 }

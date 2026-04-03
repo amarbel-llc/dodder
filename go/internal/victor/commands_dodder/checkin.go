@@ -42,6 +42,12 @@ type Checkin struct {
 
 var _ interfaces.CommandComponentWriter = (*Checkin)(nil)
 
+func (cmd Checkin) GetDescription() command.Description {
+	return command.Description{
+		Short: "commit workspace changes to the store",
+	}
+}
+
 func (cmd *Checkin) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {

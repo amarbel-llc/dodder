@@ -20,6 +20,12 @@ func init() {
 	utility.AddCmd("deinit", &Deinit{})
 }
 
+func (cmd Deinit) GetDescription() command.Description {
+	return command.Description{
+		Short: "remove repository and workspace directories",
+	}
+}
+
 type Deinit struct {
 	command_components_dodder.LocalWorkingCopy
 

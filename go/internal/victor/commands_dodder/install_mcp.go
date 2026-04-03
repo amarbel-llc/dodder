@@ -9,6 +9,12 @@ func init() {
 	utility.AddCmd("install-mcp", &InstallMcp{})
 }
 
+func (cmd InstallMcp) GetDescription() command.Description {
+	return command.Description{
+		Short: "install MCP server configuration",
+	}
+}
+
 type InstallMcp struct{}
 
 func (cmd InstallMcp) Run(req command.Request) {

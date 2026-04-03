@@ -10,6 +10,12 @@ func init() {
 	utility.AddCmd("find-missing", &FindMissing{})
 }
 
+func (cmd FindMissing) GetDescription() command.Description {
+	return command.Description{
+		Short: "find blob digests missing from stores",
+	}
+}
+
 type FindMissing struct {
 	command_components_dodder.LocalWorkingCopy
 }

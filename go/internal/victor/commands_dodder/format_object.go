@@ -26,6 +26,12 @@ func init() {
 		})
 }
 
+func (cmd FormatObject) GetDescription() command.Description {
+	return command.Description{
+		Short: "format an object with a type formatter",
+	}
+}
+
 type FormatObject struct {
 	command_components_dodder.LocalWorkingCopy
 

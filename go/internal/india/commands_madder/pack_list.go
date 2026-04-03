@@ -18,6 +18,12 @@ type PackList struct {
 	command_components_madder.BlobStore
 }
 
+func (cmd PackList) GetDescription() command.Description {
+	return command.Description{
+		Short: "list objects in a packed blob",
+	}
+}
+
 func (cmd PackList) Complete(
 	req command.Request,
 	envLocal env_local.Env,

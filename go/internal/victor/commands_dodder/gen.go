@@ -15,6 +15,12 @@ type Gen struct{}
 
 var _ interfaces.CommandComponentWriter = (*Gen)(nil)
 
+func (cmd Gen) GetDescription() command.Description {
+	return command.Description{
+		Short: "generate cryptographic keys",
+	}
+}
+
 func init() {
 	utility.AddCmd(
 		"gen",

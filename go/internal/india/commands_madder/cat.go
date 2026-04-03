@@ -34,6 +34,12 @@ type Cat struct {
 
 var _ interfaces.CommandComponentWriter = (*Cat)(nil)
 
+func (cmd Cat) GetDescription() command.Description {
+	return command.Description{
+		Short: "output blob contents by digest",
+	}
+}
+
 func (cmd Cat) Complete(
 	req command.Request,
 	envLocal env_local.Env,

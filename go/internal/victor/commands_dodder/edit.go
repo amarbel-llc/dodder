@@ -33,6 +33,12 @@ type Edit struct {
 
 var _ interfaces.CommandComponentWriter = (*Edit)(nil)
 
+func (cmd Edit) GetDescription() command.Description {
+	return command.Description{
+		Short: "check out and edit objects in an editor",
+	}
+}
+
 func (cmd *Edit) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopyWithQueryGroup.SetFlagDefinitions(flagSet)
 

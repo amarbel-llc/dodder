@@ -17,6 +17,12 @@ func init() {
 
 type InfoPivyAgent struct{}
 
+func (cmd InfoPivyAgent) GetDescription() command.Description {
+	return command.Description{
+		Short: "list ECDSA keys in pivy-agent",
+	}
+}
+
 func (cmd InfoPivyAgent) Run(req command.Request) {
 	keys, err := markl.DiscoverPivyAgentECDHKeysVerbose()
 	if err != nil {

@@ -32,6 +32,12 @@ func init() {
 		})
 }
 
+func (cmd Organize) GetDescription() command.Description {
+	return command.Description{
+		Short: "organize objects with a text editor",
+	}
+}
+
 // Refactor and fold components into userops
 type Organize struct {
 	command_components_dodder.LocalWorkingCopy

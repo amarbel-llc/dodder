@@ -99,6 +99,12 @@ type Init struct {
 
 var _ interfaces.CommandComponentWriter = (*Init)(nil)
 
+func (cmd Init) GetDescription() command.Description {
+	return command.Description{
+		Short: "initialize a blob store",
+	}
+}
+
 func (cmd *Init) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,
 ) {

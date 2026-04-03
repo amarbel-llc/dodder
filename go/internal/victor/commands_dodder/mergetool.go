@@ -21,6 +21,12 @@ func init() {
 	utility.AddCmd("merge-tool", &Mergetool{})
 }
 
+func (cmd Mergetool) GetDescription() command.Description {
+	return command.Description{
+		Short: "resolve merge conflicts with an external tool",
+	}
+}
+
 type Mergetool struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 }

@@ -16,6 +16,12 @@ func init() {
 	)
 }
 
+func (cmd CheckWorkspace) GetDescription() command.Description {
+	return command.Description{
+		Short: "check workspace state",
+	}
+}
+
 type CheckWorkspace struct {
 	command_components_dodder.LocalWorkingCopy
 }

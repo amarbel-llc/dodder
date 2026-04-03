@@ -12,6 +12,12 @@ func init() {
 	utility.AddCmd("checkin-json", &CheckinJson{})
 }
 
+func (cmd CheckinJson) GetDescription() command.Description {
+	return command.Description{
+		Short: "commit objects from JSON on stdin",
+	}
+}
+
 type CheckinJson struct {
 	command_components_dodder.LocalWorkingCopy
 }

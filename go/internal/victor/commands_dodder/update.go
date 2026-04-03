@@ -17,6 +17,12 @@ func init() {
 	)
 }
 
+func (cmd Update) GetDescription() command.Description {
+	return command.Description{
+		Short: "update type lock signatures",
+	}
+}
+
 type Update struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.Query

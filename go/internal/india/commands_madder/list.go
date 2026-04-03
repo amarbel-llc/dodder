@@ -16,6 +16,12 @@ type List struct {
 
 var _ interfaces.CommandComponentWriter = (*List)(nil)
 
+func (cmd List) GetDescription() command.Description {
+	return command.Description{
+		Short: "list configured blob stores",
+	}
+}
+
 func (cmd *List) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {

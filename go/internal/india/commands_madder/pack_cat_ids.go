@@ -15,6 +15,12 @@ type PackCatIds struct {
 	command_components_madder.EnvBlobStore
 }
 
+func (cmd PackCatIds) GetDescription() command.Description {
+	return command.Description{
+		Short: "output ids from a packed blob",
+	}
+}
+
 func (cmd PackCatIds) Run(req command.Request) {
 	envBlobStore := cmd.MakeEnvBlobStore(req)
 	blobStoreMap := envBlobStore.GetBlobStores()

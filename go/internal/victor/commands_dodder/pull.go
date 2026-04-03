@@ -15,6 +15,12 @@ func init() {
 	utility.AddCmd("pull", &Pull{})
 }
 
+func (cmd Pull) GetDescription() command.Description {
+	return command.Description{
+		Short: "pull objects from a remote repository",
+	}
+}
+
 type Pull struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.RemoteTransfer

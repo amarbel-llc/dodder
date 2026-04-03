@@ -5,8 +5,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
@@ -20,6 +20,12 @@ func init() {
 	utility.AddCmd(
 		"repo-fsck",
 		&RepoFsck{})
+}
+
+func (cmd RepoFsck) GetDescription() command.Description {
+	return command.Description{
+		Short: "verify repository inventory list integrity",
+	}
 }
 
 type RepoFsck struct {

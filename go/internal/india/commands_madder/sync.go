@@ -7,8 +7,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
@@ -33,6 +33,12 @@ type Sync struct {
 }
 
 var _ interfaces.CommandComponentWriter = (*Sync)(nil)
+
+func (cmd Sync) GetDescription() command.Description {
+	return command.Description{
+		Short: "synchronize blobs between stores",
+	}
+}
 
 func (cmd *Sync) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,

@@ -33,6 +33,12 @@ func (f *stringSliceFlag) Set(value string) error {
 	return nil
 }
 
+func (cmd Import) GetDescription() command.Description {
+	return command.Description{
+		Short: "import objects from inventory list files",
+	}
+}
+
 type Import struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.InventoryLists

@@ -22,6 +22,12 @@ type Info struct{}
 
 var _ interfaces.CommandComponentWriter = (*Info)(nil)
 
+func (cmd Info) GetDescription() command.Description {
+	return command.Description{
+		Short: "display repository information",
+	}
+}
+
 func init() {
 	utility.AddCmd(
 		"info",

@@ -11,6 +11,12 @@ func init() {
 
 type Mcp struct{}
 
+func (cmd Mcp) GetDescription() command.Description {
+	return command.Description{
+		Short: "start the MCP server",
+	}
+}
+
 func (cmd Mcp) Run(req command.Request) {
 	if err := mcp_madder.RunServer(req.Utility); err != nil {
 		req.Cancel(err)

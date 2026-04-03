@@ -20,6 +20,12 @@ func init() {
 	})
 }
 
+func (cmd CatObject) GetDescription() command.Description {
+	return command.Description{
+		Short: "output raw object content by markl id",
+	}
+}
+
 type CatObject struct {
 	command_components_dodder.LocalWorkingCopy
 
