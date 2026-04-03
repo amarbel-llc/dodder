@@ -13,8 +13,8 @@ type TomlSFTPV0 struct {
 	Password       string `toml:"password,omitempty"`
 	PrivateKeyPath string `toml:"private-key-path,omitempty"`
 	RemotePath     string `toml:"remote-path"`
+	KnownHostsFile string `toml:"known-hosts-file,omitempty"`
 }
-
 
 func (*TomlSFTPV0) GetBlobStoreType() string {
 	return "sftp"
@@ -64,6 +64,13 @@ func (blobStoreConfig *TomlSFTPV0) SetFlagDefinitions(
 		blobStoreConfig.RemotePath,
 		"Remote path for blob storage",
 	)
+
+	flagSet.StringVar(
+		&blobStoreConfig.KnownHostsFile,
+		"known-hosts-file",
+		blobStoreConfig.KnownHostsFile,
+		"Path to SSH known_hosts file (default: ~/.ssh/known_hosts)",
+	)
 }
 
 func (blobStoreConfig *TomlSFTPV0) GetHost() string {
@@ -91,6 +98,10 @@ func (blobStoreConfig *TomlSFTPV0) GetPrivateKeyPath() string {
 
 func (blobStoreConfig *TomlSFTPV0) GetRemotePath() string {
 	return blobStoreConfig.RemotePath
+}
+
+func (blobStoreConfig *TomlSFTPV0) GetKnownHostsFile() string {
+	return blobStoreConfig.KnownHostsFile
 }
 
 func (blobStoreConfig *TomlSFTPV0) SupportsMultiHash() bool {

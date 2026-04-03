@@ -17,7 +17,9 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
+	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -108,6 +110,79 @@ func (blobStore *remoteSftp) initializeOnce() {
 	})
 }
 
+func (blobStore *remoteSftp) readRemoteConfig() (err error) {
+	remotePath := blobStore.config.GetRemotePath()
+	configPath := path.Join(remotePath, directory_layout.FileNameBlobStoreConfig)
+
+	blobStore.uiPrinter.Printf("reading remote config %q...", configPath)
+
+	var configFile *sftp.File
+
+	if configFile, err = blobStore.sftpClient.Open(configPath); err != nil {
+		if os.IsNotExist(err) {
+			err = errors.Errorf(
+				"remote blob store config missing at %q; "+
+					"initialize the remote store or use --discover to infer config",
+				configPath,
+			)
+		} else {
+			err = errors.Wrapf(err, "failed to open remote blob store config")
+		}
+
+		return err
+	}
+
+	defer configFile.Close()
+
+	var typedConfig hyphence.TypedBlob[blob_store_configs.Config]
+
+	if _, err = blob_store_configs.Coder.DecodeFrom(
+		&typedConfig,
+		configFile,
+	); err != nil {
+		err = errors.Wrapf(err, "failed to decode remote blob store config at %q", configPath)
+		return err
+	}
+
+	remoteConfig := typedConfig.Blob
+
+	if hashTypeConfig, ok := remoteConfig.(blob_store_configs.ConfigHashType); ok {
+		blobStore.multiHash = hashTypeConfig.SupportsMultiHash()
+
+		if blobStore.defaultHashType, err = markl.GetFormatHashOrError(
+			hashTypeConfig.GetDefaultHashTypeId(),
+		); err != nil {
+			err = errors.Wrapf(err, "remote config has unsupported hash type")
+			return err
+		}
+	} else {
+		err = errors.Errorf(
+			"remote blob store config type %T does not provide hash type information",
+			remoteConfig,
+		)
+		return err
+	}
+
+	if bucketConfig, ok := remoteConfig.(blob_store_configs.ConfigLocalHashBucketed); ok {
+		blobStore.buckets = bucketConfig.GetHashBuckets()
+	} else {
+		err = errors.Errorf(
+			"remote blob store config type %T does not provide hash bucket information",
+			remoteConfig,
+		)
+		return err
+	}
+
+	blobStore.uiPrinter.Printf(
+		"remote config: hash=%s buckets=%v multi-hash=%t",
+		blobStore.defaultHashType.GetMarklFormatId(),
+		blobStore.buckets,
+		blobStore.multiHash,
+	)
+
+	return err
+}
+
 func (blobStore *remoteSftp) initialize() (err error) {
 	if blobStore.sshClient, err = blobStore.sshClientInitializer(); err != nil {
 		err = errors.Wrap(err)
@@ -121,8 +196,12 @@ func (blobStore *remoteSftp) initialize() (err error) {
 
 	blobStore.ctx.After(errors.MakeFuncContextFromFuncErr(blobStore.close))
 
+	if err = blobStore.readRemoteConfig(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	remotePath := blobStore.config.GetRemotePath()
-	// TODO read remote blob store config (including hash buckets)
 
 	// Create directory tree if it doesn't exist
 	parts := strings.Split(remotePath, "/")

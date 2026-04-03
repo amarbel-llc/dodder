@@ -103,6 +103,7 @@ type (
 	ConfigSFTPRemotePath interface {
 		Config
 		GetRemotePath() string
+		GetKnownHostsFile() string
 	}
 
 	ConfigSFTPUri interface {
@@ -120,7 +121,6 @@ type (
 		GetPassword() string
 		GetPrivateKeyPath() string
 	}
-
 )
 
 var DefaultHashBuckets []int = []int{2}

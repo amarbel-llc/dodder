@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -11,6 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 func MakeSSHAgent(
@@ -40,15 +42,62 @@ func MakeSSHAgent(
 	return
 }
 
+func makeHostKeyCallback(
+	knownHostsFile string,
+) (ssh.HostKeyCallback, error) {
+	var files []string
+
+	if knownHostsFile != "" {
+		files = append(files, knownHostsFile)
+	} else {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to determine home directory for known_hosts")
+		}
+
+		userKnownHosts := filepath.Join(homeDir, ".ssh", "known_hosts")
+		if _, err := os.Stat(userKnownHosts); err == nil {
+			files = append(files, userKnownHosts)
+		}
+
+		systemKnownHosts := "/etc/ssh/ssh_known_hosts"
+		if _, err := os.Stat(systemKnownHosts); err == nil {
+			files = append(files, systemKnownHosts)
+		}
+	}
+
+	if len(files) == 0 {
+		return nil, errors.Errorf(
+			"no known_hosts files found; create ~/.ssh/known_hosts or specify --known-hosts-file",
+		)
+	}
+
+	callback, err := knownhosts.New(files...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse known_hosts files: %v", files)
+	}
+
+	return callback, nil
+}
+
 // TODO refactor `blob_store_configs.ConfigSFTP` for ssh-client-specific methods
 func MakeSSHClientForExplicitConfig(
 	ctx interfaces.ActiveContext,
 	uiPrinter ui.Printer,
 	config blob_store_configs.ConfigSFTPConfigExplicit,
 ) (sshClient *ssh.Client, err error) {
+	var hostKeyCallback ssh.HostKeyCallback
+
+	if hostKeyCallback, err = makeHostKeyCallback(
+		config.GetKnownHostsFile(),
+	); err != nil {
+		err = errors.Wrap(err)
+		return
+	}
+
 	clientConfig := &ssh.ClientConfig{
 		User:            config.GetUser(),
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: make this configurable
+		HostKeyCallback: hostKeyCallback,
 	}
 
 	// Configure authentication
@@ -108,6 +157,15 @@ func MakeSSHClientFromSSHConfig(
 		return
 	}
 
+	var hostKeyCallback ssh.HostKeyCallback
+
+	if hostKeyCallback, err = makeHostKeyCallback(
+		config.GetKnownHostsFile(),
+	); err != nil {
+		err = errors.Wrap(err)
+		return
+	}
+
 	uri := config.GetUri()
 	url := uri.GetUrl()
 
@@ -116,7 +174,7 @@ func MakeSSHClientFromSSHConfig(
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeysCallback(clientAgent.Signers),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO make configurable
+		HostKeyCallback: hostKeyCallback,
 	}
 
 	port := url.Port()

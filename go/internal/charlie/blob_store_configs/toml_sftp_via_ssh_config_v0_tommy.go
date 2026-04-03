@@ -35,6 +35,10 @@ func DecodeTomlSFTPViaSSHConfigV0(input []byte) (*TomlSFTPViaSSHConfigV0Document
 		}
 		d.consumed["uri"] = true
 	}
+	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "known-hosts-file"); err == nil {
+		d.data.KnownHostsFile = v
+		d.consumed["known-hosts-file"] = true
+	}
 
 	return d, nil
 }
@@ -50,6 +54,13 @@ func (d *TomlSFTPViaSSHConfigV0Document) Encode() ([]byte, error) {
 		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "uri", string(v)); err != nil {
 			return nil, err
 		}
+	}
+	if d.data.KnownHostsFile != "" {
+		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "known-hosts-file", d.data.KnownHostsFile); err != nil {
+			return nil, err
+		}
+	} else {
+		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "known-hosts-file")
 	}
 
 	return d.cstDoc.Bytes(), nil
@@ -82,6 +93,10 @@ func DecodeTomlSFTPViaSSHConfigV0Into(data *TomlSFTPViaSSHConfigV0, doc *documen
 		}
 		consumed[keyPrefix+"uri"] = true
 	}
+	if v, err := document.GetFromContainer[string](doc, container, "known-hosts-file"); err == nil {
+		data.KnownHostsFile = v
+		consumed[keyPrefix+"known-hosts-file"] = true
+	}
 
 	return nil
 }
@@ -95,6 +110,13 @@ func EncodeTomlSFTPViaSSHConfigV0From(data *TomlSFTPViaSSHConfigV0, doc *documen
 		if err := doc.SetInContainer(container, "uri", string(v)); err != nil {
 			return err
 		}
+	}
+	if data.KnownHostsFile != "" {
+		if err := doc.SetInContainer(container, "known-hosts-file", data.KnownHostsFile); err != nil {
+			return err
+		}
+	} else {
+		_ = doc.DeleteFromContainer(container, "known-hosts-file")
 	}
 
 	return nil
