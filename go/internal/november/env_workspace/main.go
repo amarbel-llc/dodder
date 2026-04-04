@@ -162,6 +162,10 @@ func Make(
 
 				if len(hCfg.Calendars) > 0 {
 					for _, cal := range hCfg.Calendars {
+						if cal.URL == "" {
+							continue
+						}
+
 						calendars = append(calendars, haustoria_caldav.CalendarMapping{
 							URL:        cal.URL,
 							TypeId:     cal.Type,

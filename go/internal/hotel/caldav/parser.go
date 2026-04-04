@@ -10,22 +10,22 @@ import (
 // Task is the structured representation of a VTODO component, covering all
 // fields that tasks.org uses.
 type Task struct {
-	UID             string   `json:"uid"`
-	Summary         string   `json:"summary"`
-	Description     string   `json:"description,omitempty"`
-	Status          string   `json:"status,omitempty"`
-	Priority        int      `json:"priority,omitempty"`
-	Due             string   `json:"due,omitempty"`
-	DtStart         string   `json:"dtstart,omitempty"`
-	Completed       string   `json:"completed,omitempty"`
-	Created         string   `json:"created,omitempty"`
-	LastModified    string   `json:"last_modified,omitempty"`
-	Categories      []string `json:"categories,omitempty"`
-	PercentComplete int      `json:"percent_complete,omitempty"`
-	ParentUID       string   `json:"parent_uid,omitempty"`
-	RRule           string   `json:"rrule,omitempty"`
-	Location        string   `json:"location,omitempty"`
-	Geo             string   `json:"geo,omitempty"`
+	UID                string   `json:"uid"`
+	Summary            string   `json:"summary"`
+	Description        string   `json:"description,omitempty"`
+	Status             string   `json:"status,omitempty"`
+	Priority           int      `json:"priority,omitempty"`
+	Due                string   `json:"due,omitempty"`
+	DtStart            string   `json:"dtstart,omitempty"`
+	Completed          string   `json:"completed,omitempty"`
+	Created            string   `json:"created,omitempty"`
+	LastModified       string   `json:"last_modified,omitempty"`
+	Categories         []string `json:"categories,omitempty"`
+	PercentComplete    int      `json:"percent_complete,omitempty"`
+	ParentUID          string   `json:"parent_uid,omitempty"`
+	RRule              string   `json:"rrule,omitempty"`
+	Location           string   `json:"location,omitempty"`
+	Geo                string   `json:"geo,omitempty"`
 	SortOrder          int      `json:"sort_order,omitempty"`
 	Sequence           int      `json:"sequence,omitempty"`
 	Attachments        []string `json:"attachments,omitempty"`
@@ -166,7 +166,7 @@ func ParseVTODO(raw string) (*Task, error) {
 			for i := range cats {
 				cats[i] = strings.TrimSpace(cats[i])
 			}
-			t.Categories = cats
+			t.Categories = append(t.Categories, cats...)
 		case "PERCENT-COMPLETE":
 			if n, err := strconv.Atoi(value); err == nil {
 				t.PercentComplete = n
