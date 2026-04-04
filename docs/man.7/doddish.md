@@ -18,7 +18,9 @@ doddish - dodder query language
 Doddish is the query language used by dodder commands that accept object
 predicates (**show**, **checkout**, **status**, **edit**, **push**, **pull**,
 etc.). Query terms are separated by spaces and combined with AND semantics ---
-an object must match all terms to be included in the result.
+an object must match all terms to be included in the result. The exception is
+object IDs: because IDs are unique, multiple object ID terms are implicitly
+OR-combined.
 
 # QUERY TERMS
 
@@ -164,7 +166,7 @@ The **\^** operator negates a group or term:
 :   A specific zettel by ID.
 
 **one/uno one/dos**
-:   Multiple zettels (AND --- both must match, or used in list context).
+:   Multiple zettels (object IDs are OR-combined, unlike other terms).
 
 **/repo:k**
 :   A specific repo by ID.
