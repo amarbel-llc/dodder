@@ -17,8 +17,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/caldav"
+	"code.linenisgreat.com/dodder/go/internal/hotel/webdav"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/mike/haustoria_caldav"
+	"code.linenisgreat.com/dodder/go/internal/mike/haustoria_orgmode"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -187,6 +189,68 @@ func Make(
 					caldavCfg,
 					calendars,
 				)
+			}
+
+		} else if hCfg.Type == "orgmode" && hCfg.Orgmode != nil {
+			resolved, resolveErr := hCfg.Orgmode.ResolveOrgmode()
+			if resolveErr == nil {
+				var transport haustoria_orgmode.Transport
+
+				switch resolved.Transport {
+				case "webdav":
+					transport = haustoria_orgmode.MakeWebDAVTransport(
+						&webdav.Config{
+							URL:      resolved.WebDAVURL,
+							Username: resolved.WebDAVUsername,
+							Password: resolved.WebDAVPassword,
+						},
+					)
+
+				case "sftp":
+					transport, _ = haustoria_orgmode.MakeSFTPTransport(
+						haustoria_orgmode.SFTPConfig{
+							Host:           resolved.SFTPHost,
+							Port:           resolved.SFTPPort,
+							User:           resolved.SFTPUser,
+							Password:       resolved.SFTPPassword,
+							PrivateKeyPath: resolved.SFTPPrivateKeyPath,
+						},
+					)
+				}
+
+				if transport != nil {
+					var folders []haustoria_orgmode.FolderMapping
+
+					for _, folder := range hCfg.Folders {
+						if folder.Path == "" {
+							continue
+						}
+
+						folders = append(folders, haustoria_orgmode.FolderMapping{
+							Path:   folder.Path,
+							TypeId: folder.Type,
+							Tags:   folder.Tags,
+						})
+					}
+
+					if len(folders) == 0 {
+						// Default: use the WebDAV URL or SFTP path as a single folder.
+						defaultPath := resolved.WebDAVURL
+						if resolved.Transport == "sftp" {
+							defaultPath = "/org"
+						}
+
+						folders = []haustoria_orgmode.FolderMapping{{
+							Path:   defaultPath,
+							TypeId: "!md",
+						}}
+					}
+
+					outputEnv.store.StoreLike = haustoria_orgmode.MakeStore(
+						transport,
+						folders,
+					)
+				}
 			}
 		}
 	}

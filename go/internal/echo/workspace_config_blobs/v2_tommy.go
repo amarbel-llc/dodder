@@ -121,6 +121,74 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 			}
 		}
+		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "orgmode"); tableNode != nil {
+			d.consumed["haustoria.orgmode"] = true
+			orgmodeVal := &OrgmodeConfig{}
+			if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "transport"); err == nil {
+				orgmodeVal.Transport = v
+				d.consumed["haustoria.orgmode.transport"] = true
+			}
+			if webdavNode := d.cstDoc.FindTableInContainer(tableNode, "webdav"); webdavNode != nil {
+				d.consumed["haustoria.orgmode.webdav"] = true
+				webdavVal := &OrgmodeWebDAV{}
+				if v, err := document.GetFromContainer[string](d.cstDoc, webdavNode, "url"); err == nil {
+					webdavVal.URL = v
+					d.consumed["haustoria.orgmode.webdav.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, webdavNode, "username"); err == nil {
+					webdavVal.Username = v
+					d.consumed["haustoria.orgmode.webdav.username"] = true
+				}
+				orgmodeVal.WebDAV = webdavVal
+			}
+			if sftpNode := d.cstDoc.FindTableInContainer(tableNode, "sftp"); sftpNode != nil {
+				d.consumed["haustoria.orgmode.sftp"] = true
+				sftpVal := &OrgmodeSFTP{}
+				if v, err := document.GetFromContainer[string](d.cstDoc, sftpNode, "host"); err == nil {
+					sftpVal.Host = v
+					d.consumed["haustoria.orgmode.sftp.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](d.cstDoc, sftpNode, "port"); err == nil {
+					sftpVal.Port = v
+					d.consumed["haustoria.orgmode.sftp.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, sftpNode, "user"); err == nil {
+					sftpVal.User = v
+					d.consumed["haustoria.orgmode.sftp.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, sftpNode, "private-key-path"); err == nil {
+					sftpVal.PrivateKeyPath = v
+					d.consumed["haustoria.orgmode.sftp.private-key-path"] = true
+				}
+				orgmodeVal.SFTP = sftpVal
+			}
+			d.data.Haustoria.Orgmode = orgmodeVal
+		}
+		{
+			subTables := d.cstDoc.FindSubTablesInContainer(tableNode, "folders")
+			if len(subTables) > 0 {
+				d.consumed["haustoria.folders"] = true
+				d.data.Haustoria.Folders = make(map[string]FolderConfig)
+				for _, subTable := range subTables {
+					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "folders")
+					d.consumed["haustoria.folders"+"."+mapKey] = true
+					var entry FolderConfig
+					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "path"); err == nil {
+						entry.Path = v
+						d.consumed["haustoria.folders.path"] = true
+					}
+					if v, err := document.GetFromContainer[string](d.cstDoc, subTable, "type"); err == nil {
+						entry.Type = v
+						d.consumed["haustoria.folders.type"] = true
+					}
+					if v, err := document.GetFromContainer[[]string](d.cstDoc, subTable, "tags"); err == nil {
+						entry.Tags = v
+						d.consumed["haustoria.folders.tags"] = true
+					}
+					d.data.Haustoria.Folders[mapKey] = entry
+				}
+			}
+		}
 	}
 
 	return d, nil
@@ -213,6 +281,70 @@ func (d *V2Document) Encode() ([]byte, error) {
 						if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
 							return nil, err
 						}
+					}
+				}
+			}
+		}
+		if d.data.Haustoria.Orgmode != nil {
+			orgmodeTable := d.cstDoc.EnsureTableInContainer(tableNode, "orgmode")
+			if d.data.Haustoria.Orgmode.Transport != "" || d.cstDoc.HasInContainer(orgmodeTable, "transport") {
+				if err := d.cstDoc.SetInContainer(orgmodeTable, "transport", d.data.Haustoria.Orgmode.Transport); err != nil {
+					return nil, err
+				}
+			}
+			if d.data.Haustoria.Orgmode.WebDAV != nil {
+				webdavTable := d.cstDoc.EnsureTableInContainer(orgmodeTable, "webdav")
+				if d.data.Haustoria.Orgmode.WebDAV.URL != "" || d.cstDoc.HasInContainer(webdavTable, "url") {
+					if err := d.cstDoc.SetInContainer(webdavTable, "url", d.data.Haustoria.Orgmode.WebDAV.URL); err != nil {
+						return nil, err
+					}
+				}
+				if d.data.Haustoria.Orgmode.WebDAV.Username != "" || d.cstDoc.HasInContainer(webdavTable, "username") {
+					if err := d.cstDoc.SetInContainer(webdavTable, "username", d.data.Haustoria.Orgmode.WebDAV.Username); err != nil {
+						return nil, err
+					}
+				}
+			}
+			if d.data.Haustoria.Orgmode.SFTP != nil {
+				sftpTable := d.cstDoc.EnsureTableInContainer(orgmodeTable, "sftp")
+				if d.data.Haustoria.Orgmode.SFTP.Host != "" || d.cstDoc.HasInContainer(sftpTable, "host") {
+					if err := d.cstDoc.SetInContainer(sftpTable, "host", d.data.Haustoria.Orgmode.SFTP.Host); err != nil {
+						return nil, err
+					}
+				}
+				if d.data.Haustoria.Orgmode.SFTP.Port != 0 || d.cstDoc.HasInContainer(sftpTable, "port") {
+					if err := d.cstDoc.SetInContainer(sftpTable, "port", d.data.Haustoria.Orgmode.SFTP.Port); err != nil {
+						return nil, err
+					}
+				}
+				if d.data.Haustoria.Orgmode.SFTP.User != "" || d.cstDoc.HasInContainer(sftpTable, "user") {
+					if err := d.cstDoc.SetInContainer(sftpTable, "user", d.data.Haustoria.Orgmode.SFTP.User); err != nil {
+						return nil, err
+					}
+				}
+				if d.data.Haustoria.Orgmode.SFTP.PrivateKeyPath != "" || d.cstDoc.HasInContainer(sftpTable, "private-key-path") {
+					if err := d.cstDoc.SetInContainer(sftpTable, "private-key-path", d.data.Haustoria.Orgmode.SFTP.PrivateKeyPath); err != nil {
+						return nil, err
+					}
+				}
+			}
+		}
+		if len(d.data.Haustoria.Folders) > 0 {
+			for mapKey, mapVal := range d.data.Haustoria.Folders {
+				subTable := d.cstDoc.EnsureSubTableInContainer(tableNode, "folders", mapKey)
+				if mapVal.Path != "" || d.cstDoc.HasInContainer(subTable, "path") {
+					if err := d.cstDoc.SetInContainer(subTable, "path", mapVal.Path); err != nil {
+						return nil, err
+					}
+				}
+				if mapVal.Type != "" || d.cstDoc.HasInContainer(subTable, "type") {
+					if err := d.cstDoc.SetInContainer(subTable, "type", mapVal.Type); err != nil {
+						return nil, err
+					}
+				}
+				if len(mapVal.Tags) > 0 || d.cstDoc.HasInContainer(subTable, "tags") {
+					if err := d.cstDoc.SetInContainer(subTable, "tags", mapVal.Tags); err != nil {
+						return nil, err
 					}
 				}
 			}
@@ -334,6 +466,74 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 			}
 		}
+		if orgmodeNode := doc.FindTableInContainer(tableNode, "orgmode"); orgmodeNode != nil {
+			consumed[keyPrefix+"haustoria.orgmode"] = true
+			orgmodeVal := &OrgmodeConfig{}
+			if v, err := document.GetFromContainer[string](doc, orgmodeNode, "transport"); err == nil {
+				orgmodeVal.Transport = v
+				consumed[keyPrefix+"haustoria.orgmode.transport"] = true
+			}
+			if webdavNode := doc.FindTableInContainer(orgmodeNode, "webdav"); webdavNode != nil {
+				consumed[keyPrefix+"haustoria.orgmode.webdav"] = true
+				webdavVal := &OrgmodeWebDAV{}
+				if v, err := document.GetFromContainer[string](doc, webdavNode, "url"); err == nil {
+					webdavVal.URL = v
+					consumed[keyPrefix+"haustoria.orgmode.webdav.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, webdavNode, "username"); err == nil {
+					webdavVal.Username = v
+					consumed[keyPrefix+"haustoria.orgmode.webdav.username"] = true
+				}
+				orgmodeVal.WebDAV = webdavVal
+			}
+			if sftpNode := doc.FindTableInContainer(orgmodeNode, "sftp"); sftpNode != nil {
+				consumed[keyPrefix+"haustoria.orgmode.sftp"] = true
+				sftpVal := &OrgmodeSFTP{}
+				if v, err := document.GetFromContainer[string](doc, sftpNode, "host"); err == nil {
+					sftpVal.Host = v
+					consumed[keyPrefix+"haustoria.orgmode.sftp.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](doc, sftpNode, "port"); err == nil {
+					sftpVal.Port = v
+					consumed[keyPrefix+"haustoria.orgmode.sftp.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, sftpNode, "user"); err == nil {
+					sftpVal.User = v
+					consumed[keyPrefix+"haustoria.orgmode.sftp.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, sftpNode, "private-key-path"); err == nil {
+					sftpVal.PrivateKeyPath = v
+					consumed[keyPrefix+"haustoria.orgmode.sftp.private-key-path"] = true
+				}
+				orgmodeVal.SFTP = sftpVal
+			}
+			data.Haustoria.Orgmode = orgmodeVal
+		}
+		{
+			subTables := doc.FindSubTablesInContainer(tableNode, "folders")
+			if len(subTables) > 0 {
+				consumed[keyPrefix+"haustoria.folders"] = true
+				data.Haustoria.Folders = make(map[string]FolderConfig)
+				for _, subTable := range subTables {
+					mapKey := document.SubTableKeyInContainer(subTable, tableNode, "folders")
+					consumed[keyPrefix+"haustoria.folders"+"."+mapKey] = true
+					var entry FolderConfig
+					if v, err := document.GetFromContainer[string](doc, subTable, "path"); err == nil {
+						entry.Path = v
+						consumed[keyPrefix+"haustoria.folders.path"] = true
+					}
+					if v, err := document.GetFromContainer[string](doc, subTable, "type"); err == nil {
+						entry.Type = v
+						consumed[keyPrefix+"haustoria.folders.type"] = true
+					}
+					if v, err := document.GetFromContainer[[]string](doc, subTable, "tags"); err == nil {
+						entry.Tags = v
+						consumed[keyPrefix+"haustoria.folders.tags"] = true
+					}
+					data.Haustoria.Folders[mapKey] = entry
+				}
+			}
+		}
 	}
 
 	return nil
@@ -424,6 +624,70 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 						if err := doc.SetInContainer(tableNode, k, v); err != nil {
 							return err
 						}
+					}
+				}
+			}
+		}
+		if data.Haustoria.Orgmode != nil {
+			orgmodeTable := doc.EnsureTableInContainer(tableNode, "orgmode")
+			if data.Haustoria.Orgmode.Transport != "" || doc.HasInContainer(orgmodeTable, "transport") {
+				if err := doc.SetInContainer(orgmodeTable, "transport", data.Haustoria.Orgmode.Transport); err != nil {
+					return err
+				}
+			}
+			if data.Haustoria.Orgmode.WebDAV != nil {
+				webdavTable := doc.EnsureTableInContainer(orgmodeTable, "webdav")
+				if data.Haustoria.Orgmode.WebDAV.URL != "" || doc.HasInContainer(webdavTable, "url") {
+					if err := doc.SetInContainer(webdavTable, "url", data.Haustoria.Orgmode.WebDAV.URL); err != nil {
+						return err
+					}
+				}
+				if data.Haustoria.Orgmode.WebDAV.Username != "" || doc.HasInContainer(webdavTable, "username") {
+					if err := doc.SetInContainer(webdavTable, "username", data.Haustoria.Orgmode.WebDAV.Username); err != nil {
+						return err
+					}
+				}
+			}
+			if data.Haustoria.Orgmode.SFTP != nil {
+				sftpTable := doc.EnsureTableInContainer(orgmodeTable, "sftp")
+				if data.Haustoria.Orgmode.SFTP.Host != "" || doc.HasInContainer(sftpTable, "host") {
+					if err := doc.SetInContainer(sftpTable, "host", data.Haustoria.Orgmode.SFTP.Host); err != nil {
+						return err
+					}
+				}
+				if data.Haustoria.Orgmode.SFTP.Port != 0 || doc.HasInContainer(sftpTable, "port") {
+					if err := doc.SetInContainer(sftpTable, "port", data.Haustoria.Orgmode.SFTP.Port); err != nil {
+						return err
+					}
+				}
+				if data.Haustoria.Orgmode.SFTP.User != "" || doc.HasInContainer(sftpTable, "user") {
+					if err := doc.SetInContainer(sftpTable, "user", data.Haustoria.Orgmode.SFTP.User); err != nil {
+						return err
+					}
+				}
+				if data.Haustoria.Orgmode.SFTP.PrivateKeyPath != "" || doc.HasInContainer(sftpTable, "private-key-path") {
+					if err := doc.SetInContainer(sftpTable, "private-key-path", data.Haustoria.Orgmode.SFTP.PrivateKeyPath); err != nil {
+						return err
+					}
+				}
+			}
+		}
+		if len(data.Haustoria.Folders) > 0 {
+			for mapKey, mapVal := range data.Haustoria.Folders {
+				subTable := doc.EnsureSubTableInContainer(tableNode, "folders", mapKey)
+				if mapVal.Path != "" || doc.HasInContainer(subTable, "path") {
+					if err := doc.SetInContainer(subTable, "path", mapVal.Path); err != nil {
+						return err
+					}
+				}
+				if mapVal.Type != "" || doc.HasInContainer(subTable, "type") {
+					if err := doc.SetInContainer(subTable, "type", mapVal.Type); err != nil {
+						return err
+					}
+				}
+				if len(mapVal.Tags) > 0 || doc.HasInContainer(subTable, "tags") {
+					if err := doc.SetInContainer(subTable, "tags", mapVal.Tags); err != nil {
+						return err
 					}
 				}
 			}

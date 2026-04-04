@@ -430,10 +430,60 @@ func (cmd InitWorkspace) makeHaustoriaConfig(
 			},
 		}
 
+	case "orgmode":
+		orgCfg := workspace_config_blobs.OrgmodeConfig{}
+
+		resolved, err := orgCfg.ResolveOrgmode()
+		if err != nil {
+			req.Cancel(
+				errors.BadRequestf(
+					"Orgmode configuration incomplete: %s", err,
+				),
+			)
+			return nil
+		}
+
+		switch resolved.Transport {
+		case "webdav":
+			orgCfg.Transport = "webdav"
+			orgCfg.WebDAV = &workspace_config_blobs.OrgmodeWebDAV{
+				URL:      resolved.WebDAVURL,
+				Username: resolved.WebDAVUsername,
+			}
+
+		case "sftp":
+			orgCfg.Transport = "sftp"
+			orgCfg.SFTP = &workspace_config_blobs.OrgmodeSFTP{
+				Host:           resolved.SFTPHost,
+				Port:           resolved.SFTPPort,
+				User:           resolved.SFTPUser,
+				PrivateKeyPath: resolved.SFTPPrivateKeyPath,
+			}
+		}
+
+		defaultPath := resolved.WebDAVURL
+		if resolved.Transport == "sftp" {
+			defaultPath = "/org"
+		}
+
+		return &workspace_config_blobs.V2{
+			V1: v1,
+			Haustoria: workspace_config_blobs.HaustoriaConfig{
+				Type:    "orgmode",
+				Orgmode: &orgCfg,
+				Folders: map[string]workspace_config_blobs.FolderConfig{
+					"default": {
+						Path: defaultPath,
+						Type: "!md",
+					},
+				},
+			},
+		}
+
 	default:
 		req.Cancel(
 			errors.BadRequestf(
-				"unknown haustoria type: %s (supported: caldav)",
+				"unknown haustoria type: %s (supported: caldav, orgmode)",
 				cmd.Haustoria,
 			),
 		)
