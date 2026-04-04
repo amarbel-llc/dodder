@@ -34,7 +34,14 @@ type Export struct {
 	CompressionType compression_type.CompressionType
 }
 
-var _ interfaces.CommandComponentWriter = (*Export)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Export)(nil)
+	_ command.CommandWithArgs           = (*Export)(nil)
+)
+
+func (cmd *Export) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd Export) GetDescription() command.Description {
 	return command.Description{

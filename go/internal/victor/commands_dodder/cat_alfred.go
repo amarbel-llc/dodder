@@ -31,7 +31,14 @@ type CatAlfred struct {
 	genres.Genre
 }
 
-var _ interfaces.CommandComponentWriter = (*CatAlfred)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*CatAlfred)(nil)
+	_ command.CommandWithArgs           = (*CatAlfred)(nil)
+)
+
+func (cmd *CatAlfred) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd *CatAlfred) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,

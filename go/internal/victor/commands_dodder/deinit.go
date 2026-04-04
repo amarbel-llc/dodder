@@ -32,7 +32,12 @@ type Deinit struct {
 	Force bool
 }
 
-var _ interfaces.CommandComponentWriter = (*Deinit)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Deinit)(nil)
+	_ command.CommandWithArgs           = (*Deinit)(nil)
+)
+
+func (cmd *Deinit) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd *Deinit) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,

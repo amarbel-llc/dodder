@@ -14,7 +14,12 @@ type List struct {
 	command_components_madder.EnvBlobStore
 }
 
-var _ interfaces.CommandComponentWriter = (*List)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*List)(nil)
+	_ command.CommandWithArgs           = (*List)(nil)
+)
+
+func (cmd *List) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd List) GetDescription() command.Description {
 	return command.Description{

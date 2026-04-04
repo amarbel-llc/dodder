@@ -22,6 +22,10 @@ type CheckinJson struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*CheckinJson)(nil)
+
+func (cmd *CheckinJson) GetArgs() []command.ArgGroup { return nil }
+
 type TomlBookmark struct {
 	ObjectId string
 	Tags     []string

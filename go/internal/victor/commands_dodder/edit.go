@@ -31,7 +31,14 @@ type Edit struct {
 	CheckoutMode checkout_mode.Mode
 }
 
-var _ interfaces.CommandComponentWriter = (*Edit)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Edit)(nil)
+	_ command.CommandWithArgs           = (*Edit)(nil)
+)
+
+func (cmd *Edit) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd Edit) GetDescription() command.Description {
 	return command.Description{

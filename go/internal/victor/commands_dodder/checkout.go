@@ -29,7 +29,14 @@ type Checkout struct {
 	Organize        bool
 }
 
-var _ interfaces.CommandComponentWriter = (*Checkout)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Checkout)(nil)
+	_ command.CommandWithArgs           = (*Checkout)(nil)
+)
+
+func (cmd *Checkout) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd Checkout) GetDescription() command.Description {
 	return command.Description{

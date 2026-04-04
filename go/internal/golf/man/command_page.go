@@ -57,8 +57,10 @@ func generateCommandPage(
 	}
 
 	var argGroups []command.ArgGroup
+	hasArgMetadata := false
 
 	if argsCmd, ok := cmd.(command.CommandWithArgs); ok {
+		hasArgMetadata = true
 		argGroups = argsCmd.GetArgs()
 	}
 
@@ -73,7 +75,7 @@ func generateCommandPage(
 
 	if len(argGroups) > 0 {
 		writeSynopsisArgs(w, argGroups)
-	} else {
+	} else if !hasArgMetadata {
 		fmt.Fprintf(w, " [%s]", roffItalic("args..."))
 	}
 

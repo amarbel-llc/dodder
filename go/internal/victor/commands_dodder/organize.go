@@ -51,7 +51,14 @@ type Organize struct {
 	Filter script_value.ScriptValue
 }
 
-var _ interfaces.CommandComponentWriter = (*Organize)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Organize)(nil)
+	_ command.CommandWithArgs           = (*Organize)(nil)
+)
+
+func (cmd *Organize) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd *Organize) SetFlagDefinitions(flagDef interfaces.CLIFlagDefinitions) {
 	cmd.Query.SetFlagDefinitions(flagDef)

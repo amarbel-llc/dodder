@@ -22,6 +22,10 @@ type Reindex struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*Reindex)(nil)
+
+func (cmd *Reindex) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd Reindex) Run(req command.Request) {
 	args := req.PopArgs()
 

@@ -48,6 +48,10 @@ type AddZettelIds struct {
 	flatFileName string
 }
 
+var _ command.CommandWithArgs = (*AddZettelIds)(nil)
+
+func (cmd *AddZettelIds) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd AddZettelIds) Run(req command.Request) {
 	req.AssertNoMoreArgs()
 

@@ -30,7 +30,14 @@ type Clean struct {
 	organize                 bool
 }
 
-var _ interfaces.CommandComponentWriter = (*Clean)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Clean)(nil)
+	_ command.CommandWithArgs           = (*Clean)(nil)
+)
+
+func (cmd *Clean) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd Clean) GetDescription() command.Description {
 	return command.Description{

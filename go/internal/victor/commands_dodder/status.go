@@ -25,6 +25,12 @@ type Status struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 }
 
+var _ command.CommandWithArgs = (*Status)(nil)
+
+func (cmd *Status) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
+
 func (cmd Status) Run(req command.Request) {
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(req)
 	localWorkingCopy.GetEnvWorkspace().AssertNotTemporary(req)
