@@ -122,7 +122,6 @@ function complete_subcmd { # @test
 		clean.*remove checked-out objects from the workspace
 		clone.*clone a remote repository
 		complete.*complete a command-line
-		debug-caldav-list.*list raw CalDAV VTODOs as JSON .debug.
 		debug-print-probe-index.*print stream index probes
 		deinit.*remove repository and workspace directories
 		diff.*show differences between workspace and store
