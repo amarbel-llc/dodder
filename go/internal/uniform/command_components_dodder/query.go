@@ -17,11 +17,11 @@ var _ interfaces.CommandComponentWriter = (*Query)(nil)
 
 func (cmd Query) GetArgGroup() command.ArgGroup {
 	return command.ArgGroup{
-		Name:        "query",
-		Description: "query terms (AND-combined): genre filters (:z :e :t), tag names, type filters (!type)",
+		Name:        "doddish",
+		Description: "query terms (AND-combined): genre filters (:z :e :t), tag names, type filters (!type). See doddish(7).",
 		Args: []command.Arg{{
-			Name:        "predicates",
-			Description: "query predicates",
+			Name:        "doddish",
+			Description: "doddish query expression",
 			Variadic:    true,
 		}},
 	}
