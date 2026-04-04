@@ -1,8 +1,21 @@
 # repo_actions
 
-High-level actions performed on a local working copy repository. All action
-types embed `*local_working_copy.Repo` and have `Make*` constructors that
-enforce required fields.
+High-level actions performed on a local working copy repository.
+
+## Construction
+
+All action types embed a private `*repo` field (a type alias for
+`local_working_copy.Repo`) and **must** be created via `Make*` constructors.
+Struct literal construction from outside the package is a compile error.
+
+Required fields are constructor parameters; optional fields (booleans, strings,
+Proto) are set via field assignment after construction:
+
+``` go
+op := repo_actions.MakeCheckout(repo)
+op.Edit = true
+op.Options = myOptions
+```
 
 ## Key Actions
 
