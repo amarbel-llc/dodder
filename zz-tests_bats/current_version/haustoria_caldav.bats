@@ -56,31 +56,10 @@ function start_radicale {
     fi
     sleep 0.1
   done
-
-  # Create calendar
-  local http_code
-  http_code=$(curl -s -o /dev/null -w "%{http_code}" -X MKCALENDAR \
-    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
-    "$CALDAV_URL" \
-    -H 'Content-Type: application/xml' \
-    -d '<?xml version="1.0" encoding="UTF-8"?>
-<mkcalendar xmlns="urn:ietf:params:xml:ns:caldav">
-  <set xmlns="DAV:">
-    <prop>
-      <displayname>Tasks</displayname>
-      <supported-calendar-component-set xmlns="urn:ietf:params:xml:ns:caldav">
-        <comp name="VTODO"/>
-      </supported-calendar-component-set>
-    </prop>
-  </set>
-</mkcalendar>')
-  if [[ $http_code -ge 400 ]]; then
-    fail "MKCALENDAR $CALDAV_URL failed with HTTP $http_code on port $RADICALE_PORT. Log: $(cat "$BATS_TEST_TMPDIR/radicale.log" | tail -10)"
-  fi
 }
 
 function stop_radicale {
-  if [[ -n "${RADICALE_PID:-}" ]]; then
+  if [[ -n ${RADICALE_PID:-} ]]; then
     kill "$RADICALE_PID" 2>/dev/null || true
     wait "$RADICALE_PID" 2>/dev/null || true
     unset RADICALE_PID
@@ -127,10 +106,137 @@ END:VCALENDAR"
   fi
 }
 
+# Put a VTODO with explicit STATUS and optional multiple CATEGORIES lines.
+# Usage: put_vtodo_with_status <calendar_url> <uid> <summary> <status> [categories_line]...
+function put_vtodo_with_status {
+  local calendar_url="$1"
+  local uid="$2"
+  local summary="$3"
+  local status="$4"
+  shift 4
+
+  local ical="BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dodder-test//test//EN
+BEGIN:VTODO
+UID:$uid
+SUMMARY:$summary
+STATUS:$status"
+
+  # Remaining args are CATEGORIES lines
+  for cats in "$@"; do
+    ical="$ical
+CATEGORIES:$cats"
+  done
+
+  ical="$ical
+END:VTODO
+END:VCALENDAR"
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    -H "Content-Type: text/calendar" \
+    "${calendar_url}${uid}.ics" \
+    -d "$ical")
+
+  if [[ $http_code -ge 400 ]]; then
+    fail "PUT VTODO $uid to $calendar_url failed with HTTP $http_code"
+  fi
+}
+
+function create_calendar {
+  local calendar_url="$1"
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" -X MKCALENDAR \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    "$calendar_url" \
+    -H 'Content-Type: application/xml' \
+    -d '<?xml version="1.0" encoding="UTF-8"?>
+<mkcalendar xmlns="urn:ietf:params:xml:ns:caldav">
+  <set xmlns="DAV:">
+    <prop>
+      <supported-calendar-component-set xmlns="urn:ietf:params:xml:ns:caldav">
+        <comp name="VTODO"/>
+      </supported-calendar-component-set>
+    </prop>
+  </set>
+</mkcalendar>')
+  if [[ $http_code -ge 400 ]]; then
+    fail "MKCALENDAR $calendar_url failed with HTTP $http_code"
+  fi
+}
+
+# Bootstrap a multi-calendar haustoria workspace with custom config.
+# Creates parent repo, workspace dir, runs init-workspace, then overwrites
+# the workspace config with a multi-calendar + status-tags configuration.
+function bootstrap_multi_calendar_workspace {
+  local parent_dir="$BATS_TEST_TMPDIR/parent"
+  local workspace_dir="$BATS_TEST_TMPDIR/workspace"
+  mkdir -p "$parent_dir" "$workspace_dir"
+
+  local base_url="http://127.0.0.1:$RADICALE_PORT/dodder"
+  export CALDAV_TASKS_URL="${base_url}/tasks/"
+  export CALDAV_CHORES_URL="${base_url}/chores/"
+
+  create_calendar "$CALDAV_TASKS_URL"
+  create_calendar "$CALDAV_CHORES_URL"
+
+  pushd "$parent_dir" || return 1
+  run_dodder_init_disable_age "test-parent"
+  popd || return 1
+
+  pushd "$workspace_dir" || return 1
+  run_dodder init-workspace \
+    -haustoria caldav \
+    -parent "$parent_dir" \
+    ${cmd_dodder_def[@]} \
+    haustoria-ws
+  assert_success
+
+  # Overwrite config with multi-calendar + status-tags
+  cat >.dodder-workspace <<EOF
+---
+! toml-workspace_config-v2
+---
+
+parent-path = "$parent_dir"
+
+[defaults]
+tags = []
+
+[haustoria]
+type = "caldav"
+
+[haustoria.caldav]
+url = "${base_url}/"
+username = "$CALDAV_USERNAME"
+
+[haustoria.calendars.tasks]
+url = "$CALDAV_TASKS_URL"
+type = "!task"
+
+[haustoria.calendars.tasks.status-tags]
+COMPLETED = "zz-archive-task-done"
+
+[haustoria.calendars.chores]
+url = "$CALDAV_CHORES_URL"
+type = "!chore"
+
+[haustoria.calendars.chores.status-tags]
+COMPLETED = "zz-archive-task-done"
+EOF
+
+  popd || return 1
+}
+
 function bootstrap_haustoria_workspace {
   local parent_dir="$BATS_TEST_TMPDIR/parent"
   local workspace_dir="$BATS_TEST_TMPDIR/workspace"
   mkdir -p "$parent_dir" "$workspace_dir"
+
+  create_calendar "$CALDAV_URL"
 
   pushd "$parent_dir" || return 1
   run_dodder_init_disable_age "test-parent"
@@ -147,10 +253,10 @@ function bootstrap_haustoria_workspace {
 }
 
 function status_shows_caldav_resources { # @test
+  bootstrap_haustoria_workspace
+
   put_vtodo "task-1" "Buy groceries" "errands,shopping" "milk eggs bread"
   put_vtodo "task-2" "Call dentist" "health" "schedule cleaning"
-
-  bootstrap_haustoria_workspace
 
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
   run_dodder status
@@ -163,10 +269,10 @@ function status_shows_caldav_resources { # @test
 }
 
 function checkin_creates_zettels_from_caldav { # @test
+  bootstrap_haustoria_workspace
+
   put_vtodo "task-1" "Write report" "work"
   put_vtodo "task-2" "Fix bike" "errands"
-
-  bootstrap_haustoria_workspace
 
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
 
@@ -183,11 +289,11 @@ function checkin_creates_zettels_from_caldav { # @test
 }
 
 function checkout_decompiles_zettels_to_caldav { # @test
-  # First: create VTODOs on CalDAV and checkin to create dodder objects
+  bootstrap_haustoria_workspace
+
+  # Create VTODOs on CalDAV and checkin to create dodder objects
   put_vtodo "task-1" "Deploy v2.0" "ops" "rollback plan ready"
   put_vtodo "task-2" "Update docs" "docs"
-
-  bootstrap_haustoria_workspace
 
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
 
@@ -250,9 +356,9 @@ function new_creates_zettel_and_decompiles_to_caldav { # @test
 }
 
 function checkin_idempotent_no_duplicates { # @test
-  put_vtodo "task-1" "Idempotent task" "test"
-
   bootstrap_haustoria_workspace
+
+  put_vtodo "task-1" "Idempotent task" "test"
 
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
 
@@ -278,9 +384,9 @@ function checkin_idempotent_no_duplicates { # @test
 }
 
 function status_shows_checked_out_after_checkin { # @test
-  put_vtodo "task-1" "Bound task" "test"
-
   bootstrap_haustoria_workspace
+
+  put_vtodo "task-1" "Bound task" "test"
 
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
 
@@ -313,5 +419,115 @@ function checkin_empty_calendar_no_error { # @test
   run_dodder show :
   assert_success
   assert_output ""
+  popd || return 1
+}
+
+function multi_calendar_status_with_status_tags { # @test
+  bootstrap_multi_calendar_workspace
+
+  # Active tasks
+  put_vtodo_with_status "$CALDAV_TASKS_URL" "t-1" "Write docs" "NEEDS-ACTION" "work"
+  put_vtodo_with_status "$CALDAV_TASKS_URL" "t-2" "Fix login bug" "NEEDS-ACTION" "work,urgent"
+
+  # Completed task — should get zz-archive-task-done tag
+  put_vtodo_with_status "$CALDAV_TASKS_URL" "t-3" "Old migration" "COMPLETED" "ops"
+
+  # Chore calendar
+  put_vtodo_with_status "$CALDAV_CHORES_URL" "c-1" "Wash dishes" "NEEDS-ACTION" "area-home"
+  put_vtodo_with_status "$CALDAV_CHORES_URL" "c-2" "Oil bike chain" "COMPLETED" "area-home"
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder status
+  assert_success
+
+  # All 5 tasks appear (completed ones get the status-tag, not filtered)
+  local line_count
+  line_count=$(echo "$output" | wc -l)
+  [[ $line_count -eq 5 ]]
+
+  # Verify status-tags mapping: completed tasks have zz-archive-task-done
+  assert_output --partial "zz-archive-task-done"
+
+  # Verify both calendar types present
+  assert_output --partial "!task"
+  assert_output --partial "!chore"
+
+  # Checkin and verify completed task has the archive tag
+  run_dodder checkin :
+  assert_success
+
+  run_dodder show :
+  assert_success
+  assert_output --partial "zz-archive-task-done"
+
+  popd || return 1
+}
+
+function multiple_categories_lines_accumulated { # @test
+  bootstrap_haustoria_workspace
+
+  # Put a VTODO with multiple CATEGORIES lines via raw iCal
+  local ical="BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dodder-test//test//EN
+BEGIN:VTODO
+UID:multi-cat
+SUMMARY:Multi-category task
+STATUS:NEEDS-ACTION
+CATEGORIES:project-dodder
+CATEGORIES:area-career
+CATEGORIES:urgent,req-email
+END:VTODO
+END:VCALENDAR"
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    -H "Content-Type: text/calendar" \
+    "${CALDAV_URL}multi-cat.ics" \
+    -d "$ical")
+  [[ $http_code -lt 400 ]]
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder status
+  assert_success
+
+  # All four categories from three CATEGORIES lines should be present
+  assert_output --partial "area-career"
+  assert_output --partial "project-dodder"
+  assert_output --partial "req-email"
+  assert_output --partial "urgent"
+
+  popd || return 1
+}
+
+function completed_tasks_get_status_tag { # @test
+  bootstrap_multi_calendar_workspace
+
+  put_vtodo_with_status "$CALDAV_TASKS_URL" "done-1" "Finished task" "COMPLETED" "work"
+  put_vtodo_with_status "$CALDAV_TASKS_URL" "active-1" "Active task" "NEEDS-ACTION" "work"
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  # Checkin both
+  run_dodder checkin :
+  assert_success
+
+  # Show all — completed task should have zz-archive-task-done, active should not
+  run_dodder show :
+  assert_success
+
+  # Two zettels created
+  local line_count
+  line_count=$(echo "$output" | wc -l)
+  [[ $line_count -eq 2 ]]
+
+  # Completed task has archive tag, active task does not
+  assert_output --partial '"Finished task" work zz-archive-task-done'
+  assert_output --partial '"Active task" work]'
+  refute_output --partial '"Active task" work zz-archive-task-done'
+
   popd || return 1
 }
