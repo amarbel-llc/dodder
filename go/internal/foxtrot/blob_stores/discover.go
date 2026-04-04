@@ -189,7 +189,7 @@ func WriteRemoteConfig(
 		return err
 	}
 
-	defer configFile.Close()
+	defer errors.DeferredCloser(&err, configFile)
 
 	if _, err = blob_store_configs.Coder.EncodeTo(typedConfig, configFile); err != nil {
 		err = errors.Wrapf(err, "failed to write remote config to %q", configPath)

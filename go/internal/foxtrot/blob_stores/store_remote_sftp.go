@@ -132,7 +132,7 @@ func (blobStore *remoteSftp) readRemoteConfig() (err error) {
 		return err
 	}
 
-	defer configFile.Close()
+	defer configFile.Close() //defer:err-checked
 
 	var typedConfig hyphence.TypedBlob[blob_store_configs.Config]
 

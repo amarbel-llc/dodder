@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 type NewHaustoria struct {
@@ -38,7 +39,7 @@ func (op NewHaustoria) Run(
 			if reader, err = os.Open(arg); err != nil {
 				return nil, errors.Wrapf(err, "open %s", arg)
 			}
-			defer reader.Close()
+			defer files.CloseReadOnly(reader)
 		}
 
 		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned

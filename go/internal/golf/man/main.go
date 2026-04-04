@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type PageConfig struct {
@@ -39,7 +40,7 @@ func GenerateAll(
 	config PageConfig,
 	utility command.Utility,
 	outputDir string,
-) error {
+) (err error) {
 	config.resolveDate()
 
 	// Generate main utility page
@@ -53,7 +54,7 @@ func GenerateAll(
 		return fmt.Errorf("creating %s: %w", mainPagePath, err)
 	}
 
-	defer mainFile.Close()
+	defer errors.DeferredCloser(&err, mainFile)
 
 	if err := generateUtilityPage(mainFile, config, utility); err != nil {
 		return fmt.Errorf("generating %s: %w", mainPagePath, err)

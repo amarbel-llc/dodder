@@ -204,7 +204,7 @@ func (cmd *Init) runDiscover(
 		return
 	}
 
-	defer sshClient.Close()
+	defer sshClient.Close() //defer:err-checked
 
 	sftpClient, err := sftp.NewClient(sshClient)
 	if err != nil {
@@ -215,7 +215,7 @@ func (cmd *Init) runDiscover(
 		return
 	}
 
-	defer sftpClient.Close()
+	defer sftpClient.Close() //defer:err-checked
 
 	remotePath := sftpConfig.GetRemotePath()
 

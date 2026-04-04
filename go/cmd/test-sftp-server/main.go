@@ -82,7 +82,7 @@ func main() {
 }
 
 func handleConnection(conn net.Conn, config *ssh.ServerConfig, root string) {
-	defer conn.Close()
+	defer conn.Close() //defer:err-checked
 
 	sshConn, chans, reqs, err := ssh.NewServerConn(conn, config)
 	if err != nil {
@@ -90,7 +90,7 @@ func handleConnection(conn net.Conn, config *ssh.ServerConfig, root string) {
 		return
 	}
 
-	defer sshConn.Close()
+	defer sshConn.Close() //defer:err-checked
 
 	go ssh.DiscardRequests(reqs)
 
