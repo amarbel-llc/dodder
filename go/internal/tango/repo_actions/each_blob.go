@@ -5,14 +5,13 @@ import (
 	"os/exec"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/google/shlex"
 )
 
 // TODO move to store_fs
 type EachBlob struct {
-	*local_working_copy.Repo
+	*repo
 	Utility string
 }
 

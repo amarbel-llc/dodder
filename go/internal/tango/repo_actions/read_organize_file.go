@@ -7,13 +7,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
 type ReadOrganizeFile struct {
-	*local_working_copy.Repo
+	*repo
 }
 
 func (c ReadOrganizeFile) RunWithPath(
@@ -45,7 +44,7 @@ func (c ReadOrganizeFile) Run(
 	om organize_text.Metadata,
 ) (ot *organize_text.Text, err error) {
 	otFlags := organize_text.MakeFlags()
-	ApplyToOrganizeOptions(c.Repo, &otFlags.Options)
+	ApplyToOrganizeOptions(c.repo, &otFlags.Options)
 
 	o := otFlags.GetOptionsWithMetadata(
 		c.GetConfig().GetPrintOptions(),

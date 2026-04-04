@@ -5,13 +5,12 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // TODO support using query results for organize population
 type CreateOrganizeFile struct {
-	*local_working_copy.Repo
+	*repo
 	organize_text.Options
 }
 

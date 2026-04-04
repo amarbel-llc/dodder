@@ -3,13 +3,12 @@ package repo_actions
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_lua"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/lua"
 )
 
 type ExecLua struct {
-	*local_working_copy.Repo
+	*repo
 }
 
 func (u ExecLua) Run(sk *sku.Transacted, args ...string) (err error) {

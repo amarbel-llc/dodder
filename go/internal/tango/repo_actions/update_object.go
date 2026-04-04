@@ -5,12 +5,11 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type UpdateObject struct {
-	*local_working_copy.Repo
+	*repo
 }
 
 type ObjectChanges struct {

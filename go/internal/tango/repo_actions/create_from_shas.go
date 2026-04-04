@@ -5,13 +5,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type CreateFromShas struct {
-	*local_working_copy.Repo
+	*repo
 	sku.Proto
 }
 
@@ -99,7 +98,7 @@ func (op CreateFromShas) Run(
 		},
 	}
 
-	results, err = op.Repo.ExecutePlan(plan)
+	results, err = op.repo.ExecutePlan(plan)
 
 	return results, err
 }

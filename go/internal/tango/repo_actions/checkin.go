@@ -9,14 +9,13 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type Checkin struct {
-	*local_working_copy.Repo
+	*repo
 	Proto sku.Proto
 
 	// TODO make flag family disambiguate these options
@@ -61,7 +60,7 @@ func (op Checkin) Run(
 
 	var processed sku.TransactedMutableSet
 
-	if processed, err = op.Repo.Checkin(
+	if processed, err = op.repo.Checkin(
 		results,
 		op.Proto,
 		op.Delete,
@@ -89,7 +88,7 @@ func (op Checkin) runOrganize(
 	}
 
 	opOrganize := MakeOrganize2(
-		op.Repo,
+		op.repo,
 		organize_text.Metadata{
 			TagSet: op.Proto.Metadata.GetTags(),
 			Type:   op.Proto.Metadata.GetType().ToType(),
@@ -150,7 +149,7 @@ func (c Checkin) openBlobIfNecessary(
 		return err
 	}
 
-	opCheckout := MakeCheckout(c.Repo)
+	opCheckout := MakeCheckout(c.repo)
 	opCheckout.Options = checkout_options.Options{
 		CheckoutMode: checkout_mode.Make(checkout_mode.Blob),
 	}

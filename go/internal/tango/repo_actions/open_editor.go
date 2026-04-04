@@ -1,13 +1,12 @@
 package repo_actions
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/editor"
 )
 
 type OpenEditor struct {
-	*local_working_copy.Repo
+	*repo
 	VimOptions []string
 }
 

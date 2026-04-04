@@ -9,14 +9,13 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type Checkout struct {
-	*local_working_copy.Repo
+	*repo
 	Organize bool
 	checkout_options.Options
 	Open            bool
@@ -45,7 +44,7 @@ func (op Checkout) RunWithRepoId(
 	repoId ids.RepoId,
 	transactedObjects sku.TransactedSet,
 ) (checkedOutObjects sku.SkuTypeSetMutable, err error) {
-	queryBuilder := op.Repo.MakeQueryBuilder(
+	queryBuilder := op.repo.MakeQueryBuilder(
 		ids.MakeGenre(genres.Zettel),
 		nil,
 	).WithTransacted(
@@ -98,7 +97,7 @@ func (op Checkout) RunQuery(
 		}
 	}
 
-	if err = op.Repo.GetStore().CheckoutQuery(
+	if err = op.repo.GetStore().CheckoutQuery(
 		op.Options,
 		query,
 		onCheckedOut,
@@ -108,7 +107,7 @@ func (op Checkout) RunQuery(
 	}
 
 	if op.Utility != "" {
-		eachBlobOp := MakeEachBlob(op.Repo, op.Utility)
+		eachBlobOp := MakeEachBlob(op.repo, op.Utility)
 
 		if err = eachBlobOp.Run(checkedOut); err != nil {
 			err = errors.Wrap(err)
@@ -152,9 +151,9 @@ func (op Checkout) runOrganize(
 	qgOriginal *queries.Query,
 	onCheckedOut interfaces.FuncIter[sku.SkuType],
 ) (qgModified *queries.Query, err error) {
-	opOrganize := Organize{
-		Repo: op.Repo,
-		Metadata: organize_text.Metadata{
+	opOrganize := MakeOrganize(
+		op.repo,
+		organize_text.Metadata{
 			RepoId: qgOriginal.RepoId,
 			OptionCommentSet: organize_text.MakeOptionCommentSet(
 				// TODO add other OptionComments
@@ -164,8 +163,8 @@ func (op Checkout) runOrganize(
 				},
 			),
 		},
-		DontUseQueryGroupForOrganizeMetadata: true,
-	}
+	)
+	opOrganize.DontUseQueryGroupForOrganizeMetadata = true
 
 	ui.Log().Print(qgOriginal)
 

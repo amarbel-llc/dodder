@@ -3,12 +3,11 @@ package repo_actions
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type WriteNewZettels struct {
-	*local_working_copy.Repo
+	*repo
 }
 
 func (op WriteNewZettels) RunMany(
@@ -49,7 +48,7 @@ func (op WriteNewZettels) RunMany(
 		},
 	}
 
-	results, err = op.Repo.ExecutePlan(plan)
+	results, err = op.repo.ExecutePlan(plan)
 
 	return results, err
 }

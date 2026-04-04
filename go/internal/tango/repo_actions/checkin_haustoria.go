@@ -9,12 +9,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type CheckinHaustoria struct {
-	*local_working_copy.Repo
+	*repo
 	Haustoria haustoria.Haustoria
 	StoreLike store_workspace.StoreLike
 	Query     *queries.Query
@@ -93,7 +92,7 @@ func (op CheckinHaustoria) Run() (results sku.TransactedMutableSet, err error) {
 		},
 	}
 
-	results, err = op.Repo.ExecutePlan(plan)
+	results, err = op.repo.ExecutePlan(plan)
 
 	return results, err
 }

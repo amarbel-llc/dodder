@@ -8,12 +8,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 type NewHaustoria struct {
-	*local_working_copy.Repo
+	*repo
 	Haustoria  haustoria.Haustoria
 	TextParser object_metadata_fmt_hyphence.Parser
 	Proto      sku.Proto
@@ -74,7 +73,7 @@ func (op NewHaustoria) Run(
 		},
 	}
 
-	results, err = op.Repo.ExecutePlan(plan)
+	results, err = op.repo.ExecutePlan(plan)
 	if err != nil {
 		return results, err
 	}

@@ -12,7 +12,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
@@ -21,7 +20,7 @@ import (
 
 // TODO migrate over to Organize2
 type Organize struct {
-	*local_working_copy.Repo
+	*repo
 	organize_text.Metadata
 	DontUseQueryGroupForOrganizeMetadata bool
 }
@@ -109,13 +108,13 @@ func (op Organize) RunWithSkuType(
 	organizeResults.QueryGroup.RepoId = repoId
 
 	organizeFlags := organize_text.MakeFlagsWithMetadata(op.Metadata)
-	ApplyToOrganizeOptions(op.Repo, &organizeFlags.Options)
+	ApplyToOrganizeOptions(op.repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
 	createOrganizeFileOp := MakeCreateOrganizeFile(
-		op.Repo,
+		op.repo,
 		MakeOrganizeOptionsWithQueryGroup(
-			op.Repo,
+			op.repo,
 			organizeFlags,
 			organizeResults.QueryGroup,
 		),
@@ -147,7 +146,7 @@ func (op Organize) RunWithSkuType(
 
 	// TODO refactor into common vim processing loop
 	for {
-		openVimOp := MakeOpenEditor(op.Repo)
+		openVimOp := MakeOpenEditor(op.repo)
 		openVimOp.VimOptions = vim_cli_options_builder.New().
 			WithFileType("dodder-organize").
 			Build()
@@ -162,7 +161,7 @@ func (op Organize) RunWithSkuType(
 		// 	return
 		// }
 
-		readOrganizeTextOp := MakeReadOrganizeFile(op.Repo)
+		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
 
 		if _, err = file.Seek(0, io.SeekStart); err != nil {
 			err = errors.Wrap(err)
@@ -176,7 +175,7 @@ func (op Organize) RunWithSkuType(
 				op.GetPrototypeOptionComments(),
 			),
 		); err != nil {
-			if op.handleReadChangesError(op.Repo, err) {
+			if op.handleReadChangesError(op.repo, err) {
 				err = nil
 				continue
 			} else {

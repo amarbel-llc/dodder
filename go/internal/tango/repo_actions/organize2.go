@@ -9,14 +9,13 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 type Organize2 struct {
-	*local_working_copy.Repo
+	*repo
 	organize_text.Metadata
 }
 
@@ -26,13 +25,13 @@ func (op Organize2) Run(
 	organizeResults.Original = skus
 
 	organizeFlags := organize_text.MakeFlagsWithMetadata(op.Metadata)
-	ApplyToOrganizeOptions(op.Repo, &organizeFlags.Options)
+	ApplyToOrganizeOptions(op.repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
 	createOrganizeFileOp := MakeCreateOrganizeFile(
-		op.Repo,
+		op.repo,
 		MakeOrganizeOptionsWithOrganizeMetadata(
-			op.Repo,
+			op.repo,
 			organizeFlags,
 			op.Metadata,
 		),
@@ -65,7 +64,7 @@ func (op Organize2) Run(
 
 	// TODO refactor into common vim processing loop
 	for {
-		openVimOp := MakeOpenEditor(op.Repo)
+		openVimOp := MakeOpenEditor(op.repo)
 		openVimOp.VimOptions = vim_cli_options_builder.New().
 			WithFileType("dodder-organize").
 			Build()
@@ -75,7 +74,7 @@ func (op Organize2) Run(
 			return organizeResults, err
 		}
 
-		readOrganizeTextOp := MakeReadOrganizeFile(op.Repo)
+		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
 
 		if _, err = file.Seek(0, io.SeekStart); err != nil {
 			err = errors.Wrap(err)
@@ -89,7 +88,7 @@ func (op Organize2) Run(
 				op.GetPrototypeOptionComments(),
 			),
 		); err != nil {
-			if op.handleReadChangesError(op.Repo, err) {
+			if op.handleReadChangesError(op.repo, err) {
 				err = nil
 				continue
 			} else {
