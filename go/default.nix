@@ -6,6 +6,7 @@
   tommy,
   gomod2nix,
   system,
+  man7Src ? null,
 }:
 let
   pkgs = import nixpkgs {
@@ -36,11 +37,22 @@ let
     go = pkgs-master.go_1_26;
     GOTOOLCHAIN = "local";
 
+    nativeBuildInputs = pkgs-master.lib.optionals (man7Src != null) [
+      pkgs-master.pandoc
+    ];
+
     postInstall = ''
       mkdir -p $out/share/man/man1
       $out/bin/dodder-gen_man $out/share/man/man1
       $out/bin/madder-gen_man $out/share/man/man1
       rm $out/bin/dodder-gen_man $out/bin/madder-gen_man
+    ''
+    + pkgs-master.lib.optionalString (man7Src != null) ''
+      mkdir -p $out/share/man/man7
+      for f in ${man7Src}/*.md; do
+        name="$(basename "$f" .md)"
+        pandoc -s -t man "$f" -o "$out/share/man/man7/$name.7"
+      done
     '';
   };
 in

@@ -64,6 +64,7 @@
             tommy
             system
             ;
+          man7Src = ./docs/man.7;
         };
       in
       {
