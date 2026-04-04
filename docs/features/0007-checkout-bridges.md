@@ -535,6 +535,60 @@ Dry-run to preview sync without committing:
       papilio/uptown: tags updated
     (dry run — no changes committed)
 
+## Implementation Status (2026-04-04)
+
+The first haustoria implementation (`haustoria_caldav`) is merged to master and
+tested against live Fastmail CalDAV with \~1100 tasks. This section documents
+how the implementation relates to the design above and identifies gaps.
+
+### What exists
+
+- Haustoria interface + CalDAV client + `haustoria_caldav` (StoreLike +
+  CheckoutOne)
+- Multi-calendar workspace config with per-calendar type, tags, and status-tags
+- ExternalObjectId binding via binary stream index
+- status/checkin/checkout/new all work through unified query path
+- 10 BATS integration tests against per-test Radicale
+
+### Where the implementation diverges from design
+
+**Flat metadata, no field projection.** The current implementation destructures
+VTODOs into flat dodder metadata: SUMMARY → description, CATEGORIES → tags,
+DESCRIPTION → blob, STATUS → mapped tag via `status-tags` config. This is the
+"lossy compilation" problem described in FDR-0000. CalDAV properties without
+dodder mapping (PRIORITY, RRULE, VALARM, DUE, DTSTART, X-\* extensions) are
+parsed but not persisted --- they survive in the CalDAV server but are not
+round-tripped through dodder.
+
+**Status is a tag, not a field.** CalDAV STATUS (NEEDS-ACTION, COMPLETED, etc.)
+is mapped to a dodder tag via `status-tags` config (e.g. COMPLETED →
+`zz-archive-task-done`). This works for dormant filtering but loses the
+structured status value. A proper `status` field on `!task` (as described in the
+field mapping table above) would enable:
+
+- Querying by status (`show : status=COMPLETED`)
+- Mutating status via organize or checkin
+- Decompiling status back to the correct CalDAV STATUS value
+- Status values beyond the binary active/archived dichotomy (e.g. IN-PROCESS,
+  CANCELLED)
+
+See #92 (field mutation via organize/checkin), #93 (query by fields).
+
+### `!task` status field
+
+The `!task` type needs a `status` field with at least:
+
+- `todo` (maps to CalDAV NEEDS-ACTION)
+- `in-progress` (maps to CalDAV IN-PROCESS)
+- `blocked` (no CalDAV equivalent --- dodder-native)
+- `completed` (maps to CalDAV COMPLETED)
+- `cancelled` (maps to CalDAV CANCELLED)
+
+This field should be defined in the type blob, not hardcoded --- so other types
+(`!chore`, `!project`) can define their own status values. The workspace
+config's field mapping (§Workspace Config above) would map `status` →
+`meta.status` for CalDAV compilation.
+
 ## Limitations
 
 - Only `store_fs` exists today. `store_caldav` is the first non-filesystem

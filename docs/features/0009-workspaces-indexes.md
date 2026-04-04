@@ -92,6 +92,28 @@ const (
 )
 ```
 
+### User Fields vs Cache Fields
+
+ExternalState conflates two concerns that should be separated:
+
+1.  **User-visible fields** --- data the user cares about and may want to query,
+    mutate, or display. For CalDAV: status, priority, due date, recurrence rule.
+    These belong on the object's metadata (as type-defined fields per FDR-0007)
+    and should be queryable (#93), mutable via organize/checkin (#92), and
+    visible in box format output.
+
+2.  **Cache/sync fields** --- data the haustoria needs to detect changes and
+    avoid redundant fetches. For CalDAV: ETag, external UID, sync token. For
+    filesystem: mtime, size, inode. These are internal bookkeeping and should
+    not appear in user-facing output or be directly queryable.
+
+The current ExternalObjectId binding (haustoria MVP) mixes these: the CalDAV UID
+is both a cache key (used for binding lookup) and a user-visible identifier
+(shown in status output). As ExternalState matures, the separation should be
+explicit: user fields live on the object metadata (indexed, queryable, mutable),
+cache fields live on ExternalState (internal, validated lazily, never in box
+output).
+
 ### Where ExternalState Lives
 
 Today `metadata.index` (the `objects.index` struct) has:
