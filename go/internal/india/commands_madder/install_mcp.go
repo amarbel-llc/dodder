@@ -11,6 +11,10 @@ func init() {
 
 type InstallMcp struct{}
 
+var _ command.CommandWithArgs = (*InstallMcp)(nil)
+
+func (cmd *InstallMcp) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd InstallMcp) GetDescription() command.Description {
 	return command.Description{
 		Short: "install MCP server configuration",

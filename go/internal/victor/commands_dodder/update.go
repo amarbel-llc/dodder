@@ -28,7 +28,14 @@ type Update struct {
 	command_components_dodder.Query
 }
 
-var _ interfaces.CommandComponentWriter = (*Update)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Update)(nil)
+	_ command.CommandWithArgs           = (*Update)(nil)
+)
+
+func (cmd *Update) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd *Update) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,

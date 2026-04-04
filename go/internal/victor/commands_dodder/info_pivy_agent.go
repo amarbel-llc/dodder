@@ -17,6 +17,10 @@ func init() {
 
 type InfoPivyAgent struct{}
 
+var _ command.CommandWithArgs = (*InfoPivyAgent)(nil)
+
+func (cmd *InfoPivyAgent) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd InfoPivyAgent) GetDescription() command.Description {
 	return command.Description{
 		Short: "list ECDSA keys in pivy-agent",

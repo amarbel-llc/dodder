@@ -17,6 +17,10 @@ func (cmd InstallMcp) GetDescription() command.Description {
 
 type InstallMcp struct{}
 
+var _ command.CommandWithArgs = (*InstallMcp)(nil)
+
+func (cmd *InstallMcp) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd InstallMcp) Run(req command.Request) {
 	app := gomcp_command.NewApp("dodder", "Dodder zettelkasten MCP server")
 	app.MCPArgs = []string{"mcp"}

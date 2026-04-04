@@ -34,6 +34,10 @@ type RepoFsck struct {
 	command_components_madder.BlobStore
 }
 
+var _ command.CommandWithArgs = (*RepoFsck)(nil)
+
+func (cmd *RepoFsck) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd RepoFsck) Complete(
 	req command.Request,
 	envLocal env_local.Env,

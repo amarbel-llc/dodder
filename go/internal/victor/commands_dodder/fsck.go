@@ -58,7 +58,14 @@ func (cmd Fsck) GetDescription() command.Description {
 	}
 }
 
-var _ interfaces.CommandComponentWriter = (*Fsck)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Fsck)(nil)
+	_ command.CommandWithArgs           = (*Fsck)(nil)
+)
+
+func (cmd *Fsck) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd *Fsck) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopy.SetFlagDefinitions(flagSet)

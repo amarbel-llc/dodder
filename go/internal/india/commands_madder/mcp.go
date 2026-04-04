@@ -11,6 +11,10 @@ func init() {
 
 type Mcp struct{}
 
+var _ command.CommandWithArgs = (*Mcp)(nil)
+
+func (cmd *Mcp) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd Mcp) GetDescription() command.Description {
 	return command.Description{
 		Short: "start the MCP server",

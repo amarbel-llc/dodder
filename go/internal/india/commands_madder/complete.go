@@ -30,7 +30,12 @@ type Complete struct {
 	inProgress string
 }
 
-var _ interfaces.CommandComponentWriter = (*Complete)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Complete)(nil)
+	_ command.CommandWithArgs           = (*Complete)(nil)
+)
+
+func (cmd *Complete) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd Complete) GetDescription() command.Description {
 	return command.Description{

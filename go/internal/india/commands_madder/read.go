@@ -21,6 +21,10 @@ type Read struct {
 	command_components_madder.EnvBlobStore
 }
 
+var _ command.CommandWithArgs = (*Read)(nil)
+
+func (cmd *Read) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd Read) GetDescription() command.Description {
 	return command.Description{
 		Short: "read blobs from JSON on stdin",

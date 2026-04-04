@@ -17,6 +17,10 @@ func init() {
 
 type InfoSSHAgent struct{}
 
+var _ command.CommandWithArgs = (*InfoSSHAgent)(nil)
+
+func (cmd *InfoSSHAgent) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd InfoSSHAgent) GetDescription() command.Description {
 	return command.Description{
 		Short: "list keys in the SSH agent",

@@ -31,6 +31,12 @@ type Mergetool struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 }
 
+var _ command.CommandWithArgs = (*Mergetool)(nil)
+
+func (cmd *Mergetool) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
+
 func (cmd Mergetool) Run(req command.Request) {
 	localWorkingCopy, queryGroup := cmd.MakeLocalWorkingCopyAndQueryGroup(
 		req,

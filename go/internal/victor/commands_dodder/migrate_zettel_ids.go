@@ -35,6 +35,10 @@ type MigrateZettelIds struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*MigrateZettelIds)(nil)
+
+func (cmd *MigrateZettelIds) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd MigrateZettelIds) Run(req command.Request) {
 	req.AssertNoMoreArgs()
 

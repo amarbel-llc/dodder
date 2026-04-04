@@ -33,6 +33,10 @@ type DormantEdit struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*DormantEdit)(nil)
+
+func (cmd *DormantEdit) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd DormantEdit) Run(req command.Request) {
 	args := req.PopArgs()
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(req)

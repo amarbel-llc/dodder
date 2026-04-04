@@ -29,7 +29,14 @@ type Revert struct {
 	Last bool
 }
 
-var _ interfaces.CommandComponentWriter = (*Revert)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Revert)(nil)
+	_ command.CommandWithArgs           = (*Revert)(nil)
+)
+
+func (cmd *Revert) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd *Revert) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopyWithQueryGroup.SetFlagDefinitions(f)

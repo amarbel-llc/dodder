@@ -26,6 +26,10 @@ type EditConfig struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*EditConfig)(nil)
+
+func (cmd *EditConfig) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd EditConfig) GetDescription() command.Description {
 	return command.Description{
 		Short: "edit the repository configuration",

@@ -20,6 +20,10 @@ type Mcp struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*Mcp)(nil)
+
+func (cmd *Mcp) GetArgs() []command.ArgGroup { return nil }
+
 func (cmd Mcp) Run(req command.Request) {
 	repo := cmd.MakeLocalWorkingCopy(req)
 	envWorkspace := repo.GetEnvWorkspace()
