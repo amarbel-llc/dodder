@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
@@ -56,7 +56,7 @@ func (cmd Exec) Run(dep command.Request) {
 		}
 
 	case strings.HasPrefix(sk.GetType().String(), "lua"):
-		execLuaOp := user_ops.ExecLua{
+		execLuaOp := repo_actions.ExecLua{
 			Repo: localWorkingCopy,
 		}
 

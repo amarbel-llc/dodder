@@ -1,6 +1,6 @@
-# user_ops
+# repo_actions
 
-High-level user operations for the Dodder CLI.
+High-level actions performed on a local working copy repository.
 
 ## Key Operations
 

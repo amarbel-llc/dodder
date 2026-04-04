@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
@@ -131,7 +131,7 @@ func (cmd Checkin) Run(dep command.Request) {
 	workspace := localWorkingCopy.GetEnvWorkspace()
 
 	if h, ok := workspace.GetStore().StoreLike.(haustoria.Haustoria); ok {
-		op := user_ops.CheckinHaustoria{
+		op := repo_actions.CheckinHaustoria{
 			Repo:      localWorkingCopy,
 			Haustoria: h,
 			StoreLike: workspace.GetStore().StoreLike,
@@ -151,7 +151,7 @@ func (cmd Checkin) Run(dep command.Request) {
 		cmd.Proto.Metadata.AddTagPtr(tag)
 	}
 
-	op := user_ops.Checkin{
+	op := repo_actions.Checkin{
 		Delete:             cmd.Delete,
 		Organize:           cmd.Organize,
 		Proto:              cmd.Proto,

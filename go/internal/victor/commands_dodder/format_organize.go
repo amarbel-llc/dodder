@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -83,7 +83,7 @@ func (cmd *FormatOrganize) Run(dep command.Request) {
 
 	var ot *organize_text.Text
 
-	readOrganizeTextOp := user_ops.ReadOrganizeFile{}
+	readOrganizeTextOp := repo_actions.ReadOrganizeFile{}
 
 	var repoId ids.RepoId
 

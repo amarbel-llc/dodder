@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -87,7 +87,7 @@ func (cmd New) runHaustoria(
 	args []string,
 ) sku.TransactedMutableSet {
 	if len(args) == 0 {
-		emptyOp := user_ops.WriteNewZettels{
+		emptyOp := repo_actions.WriteNewZettels{
 			Repo: repo,
 		}
 
@@ -115,7 +115,7 @@ func (cmd New) runHaustoria(
 		return objects
 	}
 
-	op := user_ops.NewHaustoria{
+	op := repo_actions.NewHaustoria{
 		Repo:       repo,
 		Haustoria:  h,
 		TextParser: format,
@@ -164,7 +164,7 @@ func (cmd *New) Run(req command.Request) {
 	if h, ok := repo.GetEnvWorkspace().GetStore().StoreLike.(haustoria.Haustoria); ok {
 		objects = cmd.runHaustoria(repo, h, format, args)
 	} else if len(args) == 0 {
-		emptyOp := user_ops.WriteNewZettels{
+		emptyOp := repo_actions.WriteNewZettels{
 			Repo: repo,
 		}
 
@@ -176,7 +176,7 @@ func (cmd *New) Run(req command.Request) {
 			}
 		}
 	} else if cmd.Shas {
-		opCreateFromShas := user_ops.CreateFromShas{
+		opCreateFromShas := repo_actions.CreateFromShas{
 			Repo:  repo,
 			Proto: cmd.Proto,
 		}
@@ -189,7 +189,7 @@ func (cmd *New) Run(req command.Request) {
 			}
 		}
 	} else {
-		opCreateFromPath := user_ops.CreateFromPaths{
+		opCreateFromPath := repo_actions.CreateFromPaths{
 			Repo:       repo,
 			TextParser: format,
 			Filter:     cmd.Filter,
@@ -212,7 +212,7 @@ func (cmd *New) Run(req command.Request) {
 
 	// TODO make mutually exclusive with organize
 	if cmd.Edit {
-		opCheckout := user_ops.Checkout{
+		opCheckout := repo_actions.Checkout{
 			Repo: repo,
 			Options: checkout_options.Options{
 				CheckoutMode: checkout_mode.Make(checkout_mode.MetadataAndBlob),
@@ -233,7 +233,7 @@ func (cmd *New) Run(req command.Request) {
 	}
 
 	if cmd.Organize {
-		opOrganize := user_ops.Organize{
+		opOrganize := repo_actions.Organize{
 			Repo: repo,
 		}
 

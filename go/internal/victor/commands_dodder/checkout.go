@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
@@ -62,7 +62,7 @@ func (cmd Checkout) Run(req command.Request) {
 		req.PopArgs(),
 	)
 
-	opCheckout := user_ops.Checkout{
+	opCheckout := repo_actions.Checkout{
 		Repo:     repo,
 		Organize: cmd.Organize,
 		Options:  cmd.CheckoutOptions,

@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -108,7 +108,7 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 	}
 
 	if cmd.Organize {
-		opOrganize := user_ops.Organize{
+		opOrganize := repo_actions.Organize{
 			Repo: localWorkingCopy,
 			Metadata: organize_text.Metadata{
 				OptionCommentSet: organize_text.MakeOptionCommentSet(nil),
@@ -129,7 +129,7 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 			localWorkingCopy.GetEnvRepo().Cancel(err)
 		}
 	} else if cmd.Edit {
-		opCheckout := user_ops.Checkout{
+		opCheckout := repo_actions.Checkout{
 			Options: checkout_options.Options{
 				CheckoutMode: checkout_mode.Make(checkout_mode.MetadataAndBlob),
 			},

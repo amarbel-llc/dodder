@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
@@ -137,7 +137,7 @@ func (cmd *Organize) Run(req command.Request) {
 		queryGroup = defaultQuery
 	}
 
-	createOrganizeFileOp := user_ops.CreateOrganizeFile{
+	createOrganizeFileOp := repo_actions.CreateOrganizeFile{
 		Repo: repo,
 		Options: repo.MakeOrganizeOptionsWithQueryGroup(
 			cmd.Flags,
@@ -199,7 +199,7 @@ func (cmd *Organize) Run(req command.Request) {
 
 		var organizeText *organize_text.Text
 
-		readOrganizeTextOp := user_ops.ReadOrganizeFile{}
+		readOrganizeTextOp := repo_actions.ReadOrganizeFile{}
 
 		{
 			var err error
@@ -307,7 +307,7 @@ func (cmd Organize) readFromVim(
 	results *organize_text.Text,
 	queryGroup *queries.Query,
 ) (ot *organize_text.Text, err error) {
-	openVimOp := user_ops.OpenEditor{
+	openVimOp := repo_actions.OpenEditor{
 		VimOptions: vim_cli_options_builder.New().
 			WithFileType("dodder-organize").
 			Build(),
@@ -318,7 +318,7 @@ func (cmd Organize) readFromVim(
 		return ot, err
 	}
 
-	readOrganizeTextOp := user_ops.ReadOrganizeFile{}
+	readOrganizeTextOp := repo_actions.ReadOrganizeFile{}
 
 	if ot, err = readOrganizeTextOp.RunWithPath(
 		repo,

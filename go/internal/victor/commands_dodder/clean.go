@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -123,7 +123,7 @@ func (c Clean) runOrganize(
 	u *local_working_copy.Repo,
 	qg *queries.Query,
 ) (err error) {
-	opOrganize := user_ops.Organize{
+	opOrganize := repo_actions.Organize{
 		Repo: u,
 		Metadata: organize_text.Metadata{
 			RepoId: qg.RepoId,

@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -105,7 +105,7 @@ func (cmd EditConfig) editInVim(
 		return sk, err
 	}
 
-	openVimOp := user_ops.OpenEditor{
+	openVimOp := repo_actions.OpenEditor{
 		VimOptions: vim_cli_options_builder.New().
 			WithFileType("dodder-object").
 			Build(),

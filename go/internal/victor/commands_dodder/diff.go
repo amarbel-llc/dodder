@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -90,7 +90,7 @@ func (cmd Diff) Run(dep command.Request) {
 		DoNotWriteEmptyDescription: true,
 	}
 
-	opDiffFS := user_ops.Diff{
+	opDiffFS := repo_actions.Diff{
 		Repo: localWorkingCopy,
 		FormatterFamily: object_metadata_fmt_hyphence.Factory{
 			EnvDir:    localWorkingCopy.GetEnvRepo(),

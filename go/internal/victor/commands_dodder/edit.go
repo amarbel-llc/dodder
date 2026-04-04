@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/tango/user_ops"
+	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 )
@@ -103,7 +103,7 @@ func (cmd Edit) Run(req command.Request) {
 		CheckoutMode: cmd.CheckoutMode,
 	}
 
-	opEdit := user_ops.Checkout{
+	opEdit := repo_actions.Checkout{
 		Repo:            repo,
 		Options:         options,
 		Edit:            true,
