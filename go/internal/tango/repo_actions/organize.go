@@ -112,14 +112,14 @@ func (op Organize) RunWithSkuType(
 	ApplyToOrganizeOptions(op.Repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
-	createOrganizeFileOp := CreateOrganizeFile{
-		Repo: op.Repo,
-		Options: MakeOrganizeOptionsWithQueryGroup(
+	createOrganizeFileOp := MakeCreateOrganizeFile(
+		op.Repo,
+		MakeOrganizeOptionsWithQueryGroup(
 			op.Repo,
 			organizeFlags,
 			organizeResults.QueryGroup,
 		),
-	}
+	)
 
 	types := queries.GetTypes(organizeResults.QueryGroup)
 
@@ -147,12 +147,10 @@ func (op Organize) RunWithSkuType(
 
 	// TODO refactor into common vim processing loop
 	for {
-		openVimOp := OpenEditor{
-			Repo: op.Repo,
-			VimOptions: vim_cli_options_builder.New().
-				WithFileType("dodder-organize").
-				Build(),
-		}
+		openVimOp := MakeOpenEditor(op.Repo)
+		openVimOp.VimOptions = vim_cli_options_builder.New().
+			WithFileType("dodder-organize").
+			Build()
 
 		if err = openVimOp.Run(file.Name()); err != nil {
 			err = errors.Wrap(err)
@@ -164,7 +162,7 @@ func (op Organize) RunWithSkuType(
 		// 	return
 		// }
 
-		readOrganizeTextOp := ReadOrganizeFile{Repo: op.Repo}
+		readOrganizeTextOp := MakeReadOrganizeFile(op.Repo)
 
 		if _, err = file.Seek(0, io.SeekStart); err != nil {
 			err = errors.Wrap(err)

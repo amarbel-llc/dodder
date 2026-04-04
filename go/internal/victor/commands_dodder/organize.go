@@ -144,14 +144,14 @@ func (cmd *Organize) Run(req command.Request) {
 		queryGroup = defaultQuery
 	}
 
-	createOrganizeFileOp := repo_actions.CreateOrganizeFile{
-		Repo: repo,
-		Options: repo_actions.MakeOrganizeOptionsWithQueryGroup(
+	createOrganizeFileOp := repo_actions.MakeCreateOrganizeFile(
+		repo,
+		repo_actions.MakeOrganizeOptionsWithQueryGroup(
 			repo,
 			cmd.Flags,
 			queryGroup,
 		),
-	}
+	)
 
 	createOrganizeFileOp.Skus = objects
 
@@ -207,7 +207,7 @@ func (cmd *Organize) Run(req command.Request) {
 
 		var organizeText *organize_text.Text
 
-		readOrganizeTextOp := repo_actions.ReadOrganizeFile{Repo: repo}
+		readOrganizeTextOp := repo_actions.MakeReadOrganizeFile(repo)
 
 		{
 			var err error
@@ -316,19 +316,17 @@ func (cmd Organize) readFromVim(
 	results *organize_text.Text,
 	queryGroup *queries.Query,
 ) (ot *organize_text.Text, err error) {
-	openVimOp := repo_actions.OpenEditor{
-		Repo: repo,
-		VimOptions: vim_cli_options_builder.New().
-			WithFileType("dodder-organize").
-			Build(),
-	}
+	openVimOp := repo_actions.MakeOpenEditor(repo)
+	openVimOp.VimOptions = vim_cli_options_builder.New().
+		WithFileType("dodder-organize").
+		Build()
 
 	if err = openVimOp.Run(path); err != nil {
 		err = errors.Wrap(err)
 		return ot, err
 	}
 
-	readOrganizeTextOp := repo_actions.ReadOrganizeFile{Repo: repo}
+	readOrganizeTextOp := repo_actions.MakeReadOrganizeFile(repo)
 
 	if ot, err = readOrganizeTextOp.RunWithPath(
 		path,

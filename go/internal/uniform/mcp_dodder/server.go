@@ -712,7 +712,7 @@ func makeEditHandler(
 
 		defer objectIdRepool()
 
-		op := repo_actions.UpdateObject{Repo: repo}
+		op := repo_actions.MakeUpdateObject(repo)
 
 		changes := repo_actions.ObjectChanges{
 			Description: p.Description,

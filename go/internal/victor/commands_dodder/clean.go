@@ -130,9 +130,9 @@ func (c Clean) runOrganize(
 	u *local_working_copy.Repo,
 	qg *queries.Query,
 ) (err error) {
-	opOrganize := repo_actions.Organize{
-		Repo: u,
-		Metadata: organize_text.Metadata{
+	opOrganize := repo_actions.MakeOrganize(
+		u,
+		organize_text.Metadata{
 			RepoId: qg.RepoId,
 			OptionCommentSet: organize_text.MakeOptionCommentSet(
 				nil,
@@ -141,8 +141,8 @@ func (c Clean) runOrganize(
 				},
 			),
 		},
-		DontUseQueryGroupForOrganizeMetadata: true,
-	}
+	)
+	opOrganize.DontUseQueryGroupForOrganizeMetadata = true
 
 	ui.Log().Print(qg)
 

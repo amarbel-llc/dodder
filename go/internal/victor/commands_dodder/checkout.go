@@ -69,11 +69,9 @@ func (cmd Checkout) Run(req command.Request) {
 		req.PopArgs(),
 	)
 
-	opCheckout := repo_actions.Checkout{
-		Repo:     repo,
-		Organize: cmd.Organize,
-		Options:  cmd.CheckoutOptions,
-	}
+	opCheckout := repo_actions.MakeCheckout(repo)
+	opCheckout.Organize = cmd.Organize
+	opCheckout.Options = cmd.CheckoutOptions
 
 	envWorkspace.AssertNotTemporaryOrOfferToCreate(repo)
 

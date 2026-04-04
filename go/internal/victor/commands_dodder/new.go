@@ -87,9 +87,7 @@ func (cmd New) runHaustoria(
 	args []string,
 ) sku.TransactedMutableSet {
 	if len(args) == 0 {
-		emptyOp := repo_actions.WriteNewZettels{
-			Repo: repo,
-		}
+		emptyOp := repo_actions.MakeWriteNewZettels(repo)
 
 		objects, err := emptyOp.RunMany(cmd.Proto, cmd.Count)
 		if err != nil {
@@ -115,12 +113,7 @@ func (cmd New) runHaustoria(
 		return objects
 	}
 
-	op := repo_actions.NewHaustoria{
-		Repo:       repo,
-		Haustoria:  h,
-		TextParser: format,
-		Proto:      cmd.Proto,
-	}
+	op := repo_actions.MakeNewHaustoria(repo, h, format, cmd.Proto)
 
 	objects, err := op.Run(args...)
 	if err != nil {
@@ -164,9 +157,7 @@ func (cmd *New) Run(req command.Request) {
 	if h, ok := repo.GetEnvWorkspace().GetStore().StoreLike.(haustoria.Haustoria); ok {
 		objects = cmd.runHaustoria(repo, h, format, args)
 	} else if len(args) == 0 {
-		emptyOp := repo_actions.WriteNewZettels{
-			Repo: repo,
-		}
+		emptyOp := repo_actions.MakeWriteNewZettels(repo)
 
 		{
 			var err error
@@ -176,10 +167,8 @@ func (cmd *New) Run(req command.Request) {
 			}
 		}
 	} else if cmd.Shas {
-		opCreateFromShas := repo_actions.CreateFromShas{
-			Repo:  repo,
-			Proto: cmd.Proto,
-		}
+		opCreateFromShas := repo_actions.MakeCreateFromShas(repo)
+		opCreateFromShas.Proto = cmd.Proto
 
 		{
 			var err error
@@ -189,13 +178,10 @@ func (cmd *New) Run(req command.Request) {
 			}
 		}
 	} else {
-		opCreateFromPath := repo_actions.CreateFromPaths{
-			Repo:       repo,
-			TextParser: format,
-			Filter:     cmd.Filter,
-			Delete:     cmd.Delete,
-			Proto:      cmd.Proto,
-		}
+		opCreateFromPath := repo_actions.MakeCreateFromPaths(repo, format)
+		opCreateFromPath.Filter = cmd.Filter
+		opCreateFromPath.Delete = cmd.Delete
+		opCreateFromPath.Proto = cmd.Proto
 
 		{
 			var err error
@@ -212,20 +198,18 @@ func (cmd *New) Run(req command.Request) {
 
 	// TODO make mutually exclusive with organize
 	if cmd.Edit {
-		opCheckout := repo_actions.Checkout{
-			Repo: repo,
-			Options: checkout_options.Options{
-				CheckoutMode: checkout_mode.Make(checkout_mode.MetadataAndBlob),
-				OptionsWithoutMode: checkout_options.OptionsWithoutMode{
-					StoreSpecificOptions: store_fs.CheckoutOptions{
-						ForceInlineBlob:      true,
-						TextFormatterOptions: textFormatterOptions,
-					},
+		opCheckout := repo_actions.MakeCheckout(repo)
+		opCheckout.Options = checkout_options.Options{
+			CheckoutMode: checkout_mode.Make(checkout_mode.MetadataAndBlob),
+			OptionsWithoutMode: checkout_options.OptionsWithoutMode{
+				StoreSpecificOptions: store_fs.CheckoutOptions{
+					ForceInlineBlob:      true,
+					TextFormatterOptions: textFormatterOptions,
 				},
 			},
-			Edit:            true,
-			RefreshCheckout: true,
 		}
+		opCheckout.Edit = true
+		opCheckout.RefreshCheckout = true
 
 		if _, err := opCheckout.Run(objects); err != nil {
 			repo.Cancel(err)
@@ -233,9 +217,7 @@ func (cmd *New) Run(req command.Request) {
 	}
 
 	if cmd.Organize {
-		opOrganize := repo_actions.Organize{
-			Repo: repo,
-		}
+		opOrganize := repo_actions.MakeOrganize(repo, organize_text.Metadata{})
 
 		if err := opOrganize.Metadata.SetFromObjectMetadata(
 			&cmd.Metadata,

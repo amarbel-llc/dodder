@@ -83,7 +83,7 @@ func (cmd *FormatOrganize) Run(dep command.Request) {
 
 	var ot *organize_text.Text
 
-	readOrganizeTextOp := repo_actions.ReadOrganizeFile{Repo: localWorkingCopy}
+	readOrganizeTextOp := repo_actions.MakeReadOrganizeFile(localWorkingCopy)
 
 	var repoId ids.RepoId
 

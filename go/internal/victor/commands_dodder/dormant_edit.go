@@ -83,11 +83,9 @@ func (cmd DormantEdit) editInVim(
 		return digest, err
 	}
 
-	openVimOp := repo_actions.OpenEditor{
-		Repo: repo,
-		VimOptions: vim_cli_options_builder.New().
-			Build(),
-	}
+	openVimOp := repo_actions.MakeOpenEditor(repo)
+	openVimOp.VimOptions = vim_cli_options_builder.New().
+		Build()
 
 	if err = openVimOp.Run(path); err != nil {
 		err = errors.Wrap(err)

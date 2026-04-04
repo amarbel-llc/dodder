@@ -88,9 +88,9 @@ func (op Checkin) runOrganize(
 		Comment: "delete once checked in",
 	}
 
-	opOrganize := Organize2{
-		Repo: op.Repo,
-		Metadata: organize_text.Metadata{
+	opOrganize := MakeOrganize2(
+		op.Repo,
+		organize_text.Metadata{
 			TagSet: op.Proto.Metadata.GetTags(),
 			Type:   op.Proto.Metadata.GetType().ToType(),
 			RepoId: query.RepoId,
@@ -107,7 +107,7 @@ func (op Checkin) runOrganize(
 				},
 			),
 		},
-	}
+	)
 
 	ui.Log().Print(query)
 
@@ -150,13 +150,11 @@ func (c Checkin) openBlobIfNecessary(
 		return err
 	}
 
-	opCheckout := Checkout{
-		Repo: c.Repo,
-		Options: checkout_options.Options{
-			CheckoutMode: checkout_mode.Make(checkout_mode.Blob),
-		},
-		Utility: c.CheckoutBlobAndRun,
+	opCheckout := MakeCheckout(c.Repo)
+	opCheckout.Options = checkout_options.Options{
+		CheckoutMode: checkout_mode.Make(checkout_mode.Blob),
 	}
+	opCheckout.Utility = c.CheckoutBlobAndRun
 
 	if _, err = opCheckout.Run(objects); err != nil {
 		err = errors.Wrap(err)

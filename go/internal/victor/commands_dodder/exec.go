@@ -56,9 +56,7 @@ func (cmd Exec) Run(dep command.Request) {
 		}
 
 	case strings.HasPrefix(sk.GetType().String(), "lua"):
-		execLuaOp := repo_actions.ExecLua{
-			Repo: localWorkingCopy,
-		}
+		execLuaOp := repo_actions.MakeExecLua(localWorkingCopy)
 
 		if err := execLuaOp.Run(sk, args...); err != nil {
 			localWorkingCopy.Cancel(err)

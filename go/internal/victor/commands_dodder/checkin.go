@@ -131,12 +131,12 @@ func (cmd Checkin) Run(dep command.Request) {
 	workspace := localWorkingCopy.GetEnvWorkspace()
 
 	if h, ok := workspace.GetStore().StoreLike.(haustoria.Haustoria); ok {
-		op := repo_actions.CheckinHaustoria{
-			Repo:      localWorkingCopy,
-			Haustoria: h,
-			StoreLike: workspace.GetStore().StoreLike,
-			Query:     queryGroup,
-		}
+		op := repo_actions.MakeCheckinHaustoria(
+			localWorkingCopy,
+			h,
+			workspace.GetStore().StoreLike,
+			queryGroup,
+		)
 
 		if _, err := op.Run(); err != nil {
 			dep.Cancel(err)
@@ -151,14 +151,12 @@ func (cmd Checkin) Run(dep command.Request) {
 		cmd.Proto.Metadata.AddTagPtr(tag)
 	}
 
-	op := repo_actions.Checkin{
-		Repo:               localWorkingCopy,
-		Delete:             cmd.Delete,
-		Organize:           cmd.Organize,
-		Proto:              cmd.Proto,
-		CheckoutBlobAndRun: cmd.CheckoutBlobAndRun,
-		OpenBlob:           cmd.OpenBlob,
-	}
+	op := repo_actions.MakeCheckin(localWorkingCopy)
+	op.Delete = cmd.Delete
+	op.Organize = cmd.Organize
+	op.Proto = cmd.Proto
+	op.CheckoutBlobAndRun = cmd.CheckoutBlobAndRun
+	op.OpenBlob = cmd.OpenBlob
 
 	// TODO add auto dot operator
 	if err := op.Run(queryGroup); err != nil {

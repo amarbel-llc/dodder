@@ -108,12 +108,12 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 	}
 
 	if cmd.Organize {
-		opOrganize := repo_actions.Organize{
-			Repo: localWorkingCopy,
-			Metadata: organize_text.Metadata{
+		opOrganize := repo_actions.MakeOrganize(
+			localWorkingCopy,
+			organize_text.Metadata{
 				OptionCommentSet: organize_text.MakeOptionCommentSet(nil),
 			},
-		}
+		)
 
 		var results organize_text.OrganizeResults
 
@@ -129,13 +129,11 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 			localWorkingCopy.GetEnvRepo().Cancel(err)
 		}
 	} else if cmd.Edit {
-		opCheckout := repo_actions.Checkout{
-			Options: checkout_options.Options{
-				CheckoutMode: checkout_mode.Make(checkout_mode.MetadataAndBlob),
-			},
-			Repo: localWorkingCopy,
-			Edit: true,
+		opCheckout := repo_actions.MakeCheckout(localWorkingCopy)
+		opCheckout.Options = checkout_options.Options{
+			CheckoutMode: checkout_mode.Make(checkout_mode.MetadataAndBlob),
 		}
+		opCheckout.Edit = true
 
 		if _, err := opCheckout.Run(skus); err != nil {
 			localWorkingCopy.GetEnvRepo().Cancel(err)

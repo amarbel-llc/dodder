@@ -108,10 +108,7 @@ func (op Checkout) RunQuery(
 	}
 
 	if op.Utility != "" {
-		eachBlobOp := EachBlob{
-			Utility: op.Utility,
-			Repo:    op.Repo,
-		}
+		eachBlobOp := MakeEachBlob(op.Repo, op.Utility)
 
 		if err = eachBlobOp.Run(checkedOut); err != nil {
 			err = errors.Wrap(err)

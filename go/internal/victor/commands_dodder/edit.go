@@ -110,12 +110,10 @@ func (cmd Edit) Run(req command.Request) {
 		CheckoutMode: cmd.CheckoutMode,
 	}
 
-	opEdit := repo_actions.Checkout{
-		Repo:            repo,
-		Options:         options,
-		Edit:            true,
-		RefreshCheckout: true,
-	}
+	opEdit := repo_actions.MakeCheckout(repo)
+	opEdit.Options = options
+	opEdit.Edit = true
+	opEdit.RefreshCheckout = true
 
 	if _, err := opEdit.RunQuery(queryGroup); err != nil {
 		repo.Cancel(err)

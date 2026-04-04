@@ -105,12 +105,10 @@ func (cmd EditConfig) editInVim(
 		return sk, err
 	}
 
-	openVimOp := repo_actions.OpenEditor{
-		Repo: repo,
-		VimOptions: vim_cli_options_builder.New().
-			WithFileType("dodder-object").
-			Build(),
-	}
+	openVimOp := repo_actions.MakeOpenEditor(repo)
+	openVimOp.VimOptions = vim_cli_options_builder.New().
+		WithFileType("dodder-object").
+		Build()
 
 	if err = openVimOp.Run(path); err != nil {
 		err = errors.Wrap(err)

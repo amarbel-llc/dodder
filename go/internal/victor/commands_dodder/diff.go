@@ -90,13 +90,13 @@ func (cmd Diff) Run(dep command.Request) {
 		DoNotWriteEmptyDescription: true,
 	}
 
-	opDiffFS := repo_actions.Diff{
-		Repo: localWorkingCopy,
-		FormatterFamily: object_metadata_fmt_hyphence.Factory{
+	opDiffFS := repo_actions.MakeDiff(
+		localWorkingCopy,
+		object_metadata_fmt_hyphence.Factory{
 			EnvDir:    localWorkingCopy.GetEnvRepo(),
 			BlobStore: localWorkingCopy.GetBlobStore(),
 		}.MakeFormatterFamily(),
-	}
+	)
 
 	if err := localWorkingCopy.GetStore().QuerySkuType(
 		queryGroup,
