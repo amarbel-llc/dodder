@@ -198,31 +198,32 @@ The design draws explicit inspiration from Ruby's metaclass architecture, with
 the goal of being less dynamic and safer --- commit-time validated rather than
 runtime `method_missing`.
 
-  ---------------------------------------------------------------------------------------
-  Ruby                          dodder
-  ----------------------------- ---------------------------------------------------------
-  C runtime                     Chaos (Go binary)
+  ------------------------------------------------------------------------------------
+  Ruby                       dodder
+  -------------------------- ---------------------------------------------------------
+  C runtime                  Chaos (Go binary)
 
-  `BasicObject` (defined in C)  `!` (WASM blob, implements primordial ABI)
+  `BasicObject` (defined in  `!` (WASM blob, implements primordial ABI)
+  C)                         
 
-  `Class` (enables `class`      `!toml-type-v2` (WASM, enables TOML type declarations)
-  keyword)                      
+  `Class` (enables `class`   `!toml-type-v2` (WASM, enables TOML type declarations)
+  keyword)                   
 
-  `Module` (mixin mechanism)    exported interfaces ("actionable", "describable",
-                                "schedulable")
+  `Module` (mixin mechanism) exported interfaces ("actionable", "describable",
+                             "schedulable")
 
-  `include Actionable`          `[implements.actionable]`
+  `include Actionable`       `[implements.actionable]`
 
-  `class Task; end`             `!task` (TOML type blob, exports "actionable")
+  `class Task; end`          `!task` (TOML type blob, exports "actionable")
 
-  `Task.new`                    a `!vtodo` blob on a `!vtodo`-typed object
+  `Task.new`                 a `!vtodo` blob on a `!vtodo`-typed object
 
-  `respond_to?(:complete)`      `Exports(!vtodo, "actionable")` → true
+  `respond_to?(:complete)`   `Exports(!vtodo, "actionable")` → true
 
-  `obj.send(:complete)`         `ExecuteAction(blob, !vtodo, "actionable", "complete")`
+  `obj.send(:complete)`      `ExecuteAction(blob, !vtodo, "actionable", "complete")`
 
-  `method_missing` (runtime)    conformance validation (commit-time, never runtime)
-  ---------------------------------------------------------------------------------------
+  `method_missing` (runtime) conformance validation (commit-time, never runtime)
+  ------------------------------------------------------------------------------------
 
 The key difference: Ruby's dynamism means `method_missing` is always possible.
 Dodder validates conformance at commit time. If a type declares
@@ -789,17 +790,21 @@ conformance with `!vtodo`. The type is a label, not a contract.
 ### Path from here to the cosmology
 
 The CalDAV haustoria is the forcing function. Each step makes the current
-implementation less lossy:
+implementation less lossy. Work is tracked on the [project-haustoria
+board](https://github.com/orgs/amarbel-llc/projects/1).
 
-1.  Add a `status` field to `!task` (FDR-0007 §Implementation Status) --- first
-    type-defined field, still hardcoded in Go
-2.  Add field projection to `!toml-type-v2` --- type blobs declare fields, Go
-    dispatches `project` calls
-3.  Add iCalendar codec as a `!`-typed blob --- first tool blob, still Go-native
-    (not WASM)
-4.  Move codec dispatch to WASM --- `!` becomes a real WASM module, the
+1.  **Add a `status` field to `!task`** (#94) --- first type-defined field,
+    still hardcoded in Go. Establishes the metadata field infrastructure (binary
+    codec, box format, type blob `[fields]` table).
+2.  **Add field projection to `!toml-type-v2`** --- type blobs declare fields,
+    Go dispatches `project` calls. Fields become queryable (#93) and mutable via
+    organize/checkin (#92).
+3.  **Add iCalendar codec as a `!`-typed blob** --- first tool blob, still
+    Go-native (not WASM). The blob stores the full iCalendar content; `project`
+    extracts fields from it via the codec.
+4.  **Move codec dispatch to WASM** --- `!` becomes a real WASM module, the
     iCalendar codec becomes a WASM blob, `project` goes through the full Layer 0
-    → 1 → 2 → 3 chain
+    → 1 → 2 → 3 chain.
 
 Each step is independently useful and testable against the live Fastmail
 workspace.

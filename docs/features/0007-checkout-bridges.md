@@ -572,9 +572,10 @@ field mapping table above) would enable:
 - Status values beyond the binary active/archived dichotomy (e.g. IN-PROCESS,
   CANCELLED)
 
-See #92 (field mutation via organize/checkin), #93 (query by fields).
+See #92 (field mutation via organize/checkin), #93 (query by fields), #94 (typed
+status field on `!task`).
 
-### `!task` status field
+### `!task` status field (#94)
 
 The `!task` type needs a `status` field with at least:
 
