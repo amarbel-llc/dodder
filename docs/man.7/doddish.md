@@ -110,14 +110,24 @@ The **\^** operator negates a group or term:
 
 # EXAMPLES
 
+## Listing by Genre
+
 **:**
-:   List all latest zettels.
+:   List all latest zettels (default genre).
 
 **:t**
 :   List all type objects.
 
 **:e**
 :   List all tag objects.
+
+**:k**
+:   List all repo objects.
+
+**:z,t,e**
+:   All latest zettels, types, and tags.
+
+## Filtering by Tag and Type
 
 **todo**
 :   Zettels tagged **todo**.
@@ -131,14 +141,57 @@ The **\^** operator negates a group or term:
 **priority-0_must !task**
 :   Tasks tagged **priority-0_must** (AND combination).
 
+**=!md**
+:   Exact type match (not prefix match).
+
+## Sigil Combinations
+
 **:.z**
 :   Latest zettels that are checked out.
 
-**:z,t,e**
-:   All latest zettels, types, and tags.
+**!md?z**
+:   Hidden/dormant zettels of type **!md**.
+
+**one/uno+**
+:   History of a specific zettel (all versions).
+
+**one/uno.zettel**
+:   A specific zettel's checked-out (external) version.
+
+## Object IDs
 
 **ceroplastes/midtown**
 :   A specific zettel by ID.
+
+**one/uno one/dos**
+:   Multiple zettels (AND --- both must match, or used in list context).
+
+**/repo:k**
+:   A specific repo by ID.
+
+## Negation
+
+**\^todo**
+:   Objects NOT tagged **todo**.
+
+**\^\[test,house\] home**
+:   Objects matching **home** but NOT matching **test** OR **house**.
+
+**\[\^house,test\] home**
+:   Objects matching **home** and either (NOT **house**) or **test**.
+
+## Grouping
+
+**\[!md,home\]:z**
+:   Objects matching type **!md** OR tag **home**, restricted to zettels.
+
+**\[test,house\] home wow**
+:   Objects matching (**test** OR **house**) AND **home** AND **wow**.
+
+## Dependent Tags
+
+**-etikett-two.z**
+:   Checked-out zettels with dependent tag **-etikett-two**.
 
 # COMMON MISTAKES
 
