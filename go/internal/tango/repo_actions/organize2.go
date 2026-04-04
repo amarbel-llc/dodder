@@ -66,17 +66,18 @@ func (op Organize2) Run(
 	// TODO refactor into common vim processing loop
 	for {
 		openVimOp := OpenEditor{
+			Repo: op.Repo,
 			VimOptions: vim_cli_options_builder.New().
 				WithFileType("dodder-organize").
 				Build(),
 		}
 
-		if err = openVimOp.Run(op.Repo, file.Name()); err != nil {
+		if err = openVimOp.Run(file.Name()); err != nil {
 			err = errors.Wrap(err)
 			return organizeResults, err
 		}
 
-		readOrganizeTextOp := ReadOrganizeFile{}
+		readOrganizeTextOp := ReadOrganizeFile{Repo: op.Repo}
 
 		if _, err = file.Seek(0, io.SeekStart); err != nil {
 			err = errors.Wrap(err)
@@ -84,7 +85,6 @@ func (op Organize2) Run(
 		}
 
 		if organizeResults.After, err = readOrganizeTextOp.Run(
-			op.Repo,
 			file,
 			organize_text.NewMetadataWithOptionCommentLookup(
 				organizeResults.Before.GetRepoId(),

@@ -200,13 +200,12 @@ func (cmd *Organize) Run(req command.Request) {
 
 		var organizeText *organize_text.Text
 
-		readOrganizeTextOp := repo_actions.ReadOrganizeFile{}
+		readOrganizeTextOp := repo_actions.ReadOrganizeFile{Repo: repo}
 
 		{
 			var err error
 
 			if organizeText, err = readOrganizeTextOp.Run(
-				repo,
 				os.Stdin,
 				organize_text.NewMetadata(queryGroup.RepoId),
 			); err != nil {
@@ -311,20 +310,20 @@ func (cmd Organize) readFromVim(
 	queryGroup *queries.Query,
 ) (ot *organize_text.Text, err error) {
 	openVimOp := repo_actions.OpenEditor{
+		Repo: repo,
 		VimOptions: vim_cli_options_builder.New().
 			WithFileType("dodder-organize").
 			Build(),
 	}
 
-	if err = openVimOp.Run(repo, path); err != nil {
+	if err = openVimOp.Run(path); err != nil {
 		err = errors.Wrap(err)
 		return ot, err
 	}
 
-	readOrganizeTextOp := repo_actions.ReadOrganizeFile{}
+	readOrganizeTextOp := repo_actions.ReadOrganizeFile{Repo: repo}
 
 	if ot, err = readOrganizeTextOp.RunWithPath(
-		repo,
 		path,
 		queryGroup.RepoId,
 	); err != nil {

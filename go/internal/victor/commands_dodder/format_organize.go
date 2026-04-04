@@ -83,7 +83,7 @@ func (cmd *FormatOrganize) Run(dep command.Request) {
 
 	var ot *organize_text.Text
 
-	readOrganizeTextOp := repo_actions.ReadOrganizeFile{}
+	readOrganizeTextOp := repo_actions.ReadOrganizeFile{Repo: localWorkingCopy}
 
 	var repoId ids.RepoId
 
@@ -91,7 +91,6 @@ func (cmd *FormatOrganize) Run(dep command.Request) {
 		var err error
 
 		if ot, err = readOrganizeTextOp.Run(
-			localWorkingCopy,
 			r,
 			organize_text.NewMetadata(repoId),
 		); err != nil {

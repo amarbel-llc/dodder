@@ -12,10 +12,11 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 
-type ReadOrganizeFile struct{}
+type ReadOrganizeFile struct {
+	*local_working_copy.Repo
+}
 
 func (c ReadOrganizeFile) RunWithPath(
-	u *local_working_copy.Repo,
 	p string,
 	repoId ids.RepoId,
 ) (ot *organize_text.Text, err error) {
@@ -29,7 +30,6 @@ func (c ReadOrganizeFile) RunWithPath(
 	defer errors.DeferredCloser(&err, f)
 
 	if ot, err = c.Run(
-		u,
 		f,
 		organize_text.NewMetadata(repoId),
 	); err != nil {
@@ -41,17 +41,16 @@ func (c ReadOrganizeFile) RunWithPath(
 }
 
 func (c ReadOrganizeFile) Run(
-	u *local_working_copy.Repo,
 	r io.Reader,
 	om organize_text.Metadata,
 ) (ot *organize_text.Text, err error) {
 	otFlags := organize_text.MakeFlags()
-	ApplyToOrganizeOptions(u, &otFlags.Options)
+	ApplyToOrganizeOptions(c.Repo, &otFlags.Options)
 
 	o := otFlags.GetOptionsWithMetadata(
-		u.GetConfig().GetPrintOptions(),
-		u.SkuFormatBoxCheckedOutNoColor(),
-		u.GetStore().GetAbbrStore().GetAbbr(),
+		c.GetConfig().GetPrintOptions(),
+		c.SkuFormatBoxCheckedOutNoColor(),
+		c.GetStore().GetAbbrStore().GetAbbr(),
 		sku.ObjectFactory{},
 		om,
 	)

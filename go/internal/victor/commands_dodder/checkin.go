@@ -152,6 +152,7 @@ func (cmd Checkin) Run(dep command.Request) {
 	}
 
 	op := repo_actions.Checkin{
+		Repo:               localWorkingCopy,
 		Delete:             cmd.Delete,
 		Organize:           cmd.Organize,
 		Proto:              cmd.Proto,
@@ -160,7 +161,7 @@ func (cmd Checkin) Run(dep command.Request) {
 	}
 
 	// TODO add auto dot operator
-	if err := op.Run(localWorkingCopy, queryGroup); err != nil {
+	if err := op.Run(queryGroup); err != nil {
 		dep.Cancel(err)
 	}
 }

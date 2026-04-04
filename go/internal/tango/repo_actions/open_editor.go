@@ -7,17 +7,17 @@ import (
 )
 
 type OpenEditor struct {
+	*local_working_copy.Repo
 	VimOptions []string
 }
 
 func (c OpenEditor) Run(
-	u *local_working_copy.Repo,
 	args ...string,
 ) (err error) {
 	var e editor.Editor
 
 	if e, err = editor.MakeEditorWithVimOptions(
-		u.PrinterHeader(),
+		c.PrinterHeader(),
 		c.VimOptions,
 	); err != nil {
 		err = errors.Wrap(err)

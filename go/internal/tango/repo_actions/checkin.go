@@ -16,6 +16,7 @@ import (
 )
 
 type Checkin struct {
+	*local_working_copy.Repo
 	Proto sku.Proto
 
 	// TODO make flag family disambiguate these options
@@ -29,14 +30,13 @@ type Checkin struct {
 }
 
 func (op Checkin) Run(
-	repo *local_working_copy.Repo,
 	query *queries.Query,
 ) (err error) {
 	var lock sync.Mutex
 
 	results := sku.MakeSkuTypeSetMutable()
 
-	if err = repo.GetStore().QuerySkuType(
+	if err = op.GetStore().QuerySkuType(
 		query,
 		func(co sku.SkuType) (err error) {
 			lock.Lock()
@@ -51,7 +51,7 @@ func (op Checkin) Run(
 	}
 
 	if op.Organize {
-		if err = op.runOrganize(repo, query, results); err != nil {
+		if err = op.runOrganize(query, results); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -61,7 +61,7 @@ func (op Checkin) Run(
 
 	var processed sku.TransactedMutableSet
 
-	if processed, err = repo.Checkin(
+	if processed, err = op.Repo.Checkin(
 		results,
 		op.Proto,
 		op.Delete,
@@ -71,7 +71,7 @@ func (op Checkin) Run(
 		return err
 	}
 
-	if err = op.openBlobIfNecessary(repo, processed); err != nil {
+	if err = op.openBlobIfNecessary(processed); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -80,7 +80,6 @@ func (op Checkin) Run(
 }
 
 func (op Checkin) runOrganize(
-	repo *local_working_copy.Repo,
 	query *queries.Query,
 	results sku.SkuTypeSetMutable,
 ) (err error) {
@@ -90,7 +89,7 @@ func (op Checkin) runOrganize(
 	}
 
 	opOrganize := Organize2{
-		Repo: repo,
+		Repo: op.Repo,
 		Metadata: organize_text.Metadata{
 			TagSet: op.Proto.Metadata.GetTags(),
 			Type:   op.Proto.Metadata.GetType().ToType(),
@@ -122,7 +121,7 @@ func (op Checkin) runOrganize(
 	var changes organize_text.Changes
 
 	if changes, err = organize_text.ChangesFromResults(
-		repo.GetConfig().GetPrintOptions(),
+		op.GetConfig().GetPrintOptions(),
 		organizeResults,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -145,7 +144,6 @@ func (op Checkin) runOrganize(
 }
 
 func (c Checkin) openBlobIfNecessary(
-	repo *local_working_copy.Repo,
 	objects sku.TransactedSet,
 ) (err error) {
 	if !c.OpenBlob && c.CheckoutBlobAndRun == "" {
@@ -153,7 +151,7 @@ func (c Checkin) openBlobIfNecessary(
 	}
 
 	opCheckout := Checkout{
-		Repo: repo,
+		Repo: c.Repo,
 		Options: checkout_options.Options{
 			CheckoutMode: checkout_mode.Make(checkout_mode.Blob),
 		},
