@@ -39,7 +39,26 @@ type FormatBlob struct {
 	UTIGroup string
 }
 
-var _ interfaces.CommandComponentWriter = (*FormatBlob)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*FormatBlob)(nil)
+	_ command.CommandWithArgs           = (*FormatBlob)(nil)
+)
+
+func (cmd *FormatBlob) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{
+			{
+				Name:        "object-id",
+				Description: "object whose blob to format",
+				Required:    true,
+			},
+			{
+				Name:        "format-id",
+				Description: "formatter to use (defaults to type's default)",
+			},
+		},
+	}}
+}
 
 func (cmd *FormatBlob) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	f.BoolVar(

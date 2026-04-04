@@ -29,7 +29,21 @@ type Clone struct {
 	command_components_dodder.Query
 }
 
-var _ interfaces.CommandComponentWriter = (*Clone)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Clone)(nil)
+	_ command.CommandWithArgs           = (*Clone)(nil)
+)
+
+func (cmd *Clone) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{
+		{Args: []command.Arg{{
+			Name:        "repo-id",
+			Description: "identifier for the new local repository",
+			Required:    true,
+		}}},
+		cmd.Query.GetArgGroup(),
+	}
+}
 
 func (cmd Clone) GetDescription() command.Description {
 	return command.Description{

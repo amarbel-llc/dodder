@@ -29,7 +29,28 @@ type PullBlobStore struct {
 	command_components_madder.BlobStore
 }
 
-var _ interfaces.CommandComponentWriter = (*PullBlobStore)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*PullBlobStore)(nil)
+	_ command.CommandWithArgs           = (*PullBlobStore)(nil)
+)
+
+func (cmd *PullBlobStore) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{
+		{Args: []command.Arg{
+			{
+				Name:        "blob_store-base-path",
+				Description: "base path of the remote blob store",
+				Required:    true,
+			},
+			{
+				Name:        "blob_store-config-path",
+				Description: "path to the remote blob store config",
+				Required:    true,
+			},
+		}},
+		cmd.Query.GetArgGroup(),
+	}
+}
 
 func (cmd *PullBlobStore) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	cmd.LocalWorkingCopyWithQueryGroup.SetFlagDefinitions(f)

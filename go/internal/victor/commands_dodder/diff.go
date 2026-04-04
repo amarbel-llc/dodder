@@ -26,7 +26,14 @@ type Diff struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
 }
 
-var _ interfaces.CommandComponentWriter = (*Diff)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Diff)(nil)
+	_ command.CommandWithArgs           = (*Diff)(nil)
+)
+
+func (cmd *Diff) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
 
 func (cmd Diff) GetDescription() command.Description {
 	return command.Description{

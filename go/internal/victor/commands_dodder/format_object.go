@@ -42,7 +42,26 @@ type FormatObject struct {
 	// TODO add lockfile override option
 }
 
-var _ interfaces.CommandComponentWriter = (*FormatObject)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*FormatObject)(nil)
+	_ command.CommandWithArgs           = (*FormatObject)(nil)
+)
+
+func (cmd *FormatObject) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{
+			{
+				Name:        "object-id",
+				Description: "object to format",
+				Required:    true,
+			},
+			{
+				Name:        "format-id",
+				Description: "formatter to use (defaults to type's default)",
+			},
+		},
+	}}
+}
 
 func (cmd *FormatObject) SetFlagDefinitions(flagDefs interfaces.CLIFlagDefinitions) {
 	flagDefs.BoolVar(

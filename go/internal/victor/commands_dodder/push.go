@@ -27,7 +27,20 @@ type Push struct {
 	command_components_dodder.Query
 }
 
-var _ interfaces.CommandComponentWriter = (*Push)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Push)(nil)
+	_ command.CommandWithArgs           = (*Push)(nil)
+)
+
+func (cmd *Push) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{
+		{Args: []command.Arg{{
+			Name:        "repo-id",
+			Description: "remote repository object id (not needed with -direct or -home)",
+		}}},
+		cmd.Query.GetArgGroup(),
+	}
+}
 
 func (cmd *Push) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.RemoteTransfer.SetFlagDefinitions(flagSet)
