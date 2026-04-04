@@ -37,6 +37,19 @@ var repoSpecialKeys = []string{
 	"xdg",
 }
 
+var _ command.CommandWithArgs = (*InfoRepo)(nil)
+
+func (cmd *InfoRepo) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "keys",
+			Description: "config keys to display (defaults to store-version)",
+			Variadic:    true,
+			EnumValues:  repoSpecialKeys,
+		}},
+	}}
+}
+
 func (cmd InfoRepo) Run(req command.Request) {
 	args := req.PopArgs()
 	env := cmd.MakeEnvRepo(req, false)

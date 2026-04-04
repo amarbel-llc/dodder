@@ -21,6 +21,19 @@ type DormantRemove struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*DormantRemove)(nil)
+
+func (cmd *DormantRemove) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "tags",
+			Description: "tag names to remove from the dormant index",
+			Required:    true,
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd DormantRemove) Run(dep command.Request) {
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(dep)
 	localWorkingCopy.Must(errors.MakeFuncContextFromFuncErr(localWorkingCopy.Lock))

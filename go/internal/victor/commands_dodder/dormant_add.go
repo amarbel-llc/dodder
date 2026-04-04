@@ -21,6 +21,19 @@ type DormantAdd struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*DormantAdd)(nil)
+
+func (cmd *DormantAdd) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "tags",
+			Description: "tag names to add to the dormant index",
+			Required:    true,
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd DormantAdd) Run(dep command.Request) {
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(dep)
 

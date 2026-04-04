@@ -18,6 +18,18 @@ type PackList struct {
 	command_components_madder.BlobStore
 }
 
+var _ command.CommandWithArgs = (*PackList)(nil)
+
+func (cmd *PackList) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "store-ids",
+			Description: "blob store IDs to list packs from (defaults to all)",
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd PackList) GetDescription() command.Description {
 	return command.Description{
 		Short: "list objects in a packed blob",

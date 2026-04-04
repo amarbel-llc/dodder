@@ -24,6 +24,17 @@ type PeekZettelIds struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*PeekZettelIds)(nil)
+
+func (cmd *PeekZettelIds) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "count",
+			Description: "number of ids to show (0 for all)",
+		}},
+	}}
+}
+
 func (cmd PeekZettelIds) Run(req command.Request) {
 	args := req.PopArgs()
 

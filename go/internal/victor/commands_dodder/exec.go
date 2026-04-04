@@ -22,6 +22,25 @@ type Exec struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*Exec)(nil)
+
+func (cmd *Exec) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{
+			{
+				Name:        "object-id",
+				Description: "object containing the script to execute",
+				Required:    true,
+			},
+			{
+				Name:        "args",
+				Description: "arguments passed to the script",
+				Variadic:    true,
+			},
+		},
+	}}
+}
+
 func (cmd Exec) GetDescription() command.Description {
 	return command.Description{
 		Short: "execute a script stored as a blob",

@@ -20,6 +20,18 @@ type FindMissing struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*FindMissing)(nil)
+
+func (cmd *FindMissing) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "blob-digests",
+			Description: "blob digests to check for in stores",
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd FindMissing) Run(dep command.Request) {
 	localWorkingCopy := cmd.MakeLocalWorkingCopy(dep)
 

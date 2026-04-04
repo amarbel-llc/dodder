@@ -26,6 +26,18 @@ type CheckWorkspace struct {
 	command_components_dodder.LocalWorkingCopy
 }
 
+var _ command.CommandWithArgs = (*CheckWorkspace)(nil)
+
+func (cmd *CheckWorkspace) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:       "subcommand",
+			Required:   true,
+			EnumValues: []string{"dirty"},
+		}},
+	}}
+}
+
 func (cmd CheckWorkspace) Run(req command.Request) {
 	subcmd := req.PopArg("subcommand (dirty)")
 

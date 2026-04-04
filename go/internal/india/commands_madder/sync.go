@@ -32,7 +32,20 @@ type Sync struct {
 	Limit          int
 }
 
-var _ interfaces.CommandComponentWriter = (*Sync)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Sync)(nil)
+	_ command.CommandWithArgs           = (*Sync)(nil)
+)
+
+func (cmd *Sync) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "store-ids",
+			Description: "source store ID followed by destination store IDs (defaults to all)",
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd Sync) GetDescription() command.Description {
 	return command.Description{

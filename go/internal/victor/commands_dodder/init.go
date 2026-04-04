@@ -22,7 +22,20 @@ type Init struct {
 	command_components_dodder.Genesis
 }
 
-var _ interfaces.CommandComponentWriter = (*Init)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Init)(nil)
+	_ command.CommandWithArgs           = (*Init)(nil)
+)
+
+func (cmd *Init) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "repo-id",
+			Description: "identifier for the new repository",
+			Required:    true,
+		}},
+	}}
+}
 
 func (cmd Init) GetDescription() command.Description {
 	return command.Description{

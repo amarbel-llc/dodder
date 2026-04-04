@@ -25,7 +25,27 @@ type InitFrom struct {
 	command_components_madder.Init
 }
 
-var _ interfaces.CommandComponentWriter = (*InitFrom)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*InitFrom)(nil)
+	_ command.CommandWithArgs           = (*InitFrom)(nil)
+)
+
+func (cmd *InitFrom) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{
+			{
+				Name:        "store-name",
+				Description: "name for the new blob store",
+				Required:    true,
+			},
+			{
+				Name:        "config-path",
+				Description: "path to the blob store configuration file",
+				Required:    true,
+			},
+		},
+	}}
+}
 
 func (cmd InitFrom) GetDescription() command.Description {
 	return command.Description{

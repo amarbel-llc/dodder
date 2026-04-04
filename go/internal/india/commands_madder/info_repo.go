@@ -22,6 +22,24 @@ type InfoRepo struct {
 	command_components_madder.BlobStore
 }
 
+var _ command.CommandWithArgs = (*InfoRepo)(nil)
+
+func (cmd *InfoRepo) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{
+			{
+				Name:        "store-id",
+				Description: "blob store to query (defaults to default store)",
+			},
+			{
+				Name:        "keys",
+				Description: "config keys to display (defaults to config-immutable)",
+				Variadic:    true,
+			},
+		},
+	}}
+}
+
 func (cmd InfoRepo) GetDescription() command.Description {
 	return command.Description{
 		Short: "display blob store configuration",

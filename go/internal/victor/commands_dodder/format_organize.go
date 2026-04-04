@@ -36,7 +36,20 @@ type FormatOrganize struct {
 	Flags organize_text.Flags
 }
 
-var _ interfaces.CommandComponentWriter = (*FormatOrganize)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*FormatOrganize)(nil)
+	_ command.CommandWithArgs           = (*FormatOrganize)(nil)
+)
+
+func (cmd *FormatOrganize) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "file-descriptor",
+			Description: "file descriptor of the organize file",
+			Required:    true,
+		}},
+	}}
+}
 
 func (cmd *FormatOrganize) SetFlagDefinitions(f interfaces.CLIFlagDefinitions) {
 	cmd.Flags.SetFlagDefinitions(f)

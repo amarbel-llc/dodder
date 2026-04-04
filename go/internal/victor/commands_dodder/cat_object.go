@@ -32,7 +32,21 @@ type CatObject struct {
 	Format local_working_copy.FormatFlag
 }
 
-var _ interfaces.CommandComponentWriter = (*CatObject)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*CatObject)(nil)
+	_ command.CommandWithArgs           = (*CatObject)(nil)
+)
+
+func (cmd *CatObject) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "markl-ids",
+			Description: "markl IDs of objects to output",
+			Required:    true,
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd *CatObject) SetFlagDefinitions(flagDefs interfaces.CLIFlagDefinitions) {
 	flagDefs.Var(

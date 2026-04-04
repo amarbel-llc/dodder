@@ -25,10 +25,22 @@ type CatIds struct {
 	command_components_madder.BlobStore
 }
 
+var _ command.CommandWithArgs = (*CatIds)(nil)
+
 func (cmd *CatIds) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
 	flagSet.Var(&cmd.Format, "format", "output format for blob ids")
+}
+
+func (cmd *CatIds) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "store-ids",
+			Description: "blob store IDs to query (defaults to all)",
+			Variadic:    true,
+		}},
+	}}
 }
 
 func (cmd CatIds) GetDescription() command.Description {

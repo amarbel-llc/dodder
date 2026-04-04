@@ -32,7 +32,20 @@ type RemoteAdd struct {
 	proto sku.Proto
 }
 
-var _ interfaces.CommandComponentWriter = (*RemoteAdd)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*RemoteAdd)(nil)
+	_ command.CommandWithArgs           = (*RemoteAdd)(nil)
+)
+
+func (cmd *RemoteAdd) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "repo-id",
+			Description: "identifier for the remote repository",
+			Required:    true,
+		}},
+	}}
+}
 
 func (cmd *RemoteAdd) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	cmd.RemoteTransfer.SetFlagDefinitions(flagSet)

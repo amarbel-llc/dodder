@@ -29,7 +29,27 @@ type Complete struct {
 	inProgress string
 }
 
-var _ interfaces.CommandComponentWriter = (*Complete)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Complete)(nil)
+	_ command.CommandWithArgs           = (*Complete)(nil)
+)
+
+func (cmd *Complete) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{
+			{
+				Name:        "name",
+				Description: "subcommand name to complete",
+				Required:    true,
+			},
+			{
+				Name:        "args",
+				Description: "remaining arguments for completion context",
+				Variadic:    true,
+			},
+		},
+	}}
+}
 
 func (cmd Complete) GetDescription() command.Description {
 	return command.Description{
