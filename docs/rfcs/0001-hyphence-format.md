@@ -1,6 +1,6 @@
 ---
-status: proposed
 date: 2026-03-14
+status: proposed
 ---
 
 # Hyphence Serialization Format
@@ -59,47 +59,39 @@ interpreted as described in RFC 2119.
 
 A hyphence document consists of:
 
-1. **Metadata section** (REQUIRED): enclosed by two boundary lines
-2. **Body section** (OPTIONAL): inline content after the closing boundary, or
-   referenced via a blob line in the metadata
+1.  **Metadata section** (REQUIRED): enclosed by two boundary lines
+2.  **Body section** (OPTIONAL): inline content after the closing boundary, or
+    referenced via a blob line in the metadata
 
 A minimal document (metadata only, no body):
 
-```
----
-! <type-string>
----
-```
+    ---
+    ! <type-string>
+    ---
 
 A document with inline body:
 
-```
----
-# my description
-! <type-string>
----
+    ---
+    # my description
+    ! <type-string>
+    ---
 
-<body-content>
-```
+    <body-content>
 
 A document with a blob reference (no inline body):
 
-```
----
-# my description
-@ <markl-id-or-path>
-! <type-string>
----
-```
+    ---
+    # my description
+    @ <markl-id-or-path>
+    ! <type-string>
+    ---
 
 ### Boundary Line
 
 A boundary line MUST consist of exactly three ASCII hyphen-minus characters
 (`U+002D`) followed by a single newline character (`U+000A`):
 
-```
----\n
-```
+    ---\n
 
 A boundary line MUST NOT contain any other characters. Trailing spaces, carriage
 returns, or additional hyphens invalidate the boundary.
@@ -114,23 +106,21 @@ section MUST be ignored.
 Each metadata line begins with a single-character prefix that determines the
 line type, followed by a space and the line content:
 
-| Prefix | Name | Description |
-|--------|------|-------------|
-| `!` | Type | Object type identifier, optionally locked |
-| `@` | Blob | Blob reference (markl ID or file path) |
-| `#` | Description | Human-readable description text |
-| `-` | Tag or Reference | Tag identifier or object reference |
-| `<` | Reference | Object reference (explicit prefix) |
-| `%` | Comment | Opaque implementation-specific comment |
+  Prefix   Name               Description
+  -------- ------------------ -------------------------------------------
+  `!`      Type               Object type identifier, optionally locked
+  `@`      Blob               Blob reference (markl ID or file path)
+  `#`      Description        Human-readable description text
+  `-`      Tag or Reference   Tag identifier or object reference
+  `<`      Reference          Object reference (explicit prefix)
+  `%`      Comment            Opaque implementation-specific comment
 
 #### Type Line (`!`)
 
 The type line identifies the object's type. A metadata section SHOULD contain at
 most one type line.
 
-```
-! <type-string>
-```
+    ! <type-string>
 
 The type string identifies the versioned format of the body content. Type
 strings follow the convention `<format>-<domain>-<version>`, for example:
@@ -144,9 +134,7 @@ The type string MUST NOT contain spaces. The type string MUST NOT be empty.
 A type line MAY include a lock (a markl ID that pins the type to a specific
 version of its definition):
 
-```
-! <type-string>@<markl-id>
-```
+    ! <type-string>@<markl-id>
 
 The `@` character is part of the markl ID format and separates the type string
 from its lock value.
@@ -158,10 +146,8 @@ as an alternative to providing the body inline after the closing boundary.
 
 A blob line MUST contain either a markl ID (content digest) or a file path:
 
-```
-@ <markl-id>
-@ <file-path>
-```
+    @ <markl-id>
+    @ <file-path>
 
 When the value is a file path, both absolute and relative paths are accepted.
 When the value is a markl ID, it identifies the blob by its content-addressable
@@ -175,19 +161,17 @@ both are present.
 
 Description lines provide human-readable text describing the object:
 
-```
-# <description-text>
-```
+    # <description-text>
 
 A metadata section MAY contain multiple description lines. When more than one
 description line is present, the description is the space-concatenation of all
 description lines (in order of appearance).
 
-The use of the term "description" is intentional — descriptions are NOT titles,
-names, or identifiers. Descriptions MUST NOT be used to identify objects.
-Object identity is established by the object ID, which is immutable and
+The use of the term "description" is intentional --- descriptions are NOT
+titles, names, or identifiers. Descriptions MUST NOT be used to identify
+objects. Object identity is established by the object ID, which is immutable and
 content-addressable. This is a deliberate solution to the curse of the
-`$PATH`/filename problem, where identity is the file name — mutable, fragile,
+`$PATH`/filename problem, where identity is the file name --- mutable, fragile,
 and collision-prone.
 
 Descriptions MAY appear in the box format when objects appear in the contents of
@@ -203,29 +187,21 @@ object references; simple identifiers are parsed as tags.
 
 **Tags:**
 
-```
-- <tag-identifier>
-```
+    - <tag-identifier>
 
 **Object references** can appear in several forms:
 
 Bare reference (just the object ID):
 
-```
-- <object-id>
-```
+    - <object-id>
 
 Locked reference (object ID followed by `<`, space, and lock markl ID):
 
-```
-- <object-id> < <markl-id>
-```
+    - <object-id> < <markl-id>
 
 Aliased and locked reference (alias, space, `<`, space, locked object ID):
 
-```
-- <alias> < <object-id>@<markl-id>
-```
+    - <alias> < <object-id>@<markl-id>
 
 Object locks are markl IDs that pin the reference to a specific version of the
 referenced object.
@@ -235,20 +211,16 @@ referenced object.
 The `<` prefix is an explicit alternative to `-` for object references. It uses
 the same reference syntax as described above (bare, locked, or aliased).
 
-```
-< <object-id>
-< <object-id> < <markl-id>
-< <alias> < <object-id>@<markl-id>
-```
+    < <object-id>
+    < <object-id> < <markl-id>
+    < <alias> < <object-id>@<markl-id>
 
 #### Comment Line (`%`)
 
 Comment lines are opaque and implementation-specific. Their content is preserved
 during round-trips but their semantics are not specified by this RFC.
 
-```
-% <comment-text>
-```
+    % <comment-text>
 
 Implementations MAY use comment lines for internal bookkeeping. Implementations
 MUST preserve comment lines during encoding if they were present during
@@ -262,13 +234,11 @@ and a separator line.
 When a body follows the metadata section, there MUST be exactly one empty line
 (a single `\n`) between the closing boundary and the start of the body content:
 
-```
----\n
-<metadata-lines>\n
----\n
-\n
-<body-content>
-```
+    ---\n
+    <metadata-lines>\n
+    ---\n
+    \n
+    <body-content>
 
 This empty line is a separator and is NOT part of the body content. The body
 extends to the end of the input stream.
@@ -284,12 +254,12 @@ section. See "Blob Line" above.
 
 An encoder MUST produce output in this order:
 
-1. Write the opening boundary: `---\n`
-2. Write metadata lines (description, blob, type, references, comments)
-3. Write the closing boundary: `---\n`
-4. If inline body content follows:
-   a. Write the separator: `\n`
-   b. Write body content
+1.  Write the opening boundary: `---\n`
+2.  Write metadata lines (description, blob, type, references, comments)
+3.  Write the closing boundary: `---\n`
+4.  If inline body content follows:
+    a.  Write the separator: `\n`
+    b.  Write body content
 
 If no body content follows (either because there is none or because it is
 referenced via a blob line), the encoder MUST NOT write the separator line.
@@ -298,13 +268,13 @@ referenced via a blob line), the encoder MUST NOT write the separator line.
 
 A decoder MUST process input as follows:
 
-1. Read the opening boundary line
-2. Read metadata lines until a second boundary line is encountered
-3. Read and discard the closing boundary
-4. If content remains after the closing boundary:
-   a. Read and discard the separator line
-   b. Decode body content
-5. If a blob line was present in the metadata, resolve the blob reference
+1.  Read the opening boundary line
+2.  Read metadata lines until a second boundary line is encountered
+3.  Read and discard the closing boundary
+4.  If content remains after the closing boundary:
+    a.  Read and discard the separator line
+    b.  Decode body content
+5.  If a blob line was present in the metadata, resolve the blob reference
 
 A document MUST NOT have both inline body content and a blob line. If both are
 present, the decoder MUST return an error.
@@ -330,13 +300,13 @@ MUST NOT reject or alter the semantics of a document based on line ordering.
 However, when encoding (formatting) a metadata section, implementations SHOULD
 write lines in canonical order:
 
-1. Description lines (`#`)
-2. Locked object references (references with a `<` lock)
-3. Aliased object references (references with an alias)
-4. Bare object references (references without lock or alias)
-5. Tags
-6. Blob line (`@`)
-7. Type line (`!`) — MUST be the last non-comment line
+1.  Description lines (`#`)
+2.  Locked object references (references with a `<` lock)
+3.  Aliased object references (references with an alias)
+4.  Bare object references (references without lock or alias)
+5.  Tags
+6.  Blob line (`@`)
+7.  Type line (`!`) --- MUST be the last non-comment line
 
 #### Comment Entanglement
 
@@ -356,8 +326,8 @@ block MUST NOT be reordered.
 
 ### Identity Model
 
-Object IDs MAY collide across repositories. However, repository public keys
-MUST NOT collide, and signatures MUST NOT collide. The combination of repository
+Object IDs MAY collide across repositories. However, repository public keys MUST
+NOT collide, and signatures MUST NOT collide. The combination of repository
 identity (public key) and object ID provides globally unique identification.
 
 ### Future: Fully-Qualified Object References
@@ -366,15 +336,11 @@ Two concepts not yet introduced into the object reference and type definition
 system are **domains** and **repo IDs**. The intent is for a fully-qualified
 object reference to take the form:
 
-```
-<domain>/<repo-id>/<object-id>@<sig_type>-<blech32>
-```
+    <domain>/<repo-id>/<object-id>@<sig_type>-<blech32>
 
 For example:
 
-```
-example.com/my-repo/ceroplastes/midtown@ed25519_sig-1qxyz...
-```
+    example.com/my-repo/ceroplastes/midtown@ed25519_sig-1qxyz...
 
 This would allow universally unambiguous references in metadata sections,
 eliminating the need for out-of-band context to resolve object references across
@@ -429,10 +395,10 @@ blob references for backward compatibility, but MUST use `@` for new output.
 
 ### Normative
 
-- [RFC 2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement
+- \[RFC 2119\] Bradner, S., "Key words for use in RFCs to Indicate Requirement
   Levels", BCP 14, RFC 2119, March 1997.
-- [markl ID format] (RFC pending) Content-addressable identifier format used for
-  blob digests, type locks, and reference locks.
+- \[RFC 0002\] "Markl ID Format", dodder RFC 0002. Content-addressable
+  identifier format used for blob digests, type locks, and reference locks.
 
 ### Informative
 
