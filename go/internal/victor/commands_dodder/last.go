@@ -125,7 +125,7 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 			}
 		}
 
-		if _, err := localWorkingCopy.LockAndCommitOrganizeResults(results); err != nil {
+		if _, err := repo_actions.LockAndCommitOrganizeResults(localWorkingCopy, results); err != nil {
 			localWorkingCopy.GetEnvRepo().Cancel(err)
 		}
 	} else if cmd.Edit {

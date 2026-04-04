@@ -109,12 +109,13 @@ func (op Organize) RunWithSkuType(
 	organizeResults.QueryGroup.RepoId = repoId
 
 	organizeFlags := organize_text.MakeFlagsWithMetadata(op.Metadata)
-	op.ApplyToOrganizeOptions(&organizeFlags.Options)
+	ApplyToOrganizeOptions(op.Repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
 	createOrganizeFileOp := CreateOrganizeFile{
 		Repo: op.Repo,
-		Options: op.Repo.MakeOrganizeOptionsWithQueryGroup(
+		Options: MakeOrganizeOptionsWithQueryGroup(
+			op.Repo,
 			organizeFlags,
 			organizeResults.QueryGroup,
 		),

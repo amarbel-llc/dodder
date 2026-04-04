@@ -26,12 +26,13 @@ func (op Organize2) Run(
 	organizeResults.Original = skus
 
 	organizeFlags := organize_text.MakeFlagsWithMetadata(op.Metadata)
-	op.ApplyToOrganizeOptions(&organizeFlags.Options)
+	ApplyToOrganizeOptions(op.Repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
 	createOrganizeFileOp := CreateOrganizeFile{
 		Repo: op.Repo,
-		Options: op.Repo.MakeOrganizeOptionsWithOrganizeMetadata(
+		Options: MakeOrganizeOptionsWithOrganizeMetadata(
+			op.Repo,
 			organizeFlags,
 			op.Metadata,
 		),

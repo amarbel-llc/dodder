@@ -46,7 +46,7 @@ func (c ReadOrganizeFile) Run(
 	om organize_text.Metadata,
 ) (ot *organize_text.Text, err error) {
 	otFlags := organize_text.MakeFlags()
-	u.ApplyToOrganizeOptions(&otFlags.Options)
+	ApplyToOrganizeOptions(u, &otFlags.Options)
 
 	o := otFlags.GetOptionsWithMetadata(
 		u.GetConfig().GetPrintOptions(),

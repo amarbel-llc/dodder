@@ -1,4 +1,4 @@
-package local_working_copy
+package repo_actions
 
 import (
 	"fmt"
@@ -7,18 +7,20 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
-func (local *Repo) MakeOrganizeOptionsWithOrganizeMetadata(
+func MakeOrganizeOptionsWithOrganizeMetadata(
+	repo *local_working_copy.Repo,
 	organizeFlags organize_text.Flags,
 	metadata organize_text.Metadata,
 ) organize_text.Options {
 	options := organizeFlags.GetOptions(
-		local.GetConfig().GetPrintOptions(),
+		repo.GetConfig().GetPrintOptions(),
 		nil,
-		local.SkuFormatBoxCheckedOutNoColor(),
-		local.GetStore().GetAbbrStore().GetAbbr(),
+		repo.SkuFormatBoxCheckedOutNoColor(),
+		repo.GetStore().GetAbbrStore().GetAbbr(),
 		sku.ObjectFactory{},
 	)
 
@@ -27,24 +29,26 @@ func (local *Repo) MakeOrganizeOptionsWithOrganizeMetadata(
 	return options
 }
 
-func (local *Repo) MakeOrganizeOptionsWithQueryGroup(
+func MakeOrganizeOptionsWithQueryGroup(
+	repo *local_working_copy.Repo,
 	organizeFlags organize_text.Flags,
 	qg *queries.Query,
 ) organize_text.Options {
 	return organizeFlags.GetOptions(
-		local.GetConfig().GetPrintOptions(),
+		repo.GetConfig().GetPrintOptions(),
 		queries.GetTags(qg),
-		local.SkuFormatBoxCheckedOutNoColor(),
-		local.GetStore().GetAbbrStore().GetAbbr(),
+		repo.SkuFormatBoxCheckedOutNoColor(),
+		repo.GetStore().GetAbbrStore().GetAbbr(),
 		sku.ObjectFactory{},
 	)
 }
 
-func (local *Repo) LockAndCommitOrganizeResults(
+func LockAndCommitOrganizeResults(
+	repo *local_working_copy.Repo,
 	results organize_text.OrganizeResults,
 ) (changeResults organize_text.Changes, err error) {
 	if changeResults, err = organize_text.ChangesFromResults(
-		local.GetConfig().GetPrintOptions(),
+		repo.GetConfig().GetPrintOptions(),
 		results,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -54,7 +58,7 @@ func (local *Repo) LockAndCommitOrganizeResults(
 	count := changeResults.Changed.Len()
 
 	if count > 30 {
-		if !local.Confirm(
+		if !repo.Confirm(
 			fmt.Sprintf(
 				"a large number (%d) of objects are being changed. continue to commit?",
 				count,
@@ -62,14 +66,14 @@ func (local *Repo) LockAndCommitOrganizeResults(
 			"",
 		) {
 			// TODO output organize file used
-			errors.ContextCancelWith499ClientClosedRequest(local)
+			errors.ContextCancelWith499ClientClosedRequest(repo)
 			return changeResults, err
 		}
 	}
 
 	var proto sku.Proto
 
-	workspace := local.GetEnvWorkspace()
+	workspace := repo.GetEnvWorkspace()
 	workspaceType := workspace.GetDefaults().GetDefaultType()
 
 	proto.Metadata.GetTypeMutable().ResetWithType(workspaceType)
@@ -100,7 +104,7 @@ func (local *Repo) LockAndCommitOrganizeResults(
 		},
 	}
 
-	if _, err = local.ExecutePlan(plan); err != nil {
+	if _, err = repo.ExecutePlan(plan); err != nil {
 		err = errors.Wrap(err)
 		return changeResults, err
 	}
@@ -108,18 +112,21 @@ func (local *Repo) LockAndCommitOrganizeResults(
 	return changeResults, err
 }
 
-func (local *Repo) ApplyToOrganizeOptions(oo *organize_text.Options) {
-	oo.Config = local.GetConfigPtr()
-	oo.Abbr = local.GetStore().GetAbbrStore().GetAbbr()
+func ApplyToOrganizeOptions(
+	repo *local_working_copy.Repo,
+	oo *organize_text.Options,
+) {
+	oo.Config = repo.GetConfigPtr()
+	oo.Abbr = repo.GetStore().GetAbbrStore().GetAbbr()
 
-	if !local.GetConfig().IsDryRun() {
+	if !repo.GetConfig().IsDryRun() {
 		return
 	}
 
 	oo.AddPrototypeAndOption(
 		"dry-run",
 		&organize_text.OptionCommentDryRun{
-			MutableConfigDryRun: local.GetConfigPtr(),
+			MutableConfigDryRun: repo.GetConfigPtr(),
 		},
 	)
 }

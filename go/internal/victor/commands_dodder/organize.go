@@ -113,7 +113,7 @@ func (cmd *Organize) Run(req command.Request) {
 		req.PopArgs(),
 	)
 
-	repo.ApplyToOrganizeOptions(&cmd.Flags.Options)
+	repo_actions.ApplyToOrganizeOptions(repo, &cmd.Flags.Options)
 
 	objects := sku.MakeSkuTypeSetMutable()
 	var lock sync.Mutex
@@ -139,7 +139,8 @@ func (cmd *Organize) Run(req command.Request) {
 
 	createOrganizeFileOp := repo_actions.CreateOrganizeFile{
 		Repo: repo,
-		Options: repo.MakeOrganizeOptionsWithQueryGroup(
+		Options: repo_actions.MakeOrganizeOptionsWithQueryGroup(
+			repo,
 			cmd.Flags,
 			queryGroup,
 		),
@@ -213,7 +214,8 @@ func (cmd *Organize) Run(req command.Request) {
 			}
 		}
 
-		if _, err := repo.LockAndCommitOrganizeResults(
+		if _, err := repo_actions.LockAndCommitOrganizeResults(
+			repo,
 			organize_text.OrganizeResults{
 				Before:     createOrganizeFileResults,
 				After:      organizeText,
@@ -285,7 +287,8 @@ func (cmd *Organize) Run(req command.Request) {
 			}
 		}
 
-		if _, err := repo.LockAndCommitOrganizeResults(
+		if _, err := repo_actions.LockAndCommitOrganizeResults(
+			repo,
 			organize_text.OrganizeResults{
 				Before:     createOrganizeFileResults,
 				After:      organizeText,
