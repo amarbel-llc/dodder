@@ -90,6 +90,7 @@ function complete_subcmd { # @test
 		add-zettel-ids-yin.*add yin words to the zettel id pool
 		blob_store-cat.*output blob contents by digest
 		blob_store-cat-ids.*output object ids from a blob
+		blob_store-encode-ids.*convert hex digests to native ids
 		blob_store-complete.*complete a command-line
 		blob_store-fsck.*verify blob store integrity
 		blob_store-info-repo.*display blob store configuration

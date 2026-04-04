@@ -1,22 +1,34 @@
 package commands_madder
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
+	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func init() {
-	utility.AddCmd("cat-ids", &CatIds{})
+	utility.AddCmd("cat-ids", &CatIds{
+		Format: markl.IdFormatDefault,
+	})
 }
 
 type CatIds struct {
+	Format markl.IdFormat
+
 	command_components_madder.EnvBlobStore
 	command_components_madder.BlobStore
+}
+
+func (cmd *CatIds) SetFlagDefinitions(
+	flagSet interfaces.CLIFlagDefinitions,
+) {
+	flagSet.Var(&cmd.Format, "format", "output format for blob ids")
 }
 
 func (cmd CatIds) GetDescription() command.Description {
@@ -71,7 +83,7 @@ func (cmd CatIds) runOne(
 				command_components_madder.BlobError{BlobId: id, Err: err},
 			)
 		} else {
-			envBlobStore.GetUI().Print(id)
+			envBlobStore.GetUI().Print(cmd.Format.FormatId(id))
 		}
 	}
 }
