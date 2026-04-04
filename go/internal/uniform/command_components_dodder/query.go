@@ -15,6 +15,18 @@ type Query struct {
 
 var _ interfaces.CommandComponentWriter = (*Query)(nil)
 
+func (cmd Query) GetArgGroup() command.ArgGroup {
+	return command.ArgGroup{
+		Name:        "query",
+		Description: "query terms (AND-combined): genre filters (:z :e :t), tag names, type filters (!type)",
+		Args: []command.Arg{{
+			Name:        "predicates",
+			Description: "query predicates",
+			Variadic:    true,
+		}},
+	}
+}
+
 func (cmd *Query) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	// TODO switch to repo
 	flagSet.Var(&cmd.RepoId, "kasten", "none or Browser")

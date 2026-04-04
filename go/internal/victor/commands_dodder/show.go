@@ -39,7 +39,16 @@ type Show struct {
 	RemoteRepo ids.RepoId
 }
 
-var _ interfaces.CommandComponentWriter = (*Show)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Show)(nil)
+	_ command.CommandWithArgs           = (*Show)(nil)
+)
+
+func (cmd *Show) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{
+		cmd.Query.GetArgGroup(),
+	}
+}
 
 func (cmd Show) GetDescription() command.Description {
 	return command.Description{

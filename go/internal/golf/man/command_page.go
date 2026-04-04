@@ -49,15 +49,35 @@ func generateCommandPage(
 		fmt.Fprintln(w, roffEscape(pageName))
 	}
 
+	// Collect flags and args metadata for SYNOPSIS, OPTIONS, and ARGUMENTS.
+	flagSet := flags.NewFlagSet(name, flags.ContinueOnError)
+
+	if writer, ok := cmd.(interfaces.CommandComponentWriter); ok {
+		writer.SetFlagDefinitions(flagSet)
+	}
+
+	var argGroups []command.ArgGroup
+
+	if argsCmd, ok := cmd.(command.CommandWithArgs); ok {
+		argGroups = argsCmd.GetArgs()
+	}
+
 	// SYNOPSIS
 	fmt.Fprintln(w, roffSection("SYNOPSIS"))
-	fmt.Fprintf(
-		w,
-		"%s [%s] [%s]\n",
-		roffBold(roffEscape(synopsisCmd)),
-		roffItalic("options"),
-		roffItalic("args..."),
-	)
+
+	fmt.Fprintf(w, "%s", roffBold(roffEscape(synopsisCmd)))
+
+	if countFlags(flagSet) > 0 {
+		fmt.Fprintf(w, " [%s]", roffItalic("options"))
+	}
+
+	if len(argGroups) > 0 {
+		writeSynopsisArgs(w, argGroups)
+	} else {
+		fmt.Fprintf(w, " [%s]", roffItalic("args..."))
+	}
+
+	fmt.Fprintln(w)
 
 	// DESCRIPTION
 	if description.Long != "" {
@@ -69,15 +89,14 @@ func generateCommandPage(
 	}
 
 	// OPTIONS
-	flagSet := flags.NewFlagSet(name, flags.ContinueOnError)
-
-	if writer, ok := cmd.(interfaces.CommandComponentWriter); ok {
-		writer.SetFlagDefinitions(flagSet)
-	}
-
-	if flagCount := countFlags(flagSet); flagCount > 0 {
+	if countFlags(flagSet) > 0 {
 		fmt.Fprintln(w, roffSection("OPTIONS"))
 		writeFlags(w, flagSet)
+	}
+
+	// ARGUMENTS
+	if len(argGroups) > 0 {
+		writeArgsSection(w, argGroups)
 	}
 
 	// SEE ALSO
@@ -127,4 +146,90 @@ func writeFlags(w io.Writer, flagSet *flags.FlagSet) {
 			fmt.Fprintf(w, "Default: %s\n", roffEscape(f.DefValue))
 		}
 	})
+}
+
+// writeSynopsisArgs appends arg placeholders to the SYNOPSIS line.
+// Required args use <name>, optional use [name], variadic append "...".
+func writeSynopsisArgs(w io.Writer, groups []command.ArgGroup) {
+	for _, group := range groups {
+		for _, arg := range group.Args {
+			name := arg.Name
+
+			if arg.Variadic {
+				name += "..."
+			}
+
+			if arg.Required {
+				fmt.Fprintf(w, " <%s>", roffItalic(roffEscape(name)))
+			} else {
+				fmt.Fprintf(w, " [%s]", roffItalic(roffEscape(name)))
+			}
+		}
+	}
+}
+
+// writeArgsSection writes the ARGUMENTS section with per-arg descriptions.
+func writeArgsSection(w io.Writer, groups []command.ArgGroup) {
+	hasContent := false
+
+	for _, group := range groups {
+		for _, arg := range group.Args {
+			if arg.Description == "" && group.Description == "" {
+				continue
+			}
+
+			hasContent = true
+
+			break
+		}
+	}
+
+	if !hasContent {
+		return
+	}
+
+	fmt.Fprintln(w, roffSection("ARGUMENTS"))
+
+	for _, group := range groups {
+		if group.Description != "" && group.Name != "" {
+			fmt.Fprintln(w, roffParagraph())
+			fmt.Fprintf(w, "%s:\n", roffBold(roffEscape(group.Name)))
+			fmt.Fprintln(w, roffEscape(group.Description))
+		}
+
+		for _, arg := range group.Args {
+			fmt.Fprintln(w, roffTaggedParagraph())
+
+			name := arg.Name
+
+			if arg.Variadic {
+				name += "..."
+			}
+
+			fmt.Fprintln(w, roffBold(roffEscape(name)))
+
+			desc := arg.Description
+			if desc == "" {
+				desc = group.Description
+			}
+
+			if desc != "" {
+				fmt.Fprintln(w, roffEscape(desc))
+			}
+
+			if len(arg.EnumValues) > 0 {
+				fmt.Fprintf(
+					w,
+					"Values: %s\n",
+					roffEscape(strings.Join(arg.EnumValues, ", ")),
+				)
+			}
+
+			if arg.Value != nil {
+				if defVal := arg.Value.String(); defVal != "" {
+					fmt.Fprintf(w, "Default: %s\n", roffEscape(defVal))
+				}
+			}
+		}
+	}
 }
