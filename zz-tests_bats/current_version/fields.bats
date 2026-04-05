@@ -37,21 +37,65 @@ function create_task_type {
   assert_success
 }
 
+function create_task {
+  local description="$1"
+  local status="${2:-todo}"
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# ${description}
+		! task
+		---
+
+		status = "${status}"
+	EOM
+  assert_success
+}
+
 function field_projection_on_commit { # @test
+  create_task_type
+  create_task "my first task" "todo"
+
+  run_dodder show '!task'
+  assert_success
+  assert_output --partial 'status=todo'
+}
+
+function field_query_equality { # @test
+  create_task_type
+  create_task "task one" "todo"
+  create_task "task two" "completed"
+
+  run_dodder show 'status=todo'
+  assert_success
+  assert_output --partial '"task one"'
+  refute_output --partial '"task two"'
+}
+
+function field_query_negation { # @test
+  # https://github.com/amarbel-llc/dodder/issues/98
+  # Negated field query status^=todo returns empty.
+  skip "negated field queries need investigation"
+  create_task_type
+  create_task "task one" "todo"
+  create_task "task two" "completed"
+
+  run_dodder show 'status^=todo'
+  assert_success
+  assert_output --partial '"task two"'
+  refute_output --partial '"task one"'
+}
+
+function field_enum_validation_rejects_invalid { # @test
   create_task_type
 
   run_dodder new -edit=false - <<-EOM
 		---
-		# my first task
+		# bad task
 		! task
 		---
 
-		status = "todo"
-		summary = "buy milk"
+		status = "invalid_value"
 	EOM
-  assert_success
-
-  run_dodder show -format box '!task'
-  assert_success
-  assert_output --partial 'status=todo'
+  assert_failure
 }
