@@ -133,7 +133,7 @@ func ParseVTODO(raw string) (*Task, error) {
 			case "ACTION":
 				currentAlarm.Action = value
 			case "DESCRIPTION":
-				currentAlarm.Description = value
+				currentAlarm.Description = unescapeText(value)
 			}
 			continue
 		}
@@ -142,9 +142,9 @@ func ParseVTODO(raw string) (*Task, error) {
 		case "UID":
 			t.UID = value
 		case "SUMMARY":
-			t.Summary = value
+			t.Summary = unescapeText(value)
 		case "DESCRIPTION":
-			t.Description = value
+			t.Description = unescapeText(value)
 		case "STATUS":
 			t.Status = value
 		case "PRIORITY":
@@ -179,7 +179,7 @@ func ParseVTODO(raw string) (*Task, error) {
 		case "RRULE":
 			t.RRule = value
 		case "LOCATION":
-			t.Location = value
+			t.Location = unescapeText(value)
 		case "GEO":
 			t.Geo = value
 		case "X-APPLE-SORT-ORDER":
@@ -268,10 +268,10 @@ func TaskToIcal(t *Task) string {
 
 	writeIcalProp(&b, "UID", t.UID)
 	writeIcalProp(&b, "DTSTAMP", formatNow())
-	writeIcalProp(&b, "SUMMARY", t.Summary)
+	writeIcalProp(&b, "SUMMARY", escapeText(t.Summary))
 
 	if t.Description != "" {
-		writeIcalProp(&b, "DESCRIPTION", t.Description)
+		writeIcalProp(&b, "DESCRIPTION", escapeText(t.Description))
 	}
 	if t.Status != "" {
 		writeIcalProp(&b, "STATUS", t.Status)
@@ -301,7 +301,7 @@ func TaskToIcal(t *Task) string {
 		writeIcalProp(&b, "RRULE", t.RRule)
 	}
 	if t.Location != "" {
-		writeIcalProp(&b, "LOCATION", t.Location)
+		writeIcalProp(&b, "LOCATION", escapeText(t.Location))
 	}
 	if t.Geo != "" {
 		writeIcalProp(&b, "GEO", t.Geo)
@@ -318,7 +318,7 @@ func TaskToIcal(t *Task) string {
 		writeIcalProp(&b, "TRIGGER", alarm.Trigger)
 		writeIcalProp(&b, "ACTION", alarm.Action)
 		if alarm.Description != "" {
-			writeIcalProp(&b, "DESCRIPTION", alarm.Description)
+			writeIcalProp(&b, "DESCRIPTION", escapeText(alarm.Description))
 		}
 		b.WriteString("END:VALARM\r\n")
 	}
@@ -329,7 +329,67 @@ func TaskToIcal(t *Task) string {
 }
 
 func writeIcalProp(b *strings.Builder, name, value string) {
-	b.WriteString(name + ":" + value + "\r\n")
+	foldAndWrite(b, name+":"+value)
+}
+
+// foldAndWrite writes an iCalendar content line, folding at 75 octets per
+// RFC 5545 §3.1. Continuation lines start with a single space (which counts
+// toward the 75-octet limit of that physical line).
+func foldAndWrite(b *strings.Builder, line string) {
+	const maxFirst = 75
+	const maxCont = 74 // 75 minus the leading space
+
+	if len(line) <= maxFirst {
+		b.WriteString(line)
+		b.WriteString("\r\n")
+		return
+	}
+
+	// First physical line: up to 75 octets.
+	cut := maxFirst
+	for cut > 0 && line[cut]>>6 == 0b10 {
+		cut--
+	}
+	b.WriteString(line[:cut])
+	b.WriteString("\r\n")
+	line = line[cut:]
+
+	// Continuation lines: leading space + up to 74 octets of content.
+	for len(line) > maxCont {
+		cut = maxCont
+		for cut > 0 && line[cut]>>6 == 0b10 {
+			cut--
+		}
+		b.WriteString(" ")
+		b.WriteString(line[:cut])
+		b.WriteString("\r\n")
+		line = line[cut:]
+	}
+	if len(line) > 0 {
+		b.WriteString(" ")
+		b.WriteString(line)
+		b.WriteString("\r\n")
+	}
+}
+
+// escapeText applies RFC 5545 §3.3.11 TEXT escaping: backslash, semicolon,
+// comma, and newline are escaped with a leading backslash.
+func escapeText(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, ";", `\;`)
+	s = strings.ReplaceAll(s, ",", `\,`)
+	s = strings.ReplaceAll(s, "\n", `\n`)
+	return s
+}
+
+// unescapeText reverses RFC 5545 §3.3.11 TEXT escaping.
+func unescapeText(s string) string {
+	s = strings.ReplaceAll(s, `\n`, "\n")
+	s = strings.ReplaceAll(s, `\N`, "\n")
+	s = strings.ReplaceAll(s, `\;`, ";")
+	s = strings.ReplaceAll(s, `\,`, ",")
+	s = strings.ReplaceAll(s, `\\`, `\`)
+	return s
 }
 
 func writeDateProp(b *strings.Builder, name, value string) {

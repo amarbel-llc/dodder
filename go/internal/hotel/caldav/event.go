@@ -130,7 +130,7 @@ func ParseVEVENT(raw string) (*Event, error) {
 			case "ACTION":
 				currentAlarm.Action = value
 			case "DESCRIPTION":
-				currentAlarm.Description = value
+				currentAlarm.Description = unescapeText(value)
 			}
 			continue
 		}
@@ -139,13 +139,13 @@ func ParseVEVENT(raw string) (*Event, error) {
 		case "UID":
 			e.UID = value
 		case "SUMMARY":
-			e.Summary = value
+			e.Summary = unescapeText(value)
 		case "DESCRIPTION":
-			e.Description = value
+			e.Description = unescapeText(value)
 		case "STATUS":
 			e.Status = value
 		case "LOCATION":
-			e.Location = value
+			e.Location = unescapeText(value)
 		case "GEO":
 			e.Geo = value
 		case "DTSTART":
@@ -163,7 +163,7 @@ func ParseVEVENT(raw string) (*Event, error) {
 			for i := range cats {
 				cats[i] = strings.TrimSpace(cats[i])
 			}
-			e.Categories = cats
+			e.Categories = append(e.Categories, cats...)
 		case "RRULE":
 			e.RRule = value
 		case "RECURRENCE-ID":
@@ -201,10 +201,10 @@ func EventToIcal(e *Event) string {
 
 	writeIcalProp(&b, "UID", e.UID)
 	writeIcalProp(&b, "DTSTAMP", formatNow())
-	writeIcalProp(&b, "SUMMARY", e.Summary)
+	writeIcalProp(&b, "SUMMARY", escapeText(e.Summary))
 
 	if e.Description != "" {
-		writeIcalProp(&b, "DESCRIPTION", e.Description)
+		writeIcalProp(&b, "DESCRIPTION", escapeText(e.Description))
 	}
 	if e.Status != "" {
 		writeIcalProp(&b, "STATUS", e.Status)
@@ -219,7 +219,7 @@ func EventToIcal(e *Event) string {
 		writeIcalProp(&b, "DURATION", e.Duration)
 	}
 	if e.Location != "" {
-		writeIcalProp(&b, "LOCATION", e.Location)
+		writeIcalProp(&b, "LOCATION", escapeText(e.Location))
 	}
 	if e.Geo != "" {
 		writeIcalProp(&b, "GEO", e.Geo)
@@ -251,7 +251,7 @@ func EventToIcal(e *Event) string {
 		writeIcalProp(&b, "TRIGGER", alarm.Trigger)
 		writeIcalProp(&b, "ACTION", alarm.Action)
 		if alarm.Description != "" {
-			writeIcalProp(&b, "DESCRIPTION", alarm.Description)
+			writeIcalProp(&b, "DESCRIPTION", escapeText(alarm.Description))
 		}
 		b.WriteString("END:VALARM\r\n")
 	}
