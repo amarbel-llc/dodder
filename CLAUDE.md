@@ -73,10 +73,13 @@ fixtures) - Adding new tests - Refactoring helpers
 
 ## Bats Test Assertions
 
-- **Prefer full multi-line `assert_output` or `assert_output_unsorted` over
-  `assert_output --partial`.** Partial assertions hide regressions. Use
-  `assert_output_unsorted - <<-EOM` for output with non-deterministic line
-  order. Use `assert_output --regexp -` when lines contain dynamic values.
+- **Always use the tightest possible assertion.** Full exact `assert_output`
+  matching the complete output is the default. `assert_output_unsorted` for
+  non-deterministic line order. `assert_output --regexp` ONLY when a value is
+  truly dynamic (sandbox paths, timestamps). **Never use
+  `assert_output --partial`** --- it hides regressions by ignoring unexpected
+  extra output. If you find yourself reaching for `--partial`, use the two-pass
+  strategy below to capture the full output and write an exact assertion.
 - **Two-pass assertion strategy:** When writing new assertions, first use
   `assert_output "WRONG"` to intentionally fail and capture the actual output
   from the test runner. Then replace with the real assertion matching the
