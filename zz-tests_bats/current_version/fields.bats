@@ -117,3 +117,58 @@ function field_organize_mutation { # @test
 		[one/uno @blake2b256-fh80v4xn6qv49r66rlkpkuvq2wlm4ztpuwjy6chexfjdrk0zhatqngn3sd !task "my task" status=done]
 	EOM
 }
+
+function field_organize_no_change { # @test
+  create_task_type
+  run_dodder init-workspace -experimental-repo=false
+  create_task "my task" "todo"
+
+  # same field value — blob should not change
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		- [one/uno !task status=todo] my task
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-qhdgjzc945w6v4pw4j4hr66gehgzwf8hq4v9rch9e7px5lf525sqfjcuaa !task "my task" status=todo]
+	EOM
+}
+
+function field_organize_with_tag_and_field_change { # @test
+  create_task_type
+  run_dodder init-workspace -experimental-repo=false
+  create_task "my task" "todo"
+
+  # change field AND add tag simultaneously
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		# urgent
+		- [one/uno !task status=in-progress] my task
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-0wcxp6kzf6g9vle04vfaqy6g7q75adcceyk8f5sml5dt09rckdxqrgpn8u !task "my task" urgent status=in-progress]
+	EOM
+}
+
+function field_organize_description_and_field_change { # @test
+  create_task_type
+  run_dodder init-workspace -experimental-repo=false
+  create_task "my task" "todo"
+
+  # change field AND description simultaneously
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		- [one/uno !task status=done] updated description
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-fh80v4xn6qv49r66rlkpkuvq2wlm4ztpuwjy6chexfjdrk0zhatqngn3sd !task "updated description" status=done]
+	EOM
+}
