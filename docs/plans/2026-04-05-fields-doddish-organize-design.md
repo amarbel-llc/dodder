@@ -20,7 +20,8 @@ Date: 2026-04-05
 
 **Open issues:**
 
-- #98 --- negated field query `status^=todo` returns empty
+- #98 --- resolved: infix `status^=todo` doesn't work due to `^` being
+  `operatorTypeSoloSeq`; use prefix `^status=todo` instead
 - Organize internal/external fork resolution needs cleanup and more tests
 
 ## Problem
@@ -218,8 +219,10 @@ to distinguish projected fields from mutable fields. Not in v1 scope.
 
 ### Syntax
 
-- `status=completed` --- equality match on cached field value
-- `status^=cancelled` --- negated equality
+- `status=done` --- equality match on cached field value
+- `^status=done` --- negated equality (prefix `^`, not infix `key^=value` ---
+  the `^` operator is `operatorTypeSoloSeq` in doddish and breaks the token
+  sequence when placed between key and `=`)
 
 ### Scanner
 

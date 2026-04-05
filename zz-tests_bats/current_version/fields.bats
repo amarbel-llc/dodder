@@ -76,9 +76,15 @@ function field_query_equality { # @test
 }
 
 function field_query_negation { # @test
-  # https://github.com/amarbel-llc/dodder/issues/98
-  # Negated field query status^=todo returns empty.
-  skip "negated field queries need investigation"
+  create_task_type
+  create_task "task one" "todo"
+  create_task "task two" "done"
+
+  run_dodder show '^status=todo'
+  assert_success
+  assert_output - <<-EOM
+		[one/dos @blake2b256-fh80v4xn6qv49r66rlkpkuvq2wlm4ztpuwjy6chexfjdrk0zhatqngn3sd !task "task two" status=done]
+	EOM
 }
 
 function field_enum_validation_rejects_invalid { # @test

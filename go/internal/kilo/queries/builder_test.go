@@ -125,6 +125,10 @@ func TestFieldQuery(t1 *testing.T) {
 	)
 }
 
+// Note: infix negation syntax key^=value does not work because ^ is
+// operatorTypeSoloSeq in doddish, breaking the token sequence. Use prefix
+// syntax ^key=value instead (see #98).
+
 func TestQuery(t1 *testing.T) {
 	type testCase struct {
 		ui.TestCaseInfo
