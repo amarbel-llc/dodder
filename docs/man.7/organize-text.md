@@ -1,0 +1,185 @@
+---
+author:
+- 
+date: April 2026
+title: ORGANIZE-TEXT(7) Dodder \| Miscellaneous
+---
+
+# NAME
+
+organize-text - dodder organize text format
+
+# SYNOPSIS
+
+The organize text format is a structured text representation used by the
+**organize** command to batch-edit object metadata (tags, types, descriptions,
+fields) in a text editor or via stdin.
+
+# DESCRIPTION
+
+When **dodder organize** is invoked, it generates a text document listing
+objects grouped under headings. The user (or a script) edits this document to
+add, remove, or reassign tags, change descriptions, or edit field values. The
+edited document is then parsed back, and changes are committed to the store.
+
+The format has three components: **metadata** (document-level type and tags),
+**headings** (hierarchical tag groups), and **object lines** (individual objects
+in box format).
+
+# DOCUMENT STRUCTURE
+
+An organize text document begins with optional metadata in hyphence format,
+followed by object lines and headings:
+
+    ---
+    ! task
+    ---
+
+    # project-alpha
+
+    - [one/uno !task status=todo] fix the login bug
+    - [one/dos !task status=done] update dependencies
+
+    # project-beta
+
+    - [two/uno !task status=todo] review PR
+
+## Metadata
+
+The document metadata specifies a default type and tags applied to all objects.
+It uses the hyphence format (triple-hyphen delimiters):
+
+    ---
+    ! task
+    - project-alpha
+    ---
+
+The type (`! task`) sets the default type for new objects. Tags
+(`- project-alpha`) are applied to all objects in the document.
+
+## Headings
+
+Headings use markdown-style `#` syntax. Each heading level defines a tag scope:
+
+    # tag-a
+    - [one/uno !md] first
+
+    ## tag-b
+    - [one/dos !md] second
+
+Objects under `## tag-b` inherit both `tag-a` and `tag-b`. Heading depth
+corresponds to the number of `#` characters.
+
+Multiple tags on a heading are comma-separated:
+
+    # tag-a, tag-b
+
+## Object Lines
+
+Each object line starts with a prefix indicating its type assignment:
+
+**`-`** (direct type)
+:   The object has a known, directly assigned type.
+
+**`%`** (unknown type)
+:   The object's type is inferred or virtual.
+
+After the prefix, the object is rendered in box format (see **BOX FORMAT**
+below):
+
+    - [object-id !type tag1 tag2 field=value] description
+
+# BOX FORMAT
+
+Object lines use the box format within square brackets. Fields appear in order:
+
+1.  **Object ID** --- e.g., `one/uno`, `!md`, `konfig`
+2.  **Blob digest** --- prefixed with `@` (e.g., `@blake2b256-...`), present
+    when the object has blob content
+3.  **Type** --- prefixed with `!` (e.g., `!task`, `!md`)
+4.  **Tags** --- bare identifiers, sorted alphabetically
+5.  **Fields** --- `key=value` pairs for type-defined fields (e.g.,
+    `status=todo`)
+
+The description appears after the closing bracket as a trailer.
+
+Field values are unquoted when they contain only identifier-safe characters.
+Values with spaces or reserved characters are Go-quoted
+(`key="value with spaces"`).
+
+# EDITING
+
+## Adding Tags
+
+Move an object under a heading, or add a tag to the heading line:
+
+    # new-tag
+    - [one/uno !md] my zettel
+
+## Removing Tags
+
+Remove a tag from a heading or move the object out from under it.
+
+## Changing Descriptions
+
+Edit the description text after the closing bracket:
+
+    - [one/uno !md] updated description here
+
+## Changing Fields
+
+Edit the field value within the brackets:
+
+    - [one/uno !task status=done] my task
+
+When a field value is changed, the **fields-writer** script (defined in the type
+blob) is invoked to update the blob content. The blob digest changes
+accordingly.
+
+## Creating Objects
+
+Add a new object line. The organize system will create it on commit:
+
+    - new object description
+
+## Removing Objects
+
+Delete the object line from the document. The object will be removed from the
+result set (though not deleted from the store).
+
+# INTERNAL AND EXTERNAL FORKS
+
+When organize computes changes, each object exists as two forks:
+
+**Internal fork**
+:   The object as stored in the index. Carries full metadata including
+    **TypeBlobDigest** on fields, blob digest, type signature, and other
+    computed values.
+
+**External fork**
+:   The object as parsed from the organize text. Carries user-edited values
+    (description, tags, field values) but lacks computed metadata like
+    TypeBlobDigest.
+
+During change resolution, the external fork's edited values are overlaid onto
+the internal fork's structure. For fields, this means the internal fork provides
+the field definitions (TypeBlobDigest) while the external fork provides the
+edited values.
+
+# MODES
+
+The **organize** command supports three modes via the **-mode** flag:
+
+**interactive** (default)
+:   Generate organize text, open in editor, commit on save.
+
+**commit-directly**
+:   Generate organize text internally, read replacement from stdin, commit. Used
+    for scripted workflows.
+
+**output-only**
+:   Generate organize text and write to stdout. No changes are committed.
+
+# SEE ALSO
+
+**dodder-organize**(1), **doddish**(7), **markl-id**(7)
