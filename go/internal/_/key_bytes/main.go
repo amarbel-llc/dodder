@@ -37,6 +37,8 @@ const (
 
 	ExternalObjectId = Binary('e')
 
+	Field = Binary('F')
+
 	CacheDormant     = Binary('a')
 	CacheTagImplicit = Binary('I')
 	CacheTags        = Binary('x')

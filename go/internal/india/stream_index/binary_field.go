@@ -30,6 +30,7 @@ var binaryFieldOrder = []key_bytes.Binary{
 	key_bytes.ExternalObjectId,
 	key_bytes.CacheTagImplicit,
 	key_bytes.CacheTags,
+	key_bytes.Field,
 }
 
 type binaryField struct {

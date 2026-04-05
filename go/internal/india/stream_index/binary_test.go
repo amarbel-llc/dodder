@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
@@ -121,5 +122,114 @@ func TestBinaryOne(t1 *testing.T) {
 
 	if !sku.TransactedEqualer.Equals(expected, actual.Transacted) {
 		t.Errorf("expected %q but got %q", sku.String(expected), sku.String(actual.Transacted))
+	}
+}
+
+func TestBinaryFieldRoundTrip(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	buffer := new(bytes.Buffer)
+
+	coder := binaryEncoder{Sigil: ids.SigilLatest}
+	decoder := makeBinary(ids.SigilLatest)
+	expected, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
+
+	{
+		t.AssertNoError(
+			expected.GetObjectIdMutable().SetWithId(ids.MustZettelId("two/dos")),
+		)
+		expected.SetTai(ids.NowTai())
+		t.AssertNoError(markl.SetHexBytes(
+			markl.FormatIdHashSha256,
+			expected.GetMetadataMutable().GetBlobDigestMutable(),
+			[]byte(
+				"ed500e315f33358824203cee073893311e0a80d77989dc55c5d86247d95b2403",
+			),
+		))
+
+		metadata := expected.GetMetadataMutable()
+
+		t.AssertNoError(metadata.GetTypeMutable().SetType("!da-typ"))
+
+		// generate a fake type signature
+		{
+			typeSig := metadata.GetTypeLockMutable()
+			t.AssertNoError(typeSig.GetValueMutable().GeneratePrivateKey(
+				nil,
+				markl.FormatIdNonceSec,
+				"",
+			))
+		}
+
+		// add a type-defined field with a non-empty TypeBlobDigest
+		{
+			var typeBlobDigest markl.Id
+			t.AssertNoError(markl.SetHexBytes(
+				markl.FormatIdHashSha256,
+				&typeBlobDigest,
+				[]byte(
+					"abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789",
+				),
+			))
+
+			field := fields.Field{
+				Key:            "status",
+				Value:          "todo",
+				Type:           fields.TypeUserData,
+				TypeBlobDigest: typeBlobDigest,
+			}
+
+			metadata.GetIndexMutable().GetFieldsMutable().Append(field)
+		}
+
+		{
+			config := genesis_configs.Default().Blob
+			finalizer := object_finalizer.Make()
+
+			t.AssertNoError(config.GetPrivateKeyMutable().GeneratePrivateKey(
+				nil,
+				markl.FormatIdEd25519Sec,
+				markl.PurposeRepoPrivateKeyV1,
+			))
+			t.AssertNoError(finalizer.FinalizeAndSignOverwrite(expected, config))
+		}
+
+		_, err := coder.writeFormat(
+			buffer,
+			objectWithSigil{Transacted: expected},
+		)
+		t.AssertNoError(err)
+	}
+
+	actual := objectWithCursorAndSigil{
+		objectWithSigil: objectWithSigil{
+			Transacted: func() *sku.Transacted { t, _ := sku.GetTransactedPool().GetWithRepool(); return t }(), //repool:owned
+		},
+	}
+
+	{
+		_, err := decoder.readFormatAndMatchSigil(buffer, &actual)
+		t.AssertNoError(err)
+	}
+
+	// assert field survived round-trip
+	actualFields := actual.Transacted.GetMetadataMutable().GetIndexMutable().GetFieldsMutable()
+
+	if actualFields.Len() != 1 {
+		t.Fatalf("expected 1 field but got %d", actualFields.Len())
+	}
+
+	actualField := actualFields.At(0)
+
+	if actualField.Key != "status" {
+		t.Errorf("expected field key %q but got %q", "status", actualField.Key)
+	}
+
+	if actualField.Value != "todo" {
+		t.Errorf("expected field value %q but got %q", "todo", actualField.Value)
+	}
+
+	if actualField.Type != fields.TypeUserData {
+		t.Errorf("expected field type %d but got %d", fields.TypeUserData, actualField.Type)
 	}
 }

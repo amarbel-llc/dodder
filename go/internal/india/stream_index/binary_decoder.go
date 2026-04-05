@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/_/key_bytes"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -539,6 +540,23 @@ func (decoder *binaryDecoder) readFieldKey(
 		}
 
 		metadata.GetIndexMutable().GetTagPaths().AddPath(&tag)
+
+	case key_bytes.Field:
+		contentBytes := decoder.Content.Bytes()
+		parts := bytes.SplitN(contentBytes, []byte{0}, 2)
+
+		if len(parts) != 2 {
+			err = errors.Errorf("invalid field entry: no null separator")
+			return err
+		}
+
+		field := fields.Field{
+			Key:   string(parts[0]),
+			Value: string(parts[1]),
+			Type:  fields.TypeUserData,
+		}
+
+		metadata.GetIndexMutable().GetFieldsMutable().Append(field)
 
 	default:
 		err = errors.ErrorWithStackf("unsupported key: %s", decoder.Key)

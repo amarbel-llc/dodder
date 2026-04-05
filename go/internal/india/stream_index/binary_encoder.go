@@ -406,6 +406,43 @@ func (encoder *binaryEncoder) writeFieldKey(
 			}
 		}
 
+	case key_bytes.Field:
+		for field := range metadata.GetIndex().GetFields() {
+			if field.TypeBlobDigest.IsEmpty() {
+				continue
+			}
+
+			if _, err = io.WriteString(
+				&encoder.Content,
+				field.Key,
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			if _, err = ohio.WriteAllOrDieTrying(
+				&encoder.Content, []byte{0},
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			if _, err = io.WriteString(
+				&encoder.Content,
+				field.Value,
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			var n1 int64
+			if n1, err = encoder.binaryField.WriteTo(&encoder.Buffer); err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+			n += n1
+		}
+
 	default:
 		panic(fmt.Sprintf("unsupported key: %s", encoder.Key))
 	}
