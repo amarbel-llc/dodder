@@ -3,13 +3,13 @@ date: 2026-04-01
 promotion-criteria: the unit type ! is a content-addressed WASM blob whose
   functions are callable by the Go runtime via the primordial ABI; a meta-type
   (!toml-type-v2) satisfies type-implementable via its own WASM blob; a concrete
-  type (!task) exports the 'actionable' interface with WATI function signatures;
+  type (!task) exports the 'actionable' interface with WIT function signatures;
   a conforming type (!vtodo) implements 'actionable' by referencing a codec WASM
   blob and TOML config; the projection pipeline resolves project_field through
   the full dispatch chain (Chaos → ! → meta-type → type → conforming type →
   codec); a CalDAV VTODO round-trips through checkin/checkout with full
   iCalendar preservation; BATS tests verify field projection, action dispatch,
-  conformance validation, and codec WATI verification
+  conformance validation, and codec WIT verification
 status: exploring
 ---
 
@@ -101,7 +101,7 @@ a Lua VM and interprets Lua scripts as type definitions. Meta-types escape Layer
 
 **Layer 3: Types and interfaces.** Types defined by meta-type blobs. `!task` is
 a TOML type blob interpreted by `!toml-type-v2`. It exports "actionable" --- a
-named interface with field declarations and WATI (WebAssembly Type Interface)
+named interface with field declarations and WIT (WebAssembly Type Interface)
 function signatures. `!vtodo` is another TOML type blob that implements
 "actionable" by referencing a codec WASM blob and providing declarative config.
 Types at this level escape Layer 2: consumers interact with named interfaces
@@ -150,15 +150,15 @@ fn validate(content: &[u8], type_blob: &[u8]) -> Result<(), String>
 // Extract references from content given its type
 fn extract_refs(content: &[u8], type_blob: &[u8]) -> Vec<Reference>
 
-// Verify that a WASM blob satisfies declared WATI signatures
-fn verify_wati(wati_sigs: &[u8], wasm_blob: &[u8]) -> bool
+// Verify that a WASM blob satisfies declared WIT signatures
+fn verify_wit(wit_sigs: &[u8], wasm_blob: &[u8]) -> bool
 ```
 
 Six functions. `exports`, `project`, `execute`, `validate`, `extract_refs`, and
-`verify_wati`. Every type, every interface, every format codec derives from
-these six entry points being callable on `!`'s blob.
+`verify_wit`. Every type, every interface, every format codec derives from these
+six entry points being callable on `!`'s blob.
 
-`verify_wati` deserves special attention. It is how `!` verifies that a
+`verify_wit` deserves special attention. It is how `!` verifies that a
 downstream WASM blob actually satisfies the function signatures a type claims it
 does. Without it, conformance is trust-based. With it, the type system can
 validate itself at commit time. WASM module type signatures are statically
@@ -229,7 +229,7 @@ The key difference: Ruby's dynamism means `method_missing` is always possible.
 Dodder validates conformance at commit time. If a type declares
 `[implements.actionable]`, the finalizer verifies that every required field has
 a mapping, every action has an implementation, and every referenced WASM blob
-satisfies its declared WATI signatures. No runtime surprises.
+satisfies its declared WIT signatures. No runtime surprises.
 
 ### Interface Contracts
 
@@ -275,13 +275,13 @@ name = "tags"
 kind = "string-list"
 required = false
 
-# WATI function signatures — what a conforming codec must implement
-[[exports.actionable.wati]]
+# WIT function signatures — what a conforming codec must implement
+[[exports.actionable.wit]]
 name = "project_field"
 params = ["blob:bytes", "field_name:string"]
 returns = "field_value:bytes"
 
-[[exports.actionable.wati]]
+[[exports.actionable.wit]]
 name = "execute_action"
 params = ["blob:bytes", "action_name:string"]
 returns = "mutated_blob:bytes"
@@ -297,8 +297,8 @@ mutates = ["status"]
 ```
 
 The interface contract has three parts: **fields** (the shape of the data),
-**WATI signatures** (the function contract that codec blobs must satisfy), and
-**actions** (named mutations). Fields and actions are declarative data. WATI
+**WIT signatures** (the function contract that codec blobs must satisfy), and
+**actions** (named mutations). Fields and actions are declarative data. WIT
 signatures are the bridge to executable code.
 
 A type can export multiple interfaces. A `!calendar-event` type might export
@@ -306,14 +306,24 @@ both "schedulable" (has start, end, recurrence) and "describable" (has summary,
 body, tags). A `!task` might export "actionable" and "describable". Interfaces
 are composable --- they are Ruby modules, not single inheritance.
 
-### WATI: WebAssembly Type Interface
+### WIT: WebAssembly Interface Types
 
-WATI is the mechanism by which declarative type definitions connect to
-executable code. A type blob declares WATI function signatures as part of an
-exported interface. A conforming type references a WASM blob (the **codec**)
-that implements those signatures.
+WIT (WebAssembly Interface Types) is the W3C standard for defining typed
+interfaces between WebAssembly components. Dodder uses WIT-aligned primitives
+(string, enum, bool, u32, s32, list\<string\>) for field kind declarations,
+ensuring forward compatibility with the component model.
 
-The WATI signatures in the `!task` example above say: any codec that wants to
+WIT is the mechanism by which declarative type definitions connect to executable
+code. A type blob declares WIT function signatures as part of an exported
+interface. A conforming type references a WASM blob (the **codec**) that
+implements those signatures.
+
+**Flag:** Semantic aliases (timestamp over string, priority over u32) are a
+future extension. Integration with amarbel-llc/langlang for grammar-based type
+constraints is planned --- langlang grammars could define the validation rules
+for semantic aliases.
+
+The WIT signatures in the `!task` example above say: any codec that wants to
 make a blob "actionable" must export `project_field(blob, field_name) → value`
 and `execute_action(blob, action_name) → mutated_blob`. The signatures are
 format-agnostic --- the same signatures work for an iCal codec, a JSON codec, a
@@ -322,13 +332,13 @@ TOML codec, or a proprietary binary codec.
 The codec WASM blob is a shared library. The iCal codec referenced by `!vtodo`
 is the same blob referenced by `!vevent`, `!vjournal`, or any other
 iCalendar-backed type. It's content-addressed, immutable, reusable. Its WASM
-exports match the WATI signatures declared by whichever interface it's
+exports match the WIT signatures declared by whichever interface it's
 satisfying. The TOML config section in the conforming type's blob is what
 specializes each usage --- the codec is generic, the config makes it specific.
 
-At commit time, `verify_wati` (one of `!`'s primordial ABI functions) checks
-that the codec blob's WASM exports match the declared WATI signatures. This is
-static verification --- WASM binaries include a type section that lists exported
+At commit time, `verify_wit` (one of `!`'s primordial ABI functions) checks that
+the codec blob's WASM exports match the declared WIT signatures. This is static
+verification --- WASM binaries include a type section that lists exported
 function signatures. Behavioral correctness (does `project_field("SUMMARY")`
 actually return the SUMMARY?) cannot be verified statically and is the domain of
 tests.
@@ -351,7 +361,7 @@ blob-format = "ical-vtodo"
 # Which type defines this interface
 type-ref = "!task"
 
-# WASM blob that satisfies the WATI sigs declared by !task's "actionable"
+# WASM blob that satisfies the WIT sigs declared by !task's "actionable"
 codec = "<@blake2b256-abc... !wasm"
 
 # Declarative config passed TO the codec at call time
@@ -544,7 +554,7 @@ merge target changes:
 For Phase 1, the blob is treated as opaque at the merge level ---
 last-writer-wins for the blob, with metadata merges remaining three-way.
 Semantic blob merging (per-property iCal merge via a format-aware diff codec) is
-a natural extension: the "mergeable" interface, with WATI signatures for
+a natural extension: the "mergeable" interface, with WIT signatures for
 `diff(base, ours, theirs) → merged`. But this is future work.
 
 ### Conformance Validation
@@ -554,9 +564,9 @@ At commit time, the finalizer validates conformance declarations:
 - Every required interface field must have a mapping in `field-map` (or be
   handled by the codec)
 - Every action declared by the interface must have either a `set` block or a
-  codec that exports the corresponding WATI function
-- `verify_wati` confirms the referenced codec WASM blob actually exports the
-  functions declared in the interface's WATI signatures
+  codec that exports the corresponding WIT function
+- `verify_wit` confirms the referenced codec WASM blob actually exports the
+  functions declared in the interface's WIT signatures
 - Status maps (for enum fields) must cover all values in the interface's
   `values` list
 
@@ -603,7 +613,7 @@ absent.
     conformance fragile and implicit --- Ruby's `respond_to?` without the safety
     of `include`.
 
-5.  **WATI signatures in the interface, codec blobs in the conformance.** The
+5.  **WIT signatures in the interface, codec blobs in the conformance.** The
     interface declares *what* functions are needed (signatures). The conforming
     type declares *which* WASM blob provides them (codec reference). Rationale:
     this separates the contract from the implementation. Multiple conforming
@@ -629,7 +639,7 @@ absent.
     effort, not required for initial CalDAV round-trip where concurrent blob
     edits are rare. Metadata merges (tags, references) remain three-way.
 
-9.  **`verify_wati` as static signature check.** WASM binaries include a type
+9.  **`verify_wit` as static signature check.** WASM binaries include a type
     section listing exported function signatures. Conformance checking inspects
     this section at commit time without executing the WASM. Behavioral
     correctness is not verified statically --- it's the domain of BATS tests and
@@ -650,14 +660,14 @@ absent.
 
 ### Phase 2: Interface System
 
-4.  `[exports]` section in type blob TOML schema: field declarations, WATI
+4.  `[exports]` section in type blob TOML schema: field declarations, WIT
     signatures, action declarations.
 5.  `[implements]` section: codec reference, config (field-maps, status-maps,
     action definitions).
 6.  iCalendar codec WASM blob: parses RFC 5545, implements `project_field` and
-    `execute_action` WATI signatures, driven by TOML config.
+    `execute_action` WIT signatures, driven by TOML config.
 7.  Projection pipeline: dispatch chain from Chaos → `!` → meta-type → codec.
-8.  `verify_wati` implementation: static WASM type section inspection at commit
+8.  `verify_wit` implementation: static WASM type section inspection at commit
     time.
 9.  Conformance validation in `object_finalizer`.
 
@@ -822,7 +832,7 @@ workspace.
   "content-addressed WASM blob that defines the type system"
 - [Dynamic Type Registries](../plans/2026-02-23-dynamic-type-registries.md) ---
   vision for types-as-objects with runtime behavior; this FDR provides the
-  concrete mechanism (WATI, codec blobs, meta-types)
+  concrete mechanism (WIT, codec blobs, meta-types)
 - [Typed Blob References](../plans/2026-03-21-typed-blob-references-design.md)
-  --- blob type locks that carry format and conformance identity; WATI
+  --- blob type locks that carry format and conformance identity; WIT
   verification uses these locks to locate codec blobs

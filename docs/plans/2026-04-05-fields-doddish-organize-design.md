@@ -42,8 +42,9 @@ future extension. Integration with amarbel-llc/langlang for grammar-based type
 constraints is planned --- langlang grammars could define the validation rules
 for semantic aliases.
 
-**Flag:** FDR-0000 uses "WATI" (WebAssembly Type Interface) --- this should be
-corrected to "WIT" throughout, since WATI is not an external spec.
+**Done:** FDR-0000 renamed "WATI" to "WIT" throughout, with note that WIT refers
+to WebAssembly Interface Types (W3C standard). Semantic aliases and langlang
+integration flagged in FDR.
 
 ### `fields.Definition` --- Field Schema
 
