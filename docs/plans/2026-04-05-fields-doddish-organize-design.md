@@ -2,6 +2,27 @@
 
 Date: 2026-04-05
 
+## Implementation Status
+
+**Implemented** (mild-elm branch, 2026-04-05):
+
+- Data model: `fields.Kind` (WIT-aligned), `fields.Definition`, `TypeBlobDigest`
+  on `Field`
+- TomlV2 type blob with `[[fields]]`, `[fields-reader]`, `[fields-writer]`
+- Store version V15 with binary codec for field key/value/TypeBlobDigest
+- Doddish query: `status=todo` equality matching
+- Field read pipeline: commit-time projection via script
+- Field write pipeline: organize mutation with internal/external fork overlay
+- Default output format changed from log to box (fields visible)
+- Smart quoting: `status=todo` unquoted, descriptions quoted
+- Enum validation on commit
+- BATS tests: projection, query, enum validation, organize mutation
+
+**Open issues:**
+
+- #98 --- negated field query `status^=todo` returns empty
+- Organize internal/external fork resolution needs cleanup and more tests
+
 ## Problem
 
 Dodder objects have metadata (tags, type, description) but no mechanism for
