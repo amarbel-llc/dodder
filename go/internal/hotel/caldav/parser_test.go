@@ -248,7 +248,7 @@ func TestWriteDateProp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var b strings.Builder
-			writeDateProp(&b, "DUE", tt.value)
+			writeDateProp(&b, "DUE", tt.value, "")
 			got := b.String()
 			if got != tt.want {
 				t.Errorf("writeDateProp(DUE, %q) = %q, want %q", tt.value, got, tt.want)
@@ -374,5 +374,213 @@ func TestTaskToIcalEscaping(t *testing.T) {
 	}
 	if parsed.Location != task.Location {
 		t.Errorf("round-trip Location: got %q, want %q", parsed.Location, task.Location)
+	}
+}
+
+func TestWriteDatePropWithTZID(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		tzid  string
+		want  string
+	}{
+		{"no tzid", "20260405T120000Z", "", "DUE:20260405T120000Z\r\n"},
+		{"with tzid", "20260405T120000", "America/New_York", "DUE;TZID=America/New_York:20260405T120000\r\n"},
+		{"date-only ignores tzid", "20260405", "America/New_York", "DUE;VALUE=DATE:20260405\r\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var b strings.Builder
+			writeDateProp(&b, "DUE", tt.value, tt.tzid)
+			got := b.String()
+			if got != tt.want {
+				t.Errorf("writeDateProp(DUE, %q, %q) = %q, want %q", tt.value, tt.tzid, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseVTODOTZIDPreservation(t *testing.T) {
+	raw := "BEGIN:VCALENDAR\r\n" +
+		"BEGIN:VTODO\r\n" +
+		"UID:tzid-1\r\n" +
+		"SUMMARY:Meeting prep\r\n" +
+		"DUE;TZID=America/New_York:20260405T170000\r\n" +
+		"DTSTART;TZID=Europe/Berlin:20260405T090000\r\n" +
+		"END:VTODO\r\n" +
+		"END:VCALENDAR\r\n"
+
+	task, err := ParseVTODO(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if task.Due != "20260405T170000" {
+		t.Errorf("Due: got %q, want %q", task.Due, "20260405T170000")
+	}
+	if task.DueTZID != "America/New_York" {
+		t.Errorf("DueTZID: got %q, want %q", task.DueTZID, "America/New_York")
+	}
+	if task.DtStart != "20260405T090000" {
+		t.Errorf("DtStart: got %q, want %q", task.DtStart, "20260405T090000")
+	}
+	if task.DtStartTZID != "Europe/Berlin" {
+		t.Errorf("DtStartTZID: got %q, want %q", task.DtStartTZID, "Europe/Berlin")
+	}
+
+	// Round-trip: serialize and re-parse
+	ical := TaskToIcal(task)
+	if !strings.Contains(ical, "DUE;TZID=America/New_York:20260405T170000") {
+		t.Errorf("TZID not preserved in serialized output:\n%s", ical)
+	}
+	if !strings.Contains(ical, "DTSTART;TZID=Europe/Berlin:20260405T090000") {
+		t.Errorf("DTSTART TZID not preserved in serialized output:\n%s", ical)
+	}
+
+	parsed, err := ParseVTODO(ical)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if parsed.DueTZID != "America/New_York" {
+		t.Errorf("round-trip DueTZID: got %q, want %q", parsed.DueTZID, "America/New_York")
+	}
+	if parsed.DtStartTZID != "Europe/Berlin" {
+		t.Errorf("round-trip DtStartTZID: got %q, want %q", parsed.DtStartTZID, "Europe/Berlin")
+	}
+}
+
+func TestParseVTODODateTimeFormats(t *testing.T) {
+	t.Run("UTC datetime", func(t *testing.T) {
+		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-1\r\nSUMMARY:test\r\n" +
+			"DUE:20260405T120000Z\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
+		task, err := ParseVTODO(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if task.Due != "20260405T120000Z" {
+			t.Errorf("Due: got %q", task.Due)
+		}
+		if task.DueTZID != "" {
+			t.Errorf("DueTZID should be empty for UTC, got %q", task.DueTZID)
+		}
+	})
+
+	t.Run("floating datetime", func(t *testing.T) {
+		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-2\r\nSUMMARY:test\r\n" +
+			"DUE:20260405T120000\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
+		task, err := ParseVTODO(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if task.Due != "20260405T120000" {
+			t.Errorf("Due: got %q", task.Due)
+		}
+		if task.DueTZID != "" {
+			t.Errorf("DueTZID should be empty for floating, got %q", task.DueTZID)
+		}
+	})
+
+	t.Run("date-only VALUE=DATE", func(t *testing.T) {
+		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-3\r\nSUMMARY:test\r\n" +
+			"DUE;VALUE=DATE:20260405\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
+		task, err := ParseVTODO(raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if task.Due != "20260405" {
+			t.Errorf("Due: got %q", task.Due)
+		}
+	})
+}
+
+func TestParseVTODORecurrenceID(t *testing.T) {
+	raw := "BEGIN:VCALENDAR\r\n" +
+		"BEGIN:VTODO\r\n" +
+		"UID:rec-1\r\n" +
+		"SUMMARY:Weekly review\r\n" +
+		"RRULE:FREQ=WEEKLY;BYDAY=FR\r\n" +
+		"RECURRENCE-ID:20260410T090000Z\r\n" +
+		"END:VTODO\r\n" +
+		"END:VCALENDAR\r\n"
+
+	task, err := ParseVTODO(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if task.RRule != "FREQ=WEEKLY;BYDAY=FR" {
+		t.Errorf("RRule: got %q", task.RRule)
+	}
+	if task.RecurrenceID != "20260410T090000Z" {
+		t.Errorf("RecurrenceID: got %q, want %q", task.RecurrenceID, "20260410T090000Z")
+	}
+
+	// Round-trip
+	ical := TaskToIcal(task)
+	if !strings.Contains(ical, "RECURRENCE-ID:20260410T090000Z") {
+		t.Errorf("RecurrenceID not in serialized output:\n%s", ical)
+	}
+}
+
+func TestParseVTODOMultiComponentMaster(t *testing.T) {
+	// A .ics with a master VTODO and an override — only master is extracted.
+	raw := "BEGIN:VCALENDAR\r\n" +
+		"BEGIN:VTODO\r\n" +
+		"UID:multi-1\r\n" +
+		"SUMMARY:Take out trash\r\n" +
+		"RRULE:FREQ=WEEKLY;BYDAY=TU\r\n" +
+		"END:VTODO\r\n" +
+		"BEGIN:VTODO\r\n" +
+		"UID:multi-1\r\n" +
+		"SUMMARY:Take out trash (deferred)\r\n" +
+		"RECURRENCE-ID:20260408T080000Z\r\n" +
+		"END:VTODO\r\n" +
+		"END:VCALENDAR\r\n"
+
+	task, err := ParseVTODO(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Should get the master, not the override
+	if task.Summary != "Take out trash" {
+		t.Errorf("expected master VTODO, got Summary=%q", task.Summary)
+	}
+	if task.RecurrenceID != "" {
+		t.Errorf("master should have no RecurrenceID, got %q", task.RecurrenceID)
+	}
+	if task.RRule != "FREQ=WEEKLY;BYDAY=TU" {
+		t.Errorf("RRule: got %q", task.RRule)
+	}
+}
+
+func TestParseVEVENTTZIDPreservation(t *testing.T) {
+	raw := "BEGIN:VCALENDAR\r\n" +
+		"BEGIN:VEVENT\r\n" +
+		"UID:ev-tzid-1\r\n" +
+		"SUMMARY:Standup\r\n" +
+		"DTSTART;TZID=America/Chicago:20260405T090000\r\n" +
+		"DTEND;TZID=America/Chicago:20260405T093000\r\n" +
+		"END:VEVENT\r\n" +
+		"END:VCALENDAR\r\n"
+
+	event, err := ParseVEVENT(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if event.DtStartTZID != "America/Chicago" {
+		t.Errorf("DtStartTZID: got %q", event.DtStartTZID)
+	}
+	if event.DtEndTZID != "America/Chicago" {
+		t.Errorf("DtEndTZID: got %q", event.DtEndTZID)
+	}
+
+	// Round-trip
+	ical := EventToIcal(event)
+	if !strings.Contains(ical, "DTSTART;TZID=America/Chicago:20260405T090000") {
+		t.Errorf("DTSTART TZID not preserved:\n%s", ical)
+	}
+	if !strings.Contains(ical, "DTEND;TZID=America/Chicago:20260405T093000") {
+		t.Errorf("DTEND TZID not preserved:\n%s", ical)
 	}
 }

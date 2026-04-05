@@ -16,13 +16,16 @@ type Task struct {
 	Status             string   `json:"status,omitempty"`
 	Priority           int      `json:"priority,omitempty"`
 	Due                string   `json:"due,omitempty"`
+	DueTZID            string   `json:"due_tzid,omitempty"`
 	DtStart            string   `json:"dtstart,omitempty"`
+	DtStartTZID        string   `json:"dtstart_tzid,omitempty"`
 	Completed          string   `json:"completed,omitempty"`
 	Created            string   `json:"created,omitempty"`
 	LastModified       string   `json:"last_modified,omitempty"`
 	Categories         []string `json:"categories,omitempty"`
 	PercentComplete    int      `json:"percent_complete,omitempty"`
 	ParentUID          string   `json:"parent_uid,omitempty"`
+	RecurrenceID       string   `json:"recurrence_id,omitempty"`
 	RRule              string   `json:"rrule,omitempty"`
 	Location           string   `json:"location,omitempty"`
 	Geo                string   `json:"geo,omitempty"`
@@ -84,6 +87,11 @@ func (t *Task) ToMetadata() TaskMetadata {
 }
 
 // ParseVTODO parses a raw iCalendar string and extracts the first VTODO as a Task.
+// For recurring tasks (RRULE), a single .ics resource may contain multiple VTODO
+// components: a master plus overrides with RECURRENCE-ID. This function returns
+// only the first (master) VTODO. Override components are not extracted because
+// dodder maps each CalDAV resource to one zettel — the recurring pattern is the
+// conceptual unit, not individual instances.
 func ParseVTODO(raw string) (*Task, error) {
 	lines := unfoldLines(raw)
 
@@ -153,8 +161,10 @@ func ParseVTODO(raw string) (*Task, error) {
 			}
 		case "DUE":
 			t.Due = value
+			t.DueTZID = paramValue(name, "TZID")
 		case "DTSTART":
 			t.DtStart = value
+			t.DtStartTZID = paramValue(name, "TZID")
 		case "COMPLETED":
 			t.Completed = value
 		case "CREATED":
@@ -178,6 +188,8 @@ func ParseVTODO(raw string) (*Task, error) {
 			}
 		case "RRULE":
 			t.RRule = value
+		case "RECURRENCE-ID":
+			t.RecurrenceID = value
 		case "LOCATION":
 			t.Location = unescapeText(value)
 		case "GEO":
@@ -280,10 +292,10 @@ func TaskToIcal(t *Task) string {
 		writeIcalProp(&b, "PRIORITY", strconv.Itoa(t.Priority))
 	}
 	if t.Due != "" {
-		writeDateProp(&b, "DUE", t.Due)
+		writeDateProp(&b, "DUE", t.Due, t.DueTZID)
 	}
 	if t.DtStart != "" {
-		writeDateProp(&b, "DTSTART", t.DtStart)
+		writeDateProp(&b, "DTSTART", t.DtStart, t.DtStartTZID)
 	}
 	if t.Completed != "" {
 		writeIcalProp(&b, "COMPLETED", t.Completed)
@@ -299,6 +311,9 @@ func TaskToIcal(t *Task) string {
 	}
 	if t.RRule != "" {
 		writeIcalProp(&b, "RRULE", t.RRule)
+	}
+	if t.RecurrenceID != "" {
+		writeIcalProp(&b, "RECURRENCE-ID", t.RecurrenceID)
 	}
 	if t.Location != "" {
 		writeIcalProp(&b, "LOCATION", escapeText(t.Location))
@@ -392,14 +407,18 @@ func unescapeText(s string) string {
 	return s
 }
 
-func writeDateProp(b *strings.Builder, name, value string) {
+func writeDateProp(b *strings.Builder, name, value, tzid string) {
 	// If it looks like a date-only value (YYYYMMDD or YYYY-MM-DD), use VALUE=DATE
 	if len(value) == 8 || len(value) == 10 {
 		normalized := strings.ReplaceAll(value, "-", "")
 		if len(normalized) == 8 {
-			b.WriteString(name + ";VALUE=DATE:" + normalized + "\r\n")
+			foldAndWrite(b, name+";VALUE=DATE:"+normalized)
 			return
 		}
+	}
+	if tzid != "" {
+		foldAndWrite(b, name+";TZID="+tzid+":"+value)
+		return
 	}
 	writeIcalProp(b, name, value)
 }

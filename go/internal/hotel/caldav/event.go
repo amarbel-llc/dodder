@@ -15,7 +15,9 @@ type Event struct {
 	Location     string   `json:"location,omitempty"`
 	Geo          string   `json:"geo,omitempty"`
 	DtStart      string   `json:"dtstart,omitempty"`
+	DtStartTZID  string   `json:"dtstart_tzid,omitempty"`
 	DtEnd        string   `json:"dtend,omitempty"`
+	DtEndTZID    string   `json:"dtend_tzid,omitempty"`
 	Duration     string   `json:"duration,omitempty"`
 	Organizer    string   `json:"organizer,omitempty"`
 	Attendees    []string `json:"attendees,omitempty"`
@@ -150,8 +152,10 @@ func ParseVEVENT(raw string) (*Event, error) {
 			e.Geo = value
 		case "DTSTART":
 			e.DtStart = value
+			e.DtStartTZID = paramValue(name, "TZID")
 		case "DTEND":
 			e.DtEnd = value
+			e.DtEndTZID = paramValue(name, "TZID")
 		case "DURATION":
 			e.Duration = value
 		case "ORGANIZER":
@@ -210,10 +214,10 @@ func EventToIcal(e *Event) string {
 		writeIcalProp(&b, "STATUS", e.Status)
 	}
 	if e.DtStart != "" {
-		writeIcalProp(&b, "DTSTART", e.DtStart)
+		writeDateProp(&b, "DTSTART", e.DtStart, e.DtStartTZID)
 	}
 	if e.DtEnd != "" {
-		writeIcalProp(&b, "DTEND", e.DtEnd)
+		writeDateProp(&b, "DTEND", e.DtEnd, e.DtEndTZID)
 	}
 	if e.Duration != "" {
 		writeIcalProp(&b, "DURATION", e.Duration)

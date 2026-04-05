@@ -14,8 +14,8 @@ const requestTimeout = 30 * time.Second
 // Client is a CalDAV HTTP client that supports PROPFIND, REPORT, PUT, DELETE,
 // and MKCALENDAR operations.
 type Client struct {
-	cfg    *Config
-	http   *http.Client
+	cfg  *Config
+	http *http.Client
 }
 
 // Calendar represents a CalDAV calendar collection.
@@ -53,12 +53,12 @@ func (c *Client) do(method, url, body string, depth int) (*http.Response, error)
 // --- XML types for CalDAV responses ---
 
 type multistatusResponse struct {
-	XMLName   xml.Name   `xml:"DAV: multistatus"`
+	XMLName   xml.Name      `xml:"DAV: multistatus"`
 	Responses []davResponse `xml:"DAV: response"`
 }
 
 type davResponse struct {
-	Href    string      `xml:"DAV: href"`
+	Href     string        `xml:"DAV: href"`
 	PropStat []davPropStat `xml:"DAV: propstat"`
 }
 
@@ -68,13 +68,13 @@ type davPropStat struct {
 }
 
 type davProp struct {
-	DisplayName       string           `xml:"DAV: displayname"`
-	CalendarColor     string           `xml:"http://apple.com/ns/ical/ calendar-color"`
-	CalendarDesc      string           `xml:"urn:ietf:params:xml:ns:caldav calendar-description"`
-	SupportedCalComp  *calCompSet      `xml:"urn:ietf:params:xml:ns:caldav supported-calendar-component-set"`
-	CalendarData      string           `xml:"urn:ietf:params:xml:ns:caldav calendar-data"`
-	GetETag           string           `xml:"DAV: getetag"`
-	ResourceType      *davResourceType `xml:"DAV: resourcetype"`
+	DisplayName      string           `xml:"DAV: displayname"`
+	CalendarColor    string           `xml:"http://apple.com/ns/ical/ calendar-color"`
+	CalendarDesc     string           `xml:"urn:ietf:params:xml:ns:caldav calendar-description"`
+	SupportedCalComp *calCompSet      `xml:"urn:ietf:params:xml:ns:caldav supported-calendar-component-set"`
+	CalendarData     string           `xml:"urn:ietf:params:xml:ns:caldav calendar-data"`
+	GetETag          string           `xml:"DAV: getetag"`
+	ResourceType     *davResourceType `xml:"DAV: resourcetype"`
 }
 
 type davResourceType struct {
@@ -148,6 +148,11 @@ func (c *Client) ListCalendars() ([]Calendar, error) {
 // ListTasks performs a REPORT calendar-query to list all VTODOs in a calendar.
 // Parse errors for individual tasks are collected in TaskListResult.ParseErrors
 // rather than causing the entire listing to fail.
+//
+// All tasks are returned regardless of STATUS. Server-side filtering via
+// prop-filter is deferred until incremental sync is implemented — the
+// haustoria's status-tags mapping requires completed tasks during checkin.
+// https://github.com/amarbel-llc/dodder/issues/87
 func (c *Client) ListTasks(calendarHref string) (*TaskListResult, error) {
 	body := `<?xml version="1.0" encoding="utf-8" ?>
 <c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">
@@ -268,7 +273,7 @@ type TaskWithMeta struct {
 // TaskListResult holds the results of listing tasks, including any parse errors
 // for individual tasks that could not be parsed.
 type TaskListResult struct {
-	Tasks      []TaskWithMeta
+	Tasks       []TaskWithMeta
 	ParseErrors []string
 }
 
