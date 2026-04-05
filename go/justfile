@@ -139,6 +139,16 @@ build-go-generate:
   nix develop .. -c go generate ./internal/...
   nix develop .. -c go generate ./internal/_/...
 
+# Regenerate codegen and commit in one step
+commit-codegen: build-go-generate
+  #! /usr/bin/env fish
+  set -l changed (git diff --name-only -- '*.go' | grep -E '_tommy\.go$|_string\.go$|_stringer\.go$')
+  if test -z "$changed"
+    echo "no codegen changes"
+    return 0
+  end
+  git add $changed
+  git commit -m "chore: regenerate codegen"
 
 build-go-binary tags output:
   mkdir -p '{{output}}'

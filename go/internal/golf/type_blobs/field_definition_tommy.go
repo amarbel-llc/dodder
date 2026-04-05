@@ -4,15 +4,15 @@ package type_blobs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type FieldDefinitionDocument struct {
@@ -27,121 +27,139 @@ func DecodeFieldDefinition(input []byte) (*FieldDefinitionDocument, error) {
 		return nil, err
 	}
 
-	d := &FieldDefinitionDocument{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "name"); err == nil {
-		d.data.Name = v
-		d.consumed["name"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "kind"); err == nil {
-		d.data.Kind = v
-		d.consumed["kind"] = true
-	}
-	if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "values"); err == nil {
-		d.data.Values = v
-		d.consumed["values"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "default"); err == nil {
-		d.data.Default = v
-		d.consumed["default"] = true
+	d := &FieldDefinitionDocument{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "name":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Name = v
+				d.consumed["name"] = true
+			}
+		case "kind":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Kind = v
+				d.consumed["kind"] = true
+			}
+		case "values":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				d.data.Values = v
+				d.consumed["values"] = true
+			}
+		case "default":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Default = v
+				d.consumed["default"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *FieldDefinitionDocument) Data() *FieldDefinition { return &d.data }
-
+func (d *FieldDefinitionDocument) Data() *FieldDefinition {
+	return &d.data
+}
 func (d *FieldDefinitionDocument) Encode() ([]byte, error) {
-	if d.data.Name != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "name") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "name", d.data.Name); err != nil {
-			return nil, err
+	if d.data.Name != "" || cst.HasValue(d.cstDoc.Root(), "name") {
+		if err := cst.SetAny(d.cstDoc.Root(), "name", d.data.Name); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.Kind != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "kind") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "kind", d.data.Kind); err != nil {
-			return nil, err
+	if d.data.Kind != "" || cst.HasValue(d.cstDoc.Root(), "kind") {
+		if err := cst.SetAny(d.cstDoc.Root(), "kind", d.data.Kind); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if len(d.data.Values) > 0 || d.cstDoc.HasInContainer(d.cstDoc.Root(), "values") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "values", d.data.Values); err != nil {
-			return nil, err
+	{
+		if len(d.data.Values) > 0 || cst.HasValue(d.cstDoc.Root(), "values") {
+			if err := cst.SetAny(d.cstDoc.Root(), "values", d.data.Values); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
 		}
 	}
 	if d.data.Default != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "default", d.data.Default); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "default", d.data.Default); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "default")
+		cst.DeleteValue(d.cstDoc.Root(), "default")
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *FieldDefinitionDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *FieldDefinitionDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *FieldDefinitionDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *FieldDefinitionDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *FieldDefinitionDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeFieldDefinitionInto(data *FieldDefinition, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "name"); err == nil {
-		data.Name = v
-		consumed[keyPrefix+"name"] = true
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "name":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Name = v
+				consumed[keyPrefix+"name"] = true
+			}
+		case "kind":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Kind = v
+				consumed[keyPrefix+"kind"] = true
+			}
+		case "values":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				data.Values = v
+				consumed[keyPrefix+"values"] = true
+			}
+		case "default":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Default = v
+				consumed[keyPrefix+"default"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "kind"); err == nil {
-		data.Kind = v
-		consumed[keyPrefix+"kind"] = true
-	}
-	if v, err := document.GetFromContainer[[]string](doc, container, "values"); err == nil {
-		data.Values = v
-		consumed[keyPrefix+"values"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "default"); err == nil {
-		data.Default = v
-		consumed[keyPrefix+"default"] = true
-	}
-
 	return nil
 }
-
 func EncodeFieldDefinitionFrom(data *FieldDefinition, doc *document.Document, container *cst.Node) error {
-	if data.Name != "" || doc.HasInContainer(container, "name") {
-		if err := doc.SetInContainer(container, "name", data.Name); err != nil {
-			return err
+	if data.Name != "" || cst.HasValue(container, "name") {
+		if err := cst.SetAny(container, "name", data.Name); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.Kind != "" || doc.HasInContainer(container, "kind") {
-		if err := doc.SetInContainer(container, "kind", data.Kind); err != nil {
-			return err
+	if data.Kind != "" || cst.HasValue(container, "kind") {
+		if err := cst.SetAny(container, "kind", data.Kind); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if len(data.Values) > 0 || doc.HasInContainer(container, "values") {
-		if err := doc.SetInContainer(container, "values", data.Values); err != nil {
-			return err
+	{
+		if len(data.Values) > 0 || cst.HasValue(container, "values") {
+			if err := cst.SetAny(container, "values", data.Values); err != nil {
+				return fmt.Errorf("%w", err)
+			}
 		}
 	}
 	if data.Default != "" {
-		if err := doc.SetInContainer(container, "default", data.Default); err != nil {
-			return err
+		if err := cst.SetAny(container, "default", data.Default); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "default")
+		cst.DeleteValue(container, "default")
 	}
-
 	return nil
 }

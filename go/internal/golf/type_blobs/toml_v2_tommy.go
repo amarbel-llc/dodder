@@ -3,15 +3,13 @@
 package type_blobs
 
 import (
-	"fmt"
-	"strings"
-
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
+	"fmt"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
@@ -21,7 +19,6 @@ var (
 type fieldDefinitionHandle struct {
 	node *cst.Node
 }
-
 type TomlV2Document struct {
 	data     TomlV2
 	cstDoc   *document.Document
@@ -35,261 +32,380 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 		return nil, err
 	}
 
-	d := &TomlV2Document{cstDoc: doc, consumed: make(map[string]bool)}
+	d := &TomlV2Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
+	}
 
-	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "binary"); err == nil {
-		d.data.Binary = v
-		d.consumed["binary"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "file-extension"); err == nil {
-		d.data.FileExtension = v
-		d.consumed["file-extension"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "mime-type"); err == nil {
-		d.data.MimeType = v
-		d.consumed["mime-type"] = true
-	}
-	if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "exec-command"); tableNode != nil {
-		d.consumed["exec-command"] = true
-		execCommandVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(execCommandVal, d.cstDoc, tableNode, d.consumed, "exec-command."); err != nil {
-			return nil, fmt.Errorf("exec-command: %w", err)
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		d.data.ExecCommand = execCommandVal
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "vim-syntax-type"); err == nil {
-		d.data.VimSyntaxType = v
-		d.consumed["vim-syntax-type"] = true
-	}
-	{
-		subTables := d.cstDoc.FindSubTables("uti-groups")
-		if len(subTables) > 0 {
-			d.consumed["uti-groups"] = true
-			d.data.UTIGroups = make(map[string]UTIGroup)
-			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "uti-groups")
-				d.consumed["uti-groups"+"."+mapKey] = true
-				inner := document.GetStringMapFromTable(subTable)
-				document.MarkAllConsumed(subTable, "uti-groups"+"."+mapKey, d.consumed)
-				d.data.UTIGroups[mapKey] = UTIGroup(inner)
+		switch cst.KeyValueName(_kv) {
+		case "binary":
+			if v, ok := cst.ExtractBool(_kv); ok {
+				d.data.Binary = v
+				d.consumed["binary"] = true
+			}
+		case "file-extension":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.FileExtension = v
+				d.consumed["file-extension"] = true
+			}
+		case "mime-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.MimeType = v
+				d.consumed["mime-type"] = true
+			}
+		case "vim-syntax-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.VimSyntaxType = v
+				d.consumed["vim-syntax-type"] = true
+			}
+		case "hooks":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Hooks = v
+				d.consumed["hooks"] = true
 			}
 		}
 	}
 	{
-		subTables := d.cstDoc.FindSubTables("formatters")
-		if len(subTables) > 0 {
-			d.consumed["formatters"] = true
-			d.data.Formatters = make(map[string]script_config.WithOutputFormat)
-			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "formatters")
-				if strings.Contains(mapKey, ".") {
+		var _tbl *cst.Node
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "exec-command" {
+				_tbl = _ch
+				break
+			}
+		}
+		if _tbl != nil {
+			d.consumed["exec-command"] = true
+			scriptConfigVal := &script_config.ScriptConfig{}
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "exec-command."); err != nil {
+				return nil, fmt.Errorf("exec-command: %w", err)
+			}
+			d.data.ExecCommand = scriptConfigVal
+		}
+	}
+	{
+		var _mr map[string]UTIGroup
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind != cst.NodeTable {
+				continue
+			}
+			_hdr := cst.TableHeaderKey(_ch)
+			if !strings.HasPrefix(_hdr, "uti-groups.") {
+				continue
+			}
+			_mk := _hdr[11:]
+			if _mr == nil {
+				d.consumed["uti-groups"] = true
+				_mr = make(map[string]UTIGroup)
+			}
+			d.consumed["uti-groups"+"."+_mk] = true
+			_inner := cst.ExtractStringMap(_ch)
+			for _ik := range _inner {
+				d.consumed["uti-groups"+"."+_mk+"."+_ik] = true
+			}
+			_mr[_mk] = UTIGroup(_inner)
+		}
+		if _mr != nil {
+			d.data.UTIGroups = _mr
+		}
+	}
+	{
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind != cst.NodeTable {
+				continue
+			}
+			_hdr := cst.TableHeaderKey(_ch)
+			if !strings.HasPrefix(_hdr, "formatters.") {
+				continue
+			}
+			_mk := _hdr[11:]
+			if strings.Contains(_mk, ".") {
+				continue
+			}
+			if d.data.Formatters == nil {
+				d.consumed["formatters"] = true
+				d.data.Formatters = make(map[string]script_config.WithOutputFormat)
+			}
+			d.consumed["formatters"+"."+_mk] = true
+			var entry script_config.WithOutputFormat
+			if err := script_config.DecodeWithOutputFormatInto(&entry, d.cstDoc, _ch, d.consumed, "formatters."+_mk+"."); err != nil {
+				return nil, fmt.Errorf("formatters.%s: %w", _mk, err)
+			}
+			d.data.Formatters[_mk] = entry
+		}
+	}
+	{
+		var _ftReferences *cst.Node
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "references" {
+				_ftReferences = _ch
+				break
+			}
+		}
+		if _ftReferences != nil {
+			d.consumed["references"] = true
+			referencesVal := &ReferencesConfig{}
+			for _, _kv := range _ftReferences.Children {
+				if _kv.Kind != cst.NodeKeyValue {
 					continue
 				}
-				d.consumed["formatters"+"."+mapKey] = true
-				var entry script_config.WithOutputFormat
-				if err := script_config.DecodeWithOutputFormatInto(&entry, d.cstDoc, subTable, d.consumed, "formatters"+"."+mapKey+"."); err != nil {
-					return nil, fmt.Errorf("formatters.%s: %w", mapKey, err)
+				switch cst.KeyValueName(_kv) {
+				case "description":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Description = v
+						d.consumed["references.description"] = true
+					}
+				case "shell":
+					if v, ok := cst.ExtractStringSlice(_kv); ok {
+						referencesVal.Shell = v
+						d.consumed["references.shell"] = true
+					}
+				case "script":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Script = v
+						d.consumed["references.script"] = true
+					}
+				case "optional":
+					if v, ok := cst.ExtractBool(_kv); ok {
+						referencesVal.Optional = v
+						d.consumed["references.optional"] = true
+					}
 				}
-				d.data.Formatters[mapKey] = entry
+			}
+			for _, _ch := range d.cstDoc.Root().Children {
+				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "references.env" {
+					referencesVal.Env = cst.ExtractStringMap(_ch)
+					d.consumed["references.env"] = true
+					for _ik := range referencesVal.Env {
+						d.consumed["references.env"+"."+_ik] = true
+					}
+					break
+				}
+			}
+			d.data.References = referencesVal
+		} else {
+			referencesVal := &ReferencesConfig{}
+			_found := false
+			for _, _kv := range d.cstDoc.Root().Children {
+				if _kv.Kind != cst.NodeKeyValue {
+					continue
+				}
+				switch cst.KeyValueName(_kv) {
+				case "description":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Description = v
+						_found = true
+						d.consumed["description"] = true
+					}
+				case "shell":
+					if v, ok := cst.ExtractStringSlice(_kv); ok {
+						referencesVal.Shell = v
+						d.consumed["shell"] = true
+					}
+				case "script":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Script = v
+						_found = true
+						d.consumed["script"] = true
+					}
+				case "optional":
+					if v, ok := cst.ExtractBool(_kv); ok {
+						referencesVal.Optional = v
+						_found = true
+						d.consumed["optional"] = true
+					}
+				}
+			}
+			for _, _ch := range d.cstDoc.Root().Children {
+				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "env" {
+					referencesVal.Env = cst.ExtractStringMap(_ch)
+					_found = true
+					d.consumed["env"] = true
+					for _ik := range referencesVal.Env {
+						d.consumed["env"+"."+_ik] = true
+					}
+					break
+				}
+			}
+			if _found {
+				d.data.References = referencesVal
 			}
 		}
 	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "hooks"); err == nil {
-		d.data.Hooks = v
-		d.consumed["hooks"] = true
-	}
-	if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "references"); tableNode != nil {
-		d.consumed["references"] = true
-		referencesVal := &ReferencesConfig{}
-		if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "description"); err == nil {
-			referencesVal.Description = v
-			d.consumed["references.description"] = true
-		}
-		if v, err := document.GetFromContainer[[]string](d.cstDoc, tableNode, "shell"); err == nil {
-			referencesVal.Shell = v
-			d.consumed["references.shell"] = true
-		}
-		if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "script"); err == nil {
-			referencesVal.Script = v
-			d.consumed["references.script"] = true
-		}
-		if tableNode := d.cstDoc.FindTableInContainer(tableNode, "env"); tableNode != nil {
-			referencesVal.Env = document.GetStringMapFromTable(tableNode)
-			d.consumed["references.env"] = true
-			document.MarkAllConsumed(tableNode, "references.env", d.consumed)
-		}
-		if v, err := document.GetFromContainer[bool](d.cstDoc, tableNode, "optional"); err == nil {
-			referencesVal.Optional = v
-			d.consumed["references.optional"] = true
-		}
-		d.data.References = referencesVal
-	} else {
-		referencesVal := &ReferencesConfig{}
-		found := false
-		if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "description"); err == nil {
-			referencesVal.Description = v
-			found = true
-			d.consumed["description"] = true
-		}
-		if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "shell"); err == nil {
-			referencesVal.Shell = v
-			d.consumed["shell"] = true
-		}
-		if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "script"); err == nil {
-			referencesVal.Script = v
-			found = true
-			d.consumed["script"] = true
-		}
-		if tableNode := d.cstDoc.FindTable("env"); tableNode != nil {
-			referencesVal.Env = document.GetStringMapFromTable(tableNode)
-			d.consumed["env"] = true
-			document.MarkAllConsumed(tableNode, "env", d.consumed)
-		}
-		if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "optional"); err == nil {
-			referencesVal.Optional = v
-			found = true
-			d.consumed["optional"] = true
-		}
-		if found {
-			d.data.References = referencesVal
+	var _fieldsNodes []*cst.Node
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeArrayTable && cst.TableHeaderKey(_ch) == "fields" {
+			_fieldsNodes = append(_fieldsNodes, _ch)
 		}
 	}
-	fieldsNodes := d.cstDoc.FindArrayTableNodes("fields")
-	d.fields = make([]fieldDefinitionHandle, len(fieldsNodes))
-	d.data.Fields = make([]FieldDefinition, len(fieldsNodes))
+	d.fields = make([]fieldDefinitionHandle, len(_fieldsNodes))
+	d.data.Fields = make([]FieldDefinition, len(_fieldsNodes))
 	d.consumed["fields"] = true
-	for i, node := range fieldsNodes {
-		d.fields[i] = fieldDefinitionHandle{node: node}
-		if v, err := document.GetFromContainer[string](d.cstDoc, node, "name"); err == nil {
-			d.data.Fields[i].Name = v
-			d.consumed["fields.name"] = true
-		}
-		if v, err := document.GetFromContainer[string](d.cstDoc, node, "kind"); err == nil {
-			d.data.Fields[i].Kind = v
-			d.consumed["fields.kind"] = true
-		}
-		if v, err := document.GetFromContainer[[]string](d.cstDoc, node, "values"); err == nil {
-			d.data.Fields[i].Values = v
-			d.consumed["fields.values"] = true
-		}
-		if v, err := document.GetFromContainer[string](d.cstDoc, node, "default"); err == nil {
-			d.data.Fields[i].Default = v
-			d.consumed["fields.default"] = true
+	for i, _node := range _fieldsNodes {
+		d.fields[i] = fieldDefinitionHandle{node: _node}
+		for _, _kv := range _node.Children {
+			if _kv.Kind != cst.NodeKeyValue {
+				continue
+			}
+			switch cst.KeyValueName(_kv) {
+			case "name":
+				if v, ok := cst.ExtractString(_kv); ok {
+					d.data.Fields[i].Name = v
+					d.consumed["fields.name"] = true
+				}
+			case "kind":
+				if v, ok := cst.ExtractString(_kv); ok {
+					d.data.Fields[i].Kind = v
+					d.consumed["fields.kind"] = true
+				}
+			case "values":
+				if v, ok := cst.ExtractStringSlice(_kv); ok {
+					d.data.Fields[i].Values = v
+					d.consumed["fields.values"] = true
+				}
+			case "default":
+				if v, ok := cst.ExtractString(_kv); ok {
+					d.data.Fields[i].Default = v
+					d.consumed["fields.default"] = true
+				}
+			}
 		}
 	}
-	if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "fields-reader"); tableNode != nil {
-		d.consumed["fields-reader"] = true
-		fieldsReaderVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(fieldsReaderVal, d.cstDoc, tableNode, d.consumed, "fields-reader."); err != nil {
-			return nil, fmt.Errorf("fields-reader: %w", err)
+	{
+		var _tbl *cst.Node
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "fields-reader" {
+				_tbl = _ch
+				break
+			}
 		}
-		d.data.FieldsReader = fieldsReaderVal
-	}
-	if tableNode := d.cstDoc.FindTableInContainer(d.cstDoc.Root(), "fields-writer"); tableNode != nil {
-		d.consumed["fields-writer"] = true
-		fieldsWriterVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(fieldsWriterVal, d.cstDoc, tableNode, d.consumed, "fields-writer."); err != nil {
-			return nil, fmt.Errorf("fields-writer: %w", err)
+		if _tbl != nil {
+			d.consumed["fields-reader"] = true
+			scriptConfigVal := &script_config.ScriptConfig{}
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "fields-reader."); err != nil {
+				return nil, fmt.Errorf("fields-reader: %w", err)
+			}
+			d.data.FieldsReader = scriptConfigVal
 		}
-		d.data.FieldsWriter = fieldsWriterVal
 	}
-
+	{
+		var _tbl *cst.Node
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "fields-writer" {
+				_tbl = _ch
+				break
+			}
+		}
+		if _tbl != nil {
+			d.consumed["fields-writer"] = true
+			scriptConfigVal := &script_config.ScriptConfig{}
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "fields-writer."); err != nil {
+				return nil, fmt.Errorf("fields-writer: %w", err)
+			}
+			d.data.FieldsWriter = scriptConfigVal
+		}
+	}
 	return d, nil
 }
-
-func (d *TomlV2Document) Data() *TomlV2 { return &d.data }
-
+func (d *TomlV2Document) Data() *TomlV2 {
+	return &d.data
+}
 func (d *TomlV2Document) Encode() ([]byte, error) {
 	if d.data.Binary != false {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "binary", d.data.Binary); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "binary", d.data.Binary); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "binary")
+		cst.DeleteValue(d.cstDoc.Root(), "binary")
 	}
 	if d.data.FileExtension != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "file-extension", d.data.FileExtension); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "file-extension", d.data.FileExtension); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "file-extension")
+		cst.DeleteValue(d.cstDoc.Root(), "file-extension")
 	}
 	if d.data.MimeType != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "mime-type", d.data.MimeType); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "mime-type", d.data.MimeType); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "mime-type")
+		cst.DeleteValue(d.cstDoc.Root(), "mime-type")
 	}
 	if d.data.ExecCommand != nil {
-		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "exec-command")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "exec-command")
 		if err := script_config.EncodeScriptConfigFrom(d.data.ExecCommand, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("exec-command: %w", err)
 		}
 	}
-	if d.data.VimSyntaxType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "vim-syntax-type") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "vim-syntax-type", d.data.VimSyntaxType); err != nil {
-			return nil, err
+	if d.data.VimSyntaxType != "" || cst.HasValue(d.cstDoc.Root(), "vim-syntax-type") {
+		if err := cst.SetAny(d.cstDoc.Root(), "vim-syntax-type", d.data.VimSyntaxType); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if len(d.data.UTIGroups) > 0 {
 		for mapKey, mapVal := range d.data.UTIGroups {
-			subTable := d.cstDoc.EnsureSubTable("uti-groups", mapKey)
-			document.DeleteAllInContainer(subTable)
+			subTable := cst.EnsureChildSubTable(d.cstDoc.Root(), d.cstDoc.Root(), "uti-groups", mapKey)
+			cst.DeleteAllValues(subTable)
 			for k, v := range map[string]string(mapVal) {
-				if err := d.cstDoc.SetInContainer(subTable, k, v); err != nil {
-					return nil, err
+				if err := cst.SetAny(subTable, k, v); err != nil {
+					return nil, fmt.Errorf("%w", err)
 				}
 			}
 		}
 	}
 	if len(d.data.Formatters) > 0 {
 		for mapKey, mapVal := range d.data.Formatters {
-			subTable := d.cstDoc.EnsureSubTable("formatters", mapKey)
+			subTable := cst.EnsureChildSubTable(d.cstDoc.Root(), d.cstDoc.Root(), "formatters", mapKey)
 			if err := script_config.EncodeWithOutputFormatFrom(&mapVal, d.cstDoc, subTable); err != nil {
 				return nil, fmt.Errorf("formatters.%s: %w", mapKey, err)
 			}
 		}
 	}
-	if d.data.Hooks != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "hooks") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "hooks", d.data.Hooks); err != nil {
-			return nil, err
+	if d.data.Hooks != "" || cst.HasValue(d.cstDoc.Root(), "hooks") {
+		if err := cst.SetAny(d.cstDoc.Root(), "hooks", d.data.Hooks); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.References != nil {
-		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "references")
-		if d.data.References.Description != "" || d.cstDoc.HasInContainer(tableNode, "description") {
-			if err := d.cstDoc.SetInContainer(tableNode, "description", d.data.References.Description); err != nil {
-				return nil, err
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "references")
+		if d.data.References.Description != "" || cst.HasValue(tableNode, "description") {
+			if err := cst.SetAny(tableNode, "description", d.data.References.Description); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
-		if len(d.data.References.Shell) > 0 || d.cstDoc.HasInContainer(tableNode, "shell") {
-			if err := d.cstDoc.SetInContainer(tableNode, "shell", d.data.References.Shell); err != nil {
-				return nil, err
+		{
+			if len(d.data.References.Shell) > 0 || cst.HasValue(tableNode, "shell") {
+				if err := cst.SetAny(tableNode, "shell", d.data.References.Shell); err != nil {
+					return nil, fmt.Errorf("%w", err)
+				}
 			}
 		}
 		if d.data.References.Script != "" {
-			if err := d.cstDoc.SetMultilineInContainer(tableNode, "script", d.data.References.Script); err != nil {
-				return nil, err
+			if err := cst.SetMultilineString(tableNode, "script", d.data.References.Script); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		} else {
-			_ = d.cstDoc.DeleteFromContainer(tableNode, "script")
+			cst.DeleteValue(tableNode, "script")
 		}
 		if len(d.data.References.Env) > 0 {
-			tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "env")
-			document.DeleteAllInContainer(tableNode)
+			tableNode := cst.EnsureChildTable(d.cstDoc.Root(), tableNode, "env")
+			cst.DeleteAllValues(tableNode)
 			for k, v := range d.data.References.Env {
-				if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
-					return nil, err
+				if err := cst.SetAny(tableNode, k, v); err != nil {
+					return nil, fmt.Errorf("%w", err)
 				}
 			}
 		}
 		if d.data.References.Optional != false {
-			if err := d.cstDoc.SetInContainer(tableNode, "optional", d.data.References.Optional); err != nil {
-				return nil, err
+			if err := cst.SetAny(tableNode, "optional", d.data.References.Optional); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		} else {
-			_ = d.cstDoc.DeleteFromContainer(tableNode, "optional")
+			cst.DeleteValue(tableNode, "optional")
 		}
 	}
 	{
@@ -298,365 +414,472 @@ func (d *TomlV2Document) Encode() ([]byte, error) {
 			if i < len(d.fields) {
 				container = d.fields[i].node
 			} else {
-				container = d.cstDoc.AppendArrayTableEntry("fields")
+				container = cst.AppendArrayTableEntryAfter(d.cstDoc.Root(), "fields")
 			}
-			if d.data.Fields[i].Name != "" || d.cstDoc.HasInContainer(container, "name") {
-				if err := d.cstDoc.SetInContainer(container, "name", d.data.Fields[i].Name); err != nil {
-					return nil, err
+			if d.data.Fields[i].Name != "" || cst.HasValue(container, "name") {
+				if err := cst.SetAny(container, "name", d.data.Fields[i].Name); err != nil {
+					return nil, fmt.Errorf("%w", err)
 				}
 			}
-			if d.data.Fields[i].Kind != "" || d.cstDoc.HasInContainer(container, "kind") {
-				if err := d.cstDoc.SetInContainer(container, "kind", d.data.Fields[i].Kind); err != nil {
-					return nil, err
+			if d.data.Fields[i].Kind != "" || cst.HasValue(container, "kind") {
+				if err := cst.SetAny(container, "kind", d.data.Fields[i].Kind); err != nil {
+					return nil, fmt.Errorf("%w", err)
 				}
 			}
-			if len(d.data.Fields[i].Values) > 0 || d.cstDoc.HasInContainer(container, "values") {
-				if err := d.cstDoc.SetInContainer(container, "values", d.data.Fields[i].Values); err != nil {
-					return nil, err
+			{
+				if len(d.data.Fields[i].Values) > 0 || cst.HasValue(container, "values") {
+					if err := cst.SetAny(container, "values", d.data.Fields[i].Values); err != nil {
+						return nil, fmt.Errorf("%w", err)
+					}
 				}
 			}
 			if d.data.Fields[i].Default != "" {
-				if err := d.cstDoc.SetInContainer(container, "default", d.data.Fields[i].Default); err != nil {
-					return nil, err
+				if err := cst.SetAny(container, "default", d.data.Fields[i].Default); err != nil {
+					return nil, fmt.Errorf("%w", err)
 				}
 			} else {
-				_ = d.cstDoc.DeleteFromContainer(container, "default")
+				cst.DeleteValue(container, "default")
 			}
 		}
 	}
 	if d.data.FieldsReader != nil {
-		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "fields-reader")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "fields-reader")
 		if err := script_config.EncodeScriptConfigFrom(d.data.FieldsReader, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("fields-reader: %w", err)
 		}
 	}
 	if d.data.FieldsWriter != nil {
-		tableNode := d.cstDoc.EnsureTableInContainer(d.cstDoc.Root(), "fields-writer")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "fields-writer")
 		if err := script_config.EncodeScriptConfigFrom(d.data.FieldsWriter, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("fields-writer: %w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlV2Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlV2Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlV2Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlV2Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlV2Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlV2Into(data *TomlV2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[bool](doc, container, "binary"); err == nil {
-		data.Binary = v
-		consumed[keyPrefix+"binary"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "file-extension"); err == nil {
-		data.FileExtension = v
-		consumed[keyPrefix+"file-extension"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "mime-type"); err == nil {
-		data.MimeType = v
-		consumed[keyPrefix+"mime-type"] = true
-	}
-	if tableNode := doc.FindTableInContainer(container, "exec-command"); tableNode != nil {
-		consumed[keyPrefix+"exec-command"] = true
-		execCommandVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(execCommandVal, doc, tableNode, consumed, keyPrefix+"exec-command."); err != nil {
-			return fmt.Errorf("exec-command: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		data.ExecCommand = execCommandVal
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "vim-syntax-type"); err == nil {
-		data.VimSyntaxType = v
-		consumed[keyPrefix+"vim-syntax-type"] = true
-	}
-	{
-		subTables := doc.FindSubTables("uti-groups")
-		if len(subTables) > 0 {
-			consumed[keyPrefix+"uti-groups"] = true
-			data.UTIGroups = make(map[string]UTIGroup)
-			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "uti-groups")
-				consumed[keyPrefix+"uti-groups"+"."+mapKey] = true
-				inner := document.GetStringMapFromTable(subTable)
-				document.MarkAllConsumed(subTable, keyPrefix+"uti-groups"+"."+mapKey, consumed)
-				data.UTIGroups[mapKey] = UTIGroup(inner)
+		switch cst.KeyValueName(_kv) {
+		case "binary":
+			if v, ok := cst.ExtractBool(_kv); ok {
+				data.Binary = v
+				consumed[keyPrefix+"binary"] = true
+			}
+		case "file-extension":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.FileExtension = v
+				consumed[keyPrefix+"file-extension"] = true
+			}
+		case "mime-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.MimeType = v
+				consumed[keyPrefix+"mime-type"] = true
+			}
+		case "vim-syntax-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.VimSyntaxType = v
+				consumed[keyPrefix+"vim-syntax-type"] = true
+			}
+		case "hooks":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Hooks = v
+				consumed[keyPrefix+"hooks"] = true
 			}
 		}
 	}
 	{
-		subTables := doc.FindSubTablesInContainer(container, "formatters")
-		if len(subTables) > 0 {
-			consumed[keyPrefix+"formatters"] = true
-			data.Formatters = make(map[string]script_config.WithOutputFormat)
-			for _, subTable := range subTables {
-				mapKey := document.SubTableKeyInContainer(subTable, container, "formatters")
-				if strings.Contains(mapKey, ".") {
+		var _tbl *cst.Node
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"exec-command" {
+				_tbl = _ch
+				break
+			}
+		}
+		if _tbl != nil {
+			consumed[keyPrefix+"exec-command"] = true
+			scriptConfigVal := &script_config.ScriptConfig{}
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"exec-command."); err != nil {
+				return fmt.Errorf("exec-command: %w", err)
+			}
+			data.ExecCommand = scriptConfigVal
+		}
+	}
+	{
+		var _mr map[string]UTIGroup
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind != cst.NodeTable {
+				continue
+			}
+			_hdr := cst.TableHeaderKey(_ch)
+			if !strings.HasPrefix(_hdr, keyPrefix+"uti-groups.") {
+				continue
+			}
+			_mk := _hdr[len(keyPrefix)+len("uti-groups."):]
+			if _mr == nil {
+				consumed[keyPrefix+"uti-groups"] = true
+				_mr = make(map[string]UTIGroup)
+			}
+			consumed[keyPrefix+"uti-groups"+"."+_mk] = true
+			_inner := cst.ExtractStringMap(_ch)
+			for _ik := range _inner {
+				consumed[keyPrefix+"uti-groups"+"."+_mk+"."+_ik] = true
+			}
+			_mr[_mk] = UTIGroup(_inner)
+		}
+		if _mr != nil {
+			data.UTIGroups = _mr
+		}
+	}
+	{
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind != cst.NodeTable {
+				continue
+			}
+			_hdr := cst.TableHeaderKey(_ch)
+			if !strings.HasPrefix(_hdr, keyPrefix+"formatters.") {
+				continue
+			}
+			_mk := _hdr[len(keyPrefix)+len("formatters."):]
+			if strings.Contains(_mk, ".") {
+				continue
+			}
+			if data.Formatters == nil {
+				consumed[keyPrefix+"formatters"] = true
+				data.Formatters = make(map[string]script_config.WithOutputFormat)
+			}
+			consumed[keyPrefix+"formatters"+"."+_mk] = true
+			var entry script_config.WithOutputFormat
+			if err := script_config.DecodeWithOutputFormatInto(&entry, doc, _ch, consumed, keyPrefix+"formatters."+_mk+"."); err != nil {
+				return fmt.Errorf("formatters.%s: %w", _mk, err)
+			}
+			data.Formatters[_mk] = entry
+		}
+	}
+	{
+		var _ftReferences *cst.Node
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"references" {
+				_ftReferences = _ch
+				break
+			}
+		}
+		if _ftReferences != nil {
+			consumed[keyPrefix+"references"] = true
+			referencesVal := &ReferencesConfig{}
+			for _, _kv := range _ftReferences.Children {
+				if _kv.Kind != cst.NodeKeyValue {
 					continue
 				}
-				consumed[keyPrefix+"formatters"+"."+mapKey] = true
-				var entry script_config.WithOutputFormat
-				if err := script_config.DecodeWithOutputFormatInto(&entry, doc, subTable, consumed, keyPrefix+"formatters"+"."+mapKey+"."); err != nil {
-					return fmt.Errorf("formatters.%s: %w", mapKey, err)
+				switch cst.KeyValueName(_kv) {
+				case "description":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Description = v
+						consumed[keyPrefix+"references.description"] = true
+					}
+				case "shell":
+					if v, ok := cst.ExtractStringSlice(_kv); ok {
+						referencesVal.Shell = v
+						consumed[keyPrefix+"references.shell"] = true
+					}
+				case "script":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Script = v
+						consumed[keyPrefix+"references.script"] = true
+					}
+				case "optional":
+					if v, ok := cst.ExtractBool(_kv); ok {
+						referencesVal.Optional = v
+						consumed[keyPrefix+"references.optional"] = true
+					}
 				}
-				data.Formatters[mapKey] = entry
+			}
+			for _, _ch := range doc.Root().Children {
+				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"references.env" {
+					referencesVal.Env = cst.ExtractStringMap(_ch)
+					consumed[keyPrefix+"references.env"] = true
+					for _ik := range referencesVal.Env {
+						consumed[keyPrefix+"references.env"+"."+_ik] = true
+					}
+					break
+				}
+			}
+			data.References = referencesVal
+		} else {
+			referencesVal := &ReferencesConfig{}
+			_found := false
+			for _, _kv := range container.Children {
+				if _kv.Kind != cst.NodeKeyValue {
+					continue
+				}
+				switch cst.KeyValueName(_kv) {
+				case "description":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Description = v
+						_found = true
+						consumed["description"] = true
+					}
+				case "shell":
+					if v, ok := cst.ExtractStringSlice(_kv); ok {
+						referencesVal.Shell = v
+						consumed["shell"] = true
+					}
+				case "script":
+					if v, ok := cst.ExtractString(_kv); ok {
+						referencesVal.Script = v
+						_found = true
+						consumed["script"] = true
+					}
+				case "optional":
+					if v, ok := cst.ExtractBool(_kv); ok {
+						referencesVal.Optional = v
+						_found = true
+						consumed["optional"] = true
+					}
+				}
+			}
+			for _, _ch := range doc.Root().Children {
+				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "env" {
+					referencesVal.Env = cst.ExtractStringMap(_ch)
+					_found = true
+					consumed["env"] = true
+					for _ik := range referencesVal.Env {
+						consumed["env"+"."+_ik] = true
+					}
+					break
+				}
+			}
+			if _found {
+				data.References = referencesVal
 			}
 		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "hooks"); err == nil {
-		data.Hooks = v
-		consumed[keyPrefix+"hooks"] = true
-	}
-	if tableNode := doc.FindTableInContainer(container, "references"); tableNode != nil {
-		consumed[keyPrefix+"references"] = true
-		referencesVal := &ReferencesConfig{}
-		if v, err := document.GetFromContainer[string](doc, tableNode, "description"); err == nil {
-			referencesVal.Description = v
-			consumed[keyPrefix+"references.description"] = true
-		}
-		if v, err := document.GetFromContainer[[]string](doc, tableNode, "shell"); err == nil {
-			referencesVal.Shell = v
-			consumed[keyPrefix+"references.shell"] = true
-		}
-		if v, err := document.GetFromContainer[string](doc, tableNode, "script"); err == nil {
-			referencesVal.Script = v
-			consumed[keyPrefix+"references.script"] = true
-		}
-		if tableNode := doc.FindTableInContainer(tableNode, "env"); tableNode != nil {
-			referencesVal.Env = document.GetStringMapFromTable(tableNode)
-			consumed[keyPrefix+"references.env"] = true
-			document.MarkAllConsumed(tableNode, keyPrefix+"references.env", consumed)
-		}
-		if v, err := document.GetFromContainer[bool](doc, tableNode, "optional"); err == nil {
-			referencesVal.Optional = v
-			consumed[keyPrefix+"references.optional"] = true
-		}
-		data.References = referencesVal
-	} else {
-		referencesVal := &ReferencesConfig{}
-		found := false
-		if v, err := document.GetFromContainer[string](doc, container, "description"); err == nil {
-			referencesVal.Description = v
-			found = true
-			consumed[keyPrefix+"description"] = true
-		}
-		if v, err := document.GetFromContainer[[]string](doc, container, "shell"); err == nil {
-			referencesVal.Shell = v
-			consumed[keyPrefix+"shell"] = true
-		}
-		if v, err := document.GetFromContainer[string](doc, container, "script"); err == nil {
-			referencesVal.Script = v
-			found = true
-			consumed[keyPrefix+"script"] = true
-		}
-		if tableNode := doc.FindTableInContainer(container, "env"); tableNode != nil {
-			referencesVal.Env = document.GetStringMapFromTable(tableNode)
-			consumed[keyPrefix+"env"] = true
-			document.MarkAllConsumed(tableNode, keyPrefix+"env", consumed)
-		}
-		if v, err := document.GetFromContainer[bool](doc, container, "optional"); err == nil {
-			referencesVal.Optional = v
-			found = true
-			consumed[keyPrefix+"optional"] = true
-		}
-		if found {
-			data.References = referencesVal
-		}
-	}
-	fieldsNodes := doc.FindArrayTableNodes(keyPrefix + "fields")
-	data.Fields = make([]FieldDefinition, len(fieldsNodes))
+	var _fieldsNodes []*cst.Node
+	_fieldsNodes = doc.FindArrayTableNodes(keyPrefix + "fields")
+	data.Fields = make([]FieldDefinition, len(_fieldsNodes))
 	consumed[keyPrefix+"fields"] = true
-	for i, node := range fieldsNodes {
-		if v, err := document.GetFromContainer[string](doc, node, "name"); err == nil {
-			data.Fields[i].Name = v
-			consumed[keyPrefix+"fields.name"] = true
-		}
-		if v, err := document.GetFromContainer[string](doc, node, "kind"); err == nil {
-			data.Fields[i].Kind = v
-			consumed[keyPrefix+"fields.kind"] = true
-		}
-		if v, err := document.GetFromContainer[[]string](doc, node, "values"); err == nil {
-			data.Fields[i].Values = v
-			consumed[keyPrefix+"fields.values"] = true
-		}
-		if v, err := document.GetFromContainer[string](doc, node, "default"); err == nil {
-			data.Fields[i].Default = v
-			consumed[keyPrefix+"fields.default"] = true
+	for i, _node := range _fieldsNodes {
+		for _, _kv := range _node.Children {
+			if _kv.Kind != cst.NodeKeyValue {
+				continue
+			}
+			switch cst.KeyValueName(_kv) {
+			case "name":
+				if v, ok := cst.ExtractString(_kv); ok {
+					data.Fields[i].Name = v
+					consumed[keyPrefix+"fields.name"] = true
+				}
+			case "kind":
+				if v, ok := cst.ExtractString(_kv); ok {
+					data.Fields[i].Kind = v
+					consumed[keyPrefix+"fields.kind"] = true
+				}
+			case "values":
+				if v, ok := cst.ExtractStringSlice(_kv); ok {
+					data.Fields[i].Values = v
+					consumed[keyPrefix+"fields.values"] = true
+				}
+			case "default":
+				if v, ok := cst.ExtractString(_kv); ok {
+					data.Fields[i].Default = v
+					consumed[keyPrefix+"fields.default"] = true
+				}
+			}
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "fields-reader"); tableNode != nil {
-		consumed[keyPrefix+"fields-reader"] = true
-		fieldsReaderVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(fieldsReaderVal, doc, tableNode, consumed, keyPrefix+"fields-reader."); err != nil {
-			return fmt.Errorf("fields-reader: %w", err)
+	{
+		var _tbl *cst.Node
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"fields-reader" {
+				_tbl = _ch
+				break
+			}
 		}
-		data.FieldsReader = fieldsReaderVal
-	}
-	if tableNode := doc.FindTableInContainer(container, "fields-writer"); tableNode != nil {
-		consumed[keyPrefix+"fields-writer"] = true
-		fieldsWriterVal := &script_config.ScriptConfig{}
-		if err := script_config.DecodeScriptConfigInto(fieldsWriterVal, doc, tableNode, consumed, keyPrefix+"fields-writer."); err != nil {
-			return fmt.Errorf("fields-writer: %w", err)
+		if _tbl != nil {
+			consumed[keyPrefix+"fields-reader"] = true
+			scriptConfigVal := &script_config.ScriptConfig{}
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"fields-reader."); err != nil {
+				return fmt.Errorf("fields-reader: %w", err)
+			}
+			data.FieldsReader = scriptConfigVal
 		}
-		data.FieldsWriter = fieldsWriterVal
 	}
-
+	{
+		var _tbl *cst.Node
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"fields-writer" {
+				_tbl = _ch
+				break
+			}
+		}
+		if _tbl != nil {
+			consumed[keyPrefix+"fields-writer"] = true
+			scriptConfigVal := &script_config.ScriptConfig{}
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"fields-writer."); err != nil {
+				return fmt.Errorf("fields-writer: %w", err)
+			}
+			data.FieldsWriter = scriptConfigVal
+		}
+	}
 	return nil
 }
-
 func EncodeTomlV2From(data *TomlV2, doc *document.Document, container *cst.Node) error {
 	if data.Binary != false {
-		if err := doc.SetInContainer(container, "binary", data.Binary); err != nil {
-			return err
+		if err := cst.SetAny(container, "binary", data.Binary); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "binary")
+		cst.DeleteValue(container, "binary")
 	}
 	if data.FileExtension != "" {
-		if err := doc.SetInContainer(container, "file-extension", data.FileExtension); err != nil {
-			return err
+		if err := cst.SetAny(container, "file-extension", data.FileExtension); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "file-extension")
+		cst.DeleteValue(container, "file-extension")
 	}
 	if data.MimeType != "" {
-		if err := doc.SetInContainer(container, "mime-type", data.MimeType); err != nil {
-			return err
+		if err := cst.SetAny(container, "mime-type", data.MimeType); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "mime-type")
+		cst.DeleteValue(container, "mime-type")
 	}
 	if data.ExecCommand != nil {
-		tableNode := doc.EnsureTableInContainer(container, "exec-command")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "exec-command")
 		if err := script_config.EncodeScriptConfigFrom(data.ExecCommand, doc, tableNode); err != nil {
 			return fmt.Errorf("exec-command: %w", err)
 		}
 	}
-	if data.VimSyntaxType != "" || doc.HasInContainer(container, "vim-syntax-type") {
-		if err := doc.SetInContainer(container, "vim-syntax-type", data.VimSyntaxType); err != nil {
-			return err
+	if data.VimSyntaxType != "" || cst.HasValue(container, "vim-syntax-type") {
+		if err := cst.SetAny(container, "vim-syntax-type", data.VimSyntaxType); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if len(data.UTIGroups) > 0 {
 		for mapKey, mapVal := range data.UTIGroups {
-			subTable := doc.EnsureSubTable("uti-groups", mapKey)
-			document.DeleteAllInContainer(subTable)
+			subTable := cst.EnsureChildSubTable(doc.Root(), doc.Root(), "uti-groups", mapKey)
+			cst.DeleteAllValues(subTable)
 			for k, v := range map[string]string(mapVal) {
-				if err := doc.SetInContainer(subTable, k, v); err != nil {
-					return err
+				if err := cst.SetAny(subTable, k, v); err != nil {
+					return fmt.Errorf("%w", err)
 				}
 			}
 		}
 	}
 	if len(data.Formatters) > 0 {
 		for mapKey, mapVal := range data.Formatters {
-			subTable := doc.EnsureSubTableInContainer(container, "formatters", mapKey)
+			subTable := cst.EnsureChildSubTable(doc.Root(), container, "formatters", mapKey)
 			if err := script_config.EncodeWithOutputFormatFrom(&mapVal, doc, subTable); err != nil {
 				return fmt.Errorf("formatters.%s: %w", mapKey, err)
 			}
 		}
 	}
-	if data.Hooks != "" || doc.HasInContainer(container, "hooks") {
-		if err := doc.SetInContainer(container, "hooks", data.Hooks); err != nil {
-			return err
+	if data.Hooks != "" || cst.HasValue(container, "hooks") {
+		if err := cst.SetAny(container, "hooks", data.Hooks); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.References != nil {
-		tableNode := doc.EnsureTableInContainer(container, "references")
-		if data.References.Description != "" || doc.HasInContainer(tableNode, "description") {
-			if err := doc.SetInContainer(tableNode, "description", data.References.Description); err != nil {
-				return err
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "references")
+		if data.References.Description != "" || cst.HasValue(tableNode, "description") {
+			if err := cst.SetAny(tableNode, "description", data.References.Description); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		}
-		if len(data.References.Shell) > 0 || doc.HasInContainer(tableNode, "shell") {
-			if err := doc.SetInContainer(tableNode, "shell", data.References.Shell); err != nil {
-				return err
+		{
+			if len(data.References.Shell) > 0 || cst.HasValue(tableNode, "shell") {
+				if err := cst.SetAny(tableNode, "shell", data.References.Shell); err != nil {
+					return fmt.Errorf("%w", err)
+				}
 			}
 		}
 		if data.References.Script != "" {
-			if err := doc.SetMultilineInContainer(tableNode, "script", data.References.Script); err != nil {
-				return err
+			if err := cst.SetMultilineString(tableNode, "script", data.References.Script); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		} else {
-			_ = doc.DeleteFromContainer(tableNode, "script")
+			cst.DeleteValue(tableNode, "script")
 		}
 		if len(data.References.Env) > 0 {
-			tableNode := doc.EnsureTableInContainer(tableNode, "env")
-			document.DeleteAllInContainer(tableNode)
+			tableNode := cst.EnsureChildTable(doc.Root(), tableNode, "env")
+			cst.DeleteAllValues(tableNode)
 			for k, v := range data.References.Env {
-				if err := doc.SetInContainer(tableNode, k, v); err != nil {
-					return err
+				if err := cst.SetAny(tableNode, k, v); err != nil {
+					return fmt.Errorf("%w", err)
 				}
 			}
 		}
 		if data.References.Optional != false {
-			if err := doc.SetInContainer(tableNode, "optional", data.References.Optional); err != nil {
-				return err
+			if err := cst.SetAny(tableNode, "optional", data.References.Optional); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		} else {
-			_ = doc.DeleteFromContainer(tableNode, "optional")
+			cst.DeleteValue(tableNode, "optional")
 		}
 	}
 	{
-		fieldsExisting := doc.FindArrayTableNodes("fields")
+		fieldsExisting := cst.FindArrayTableNodes(doc.Root(), "fields")
 		for i := range data.Fields {
 			var container *cst.Node
 			if i < len(fieldsExisting) {
 				container = fieldsExisting[i]
 			} else {
-				container = doc.AppendArrayTableEntry("fields")
+				container = cst.AppendArrayTableEntryAfter(doc.Root(), "fields")
 			}
-			if data.Fields[i].Name != "" || doc.HasInContainer(container, "name") {
-				if err := doc.SetInContainer(container, "name", data.Fields[i].Name); err != nil {
-					return err
+			if data.Fields[i].Name != "" || cst.HasValue(container, "name") {
+				if err := cst.SetAny(container, "name", data.Fields[i].Name); err != nil {
+					return fmt.Errorf("%w", err)
 				}
 			}
-			if data.Fields[i].Kind != "" || doc.HasInContainer(container, "kind") {
-				if err := doc.SetInContainer(container, "kind", data.Fields[i].Kind); err != nil {
-					return err
+			if data.Fields[i].Kind != "" || cst.HasValue(container, "kind") {
+				if err := cst.SetAny(container, "kind", data.Fields[i].Kind); err != nil {
+					return fmt.Errorf("%w", err)
 				}
 			}
-			if len(data.Fields[i].Values) > 0 || doc.HasInContainer(container, "values") {
-				if err := doc.SetInContainer(container, "values", data.Fields[i].Values); err != nil {
-					return err
+			{
+				if len(data.Fields[i].Values) > 0 || cst.HasValue(container, "values") {
+					if err := cst.SetAny(container, "values", data.Fields[i].Values); err != nil {
+						return fmt.Errorf("%w", err)
+					}
 				}
 			}
 			if data.Fields[i].Default != "" {
-				if err := doc.SetInContainer(container, "default", data.Fields[i].Default); err != nil {
-					return err
+				if err := cst.SetAny(container, "default", data.Fields[i].Default); err != nil {
+					return fmt.Errorf("%w", err)
 				}
 			} else {
-				_ = doc.DeleteFromContainer(container, "default")
+				cst.DeleteValue(container, "default")
 			}
 		}
 	}
 	if data.FieldsReader != nil {
-		tableNode := doc.EnsureTableInContainer(container, "fields-reader")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "fields-reader")
 		if err := script_config.EncodeScriptConfigFrom(data.FieldsReader, doc, tableNode); err != nil {
 			return fmt.Errorf("fields-reader: %w", err)
 		}
 	}
 	if data.FieldsWriter != nil {
-		tableNode := doc.EnsureTableInContainer(container, "fields-writer")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "fields-writer")
 		if err := script_config.EncodeScriptConfigFrom(data.FieldsWriter, doc, tableNode); err != nil {
 			return fmt.Errorf("fields-writer: %w", err)
 		}
 	}
-
 	return nil
 }
