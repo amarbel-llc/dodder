@@ -10,6 +10,10 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
+func needsQuoting(value string) bool {
+	return strings.ContainsAny(value, " ,[]^=\n:+.?/!%@#<\"")
+}
+
 type FormattedField struct {
 	fields.Field
 	Separator          rune
@@ -215,9 +219,20 @@ func (f *boxStringEncoder) writeStringFormatField(
 
 	format := "%s%s%s%s"
 
-	if (strings.ContainsRune(field.Value, ' ') || field.Type == fields.TypeUserData) &&
-		!field.DisableValueQuotes {
-		format = "%s%q%s%s"
+	if !field.DisableValueQuotes {
+		switch {
+		// key=value fields: only quote if the value contains reserved characters
+		case field.Key != "" && field.Type == fields.TypeUserData:
+			if needsQuoting(field.Value) {
+				format = "%s%q%s%s"
+			}
+		// all other TypeUserData (descriptions): always quote
+		case field.Type == fields.TypeUserData:
+			format = "%s%q%s%s"
+		// non-UserData fields: quote if spaces
+		case strings.ContainsRune(field.Value, ' '):
+			format = "%s%q%s%s"
+		}
 	}
 
 	n1, err = fmt.Fprintf(w, format, preColor, field.Value, postColor, ellipsis)

@@ -53,5 +53,5 @@ function field_projection_on_commit { # @test
 
   run_dodder show -format box '!task'
   assert_success
-  assert_output --partial 'status="todo"'
+  assert_output --partial 'status=todo'
 }
