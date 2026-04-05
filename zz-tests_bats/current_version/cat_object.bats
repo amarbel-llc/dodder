@@ -19,7 +19,7 @@ function cat_object_by_type_sig { # @test
   run_dodder cat-object "$sig"
   assert_success
   assert_output --partial '!md'
-  assert_output --partial '!toml-type-v1'
+  assert_output --partial '!toml-type-v2'
 }
 
 function cat_object_by_zettel_sig { # @test

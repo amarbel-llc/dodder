@@ -118,7 +118,7 @@ func (local *Repo) prepareDefaultType(
 	objectIdType = ids.MustTypeStruct("md")
 	tipe := ids.DefaultOrPanic(genres.Type)
 
-	var blob type_blobs.TomlV1
+	var blob type_blobs.TomlV2
 	if bigBang.IncludeDefaultPandocTools {
 		blob = type_blobs.DefaultWithPandocFormatter()
 	} else {

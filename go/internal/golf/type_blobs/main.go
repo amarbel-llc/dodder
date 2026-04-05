@@ -4,15 +4,15 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 
-func Default() TomlV1 {
-	return TomlV1{
+func Default() TomlV2 {
+	return TomlV2{
 		FileExtension: "md",
 		VimSyntaxType: "markdown",
 	}
 }
 
-func DefaultWithPandocFormatter() TomlV1 {
-	return TomlV1{
+func DefaultWithPandocFormatter() TomlV2 {
+	return TomlV2{
 		FileExtension: "md",
 		Formatters: map[string]script_config.WithOutputFormat{
 			"text": {
@@ -27,15 +27,15 @@ func DefaultWithPandocFormatter() TomlV1 {
 	}
 }
 
-func DefaultPandocDefaults() TomlV1 {
-	return TomlV1{
+func DefaultPandocDefaults() TomlV2 {
+	return TomlV2{
 		FileExtension: "yaml",
 		Formatters:    make(map[string]script_config.WithOutputFormat),
 	}
 }
 
-func DefaultPandocLuaFilter() TomlV1 {
-	return TomlV1{
+func DefaultPandocLuaFilter() TomlV2 {
+	return TomlV2{
 		FileExtension: "lua",
 		Formatters:    make(map[string]script_config.WithOutputFormat),
 	}

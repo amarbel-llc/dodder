@@ -22,7 +22,7 @@ function basic { # @test
 		---
 
 		\[konfig @blake2b256-.+ .* !toml-config-v2]
-		\[!md @blake2b256-.+ .* !toml-type-v1]
+		\[!md @blake2b256-.+ .* !toml-type-v2]
 	EOM
 
 	assert_output_unsorted --regexp - <<-'EOM'

@@ -110,7 +110,7 @@ function use_blob_digest { # @test
   run_dodder new -edit=false -shas -type txt "$the_blob2_digest"
   assert_success
   assert_output - <<-EOM
-		[!txt !toml-type-v1]
+		[!txt !toml-type-v2]
 		[one/tres @$the_blob2_digest !txt]
 	EOM
 

@@ -135,7 +135,7 @@ function run_dodder_init {
 
   assert_success
   assert_output - <<-EOM
-[!md @$(get_type_blob_sha) !toml-type-v1]
+[!md @$(get_type_blob_sha) !toml-type-v2]
 [konfig @$(get_konfig_sha) !toml-config-v2]
 EOM
 
@@ -159,7 +159,7 @@ function run_dodder_init_sha256 {
 
   assert_success
   assert_output --regexp - <<-EOM
-		\[!md @sha256-.+ !toml-type-v1]
+		\[!md @sha256-.+ !toml-type-v2]
 		\[konfig @sha256-.+ !toml-config-v2]
 	EOM
 }
@@ -200,7 +200,7 @@ function run_dodder_init_disable_age_xdg {
 
   assert_success
   # assert_output - <<-EOM
-  # [!md @$(get_type_blob_sha) !toml-type-v1]
+  # [!md @$(get_type_blob_sha) !toml-type-v2]
   # [konfig @$(get_konfig_sha) !toml-config-v2]
   # EOM
 
@@ -228,7 +228,7 @@ function run_dodder_init_disable_age {
 
   assert_success
   assert_output --regexp - <<-EOM
-\[!md @blake2b256-.+ !toml-type-v1]
+\[!md @blake2b256-.+ !toml-type-v2]
 \[konfig @blake2b256-.+ !toml-config-v2]
 EOM
 

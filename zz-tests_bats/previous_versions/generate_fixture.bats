@@ -42,7 +42,7 @@ function generate { # @test
 
   run_dodder show !md:t :konfig
   assert_success
-  assert_line --regexp '\[!md @blake2b256-.+ !toml-type-v1]'
+  assert_line --regexp '\[!md @blake2b256-.+ !toml-type-v2]'
   assert_line --regexp '\[konfig @blake2b256-.+ !toml-config-v2]'
 
   run_dodder show -format text :konfig

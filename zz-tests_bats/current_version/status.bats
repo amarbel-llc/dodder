@@ -19,7 +19,7 @@ function checkout_everything() {
   run_dodder checkout :z,t,e
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [md.type @$(get_type_blob_sha) !toml-type-v1]
+		      checked out [md.type @$(get_type_blob_sha) !toml-type-v2]
 		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
@@ -38,7 +38,7 @@ function dirty_new_zettel() {
 
   assert_success
   assert_output --partial - <<-EOM
-		[!txt !toml-type-v1]
+		[!txt !toml-type-v2]
 		[two/uno @blake2b256-x4dstl5rrxp60932zj0sgmaku39ylula4fg3scgcgyj4yyneyy3qdtnzlm !txt "the new zettel" etikett-one]
 	EOM
 }
@@ -277,7 +277,7 @@ function status_simple_all { # @test
   run_dodder status
   assert_success
   assert_output_unsorted - <<-EOM
-		             same [md.type @$(get_type_blob_sha) !toml-type-v1]
+		             same [md.type @$(get_type_blob_sha) !toml-type-v2]
 		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		             same [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
@@ -291,10 +291,10 @@ function status_simple_all { # @test
   run_dodder status .
   assert_success
   assert_output_unsorted - <<-EOM
-		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v1]
+		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
 		          changed [one/dos.zettel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		          changed [one/uno.zettel @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
-		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v1]
+		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v2]
 		        untracked [zz-archive.tag @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 }
@@ -304,7 +304,7 @@ function status_simple_typ { # @test
   run_dodder status .t
   assert_success
   assert_output_unsorted - <<-EOM
-		             same [md.type @$(get_type_blob_sha) !toml-type-v1]
+		             same [md.type @$(get_type_blob_sha) !toml-type-v2]
 	EOM
 
   dirty_md_typ
@@ -313,8 +313,8 @@ function status_simple_typ { # @test
   run_dodder status .t
   assert_success
   assert_output_unsorted - <<-EOM
-		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v1]
-		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v1]
+		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
+		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v2]
 	EOM
 }
 
@@ -364,7 +364,7 @@ function status_conflict { # @test
 	EOM
   assert_success
   assert_output - <<-EOM
-		[!txt2 !toml-type-v1]
+		[!txt2 !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again" new-etikett-for-all tag-3 tag-4]
 	EOM
 
@@ -406,7 +406,7 @@ function status_added_untracked() { # @test
   assert_output_unsorted - <<-EOM
 		        untracked [test.md @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9]
 		             same [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		             same [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
+		             same [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 }
@@ -448,7 +448,7 @@ function status_dot_untracked_recognized_blob() { # @test
   assert_output_unsorted - <<-EOM
 		       recognized [one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4
 		                   test.md]
-		             same [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
+		             same [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		             same [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM

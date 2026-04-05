@@ -13,7 +13,7 @@ setup() {
   run_dodder checkout :z,t,e
   assert_success
   assert_output_unsorted - <<-EOM
-		      checked out [md.type @$(get_type_blob_sha) !toml-type-v1]
+		      checked out [md.type @$(get_type_blob_sha) !toml-type-v2]
 		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
@@ -121,7 +121,7 @@ function checkin_simple_all { # @test
   run_dodder checkin .
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
@@ -130,7 +130,7 @@ function checkin_simple_all { # @test
   run_dodder show -format log :?z,e,t
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
@@ -141,7 +141,7 @@ function checkin_simple_all_dry_run { # @test
   run_dodder checkin -dry-run .
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
@@ -150,7 +150,7 @@ function checkin_simple_all_dry_run { # @test
   run_dodder show -format log :z,e,t
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v1]
+		[!md @$(get_type_blob_sha) !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
@@ -160,7 +160,7 @@ function checkin_simple_typ { # @test
   run_dodder checkin .t
   assert_success
   assert_output - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 	EOM
 
   run_dodder update :z
@@ -187,7 +187,7 @@ function checkin_simple_typ { # @test
   run_dodder show !md:t
   assert_success
   assert_output - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 	EOM
 
   run_dodder show -format type.vim-syntax-type !md:typ
@@ -239,7 +239,7 @@ function checkin_zettel_typ_has_commit_hook { # @test
   run_dodder checkin -delete typ_with_hook.type
   assert_success
   assert_output - <<-EOM
-		[!typ_with_hook @blake2b256-h5ydwl76wjenz32ujma0qgse2fv4xxh992rjyv5k6uxe5vr6ul9qvcjskm !toml-type-v1]
+		[!typ_with_hook @blake2b256-h5ydwl76wjenz32ujma0qgse2fv4xxh992rjyv5k6uxe5vr6ul9qvcjskm !toml-type-v2]
 		          deleted [typ_with_hook.type]
 	EOM
 
@@ -284,7 +284,7 @@ function checkin_dot_untracked_fs_blob() { # @test
   run_dodder checkin .
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
@@ -315,7 +315,7 @@ function checkin_dot_organize_exclude_untracked_fs_blob() { # @test
   run_dodder checkin -organize .
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
@@ -365,7 +365,7 @@ function checkin_dot_organize_include_untracked_fs_blob() { # @test
   run_dodder checkin -organize . </dev/null
   assert_success
   assert_output_unsorted - <<-EOM
-		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v1]
+		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "test"]
@@ -382,7 +382,7 @@ function checkin_dot_include_untracked_fs_blob_with_spaces() { # @test
   run_dodder checkin "test with spaces.txt" </dev/null
   assert_success
   assert_output_unsorted - <<-EOM
-		[!txt !toml-type-v1]
+		[!txt !toml-type-v2]
 		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !txt "test with spaces"]
 	EOM
 }
@@ -397,7 +397,7 @@ function checkin_dot_organize_include_untracked_fs_blob_with_spaces() { # @test
   run_dodder checkin -organize "test with spaces.txt" </dev/null
   assert_success
   assert_output_unsorted - <<-EOM
-		[!txt !toml-type-v1]
+		[!txt !toml-type-v2]
 		[two/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !txt "test with spaces"]
 	EOM
 }
@@ -476,7 +476,7 @@ function checkin_type_file_creates_type_object { # @test
 
 	cat >img.type <<-'TYPEFILE'
 		---
-		! toml-type-v1
+		! toml-type-v2
 		---
 
 		file-extension = "png"
@@ -488,5 +488,5 @@ function checkin_type_file_creates_type_object { # @test
 	# The type object !img should exist after checkin
 	run_dodder show '!img:t'
 	assert_success
-	assert_output --regexp '^\[!img @blake2b256-.+ !toml-type-v1\]$'
+	assert_output --regexp '^\[!img @blake2b256-.+ !toml-type-v2\]$'
 }

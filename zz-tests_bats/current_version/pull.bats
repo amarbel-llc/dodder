@@ -71,7 +71,7 @@ function bootstrap_content {
 	run_dodder checkin -delete task.type
 	assert_success
 	assert_output - <<-EOM
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 		          deleted [task.type]
 	EOM
 }
@@ -119,7 +119,7 @@ function pull_history_zettel_type_tag_no_conflicts { # @test
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
 	try_add_new_after_pull
@@ -150,7 +150,7 @@ function pull_history_zettel_type_tag_no_conflicts_stdio_local { # @test
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
 	try_add_new_after_pull
@@ -199,7 +199,7 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		       conflicted [one/dos]
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 		import failed with conflicts, merging required
 	EOM
 
@@ -313,7 +313,7 @@ function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @te
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
 	run_dodder status
@@ -381,7 +381,7 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
 	assert_failure
 	assert_output_unsorted --partial - <<-EOM
 		       conflicted [one/uno]
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
@@ -451,10 +451,10 @@ function pull_history_default_no_conflict { # @test
 	run_dodder show +?z,t,e
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
 	run_dodder show one/dos+
@@ -466,13 +466,13 @@ function pull_history_default_no_conflict { # @test
 	run_dodder show !md:t
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 	EOM
 
 	run_dodder show !task:t
 	assert_success
 	assert_output - <<-EOM
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
 	try_add_new_after_pull
@@ -566,7 +566,7 @@ function pull_direct_local_path_no_conflicts { # @test
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
-		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v1]
+		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
 	try_add_new_after_pull
@@ -589,7 +589,7 @@ function pull_direct_blob_references_transferred { # @test
 	# Create a type with reference discovery for blob refs
 	cat >refblob.type <<-'TYPEFILE'
 		---
-		! toml-type-v1
+		! toml-type-v2
 		---
 
 		file-extension = "md"
@@ -650,7 +650,7 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
 	# Create a type with hyphen in name and reference discovery
 	cat >ref-blob.type <<-'TYPEFILE'
 		---
-		! toml-type-v1
+		! toml-type-v2
 		---
 
 		file-extension = "md"
@@ -760,7 +760,7 @@ function pull_direct_multiple_blob_references_transferred { # @test
 	# Create a type with reference discovery for blob refs
 	cat >refblob.type <<-'TYPEFILE'
 		---
-		! toml-type-v1
+		! toml-type-v2
 		---
 
 		file-extension = "md"
@@ -831,7 +831,7 @@ function pull_direct_transitive_blob_references_transferred { # @test
 	# Create treeblob type: its discovery script emits blob refs from content
 	cat >treeblob.type <<-'TYPEFILE'
 		---
-		! toml-type-v1
+		! toml-type-v2
 		---
 
 		file-extension = "tree"
@@ -847,7 +847,7 @@ function pull_direct_transitive_blob_references_transferred { # @test
 	# Create refblob type: its discovery script emits blob refs with treeblob type
 	cat >refblob.type <<-'TYPEFILE'
 		---
-		! toml-type-v1
+		! toml-type-v2
 		---
 
 		file-extension = "md"

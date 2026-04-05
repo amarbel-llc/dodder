@@ -79,7 +79,7 @@ function init_and_reindex { # @test
 	run_dodder show :t,konfig
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v1]
+		[!md @$(get_type_blob_sha) !toml-type-v2]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
@@ -88,7 +88,7 @@ function init_and_reindex { # @test
 	run_dodder show :t,konfig
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v1]
+		[!md @$(get_type_blob_sha) !toml-type-v2]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 }
@@ -140,7 +140,7 @@ function init_with_non_xdg { # @test
 	run_dodder show +konfig,t
 	assert_success
 	assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v1]
+		[!md @$(get_type_blob_sha) !toml-type-v2]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 }
@@ -210,7 +210,7 @@ function init_with_age { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
@@ -251,7 +251,7 @@ function init_with_existing_madder_store { # @test
 
 	assert_success
 	assert_output --regexp - <<-'EOM'
-		\[!md @blake2b256-[[:alnum:]]+ !toml-type-v1]
+		\[!md @blake2b256-[[:alnum:]]+ !toml-type-v2]
 		\[konfig @blake2b256-[[:alnum:]]+ !toml-config-v2]
 	EOM
 
@@ -261,7 +261,7 @@ function init_with_existing_madder_store { # @test
 	run_dodder last -format inventory_list-sans-tai
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-[[:alnum:]]+ .* !toml-type-v1]
+		\[!md @blake2b256-[[:alnum:]]+ .* !toml-type-v2]
 		\[konfig @blake2b256-[[:alnum:]]+ .* !toml-config-v2]
 	EOM
 }
@@ -277,7 +277,7 @@ function init_with_json_inventory_list_type { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v1]
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 

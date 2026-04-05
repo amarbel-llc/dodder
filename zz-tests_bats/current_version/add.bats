@@ -92,7 +92,7 @@ function add_not_md { # @test
 
 	assert_success
 	assert_output - <<-EOM
-		[!pdf !toml-type-v1]
+		[!pdf !toml-type-v2]
 		[one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !pdf "to_add" zz-inbox-2022-11-14]
 		      checked out [one/uno @blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08 !pdf "to_add" zz-inbox-2022-11-14
 		                   one/uno.pdf]
