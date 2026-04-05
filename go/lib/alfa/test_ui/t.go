@@ -235,3 +235,21 @@ func (test *T) AssertError(err error) {
 		test.fatalf(1, "expected an error but got none")
 	}
 }
+
+//go:noinline
+func (test *T) AssertTrue(value bool, msg string) {
+	test.Helper()
+
+	if !value {
+		test.fatalf(1, "expected true: %s", msg)
+	}
+}
+
+//go:noinline
+func (test *T) AssertFalse(value bool, msg string) {
+	test.Helper()
+
+	if value {
+		test.fatalf(1, "expected false: %s", msg)
+	}
+}
