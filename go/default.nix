@@ -102,6 +102,7 @@ in
       radicale
       shellcheck
       shfmt
+      yq-go
     ])
     ++ pkgs-master.lib.optionals (bob != null) [
       bob.packages.${system}.batman
