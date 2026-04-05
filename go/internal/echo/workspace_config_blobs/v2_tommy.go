@@ -128,41 +128,195 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				orgmodeVal.Transport = v
 				d.consumed["haustoria.orgmode.transport"] = true
 			}
-			if webdavNode := d.cstDoc.FindTableInContainer(tableNode, "webdav"); webdavNode != nil {
+			if tableNode := d.cstDoc.FindTableInContainer(tableNode, "webdav"); tableNode != nil {
 				d.consumed["haustoria.orgmode.webdav"] = true
-				webdavVal := &OrgmodeWebDAV{}
-				if v, err := document.GetFromContainer[string](d.cstDoc, webdavNode, "url"); err == nil {
-					webdavVal.URL = v
+				webDAVVal := &OrgmodeWebDAV{}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
 					d.consumed["haustoria.orgmode.webdav.url"] = true
 				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, webdavNode, "username"); err == nil {
-					webdavVal.Username = v
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
 					d.consumed["haustoria.orgmode.webdav.username"] = true
 				}
-				orgmodeVal.WebDAV = webdavVal
+				orgmodeVal.WebDAV = webDAVVal
+			} else {
+				webDAVVal := &OrgmodeWebDAV{}
+				found := false
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
+					found = true
+					d.consumed["haustoria.orgmode.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
+					found = true
+					d.consumed["haustoria.orgmode.username"] = true
+				}
+				if found {
+					orgmodeVal.WebDAV = webDAVVal
+				}
 			}
-			if sftpNode := d.cstDoc.FindTableInContainer(tableNode, "sftp"); sftpNode != nil {
+			if tableNode := d.cstDoc.FindTableInContainer(tableNode, "sftp"); tableNode != nil {
 				d.consumed["haustoria.orgmode.sftp"] = true
-				sftpVal := &OrgmodeSFTP{}
-				if v, err := document.GetFromContainer[string](d.cstDoc, sftpNode, "host"); err == nil {
-					sftpVal.Host = v
+				sFTPVal := &OrgmodeSFTP{}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
 					d.consumed["haustoria.orgmode.sftp.host"] = true
 				}
-				if v, err := document.GetFromContainer[int](d.cstDoc, sftpNode, "port"); err == nil {
-					sftpVal.Port = v
+				if v, err := document.GetFromContainer[int](d.cstDoc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
 					d.consumed["haustoria.orgmode.sftp.port"] = true
 				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, sftpNode, "user"); err == nil {
-					sftpVal.User = v
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
 					d.consumed["haustoria.orgmode.sftp.user"] = true
 				}
-				if v, err := document.GetFromContainer[string](d.cstDoc, sftpNode, "private-key-path"); err == nil {
-					sftpVal.PrivateKeyPath = v
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
 					d.consumed["haustoria.orgmode.sftp.private-key-path"] = true
 				}
-				orgmodeVal.SFTP = sftpVal
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					d.consumed["haustoria.orgmode.sftp.known-hosts-file"] = true
+				}
+				orgmodeVal.SFTP = sFTPVal
+			} else {
+				sFTPVal := &OrgmodeSFTP{}
+				found := false
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
+					found = true
+					d.consumed["haustoria.orgmode.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](d.cstDoc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
+					found = true
+					d.consumed["haustoria.orgmode.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
+					found = true
+					d.consumed["haustoria.orgmode.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
+					found = true
+					d.consumed["haustoria.orgmode.private-key-path"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					found = true
+					d.consumed["haustoria.orgmode.known-hosts-file"] = true
+				}
+				if found {
+					orgmodeVal.SFTP = sFTPVal
+				}
 			}
 			d.data.Haustoria.Orgmode = orgmodeVal
+		} else {
+			orgmodeVal := &OrgmodeConfig{}
+			found := false
+			if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "transport"); err == nil {
+				orgmodeVal.Transport = v
+				found = true
+				d.consumed["haustoria.transport"] = true
+			}
+			if tableNode := d.cstDoc.FindTableInContainer(tableNode, "webdav"); tableNode != nil {
+				d.consumed["haustoria.webdav"] = true
+				webDAVVal := &OrgmodeWebDAV{}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
+					found = true
+					d.consumed["haustoria.webdav.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
+					found = true
+					d.consumed["haustoria.webdav.username"] = true
+				}
+				orgmodeVal.WebDAV = webDAVVal
+			} else {
+				webDAVVal := &OrgmodeWebDAV{}
+				found := false
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
+					found = true
+					d.consumed["haustoria.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
+					found = true
+					d.consumed["haustoria.username"] = true
+				}
+				if found {
+					orgmodeVal.WebDAV = webDAVVal
+				}
+			}
+			if tableNode := d.cstDoc.FindTableInContainer(tableNode, "sftp"); tableNode != nil {
+				d.consumed["haustoria.sftp"] = true
+				sFTPVal := &OrgmodeSFTP{}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
+					found = true
+					d.consumed["haustoria.sftp.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](d.cstDoc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
+					found = true
+					d.consumed["haustoria.sftp.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
+					found = true
+					d.consumed["haustoria.sftp.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
+					found = true
+					d.consumed["haustoria.sftp.private-key-path"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					found = true
+					d.consumed["haustoria.sftp.known-hosts-file"] = true
+				}
+				orgmodeVal.SFTP = sFTPVal
+			} else {
+				sFTPVal := &OrgmodeSFTP{}
+				found := false
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
+					found = true
+					d.consumed["haustoria.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](d.cstDoc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
+					found = true
+					d.consumed["haustoria.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
+					found = true
+					d.consumed["haustoria.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
+					found = true
+					d.consumed["haustoria.private-key-path"] = true
+				}
+				if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					found = true
+					d.consumed["haustoria.known-hosts-file"] = true
+				}
+				if found {
+					orgmodeVal.SFTP = sFTPVal
+				}
+			}
+			if found {
+				d.data.Haustoria.Orgmode = orgmodeVal
+			}
 		}
 		{
 			subTables := d.cstDoc.FindSubTablesInContainer(tableNode, "folders")
@@ -286,44 +440,49 @@ func (d *V2Document) Encode() ([]byte, error) {
 			}
 		}
 		if d.data.Haustoria.Orgmode != nil {
-			orgmodeTable := d.cstDoc.EnsureTableInContainer(tableNode, "orgmode")
-			if d.data.Haustoria.Orgmode.Transport != "" || d.cstDoc.HasInContainer(orgmodeTable, "transport") {
-				if err := d.cstDoc.SetInContainer(orgmodeTable, "transport", d.data.Haustoria.Orgmode.Transport); err != nil {
+			tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "orgmode")
+			if d.data.Haustoria.Orgmode.Transport != "" || d.cstDoc.HasInContainer(tableNode, "transport") {
+				if err := d.cstDoc.SetInContainer(tableNode, "transport", d.data.Haustoria.Orgmode.Transport); err != nil {
 					return nil, err
 				}
 			}
 			if d.data.Haustoria.Orgmode.WebDAV != nil {
-				webdavTable := d.cstDoc.EnsureTableInContainer(orgmodeTable, "webdav")
-				if d.data.Haustoria.Orgmode.WebDAV.URL != "" || d.cstDoc.HasInContainer(webdavTable, "url") {
-					if err := d.cstDoc.SetInContainer(webdavTable, "url", d.data.Haustoria.Orgmode.WebDAV.URL); err != nil {
+				tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "webdav")
+				if d.data.Haustoria.Orgmode.WebDAV.URL != "" || d.cstDoc.HasInContainer(tableNode, "url") {
+					if err := d.cstDoc.SetInContainer(tableNode, "url", d.data.Haustoria.Orgmode.WebDAV.URL); err != nil {
 						return nil, err
 					}
 				}
-				if d.data.Haustoria.Orgmode.WebDAV.Username != "" || d.cstDoc.HasInContainer(webdavTable, "username") {
-					if err := d.cstDoc.SetInContainer(webdavTable, "username", d.data.Haustoria.Orgmode.WebDAV.Username); err != nil {
+				if d.data.Haustoria.Orgmode.WebDAV.Username != "" || d.cstDoc.HasInContainer(tableNode, "username") {
+					if err := d.cstDoc.SetInContainer(tableNode, "username", d.data.Haustoria.Orgmode.WebDAV.Username); err != nil {
 						return nil, err
 					}
 				}
 			}
 			if d.data.Haustoria.Orgmode.SFTP != nil {
-				sftpTable := d.cstDoc.EnsureTableInContainer(orgmodeTable, "sftp")
-				if d.data.Haustoria.Orgmode.SFTP.Host != "" || d.cstDoc.HasInContainer(sftpTable, "host") {
-					if err := d.cstDoc.SetInContainer(sftpTable, "host", d.data.Haustoria.Orgmode.SFTP.Host); err != nil {
+				tableNode := d.cstDoc.EnsureTableInContainer(tableNode, "sftp")
+				if d.data.Haustoria.Orgmode.SFTP.Host != "" || d.cstDoc.HasInContainer(tableNode, "host") {
+					if err := d.cstDoc.SetInContainer(tableNode, "host", d.data.Haustoria.Orgmode.SFTP.Host); err != nil {
 						return nil, err
 					}
 				}
-				if d.data.Haustoria.Orgmode.SFTP.Port != 0 || d.cstDoc.HasInContainer(sftpTable, "port") {
-					if err := d.cstDoc.SetInContainer(sftpTable, "port", d.data.Haustoria.Orgmode.SFTP.Port); err != nil {
+				if d.data.Haustoria.Orgmode.SFTP.Port != 0 || d.cstDoc.HasInContainer(tableNode, "port") {
+					if err := d.cstDoc.SetInContainer(tableNode, "port", d.data.Haustoria.Orgmode.SFTP.Port); err != nil {
 						return nil, err
 					}
 				}
-				if d.data.Haustoria.Orgmode.SFTP.User != "" || d.cstDoc.HasInContainer(sftpTable, "user") {
-					if err := d.cstDoc.SetInContainer(sftpTable, "user", d.data.Haustoria.Orgmode.SFTP.User); err != nil {
+				if d.data.Haustoria.Orgmode.SFTP.User != "" || d.cstDoc.HasInContainer(tableNode, "user") {
+					if err := d.cstDoc.SetInContainer(tableNode, "user", d.data.Haustoria.Orgmode.SFTP.User); err != nil {
 						return nil, err
 					}
 				}
-				if d.data.Haustoria.Orgmode.SFTP.PrivateKeyPath != "" || d.cstDoc.HasInContainer(sftpTable, "private-key-path") {
-					if err := d.cstDoc.SetInContainer(sftpTable, "private-key-path", d.data.Haustoria.Orgmode.SFTP.PrivateKeyPath); err != nil {
+				if d.data.Haustoria.Orgmode.SFTP.PrivateKeyPath != "" || d.cstDoc.HasInContainer(tableNode, "private-key-path") {
+					if err := d.cstDoc.SetInContainer(tableNode, "private-key-path", d.data.Haustoria.Orgmode.SFTP.PrivateKeyPath); err != nil {
+						return nil, err
+					}
+				}
+				if d.data.Haustoria.Orgmode.SFTP.KnownHostsFile != "" || d.cstDoc.HasInContainer(tableNode, "known-hosts-file") {
+					if err := d.cstDoc.SetInContainer(tableNode, "known-hosts-file", d.data.Haustoria.Orgmode.SFTP.KnownHostsFile); err != nil {
 						return nil, err
 					}
 				}
@@ -466,48 +625,202 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 			}
 		}
-		if orgmodeNode := doc.FindTableInContainer(tableNode, "orgmode"); orgmodeNode != nil {
+		if tableNode := doc.FindTableInContainer(tableNode, "orgmode"); tableNode != nil {
 			consumed[keyPrefix+"haustoria.orgmode"] = true
 			orgmodeVal := &OrgmodeConfig{}
-			if v, err := document.GetFromContainer[string](doc, orgmodeNode, "transport"); err == nil {
+			if v, err := document.GetFromContainer[string](doc, tableNode, "transport"); err == nil {
 				orgmodeVal.Transport = v
 				consumed[keyPrefix+"haustoria.orgmode.transport"] = true
 			}
-			if webdavNode := doc.FindTableInContainer(orgmodeNode, "webdav"); webdavNode != nil {
+			if tableNode := doc.FindTableInContainer(tableNode, "webdav"); tableNode != nil {
 				consumed[keyPrefix+"haustoria.orgmode.webdav"] = true
-				webdavVal := &OrgmodeWebDAV{}
-				if v, err := document.GetFromContainer[string](doc, webdavNode, "url"); err == nil {
-					webdavVal.URL = v
+				webDAVVal := &OrgmodeWebDAV{}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
 					consumed[keyPrefix+"haustoria.orgmode.webdav.url"] = true
 				}
-				if v, err := document.GetFromContainer[string](doc, webdavNode, "username"); err == nil {
-					webdavVal.Username = v
+				if v, err := document.GetFromContainer[string](doc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
 					consumed[keyPrefix+"haustoria.orgmode.webdav.username"] = true
 				}
-				orgmodeVal.WebDAV = webdavVal
+				orgmodeVal.WebDAV = webDAVVal
+			} else {
+				webDAVVal := &OrgmodeWebDAV{}
+				found := false
+				if v, err := document.GetFromContainer[string](doc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.username"] = true
+				}
+				if found {
+					orgmodeVal.WebDAV = webDAVVal
+				}
 			}
-			if sftpNode := doc.FindTableInContainer(orgmodeNode, "sftp"); sftpNode != nil {
+			if tableNode := doc.FindTableInContainer(tableNode, "sftp"); tableNode != nil {
 				consumed[keyPrefix+"haustoria.orgmode.sftp"] = true
-				sftpVal := &OrgmodeSFTP{}
-				if v, err := document.GetFromContainer[string](doc, sftpNode, "host"); err == nil {
-					sftpVal.Host = v
+				sFTPVal := &OrgmodeSFTP{}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
 					consumed[keyPrefix+"haustoria.orgmode.sftp.host"] = true
 				}
-				if v, err := document.GetFromContainer[int](doc, sftpNode, "port"); err == nil {
-					sftpVal.Port = v
+				if v, err := document.GetFromContainer[int](doc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
 					consumed[keyPrefix+"haustoria.orgmode.sftp.port"] = true
 				}
-				if v, err := document.GetFromContainer[string](doc, sftpNode, "user"); err == nil {
-					sftpVal.User = v
+				if v, err := document.GetFromContainer[string](doc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
 					consumed[keyPrefix+"haustoria.orgmode.sftp.user"] = true
 				}
-				if v, err := document.GetFromContainer[string](doc, sftpNode, "private-key-path"); err == nil {
-					sftpVal.PrivateKeyPath = v
+				if v, err := document.GetFromContainer[string](doc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
 					consumed[keyPrefix+"haustoria.orgmode.sftp.private-key-path"] = true
 				}
-				orgmodeVal.SFTP = sftpVal
+				if v, err := document.GetFromContainer[string](doc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					consumed[keyPrefix+"haustoria.orgmode.sftp.known-hosts-file"] = true
+				}
+				orgmodeVal.SFTP = sFTPVal
+			} else {
+				sFTPVal := &OrgmodeSFTP{}
+				found := false
+				if v, err := document.GetFromContainer[string](doc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](doc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.private-key-path"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					found = true
+					consumed[keyPrefix+"haustoria.orgmode.known-hosts-file"] = true
+				}
+				if found {
+					orgmodeVal.SFTP = sFTPVal
+				}
 			}
 			data.Haustoria.Orgmode = orgmodeVal
+		} else {
+			orgmodeVal := &OrgmodeConfig{}
+			found := false
+			if v, err := document.GetFromContainer[string](doc, tableNode, "transport"); err == nil {
+				orgmodeVal.Transport = v
+				found = true
+				consumed[keyPrefix+"haustoria.transport"] = true
+			}
+			if tableNode := doc.FindTableInContainer(tableNode, "webdav"); tableNode != nil {
+				consumed[keyPrefix+"haustoria.webdav"] = true
+				webDAVVal := &OrgmodeWebDAV{}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
+					found = true
+					consumed[keyPrefix+"haustoria.webdav.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
+					found = true
+					consumed[keyPrefix+"haustoria.webdav.username"] = true
+				}
+				orgmodeVal.WebDAV = webDAVVal
+			} else {
+				webDAVVal := &OrgmodeWebDAV{}
+				found := false
+				if v, err := document.GetFromContainer[string](doc, tableNode, "url"); err == nil {
+					webDAVVal.URL = v
+					found = true
+					consumed[keyPrefix+"haustoria.url"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "username"); err == nil {
+					webDAVVal.Username = v
+					found = true
+					consumed[keyPrefix+"haustoria.username"] = true
+				}
+				if found {
+					orgmodeVal.WebDAV = webDAVVal
+				}
+			}
+			if tableNode := doc.FindTableInContainer(tableNode, "sftp"); tableNode != nil {
+				consumed[keyPrefix+"haustoria.sftp"] = true
+				sFTPVal := &OrgmodeSFTP{}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
+					found = true
+					consumed[keyPrefix+"haustoria.sftp.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](doc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
+					found = true
+					consumed[keyPrefix+"haustoria.sftp.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
+					found = true
+					consumed[keyPrefix+"haustoria.sftp.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
+					found = true
+					consumed[keyPrefix+"haustoria.sftp.private-key-path"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					found = true
+					consumed[keyPrefix+"haustoria.sftp.known-hosts-file"] = true
+				}
+				orgmodeVal.SFTP = sFTPVal
+			} else {
+				sFTPVal := &OrgmodeSFTP{}
+				found := false
+				if v, err := document.GetFromContainer[string](doc, tableNode, "host"); err == nil {
+					sFTPVal.Host = v
+					found = true
+					consumed[keyPrefix+"haustoria.host"] = true
+				}
+				if v, err := document.GetFromContainer[int](doc, tableNode, "port"); err == nil {
+					sFTPVal.Port = v
+					found = true
+					consumed[keyPrefix+"haustoria.port"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "user"); err == nil {
+					sFTPVal.User = v
+					found = true
+					consumed[keyPrefix+"haustoria.user"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "private-key-path"); err == nil {
+					sFTPVal.PrivateKeyPath = v
+					found = true
+					consumed[keyPrefix+"haustoria.private-key-path"] = true
+				}
+				if v, err := document.GetFromContainer[string](doc, tableNode, "known-hosts-file"); err == nil {
+					sFTPVal.KnownHostsFile = v
+					found = true
+					consumed[keyPrefix+"haustoria.known-hosts-file"] = true
+				}
+				if found {
+					orgmodeVal.SFTP = sFTPVal
+				}
+			}
+			if found {
+				data.Haustoria.Orgmode = orgmodeVal
+			}
 		}
 		{
 			subTables := doc.FindSubTablesInContainer(tableNode, "folders")
@@ -629,44 +942,49 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 			}
 		}
 		if data.Haustoria.Orgmode != nil {
-			orgmodeTable := doc.EnsureTableInContainer(tableNode, "orgmode")
-			if data.Haustoria.Orgmode.Transport != "" || doc.HasInContainer(orgmodeTable, "transport") {
-				if err := doc.SetInContainer(orgmodeTable, "transport", data.Haustoria.Orgmode.Transport); err != nil {
+			tableNode := doc.EnsureTableInContainer(tableNode, "orgmode")
+			if data.Haustoria.Orgmode.Transport != "" || doc.HasInContainer(tableNode, "transport") {
+				if err := doc.SetInContainer(tableNode, "transport", data.Haustoria.Orgmode.Transport); err != nil {
 					return err
 				}
 			}
 			if data.Haustoria.Orgmode.WebDAV != nil {
-				webdavTable := doc.EnsureTableInContainer(orgmodeTable, "webdav")
-				if data.Haustoria.Orgmode.WebDAV.URL != "" || doc.HasInContainer(webdavTable, "url") {
-					if err := doc.SetInContainer(webdavTable, "url", data.Haustoria.Orgmode.WebDAV.URL); err != nil {
+				tableNode := doc.EnsureTableInContainer(tableNode, "webdav")
+				if data.Haustoria.Orgmode.WebDAV.URL != "" || doc.HasInContainer(tableNode, "url") {
+					if err := doc.SetInContainer(tableNode, "url", data.Haustoria.Orgmode.WebDAV.URL); err != nil {
 						return err
 					}
 				}
-				if data.Haustoria.Orgmode.WebDAV.Username != "" || doc.HasInContainer(webdavTable, "username") {
-					if err := doc.SetInContainer(webdavTable, "username", data.Haustoria.Orgmode.WebDAV.Username); err != nil {
+				if data.Haustoria.Orgmode.WebDAV.Username != "" || doc.HasInContainer(tableNode, "username") {
+					if err := doc.SetInContainer(tableNode, "username", data.Haustoria.Orgmode.WebDAV.Username); err != nil {
 						return err
 					}
 				}
 			}
 			if data.Haustoria.Orgmode.SFTP != nil {
-				sftpTable := doc.EnsureTableInContainer(orgmodeTable, "sftp")
-				if data.Haustoria.Orgmode.SFTP.Host != "" || doc.HasInContainer(sftpTable, "host") {
-					if err := doc.SetInContainer(sftpTable, "host", data.Haustoria.Orgmode.SFTP.Host); err != nil {
+				tableNode := doc.EnsureTableInContainer(tableNode, "sftp")
+				if data.Haustoria.Orgmode.SFTP.Host != "" || doc.HasInContainer(tableNode, "host") {
+					if err := doc.SetInContainer(tableNode, "host", data.Haustoria.Orgmode.SFTP.Host); err != nil {
 						return err
 					}
 				}
-				if data.Haustoria.Orgmode.SFTP.Port != 0 || doc.HasInContainer(sftpTable, "port") {
-					if err := doc.SetInContainer(sftpTable, "port", data.Haustoria.Orgmode.SFTP.Port); err != nil {
+				if data.Haustoria.Orgmode.SFTP.Port != 0 || doc.HasInContainer(tableNode, "port") {
+					if err := doc.SetInContainer(tableNode, "port", data.Haustoria.Orgmode.SFTP.Port); err != nil {
 						return err
 					}
 				}
-				if data.Haustoria.Orgmode.SFTP.User != "" || doc.HasInContainer(sftpTable, "user") {
-					if err := doc.SetInContainer(sftpTable, "user", data.Haustoria.Orgmode.SFTP.User); err != nil {
+				if data.Haustoria.Orgmode.SFTP.User != "" || doc.HasInContainer(tableNode, "user") {
+					if err := doc.SetInContainer(tableNode, "user", data.Haustoria.Orgmode.SFTP.User); err != nil {
 						return err
 					}
 				}
-				if data.Haustoria.Orgmode.SFTP.PrivateKeyPath != "" || doc.HasInContainer(sftpTable, "private-key-path") {
-					if err := doc.SetInContainer(sftpTable, "private-key-path", data.Haustoria.Orgmode.SFTP.PrivateKeyPath); err != nil {
+				if data.Haustoria.Orgmode.SFTP.PrivateKeyPath != "" || doc.HasInContainer(tableNode, "private-key-path") {
+					if err := doc.SetInContainer(tableNode, "private-key-path", data.Haustoria.Orgmode.SFTP.PrivateKeyPath); err != nil {
+						return err
+					}
+				}
+				if data.Haustoria.Orgmode.SFTP.KnownHostsFile != "" || doc.HasInContainer(tableNode, "known-hosts-file") {
+					if err := doc.SetInContainer(tableNode, "known-hosts-file", data.Haustoria.Orgmode.SFTP.KnownHostsFile); err != nil {
 						return err
 					}
 				}

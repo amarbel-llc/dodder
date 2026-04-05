@@ -35,9 +35,9 @@ type CalendarConfig struct {
 // OrgmodeConfig holds orgmode haustoria connection parameters. Supports
 // WebDAV or SFTP as the file transport.
 type OrgmodeConfig struct {
-	Transport string          `toml:"transport"` // "webdav" or "sftp"
-	WebDAV    *OrgmodeWebDAV  `toml:"webdav,omitempty"`
-	SFTP      *OrgmodeSFTP    `toml:"sftp,omitempty"`
+	Transport string         `toml:"transport"` // "webdav" or "sftp"
+	WebDAV    *OrgmodeWebDAV `toml:"webdav,omitempty"`
+	SFTP      *OrgmodeSFTP   `toml:"sftp,omitempty"`
 }
 
 // OrgmodeWebDAV holds WebDAV connection parameters for orgmode sync.
@@ -52,6 +52,7 @@ type OrgmodeSFTP struct {
 	Port           int    `toml:"port"`
 	User           string `toml:"user"`
 	PrivateKeyPath string `toml:"private-key-path"`
+	KnownHostsFile string `toml:"known-hosts-file"`
 }
 
 // FolderConfig maps a remote folder to a dodder type and optional tags.
@@ -98,6 +99,7 @@ func (orgmodeConfig OrgmodeConfig) ResolveOrgmode() (ResolvedOrgmodeConfig, erro
 			resolved.SFTPPort = orgmodeConfig.SFTP.Port
 			resolved.SFTPUser = orgmodeConfig.SFTP.User
 			resolved.SFTPPrivateKeyPath = orgmodeConfig.SFTP.PrivateKeyPath
+			resolved.SFTPKnownHostsFile = orgmodeConfig.SFTP.KnownHostsFile
 		}
 
 		if resolved.SFTPHost == "" {
@@ -134,6 +136,7 @@ type ResolvedOrgmodeConfig struct {
 	SFTPUser           string
 	SFTPPassword       string
 	SFTPPrivateKeyPath string
+	SFTPKnownHostsFile string
 }
 
 // Resolve merges TOML config values with environment variables.

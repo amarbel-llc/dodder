@@ -1,6 +1,7 @@
 package webdav
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -123,17 +124,23 @@ func (client *Client) Get(fileURL string) (content []byte, etag string, err erro
 }
 
 // Put creates or updates a file at the given URL. If etag is non-empty, the
-// request uses If-Match for conditional update.
-func (client *Client) Put(fileURL string, content []byte, etag string) (err error) {
+// request uses If-Match for conditional update. The contentType parameter
+// sets the Content-Type header; if empty, defaults to
+// "application/octet-stream".
+func (client *Client) Put(fileURL string, content []byte, etag string, contentType string) (err error) {
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
 	headers := map[string]string{
-		"Content-Type": "text/org; charset=utf-8",
+		"Content-Type": contentType,
 	}
 
 	if etag != "" {
 		headers["If-Match"] = etag
 	}
 
-	resp, err := client.do("PUT", fileURL, strings.NewReader(string(content)), headers)
+	resp, err := client.do("PUT", fileURL, bytes.NewReader(content), headers)
 	if err != nil {
 		return fmt.Errorf("PUT %s: %w", fileURL, err)
 	}
@@ -184,8 +191,8 @@ type multistatusResponse struct {
 }
 
 type davResponse struct {
-	Href     string      `xml:"DAV: href"`
-	Propstat []propstat  `xml:"DAV: propstat"`
+	Href     string     `xml:"DAV: href"`
+	Propstat []propstat `xml:"DAV: propstat"`
 }
 
 type propstat struct {

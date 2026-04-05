@@ -207,15 +207,21 @@ func Make(
 					)
 
 				case "sftp":
-					transport, _ = haustoria_orgmode.MakeSFTPTransport(
+					var sftpErr error
+					transport, sftpErr = haustoria_orgmode.MakeSFTPTransport(
 						haustoria_orgmode.SFTPConfig{
 							Host:           resolved.SFTPHost,
 							Port:           resolved.SFTPPort,
 							User:           resolved.SFTPUser,
 							Password:       resolved.SFTPPassword,
 							PrivateKeyPath: resolved.SFTPPrivateKeyPath,
+							KnownHostsFile: resolved.SFTPKnownHostsFile,
 						},
 					)
+					if sftpErr != nil {
+						err = errors.Wrapf(sftpErr, "orgmode sftp transport")
+						return
+					}
 				}
 
 				if transport != nil {

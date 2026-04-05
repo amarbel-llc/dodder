@@ -254,7 +254,7 @@ func (store *Store) ReadAllExternalItems() error {
 }
 
 func (store *Store) Flush() error {
-	return nil
+	return store.transport.Close()
 }
 
 func (store *Store) GetObjectIdsForString(
@@ -314,8 +314,10 @@ func (store *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResu
 
 			description, tags, body := extractFromDocument(doc)
 
-			// Merge folder tags with heading tags.
-			allTags := append(folder.Tags, tags...)
+			// Merge folder tags with heading tags without mutating folder.Tags.
+			allTags := make([]string, 0, len(folder.Tags)+len(tags))
+			allTags = append(allTags, folder.Tags...)
+			allTags = append(allTags, tags...)
 
 			return haustoria.CompileResult{
 				ExternalId:  externalId,
@@ -344,8 +346,7 @@ func (store *Store) Decompile(req haustoria.DecompileRequest) (haustoria.Decompi
 	}
 
 	// Build orgmode document from dodder fields.
-	props := make(orgmode.Properties)
-	props["DODDER_ID"] = req.ObjectId
+	props := orgmode.Properties{{Key: "DODDER_ID", Value: req.ObjectId}}
 
 	heading := orgmode.MakeHeading(
 		req.Description,

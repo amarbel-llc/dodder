@@ -24,13 +24,44 @@ type Heading struct {
 	Children   []Heading
 }
 
+// Property is a single key-value pair from a :PROPERTIES: drawer.
+type Property struct {
+	Key   string
+	Value string
+}
+
 // Properties is the :PROPERTIES: drawer content as ordered key-value pairs.
-type Properties map[string]string
+type Properties []Property
+
+// Get returns the value for a key and whether it was found.
+func (props Properties) Get(key string) (string, bool) {
+	for _, p := range props {
+		if p.Key == key {
+			return p.Value, true
+		}
+	}
+
+	return "", false
+}
+
+// Set sets a key-value pair, replacing an existing key or appending.
+func (props *Properties) Set(key, value string) {
+	for i, p := range *props {
+		if p.Key == key {
+			(*props)[i].Value = value
+			return
+		}
+	}
+
+	*props = append(*props, Property{Key: key, Value: value})
+}
 
 // Parse reads orgmode text and returns a Document. This is a minimal parser
 // sufficient for round-tripping dodder zettels through orgmode: it handles
 // headings, TODO keywords, tags, property drawers, and body text.
 func Parse(text string) (document Document, err error) {
+	// Normalize Windows line endings before splitting.
+	text = strings.ReplaceAll(text, "\r\n", "\n")
 	lines := strings.Split(text, "\n")
 
 	var preambleLines []string
@@ -100,7 +131,7 @@ func Serialize(document Document) string {
 
 	for idx, heading := range document.Headings {
 		if idx > 0 || document.Preamble != "" {
-			// Blank line between headings or after preamble.
+			builder.WriteString("\n")
 		}
 		serializeHeading(&builder, &heading)
 	}
@@ -153,8 +184,8 @@ func serializeHeading(builder *strings.Builder, heading *Heading) {
 	// Property drawer.
 	if len(heading.Properties) > 0 {
 		builder.WriteString(":PROPERTIES:\n")
-		for key, value := range heading.Properties {
-			fmt.Fprintf(builder, ":%s: %s\n", key, value)
+		for _, prop := range heading.Properties {
+			fmt.Fprintf(builder, ":%s: %s\n", prop.Key, prop.Value)
 		}
 		builder.WriteString(":END:\n")
 	}
@@ -224,7 +255,7 @@ func parsePropertyDrawer(lines []string, i int) (Properties, int) {
 		return nil, i
 	}
 
-	props := make(Properties)
+	var props Properties
 	i++
 
 	for i < len(lines) {
@@ -242,7 +273,7 @@ func parsePropertyDrawer(lines []string, i int) (Properties, int) {
 			if colonIdx > 0 {
 				key := rest[:colonIdx]
 				value := strings.TrimSpace(rest[colonIdx+1:])
-				props[key] = value
+				props = append(props, Property{Key: key, Value: value})
 			}
 		}
 	}

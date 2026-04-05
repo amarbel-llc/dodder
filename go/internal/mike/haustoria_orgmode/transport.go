@@ -15,6 +15,9 @@ type Transport interface {
 
 	// Delete removes a file.
 	Delete(filePath string) error
+
+	// Close releases any resources held by the transport (connections, etc.).
+	Close() error
 }
 
 // RemoteFile is a file discovered by Transport.List.

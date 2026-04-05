@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 // SFTPConfig holds SFTP connection parameters for the orgmode transport.
@@ -26,6 +27,7 @@ type SFTPConfig struct {
 // sftpTransport implements Transport using SFTP.
 type sftpTransport struct {
 	config     SFTPConfig
+	agentConn  net.Conn
 	sshClient  *ssh.Client
 	sftpClient *sftp.Client
 }
@@ -65,14 +67,25 @@ func (transport *sftpTransport) connect() (err error) {
 	}
 
 	if len(authMethods) == 0 {
-		// Try SSH agent via SSH_AUTH_SOCK.
-		if agentAuth := sshAgentAuth(); agentAuth != nil {
+		agentAuth, agentConn, agentErr := sshAgentAuth()
+		if agentErr != nil {
+			return fmt.Errorf("ssh agent: %w", agentErr)
+		}
+
+		if agentAuth != nil {
 			authMethods = append(authMethods, agentAuth)
+			transport.agentConn = agentConn
 		}
 	}
 
 	if len(authMethods) == 0 {
 		return fmt.Errorf("no SSH authentication method available")
+	}
+
+	hostKeyCallback, err := makeHostKeyCallback(transport.config.KnownHostsFile)
+	if err != nil {
+		transport.closeAgentConn()
+		return err
 	}
 
 	port := transport.config.Port
@@ -83,23 +96,52 @@ func (transport *sftpTransport) connect() (err error) {
 	sshConfig := &ssh.ClientConfig{
 		User:            transport.config.User,
 		Auth:            authMethods,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: hostKeyCallback,
 	}
 
 	addr := fmt.Sprintf("%s:%d", transport.config.Host, port)
 
 	transport.sshClient, err = ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
+		transport.closeAgentConn()
 		return fmt.Errorf("ssh dial %s: %w", addr, err)
 	}
 
 	transport.sftpClient, err = sftp.NewClient(transport.sshClient)
 	if err != nil {
 		transport.sshClient.Close()
+		transport.closeAgentConn()
 		return fmt.Errorf("sftp client: %w", err)
 	}
 
 	return nil
+}
+
+func (transport *sftpTransport) closeAgentConn() {
+	if transport.agentConn != nil {
+		transport.agentConn.Close()
+		transport.agentConn = nil
+	}
+}
+
+func (transport *sftpTransport) Close() error {
+	var firstErr error
+
+	if transport.sftpClient != nil {
+		if err := transport.sftpClient.Close(); err != nil {
+			firstErr = err
+		}
+	}
+
+	if transport.sshClient != nil {
+		if err := transport.sshClient.Close(); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+
+	transport.closeAgentConn()
+
+	return firstErr
 }
 
 func (transport *sftpTransport) List(folder string) (files []RemoteFile, err error) {
@@ -180,17 +222,57 @@ func (transport *sftpTransport) Delete(filePath string) (err error) {
 }
 
 // sshAgentAuth attempts to create an SSH agent authentication method from
-// SSH_AUTH_SOCK. Returns nil if unavailable.
-func sshAgentAuth() ssh.AuthMethod {
+// SSH_AUTH_SOCK. Returns the auth method and the agent connection (which the
+// caller must close when done).
+func sshAgentAuth() (ssh.AuthMethod, net.Conn, error) {
 	socket := os.Getenv("SSH_AUTH_SOCK")
 	if socket == "" {
-		return nil
+		return nil, nil, nil
 	}
 
 	conn, err := net.Dial("unix", socket)
 	if err != nil {
-		return nil
+		return nil, nil, fmt.Errorf("connect to SSH_AUTH_SOCK: %w", err)
 	}
 
-	return ssh.PublicKeysCallback(agent.NewClient(conn).Signers)
+	return ssh.PublicKeysCallback(agent.NewClient(conn).Signers), conn, nil
+}
+
+// makeHostKeyCallback builds an ssh.HostKeyCallback from known_hosts files.
+// If knownHostsFile is non-empty, only that file is used. Otherwise falls back
+// to ~/.ssh/known_hosts and /etc/ssh/ssh_known_hosts.
+func makeHostKeyCallback(knownHostsFile string) (ssh.HostKeyCallback, error) {
+	var files []string
+
+	if knownHostsFile != "" {
+		files = append(files, knownHostsFile)
+	} else {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("determine home directory for known_hosts: %w", err)
+		}
+
+		userKnownHosts := filepath.Join(homeDir, ".ssh", "known_hosts")
+		if _, err := os.Stat(userKnownHosts); err == nil {
+			files = append(files, userKnownHosts)
+		}
+
+		systemKnownHosts := "/etc/ssh/ssh_known_hosts"
+		if _, err := os.Stat(systemKnownHosts); err == nil {
+			files = append(files, systemKnownHosts)
+		}
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf(
+			"no known_hosts files found; create ~/.ssh/known_hosts or specify known-hosts-file in config",
+		)
+	}
+
+	callback, err := knownhosts.New(files...)
+	if err != nil {
+		return nil, fmt.Errorf("parse known_hosts files %v: %w", files, err)
+	}
+
+	return callback, nil
 }

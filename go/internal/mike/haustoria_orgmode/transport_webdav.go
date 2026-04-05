@@ -53,9 +53,13 @@ func (transport *webdavTransport) Read(filePath string) (content []byte, etag st
 }
 
 func (transport *webdavTransport) Write(filePath string, content []byte, etag string) error {
-	return transport.client.Put(filePath, content, etag)
+	return transport.client.Put(filePath, content, etag, "text/plain; charset=utf-8")
 }
 
 func (transport *webdavTransport) Delete(filePath string) error {
 	return transport.client.Delete(filePath)
+}
+
+func (transport *webdavTransport) Close() error {
+	return nil
 }
