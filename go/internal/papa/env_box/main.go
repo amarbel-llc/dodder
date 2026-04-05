@@ -118,10 +118,9 @@ func (env *env) StringFormatWriterSkuBoxCheckedOut(
 func (env *env) SkuFormatBoxTransactedNoColor() *box_format.BoxTransacted {
 	colorOptions := env.FormatColorOptionsOut(env.config.GetPrintOptions())
 	colorOptions.OffEntirely = true
-	options := env.config.GetPrintOptions().WithPrintBlobDigests(false)
+	options := env.config.GetPrintOptions().
+		WithPrintBlobDigests(true)
 	options.BoxPrintTime = false
-	options.PrintBlobDigests = false
-	options.BoxDescriptionInBox = false
 
 	return env.StringFormatWriterSkuBoxTransacted(
 		options,

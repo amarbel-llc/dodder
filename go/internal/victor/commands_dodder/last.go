@@ -23,7 +23,7 @@ func init() {
 	utility.AddCmd("last", &Last{
 		Format: local_working_copy.FormatFlag{
 			DefaultFormatter: local_working_copy.GetFormatFuncConstructorEntry(
-				"log",
+				"box",
 			),
 		},
 	})

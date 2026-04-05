@@ -14,7 +14,7 @@ func init() {
 	utility.AddCmd("cat-object", &CatObject{
 		Format: local_working_copy.FormatFlag{
 			DefaultFormatter: local_working_copy.GetFormatFuncConstructorEntry(
-				"log",
+				"box",
 			),
 		},
 	})

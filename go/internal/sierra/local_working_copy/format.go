@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"iter"
 	"maps"
 	"slices"
 	"strings"
@@ -39,6 +40,7 @@ type (
 	FormatFuncConstructorEntry struct {
 		Name        string
 		description string
+		Unlisted    bool
 		FormatFuncConstructor
 	}
 
@@ -64,12 +66,12 @@ func (formatFlag *FormatFlag) String() string {
 			return fmt.Sprintf(
 				"Default: %s, All: %q",
 				formatFlag.DefaultFormatter.Name,
-				slices.Sorted(maps.Keys(formatters)),
+				slices.Sorted(listedFormatNames()),
 			)
 		} else {
 			return fmt.Sprintf(
 				"%q",
-				slices.Sorted(maps.Keys(formatters)),
+				slices.Sorted(listedFormatNames()),
 			)
 		}
 	} else if formatFlag.formatter.description != "" {
@@ -79,10 +81,28 @@ func (formatFlag *FormatFlag) String() string {
 	}
 }
 
+func listedFormatNames() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for name, entry := range formatters {
+			if entry.Unlisted {
+				continue
+			}
+
+			if !yield(name) {
+				return
+			}
+		}
+	}
+}
+
 var formatterCompletions = func() map[string]string {
 	completion := make(map[string]string, len(formatters))
 
 	for name, entry := range formatters {
+		if entry.Unlisted {
+			continue
+		}
+
 		if entry.description != "" {
 			completion[name] = name
 		} else {
@@ -104,7 +124,7 @@ func (formatFlag *FormatFlag) Set(value string) (err error) {
 	if entry, ok = formatters[value]; !ok {
 		err = flags.ErrInvalidValue{
 			Actual:   value,
-			Expected: slices.Sorted(maps.Keys(formatters)),
+			Expected: slices.Sorted(listedFormatNames()),
 		}
 
 		return err
@@ -599,6 +619,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 		},
 	},
 	"log": {
+		Unlisted: true,
 		FormatFuncConstructor: func(
 			repo *Repo,
 			writer interfaces.WriterAndStringWriter,

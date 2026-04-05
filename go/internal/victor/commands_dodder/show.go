@@ -19,7 +19,7 @@ func init() {
 	utility.AddCmd("show", &Show{
 		Format: local_working_copy.FormatFlag{
 			DefaultFormatter: local_working_copy.GetFormatFuncConstructorEntry(
-				"log",
+				"box",
 			),
 		},
 	})
