@@ -86,12 +86,30 @@ func (assignment *Assignment) addToSet(
 
 				outputObject.SetState(objectOriginal.GetState())
 
+				// Inherit field definitions (TypeBlobDigest) from internal fork,
+				// then overlay any edited values from the external fork
+				// (organize input).
+				// TODO(#new) this internal/external fork resolution needs
+				// cleanup and more tests
 				{
-					src := objectOriginal.GetSkuExternal().GetMetadata()
+					internalFields := objectOriginal.GetSkuExternal().GetMetadata().GetIndex().GetFields()
+					externalFields := organizeObject.GetSkuExternal().GetMetadata().GetIndex().GetFields()
 
-					outputObject.GetSkuExternal().GetMetadataMutable().GetIndexMutable().GetFieldsMutable().ResetWithSeq(
-						src.GetIndex().GetFields(),
-					)
+					editedValues := make(map[string]string)
+					for field := range externalFields {
+						editedValues[field.Key] = field.Value
+					}
+
+					outputFields := outputObject.GetSkuExternal().GetMetadataMutable().GetIndexMutable().GetFieldsMutable()
+					outputFields.Reset()
+
+					for field := range internalFields {
+						if newValue, ok := editedValues[field.Key]; ok {
+							field.Value = newValue
+						}
+
+						outputFields.Append(field)
+					}
 				}
 			}
 

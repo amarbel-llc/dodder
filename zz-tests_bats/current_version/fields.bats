@@ -23,7 +23,7 @@ function create_task_type {
 		[[fields]]
 		name = "status"
 		kind = "enum"
-		values = ["todo", "in-progress", "blocked", "completed", "cancelled"]
+		values = ["todo", "in-progress", "blocked", "done", "cancelled"]
 		default = "todo"
 
 		[fields-reader]
@@ -66,7 +66,7 @@ function field_projection_on_commit { # @test
 function field_query_equality { # @test
   create_task_type
   create_task "task one" "todo"
-  create_task "task two" "completed"
+  create_task "task two" "done"
 
   run_dodder show 'status=todo'
   assert_success
@@ -93,4 +93,21 @@ function field_enum_validation_rejects_invalid { # @test
 		status = "invalid_value"
 	EOM
   assert_failure
+}
+
+function field_organize_mutation { # @test
+  create_task_type
+  run_dodder init-workspace -experimental-repo=false
+  create_task "my task" "todo"
+
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		- [one/uno !task status=done] my task
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-fh80v4xn6qv49r66rlkpkuvq2wlm4ztpuwjy6chexfjdrk0zhatqngn3sd !task "my task" status=done]
+	EOM
 }

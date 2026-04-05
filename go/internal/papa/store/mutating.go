@@ -82,7 +82,7 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 		}
 	}
 
-	if err = commitFacilitator.tryWriteFields(daughter, options); err != nil {
+	if err = commitFacilitator.tryWriteFields(daughter, mother, options); err != nil {
 		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
 			err = nil
 		} else {

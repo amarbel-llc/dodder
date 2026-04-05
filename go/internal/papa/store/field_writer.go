@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
@@ -14,6 +15,7 @@ import (
 
 func (store *Store) tryWriteFields(
 	daughter *sku.Transacted,
+	mother *sku.Transacted,
 	options sku.CommitOptions,
 ) (err error) {
 	if !options.RunHooks {
@@ -24,17 +26,45 @@ func (store *Store) tryWriteFields(
 		return err
 	}
 
-	// Check if the object has any type-defined fields (non-empty TypeBlobDigest)
-	hasTypeDefinedFields := false
+	// Collect field values from daughter (the external/edited fork).
+	// If fields lack TypeBlobDigest (e.g., parsed from organize text),
+	// inherit it from the mother (the internal fork).
+	daughterFields := make(map[string]fields.Field)
 
 	for field := range daughter.GetMetadata().GetIndex().GetFields() {
-		if !field.TypeBlobDigest.IsNull() {
-			hasTypeDefinedFields = true
+		daughterFields[field.Key] = field
+	}
+
+	if len(daughterFields) == 0 {
+		return err
+	}
+
+	// Check if any daughter field already has TypeBlobDigest.
+	// If not, check mother for type-defined fields to inherit from.
+	hasTypeInfo := false
+
+	for _, field := range daughterFields {
+		if !field.TypeBlobDigest.IsEmpty() {
+			hasTypeInfo = true
 			break
 		}
 	}
 
-	if !hasTypeDefinedFields {
+	if !hasTypeInfo && mother != nil {
+		for field := range mother.GetMetadata().GetIndex().GetFields() {
+			if field.TypeBlobDigest.IsEmpty() {
+				continue
+			}
+
+			if df, ok := daughterFields[field.Key]; ok {
+				df.TypeBlobDigest = field.TypeBlobDigest
+				daughterFields[field.Key] = df
+				hasTypeInfo = true
+			}
+		}
+	}
+
+	if !hasTypeInfo {
 		return err
 	}
 
@@ -122,8 +152,8 @@ func (store *Store) tryWriteFields(
 	env := make(map[string]string)
 	env["DODDER_BLOB_PATH"] = tmpPath
 
-	for field := range daughter.GetMetadata().GetIndex().GetFields() {
-		if !field.TypeBlobDigest.IsNull() {
+	for _, field := range daughterFields {
+		if !field.TypeBlobDigest.IsEmpty() {
 			env[fmt.Sprintf("DODDER_FIELD_%s", field.Key)] = field.Value
 		}
 	}

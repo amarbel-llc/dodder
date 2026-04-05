@@ -412,6 +412,7 @@ func (encoder *binaryEncoder) writeFieldKey(
 				continue
 			}
 
+			// Wire format: key\x00value\x00typeBlobDigest (binary encoded)
 			if _, err = io.WriteString(
 				&encoder.Content,
 				field.Key,
@@ -433,6 +434,31 @@ func (encoder *binaryEncoder) writeFieldKey(
 			); err != nil {
 				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
 				return n, err
+			}
+
+			if _, err = ohio.WriteAllOrDieTrying(
+				&encoder.Content, []byte{0},
+			); err != nil {
+				err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+				return n, err
+			}
+
+			{
+				digestBytes, marshalErr := markl.IdBinaryEncodingTypeData{
+					MarklId: field.TypeBlobDigest,
+				}.MarshalBinary()
+
+				if marshalErr != nil {
+					err = errors.Wrap(marshalErr)
+					return n, err
+				}
+
+				if _, err = ohio.WriteAllOrDieTrying(
+					&encoder.Content, digestBytes,
+				); err != nil {
+					err = errors.WrapExceptSentinelAsNil(err, io.EOF)
+					return n, err
+				}
 			}
 
 			var n1 int64

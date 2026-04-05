@@ -543,9 +543,10 @@ func (decoder *binaryDecoder) readFieldKey(
 
 	case key_bytes.Field:
 		contentBytes := decoder.Content.Bytes()
-		parts := bytes.SplitN(contentBytes, []byte{0}, 2)
+		// Wire format: key\x00value\x00typeBlobDigest
+		parts := bytes.SplitN(contentBytes, []byte{0}, 3)
 
-		if len(parts) != 2 {
+		if len(parts) < 2 {
 			err = errors.Errorf("invalid field entry: no null separator")
 			return err
 		}
@@ -554,6 +555,17 @@ func (decoder *binaryDecoder) readFieldKey(
 			Key:   string(parts[0]),
 			Value: string(parts[1]),
 			Type:  fields.TypeUserData,
+		}
+
+		if len(parts) == 3 && len(parts[2]) > 0 {
+			digestDecoder := markl.IdBinaryDecodingTypeData{
+				MarklIdMutable: &field.TypeBlobDigest,
+			}
+
+			if err = digestDecoder.UnmarshalBinary(parts[2]); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
 		}
 
 		metadata.GetIndexMutable().GetFieldsMutable().Append(field)
