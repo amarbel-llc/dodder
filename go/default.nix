@@ -52,8 +52,9 @@ let
       for f in ${man7Src}/*.md; do
         name="$(basename "$f" .md)"
         pandoc -s -t man "$f" -o "$out/share/man/man7/$name.7"
-        # Disable double sentence spacing (.ss 12 0 = 12/36em word space, 0 extra sentence space)
-        ${pkgs-master.gnused}/bin/sed -i '3a\.\\" Disable sentence spacing\n.ss 12 0' "$out/share/man/man7/$name.7"
+        # .ss 12 0 = disable double sentence spacing
+        # .na = ragged-right (no justification)
+        ${pkgs-master.gnused}/bin/sed -i '3a\.\\" Formatting overrides\n.ss 12 0\n.na' "$out/share/man/man7/$name.7"
       done
     '';
   };
