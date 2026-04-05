@@ -181,7 +181,8 @@ func getScannerTestCases() []scannerTestCase {
 				),
 			},
 		},
-		// negated key-value: status^=cancelled
+		// ^ is operatorTypeSoloSeq so status^=cancelled produces 4 seqs
+		// (use prefix ^status=cancelled for negated field queries)
 		{
 			input: `status^=cancelled`,
 			expected: []testSeq{
