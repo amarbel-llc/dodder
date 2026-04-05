@@ -259,6 +259,25 @@ LOOP:
 				}
 			}
 
+			if seq.MatchStart(doddish.TokenMatcherKeyValue...) ||
+				seq.MatchStart(doddish.TokenMatcherKeyValueLiteral...) {
+				key := string(seq.At(0).Contents)
+				value := seq[2:]
+
+				field := &expField{
+					Key:   key,
+					Value: value.String(),
+				}
+
+				exp := buildState.makeExp(isNegated, isExact, field)
+				stack.Last().Add(exp)
+
+				isNegated = false
+				isExact = false
+
+				continue LOOP
+			}
+
 			oid, _ := ids.GetObjectIdPool().GetWithRepool() //repool:owned
 			objectId := ObjectId{
 				ObjectId: oid,

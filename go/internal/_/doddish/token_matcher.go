@@ -47,6 +47,21 @@ var (
 		TokenTypeLiteral,
 	}
 
+	// key^=value
+	TokenMatcherKeyValueNegated = TokensMatcher{
+		TokenTypeIdentifier,
+		TokenMatcherOp(OpNegation),
+		TokenMatcherOp(OpExact),
+	}
+
+	// key^="value"
+	TokenMatcherKeyValueNegatedLiteral = TokensMatcher{
+		TokenTypeIdentifier,
+		TokenMatcherOp(OpNegation),
+		TokenMatcherOp(OpExact),
+		TokenTypeLiteral,
+	}
+
 	TokenMatcherTai = TokensMatcher{
 		TokenTypeIdentifier,
 		TokenMatcherOp('.'),

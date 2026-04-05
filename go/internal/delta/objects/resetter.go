@@ -57,6 +57,7 @@ func (resetter resetter) ResetWith(dst MetadataMutable, src Metadata) {
 func resetIndex(a *index) {
 	a.Comments.Reset()
 	a.Dormant.Reset()
+	a.Fields.Reset()
 	a.SelfWithoutTai.Reset()
 	a.SetImplicitTags(nil)
 	a.TagPaths.Reset()

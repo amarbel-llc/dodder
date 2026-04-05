@@ -210,6 +210,43 @@ func getSeqTestCases() []seqTestCase {
 	}
 }
 
+func TestTokenMatcherKeyValueNegated(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	// Construct a seq that matches key^=value pattern
+	seq := Seq{
+		{Type: TokenTypeIdentifier, Contents: []byte("status")},
+		{Type: TokenTypeOperator, Contents: []byte("^")},
+		{Type: TokenTypeOperator, Contents: []byte("=")},
+	}
+
+	if !seq.MatchAll(TokenMatcherKeyValueNegated...) {
+		t.Errorf("expected seq to match TokenMatcherKeyValueNegated")
+	}
+
+	// Construct a seq that matches key^="value" pattern
+	seqLiteral := Seq{
+		{Type: TokenTypeIdentifier, Contents: []byte("status")},
+		{Type: TokenTypeOperator, Contents: []byte("^")},
+		{Type: TokenTypeOperator, Contents: []byte("=")},
+		{Type: TokenTypeLiteral, Contents: []byte("cancelled")},
+	}
+
+	if !seqLiteral.MatchAll(TokenMatcherKeyValueNegatedLiteral...) {
+		t.Errorf("expected seq to match TokenMatcherKeyValueNegatedLiteral")
+	}
+
+	// Verify non-negated doesn't match negated
+	seqNonNeg := Seq{
+		{Type: TokenTypeIdentifier, Contents: []byte("status")},
+		{Type: TokenTypeOperator, Contents: []byte("=")},
+	}
+
+	if seqNonNeg.MatchAll(TokenMatcherKeyValueNegated...) {
+		t.Errorf("expected non-negated seq not to match TokenMatcherKeyValueNegated")
+	}
+}
+
 func TestSeq(t1 *testing.T) {
 	t := ui.T{T: t1}
 

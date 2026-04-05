@@ -181,6 +181,16 @@ func getScannerTestCases() []scannerTestCase {
 				),
 			},
 		},
+		// negated key-value: status^=cancelled
+		{
+			input: `status^=cancelled`,
+			expected: []testSeq{
+				makeTestSeq(TokenTypeIdentifier, "status"),
+				makeTestSeq(TokenTypeOperator, "^"),
+				makeTestSeq(TokenTypeOperator, "="),
+				makeTestSeq(TokenTypeIdentifier, "cancelled"),
+			},
+		},
 		// typed blob ref without alias: <@digest !type@sig
 		{
 			input: `<@blake2b256-abc123 !tree@ed25519-sig456`,

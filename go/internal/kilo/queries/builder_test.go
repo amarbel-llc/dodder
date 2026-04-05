@@ -3,10 +3,127 @@ package queries
 import (
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/internal/_/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
+
+func TestFieldQuery(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	t.Run(
+		ui.MakeTestCaseInfo("field query string"),
+		func(t *ui.T) {
+			sut := (&Builder{}).WithOptions(
+				BuilderOptionDefaultGenres(genres.Zettel),
+			)
+
+			m, err := sut.BuildQueryGroup("status=completed:z")
+			t.AssertNoError(err)
+
+			actual := m.String()
+			t.AssertEqual("status=completed:Zettel", actual)
+		},
+	)
+
+	t.Run(
+		ui.MakeTestCaseInfo("negated field query string"),
+		func(t *ui.T) {
+			sut := (&Builder{}).WithOptions(
+				BuilderOptionDefaultGenres(genres.Zettel),
+			)
+
+			m, err := sut.BuildQueryGroup("^status=completed:z")
+			t.AssertNoError(err)
+
+			actual := m.String()
+			t.AssertEqual("^status=completed:Zettel", actual)
+		},
+	)
+
+	t.Run(
+		ui.MakeTestCaseInfo("field query matching"),
+		func(t *ui.T) {
+			sut := (&Builder{}).WithOptions(
+				BuilderOptionDefaultGenres(genres.Zettel),
+			)
+
+			m, err := sut.BuildQueryGroup("status=completed:z")
+			t.AssertNoError(err)
+
+			object, repool := sku.GetTransactedPool().GetWithRepool()
+			defer repool()
+
+			object.ObjectId.Genre = genres.Zettel
+			object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable().Append(
+				fields.Field{
+					Key:   "status",
+					Value: "completed",
+				},
+			)
+
+			if !m.containsSku(object) {
+				t.Errorf("expected query to match object with status=completed field")
+			}
+		},
+	)
+
+	t.Run(
+		ui.MakeTestCaseInfo("field query non-matching"),
+		func(t *ui.T) {
+			sut := (&Builder{}).WithOptions(
+				BuilderOptionDefaultGenres(genres.Zettel),
+			)
+
+			m, err := sut.BuildQueryGroup("status=completed:z")
+			t.AssertNoError(err)
+
+			object, repool := sku.GetTransactedPool().GetWithRepool()
+			defer repool()
+
+			object.ObjectId.Genre = genres.Zettel
+			object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable().Append(
+				fields.Field{
+					Key:   "status",
+					Value: "cancelled",
+				},
+			)
+
+			if m.containsSku(object) {
+				t.Errorf("expected query not to match object with status=cancelled field")
+			}
+		},
+	)
+
+	t.Run(
+		ui.MakeTestCaseInfo("negated field query matching"),
+		func(t *ui.T) {
+			sut := (&Builder{}).WithOptions(
+				BuilderOptionDefaultGenres(genres.Zettel),
+			)
+
+			m, err := sut.BuildQueryGroup("^status=cancelled:z")
+			t.AssertNoError(err)
+
+			object, repool := sku.GetTransactedPool().GetWithRepool()
+			defer repool()
+
+			object.ObjectId.Genre = genres.Zettel
+			object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable().Append(
+				fields.Field{
+					Key:   "status",
+					Value: "completed",
+				},
+			)
+
+			if !m.containsSku(object) {
+				t.Errorf("expected negated query to match object without status=cancelled field")
+			}
+		},
+	)
+}
 
 func TestQuery(t1 *testing.T) {
 	type testCase struct {
