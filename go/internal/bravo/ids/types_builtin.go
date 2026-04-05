@@ -48,7 +48,8 @@ const (
 	TypeTomlTagV1                                   = "!toml-tag-v1"
 	TypeTomlTypeV0                                  = "!toml-type-v0" // Deprecated
 	TypeTomlTypeV1                                  = "!toml-type-v1"
-	TypeTomlTypeVCurrent                            = TypeTomlTypeV1
+	TypeTomlTypeV2                                  = "!toml-type-v2"
+	TypeTomlTypeVCurrent                            = TypeTomlTypeV2
 	TypeTomlWorkspaceConfigV0                       = "!toml-workspace_config-v0"
 	TypeTomlWorkspaceConfigV1                       = "!toml-workspace_config-v1"
 	TypeTomlWorkspaceConfigV2                       = "!toml-workspace_config-v2"
@@ -129,7 +130,8 @@ func init() {
 	registerBuiltinTypeString(TypeTomlTagV0, genres.Tag, false)
 	registerBuiltinTypeString(TypeTomlTagV1, genres.Tag, true)
 	registerBuiltinTypeString(TypeTomlTypeV0, genres.Type, false)
-	registerBuiltinTypeString(TypeTomlTypeV1, genres.Type, true)
+	registerBuiltinTypeString(TypeTomlTypeV1, genres.Type, false)
+	registerBuiltinTypeString(TypeTomlTypeV2, genres.Type, true)
 	registerBuiltinTypeString(TypeTomlWorkspaceConfigV0, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlWorkspaceConfigV1, genres.Unknown, false)
 	registerBuiltinTypeString(TypeTomlWorkspaceConfigV2, genres.Unknown, false)

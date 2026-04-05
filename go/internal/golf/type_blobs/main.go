@@ -69,3 +69,9 @@ type WithStringLuaHooks interface {
 type WithReferences interface {
 	GetReferences() *ReferencesConfig
 }
+
+type WithFields interface {
+	GetFieldDefinitions() []FieldDefinition
+	GetFieldsReader() *script_config.ScriptConfig
+	GetFieldsWriter() *script_config.ScriptConfig
+}

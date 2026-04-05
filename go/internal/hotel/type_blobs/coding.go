@@ -57,6 +57,28 @@ var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
 					return doc.Encode()
 				},
 			},
+			ids.TypeTomlTypeV2: hyphence.CoderTommy[
+				Blob,
+				*Blob,
+			]{
+				Decode: func(b []byte) (Blob, error) {
+					doc, err := golf_tb.DecodeTomlV2(b)
+					if err != nil {
+						return &TomlV2{}, nil
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(blob Blob) ([]byte, error) {
+					doc, err := golf_tb.DecodeTomlV2(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := blob.(*TomlV2); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
+				},
+			},
 		},
 	),
 }
