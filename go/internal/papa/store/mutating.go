@@ -82,6 +82,15 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 		}
 	}
 
+	if err = commitFacilitator.tryReadFields(daughter, options); err != nil {
+		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
+			err = nil
+		} else {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	// TODO just just mutter == nil
 	if mother == nil {
 		if err = commitFacilitator.tryNewHook(daughter, options); err != nil {
