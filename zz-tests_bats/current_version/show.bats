@@ -98,7 +98,7 @@ function show_simple_one_zettel_checked_out { # @test
   run_dodder show one/uno.zettel
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 object=.+/one/uno.zettel]
+		\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 object=/.+/one/uno\.zettel]
 	EOM
 }
 

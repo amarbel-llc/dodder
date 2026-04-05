@@ -58,7 +58,9 @@ function field_projection_on_commit { # @test
 
   run_dodder show '!task'
   assert_success
-  assert_output --partial 'status=todo'
+  assert_output - <<-EOM
+		[one/uno @blake2b256-qhdgjzc945w6v4pw4j4hr66gehgzwf8hq4v9rch9e7px5lf525sqfjcuaa !task "my first task" status=todo]
+	EOM
 }
 
 function field_query_equality { # @test
@@ -68,22 +70,15 @@ function field_query_equality { # @test
 
   run_dodder show 'status=todo'
   assert_success
-  assert_output --partial '"task one"'
-  refute_output --partial '"task two"'
+  assert_output - <<-EOM
+		[one/uno @blake2b256-qhdgjzc945w6v4pw4j4hr66gehgzwf8hq4v9rch9e7px5lf525sqfjcuaa !task "task one" status=todo]
+	EOM
 }
 
 function field_query_negation { # @test
   # https://github.com/amarbel-llc/dodder/issues/98
   # Negated field query status^=todo returns empty.
   skip "negated field queries need investigation"
-  create_task_type
-  create_task "task one" "todo"
-  create_task "task two" "completed"
-
-  run_dodder show 'status^=todo'
-  assert_success
-  assert_output --partial '"task two"'
-  refute_output --partial '"task one"'
 }
 
 function field_enum_validation_rejects_invalid { # @test
