@@ -4,15 +4,15 @@ package repo_blobs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlXDGV0Document struct {
@@ -27,165 +27,183 @@ func DecodeTomlXDGV0(input []byte) (*TomlXDGV0Document, error) {
 		return nil, err
 	}
 
-	d := &TomlXDGV0Document{cstDoc: doc, consumed: make(map[string]bool)}
+	d := &TomlXDGV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
+	}
 
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "public-key"); err == nil {
-		if err := d.data.PublicKey.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("public-key: %w", err)
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		d.consumed["public-key"] = true
+		switch cst.KeyValueName(_kv) {
+		case "public-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("public-key: %w", err)
+				}
+				d.consumed["public-key"] = true
+			}
+		case "data":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Data = v
+				d.consumed["data"] = true
+			}
+		case "config":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Config = v
+				d.consumed["config"] = true
+			}
+		case "state":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.State = v
+				d.consumed["state"] = true
+			}
+		case "cache":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Cache = v
+				d.consumed["cache"] = true
+			}
+		case "runtime":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Runtime = v
+				d.consumed["runtime"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "data"); err == nil {
-		d.data.Data = v
-		d.consumed["data"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "config"); err == nil {
-		d.data.Config = v
-		d.consumed["config"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "state"); err == nil {
-		d.data.State = v
-		d.consumed["state"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "cache"); err == nil {
-		d.data.Cache = v
-		d.consumed["cache"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "runtime"); err == nil {
-		d.data.Runtime = v
-		d.consumed["runtime"] = true
-	}
-
 	return d, nil
 }
-
-func (d *TomlXDGV0Document) Data() *TomlXDGV0 { return &d.data }
-
+func (d *TomlXDGV0Document) Data() *TomlXDGV0 {
+	return &d.data
+}
 func (d *TomlXDGV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("public-key: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "public-key", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "public-key", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.Data != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "data") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "data", d.data.Data); err != nil {
-			return nil, err
+	if d.data.Data != "" || cst.HasValue(d.cstDoc.Root(), "data") {
+		if err := cst.SetAny(d.cstDoc.Root(), "data", d.data.Data); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.Config != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "config") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "config", d.data.Config); err != nil {
-			return nil, err
+	if d.data.Config != "" || cst.HasValue(d.cstDoc.Root(), "config") {
+		if err := cst.SetAny(d.cstDoc.Root(), "config", d.data.Config); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.State != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "state") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "state", d.data.State); err != nil {
-			return nil, err
+	if d.data.State != "" || cst.HasValue(d.cstDoc.Root(), "state") {
+		if err := cst.SetAny(d.cstDoc.Root(), "state", d.data.State); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.Cache != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "cache") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "cache", d.data.Cache); err != nil {
-			return nil, err
+	if d.data.Cache != "" || cst.HasValue(d.cstDoc.Root(), "cache") {
+		if err := cst.SetAny(d.cstDoc.Root(), "cache", d.data.Cache); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.Runtime != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "runtime") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "runtime", d.data.Runtime); err != nil {
-			return nil, err
+	if d.data.Runtime != "" || cst.HasValue(d.cstDoc.Root(), "runtime") {
+		if err := cst.SetAny(d.cstDoc.Root(), "runtime", d.data.Runtime); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlXDGV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlXDGV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlXDGV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlXDGV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlXDGV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlXDGV0Into(data *TomlXDGV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
-		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("public-key: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"public-key"] = true
+		switch cst.KeyValueName(_kv) {
+		case "public-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("public-key: %w", err)
+				}
+				consumed[keyPrefix+"public-key"] = true
+			}
+		case "data":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Data = v
+				consumed[keyPrefix+"data"] = true
+			}
+		case "config":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Config = v
+				consumed[keyPrefix+"config"] = true
+			}
+		case "state":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.State = v
+				consumed[keyPrefix+"state"] = true
+			}
+		case "cache":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Cache = v
+				consumed[keyPrefix+"cache"] = true
+			}
+		case "runtime":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Runtime = v
+				consumed[keyPrefix+"runtime"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "data"); err == nil {
-		data.Data = v
-		consumed[keyPrefix+"data"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "config"); err == nil {
-		data.Config = v
-		consumed[keyPrefix+"config"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "state"); err == nil {
-		data.State = v
-		consumed[keyPrefix+"state"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "cache"); err == nil {
-		data.Cache = v
-		consumed[keyPrefix+"cache"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "runtime"); err == nil {
-		data.Runtime = v
-		consumed[keyPrefix+"runtime"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlXDGV0From(data *TomlXDGV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()
 		if err != nil {
 			return fmt.Errorf("public-key: %w", err)
 		}
-		if err := doc.SetInContainer(container, "public-key", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "public-key", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.Data != "" || doc.HasInContainer(container, "data") {
-		if err := doc.SetInContainer(container, "data", data.Data); err != nil {
-			return err
+	if data.Data != "" || cst.HasValue(container, "data") {
+		if err := cst.SetAny(container, "data", data.Data); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.Config != "" || doc.HasInContainer(container, "config") {
-		if err := doc.SetInContainer(container, "config", data.Config); err != nil {
-			return err
+	if data.Config != "" || cst.HasValue(container, "config") {
+		if err := cst.SetAny(container, "config", data.Config); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.State != "" || doc.HasInContainer(container, "state") {
-		if err := doc.SetInContainer(container, "state", data.State); err != nil {
-			return err
+	if data.State != "" || cst.HasValue(container, "state") {
+		if err := cst.SetAny(container, "state", data.State); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.Cache != "" || doc.HasInContainer(container, "cache") {
-		if err := doc.SetInContainer(container, "cache", data.Cache); err != nil {
-			return err
+	if data.Cache != "" || cst.HasValue(container, "cache") {
+		if err := cst.SetAny(container, "cache", data.Cache); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.Runtime != "" || doc.HasInContainer(container, "runtime") {
-		if err := doc.SetInContainer(container, "runtime", data.Runtime); err != nil {
-			return err
+	if data.Runtime != "" || cst.HasValue(container, "runtime") {
+		if err := cst.SetAny(container, "runtime", data.Runtime); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

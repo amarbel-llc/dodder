@@ -146,14 +146,8 @@ tags = []
 [haustoria]
 type = "orgmode"
 
-# TODO https://github.com/amarbel-llc/tommy/issues/62
-# empty sections prevent nil-pointer in generated decoder
-[haustoria.caldav]
-
 [haustoria.orgmode]
 transport = "sftp"
-
-[haustoria.orgmode.webdav]
 
 [haustoria.orgmode.sftp]
 host = "127.0.0.1"
@@ -373,14 +367,8 @@ tags = []
 [haustoria]
 type = "orgmode"
 
-# TODO https://github.com/amarbel-llc/tommy/issues/62
-# empty sections prevent nil-pointer in generated decoder
-[haustoria.caldav]
-
 [haustoria.orgmode]
 transport = "sftp"
-
-[haustoria.orgmode.webdav]
 
 [haustoria.orgmode.sftp]
 host = "127.0.0.1"

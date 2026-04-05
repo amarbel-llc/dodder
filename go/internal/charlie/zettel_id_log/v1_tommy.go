@@ -4,15 +4,15 @@ package zettel_id_log
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type V1Document struct {
@@ -27,44 +27,57 @@ func DecodeV1(input []byte) (*V1Document, error) {
 		return nil, err
 	}
 
-	d := &V1Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "side"); err == nil {
-		if err := d.data.Side.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("side: %w", err)
-		}
-		d.consumed["side"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "tai"); err == nil {
-		if err := d.data.Tai.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("tai: %w", err)
-		}
-		d.consumed["tai"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "markl-id"); err == nil {
-		if err := d.data.MarklId.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("markl-id: %w", err)
-		}
-		d.consumed["markl-id"] = true
-	}
-	if v, err := document.GetFromContainer[int](d.cstDoc, d.cstDoc.Root(), "word-count"); err == nil {
-		d.data.WordCount = v
-		d.consumed["word-count"] = true
+	d := &V1Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "side":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.Side.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("side: %w", err)
+				}
+				d.consumed["side"] = true
+			}
+		case "tai":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.Tai.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("tai: %w", err)
+				}
+				d.consumed["tai"] = true
+			}
+		case "markl-id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.MarklId.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("markl-id: %w", err)
+				}
+				d.consumed["markl-id"] = true
+			}
+		case "word-count":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				d.data.WordCount = v
+				d.consumed["word-count"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *V1Document) Data() *V1 { return &d.data }
-
+func (d *V1Document) Data() *V1 {
+	return &d.data
+}
 func (d *V1Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Side.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("side: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "side", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "side", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -72,8 +85,8 @@ func (d *V1Document) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("tai: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "tai", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "tai", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -81,74 +94,76 @@ func (d *V1Document) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("markl-id: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "markl-id", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "markl-id", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.WordCount != 0 || d.cstDoc.HasInContainer(d.cstDoc.Root(), "word-count") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "word-count", d.data.WordCount); err != nil {
-			return nil, err
+	if d.data.WordCount != 0 || cst.HasValue(d.cstDoc.Root(), "word-count") {
+		if err := cst.SetAny(d.cstDoc.Root(), "word-count", d.data.WordCount); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *V1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *V1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *V1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *V1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *V1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "side"); err == nil {
-		if err := data.Side.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("side: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"side"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "tai"); err == nil {
-		if err := data.Tai.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("tai: %w", err)
+		switch cst.KeyValueName(_kv) {
+		case "side":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.Side.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("side: %w", err)
+				}
+				consumed[keyPrefix+"side"] = true
+			}
+		case "tai":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.Tai.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("tai: %w", err)
+				}
+				consumed[keyPrefix+"tai"] = true
+			}
+		case "markl-id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.MarklId.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("markl-id: %w", err)
+				}
+				consumed[keyPrefix+"markl-id"] = true
+			}
+		case "word-count":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				data.WordCount = v
+				consumed[keyPrefix+"word-count"] = true
+			}
 		}
-		consumed[keyPrefix+"tai"] = true
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "markl-id"); err == nil {
-		if err := data.MarklId.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("markl-id: %w", err)
-		}
-		consumed[keyPrefix+"markl-id"] = true
-	}
-	if v, err := document.GetFromContainer[int](doc, container, "word-count"); err == nil {
-		data.WordCount = v
-		consumed[keyPrefix+"word-count"] = true
-	}
-
 	return nil
 }
-
 func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Side.MarshalText()
 		if err != nil {
 			return fmt.Errorf("side: %w", err)
 		}
-		if err := doc.SetInContainer(container, "side", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "side", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -156,8 +171,8 @@ func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 		if err != nil {
 			return fmt.Errorf("tai: %w", err)
 		}
-		if err := doc.SetInContainer(container, "tai", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "tai", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -165,15 +180,14 @@ func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 		if err != nil {
 			return fmt.Errorf("markl-id: %w", err)
 		}
-		if err := doc.SetInContainer(container, "markl-id", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "markl-id", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.WordCount != 0 || doc.HasInContainer(container, "word-count") {
-		if err := doc.SetInContainer(container, "word-count", data.WordCount); err != nil {
-			return err
+	if data.WordCount != 0 || cst.HasValue(container, "word-count") {
+		if err := cst.SetAny(container, "word-count", data.WordCount); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

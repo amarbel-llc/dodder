@@ -4,15 +4,15 @@ package tag_blobs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlV1Document struct {
@@ -27,63 +27,71 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 		return nil, err
 	}
 
-	d := &TomlV1Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "filter"); err == nil {
-		d.data.Filter = v
-		d.consumed["filter"] = true
+	d := &TomlV1Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
-	return d, nil
-}
-
-func (d *TomlV1Document) Data() *TomlV1 { return &d.data }
-
-func (d *TomlV1Document) Encode() ([]byte, error) {
-	if d.data.Filter != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "filter") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "filter", d.data.Filter); err != nil {
-			return nil, err
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "filter":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Filter = v
+				d.consumed["filter"] = true
+			}
 		}
 	}
-
+	return d, nil
+}
+func (d *TomlV1Document) Data() *TomlV1 {
+	return &d.data
+}
+func (d *TomlV1Document) Encode() ([]byte, error) {
+	if d.data.Filter != "" || cst.HasValue(d.cstDoc.Root(), "filter") {
+		if err := cst.SetAny(d.cstDoc.Root(), "filter", d.data.Filter); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	}
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlV1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlV1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlV1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlV1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "filter"); err == nil {
-		data.Filter = v
-		consumed[keyPrefix+"filter"] = true
-	}
-
-	return nil
-}
-
-func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node) error {
-	if data.Filter != "" || doc.HasInContainer(container, "filter") {
-		if err := doc.SetInContainer(container, "filter", data.Filter); err != nil {
-			return err
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "filter":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Filter = v
+				consumed[keyPrefix+"filter"] = true
+			}
 		}
 	}
-
+	return nil
+}
+func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node) error {
+	if data.Filter != "" || cst.HasValue(container, "filter") {
+		if err := cst.SetAny(container, "filter", data.Filter); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	}
 	return nil
 }

@@ -4,15 +4,15 @@ package blob_store_configs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlUriV0Document struct {
@@ -27,75 +27,83 @@ func DecodeTomlUriV0(input []byte) (*TomlUriV0Document, error) {
 		return nil, err
 	}
 
-	d := &TomlUriV0Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "uri"); err == nil {
-		if err := d.data.Uri.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("uri: %w", err)
-		}
-		d.consumed["uri"] = true
+	d := &TomlUriV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "uri":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.Uri.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("uri: %w", err)
+				}
+				d.consumed["uri"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TomlUriV0Document) Data() *TomlUriV0 { return &d.data }
-
+func (d *TomlUriV0Document) Data() *TomlUriV0 {
+	return &d.data
+}
 func (d *TomlUriV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Uri.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("uri: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "uri", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "uri", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlUriV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlUriV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlUriV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlUriV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlUriV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlUriV0Into(data *TomlUriV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "uri"); err == nil {
-		if err := data.Uri.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("uri: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"uri"] = true
+		switch cst.KeyValueName(_kv) {
+		case "uri":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.Uri.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("uri: %w", err)
+				}
+				consumed[keyPrefix+"uri"] = true
+			}
+		}
 	}
-
 	return nil
 }
-
 func EncodeTomlUriV0From(data *TomlUriV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Uri.MarshalText()
 		if err != nil {
 			return fmt.Errorf("uri: %w", err)
 		}
-		if err := doc.SetInContainer(container, "uri", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "uri", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

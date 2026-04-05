@@ -4,15 +4,15 @@ package repo_blobs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlLocalOverridePathV0Document struct {
@@ -27,93 +27,103 @@ func DecodeTomlLocalOverridePathV0(input []byte) (*TomlLocalOverridePathV0Docume
 		return nil, err
 	}
 
-	d := &TomlLocalOverridePathV0Document{cstDoc: doc, consumed: make(map[string]bool)}
+	d := &TomlLocalOverridePathV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
+	}
 
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "public-key"); err == nil {
-		if err := d.data.PublicKey.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("public-key: %w", err)
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		d.consumed["public-key"] = true
+		switch cst.KeyValueName(_kv) {
+		case "public-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("public-key: %w", err)
+				}
+				d.consumed["public-key"] = true
+			}
+		case "override-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.OverridePath = v
+				d.consumed["override-path"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "override-path"); err == nil {
-		d.data.OverridePath = v
-		d.consumed["override-path"] = true
-	}
-
 	return d, nil
 }
-
-func (d *TomlLocalOverridePathV0Document) Data() *TomlLocalOverridePathV0 { return &d.data }
-
+func (d *TomlLocalOverridePathV0Document) Data() *TomlLocalOverridePathV0 {
+	return &d.data
+}
 func (d *TomlLocalOverridePathV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("public-key: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "public-key", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "public-key", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.OverridePath != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "override-path") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "override-path", d.data.OverridePath); err != nil {
-			return nil, err
+	if d.data.OverridePath != "" || cst.HasValue(d.cstDoc.Root(), "override-path") {
+		if err := cst.SetAny(d.cstDoc.Root(), "override-path", d.data.OverridePath); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlLocalOverridePathV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlLocalOverridePathV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlLocalOverridePathV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlLocalOverridePathV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlLocalOverridePathV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlLocalOverridePathV0Into(data *TomlLocalOverridePathV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
-		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("public-key: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"public-key"] = true
+		switch cst.KeyValueName(_kv) {
+		case "public-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("public-key: %w", err)
+				}
+				consumed[keyPrefix+"public-key"] = true
+			}
+		case "override-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.OverridePath = v
+				consumed[keyPrefix+"override-path"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "override-path"); err == nil {
-		data.OverridePath = v
-		consumed[keyPrefix+"override-path"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlLocalOverridePathV0From(data *TomlLocalOverridePathV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()
 		if err != nil {
 			return fmt.Errorf("public-key: %w", err)
 		}
-		if err := doc.SetInContainer(container, "public-key", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "public-key", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.OverridePath != "" || doc.HasInContainer(container, "override-path") {
-		if err := doc.SetInContainer(container, "override-path", data.OverridePath); err != nil {
-			return err
+	if data.OverridePath != "" || cst.HasValue(container, "override-path") {
+		if err := cst.SetAny(container, "override-path", data.OverridePath); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

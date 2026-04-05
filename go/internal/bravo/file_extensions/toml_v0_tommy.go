@@ -4,15 +4,15 @@ package file_extensions
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TOMLV0Document struct {
@@ -27,135 +27,151 @@ func DecodeTOMLV0(input []byte) (*TOMLV0Document, error) {
 		return nil, err
 	}
 
-	d := &TOMLV0Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "organize"); err == nil {
-		d.data.Organize = &v
-		d.consumed["organize"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "kasten"); err == nil {
-		d.data.Repo = &v
-		d.consumed["kasten"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "etikett"); err == nil {
-		d.data.Tag = &v
-		d.consumed["etikett"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "typ"); err == nil {
-		d.data.Type = &v
-		d.consumed["typ"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "zettel"); err == nil {
-		d.data.Zettel = &v
-		d.consumed["zettel"] = true
+	d := &TOMLV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "organize":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Organize = &v
+				d.consumed["organize"] = true
+			}
+		case "kasten":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Repo = &v
+				d.consumed["kasten"] = true
+			}
+		case "etikett":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Tag = &v
+				d.consumed["etikett"] = true
+			}
+		case "typ":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Type = &v
+				d.consumed["typ"] = true
+			}
+		case "zettel":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Zettel = &v
+				d.consumed["zettel"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TOMLV0Document) Data() *TOMLV0 { return &d.data }
-
+func (d *TOMLV0Document) Data() *TOMLV0 {
+	return &d.data
+}
 func (d *TOMLV0Document) Encode() ([]byte, error) {
 	if d.data.Organize != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "organize", *d.data.Organize); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "organize", *d.data.Organize); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Repo != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "kasten", *d.data.Repo); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "kasten", *d.data.Repo); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Tag != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "etikett", *d.data.Tag); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "etikett", *d.data.Tag); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Type != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "typ", *d.data.Type); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "typ", *d.data.Type); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Zettel != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "zettel", *d.data.Zettel); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "zettel", *d.data.Zettel); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TOMLV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TOMLV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TOMLV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TOMLV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TOMLV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTOMLV0Into(data *TOMLV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "organize"); err == nil {
-		data.Organize = &v
-		consumed[keyPrefix+"organize"] = true
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "organize":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Organize = &v
+				consumed[keyPrefix+"organize"] = true
+			}
+		case "kasten":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Repo = &v
+				consumed[keyPrefix+"kasten"] = true
+			}
+		case "etikett":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Tag = &v
+				consumed[keyPrefix+"etikett"] = true
+			}
+		case "typ":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Type = &v
+				consumed[keyPrefix+"typ"] = true
+			}
+		case "zettel":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Zettel = &v
+				consumed[keyPrefix+"zettel"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "kasten"); err == nil {
-		data.Repo = &v
-		consumed[keyPrefix+"kasten"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "etikett"); err == nil {
-		data.Tag = &v
-		consumed[keyPrefix+"etikett"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "typ"); err == nil {
-		data.Type = &v
-		consumed[keyPrefix+"typ"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "zettel"); err == nil {
-		data.Zettel = &v
-		consumed[keyPrefix+"zettel"] = true
-	}
-
 	return nil
 }
-
 func EncodeTOMLV0From(data *TOMLV0, doc *document.Document, container *cst.Node) error {
 	if data.Organize != nil {
-		if err := doc.SetInContainer(container, "organize", *data.Organize); err != nil {
-			return err
+		if err := cst.SetAny(container, "organize", *data.Organize); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Repo != nil {
-		if err := doc.SetInContainer(container, "kasten", *data.Repo); err != nil {
-			return err
+		if err := cst.SetAny(container, "kasten", *data.Repo); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Tag != nil {
-		if err := doc.SetInContainer(container, "etikett", *data.Tag); err != nil {
-			return err
+		if err := cst.SetAny(container, "etikett", *data.Tag); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Type != nil {
-		if err := doc.SetInContainer(container, "typ", *data.Type); err != nil {
-			return err
+		if err := cst.SetAny(container, "typ", *data.Type); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Zettel != nil {
-		if err := doc.SetInContainer(container, "zettel", *data.Zettel); err != nil {
-			return err
+		if err := cst.SetAny(container, "zettel", *data.Zettel); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

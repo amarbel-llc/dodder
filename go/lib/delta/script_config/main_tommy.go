@@ -4,15 +4,15 @@ package script_config
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type ScriptConfigDocument struct {
@@ -27,131 +27,157 @@ func DecodeScriptConfig(input []byte) (*ScriptConfigDocument, error) {
 		return nil, err
 	}
 
-	d := &ScriptConfigDocument{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "description"); err == nil {
-		d.data.Description = v
-		d.consumed["description"] = true
-	}
-	if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "shell"); err == nil {
-		d.data.Shell = v
-		d.consumed["shell"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "script"); err == nil {
-		d.data.Script = v
-		d.consumed["script"] = true
-	}
-	if tableNode := d.cstDoc.FindTable("env"); tableNode != nil {
-		d.data.Env = document.GetStringMapFromTable(tableNode)
-		d.consumed["env"] = true
-		document.MarkAllConsumed(tableNode, "env", d.consumed)
+	d := &ScriptConfigDocument{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
-	return d, nil
-}
-
-func (d *ScriptConfigDocument) Data() *ScriptConfig { return &d.data }
-
-func (d *ScriptConfigDocument) Encode() ([]byte, error) {
-	if d.data.Description != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "description") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "description", d.data.Description); err != nil {
-			return nil, err
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "description":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Description = v
+				d.consumed["description"] = true
+			}
+		case "shell":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				d.data.Shell = v
+				d.consumed["shell"] = true
+			}
+		case "script":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Script = v
+				d.consumed["script"] = true
+			}
 		}
 	}
-	if len(d.data.Shell) > 0 || d.cstDoc.HasInContainer(d.cstDoc.Root(), "shell") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "shell", d.data.Shell); err != nil {
-			return nil, err
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "env" {
+			d.data.Env = cst.ExtractStringMap(_ch)
+			d.consumed["env"] = true
+			for _ik := range d.data.Env {
+				d.consumed["env"+"."+_ik] = true
+			}
+			break
+		}
+	}
+	return d, nil
+}
+func (d *ScriptConfigDocument) Data() *ScriptConfig {
+	return &d.data
+}
+func (d *ScriptConfigDocument) Encode() ([]byte, error) {
+	if d.data.Description != "" || cst.HasValue(d.cstDoc.Root(), "description") {
+		if err := cst.SetAny(d.cstDoc.Root(), "description", d.data.Description); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	}
+	{
+		if len(d.data.Shell) > 0 || cst.HasValue(d.cstDoc.Root(), "shell") {
+			if err := cst.SetAny(d.cstDoc.Root(), "shell", d.data.Shell); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
 		}
 	}
 	if d.data.Script != "" {
-		if err := d.cstDoc.SetMultilineInContainer(d.cstDoc.Root(), "script", d.data.Script); err != nil {
-			return nil, err
+		if err := cst.SetMultilineString(d.cstDoc.Root(), "script", d.data.Script); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "script")
+		cst.DeleteValue(d.cstDoc.Root(), "script")
 	}
 	if len(d.data.Env) > 0 {
-		tableNode := d.cstDoc.EnsureTable("env")
-		document.DeleteAllInContainer(tableNode)
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "env")
+		cst.DeleteAllValues(tableNode)
 		for k, v := range d.data.Env {
-			if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
-				return nil, err
+			if err := cst.SetAny(tableNode, k, v); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *ScriptConfigDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *ScriptConfigDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *ScriptConfigDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *ScriptConfigDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *ScriptConfigDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeScriptConfigInto(data *ScriptConfig, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "description"); err == nil {
-		data.Description = v
-		consumed[keyPrefix+"description"] = true
-	}
-	if v, err := document.GetFromContainer[[]string](doc, container, "shell"); err == nil {
-		data.Shell = v
-		consumed[keyPrefix+"shell"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "script"); err == nil {
-		data.Script = v
-		consumed[keyPrefix+"script"] = true
-	}
-	if tableNode := doc.FindTableInContainer(container, "env"); tableNode != nil {
-		data.Env = document.GetStringMapFromTable(tableNode)
-		consumed[keyPrefix+"env"] = true
-		document.MarkAllConsumed(tableNode, keyPrefix+"env", consumed)
-	}
-
-	return nil
-}
-
-func EncodeScriptConfigFrom(data *ScriptConfig, doc *document.Document, container *cst.Node) error {
-	if data.Description != "" || doc.HasInContainer(container, "description") {
-		if err := doc.SetInContainer(container, "description", data.Description); err != nil {
-			return err
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-	}
-	if len(data.Shell) > 0 || doc.HasInContainer(container, "shell") {
-		if err := doc.SetInContainer(container, "shell", data.Shell); err != nil {
-			return err
-		}
-	}
-	if data.Script != "" {
-		if err := doc.SetMultilineInContainer(container, "script", data.Script); err != nil {
-			return err
-		}
-	} else {
-		_ = doc.DeleteFromContainer(container, "script")
-	}
-	if len(data.Env) > 0 {
-		tableNode := doc.EnsureTableInContainer(container, "env")
-		document.DeleteAllInContainer(tableNode)
-		for k, v := range data.Env {
-			if err := doc.SetInContainer(tableNode, k, v); err != nil {
-				return err
+		switch cst.KeyValueName(_kv) {
+		case "description":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Description = v
+				consumed[keyPrefix+"description"] = true
+			}
+		case "shell":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				data.Shell = v
+				consumed[keyPrefix+"shell"] = true
+			}
+		case "script":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Script = v
+				consumed[keyPrefix+"script"] = true
 			}
 		}
 	}
-
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"env" {
+			data.Env = cst.ExtractStringMap(_ch)
+			consumed[keyPrefix+"env"] = true
+			for _ik := range data.Env {
+				consumed[keyPrefix+"env"+"."+_ik] = true
+			}
+			break
+		}
+	}
+	return nil
+}
+func EncodeScriptConfigFrom(data *ScriptConfig, doc *document.Document, container *cst.Node) error {
+	if data.Description != "" || cst.HasValue(container, "description") {
+		if err := cst.SetAny(container, "description", data.Description); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	}
+	{
+		if len(data.Shell) > 0 || cst.HasValue(container, "shell") {
+			if err := cst.SetAny(container, "shell", data.Shell); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		}
+	}
+	if data.Script != "" {
+		if err := cst.SetMultilineString(container, "script", data.Script); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(container, "script")
+	}
+	if len(data.Env) > 0 {
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "env")
+		cst.DeleteAllValues(tableNode)
+		for k, v := range data.Env {
+			if err := cst.SetAny(tableNode, k, v); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		}
+	}
 	return nil
 }

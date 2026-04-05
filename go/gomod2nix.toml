@@ -34,8 +34,8 @@ schema = 3
     hash = 'sha256-xEmWi8sABzRWp8fbPavpZKznx943HWqVcLv6pckTP+k='
 
   [mod.'github.com/amarbel-llc/tommy']
-    version = 'v0.0.0-20260404125229-9b97e13e85e8'
-    hash = 'sha256-V/+Tmn5n1529OK1T9HEayxM7+ThbthDV1OOYk+8Y4sc='
+    version = 'v0.0.0-20260405140817-8dfcca4c3fe1'
+    hash = 'sha256-PCchX9Lt4rBFIaP1AnVYuSKCuCf2Nn1V1vqty1bGcfk='
     goVersion = '1.26'
 
   [mod.'github.com/atotto/clipboard']

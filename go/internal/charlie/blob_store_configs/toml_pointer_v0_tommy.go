@@ -4,15 +4,15 @@ package blob_store_configs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlPointerV0Document struct {
@@ -27,111 +27,123 @@ func DecodeTomlPointerV0(input []byte) (*TomlPointerV0Document, error) {
 		return nil, err
 	}
 
-	d := &TomlPointerV0Document{cstDoc: doc, consumed: make(map[string]bool)}
+	d := &TomlPointerV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
+	}
 
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "id"); err == nil {
-		if err := d.data.Id.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("id: %w", err)
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		d.consumed["id"] = true
+		switch cst.KeyValueName(_kv) {
+		case "id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.Id.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("id: %w", err)
+				}
+				d.consumed["id"] = true
+			}
+		case "base-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.BasePath = v
+				d.consumed["base-path"] = true
+			}
+		case "config-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.ConfigPath = v
+				d.consumed["config-path"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "base-path"); err == nil {
-		d.data.BasePath = v
-		d.consumed["base-path"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "config-path"); err == nil {
-		d.data.ConfigPath = v
-		d.consumed["config-path"] = true
-	}
-
 	return d, nil
 }
-
-func (d *TomlPointerV0Document) Data() *TomlPointerV0 { return &d.data }
-
+func (d *TomlPointerV0Document) Data() *TomlPointerV0 {
+	return &d.data
+}
 func (d *TomlPointerV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Id.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("id: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "id", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "id", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.BasePath != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "base-path") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "base-path", d.data.BasePath); err != nil {
-			return nil, err
+	if d.data.BasePath != "" || cst.HasValue(d.cstDoc.Root(), "base-path") {
+		if err := cst.SetAny(d.cstDoc.Root(), "base-path", d.data.BasePath); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.ConfigPath != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "config-path") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "config-path", d.data.ConfigPath); err != nil {
-			return nil, err
+	if d.data.ConfigPath != "" || cst.HasValue(d.cstDoc.Root(), "config-path") {
+		if err := cst.SetAny(d.cstDoc.Root(), "config-path", d.data.ConfigPath); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlPointerV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlPointerV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlPointerV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlPointerV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlPointerV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlPointerV0Into(data *TomlPointerV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "id"); err == nil {
-		if err := data.Id.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("id: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"id"] = true
+		switch cst.KeyValueName(_kv) {
+		case "id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.Id.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("id: %w", err)
+				}
+				consumed[keyPrefix+"id"] = true
+			}
+		case "base-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.BasePath = v
+				consumed[keyPrefix+"base-path"] = true
+			}
+		case "config-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.ConfigPath = v
+				consumed[keyPrefix+"config-path"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "base-path"); err == nil {
-		data.BasePath = v
-		consumed[keyPrefix+"base-path"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "config-path"); err == nil {
-		data.ConfigPath = v
-		consumed[keyPrefix+"config-path"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlPointerV0From(data *TomlPointerV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Id.MarshalText()
 		if err != nil {
 			return fmt.Errorf("id: %w", err)
 		}
-		if err := doc.SetInContainer(container, "id", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "id", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.BasePath != "" || doc.HasInContainer(container, "base-path") {
-		if err := doc.SetInContainer(container, "base-path", data.BasePath); err != nil {
-			return err
+	if data.BasePath != "" || cst.HasValue(container, "base-path") {
+		if err := cst.SetAny(container, "base-path", data.BasePath); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.ConfigPath != "" || doc.HasInContainer(container, "config-path") {
-		if err := doc.SetInContainer(container, "config-path", data.ConfigPath); err != nil {
-			return err
+	if data.ConfigPath != "" || cst.HasValue(container, "config-path") {
+		if err := cst.SetAny(container, "config-path", data.ConfigPath); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

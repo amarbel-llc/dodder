@@ -3,17 +3,17 @@
 package genesis_configs
 
 import (
-	"fmt"
-
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
+	"fmt"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlV2PrivateDocument struct {
@@ -28,51 +28,65 @@ func DecodeTomlV2Private(input []byte) (*TomlV2PrivateDocument, error) {
 		return nil, err
 	}
 
-	d := &TomlV2PrivateDocument{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "private-key"); err == nil {
-		if err := d.data.PrivateKey.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("private-key: %w", err)
-		}
-		d.consumed["private-key"] = true
-	}
-	if v, err := document.GetFromContainer[int](d.cstDoc, d.cstDoc.Root(), "store-version"); err == nil {
-		d.data.StoreVersion = store_version.Version(v)
-		d.consumed["store-version"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "id"); err == nil {
-		if err := d.data.RepoId.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("id: %w", err)
-		}
-		d.consumed["id"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "inventory_list-type"); err == nil {
-		d.data.InventoryListType = v
-		d.consumed["inventory_list-type"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "object-sig-type"); err == nil {
-		d.data.ObjectSigType = v
-		d.consumed["object-sig-type"] = true
+	d := &TomlV2PrivateDocument{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "private-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.PrivateKey.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("private-key: %w", err)
+				}
+				d.consumed["private-key"] = true
+			}
+		case "store-version":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				d.data.StoreVersion = store_version.Version(v)
+				d.consumed["store-version"] = true
+			}
+		case "id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.RepoId.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("id: %w", err)
+				}
+				d.consumed["id"] = true
+			}
+		case "inventory_list-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.InventoryListType = v
+				d.consumed["inventory_list-type"] = true
+			}
+		case "object-sig-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.ObjectSigType = v
+				d.consumed["object-sig-type"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TomlV2PrivateDocument) Data() *TomlV2Private { return &d.data }
-
+func (d *TomlV2PrivateDocument) Data() *TomlV2Private {
+	return &d.data
+}
 func (d *TomlV2PrivateDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PrivateKey.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("private-key: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "private-key", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "private-key", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.StoreVersion != store_version.Version(0) || d.cstDoc.HasInContainer(d.cstDoc.Root(), "store-version") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "store-version", int(d.data.StoreVersion)); err != nil {
-			return nil, err
+	if d.data.StoreVersion != store_version.Version(0) || cst.HasValue(d.cstDoc.Root(), "store-version") {
+		if err := cst.SetAny(d.cstDoc.Root(), "store-version", int(d.data.StoreVersion)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -80,86 +94,89 @@ func (d *TomlV2PrivateDocument) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("id: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "id", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "id", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.InventoryListType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "inventory_list-type") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "inventory_list-type", d.data.InventoryListType); err != nil {
-			return nil, err
+	if d.data.InventoryListType != "" || cst.HasValue(d.cstDoc.Root(), "inventory_list-type") {
+		if err := cst.SetAny(d.cstDoc.Root(), "inventory_list-type", d.data.InventoryListType); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.ObjectSigType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "object-sig-type") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "object-sig-type", d.data.ObjectSigType); err != nil {
-			return nil, err
+	if d.data.ObjectSigType != "" || cst.HasValue(d.cstDoc.Root(), "object-sig-type") {
+		if err := cst.SetAny(d.cstDoc.Root(), "object-sig-type", d.data.ObjectSigType); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlV2PrivateDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlV2PrivateDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlV2PrivateDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlV2PrivateDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlV2PrivateDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlV2PrivateInto(data *TomlV2Private, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "private-key"); err == nil {
-		if err := data.PrivateKey.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("private-key: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"private-key"] = true
-	}
-	if v, err := document.GetFromContainer[int](doc, container, "store-version"); err == nil {
-		data.StoreVersion = store_version.Version(v)
-		consumed[keyPrefix+"store-version"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "id"); err == nil {
-		if err := data.RepoId.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("id: %w", err)
+		switch cst.KeyValueName(_kv) {
+		case "private-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.PrivateKey.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("private-key: %w", err)
+				}
+				consumed[keyPrefix+"private-key"] = true
+			}
+		case "store-version":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				data.StoreVersion = store_version.Version(v)
+				consumed[keyPrefix+"store-version"] = true
+			}
+		case "id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.RepoId.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("id: %w", err)
+				}
+				consumed[keyPrefix+"id"] = true
+			}
+		case "inventory_list-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.InventoryListType = v
+				consumed[keyPrefix+"inventory_list-type"] = true
+			}
+		case "object-sig-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.ObjectSigType = v
+				consumed[keyPrefix+"object-sig-type"] = true
+			}
 		}
-		consumed[keyPrefix+"id"] = true
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "inventory_list-type"); err == nil {
-		data.InventoryListType = v
-		consumed[keyPrefix+"inventory_list-type"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "object-sig-type"); err == nil {
-		data.ObjectSigType = v
-		consumed[keyPrefix+"object-sig-type"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlV2PrivateFrom(data *TomlV2Private, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PrivateKey.MarshalText()
 		if err != nil {
 			return fmt.Errorf("private-key: %w", err)
 		}
-		if err := doc.SetInContainer(container, "private-key", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "private-key", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.StoreVersion != store_version.Version(0) || doc.HasInContainer(container, "store-version") {
-		if err := doc.SetInContainer(container, "store-version", int(data.StoreVersion)); err != nil {
-			return err
+	if data.StoreVersion != store_version.Version(0) || cst.HasValue(container, "store-version") {
+		if err := cst.SetAny(container, "store-version", int(data.StoreVersion)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -167,21 +184,20 @@ func EncodeTomlV2PrivateFrom(data *TomlV2Private, doc *document.Document, contai
 		if err != nil {
 			return fmt.Errorf("id: %w", err)
 		}
-		if err := doc.SetInContainer(container, "id", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "id", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.InventoryListType != "" || doc.HasInContainer(container, "inventory_list-type") {
-		if err := doc.SetInContainer(container, "inventory_list-type", data.InventoryListType); err != nil {
-			return err
+	if data.InventoryListType != "" || cst.HasValue(container, "inventory_list-type") {
+		if err := cst.SetAny(container, "inventory_list-type", data.InventoryListType); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.ObjectSigType != "" || doc.HasInContainer(container, "object-sig-type") {
-		if err := doc.SetInContainer(container, "object-sig-type", data.ObjectSigType); err != nil {
-			return err
+	if data.ObjectSigType != "" || cst.HasValue(container, "object-sig-type") {
+		if err := cst.SetAny(container, "object-sig-type", data.ObjectSigType); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }
 
@@ -197,51 +213,65 @@ func DecodeTomlV2Public(input []byte) (*TomlV2PublicDocument, error) {
 		return nil, err
 	}
 
-	d := &TomlV2PublicDocument{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "public-key"); err == nil {
-		if err := d.data.PublicKey.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("public-key: %w", err)
-		}
-		d.consumed["public-key"] = true
-	}
-	if v, err := document.GetFromContainer[int](d.cstDoc, d.cstDoc.Root(), "store-version"); err == nil {
-		d.data.StoreVersion = store_version.Version(v)
-		d.consumed["store-version"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "id"); err == nil {
-		if err := d.data.RepoId.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("id: %w", err)
-		}
-		d.consumed["id"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "inventory_list-type"); err == nil {
-		d.data.InventoryListType = v
-		d.consumed["inventory_list-type"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "object-sig-type"); err == nil {
-		d.data.ObjectSigType = v
-		d.consumed["object-sig-type"] = true
+	d := &TomlV2PublicDocument{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "public-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("public-key: %w", err)
+				}
+				d.consumed["public-key"] = true
+			}
+		case "store-version":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				d.data.StoreVersion = store_version.Version(v)
+				d.consumed["store-version"] = true
+			}
+		case "id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.RepoId.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("id: %w", err)
+				}
+				d.consumed["id"] = true
+			}
+		case "inventory_list-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.InventoryListType = v
+				d.consumed["inventory_list-type"] = true
+			}
+		case "object-sig-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.ObjectSigType = v
+				d.consumed["object-sig-type"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TomlV2PublicDocument) Data() *TomlV2Public { return &d.data }
-
+func (d *TomlV2PublicDocument) Data() *TomlV2Public {
+	return &d.data
+}
 func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("public-key: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "public-key", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "public-key", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.StoreVersion != store_version.Version(0) || d.cstDoc.HasInContainer(d.cstDoc.Root(), "store-version") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "store-version", int(d.data.StoreVersion)); err != nil {
-			return nil, err
+	if d.data.StoreVersion != store_version.Version(0) || cst.HasValue(d.cstDoc.Root(), "store-version") {
+		if err := cst.SetAny(d.cstDoc.Root(), "store-version", int(d.data.StoreVersion)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -249,86 +279,89 @@ func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("id: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "id", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "id", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.InventoryListType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "inventory_list-type") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "inventory_list-type", d.data.InventoryListType); err != nil {
-			return nil, err
+	if d.data.InventoryListType != "" || cst.HasValue(d.cstDoc.Root(), "inventory_list-type") {
+		if err := cst.SetAny(d.cstDoc.Root(), "inventory_list-type", d.data.InventoryListType); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-	if d.data.ObjectSigType != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "object-sig-type") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "object-sig-type", d.data.ObjectSigType); err != nil {
-			return nil, err
+	if d.data.ObjectSigType != "" || cst.HasValue(d.cstDoc.Root(), "object-sig-type") {
+		if err := cst.SetAny(d.cstDoc.Root(), "object-sig-type", d.data.ObjectSigType); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlV2PublicDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlV2PublicDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlV2PublicDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlV2PublicDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlV2PublicDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlV2PublicInto(data *TomlV2Public, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "public-key"); err == nil {
-		if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("public-key: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"public-key"] = true
-	}
-	if v, err := document.GetFromContainer[int](doc, container, "store-version"); err == nil {
-		data.StoreVersion = store_version.Version(v)
-		consumed[keyPrefix+"store-version"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "id"); err == nil {
-		if err := data.RepoId.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("id: %w", err)
+		switch cst.KeyValueName(_kv) {
+		case "public-key":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.PublicKey.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("public-key: %w", err)
+				}
+				consumed[keyPrefix+"public-key"] = true
+			}
+		case "store-version":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				data.StoreVersion = store_version.Version(v)
+				consumed[keyPrefix+"store-version"] = true
+			}
+		case "id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.RepoId.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("id: %w", err)
+				}
+				consumed[keyPrefix+"id"] = true
+			}
+		case "inventory_list-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.InventoryListType = v
+				consumed[keyPrefix+"inventory_list-type"] = true
+			}
+		case "object-sig-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.ObjectSigType = v
+				consumed[keyPrefix+"object-sig-type"] = true
+			}
 		}
-		consumed[keyPrefix+"id"] = true
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "inventory_list-type"); err == nil {
-		data.InventoryListType = v
-		consumed[keyPrefix+"inventory_list-type"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "object-sig-type"); err == nil {
-		data.ObjectSigType = v
-		consumed[keyPrefix+"object-sig-type"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlV2PublicFrom(data *TomlV2Public, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()
 		if err != nil {
 			return fmt.Errorf("public-key: %w", err)
 		}
-		if err := doc.SetInContainer(container, "public-key", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "public-key", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.StoreVersion != store_version.Version(0) || doc.HasInContainer(container, "store-version") {
-		if err := doc.SetInContainer(container, "store-version", int(data.StoreVersion)); err != nil {
-			return err
+	if data.StoreVersion != store_version.Version(0) || cst.HasValue(container, "store-version") {
+		if err := cst.SetAny(container, "store-version", int(data.StoreVersion)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -336,20 +369,19 @@ func EncodeTomlV2PublicFrom(data *TomlV2Public, doc *document.Document, containe
 		if err != nil {
 			return fmt.Errorf("id: %w", err)
 		}
-		if err := doc.SetInContainer(container, "id", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "id", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.InventoryListType != "" || doc.HasInContainer(container, "inventory_list-type") {
-		if err := doc.SetInContainer(container, "inventory_list-type", data.InventoryListType); err != nil {
-			return err
+	if data.InventoryListType != "" || cst.HasValue(container, "inventory_list-type") {
+		if err := cst.SetAny(container, "inventory_list-type", data.InventoryListType); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-	if data.ObjectSigType != "" || doc.HasInContainer(container, "object-sig-type") {
-		if err := doc.SetInContainer(container, "object-sig-type", data.ObjectSigType); err != nil {
-			return err
+	if data.ObjectSigType != "" || cst.HasValue(container, "object-sig-type") {
+		if err := cst.SetAny(container, "object-sig-type", data.ObjectSigType); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

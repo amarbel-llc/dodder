@@ -4,15 +4,15 @@ package blob_store_configs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlSFTPV0Document struct {
@@ -27,187 +27,207 @@ func DecodeTomlSFTPV0(input []byte) (*TomlSFTPV0Document, error) {
 		return nil, err
 	}
 
-	d := &TomlSFTPV0Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "host"); err == nil {
-		d.data.Host = v
-		d.consumed["host"] = true
-	}
-	if v, err := document.GetFromContainer[int](d.cstDoc, d.cstDoc.Root(), "port"); err == nil {
-		d.data.Port = v
-		d.consumed["port"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "user"); err == nil {
-		d.data.User = v
-		d.consumed["user"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "password"); err == nil {
-		d.data.Password = v
-		d.consumed["password"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "private-key-path"); err == nil {
-		d.data.PrivateKeyPath = v
-		d.consumed["private-key-path"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "remote-path"); err == nil {
-		d.data.RemotePath = v
-		d.consumed["remote-path"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "known-hosts-file"); err == nil {
-		d.data.KnownHostsFile = v
-		d.consumed["known-hosts-file"] = true
+	d := &TomlSFTPV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "host":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Host = v
+				d.consumed["host"] = true
+			}
+		case "port":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				d.data.Port = v
+				d.consumed["port"] = true
+			}
+		case "user":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.User = v
+				d.consumed["user"] = true
+			}
+		case "password":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Password = v
+				d.consumed["password"] = true
+			}
+		case "private-key-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.PrivateKeyPath = v
+				d.consumed["private-key-path"] = true
+			}
+		case "remote-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.RemotePath = v
+				d.consumed["remote-path"] = true
+			}
+		case "known-hosts-file":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.KnownHostsFile = v
+				d.consumed["known-hosts-file"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TomlSFTPV0Document) Data() *TomlSFTPV0 { return &d.data }
-
+func (d *TomlSFTPV0Document) Data() *TomlSFTPV0 {
+	return &d.data
+}
 func (d *TomlSFTPV0Document) Encode() ([]byte, error) {
-	if d.data.Host != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "host") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "host", d.data.Host); err != nil {
-			return nil, err
+	if d.data.Host != "" || cst.HasValue(d.cstDoc.Root(), "host") {
+		if err := cst.SetAny(d.cstDoc.Root(), "host", d.data.Host); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Port != 0 {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "port", d.data.Port); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "port", d.data.Port); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "port")
+		cst.DeleteValue(d.cstDoc.Root(), "port")
 	}
-	if d.data.User != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "user") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "user", d.data.User); err != nil {
-			return nil, err
+	if d.data.User != "" || cst.HasValue(d.cstDoc.Root(), "user") {
+		if err := cst.SetAny(d.cstDoc.Root(), "user", d.data.User); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Password != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "password", d.data.Password); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "password", d.data.Password); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "password")
+		cst.DeleteValue(d.cstDoc.Root(), "password")
 	}
 	if d.data.PrivateKeyPath != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "private-key-path", d.data.PrivateKeyPath); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "private-key-path", d.data.PrivateKeyPath); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "private-key-path")
+		cst.DeleteValue(d.cstDoc.Root(), "private-key-path")
 	}
-	if d.data.RemotePath != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "remote-path") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "remote-path", d.data.RemotePath); err != nil {
-			return nil, err
+	if d.data.RemotePath != "" || cst.HasValue(d.cstDoc.Root(), "remote-path") {
+		if err := cst.SetAny(d.cstDoc.Root(), "remote-path", d.data.RemotePath); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.KnownHostsFile != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "known-hosts-file", d.data.KnownHostsFile); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "known-hosts-file", d.data.KnownHostsFile); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "known-hosts-file")
+		cst.DeleteValue(d.cstDoc.Root(), "known-hosts-file")
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlSFTPV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlSFTPV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlSFTPV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlSFTPV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlSFTPV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlSFTPV0Into(data *TomlSFTPV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "host"); err == nil {
-		data.Host = v
-		consumed[keyPrefix+"host"] = true
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "host":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Host = v
+				consumed[keyPrefix+"host"] = true
+			}
+		case "port":
+			if v, ok := cst.ExtractInt(_kv); ok {
+				data.Port = v
+				consumed[keyPrefix+"port"] = true
+			}
+		case "user":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.User = v
+				consumed[keyPrefix+"user"] = true
+			}
+		case "password":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Password = v
+				consumed[keyPrefix+"password"] = true
+			}
+		case "private-key-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.PrivateKeyPath = v
+				consumed[keyPrefix+"private-key-path"] = true
+			}
+		case "remote-path":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.RemotePath = v
+				consumed[keyPrefix+"remote-path"] = true
+			}
+		case "known-hosts-file":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.KnownHostsFile = v
+				consumed[keyPrefix+"known-hosts-file"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[int](doc, container, "port"); err == nil {
-		data.Port = v
-		consumed[keyPrefix+"port"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "user"); err == nil {
-		data.User = v
-		consumed[keyPrefix+"user"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "password"); err == nil {
-		data.Password = v
-		consumed[keyPrefix+"password"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "private-key-path"); err == nil {
-		data.PrivateKeyPath = v
-		consumed[keyPrefix+"private-key-path"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "remote-path"); err == nil {
-		data.RemotePath = v
-		consumed[keyPrefix+"remote-path"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "known-hosts-file"); err == nil {
-		data.KnownHostsFile = v
-		consumed[keyPrefix+"known-hosts-file"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlSFTPV0From(data *TomlSFTPV0, doc *document.Document, container *cst.Node) error {
-	if data.Host != "" || doc.HasInContainer(container, "host") {
-		if err := doc.SetInContainer(container, "host", data.Host); err != nil {
-			return err
+	if data.Host != "" || cst.HasValue(container, "host") {
+		if err := cst.SetAny(container, "host", data.Host); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Port != 0 {
-		if err := doc.SetInContainer(container, "port", data.Port); err != nil {
-			return err
+		if err := cst.SetAny(container, "port", data.Port); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "port")
+		cst.DeleteValue(container, "port")
 	}
-	if data.User != "" || doc.HasInContainer(container, "user") {
-		if err := doc.SetInContainer(container, "user", data.User); err != nil {
-			return err
+	if data.User != "" || cst.HasValue(container, "user") {
+		if err := cst.SetAny(container, "user", data.User); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Password != "" {
-		if err := doc.SetInContainer(container, "password", data.Password); err != nil {
-			return err
+		if err := cst.SetAny(container, "password", data.Password); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "password")
+		cst.DeleteValue(container, "password")
 	}
 	if data.PrivateKeyPath != "" {
-		if err := doc.SetInContainer(container, "private-key-path", data.PrivateKeyPath); err != nil {
-			return err
+		if err := cst.SetAny(container, "private-key-path", data.PrivateKeyPath); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "private-key-path")
+		cst.DeleteValue(container, "private-key-path")
 	}
-	if data.RemotePath != "" || doc.HasInContainer(container, "remote-path") {
-		if err := doc.SetInContainer(container, "remote-path", data.RemotePath); err != nil {
-			return err
+	if data.RemotePath != "" || cst.HasValue(container, "remote-path") {
+		if err := cst.SetAny(container, "remote-path", data.RemotePath); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.KnownHostsFile != "" {
-		if err := doc.SetInContainer(container, "known-hosts-file", data.KnownHostsFile); err != nil {
-			return err
+		if err := cst.SetAny(container, "known-hosts-file", data.KnownHostsFile); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "known-hosts-file")
+		cst.DeleteValue(container, "known-hosts-file")
 	}
-
 	return nil
 }

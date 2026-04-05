@@ -4,15 +4,15 @@ package file_extensions
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TOMLV1Document struct {
@@ -27,189 +27,211 @@ func DecodeTOMLV1(input []byte) (*TOMLV1Document, error) {
 		return nil, err
 	}
 
-	d := &TOMLV1Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "config"); err == nil {
-		d.data.Config = &v
-		d.consumed["config"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "conflict"); err == nil {
-		d.data.Conflict = &v
-		d.consumed["conflict"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "lockfile"); err == nil {
-		d.data.Lockfile = &v
-		d.consumed["lockfile"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "organize"); err == nil {
-		d.data.Organize = &v
-		d.consumed["organize"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "repo"); err == nil {
-		d.data.Repo = &v
-		d.consumed["repo"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "tag"); err == nil {
-		d.data.Tag = &v
-		d.consumed["tag"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "type"); err == nil {
-		d.data.Type = &v
-		d.consumed["type"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "zettel"); err == nil {
-		d.data.Zettel = &v
-		d.consumed["zettel"] = true
+	d := &TOMLV1Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "config":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Config = &v
+				d.consumed["config"] = true
+			}
+		case "conflict":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Conflict = &v
+				d.consumed["conflict"] = true
+			}
+		case "lockfile":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Lockfile = &v
+				d.consumed["lockfile"] = true
+			}
+		case "organize":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Organize = &v
+				d.consumed["organize"] = true
+			}
+		case "repo":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Repo = &v
+				d.consumed["repo"] = true
+			}
+		case "tag":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Tag = &v
+				d.consumed["tag"] = true
+			}
+		case "type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Type = &v
+				d.consumed["type"] = true
+			}
+		case "zettel":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Zettel = &v
+				d.consumed["zettel"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TOMLV1Document) Data() *TOMLV1 { return &d.data }
-
+func (d *TOMLV1Document) Data() *TOMLV1 {
+	return &d.data
+}
 func (d *TOMLV1Document) Encode() ([]byte, error) {
 	if d.data.Config != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "config", *d.data.Config); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "config", *d.data.Config); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Conflict != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "conflict", *d.data.Conflict); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "conflict", *d.data.Conflict); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Lockfile != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "lockfile", *d.data.Lockfile); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "lockfile", *d.data.Lockfile); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Organize != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "organize", *d.data.Organize); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "organize", *d.data.Organize); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Repo != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "repo", *d.data.Repo); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "repo", *d.data.Repo); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Tag != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "tag", *d.data.Tag); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "tag", *d.data.Tag); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Type != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "type", *d.data.Type); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "type", *d.data.Type); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.Zettel != nil {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "zettel", *d.data.Zettel); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "zettel", *d.data.Zettel); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TOMLV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TOMLV1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TOMLV1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TOMLV1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TOMLV1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTOMLV1Into(data *TOMLV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "config"); err == nil {
-		data.Config = &v
-		consumed[keyPrefix+"config"] = true
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "config":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Config = &v
+				consumed[keyPrefix+"config"] = true
+			}
+		case "conflict":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Conflict = &v
+				consumed[keyPrefix+"conflict"] = true
+			}
+		case "lockfile":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Lockfile = &v
+				consumed[keyPrefix+"lockfile"] = true
+			}
+		case "organize":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Organize = &v
+				consumed[keyPrefix+"organize"] = true
+			}
+		case "repo":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Repo = &v
+				consumed[keyPrefix+"repo"] = true
+			}
+		case "tag":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Tag = &v
+				consumed[keyPrefix+"tag"] = true
+			}
+		case "type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Type = &v
+				consumed[keyPrefix+"type"] = true
+			}
+		case "zettel":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Zettel = &v
+				consumed[keyPrefix+"zettel"] = true
+			}
+		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "conflict"); err == nil {
-		data.Conflict = &v
-		consumed[keyPrefix+"conflict"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "lockfile"); err == nil {
-		data.Lockfile = &v
-		consumed[keyPrefix+"lockfile"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "organize"); err == nil {
-		data.Organize = &v
-		consumed[keyPrefix+"organize"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "repo"); err == nil {
-		data.Repo = &v
-		consumed[keyPrefix+"repo"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "tag"); err == nil {
-		data.Tag = &v
-		consumed[keyPrefix+"tag"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "type"); err == nil {
-		data.Type = &v
-		consumed[keyPrefix+"type"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "zettel"); err == nil {
-		data.Zettel = &v
-		consumed[keyPrefix+"zettel"] = true
-	}
-
 	return nil
 }
-
 func EncodeTOMLV1From(data *TOMLV1, doc *document.Document, container *cst.Node) error {
 	if data.Config != nil {
-		if err := doc.SetInContainer(container, "config", *data.Config); err != nil {
-			return err
+		if err := cst.SetAny(container, "config", *data.Config); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Conflict != nil {
-		if err := doc.SetInContainer(container, "conflict", *data.Conflict); err != nil {
-			return err
+		if err := cst.SetAny(container, "conflict", *data.Conflict); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Lockfile != nil {
-		if err := doc.SetInContainer(container, "lockfile", *data.Lockfile); err != nil {
-			return err
+		if err := cst.SetAny(container, "lockfile", *data.Lockfile); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Organize != nil {
-		if err := doc.SetInContainer(container, "organize", *data.Organize); err != nil {
-			return err
+		if err := cst.SetAny(container, "organize", *data.Organize); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Repo != nil {
-		if err := doc.SetInContainer(container, "repo", *data.Repo); err != nil {
-			return err
+		if err := cst.SetAny(container, "repo", *data.Repo); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Tag != nil {
-		if err := doc.SetInContainer(container, "tag", *data.Tag); err != nil {
-			return err
+		if err := cst.SetAny(container, "tag", *data.Tag); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Type != nil {
-		if err := doc.SetInContainer(container, "type", *data.Type); err != nil {
-			return err
+		if err := cst.SetAny(container, "type", *data.Type); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.Zettel != nil {
-		if err := doc.SetInContainer(container, "zettel", *data.Zettel); err != nil {
-			return err
+		if err := cst.SetAny(container, "zettel", *data.Zettel); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

@@ -3,17 +3,17 @@
 package workspace_config_blobs
 
 import (
-	"fmt"
-
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
+	"fmt"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type V0Document struct {
@@ -28,109 +28,125 @@ func DecodeV0(input []byte) (*V0Document, error) {
 		return nil, err
 	}
 
-	d := &V0Document{cstDoc: doc, consumed: make(map[string]bool)}
+	d := &V0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
+	}
 
-	if tableNode := d.cstDoc.FindTable("defaults"); tableNode != nil {
-		d.consumed["defaults"] = true
-		if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&d.data.Defaults, d.cstDoc, tableNode, d.consumed, "defaults."); err != nil {
-			return nil, fmt.Errorf("defaults: %w", err)
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "query":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Query = v
+				d.consumed["query"] = true
+			}
+		case "dry-run":
+			if v, ok := cst.ExtractBool(_kv); ok {
+				d.data.DryRun = v
+				d.consumed["dry-run"] = true
+			}
 		}
 	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "query"); err == nil {
-		d.data.Query = v
-		d.consumed["query"] = true
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "defaults" {
+			d.consumed["defaults"] = true
+			if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&d.data.Defaults, d.cstDoc, _ch, d.consumed, "defaults."); err != nil {
+				return nil, fmt.Errorf("defaults: %w", err)
+			}
+			break
+		}
 	}
-	if v, err := document.GetFromContainer[bool](d.cstDoc, d.cstDoc.Root(), "dry-run"); err == nil {
-		d.data.DryRun = v
-		d.consumed["dry-run"] = true
-	}
-
 	return d, nil
 }
-
-func (d *V0Document) Data() *V0 { return &d.data }
-
+func (d *V0Document) Data() *V0 {
+	return &d.data
+}
 func (d *V0Document) Encode() ([]byte, error) {
 	{
-		tableNode := d.cstDoc.EnsureTable("defaults")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "defaults")
 		if err := repo_configs.EncodeDefaultsV1OmitEmptyFrom(&d.data.Defaults, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("defaults: %w", err)
 		}
 	}
 	if d.data.Query != "" {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "query", d.data.Query); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "query", d.data.Query); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = d.cstDoc.DeleteFromContainer(d.cstDoc.Root(), "query")
+		cst.DeleteValue(d.cstDoc.Root(), "query")
 	}
-	if d.data.DryRun != false || d.cstDoc.HasInContainer(d.cstDoc.Root(), "dry-run") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "dry-run", d.data.DryRun); err != nil {
-			return nil, err
+	if d.data.DryRun != false || cst.HasValue(d.cstDoc.Root(), "dry-run") {
+		if err := cst.SetAny(d.cstDoc.Root(), "dry-run", d.data.DryRun); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *V0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *V0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *V0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *V0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *V0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
-		consumed[keyPrefix+"defaults"] = true
-		if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&data.Defaults, doc, tableNode, consumed, keyPrefix+"defaults."); err != nil {
-			return fmt.Errorf("defaults: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "query":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Query = v
+				consumed[keyPrefix+"query"] = true
+			}
+		case "dry-run":
+			if v, ok := cst.ExtractBool(_kv); ok {
+				data.DryRun = v
+				consumed[keyPrefix+"dry-run"] = true
+			}
 		}
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "query"); err == nil {
-		data.Query = v
-		consumed[keyPrefix+"query"] = true
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"defaults" {
+			consumed[keyPrefix+"defaults"] = true
+			if err := repo_configs.DecodeDefaultsV1OmitEmptyInto(&data.Defaults, doc, _ch, consumed, keyPrefix+"defaults."); err != nil {
+				return fmt.Errorf("defaults: %w", err)
+			}
+			break
+		}
 	}
-	if v, err := document.GetFromContainer[bool](doc, container, "dry-run"); err == nil {
-		data.DryRun = v
-		consumed[keyPrefix+"dry-run"] = true
-	}
-
 	return nil
 }
-
 func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 	{
-		tableNode := doc.EnsureTableInContainer(container, "defaults")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "defaults")
 		if err := repo_configs.EncodeDefaultsV1OmitEmptyFrom(&data.Defaults, doc, tableNode); err != nil {
 			return fmt.Errorf("defaults: %w", err)
 		}
 	}
 	if data.Query != "" {
-		if err := doc.SetInContainer(container, "query", data.Query); err != nil {
-			return err
+		if err := cst.SetAny(container, "query", data.Query); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	} else {
-		_ = doc.DeleteFromContainer(container, "query")
+		cst.DeleteValue(container, "query")
 	}
-	if data.DryRun != false || doc.HasInContainer(container, "dry-run") {
-		if err := doc.SetInContainer(container, "dry-run", data.DryRun); err != nil {
-			return err
+	if data.DryRun != false || cst.HasValue(container, "dry-run") {
+		if err := cst.SetAny(container, "dry-run", data.DryRun); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }

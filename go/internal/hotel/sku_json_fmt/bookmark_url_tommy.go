@@ -4,15 +4,15 @@ package sku_json_fmt
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlBookmarkDocument struct {
@@ -27,63 +27,71 @@ func DecodeTomlBookmark(input []byte) (*TomlBookmarkDocument, error) {
 		return nil, err
 	}
 
-	d := &TomlBookmarkDocument{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "url"); err == nil {
-		d.data.Url = v
-		d.consumed["url"] = true
+	d := &TomlBookmarkDocument{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
-	return d, nil
-}
-
-func (d *TomlBookmarkDocument) Data() *TomlBookmark { return &d.data }
-
-func (d *TomlBookmarkDocument) Encode() ([]byte, error) {
-	if d.data.Url != "" || d.cstDoc.HasInContainer(d.cstDoc.Root(), "url") {
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "url", d.data.Url); err != nil {
-			return nil, err
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "url":
+			if v, ok := cst.ExtractString(_kv); ok {
+				d.data.Url = v
+				d.consumed["url"] = true
+			}
 		}
 	}
-
+	return d, nil
+}
+func (d *TomlBookmarkDocument) Data() *TomlBookmark {
+	return &d.data
+}
+func (d *TomlBookmarkDocument) Encode() ([]byte, error) {
+	if d.data.Url != "" || cst.HasValue(d.cstDoc.Root(), "url") {
+		if err := cst.SetAny(d.cstDoc.Root(), "url", d.data.Url); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	}
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlBookmarkDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlBookmarkDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlBookmarkDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlBookmarkDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlBookmarkDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlBookmarkInto(data *TomlBookmark, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "url"); err == nil {
-		data.Url = v
-		consumed[keyPrefix+"url"] = true
-	}
-
-	return nil
-}
-
-func EncodeTomlBookmarkFrom(data *TomlBookmark, doc *document.Document, container *cst.Node) error {
-	if data.Url != "" || doc.HasInContainer(container, "url") {
-		if err := doc.SetInContainer(container, "url", data.Url); err != nil {
-			return err
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "url":
+			if v, ok := cst.ExtractString(_kv); ok {
+				data.Url = v
+				consumed[keyPrefix+"url"] = true
+			}
 		}
 	}
-
+	return nil
+}
+func EncodeTomlBookmarkFrom(data *TomlBookmark, doc *document.Document, container *cst.Node) error {
+	if data.Url != "" || cst.HasValue(container, "url") {
+		if err := cst.SetAny(container, "url", data.Url); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	}
 	return nil
 }

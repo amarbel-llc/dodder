@@ -3,19 +3,17 @@
 package repo_configs
 
 import (
-	"fmt"
-	"strings"
-
 	"code.linenisgreat.com/dodder/go/internal/_/options_print"
 	"code.linenisgreat.com/dodder/go/internal/_/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
+	"fmt"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
@@ -34,37 +32,48 @@ func DecodeDefaultsV0(input []byte) (*DefaultsV0Document, error) {
 		return nil, err
 	}
 
-	d := &DefaultsV0Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "typ"); err == nil {
-		if err := d.data.Typ.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("typ: %w", err)
-		}
-		d.consumed["typ"] = true
+	d := &DefaultsV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
-	if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "etiketten"); err == nil {
-		d.data.Etiketten = make([]ids.TagStruct, len(v))
-		for i, s := range v {
-			if err := d.data.Etiketten[i].UnmarshalText([]byte(s)); err != nil {
-				return nil, fmt.Errorf("etiketten[%d]: %w", i, err)
+
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "typ":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.Typ.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("typ: %w", err)
+				}
+				d.consumed["typ"] = true
+			}
+		case "etiketten":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				d.data.Etiketten = make([]ids.TagStruct, len(v))
+				for _si, _s := range v {
+					if err := d.data.Etiketten[_si].UnmarshalText([]byte(_s)); err != nil {
+						return nil, fmt.Errorf("etiketten[%d]: %w", _si, err)
+					}
+				}
+				d.consumed["etiketten"] = true
 			}
 		}
-		d.consumed["etiketten"] = true
 	}
-
 	return d, nil
 }
-
-func (d *DefaultsV0Document) Data() *DefaultsV0 { return &d.data }
-
+func (d *DefaultsV0Document) Data() *DefaultsV0 {
+	return &d.data
+}
 func (d *DefaultsV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Typ.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("typ: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "typ", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "typ", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -76,62 +85,62 @@ func (d *DefaultsV0Document) Encode() ([]byte, error) {
 			}
 			vals[i] = string(v)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "etiketten", vals); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "etiketten", vals); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *DefaultsV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *DefaultsV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *DefaultsV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *DefaultsV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *DefaultsV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeDefaultsV0Into(data *DefaultsV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "typ"); err == nil {
-		if err := data.Typ.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("typ: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"typ"] = true
-	}
-	if v, err := document.GetFromContainer[[]string](doc, container, "etiketten"); err == nil {
-		data.Etiketten = make([]ids.TagStruct, len(v))
-		for i, s := range v {
-			if err := data.Etiketten[i].UnmarshalText([]byte(s)); err != nil {
-				return fmt.Errorf("etiketten[%d]: %w", i, err)
+		switch cst.KeyValueName(_kv) {
+		case "typ":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.Typ.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("typ: %w", err)
+				}
+				consumed[keyPrefix+"typ"] = true
+			}
+		case "etiketten":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				data.Etiketten = make([]ids.TagStruct, len(v))
+				for _si, _s := range v {
+					if err := data.Etiketten[_si].UnmarshalText([]byte(_s)); err != nil {
+						return fmt.Errorf("etiketten[%d]: %w", _si, err)
+					}
+				}
+				consumed[keyPrefix+"etiketten"] = true
 			}
 		}
-		consumed[keyPrefix+"etiketten"] = true
 	}
-
 	return nil
 }
-
 func EncodeDefaultsV0From(data *DefaultsV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Typ.MarshalText()
 		if err != nil {
 			return fmt.Errorf("typ: %w", err)
 		}
-		if err := doc.SetInContainer(container, "typ", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "typ", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -143,11 +152,10 @@ func EncodeDefaultsV0From(data *DefaultsV0, doc *document.Document, container *c
 			}
 			vals[i] = string(v)
 		}
-		if err := doc.SetInContainer(container, "etiketten", vals); err != nil {
-			return err
+		if err := cst.SetAny(container, "etiketten", vals); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }
 
@@ -163,93 +171,135 @@ func DecodeV0(input []byte) (*V0Document, error) {
 		return nil, err
 	}
 
-	d := &V0Document{cstDoc: doc, consumed: make(map[string]bool)}
+	d := &V0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
+	}
 
-	if tableNode := d.cstDoc.FindTable("defaults"); tableNode != nil {
-		d.consumed["defaults"] = true
-		if v, err := document.GetFromContainer[string](d.cstDoc, tableNode, "typ"); err == nil {
-			if err := d.data.Defaults.Typ.UnmarshalText([]byte(v)); err != nil {
-				return nil, fmt.Errorf("typ: %w", err)
-			}
-			d.consumed["defaults.typ"] = true
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		if v, err := document.GetFromContainer[[]string](d.cstDoc, tableNode, "etiketten"); err == nil {
-			d.data.Defaults.Etiketten = make([]ids.TagStruct, len(v))
-			for i, s := range v {
-				if err := d.data.Defaults.Etiketten[i].UnmarshalText([]byte(s)); err != nil {
-					return nil, fmt.Errorf("etiketten[%d]: %w", i, err)
+		switch cst.KeyValueName(_kv) {
+		case "hidden-etiketten":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				d.data.HiddenEtiketten = make([]ids.TagStruct, len(v))
+				for _si, _s := range v {
+					if err := d.data.HiddenEtiketten[_si].UnmarshalText([]byte(_s)); err != nil {
+						return nil, fmt.Errorf("hidden-etiketten[%d]: %w", _si, err)
+					}
 				}
-			}
-			d.consumed["defaults.etiketten"] = true
-		}
-	}
-	if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "hidden-etiketten"); err == nil {
-		d.data.HiddenEtiketten = make([]ids.TagStruct, len(v))
-		for i, s := range v {
-			if err := d.data.HiddenEtiketten[i].UnmarshalText([]byte(s)); err != nil {
-				return nil, fmt.Errorf("hidden-etiketten[%d]: %w", i, err)
+				d.consumed["hidden-etiketten"] = true
 			}
 		}
-		d.consumed["hidden-etiketten"] = true
 	}
-	if tableNode := d.cstDoc.FindTable("file-extensions"); tableNode != nil {
-		d.consumed["file-extensions"] = true
-		if err := file_extensions.DecodeTOMLV0Into(&d.data.FileExtensions, d.cstDoc, tableNode, d.consumed, "file-extensions."); err != nil {
-			return nil, fmt.Errorf("file-extensions: %w", err)
-		}
-	}
-	{
-		subTables := d.cstDoc.FindSubTables("actions")
-		if len(subTables) > 0 {
-			d.consumed["actions"] = true
-			d.data.Actions = make(map[string]script_config.ScriptConfig)
-			for _, subTable := range subTables {
-				mapKey := document.SubTableKey(subTable, "actions")
-				if strings.Contains(mapKey, ".") {
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "defaults" {
+			d.consumed["defaults"] = true
+			for _, _kv := range _ch.Children {
+				if _kv.Kind != cst.NodeKeyValue {
 					continue
 				}
-				d.consumed["actions"+"."+mapKey] = true
-				var entry script_config.ScriptConfig
-				if err := script_config.DecodeScriptConfigInto(&entry, d.cstDoc, subTable, d.consumed, "actions"+"."+mapKey+"."); err != nil {
-					return nil, fmt.Errorf("actions.%s: %w", mapKey, err)
+				switch cst.KeyValueName(_kv) {
+				case "typ":
+					if v, ok := cst.ExtractString(_kv); ok {
+						if err := d.data.Defaults.Typ.UnmarshalText([]byte(v)); err != nil {
+							return nil, fmt.Errorf("typ: %w", err)
+						}
+						d.consumed["defaults.typ"] = true
+					}
+				case "etiketten":
+					if v, ok := cst.ExtractStringSlice(_kv); ok {
+						d.data.Defaults.Etiketten = make([]ids.TagStruct, len(v))
+						for _si, _s := range v {
+							if err := d.data.Defaults.Etiketten[_si].UnmarshalText([]byte(_s)); err != nil {
+								return nil, fmt.Errorf("etiketten[%d]: %w", _si, err)
+							}
+						}
+						d.consumed["defaults.etiketten"] = true
+					}
 				}
-				d.data.Actions[mapKey] = entry
 			}
+			break
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("cli-output"); tableNode != nil {
-		d.consumed["cli-output"] = true
-		if err := options_print.DecodeV1Into(&d.data.PrintOptions, d.cstDoc, tableNode, d.consumed, "cli-output."); err != nil {
-			return nil, fmt.Errorf("cli-output: %w", err)
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "file-extensions" {
+			d.consumed["file-extensions"] = true
+			if err := file_extensions.DecodeTOMLV0Into(&d.data.FileExtensions, d.cstDoc, _ch, d.consumed, "file-extensions."); err != nil {
+				return nil, fmt.Errorf("file-extensions: %w", err)
+			}
+			break
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("tools"); tableNode != nil {
-		d.consumed["tools"] = true
-		if err := options_tools.DecodeOptionsInto(&d.data.Tools, d.cstDoc, tableNode, d.consumed, "tools."); err != nil {
-			return nil, fmt.Errorf("tools: %w", err)
+	{
+		for _, _ch := range d.cstDoc.Root().Children {
+			if _ch.Kind != cst.NodeTable {
+				continue
+			}
+			_hdr := cst.TableHeaderKey(_ch)
+			if !strings.HasPrefix(_hdr, "actions.") {
+				continue
+			}
+			_mk := _hdr[8:]
+			if strings.Contains(_mk, ".") {
+				continue
+			}
+			if d.data.Actions == nil {
+				d.consumed["actions"] = true
+				d.data.Actions = make(map[string]script_config.ScriptConfig)
+			}
+			d.consumed["actions"+"."+_mk] = true
+			var entry script_config.ScriptConfig
+			if err := script_config.DecodeScriptConfigInto(&entry, d.cstDoc, _ch, d.consumed, "actions."+_mk+"."); err != nil {
+				return nil, fmt.Errorf("actions.%s: %w", _mk, err)
+			}
+			d.data.Actions[_mk] = entry
 		}
 	}
-	if tableNode := d.cstDoc.FindTable("filters"); tableNode != nil {
-		d.data.Filters = document.GetStringMapFromTable(tableNode)
-		d.consumed["filters"] = true
-		document.MarkAllConsumed(tableNode, "filters", d.consumed)
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "cli-output" {
+			d.consumed["cli-output"] = true
+			if err := options_print.DecodeV1Into(&d.data.PrintOptions, d.cstDoc, _ch, d.consumed, "cli-output."); err != nil {
+				return nil, fmt.Errorf("cli-output: %w", err)
+			}
+			break
+		}
 	}
-
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "tools" {
+			d.consumed["tools"] = true
+			if err := options_tools.DecodeOptionsInto(&d.data.Tools, d.cstDoc, _ch, d.consumed, "tools."); err != nil {
+				return nil, fmt.Errorf("tools: %w", err)
+			}
+			break
+		}
+	}
+	for _, _ch := range d.cstDoc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "filters" {
+			d.data.Filters = cst.ExtractStringMap(_ch)
+			d.consumed["filters"] = true
+			for _ik := range d.data.Filters {
+				d.consumed["filters"+"."+_ik] = true
+			}
+			break
+		}
+	}
 	return d, nil
 }
-
-func (d *V0Document) Data() *V0 { return &d.data }
-
+func (d *V0Document) Data() *V0 {
+	return &d.data
+}
 func (d *V0Document) Encode() ([]byte, error) {
 	{
-		tableNode := d.cstDoc.EnsureTable("defaults")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "defaults")
 		{
 			v, err := d.data.Defaults.Typ.MarshalText()
 			if err != nil {
 				return nil, fmt.Errorf("typ: %w", err)
 			}
-			if err := d.cstDoc.SetInContainer(tableNode, "typ", string(v)); err != nil {
-				return nil, err
+			if err := cst.SetAny(tableNode, "typ", string(v)); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
 		{
@@ -261,8 +311,8 @@ func (d *V0Document) Encode() ([]byte, error) {
 				}
 				vals[i] = string(v)
 			}
-			if err := d.cstDoc.SetInContainer(tableNode, "etiketten", vals); err != nil {
-				return nil, err
+			if err := cst.SetAny(tableNode, "etiketten", vals); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
 	}
@@ -275,153 +325,184 @@ func (d *V0Document) Encode() ([]byte, error) {
 			}
 			vals[i] = string(v)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "hidden-etiketten", vals); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "hidden-etiketten", vals); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
-		tableNode := d.cstDoc.EnsureTable("file-extensions")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "file-extensions")
 		if err := file_extensions.EncodeTOMLV0From(&d.data.FileExtensions, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("file-extensions: %w", err)
 		}
 	}
 	if len(d.data.Actions) > 0 {
 		for mapKey, mapVal := range d.data.Actions {
-			subTable := d.cstDoc.EnsureSubTable("actions", mapKey)
+			subTable := cst.EnsureChildSubTable(d.cstDoc.Root(), d.cstDoc.Root(), "actions", mapKey)
 			if err := script_config.EncodeScriptConfigFrom(&mapVal, d.cstDoc, subTable); err != nil {
 				return nil, fmt.Errorf("actions.%s: %w", mapKey, err)
 			}
 		}
 	}
 	{
-		tableNode := d.cstDoc.EnsureTable("cli-output")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "cli-output")
 		if err := options_print.EncodeV1From(&d.data.PrintOptions, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("cli-output: %w", err)
 		}
 	}
 	{
-		tableNode := d.cstDoc.EnsureTable("tools")
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "tools")
 		if err := options_tools.EncodeOptionsFrom(&d.data.Tools, d.cstDoc, tableNode); err != nil {
 			return nil, fmt.Errorf("tools: %w", err)
 		}
 	}
 	if len(d.data.Filters) > 0 {
-		tableNode := d.cstDoc.EnsureTable("filters")
-		document.DeleteAllInContainer(tableNode)
+		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "filters")
+		cst.DeleteAllValues(tableNode)
 		for k, v := range d.data.Filters {
-			if err := d.cstDoc.SetInContainer(tableNode, k, v); err != nil {
-				return nil, err
+			if err := cst.SetAny(tableNode, k, v); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *V0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *V0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *V0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *V0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *V0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if tableNode := doc.FindTableInContainer(container, "defaults"); tableNode != nil {
-		consumed[keyPrefix+"defaults"] = true
-		if v, err := document.GetFromContainer[string](doc, tableNode, "typ"); err == nil {
-			if err := data.Defaults.Typ.UnmarshalText([]byte(v)); err != nil {
-				return fmt.Errorf("typ: %w", err)
-			}
-			consumed[keyPrefix+"defaults.typ"] = true
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		if v, err := document.GetFromContainer[[]string](doc, tableNode, "etiketten"); err == nil {
-			data.Defaults.Etiketten = make([]ids.TagStruct, len(v))
-			for i, s := range v {
-				if err := data.Defaults.Etiketten[i].UnmarshalText([]byte(s)); err != nil {
-					return fmt.Errorf("etiketten[%d]: %w", i, err)
+		switch cst.KeyValueName(_kv) {
+		case "hidden-etiketten":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				data.HiddenEtiketten = make([]ids.TagStruct, len(v))
+				for _si, _s := range v {
+					if err := data.HiddenEtiketten[_si].UnmarshalText([]byte(_s)); err != nil {
+						return fmt.Errorf("hidden-etiketten[%d]: %w", _si, err)
+					}
 				}
-			}
-			consumed[keyPrefix+"defaults.etiketten"] = true
-		}
-	}
-	if v, err := document.GetFromContainer[[]string](doc, container, "hidden-etiketten"); err == nil {
-		data.HiddenEtiketten = make([]ids.TagStruct, len(v))
-		for i, s := range v {
-			if err := data.HiddenEtiketten[i].UnmarshalText([]byte(s)); err != nil {
-				return fmt.Errorf("hidden-etiketten[%d]: %w", i, err)
+				consumed[keyPrefix+"hidden-etiketten"] = true
 			}
 		}
-		consumed[keyPrefix+"hidden-etiketten"] = true
 	}
-	if tableNode := doc.FindTableInContainer(container, "file-extensions"); tableNode != nil {
-		consumed[keyPrefix+"file-extensions"] = true
-		if err := file_extensions.DecodeTOMLV0Into(&data.FileExtensions, doc, tableNode, consumed, keyPrefix+"file-extensions."); err != nil {
-			return fmt.Errorf("file-extensions: %w", err)
-		}
-	}
-	{
-		subTables := doc.FindSubTablesInContainer(container, "actions")
-		if len(subTables) > 0 {
-			consumed[keyPrefix+"actions"] = true
-			data.Actions = make(map[string]script_config.ScriptConfig)
-			for _, subTable := range subTables {
-				mapKey := document.SubTableKeyInContainer(subTable, container, "actions")
-				if strings.Contains(mapKey, ".") {
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"defaults" {
+			consumed[keyPrefix+"defaults"] = true
+			for _, _kv := range _ch.Children {
+				if _kv.Kind != cst.NodeKeyValue {
 					continue
 				}
-				consumed[keyPrefix+"actions"+"."+mapKey] = true
-				var entry script_config.ScriptConfig
-				if err := script_config.DecodeScriptConfigInto(&entry, doc, subTable, consumed, keyPrefix+"actions"+"."+mapKey+"."); err != nil {
-					return fmt.Errorf("actions.%s: %w", mapKey, err)
+				switch cst.KeyValueName(_kv) {
+				case "typ":
+					if v, ok := cst.ExtractString(_kv); ok {
+						if err := data.Defaults.Typ.UnmarshalText([]byte(v)); err != nil {
+							return fmt.Errorf("typ: %w", err)
+						}
+						consumed[keyPrefix+"defaults.typ"] = true
+					}
+				case "etiketten":
+					if v, ok := cst.ExtractStringSlice(_kv); ok {
+						data.Defaults.Etiketten = make([]ids.TagStruct, len(v))
+						for _si, _s := range v {
+							if err := data.Defaults.Etiketten[_si].UnmarshalText([]byte(_s)); err != nil {
+								return fmt.Errorf("etiketten[%d]: %w", _si, err)
+							}
+						}
+						consumed[keyPrefix+"defaults.etiketten"] = true
+					}
 				}
-				data.Actions[mapKey] = entry
 			}
+			break
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "cli-output"); tableNode != nil {
-		consumed[keyPrefix+"cli-output"] = true
-		if err := options_print.DecodeV1Into(&data.PrintOptions, doc, tableNode, consumed, keyPrefix+"cli-output."); err != nil {
-			return fmt.Errorf("cli-output: %w", err)
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"file-extensions" {
+			consumed[keyPrefix+"file-extensions"] = true
+			if err := file_extensions.DecodeTOMLV0Into(&data.FileExtensions, doc, _ch, consumed, keyPrefix+"file-extensions."); err != nil {
+				return fmt.Errorf("file-extensions: %w", err)
+			}
+			break
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "tools"); tableNode != nil {
-		consumed[keyPrefix+"tools"] = true
-		if err := options_tools.DecodeOptionsInto(&data.Tools, doc, tableNode, consumed, keyPrefix+"tools."); err != nil {
-			return fmt.Errorf("tools: %w", err)
+	{
+		for _, _ch := range doc.Root().Children {
+			if _ch.Kind != cst.NodeTable {
+				continue
+			}
+			_hdr := cst.TableHeaderKey(_ch)
+			if !strings.HasPrefix(_hdr, keyPrefix+"actions.") {
+				continue
+			}
+			_mk := _hdr[len(keyPrefix)+len("actions."):]
+			if strings.Contains(_mk, ".") {
+				continue
+			}
+			if data.Actions == nil {
+				consumed[keyPrefix+"actions"] = true
+				data.Actions = make(map[string]script_config.ScriptConfig)
+			}
+			consumed[keyPrefix+"actions"+"."+_mk] = true
+			var entry script_config.ScriptConfig
+			if err := script_config.DecodeScriptConfigInto(&entry, doc, _ch, consumed, keyPrefix+"actions."+_mk+"."); err != nil {
+				return fmt.Errorf("actions.%s: %w", _mk, err)
+			}
+			data.Actions[_mk] = entry
 		}
 	}
-	if tableNode := doc.FindTableInContainer(container, "filters"); tableNode != nil {
-		data.Filters = document.GetStringMapFromTable(tableNode)
-		consumed[keyPrefix+"filters"] = true
-		document.MarkAllConsumed(tableNode, keyPrefix+"filters", consumed)
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"cli-output" {
+			consumed[keyPrefix+"cli-output"] = true
+			if err := options_print.DecodeV1Into(&data.PrintOptions, doc, _ch, consumed, keyPrefix+"cli-output."); err != nil {
+				return fmt.Errorf("cli-output: %w", err)
+			}
+			break
+		}
 	}
-
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"tools" {
+			consumed[keyPrefix+"tools"] = true
+			if err := options_tools.DecodeOptionsInto(&data.Tools, doc, _ch, consumed, keyPrefix+"tools."); err != nil {
+				return fmt.Errorf("tools: %w", err)
+			}
+			break
+		}
+	}
+	for _, _ch := range doc.Root().Children {
+		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"filters" {
+			data.Filters = cst.ExtractStringMap(_ch)
+			consumed[keyPrefix+"filters"] = true
+			for _ik := range data.Filters {
+				consumed[keyPrefix+"filters"+"."+_ik] = true
+			}
+			break
+		}
+	}
 	return nil
 }
-
 func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 	{
-		tableNode := doc.EnsureTableInContainer(container, "defaults")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "defaults")
 		{
 			v, err := data.Defaults.Typ.MarshalText()
 			if err != nil {
 				return fmt.Errorf("typ: %w", err)
 			}
-			if err := doc.SetInContainer(tableNode, "typ", string(v)); err != nil {
-				return err
+			if err := cst.SetAny(tableNode, "typ", string(v)); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		}
 		{
@@ -433,8 +514,8 @@ func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 				}
 				vals[i] = string(v)
 			}
-			if err := doc.SetInContainer(tableNode, "etiketten", vals); err != nil {
-				return err
+			if err := cst.SetAny(tableNode, "etiketten", vals); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		}
 	}
@@ -447,45 +528,44 @@ func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 			}
 			vals[i] = string(v)
 		}
-		if err := doc.SetInContainer(container, "hidden-etiketten", vals); err != nil {
-			return err
+		if err := cst.SetAny(container, "hidden-etiketten", vals); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
-		tableNode := doc.EnsureTableInContainer(container, "file-extensions")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "file-extensions")
 		if err := file_extensions.EncodeTOMLV0From(&data.FileExtensions, doc, tableNode); err != nil {
 			return fmt.Errorf("file-extensions: %w", err)
 		}
 	}
 	if len(data.Actions) > 0 {
 		for mapKey, mapVal := range data.Actions {
-			subTable := doc.EnsureSubTableInContainer(container, "actions", mapKey)
+			subTable := cst.EnsureChildSubTable(doc.Root(), container, "actions", mapKey)
 			if err := script_config.EncodeScriptConfigFrom(&mapVal, doc, subTable); err != nil {
 				return fmt.Errorf("actions.%s: %w", mapKey, err)
 			}
 		}
 	}
 	{
-		tableNode := doc.EnsureTableInContainer(container, "cli-output")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "cli-output")
 		if err := options_print.EncodeV1From(&data.PrintOptions, doc, tableNode); err != nil {
 			return fmt.Errorf("cli-output: %w", err)
 		}
 	}
 	{
-		tableNode := doc.EnsureTableInContainer(container, "tools")
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "tools")
 		if err := options_tools.EncodeOptionsFrom(&data.Tools, doc, tableNode); err != nil {
 			return fmt.Errorf("tools: %w", err)
 		}
 	}
 	if len(data.Filters) > 0 {
-		tableNode := doc.EnsureTableInContainer(container, "filters")
-		document.DeleteAllInContainer(tableNode)
+		tableNode := cst.EnsureChildTable(doc.Root(), container, "filters")
+		cst.DeleteAllValues(tableNode)
 		for k, v := range data.Filters {
-			if err := doc.SetInContainer(tableNode, k, v); err != nil {
-				return err
+			if err := cst.SetAny(tableNode, k, v); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		}
 	}
-
 	return nil
 }

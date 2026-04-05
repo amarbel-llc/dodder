@@ -4,15 +4,15 @@ package blob_store_configs
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type TomlInventoryArchiveV0Document struct {
@@ -27,46 +27,59 @@ func DecodeTomlInventoryArchiveV0(input []byte) (*TomlInventoryArchiveV0Document
 		return nil, err
 	}
 
-	d := &TomlInventoryArchiveV0Document{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "hash_type-id"); err == nil {
-		if err := d.data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("hash_type-id: %w", err)
-		}
-		d.consumed["hash_type-id"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "compression-type"); err == nil {
-		if err := d.data.CompressionType.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("compression-type: %w", err)
-		}
-		d.consumed["compression-type"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "loose-blob-store-id"); err == nil {
-		if err := d.data.LooseBlobStoreId.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("loose-blob-store-id: %w", err)
-		}
-		d.consumed["loose-blob-store-id"] = true
-	}
-	if v, err := document.GetFromContainer[string](d.cstDoc, d.cstDoc.Root(), "encryption"); err == nil {
-		if err := d.data.Encryption.UnmarshalText([]byte(v)); err != nil {
-			return nil, fmt.Errorf("encryption: %w", err)
-		}
-		d.consumed["encryption"] = true
+	d := &TomlInventoryArchiveV0Document{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "hash_type-id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("hash_type-id: %w", err)
+				}
+				d.consumed["hash_type-id"] = true
+			}
+		case "compression-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.CompressionType.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("compression-type: %w", err)
+				}
+				d.consumed["compression-type"] = true
+			}
+		case "loose-blob-store-id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.LooseBlobStoreId.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("loose-blob-store-id: %w", err)
+				}
+				d.consumed["loose-blob-store-id"] = true
+			}
+		case "encryption":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := d.data.Encryption.UnmarshalText([]byte(v)); err != nil {
+					return nil, fmt.Errorf("encryption: %w", err)
+				}
+				d.consumed["encryption"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *TomlInventoryArchiveV0Document) Data() *TomlInventoryArchiveV0 { return &d.data }
-
+func (d *TomlInventoryArchiveV0Document) Data() *TomlInventoryArchiveV0 {
+	return &d.data
+}
 func (d *TomlInventoryArchiveV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.HashTypeId.MarshalText()
 		if err != nil {
 			return nil, fmt.Errorf("hash_type-id: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "hash_type-id", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "hash_type-id", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -74,8 +87,8 @@ func (d *TomlInventoryArchiveV0Document) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("compression-type: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "compression-type", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "compression-type", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -83,8 +96,8 @@ func (d *TomlInventoryArchiveV0Document) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("loose-blob-store-id: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "loose-blob-store-id", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "loose-blob-store-id", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -92,71 +105,73 @@ func (d *TomlInventoryArchiveV0Document) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("encryption: %w", err)
 		}
-		if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "encryption", string(v)); err != nil {
-			return nil, err
+		if err := cst.SetAny(d.cstDoc.Root(), "encryption", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *TomlInventoryArchiveV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *TomlInventoryArchiveV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *TomlInventoryArchiveV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *TomlInventoryArchiveV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *TomlInventoryArchiveV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeTomlInventoryArchiveV0Into(data *TomlInventoryArchiveV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[string](doc, container, "hash_type-id"); err == nil {
-		if err := data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("hash_type-id: %w", err)
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
 		}
-		consumed[keyPrefix+"hash_type-id"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "compression-type"); err == nil {
-		if err := data.CompressionType.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("compression-type: %w", err)
+		switch cst.KeyValueName(_kv) {
+		case "hash_type-id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.HashTypeId.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("hash_type-id: %w", err)
+				}
+				consumed[keyPrefix+"hash_type-id"] = true
+			}
+		case "compression-type":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.CompressionType.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("compression-type: %w", err)
+				}
+				consumed[keyPrefix+"compression-type"] = true
+			}
+		case "loose-blob-store-id":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.LooseBlobStoreId.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("loose-blob-store-id: %w", err)
+				}
+				consumed[keyPrefix+"loose-blob-store-id"] = true
+			}
+		case "encryption":
+			if v, ok := cst.ExtractString(_kv); ok {
+				if err := data.Encryption.UnmarshalText([]byte(v)); err != nil {
+					return fmt.Errorf("encryption: %w", err)
+				}
+				consumed[keyPrefix+"encryption"] = true
+			}
 		}
-		consumed[keyPrefix+"compression-type"] = true
 	}
-	if v, err := document.GetFromContainer[string](doc, container, "loose-blob-store-id"); err == nil {
-		if err := data.LooseBlobStoreId.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("loose-blob-store-id: %w", err)
-		}
-		consumed[keyPrefix+"loose-blob-store-id"] = true
-	}
-	if v, err := document.GetFromContainer[string](doc, container, "encryption"); err == nil {
-		if err := data.Encryption.UnmarshalText([]byte(v)); err != nil {
-			return fmt.Errorf("encryption: %w", err)
-		}
-		consumed[keyPrefix+"encryption"] = true
-	}
-
 	return nil
 }
-
 func EncodeTomlInventoryArchiveV0From(data *TomlInventoryArchiveV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.HashTypeId.MarshalText()
 		if err != nil {
 			return fmt.Errorf("hash_type-id: %w", err)
 		}
-		if err := doc.SetInContainer(container, "hash_type-id", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "hash_type-id", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -164,8 +179,8 @@ func EncodeTomlInventoryArchiveV0From(data *TomlInventoryArchiveV0, doc *documen
 		if err != nil {
 			return fmt.Errorf("compression-type: %w", err)
 		}
-		if err := doc.SetInContainer(container, "compression-type", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "compression-type", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -173,8 +188,8 @@ func EncodeTomlInventoryArchiveV0From(data *TomlInventoryArchiveV0, doc *documen
 		if err != nil {
 			return fmt.Errorf("loose-blob-store-id: %w", err)
 		}
-		if err := doc.SetInContainer(container, "loose-blob-store-id", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "loose-blob-store-id", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -182,10 +197,9 @@ func EncodeTomlInventoryArchiveV0From(data *TomlInventoryArchiveV0, doc *documen
 		if err != nil {
 			return fmt.Errorf("encryption: %w", err)
 		}
-		if err := doc.SetInContainer(container, "encryption", string(v)); err != nil {
-			return err
+		if err := cst.SetAny(container, "encryption", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
-
 	return nil
 }
