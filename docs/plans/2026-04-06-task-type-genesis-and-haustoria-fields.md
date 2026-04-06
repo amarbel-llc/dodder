@@ -29,10 +29,14 @@ This plan does two things:
 - `!vtodo` as a persisted type (dropped --- haustoria-side only).
 - Langlang PEG grammars for any iCal property.
 - Generic interface mapping (`[implements.actionable.field-map]`).
-- `!chore` as a separate type. The existing `chores` calendar in
-  `~/workspaces/dodder-haustoria-caldav` will reuse `!task`.
+- An `!actionable` abstract type or any composition / inheritance mechanism
+  shared between `!task` and `!chore`. Both ship with duplicated field
+  lists; the abstract type is captured as future work in §1a.
 - Migration of existing repos. V14 → V15 was the only recent format bump and
   it's already shipped; this plan does not change persisted formats.
+- Conflict resolution between dodder-side edits and CalDAV-side edits
+  during sync. Last-write-wins for now; proper merge semantics block on
+  #19.
 
 ## Design
 
@@ -44,6 +48,7 @@ content:
 
 ``` toml
 file-extension = "toml"
+vim-syntax-type = "toml"
 
 [[fields]]
 name = "status"
@@ -55,15 +60,31 @@ default = "todo"
 name = "priority"
 kind = "enum"
 values = ["p0", "p1", "p2", "p3"]
+default = "p0"
 
 [[fields]]
 name = "due"
 kind = "string"
+
+[fields-reader]
+script = "yq -p toml -o json '{\"status\": .status, \"priority\": .priority, \"due\": .due}'"
+
+[fields-writer]
+script = "yq -p toml -o toml -i \".status = \\\"$DODDER_FIELD_status\\\" | .priority = \\\"$DODDER_FIELD_priority\\\" | .due = \\\"$DODDER_FIELD_due\\\"\" \"$DODDER_BLOB_PATH\""
 ```
 
-The blob format for `!task` instances is TOML (file extension `toml`); the
-fields are stored as TOML key/value pairs in the blob and as records in the
-binary stream index (see §3 for how the haustoria sets them).
+The blob format for `!task` instances is TOML. Each instance's blob mirrors the
+field values; the reader script projects them into `Metadata.Index.Fields` on
+every commit, and the writer script projects edits back into the blob during
+organize mutations.
+
+Both scripts are mandatory. PR #100 probes proved that omitting either breaks
+the round-trip: missing writer drops user edits and duplicates fields in
+`dodder show` (issue #102), and missing reader+writer means fields don't persist
+at all. See PR #100 commits `cfdb846` and `c5ebd34` for the full probe matrix.
+
+`yq` is required at runtime (it's already a dependency for the existing fields
+tests).
 
 Status enum values match the field-mutation work in `19c6f63` ("use 'done'
 instead of 'completed'"). The mapping to/from VTODO STATUS is the haustoria's
@@ -144,108 +165,90 @@ existing flag is reused.
 `echo/workspace_config_blobs`. Tommy codegen for the V2 workspace config is
 regenerated. The status-tag tests are deleted (see §4).
 
-**Look up the `!task` (or `!chore`) type blob digest fresh on every compile and
-decompile cycle.** Do NOT cache the digest at `Initialize`. The haustoria runs
-`s.supplies.ReadPrimitiveQuery` for `task:t` (or `chore:t`, keyed off
-`cal.TypeId`) inside `queryCheckedOutForCalendar` and `CheckoutOne`, captures
-the current type object's blob digest, and stamps it on each `fields.Field` it
-constructs. Rationale: the user might re-commit the type object with new field
-definitions; a cached digest would point at a stale blob and break field
-round-tripping for newly-set fields.
+#### Approach: blob-canonical, reader/writer-driven
 
-If the type is missing (e.g. the workspace was init'd without
-`-include-builtin-actionable-types` and no user-defined `!task` exists), the
-haustoria fails the query with a clear error pointing the user at
-`dodder init -include-builtin-actionable-types` or at creating the type
-manually.
+PR #100 probes (commits `cfdb846`, `c5ebd34`) established that the only
+reliable way to round-trip fields through the commit cycle is via the
+existing `[fields-reader]` / `[fields-writer]` script machinery declared on
+the type blob. The haustoria does NOT set `Metadata.Index.Fields` directly.
+Instead:
 
-#### Field-writer / field-reader interaction
+- **Compile path** (CalDAV → dodder): the haustoria builds a Go-side
+  `{status, priority, due}` from the parsed VTODO, serializes it as a TOML
+  blob, writes the blob to the blob store, and commits a `!task` object
+  whose blob digest points at it. The reader script declared on `!task`
+  (see §1) projects the fields out of the blob into
+  `Metadata.Index.Fields` automatically during commit.
 
-The fields plumbing in `papa/store/{field_writer,field_reader}.go` runs
-script-based projection between the blob and the index. Both functions
-early-return if the type blob has no `[fields-reader]` / `[fields-writer]`
-script configured (verified at `field_writer.go:110-112` and
-`field_reader.go:74-77`).
+- **User edits** (`dodder organize`): standard fields-writer pipeline.
+  Daughter has the edited field value, `tryWriteFields` runs the writer
+  script, the script rewrites the TOML blob, the new blob digest replaces
+  the old. `tryReadFields` re-projects the fields. Probe 12
+  (`field_full_task_organize_mutate_one_of_three`) confirms this round-trip.
 
-`!task` and `!chore` ship **without** reader/writer scripts. Consequence:
+- **Decompile path** (dodder → CalDAV): the haustoria reads
+  `Metadata.Index.Fields` (which the reader has populated from the blob)
+  for status / priority / due, applies the inverse mappings (table below),
+  and emits a VTODO via `CheckoutOne`.
 
-1.  The haustoria sets `daughter.Metadata.Index.Fields["status"]` (etc.) with
-    `TypeBlobDigest` populated.
-2.  The commit cycle calls `tryWriteFields` --- early-returns at
-    `fieldsWriter == nil`. Daughter fields stay intact.
-3.  The commit cycle calls `tryReadFields` --- early-returns at
-    `fieldsReader == nil`. Daughter fields still intact.
-4.  The binary stream-index encoder serializes `Metadata.Index.Fields` verbatim
-    (this is the codec change from `19c6f63`).
-5.  On read back, fields appear in the index without ever touching the blob.
+#### What this avoids vs the original draft
 
-The blob is therefore a **decorative artifact** for `!task` --- it can be empty
-or hold a TOML mirror of the fields, but neither dodder nor the haustoria reads
-it for field values. The canonical source is CalDAV (via the haustoria) and the
-cached projection is the binary stream index. **Open verification task:**
-confirm the binary codec actually persists `Metadata.Index.Fields` even when no
-script ran (the codec was added in `19c6f63` and tests pass for organize-driven
-mutation, so this should hold, but the haustoria path is a new entry point and
-warrants a unit test before relying on it).
+- **No fresh `TypeBlobDigest` lookup needed.** The reader script handles
+  digest stamping automatically when it runs during commit.
+- **No new code paths in `papa/store`.** The existing reader/writer
+  machinery does all the work.
+- **No `s.supplies.ReadPrimitiveQuery` plumbing.** The haustoria doesn't
+  need to know the type blob digest at all.
+- **`dodder` is a source of truth between sync cycles.** User edits via
+  organize survive haustoria re-syncs because the dodder blob has the
+  canonical field values. Conflict resolution between dodder and CalDAV
+  is out of scope for this PR (last-write-wins is acceptable until #19
+  lands).
 
-**Compile path (`queryCheckedOutForCalendar`)**: replace the `StatusTags` block
-with direct field projection. The type blob digest is fetched fresh per calendar
-(the result can be reused for all tasks in the same calendar because the type
-object can't change mid-query).
+#### Compile path: VTODO → TOML blob
 
-``` go
-typeBlobDigest, err := s.lookupTypeBlobDigest(cal.TypeId) // fresh per calendar
-if err != nil {
-    return errors.Wrapf(err, "lookup %s type blob", cal.TypeId)
+```go
+// per task in queryCheckedOutForCalendar
+blob := buildTaskTomlBlob(twm.Task)
+if err := s.writeBlob(external, blob); err != nil {
+    return errors.Wrapf(err, "write task blob for %s", twm.Task.UID)
 }
-
-// ... per task ...
-
-metadata := external.GetMetadataMutable()
-indexFields := metadata.GetIndexMutable().GetFieldsMutable()
-
-indexFields.Add(fields.Field{
-    Key:            "status",
-    Value:          mapVTODOStatusToFieldValue(twm.Task.Status), // "todo" default
-    TypeBlobDigest: typeBlobDigest,
-})
-
-indexFields.Add(fields.Field{
-    Key:            "priority",
-    Value:          mapVTODOPriorityToFieldValue(twm.Task.Priority), // "p0" default
-    TypeBlobDigest: typeBlobDigest,
-})
-
-if twm.Task.Due != "" {
-    indexFields.Add(fields.Field{
-        Key:            "due",
-        Value:          twm.Task.Due,
-        TypeBlobDigest: typeBlobDigest,
-    })
-}
+// reader script runs during commit and projects fields into the index
 ```
 
-The status value mapping:
+`buildTaskTomlBlob` is a small Go function that emits TOML like:
 
-  VTODO STATUS     `!task` field value
-  ---------------- ---------------------
-  (absent)         `todo`
-  `NEEDS-ACTION`   `todo`
-  `IN-PROCESS`     `in-process`
-  `COMPLETED`      `done`
-  `CANCELLED`      `cancelled`
+```toml
+status = "in-process"
+priority = "p2"
+due = "20260415T120000Z"
+```
+
+The status and priority values come from the mapping tables below.
+
+#### Status mapping
+
+| VTODO STATUS   | `!task` field value |
+|----------------|---------------------|
+| (absent)       | `todo`              |
+| `NEEDS-ACTION` | `todo`              |
+| `IN-PROCESS`   | `in-process`        |
+| `COMPLETED`    | `done`              |
+| `CANCELLED`    | `cancelled`         |
 
 Unknown values fall back to `todo` and log a warning at debug level.
 
-**Decompile path (`CheckoutOne`)**: pull the same fields out of
-`object.GetMetadata().GetIndex().GetFields()` and write them onto the
-`caldav.Task` before PUT. Currently `CheckoutOne` doesn't read fields at all and
-the existing decompile hardcodes `STATUS:NEEDS-ACTION`.
+#### Decompile path: `Metadata.Index.Fields` → VTODO
 
-The reverse status mapping is the inverse of the table above. `priority` is
-mapped back through the §1 priority table (`p0`→0, `p1`→9, `p2`→5, `p3`→1).
-`due` is passed through unchanged (CalDAV expects an iCal datetime string; we
-don't reformat it).
+`CheckoutOne` reads the three fields out of
+`object.GetMetadata().GetIndex().GetFields()`, applies the inverse status
+and priority mappings, and emits a VTODO. The current decompile hardcodes
+`STATUS:NEEDS-ACTION` and ignores priority/due — that goes away.
+
+The reverse status mapping is the inverse of the table above. Priority is
+mapped back through the §1 priority table (`p0`→0, `p1`→9, `p2`→5,
+`p3`→1). `due` is passed through unchanged (CalDAV expects an iCal
+datetime string; the haustoria does not reformat it).
 
 ### 4. Tests
 
@@ -257,15 +260,22 @@ don't reformat it).
   nearest.
 - `TestDuePassthrough` --- verbatim string passthrough.
 
-**Critical-path Go test** (must run before BATS):
+**Already-landed probe tests** (PR #100, `cfdb846` and `c5ebd34`,
+`zz-tests_bats/current_version/fields.bats`):
 
-- `TestFieldsPersistThroughCommitWithoutScripts` --- in
-  `papa/store/field_writer_test.go` (or a new `field_persistence_test.go`).
-  Commits a daughter object with `Metadata.Index.Fields` populated but no
-  `[fields-writer]` / `[fields-reader]` scripts on the type blob. Reads the
-  object back from the stream index and asserts the fields survived. This
-  validates the assumption documented in §3 "Field-writer / field-reader
-  interaction" before the haustoria starts depending on it.
+- `field_persists_without_any_scripts` — confirms fields are dropped when
+  the type has no scripts. Filed as issue #101 for follow-up.
+- `field_persists_with_reader_only_no_writer` — confirms reader-only mode
+  drops user edits and duplicates fields in `show` output. Filed as
+  issue #102.
+- `field_full_task_three_fields_from_blob` — confirms the haustoria
+  compile path works: TOML blob with three fields baked in projects all
+  three via the reader script.
+- `field_full_task_organize_mutate_one_of_three` — confirms
+  organize-driven field mutation round-trips through the writer script
+  while preserving untouched fields.
+- `field_full_task_organize_from_empty_blob` — documents the empty-blob
+  failure mode (also issue #101).
 
 **BATS integration tests** in `zz-tests_bats/current_version/`:
 
@@ -354,49 +364,63 @@ Resolved in PR #100 review comments:
     haustoria flow (the canonical source is CalDAV); for direct
     `dodder new !task` use, the user edits a TOML file.
 
-## Open verification before implementation
+## Resolved verification (PR #100 probes)
 
-1.  **Field codec round-trip without scripts**: `!task` ships without
-    `[fields-reader]` / `[fields-writer]` script configs. The plan assumes that
-    fields set directly on `Metadata.Index.Fields` (with TypeBlobDigest
-    populated) are persisted by the binary stream-index codec from `19c6f63` and
-    read back intact on the next query. Confirmed by reading
-    `field_writer.go:110-112` and `field_reader.go:74-77` (both early-return
-    when no script is configured), but the assumption is gated on a Go unit test
-    (`TestFieldsPersistThroughCommitWithoutScripts`, see §4) that runs BEFORE
-    any haustoria changes.
+The original draft assumed fields could be set directly on
+`Metadata.Index.Fields` and would persist via the binary stream-index codec
+without scripts. **PR #100 probes proved that wrong** — see the five
+`field_*` probe tests in `zz-tests_bats/current_version/fields.bats` landed
+in commits `cfdb846` and `c5ebd34`.
 
-2.  **`s.supplies.ReadPrimitiveQuery` for type lookup**: confirm the primitive
-    query API can find a type object by `task:t` predicate from inside the
-    haustoria. If not, exposing a small accessor on the supplies struct
-    (e.g. `GetBuiltinTypeBlobDigest("!task")`).
+Both `tryWriteFields` and `tryReadFields` early-return on missing scripts,
+but the daughter fields do NOT survive the early-return path through to the
+binary codec — they are silently dropped at commit time.
+
+The plan now uses `[fields-reader]` + `[fields-writer]` scripts on `!task`
+(see §1) so the haustoria can rely on the existing fields machinery instead
+of bypassing it. The previously-required
+`TestFieldsPersistThroughCommitWithoutScripts` is unnecessary; probes 11 and
+12 already cover the supported flow.
+
+Two follow-up bugs were filed against the fields infrastructure:
+
+- **#101** — `fields-writer` should support blob-less first writes. The
+  haustoria sidesteps this by always writing a non-empty TOML blob; the bug
+  remains worth fixing for future programmatic field-set callers.
+- **#102** — reader-only mode silently drops user edits AND duplicates fields
+  in `show` output. Independent of this PR but exposed by the probes.
 
 ## Implementation order
 
-1.  Land `TestFieldsPersistThroughCommitWithoutScripts` first --- validates the
-    core assumption before any haustoria work.
-2.  Add `type_blobs.DefaultTaskType()` + `DefaultChoreType()` + unit tests.
-3.  Wire `prepareBuiltinActionableTypes` into `local_working_copy/genesis.go`
+1.  Add `type_blobs.DefaultTaskType()` + `DefaultChoreType()` (with the
+    reader and writer scripts from §1) + unit tests.
+2.  Wire `prepareBuiltinActionableTypes` into `local_working_copy/genesis.go`
     and add the `BigBang.IncludeBuiltinActionableTypes` flag.
-4.  Add `genesis_opt_in_actionable_types` BATS test for the genesis path.
-5.  Update `mike/haustoria_caldav`: fresh-lookup helper, drop `StatusTags`,
-    compile path field projection. Drop `StatusTags` from
-    `echo/workspace_config_blobs` config (regenerate tommy codegen).
-6.  Update `mike/haustoria_caldav` decompile path: read fields from metadata,
-    write to VTODO.
-7.  Add Go round-trip tests + BATS round-trip tests.
-8.  Drop existing `caldav_status_tags_*` tests.
-9.  Update FDR-0007 status and add the supersede note to the !vtodo plan.
-10. Test the live workspace, re-init with the new flag.
+3.  Add `genesis_opt_in_actionable_types` BATS test for the genesis path.
+4.  Update `mike/haustoria_caldav` compile path: drop `StatusTags`, build
+    TOML blob from VTODO via `buildTaskTomlBlob`, write to blob store, commit
+    with the blob digest. Drop `StatusTags` from `echo/workspace_config_blobs`
+    config (regenerate tommy codegen).
+5.  Update `mike/haustoria_caldav` decompile path: read fields from
+    `Metadata.Index.Fields`, apply inverse mappings, write to VTODO.
+6.  Add Go round-trip tests + BATS round-trip tests.
+7.  Drop existing `caldav_status_tags_*` tests.
+8.  Update FDR-0007 status and add the supersede note to the !vtodo plan.
+9.  Test the live workspace, re-init with the new flag.
 
 ## Risks
 
-- **Field codec assumption**: if `TestFieldsPersistThroughCommitWithoutScripts`
-  fails, the whole approach needs rethinking --- either ship a `fields-writer`
-  script for `!task` (a small TOML projector), or add a "field-only" commit path
-  that bypasses the script gate. The test runs first to surface this fast.
+- **`yq` runtime dependency**: the reader/writer scripts shell out to `yq`
+  on every commit. Already a dependency for the existing fields tests, so
+  no new external requirement, but worth noting that `!task` won't work in
+  environments without it. Three OS process invocations per object on
+  commit (writer + reader, plus reader on subsequent reads). For 1100-task
+  workspaces this is a few thousand `yq` invocations on a full sync —
+  acceptable for an interactive command, possibly slow enough to want
+  batching later.
 
-- **Field digest drift**: even with fresh lookup, if the user re-commits the
+- **Field digest drift**: even with the reader script auto-stamping the
+  current type blob digest, if the user re-commits the
   `!task` type with incompatible field defs (say removing the `status` field),
   existing index records will have a stale `TypeBlobDigest` and may not resolve
   correctly on read. Same risk class as user-defined types --- no new

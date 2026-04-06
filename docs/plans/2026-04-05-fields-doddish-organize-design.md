@@ -23,6 +23,15 @@ Date: 2026-04-05
 - #98 --- resolved: infix `status^=todo` doesn't work due to `^` being
   `operatorTypeSoloSeq`; use prefix `^status=todo` instead
 - Organize internal/external fork resolution needs cleanup and more tests
+- #101 --- `fields-writer` should support blob-less first writes. Currently
+  `papa/store/field_writer.go:25-27` early-returns when the daughter has no blob
+  digest, so the writer can't create a blob from scratch when fields are set
+  programmatically. Blocks the haustoria use case in PR #100 and any future
+  "construct object from fields" code path.
+- #102 --- when `[fields-reader]` is configured but `[fields-writer]` is not,
+  organize edits are silently dropped AND fields appear duplicated in
+  `dodder show` output (`status=todo status=todo`). Two regressions in one
+  output line, exposed by PR #100 probes.
 
 ## Problem
 
