@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -177,7 +178,7 @@ func (transport *sftpTransport) Read(filePath string) (content []byte, etag stri
 	if err != nil {
 		return nil, "", fmt.Errorf("sftp open %s: %w", filePath, err)
 	}
-	defer file.Close()
+	defer errors.DeferredCloser(&err, file)
 
 	content, err = io.ReadAll(file)
 	if err != nil {
@@ -204,7 +205,7 @@ func (transport *sftpTransport) Write(filePath string, content []byte, _ string)
 	if err != nil {
 		return fmt.Errorf("sftp create %s: %w", filePath, err)
 	}
-	defer file.Close()
+	defer errors.DeferredCloser(&err, file)
 
 	if _, err = file.Write(content); err != nil {
 		return fmt.Errorf("sftp write %s: %w", filePath, err)

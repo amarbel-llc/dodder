@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 const requestTimeout = 30 * time.Second
@@ -88,7 +90,7 @@ func (client *Client) List(collectionURL string) (resources []Resource, err erro
 	if err != nil {
 		return nil, fmt.Errorf("PROPFIND %s: %w", collectionURL, err)
 	}
-	defer resp.Body.Close()
+	defer errors.DeferredCloser(&err, resp.Body)
 
 	if resp.StatusCode != http.StatusMultiStatus {
 		return nil, fmt.Errorf("PROPFIND %s: status %d", collectionURL, resp.StatusCode)
@@ -108,7 +110,7 @@ func (client *Client) Get(fileURL string) (content []byte, etag string, err erro
 	if err != nil {
 		return nil, "", fmt.Errorf("GET %s: %w", fileURL, err)
 	}
-	defer resp.Body.Close()
+	defer errors.DeferredCloser(&err, resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, "", fmt.Errorf("GET %s: status %d", fileURL, resp.StatusCode)
@@ -144,7 +146,7 @@ func (client *Client) Put(fileURL string, content []byte, etag string, contentTy
 	if err != nil {
 		return fmt.Errorf("PUT %s: %w", fileURL, err)
 	}
-	defer resp.Body.Close()
+	defer errors.DeferredCloser(&err, resp.Body)
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("PUT %s: status %d", fileURL, resp.StatusCode)
@@ -159,7 +161,7 @@ func (client *Client) Delete(fileURL string) (err error) {
 	if err != nil {
 		return fmt.Errorf("DELETE %s: %w", fileURL, err)
 	}
-	defer resp.Body.Close()
+	defer errors.DeferredCloser(&err, resp.Body)
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("DELETE %s: status %d", fileURL, resp.StatusCode)
@@ -174,7 +176,7 @@ func (client *Client) Mkcol(collectionURL string) (err error) {
 	if err != nil {
 		return fmt.Errorf("MKCOL %s: %w", collectionURL, err)
 	}
-	defer resp.Body.Close()
+	defer errors.DeferredCloser(&err, resp.Body)
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("MKCOL %s: status %d", collectionURL, resp.StatusCode)
