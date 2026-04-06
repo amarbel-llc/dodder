@@ -1,8 +1,6 @@
 package local_working_copy
 
 import (
-	"context"
-
 	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -23,7 +21,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/store"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/charlie/wasm"
 )
 
 type (
@@ -191,15 +188,9 @@ func (local *Repo) initialize(
 	// 	}
 	// }
 
-	wasmRt, wasmErr := wasm.MakeRuntime(context.Background())
-	if wasmErr != nil {
-		ui.Err().Printf("failed to initialize WASM runtime: %s", wasmErr)
-	}
-
 	local.typedBlobStore = typed_blob_store.MakeStores(
 		local.envRepo,
 		local.envLua,
-		wasmRt,
 		boxFormatArchive,
 	)
 

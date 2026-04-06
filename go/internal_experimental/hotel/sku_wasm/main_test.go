@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/wasm"
+	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
 )
 
 //go:embed testdata/always_true.wasm

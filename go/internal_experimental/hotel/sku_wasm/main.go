@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
 	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/wasm"
 	"github.com/tetratelabs/wazero/api"
 )
 
