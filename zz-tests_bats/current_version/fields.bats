@@ -95,6 +95,42 @@ function create_task_type_reader_only {
   assert_success
 }
 
+# Type with the FULL three-field set (status, priority, due) and both
+# reader/writer scripts, mirroring what !task would ship with. Used to probe
+# whether the haustoria-style flow (write a TOML blob with fields baked in,
+# then commit) round-trips correctly.
+function create_task_type_full {
+  cat - >task.type <<-'EOM'
+		file-extension = "toml"
+		vim-syntax-type = "toml"
+
+		[[fields]]
+		name = "status"
+		kind = "enum"
+		values = ["todo", "in-process", "done", "cancelled"]
+		default = "todo"
+
+		[[fields]]
+		name = "priority"
+		kind = "enum"
+		values = ["p0", "p1", "p2", "p3"]
+		default = "p0"
+
+		[[fields]]
+		name = "due"
+		kind = "string"
+
+		[fields-reader]
+		script = "yq -p toml -o json '{\"status\": .status, \"priority\": .priority, \"due\": .due}'"
+
+		[fields-writer]
+		script = "yq -p toml -o toml -i \".status = \\\"$DODDER_FIELD_status\\\" | .priority = \\\"$DODDER_FIELD_priority\\\" | .due = \\\"$DODDER_FIELD_due\\\"\" \"$DODDER_BLOB_PATH\""
+	EOM
+
+  run_dodder checkin -delete task.type
+  assert_success
+}
+
 function field_projection_on_commit { # @test
   create_task_type
   create_task "my first task" "todo"
@@ -280,5 +316,98 @@ function field_persists_with_reader_only_no_writer { # @test
   # output line. See dodder issue (to file).
   assert_output - <<-EOM
 		[one/uno @blake2b256-qhdgjzc945w6v4pw4j4hr66gehgzwf8hq4v9rch9e7px5lf525sqfjcuaa !task "my task" status=todo status=todo]
+	EOM
+}
+
+# Probe: full !task type with three fields and reader+writer. Create a task
+# with a TOML blob that has all three field values baked in.
+#
+# RESULT: works. All three fields project from the blob via the reader script
+# and appear in show output. This is the "option 2" haustoria flow.
+function field_full_task_three_fields_from_blob { # @test
+  create_task_type_full
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# my task
+		! task
+		---
+
+		status = "in-process"
+		priority = "p2"
+		due = "20260415T120000Z"
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-vlvc52ycuyyk4vm98j9z33kceh4c0z253e9rlg3n3erp5kwc2xhssfyyn9 !task "my task" status=in-process priority=p2 due=20260415T120000Z]
+	EOM
+}
+
+# Probe: full !task type, organize-mutate one of three fields. Verifies the
+# writer script projects the changed field while preserving the others.
+#
+# RESULT: works. status changes to "done", priority and due remain. The new
+# blob digest is different (writer rewrote the TOML). Round-trip is clean.
+function field_full_task_organize_mutate_one_of_three { # @test
+  create_task_type_full
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# my task
+		! task
+		---
+
+		status = "todo"
+		priority = "p1"
+		due = "20260415T120000Z"
+	EOM
+  assert_success
+
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		- [one/uno !task status=done priority=p1 due=20260415T120000Z] my task
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-vpgtdcx47rtm8djza9acw46gjrj0a0rc7g6grxt5fqxdcyu5scss7e3xae !task "my task" status=done priority=p1 due=20260415T120000Z]
+	EOM
+}
+
+# Probe: full !task type, organize-set fields starting from an EMPTY blob.
+# This simulates the haustoria's "first checkin if no blob is provided" case.
+#
+# RESULT: same as field_persists_without_any_scripts — fields are dropped,
+# blob digest disappears. Even with a writer script configured, an empty
+# starting blob means tryWriteFields can't run (the writer needs an existing
+# blob path to mutate). Implication: the haustoria MUST write a non-empty
+# starter blob before setting fields, OR write the full TOML blob with fields
+# already baked in (option 2 — see field_full_task_three_fields_from_blob).
+function field_full_task_organize_from_empty_blob { # @test
+  create_task_type_full
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# my task
+		! task
+		---
+	EOM
+  assert_success
+
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		- [one/uno !task status=in-process priority=p2 due=20260415T120000Z] my task
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno !task "my task"]
 	EOM
 }
