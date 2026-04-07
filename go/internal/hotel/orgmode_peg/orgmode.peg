@@ -1,0 +1,33 @@
+// orgmode.peg — minimal subset for dodder haustoria_orgmode
+//
+// Models org files as a preamble followed by a sequence of top-level
+// headings. Each heading has optional TODO keyword, title, tag suffix,
+// optional :PROPERTIES: drawer, and body content. Subheadings (** and
+// deeper) and inline markup are preserved as opaque body text.
+
+OrgFile         <- Preamble Heading* !.
+
+Preamble        <- BodyLine*
+
+Heading         <- HeadingStart HeadingContent EOL Planning Drawer? Body
+HeadingStart    <- '*' !'*' ' '
+HeadingContent  <- HeadingText? TagSuffix?
+HeadingText     <- (!TagSuffix !EOL .)+
+TagSuffix       <- ' ' ':' Tag (':' Tag)* ':' &EOL
+Tag             <- [a-zA-Z0-9_-]+
+
+Planning        <- PlanningLine*
+PlanningLine    <- ('SCHEDULED' / 'DEADLINE' / 'CLOSED') ':' (!EOL .)* EOL
+
+Drawer          <- ':PROPERTIES:' EOL DrawerEntry* ':END:' EOL
+DrawerEntry     <- !':END:' (Property / OtherDrawerLine)
+Property        <- ':' PropKey ':' (!EOL .)* EOL
+OtherDrawerLine <- (!EOL .)* EOL
+PropKey         <- [A-Z_][A-Z0-9_]*
+
+Body            <- BodyLine*
+BodyLine        <- !HeadingStart (FullLine / PartialLine)
+FullLine        <- (!EOL .)* EOL
+PartialLine     <- (!EOL .)+ !.
+
+EOL             <- '\r\n' / '\n'
