@@ -24,6 +24,8 @@ var (
 	DefaultWithPandocFormatter = golf_tb.DefaultWithPandocFormatter
 	DefaultPandocDefaults      = golf_tb.DefaultPandocDefaults
 	DefaultPandocLuaFilter     = golf_tb.DefaultPandocLuaFilter
+	DefaultTaskType            = golf_tb.DefaultTaskType
+	DefaultChoreType           = golf_tb.DefaultChoreType
 )
 
 var (
