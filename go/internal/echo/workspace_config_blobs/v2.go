@@ -26,10 +26,9 @@ type CalDAVConfig struct {
 
 // CalendarConfig maps a CalDAV calendar to a dodder type and optional tags.
 type CalendarConfig struct {
-	URL        string            `toml:"url"`
-	Type       string            `toml:"type"`
-	Tags       []string          `toml:"tags,omitempty"`
-	StatusTags map[string]string `toml:"status-tags,omitempty"`
+	URL  string   `toml:"url"`
+	Type string   `toml:"type"`
+	Tags []string `toml:"tags,omitempty"`
 }
 
 // OrgmodeConfig holds orgmode haustoria connection parameters. Supports

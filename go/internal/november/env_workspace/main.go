@@ -169,10 +169,9 @@ func Make(
 						}
 
 						calendars = append(calendars, haustoria_caldav.CalendarMapping{
-							URL:        cal.URL,
-							TypeId:     cal.Type,
-							Tags:       cal.Tags,
-							StatusTags: cal.StatusTags,
+							URL:    cal.URL,
+							TypeId: cal.Type,
+							Tags:   cal.Tags,
 						})
 					}
 				}

@@ -187,16 +187,6 @@ func DecodeV2(input []byte) (*V2Document, error) {
 							}
 						}
 					}
-					for _, _ch := range d.cstDoc.Root().Children {
-						if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "haustoria.calendars."+_mk+"."+"status-tags" {
-							entry.StatusTags = cst.ExtractStringMap(_ch)
-							d.consumed["haustoria.calendars."+_mk+"."+"status-tags"] = true
-							for _ik := range entry.StatusTags {
-								d.consumed["haustoria.calendars."+_mk+"."+"status-tags"+"."+_ik] = true
-							}
-							break
-						}
-					}
 					_mr[_mk] = entry
 				}
 				if _mr != nil {
@@ -674,15 +664,6 @@ func (d *V2Document) Encode() ([]byte, error) {
 						}
 					}
 				}
-				if len(mapVal.StatusTags) > 0 {
-					tableNode := cst.EnsureChildTable(d.cstDoc.Root(), subTable, "status-tags")
-					cst.DeleteAllValues(tableNode)
-					for k, v := range mapVal.StatusTags {
-						if err := cst.SetAny(tableNode, k, v); err != nil {
-							return nil, fmt.Errorf("%w", err)
-						}
-					}
-				}
 			}
 		}
 		if d.data.Haustoria.Orgmode != nil {
@@ -927,16 +908,6 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								entry.Tags = v
 								consumed[keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"tags"] = true
 							}
-						}
-					}
-					for _, _ch := range doc.Root().Children {
-						if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"status-tags" {
-							entry.StatusTags = cst.ExtractStringMap(_ch)
-							consumed[keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"status-tags"] = true
-							for _ik := range entry.StatusTags {
-								consumed[keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"status-tags"+"."+_ik] = true
-							}
-							break
 						}
 					}
 					_mr[_mk] = entry
@@ -1409,15 +1380,6 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 				{
 					if len(mapVal.Tags) > 0 || cst.HasValue(subTable, "tags") {
 						if err := cst.SetAny(subTable, "tags", mapVal.Tags); err != nil {
-							return fmt.Errorf("%w", err)
-						}
-					}
-				}
-				if len(mapVal.StatusTags) > 0 {
-					tableNode := cst.EnsureChildTable(doc.Root(), subTable, "status-tags")
-					cst.DeleteAllValues(tableNode)
-					for k, v := range mapVal.StatusTags {
-						if err := cst.SetAny(tableNode, k, v); err != nil {
 							return fmt.Errorf("%w", err)
 						}
 					}
