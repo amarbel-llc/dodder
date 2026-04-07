@@ -161,6 +161,10 @@ schema = 3
     version = 'v0.0.0-20191202100458-e7afc7fbc510'
     hash = 'sha256-1f392pCmS7AXVKXIC1SvKlYtK/rvW47F5CCkGT2G6JM='
 
+  [mod.'github.com/google/uuid']
+    version = 'v1.6.0'
+    hash = 'sha256-VWl9sqUzdOuhW0KzQlv0gwwUQClYkmZwSydHG2sALYw='
+
   [mod.'github.com/gorilla/mux']
     version = 'v1.8.1'
     hash = 'sha256-nDABvAhlYgxUW2N/brrep7NkQXoSGcHhA+XI4+tK0F0='
