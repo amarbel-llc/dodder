@@ -107,14 +107,14 @@ function create_task_type_full {
 		[[fields]]
 		name = "status"
 		kind = "enum"
-		values = ["todo", "in-process", "done", "cancelled"]
+		values = ["todo", "in_progress", "done", "cancelled"]
 		default = "todo"
 
 		[[fields]]
 		name = "priority"
 		kind = "enum"
 		values = ["p0", "p1", "p2", "p3"]
-		default = "p0"
+		default = "p3"
 
 		[[fields]]
 		name = "due"
@@ -333,8 +333,8 @@ function field_full_task_three_fields_from_blob { # @test
 		! task
 		---
 
-		status = "in-process"
-		priority = "p2"
+		status = "in_progress"
+		priority = "p1"
 		due = "20260415T120000Z"
 	EOM
   assert_success
@@ -342,7 +342,7 @@ function field_full_task_three_fields_from_blob { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-vlvc52ycuyyk4vm98j9z33kceh4c0z253e9rlg3n3erp5kwc2xhssfyyn9 !task "my task" status=in-process priority=p2 due=20260415T120000Z]
+		[one/uno @blake2b256-sehqwrekuhk346cppprq72mxk0qug5qfe6ghdqcd0tanf4plu6lsape8ag !task "my task" status=in_progress priority=p1 due=20260415T120000Z]
 	EOM
 }
 
@@ -362,20 +362,20 @@ function field_full_task_organize_mutate_one_of_three { # @test
 		---
 
 		status = "todo"
-		priority = "p1"
+		priority = "p2"
 		due = "20260415T120000Z"
 	EOM
   assert_success
 
   run_dodder organize -mode commit-directly '!task' <<-EOM
-		- [one/uno !task status=done priority=p1 due=20260415T120000Z] my task
+		- [one/uno !task status=done priority=p2 due=20260415T120000Z] my task
 	EOM
   assert_success
 
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-vpgtdcx47rtm8djza9acw46gjrj0a0rc7g6grxt5fqxdcyu5scss7e3xae !task "my task" status=done priority=p1 due=20260415T120000Z]
+		[one/uno @blake2b256-j0yn4cd0fvng3daxg0xrgjrag55v9l3gfsyhnawma3pm3szxpmtsgzaxs9 !task "my task" status=done priority=p2 due=20260415T120000Z]
 	EOM
 }
 
@@ -401,7 +401,7 @@ function field_full_task_organize_from_empty_blob { # @test
   assert_success
 
   run_dodder organize -mode commit-directly '!task' <<-EOM
-		- [one/uno !task status=in-process priority=p2 due=20260415T120000Z] my task
+		- [one/uno !task status=in_progress priority=p1 due=20260415T120000Z] my task
 	EOM
   assert_success
 
