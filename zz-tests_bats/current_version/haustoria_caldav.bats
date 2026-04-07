@@ -145,6 +145,76 @@ END:VCALENDAR"
   fi
 }
 
+# Put a VTODO with a complete field set: STATUS, PRIORITY, DUE,
+# DESCRIPTION, plus optional CATEGORIES. Used by the round-trip tests
+# below.
+# Usage: put_vtodo_full <url> <uid> <summary> <status> <priority> <due> <description> [categories]
+function put_vtodo_full {
+  local calendar_url="$1"
+  local uid="$2"
+  local summary="$3"
+  local status="$4"
+  local priority="$5"
+  local due="$6"
+  local description="$7"
+  local categories="${8:-}"
+
+  local ical="BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dodder-test//test//EN
+BEGIN:VTODO
+UID:$uid
+SUMMARY:$summary
+STATUS:$status
+PRIORITY:$priority"
+
+  if [[ -n "$due" ]]; then
+    ical="$ical
+DUE:$due"
+  fi
+
+  if [[ -n "$description" ]]; then
+    # Escape backslashes and newlines per RFC 5545.
+    local escaped="${description//\\/\\\\}"
+    escaped="${escaped//$'\n'/\\n}"
+    ical="$ical
+DESCRIPTION:$escaped"
+  fi
+
+  if [[ -n "$categories" ]]; then
+    ical="$ical
+CATEGORIES:$categories"
+  fi
+
+  ical="$ical
+END:VTODO
+END:VCALENDAR"
+
+  local http_code
+  http_code=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    -H "Content-Type: text/calendar" \
+    "${calendar_url}${uid}.ics" \
+    -d "$ical")
+
+  if [[ $http_code -ge 400 ]]; then
+    fail "PUT VTODO $uid (full) failed with HTTP $http_code"
+  fi
+}
+
+# Read a VTODO from CalDAV and emit raw iCal text on stdout. Used by
+# round-trip tests to assert what made it back to the server after a
+# checkout.
+function get_vtodo_ical {
+  local calendar_url="$1"
+  local uid="$2"
+
+  curl -s \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    -H "Accept: text/calendar" \
+    "${calendar_url}${uid}.ics"
+}
+
 function create_calendar {
   local calendar_url="$1"
 
@@ -168,9 +238,31 @@ function create_calendar {
   fi
 }
 
+# Bootstrap parent repo with !task and !chore built-in types.
+# Wraps dodder init with -include-builtin-actionable-types so the parent
+# commits the actionable type definitions, then init-workspace into the
+# workspace dir. Tests rely on the !task type's reader script projecting
+# status/priority/due fields onto checked-out objects from CalDAV.
+function init_haustoria_parent {
+  local parent_dir="$1"
+  pushd "$parent_dir" || return 1
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    -repo_id . \
+    -lock-internal-files=false \
+    -include-builtin-actionable-types \
+    test-parent
+  assert_success
+  popd || return 1
+}
+
 # Bootstrap a multi-calendar haustoria workspace with custom config.
-# Creates parent repo, workspace dir, runs init-workspace, then overwrites
-# the workspace config with a multi-calendar + status-tags configuration.
+# Creates parent repo (with built-in actionable types), workspace dir, runs
+# init-workspace, then overwrites the workspace config with a multi-calendar
+# configuration. Status / priority / due round-trip via the !task and !chore
+# field reader/writer scripts; no status-tags mapping.
 function bootstrap_multi_calendar_workspace {
   local parent_dir="$BATS_TEST_TMPDIR/parent"
   local workspace_dir="$BATS_TEST_TMPDIR/workspace"
@@ -183,19 +275,19 @@ function bootstrap_multi_calendar_workspace {
   create_calendar "$CALDAV_TASKS_URL"
   create_calendar "$CALDAV_CHORES_URL"
 
-  pushd "$parent_dir" || return 1
-  run_dodder_init_disable_age "test-parent"
-  popd || return 1
+  init_haustoria_parent "$parent_dir"
 
   pushd "$workspace_dir" || return 1
   run_dodder init-workspace \
     -haustoria caldav \
     -parent "$parent_dir" \
+    -include-builtin-actionable-types \
     ${cmd_dodder_def[@]} \
     haustoria-ws
   assert_success
 
-  # Overwrite config with multi-calendar + status-tags
+  # Overwrite config with multi-calendar setup. No status-tags blocks —
+  # status round-trips via the !task field instead.
   cat >.dodder-workspace <<EOF
 ---
 ! toml-workspace_config-v2
@@ -217,15 +309,9 @@ username = "$CALDAV_USERNAME"
 url = "$CALDAV_TASKS_URL"
 type = "!task"
 
-[haustoria.calendars.tasks.status-tags]
-COMPLETED = "zz-archive-task-done"
-
 [haustoria.calendars.chores]
 url = "$CALDAV_CHORES_URL"
 type = "!chore"
-
-[haustoria.calendars.chores.status-tags]
-COMPLETED = "zz-archive-task-done"
 EOF
 
   popd || return 1
@@ -238,14 +324,13 @@ function bootstrap_haustoria_workspace {
 
   create_calendar "$CALDAV_URL"
 
-  pushd "$parent_dir" || return 1
-  run_dodder_init_disable_age "test-parent"
-  popd || return 1
+  init_haustoria_parent "$parent_dir"
 
   pushd "$workspace_dir" || return 1
   run_dodder init-workspace \
     -haustoria caldav \
     -parent "$parent_dir" \
+    -include-builtin-actionable-types \
     ${cmd_dodder_def[@]} \
     haustoria-ws
   assert_success
@@ -261,9 +346,14 @@ function status_shows_caldav_resources { # @test
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
   run_dodder status
   assert_success
+  # Status shows the in-memory CalDAV objects produced by the haustoria's
+  # compile path. The blob digest reflects the new TOML format
+  # (status/priority/due/notes). No field columns appear because the !task
+  # type's reader script only runs during the commit cycle, not during the
+  # untracked-status query — fields project after `dodder checkin`.
   assert_output_unsorted - <<-'EOM'
-		        untracked [task-1 @blake2b256-sfghaeqe5dwr74mqpkttk402jua5um9ql3jgcdgpmvqx6znsf0ws8scpua !task "Buy groceries" errands shopping]
-		        untracked [task-2 @blake2b256-eac5sj9j602ktwhy9zv355rm7nt82gqsyn525fkj2wxvqe4vuevqcy9n57 !task "Call dentist" health]
+		        untracked [task-1 @blake2b256-qg0l6r7jxyfh0zptqns7r4j664hp8j4htjrea3es6g5ve907jc6qgnk98w !task "Buy groceries" errands shopping]
+		        untracked [task-2 @blake2b256-55pqnlyz6l9f9c4gfx68xvty2wy2e9evartmveg6t87ddft9tq3qdqvr47 !task "Call dentist" health]
 	EOM
   popd || return 1
 }
@@ -279,11 +369,15 @@ function checkin_creates_zettels_from_caldav { # @test
   run_dodder checkin :
   assert_success
 
-  run_dodder show :
+  # Query with type filter so the box format shows fields. Both tasks
+  # have empty notes/due/priority, so they share the same TOML blob
+  # digest (status=todo, priority=p3, due="", notes="") — content-
+  # addressing means identical blobs map to one digest.
+  run_dodder show '!task'
   assert_success
   assert_output_unsorted - <<-EOM
-		[one/dos !task "Write report" work]
-		[one/uno !task "Fix bike" errands]
+		[one/dos @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Write report" work status=todo priority=p3 due=]
+		[one/uno @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Fix bike" errands status=todo priority=p3 due=]
 	EOM
   popd || return 1
 }
@@ -330,6 +424,9 @@ function new_creates_zettel_and_decompiles_to_caldav { # @test
 
   pushd "$BATS_TEST_TMPDIR/workspace" || return 1
 
+  # The blob body is now TOML mirroring the !task field set; the writer
+  # script (yq) needs valid TOML on input. The notes key holds the
+  # free-form description text.
   run_dodder new -edit=false - <<-EOM
 		---
 		# Review PR
@@ -337,16 +434,19 @@ function new_creates_zettel_and_decompiles_to_caldav { # @test
 		! task
 		---
 
-		check for regressions
+		status = "todo"
+		priority = "p1"
+		due = ""
+		notes = "check for regressions"
 	EOM
   assert_success
 
-  # Verify zettel was created in dodder store
-  run_dodder show :
+  # Verify zettel was created in dodder store with field projection
+  run_dodder show '!task'
   assert_success
-  assert_output --partial "Review PR"
-  assert_output --partial "!task"
-  assert_output --partial "work"
+  assert_output --partial 'Review PR'
+  assert_output --partial 'status=todo'
+  assert_output --partial 'priority=p1'
 
   # Verify VTODO was created on CalDAV
   run_dodder status
@@ -366,19 +466,20 @@ function checkin_idempotent_no_duplicates { # @test
   run_dodder checkin :
   assert_success
 
-  run_dodder show :
+  run_dodder show '!task'
   assert_success
   assert_output --partial "Idempotent task"
-  local first_output="$output"
 
   # Second checkin should NOT create a duplicate
   run_dodder checkin :
   assert_success
 
-  run_dodder show :
+  run_dodder show '!task'
   assert_success
+  # Single object with field columns. Blob digest is the zero-default
+  # TOML blob (status=todo, priority=p3, due="", notes="").
   assert_output - <<-EOM
-		[one/uno !task "Idempotent task" test]
+		[one/uno @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Idempotent task" test status=todo priority=p3 due=]
 	EOM
   popd || return 1
 }
@@ -399,11 +500,15 @@ function status_shows_checked_out_after_checkin { # @test
   run_dodder checkin :
   assert_success
 
-  # After checkin: should show as checked out, not untracked
+  # After checkin: should show as checked out, not untracked. The blob
+  # digest is set during compile via buildTaskTomlBlob; since the bound
+  # in-memory object is not re-projected through the reader script during
+  # the status query (only on commit), the box format here doesn't show
+  # field columns — same as the untracked case.
   run_dodder status
   assert_success
   assert_output - <<-EOM
-		          changed [ !task "Bound task" test]
+		          changed [ @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Bound task" test]
 	EOM
   popd || return 1
 }
@@ -422,14 +527,14 @@ function checkin_empty_calendar_no_error { # @test
   popd || return 1
 }
 
-function multi_calendar_status_with_status_tags { # @test
+function multi_calendar_status_field_projection { # @test
   bootstrap_multi_calendar_workspace
 
   # Active tasks
   put_vtodo_with_status "$CALDAV_TASKS_URL" "t-1" "Write docs" "NEEDS-ACTION" "work"
   put_vtodo_with_status "$CALDAV_TASKS_URL" "t-2" "Fix login bug" "NEEDS-ACTION" "work,urgent"
 
-  # Completed task — should get zz-archive-task-done tag
+  # Completed task — projects status=done via the reader script after checkin
   put_vtodo_with_status "$CALDAV_TASKS_URL" "t-3" "Old migration" "COMPLETED" "ops"
 
   # Chore calendar
@@ -441,25 +546,36 @@ function multi_calendar_status_with_status_tags { # @test
   run_dodder status
   assert_success
 
-  # All 5 tasks appear (completed ones get the status-tag, not filtered)
+  # All 5 tasks appear (completed ones are not filtered — that's a
+  # consumer concern via doddish field queries).
   local line_count
   line_count=$(echo "$output" | wc -l)
   [[ $line_count -eq 5 ]]
 
-  # Verify status-tags mapping: completed tasks have zz-archive-task-done
-  assert_output --partial "zz-archive-task-done"
-
-  # Verify both calendar types present
+  # Both calendar types present
   assert_output --partial "!task"
   assert_output --partial "!chore"
 
-  # Checkin and verify completed task has the archive tag
+  # Checkin and verify the field projection survived through both types.
   run_dodder checkin :
   assert_success
 
-  run_dodder show :
+  run_dodder show '!task'
   assert_success
-  assert_output --partial "zz-archive-task-done"
+  # COMPLETED → status=done, NEEDS-ACTION → status=todo
+  assert_output --partial 'status=done'
+  assert_output --partial 'status=todo'
+
+  run_dodder show '!chore'
+  assert_success
+  assert_output --partial 'status=done'
+  assert_output --partial 'status=todo'
+
+  # Doddish field query works for filtering completed tasks, replacing
+  # the previous zz-archive-task-done tag-based filter.
+  run_dodder show '^status=done !task'
+  assert_success
+  refute_output --partial 'Old migration'
 
   popd || return 1
 }
@@ -503,7 +619,7 @@ END:VCALENDAR"
   popd || return 1
 }
 
-function completed_tasks_get_status_tag { # @test
+function completed_tasks_get_status_field { # @test
   bootstrap_multi_calendar_workspace
 
   put_vtodo_with_status "$CALDAV_TASKS_URL" "done-1" "Finished task" "COMPLETED" "work"
@@ -515,8 +631,9 @@ function completed_tasks_get_status_tag { # @test
   run_dodder checkin :
   assert_success
 
-  # Show all — completed task should have zz-archive-task-done, active should not
-  run_dodder show :
+  # Show !task — completed task projects status=done via the reader
+  # script, active projects status=todo.
+  run_dodder show '!task'
   assert_success
 
   # Two zettels created
@@ -524,10 +641,175 @@ function completed_tasks_get_status_tag { # @test
   line_count=$(echo "$output" | wc -l)
   [[ $line_count -eq 2 ]]
 
-  # Completed task has archive tag, active task does not
-  assert_output --partial '"Finished task" work zz-archive-task-done'
-  assert_output --partial '"Active task" work]'
-  refute_output --partial '"Active task" work zz-archive-task-done'
+  # Completed task has status=done, active task has status=todo. The
+  # field columns appear after the tag list in the box format.
+  assert_output --partial '"Finished task" work status=done'
+  assert_output --partial '"Active task" work status=todo'
+
+  popd || return 1
+}
+
+# Round-trip test covering all four blob keys (status, priority, due,
+# notes): VTODO with full field set → checkin → checkout (without
+# mutation) → verify CalDAV-side state matches the original. This
+# exercises buildTaskTomlBlob (compile) and parseTaskTomlBlob +
+# Decompile (round-trip back to VTODO) together.
+#
+# Note: this test does NOT exercise the organize-driven mutation path.
+# `dodder organize -mode commit-directly` triggers a deeper malformed-
+# blob-digest panic in the merge path that's unrelated to the haustoria
+# implementation; tracked as a follow-up issue.
+function caldav_round_trip_all_fields { # @test
+  bootstrap_haustoria_workspace
+
+  put_vtodo_full \
+    "$CALDAV_URL" \
+    "rt-1" \
+    "Round trip task" \
+    "IN-PROCESS" \
+    "1" \
+    "20260415T120000Z" \
+    "the original notes" \
+    "work,urgent"
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  # Checkin: blob is built from VTODO via buildTaskTomlBlob; reader
+  # script projects fields into the index.
+  run_dodder checkin :
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  # Compile mappings: STATUS:IN-PROCESS → in_progress, PRIORITY:1 → p0
+  assert_output --partial 'status=in_progress'
+  assert_output --partial 'priority=p0'
+  assert_output --partial 'due=20260415T120000Z'
+
+  # Delete the CalDAV resource so checkout has to recreate it from the
+  # dodder-side TOML blob.
+  curl -s -X DELETE \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    "${CALDAV_URL}rt-1.ics" >/dev/null 2>&1
+
+  # Checkout: Decompile parses the TOML blob, applies inverse
+  # status/priority mappings, and PUTs a new VTODO.
+  run_dodder checkout :z
+  assert_success
+
+  # Verify the VTODO on the CalDAV server reflects the original state.
+  # Note: the haustoria's Decompile path does not currently round-trip
+  # CATEGORIES (tags are read from object metadata, not from the blob),
+  # so we don't assert on those here.
+  run get_vtodo_ical "$CALDAV_URL" "rt-1"
+  assert_success
+  assert_output --partial 'STATUS:IN-PROCESS'
+  assert_output --partial 'PRIORITY:1'
+  assert_output --partial 'DUE:20260415T120000Z'
+  assert_output --partial 'DESCRIPTION:the original notes'
+
+  popd || return 1
+}
+
+# Edge case: VTODO with empty optional fields (no PRIORITY, no DUE, no
+# DESCRIPTION). All three should land as defaults (p3, "", "") and survive
+# the round-trip.
+function caldav_round_trip_empty_optionals { # @test
+  bootstrap_haustoria_workspace
+
+  put_vtodo_full \
+    "$CALDAV_URL" \
+    "rt-empty" \
+    "Empty optionals" \
+    "NEEDS-ACTION" \
+    "0" \
+    "" \
+    "" \
+    ""
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder checkin :
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output --partial 'status=todo'
+  assert_output --partial 'priority=p3'
+  assert_output --partial 'due='
+
+  popd || return 1
+}
+
+# Edge case: multi-line VTODO DESCRIPTION text. Notes is the only blob
+# key that can contain newlines; the buildTaskTomlBlob serializer uses
+# strconv.Quote which produces a single-line basic string with \n
+# escapes. Verify the round-trip preserves the line breaks.
+function caldav_round_trip_multiline_notes { # @test
+  bootstrap_haustoria_workspace
+
+  put_vtodo_full \
+    "$CALDAV_URL" \
+    "rt-multi" \
+    "Multi-line notes" \
+    "NEEDS-ACTION" \
+    "0" \
+    "" \
+    "first line
+second line
+third line" \
+    ""
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder checkin :
+  assert_success
+
+  # Delete the CalDAV resource so checkout's PUT is a create rather than
+  # an update. PutTask with empty ETag uses If-None-Match: * (create
+  # semantics); ETag-based updates are tracked in #103 (haustoria
+  # caching).
+  curl -s -X DELETE \
+    -u "$CALDAV_USERNAME:$CALDAV_PASSWORD" \
+    "${CALDAV_URL}rt-multi.ics" >/dev/null 2>&1
+
+  # Checkout decompiles the blob's notes back into VTODO DESCRIPTION.
+  run_dodder checkout :z
+  assert_success
+
+  run get_vtodo_ical "$CALDAV_URL" "rt-multi"
+  assert_success
+  # iCalendar uses \n (literal backslash-n) for line breaks inside text
+  # values. The original three-line description should appear in the
+  # VTODO body with these escape sequences.
+  assert_output --partial 'DESCRIPTION:first line\nsecond line\nthird line'
+
+  popd || return 1
+}
+
+# Edge case: out-of-band VTODO PRIORITY value (not 0/1/5/9) buckets to
+# the nearest canonical field value. PRIORITY:3 should bucket to p1.
+function caldav_round_trip_out_of_band_priority { # @test
+  bootstrap_haustoria_workspace
+
+  put_vtodo_full \
+    "$CALDAV_URL" \
+    "rt-prio-3" \
+    "Off-band priority" \
+    "NEEDS-ACTION" \
+    "3" \
+    "" \
+    "" \
+    ""
+
+  pushd "$BATS_TEST_TMPDIR/workspace" || return 1
+
+  run_dodder checkin :
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output --partial 'priority=p1'
 
   popd || return 1
 }

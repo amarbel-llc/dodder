@@ -192,8 +192,15 @@ func (s *Store) CheckoutOne(
 		}
 	}
 
+	// Preserve the CalDAV UID across the round-trip. Without this,
+	// Decompile would generate a fresh `dodder-N@dodder` UID, breaking
+	// the binding between the dodder object and its remote VTODO and
+	// orphaning the original .ics file on the server.
+	externalId := object.GetExternalObjectId().String()
+
 	result, err := s.Decompile(haustoria.DecompileRequest{
 		ObjectId:    object.GetObjectId().String(),
+		ExternalId:  externalId,
 		Description: description,
 		Blob:        blob,
 		Tags:        tags,
