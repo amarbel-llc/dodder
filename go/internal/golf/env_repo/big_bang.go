@@ -17,12 +17,13 @@ type BigBang struct {
 
 	PrivateKey markl.Id
 
-	Yin                       string
-	Yang                      string
-	ExcludeDefaultType        bool
-	ExcludeDefaultConfig      bool
-	IncludeDefaultPandocTools bool
-	BlobStoreId               blob_store_id.Id
+	Yin                           string
+	Yang                          string
+	ExcludeDefaultType            bool
+	ExcludeDefaultConfig          bool
+	IncludeDefaultPandocTools     bool
+	IncludeBuiltinActionableTypes bool
+	BlobStoreId                   blob_store_id.Id
 }
 
 func (bigBang *BigBang) SetDefaults() {

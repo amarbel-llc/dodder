@@ -87,6 +87,14 @@ func (local *Repo) initDefaultTypeAndConfig(
 		return err
 	}
 
+	if err = local.prepareBuiltinActionableTypes(
+		bigBang,
+		&builder,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	plan, buildErr := builder.Build()
 	if buildErr != nil {
 		err = errors.Wrap(buildErr)
@@ -174,6 +182,65 @@ func (local *Repo) prepareDefaultType(
 	}
 
 	return objectIdType, err
+}
+
+// prepareBuiltinActionableTypes commits the !task and !chore built-in types
+// when bigBang.IncludeBuiltinActionableTypes is set. Both types share the same
+// field set (status, priority, due) declared in type_blobs.DefaultTaskType /
+// DefaultChoreType. Opt-in for now per docs/plans/2026-04-06-task-type-genesis-
+// and-haustoria-fields.md.
+func (local *Repo) prepareBuiltinActionableTypes(
+	bigBang env_repo.BigBang,
+	builder *import_plan.Builder,
+) (err error) {
+	if !bigBang.IncludeBuiltinActionableTypes {
+		return err
+	}
+
+	for _, builtin := range []struct {
+		objectIdString string
+		blob           type_blobs.TomlV2
+	}{
+		{
+			objectIdString: "task",
+			blob:           type_blobs.DefaultTaskType(),
+		},
+		{
+			objectIdString: "chore",
+			blob:           type_blobs.DefaultChoreType(),
+		},
+	} {
+		objectIdType := ids.MustTypeStruct(builtin.objectIdString)
+		tipe := ids.DefaultOrPanic(genres.Type)
+
+		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
+
+		if err = object.GetObjectIdMutable().SetWithId(objectIdType); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		var digest domain_interfaces.MarklId
+
+		blob := builtin.blob
+		if digest, _, err = local.GetStore().GetTypedBlobStore().Type.SaveBlobText(
+			tipe,
+			&blob,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
+		object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
+
+		if err = builder.AddObject(object, 0); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	return err
 }
 
 func (local *Repo) prepareDefaultConfig(

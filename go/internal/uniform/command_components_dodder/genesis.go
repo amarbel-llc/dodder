@@ -73,6 +73,13 @@ func (cmd *Genesis) SetFlagDefinitions(
 		false,
 		"Include pandoc Lua filters and defaults as blob references on the default type",
 	)
+
+	flagSet.BoolVar(
+		&cmd.BigBang.IncludeBuiltinActionableTypes,
+		"include-builtin-actionable-types",
+		false,
+		"Commit !task and !chore built-in types with status/priority/due fields and yq-based reader/writer scripts",
+	)
 }
 
 func (cmd Genesis) OnTheFirstDay(
