@@ -319,12 +319,22 @@ func (s *Store) Decompile(req haustoria.DecompileRequest) (haustoria.DecompileRe
 		)
 	}
 
+	// Parse the !task TOML blob (produced by buildTaskTomlBlob during the
+	// compile path or by the type's fields-writer script during organize
+	// edits) to recover status / priority / due / notes. The blob is the
+	// canonical source of truth — we don't read from Metadata.Index.Fields
+	// here so the path works whether or not the !task type with reader
+	// script is committed in the repo.
+	values := parseTaskTomlBlob(req.Blob)
+
 	task := caldav.Task{
 		UID:         req.ExternalId,
 		Summary:     req.Description,
-		Description: string(req.Blob),
+		Description: values.Notes,
 		Categories:  req.Tags,
-		Status:      "NEEDS-ACTION",
+		Status:      mapFieldValueToVTODOStatus(values.Status),
+		Priority:    mapFieldValueToVTODOPriority(values.Priority),
+		Due:         values.Due,
 	}
 
 	if task.UID == "" {
