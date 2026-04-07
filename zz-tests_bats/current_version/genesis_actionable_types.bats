@@ -96,6 +96,33 @@ function genesis_task_type_blob_has_fields_and_scripts { # @test
 	EOM
 }
 
+# Verifies the field round-trip via `dodder new`: after init with the
+# opt-in flag, a freshly-created !task with a TOML body has all three
+# fields projected by the reader script and visible in `dodder show`.
+function genesis_dodder_new_task_projects_fields { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# my probe task
+		! task
+		---
+
+		status = "in_progress"
+		priority = "p1"
+		due = "20260415T120000Z"
+		notes = "probe content"
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-g9ch2vs6vwqhhx8jgmj6xhq02u3ze39mgjj5ranpn3jv9kdeu8rsz2r9xj !task "my probe task" status=in_progress priority=p1 due=20260415T120000Z]
+	EOM
+}
+
 # !chore should have the same field set as !task — same field defs, same
 # scripts. The blob digests should match because the bodies are
 # byte-identical.
