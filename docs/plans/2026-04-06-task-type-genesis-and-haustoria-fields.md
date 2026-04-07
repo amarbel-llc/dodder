@@ -53,14 +53,14 @@ vim-syntax-type = "toml"
 [[fields]]
 name = "status"
 kind = "enum"
-values = ["todo", "in-process", "done", "cancelled"]
+values = ["todo", "in_progress", "done", "cancelled"]
 default = "todo"
 
 [[fields]]
 name = "priority"
 kind = "enum"
 values = ["p0", "p1", "p2", "p3"]
-default = "p0"
+default = "p3"
 
 [[fields]]
 name = "due"
@@ -90,16 +90,17 @@ Status enum values match the field-mutation work in `19c6f63` ("use 'done'
 instead of 'completed'"). The mapping to/from VTODO STATUS is the haustoria's
 job (see §3 below).
 
-`priority` is an enum with values `p0` / `p1` / `p2` / `p3` corresponding to the
-tasks.org convention (none / `!` / `!!` / `!!!`). The numeric VTODO PRIORITY
-mapping is the haustoria's job:
+`priority` is an enum with values `p0` / `p1` / `p2` / `p3` where `p0` is
+the highest priority (matches the "P0 / sev-0" ticket-tracker convention).
+The mapping to/from VTODO PRIORITY and the tasks.org `!`/`!!`/`!!!`
+convention is the haustoria's job:
 
-  VTODO PRIORITY   `!task` priority   tasks.org
-  ---------------- ------------------ -----------
-  0 (or absent)    `p0`               (none)
-  9                `p1`               `!`
-  5                `p2`               `!!`
-  1                `p3`               `!!!`
+| `!task` priority | VTODO PRIORITY | tasks.org |
+|------------------|----------------|-----------|
+| `p0`             | 1              | `!!!`     |
+| `p1`             | 5              | `!!`      |
+| `p2`             | 9              | `!`       |
+| `p3`             | 0 (or absent)  | (none)    |
 
 Other PRIORITY values fall back to the closest bucket on read; on write the
 haustoria emits the canonical numeric value above.
@@ -219,8 +220,8 @@ if err := s.writeBlob(external, blob); err != nil {
 `buildTaskTomlBlob` is a small Go function that emits TOML like:
 
 ```toml
-status = "in-process"
-priority = "p2"
+status = "in_progress"
+priority = "p1"
 due = "20260415T120000Z"
 ```
 
@@ -232,7 +233,7 @@ The status and priority values come from the mapping tables below.
 |----------------|---------------------|
 | (absent)       | `todo`              |
 | `NEEDS-ACTION` | `todo`              |
-| `IN-PROCESS`   | `in-process`        |
+| `IN-PROCESS`   | `in_progress`       |
 | `COMPLETED`    | `done`              |
 | `CANCELLED`    | `cancelled`         |
 
@@ -246,8 +247,8 @@ and priority mappings, and emits a VTODO. The current decompile hardcodes
 `STATUS:NEEDS-ACTION` and ignores priority/due — that goes away.
 
 The reverse status mapping is the inverse of the table above. Priority is
-mapped back through the §1 priority table (`p0`→0, `p1`→9, `p2`→5,
-`p3`→1). `due` is passed through unchanged (CalDAV expects an iCal
+mapped back through the §1 priority table (`p0`→1, `p1`→5, `p2`→9,
+`p3`→0). `due` is passed through unchanged (CalDAV expects an iCal
 datetime string; the haustoria does not reformat it).
 
 ### 4. Tests
@@ -256,7 +257,7 @@ datetime string; the haustoria does not reformat it).
 
 - `TestStatusValueRoundTrip` --- table-driven over the five VTODO STATUS values.
 - `TestPriorityValueRoundTrip` --- table-driven `p0`/`p1`/`p2`/`p3` ↔
-  `0`/`9`/`5`/`1`, plus out-of-band PRIORITY values (`2`, `3`, `7`) bucketed to
+  `1`/`5`/`9`/`0`, plus out-of-band PRIORITY values (`2`, `3`, `7`) bucketed to
   nearest.
 - `TestDuePassthrough` --- verbatim string passthrough.
 
@@ -286,7 +287,7 @@ datetime string; the haustoria does not reformat it).
   → `dodder show` displays `status=done` → `dodder organize` to set
   `status=todo` → checkout → CalDAV server has `STATUS:NEEDS-ACTION`.
 - Add `caldav_round_trip_priority_field`: VTODO with `PRIORITY:1` → checkin →
-  `priority=p3` → organize to `p1` → checkout → `PRIORITY:9`.
+  `priority=p0` → organize to `p2` → checkout → `PRIORITY:9`.
 - Add `caldav_round_trip_due_field`: passthrough verification.
 - Add `caldav_fresh_type_lookup`: re-commit the `!task` type with a new field
   definition between two `dodder status` runs; verify the haustoria picks up the
@@ -338,12 +339,12 @@ need to reach into the dormant index from `mike/haustoria_caldav`.
 
 Resolved in PR #100 review comments:
 
-1.  **Status enum values**: `todo` / `in-process` / `done` / `cancelled`. The
+1.  **Status enum values**: `todo` / `in_progress` / `done` / `cancelled`. The
     haustoria maps these to/from CalDAV STATUS values (table in §3).
 
-2.  **Priority**: enum with values `p0` / `p1` / `p2` / `p3` mapped to the
-    tasks.org convention (none / `!` / `!!` / `!!!`) and VTODO PRIORITY integers
-    `0` / `9` / `5` / `1` (table in §1).
+2.  **Priority**: enum with values `p0` / `p1` / `p2` / `p3` where `p0` is
+    highest. Maps to the tasks.org convention (`!!!` / `!!` / `!` / none)
+    and VTODO PRIORITY integers `1` / `5` / `9` / `0` (table in §1).
 
 3.  **`!chore`**: ships as a separate built-in type alongside `!task`, with the
     same field set. Future: explore an `!actionable` abstract type that both
