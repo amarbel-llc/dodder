@@ -4,9 +4,21 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/hotel/caldav"
 )
+
+// taskBlobValues is the parsed in-memory shape of a !task TOML blob, used by
+// the decompile path. The four keys correspond to the keys emitted by
+// buildTaskTomlBlob in the compile path. Round-trip through
+// parseTaskTomlBlob → buildTaskTomlBlob preserves all values.
+type taskBlobValues struct {
+	Status   string
+	Priority string
+	Due      string
+	Notes    string
+}
 
 // buildTaskTomlBlob serializes a CalDAV VTODO into the TOML blob format
 // expected by the !task / !chore built-in types. The blob contains four
@@ -121,4 +133,51 @@ func mapFieldValueToVTODOPriority(fieldValue string) int {
 	default:
 		return 0
 	}
+}
+
+// parseTaskTomlBlob parses a !task TOML blob produced by buildTaskTomlBlob.
+// The format is constrained: each of the four keys appears as a single line
+// `key = "value"` where the value is a TOML basic string (compatible with
+// strconv.Unquote). Unknown keys are ignored; missing keys default to the
+// zero value.
+//
+// This deliberately avoids a full TOML parser dependency. The blob shape is
+// owned by buildTaskTomlBlob; if that function changes, this one must too.
+// User edits via `dodder organize` go through the type's fields-writer
+// (yq) which preserves the same key=value structure.
+func parseTaskTomlBlob(blob []byte) taskBlobValues {
+	var values taskBlobValues
+
+	for _, line := range strings.Split(string(blob), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		eq := strings.IndexByte(line, '=')
+		if eq < 0 {
+			continue
+		}
+
+		key := strings.TrimSpace(line[:eq])
+		raw := strings.TrimSpace(line[eq+1:])
+
+		val, err := strconv.Unquote(raw)
+		if err != nil {
+			continue
+		}
+
+		switch key {
+		case "status":
+			values.Status = val
+		case "priority":
+			values.Priority = val
+		case "due":
+			values.Due = val
+		case "notes":
+			values.Notes = val
+		}
+	}
+
+	return values
 }
