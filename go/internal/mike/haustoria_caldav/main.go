@@ -22,10 +22,9 @@ import (
 // CalendarMapping associates a CalDAV calendar URL with a dodder type and
 // optional tags.
 type CalendarMapping struct {
-	URL        string
-	TypeId     string
-	Tags       []string
-	StatusTags map[string]string // CalDAV STATUS → dodder tag
+	URL    string
+	TypeId string
+	Tags   []string
 }
 
 // Store implements both haustoria.Haustoria and store_workspace.StoreLike
@@ -134,17 +133,16 @@ func (s *Store) queryCheckedOutForCalendar(
 			}
 		}
 
-		// Map CalDAV STATUS to a dodder tag via config.
-		if tag, ok := cal.StatusTags[twm.Task.Status]; ok {
-			if addErr := metadata.AddTagString(tag); addErr != nil {
-				// skip invalid tag
-			}
-		}
-
-		if twm.Task.Description != "" {
-			if err = s.writeBlob(external, []byte(twm.Task.Description)); err != nil {
-				return errors.Wrapf(err, "write blob for %s", twm.Task.UID)
-			}
+		// Build the !task TOML blob with status, priority, due baked in
+		// (the reader script declared on !task projects them into
+		// Metadata.Index.Fields during commit). The VTODO DESCRIPTION text
+		// is stored as a `notes` key in the blob — present in the file but
+		// NOT declared as a [[fields]] entry on !task, so it doesn't
+		// appear as a queryable field for now (#TODO promote to field
+		// once the round-trip story is proven).
+		blob := buildTaskTomlBlob(&twm.Task)
+		if err = s.writeBlob(external, blob); err != nil {
+			return errors.Wrapf(err, "write task blob for %s", twm.Task.UID)
 		}
 
 		if err = external.GetExternalObjectIdMutable().SetWithGenre(
