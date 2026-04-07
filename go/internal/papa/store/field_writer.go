@@ -137,7 +137,7 @@ func (store *Store) tryWriteFields(
 	}
 
 	tmpPath := tmpFile.Name()
-	defer os.Remove(tmpPath)
+	defer os.Remove(tmpPath) //defer:err-checked
 
 	if _, err = tmpFile.Write(blobContent.Bytes()); err != nil {
 		tmpFile.Close()

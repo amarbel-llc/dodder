@@ -102,76 +102,126 @@ func (store *Store) queryCheckedOutForFolder(
 	}
 
 	for _, file := range files {
-		content, _, readErr := store.transport.Read(file.Path)
+		content, etag, readErr := store.transport.Read(file.Path)
 		if readErr != nil {
 			continue
 		}
 
-		doc, parseErr := orgmode.Parse(string(content))
+		headings, parseErr := parseFile(content)
 		if parseErr != nil {
 			continue
 		}
 
-		// Use the filename (without extension) as the external ID.
-		externalId := fileExternalId(file.Path)
-
-		// Extract the first heading as the zettel description.
-		description, tags, body := extractFromDocument(doc)
-
-		co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
-
-		external := co.GetSkuExternal()
-		metadata := external.GetMetadataMutable()
-
-		if err = metadata.GetDescriptionMutable().Set(description); err != nil {
-			return errors.Wrap(err)
+		// Normalize: add :ID: UUID v7 to any heading missing one, then
+		// write the file back if anything changed. After normalization,
+		// every heading has a stable external identity.
+		newContent, changed, normErr := normalizeIDs(content, headings)
+		if normErr != nil {
+			return errors.Wrap(normErr)
 		}
 
-		if folder.TypeId != "" {
-			if err = metadata.GetTypeMutable().SetType(folder.TypeId); err != nil {
-				return errors.Wrap(err)
+		if changed {
+			if writeErr := store.transport.Write(
+				file.Path,
+				newContent,
+				etag,
+			); writeErr != nil {
+				return errors.Wrapf(
+					writeErr,
+					"write normalized orgmode file %s",
+					file.Path,
+				)
 			}
-		}
 
-		// Add per-folder tags from the mapping.
-		for _, tagStr := range folder.Tags {
-			if addErr := metadata.AddTagString(tagStr); addErr != nil {
+			// Re-parse with the new content so byte spans are valid.
+			headings, parseErr = parseFile(newContent)
+			if parseErr != nil {
 				continue
 			}
+			content = newContent
 		}
 
-		// Add tags from the orgmode heading.
-		for _, tagStr := range tags {
-			if addErr := metadata.AddTagString(tagStr); addErr != nil {
-				continue
+		for _, heading := range headings {
+			if err = store.emitHeading(
+				folder,
+				heading,
+				content,
+				bindings,
+				output,
+			); err != nil {
+				return err
 			}
 		}
+	}
 
-		if body != "" {
-			if err = store.writeBlob(external, []byte(body)); err != nil {
-				return errors.Wrapf(err, "write blob for %s", externalId)
-			}
-		}
+	return nil
+}
 
-		if err = external.GetExternalObjectIdMutable().SetWithGenre(
-			externalId,
-			genres.Zettel,
-		); err != nil {
+func (store *Store) emitHeading(
+	folder FolderMapping,
+	heading ParsedHeading,
+	content []byte,
+	bindings map[string]*sku.Transacted,
+	output interfaces.FuncIter[sku.SkuType],
+) (err error) {
+	if heading.ID == "" {
+		// Headings without an :ID: property are skipped. Normalization
+		// should have filled this in for every heading, so this is a
+		// defensive no-op.
+		return nil
+	}
+
+	co, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
+
+	external := co.GetSkuExternal()
+	metadata := external.GetMetadataMutable()
+
+	if err = metadata.GetDescriptionMutable().Set(heading.Title); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if folder.TypeId != "" {
+		if err = metadata.GetTypeMutable().SetType(folder.TypeId); err != nil {
 			return errors.Wrap(err)
 		}
+	}
 
-		// Check if this orgmode file has an existing dodder binding.
-		if bound, ok := bindings[externalId]; ok {
-			sku.TransactedResetter.ResetWith(co.GetSku(), bound)
-			co.SetState(checked_out_state.CheckedOut)
-		} else {
-			co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)
-			co.SetState(checked_out_state.Untracked)
+	for _, tagStr := range folder.Tags {
+		if addErr := metadata.AddTagString(tagStr); addErr != nil {
+			continue
 		}
+	}
 
-		if err = output(co); err != nil {
-			return errors.Wrap(err)
+	for _, tagStr := range heading.Tags {
+		if addErr := metadata.AddTagString(tagStr); addErr != nil {
+			continue
 		}
+	}
+
+	body := content[heading.BodyStart:heading.BodyEnd]
+	if len(body) > 0 {
+		if err = store.writeBlob(external, body); err != nil {
+			return errors.Wrapf(err, "write blob for %s", heading.ID)
+		}
+	}
+
+	if err = external.GetExternalObjectIdMutable().SetWithGenre(
+		heading.ID,
+		genres.Zettel,
+	); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if bound, ok := bindings[heading.ID]; ok {
+		sku.TransactedResetter.ResetWith(co.GetSku(), bound)
+		co.SetState(checked_out_state.CheckedOut)
+	} else {
+		co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)
+		co.SetState(checked_out_state.Untracked)
+	}
+
+	if err = output(co); err != nil {
+		return errors.Wrap(err)
 	}
 
 	return nil
@@ -287,8 +337,8 @@ func (store *Store) writeBlob(
 
 // --- Haustoria interface ---
 
-// Compile reads an orgmode file and returns dodder-compatible fields.
-// external -> dodder
+// Compile reads an orgmode heading and returns dodder-compatible fields.
+// external -> dodder. The req.ExternalId is the heading's :ID: UUID.
 func (store *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResult, error) {
 	for _, folder := range store.folders {
 		files, err := store.transport.List(folder.Path)
@@ -297,41 +347,39 @@ func (store *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResu
 		}
 
 		for _, file := range files {
-			externalId := fileExternalId(file.Path)
-			if externalId != req.ExternalId {
+			content, etag, readErr := store.transport.Read(file.Path)
+			if readErr != nil {
 				continue
 			}
 
-			content, etag, readErr := store.transport.Read(file.Path)
-			if readErr != nil {
-				return haustoria.CompileResult{}, readErr
-			}
-
-			doc, parseErr := orgmode.Parse(string(content))
+			headings, parseErr := parseFile(content)
 			if parseErr != nil {
-				return haustoria.CompileResult{}, parseErr
+				continue
 			}
 
-			description, tags, body := extractFromDocument(doc)
+			for _, heading := range headings {
+				if heading.ID != req.ExternalId {
+					continue
+				}
 
-			// Merge folder tags with heading tags without mutating folder.Tags.
-			allTags := make([]string, 0, len(folder.Tags)+len(tags))
-			allTags = append(allTags, folder.Tags...)
-			allTags = append(allTags, tags...)
+				allTags := make([]string, 0, len(folder.Tags)+len(heading.Tags))
+				allTags = append(allTags, folder.Tags...)
+				allTags = append(allTags, heading.Tags...)
 
-			return haustoria.CompileResult{
-				ExternalId:  externalId,
-				Description: description,
-				Blob:        []byte(body),
-				Tags:        allTags,
-				TypeId:      folder.TypeId,
-				ETag:        etag,
-			}, nil
+				return haustoria.CompileResult{
+					ExternalId:  heading.ID,
+					Description: heading.Title,
+					Blob:        content[heading.BodyStart:heading.BodyEnd],
+					Tags:        allTags,
+					TypeId:      folder.TypeId,
+					ETag:        etag,
+				}, nil
+			}
 		}
 	}
 
 	return haustoria.CompileResult{}, fmt.Errorf(
-		"orgmode file not found: %s", req.ExternalId,
+		"orgmode heading not found: %s", req.ExternalId,
 	)
 }
 
@@ -391,11 +439,26 @@ func (store *Store) Discover() ([]haustoria.ExternalResource, error) {
 		}
 
 		for _, file := range files {
-			resources = append(resources, haustoria.ExternalResource{
-				ExternalId:  fileExternalId(file.Path),
-				TypeId:      folder.TypeId,
-				Description: strings.TrimSuffix(file.Name, ".org"),
-			})
+			content, _, readErr := store.transport.Read(file.Path)
+			if readErr != nil {
+				continue
+			}
+
+			headings, parseErr := parseFile(content)
+			if parseErr != nil {
+				continue
+			}
+
+			for _, heading := range headings {
+				if heading.ID == "" {
+					continue
+				}
+				resources = append(resources, haustoria.ExternalResource{
+					ExternalId:  heading.ID,
+					TypeId:      folder.TypeId,
+					Description: heading.Title,
+				})
+			}
 		}
 	}
 
