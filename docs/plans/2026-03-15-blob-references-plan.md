@@ -31,7 +31,7 @@ package objects
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
@@ -356,13 +356,13 @@ blob references (new).
 **Promotion criteria:** N/A — existing format has not shipped.
 
 **Files:**
-- Modify: `go/internal/_/doddish/token_matcher.go`
+- Modify: `go/internal/0/doddish/token_matcher.go`
 - Modify: `go/internal/hotel/box_format/read.go`
 - Modify: `go/internal/echo/object_metadata_box_builder/main.go`
 
 **Step 1: Update token matchers**
 
-In `go/internal/_/doddish/token_matcher.go`, change the alias matcher and add
+In `go/internal/0/doddish/token_matcher.go`, change the alias matcher and add
 blob ref matchers:
 
 ```go

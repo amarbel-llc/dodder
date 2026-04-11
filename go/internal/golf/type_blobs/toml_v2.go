@@ -1,7 +1,7 @@
 package type_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/reset"
+	"code.linenisgreat.com/dodder/go/lib/0/reset"
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 

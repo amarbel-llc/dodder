@@ -35,7 +35,7 @@ KindString and KindEnum are used in v1.
 
 **Files:**
 
-- Modify: `go/internal/_/fields/main.go`
+- Modify: `go/internal/0/fields/main.go`
 
 **Step 1: Add Kind type and constants**
 
@@ -72,7 +72,7 @@ Add the field schema struct to the fields package.
 
 **Files:**
 
-- Modify: `go/internal/_/fields/main.go`
+- Modify: `go/internal/0/fields/main.go`
 
 **Step 1: Add Definition struct**
 
@@ -106,7 +106,7 @@ Definition via the type blob store.
 
 **Files:**
 
-- Modify: `go/internal/_/fields/main.go`
+- Modify: `go/internal/0/fields/main.go`
 - Modify: any files that construct `Field` literals (box_format, hyphence
   parsers) --- add zero-value `TypeBlobDigest` if needed by compiler
 
@@ -164,7 +164,7 @@ This is the TOML-tagged struct for `[[fields]]` array entries. It mirrors
 ``` go
 package type_blobs
 
-import "code.linenisgreat.com/dodder/go/internal/_/fields"
+import "code.linenisgreat.com/dodder/go/internal/0/fields"
 
 //go:generate tommy generate
 type FieldDefinition struct {
@@ -213,7 +213,7 @@ func KindFromString(s string) Kind {
 package type_blobs
 
 import (
-    "code.linenisgreat.com/dodder/go/lib/_/reset"
+    "code.linenisgreat.com/dodder/go/lib/0/reset"
     "code.linenisgreat.com/dodder/go/lib/delta/script_config"
 )
 
@@ -343,7 +343,7 @@ Add the new key byte and encoder/decoder cases for field key/value pairs.
 
 **Files:**
 
-- Modify: `go/internal/_/key_bytes/main.go` (add Field constant)
+- Modify: `go/internal/0/key_bytes/main.go` (add Field constant)
 - Modify: `go/internal/india/stream_index/binary_field.go` (add to
   binaryFieldOrder)
 - Modify: `go/internal/india/stream_index/binary_encoder.go` (add encoding case)
@@ -362,7 +362,7 @@ byte doesn't exist yet)
 
 **Step 3: Add `key_bytes.Field`**
 
-In `go/internal/_/key_bytes/main.go`, add:
+In `go/internal/0/key_bytes/main.go`, add:
 
 ``` go
 Field = Binary('F')
@@ -432,17 +432,17 @@ Add the `key^=value` token matcher for negated field queries.
 
 **Files:**
 
-- Modify: `go/internal/_/doddish/token_matcher.go`
+- Modify: `go/internal/0/doddish/token_matcher.go`
 
 **Step 1: Write failing test**
 
-In `go/internal/_/doddish/scanner_test.go` or `seq_test.go`, add a test that
+In `go/internal/0/doddish/scanner_test.go` or `seq_test.go`, add a test that
 scans `status^=cancelled` and matches against the new
 `TokenMatcherKeyValueNegated` pattern.
 
 **Step 2: Run test to verify it fails**
 
-Run: `just test-go-pkg ./internal/_/doddish/` Expected: FAIL
+Run: `just test-go-pkg ./internal/0/doddish/` Expected: FAIL
 
 **Step 3: Add TokenMatcherKeyValueNegated**
 
@@ -467,7 +467,7 @@ TokenMatcherKeyValueNegatedLiteral = TokensMatcher{
 
 **Step 4: Run test to verify it passes**
 
-Run: `just test-go-pkg ./internal/_/doddish/` Expected: PASS
+Run: `just test-go-pkg ./internal/0/doddish/` Expected: PASS
 
 **Step 5: Commit**
 

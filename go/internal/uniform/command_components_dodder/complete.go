@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/india/sku_fmt"
 	pkg_query "code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 )
 

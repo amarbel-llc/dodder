@@ -3,7 +3,7 @@ package typed_blob_store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
+	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"

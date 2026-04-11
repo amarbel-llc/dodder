@@ -40,8 +40,8 @@ import (
 	"os"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/_/primordial"
-	"code.linenisgreat.com/dodder/go/internal/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/internal/0/primordial"
+	"code.linenisgreat.com/dodder/go/internal/0/stack_frame"
 )
 
 func MakePrinter(file *os.File) printer {
@@ -264,7 +264,7 @@ package config_cli
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/debug"
 )

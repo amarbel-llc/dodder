@@ -449,7 +449,7 @@ In `data_writer.go`:
 
 Add `interfaces` import:
 ```go
-"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 ```
 
 Add field to `DataWriter`:

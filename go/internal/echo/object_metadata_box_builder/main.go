@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/_/fields"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"

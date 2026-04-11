@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/november/env_workspace"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 // TODO explore permissions for who can read / write from the inventory list

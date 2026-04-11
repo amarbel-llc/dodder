@@ -208,8 +208,8 @@ code formatted by these tools.
 
 Go source lives under two directories, organized by NATO layer:
 
-- `go/lib/` contains domain-agnostic utility packages (`_` through echo tiers).
-- `go/internal/` contains dodder-specific packages (`_` through yankee tiers).
+- `go/lib/` contains domain-agnostic utility packages (`0` through echo tiers).
+- `go/internal/` contains dodder-specific packages (`0` through yankee tiers).
 - Each NATO directory holds one or more Go packages (e.g., `go/internal/echo/ids/`,
   `go/lib/alfa/errors/`).
 - Import paths follow the form

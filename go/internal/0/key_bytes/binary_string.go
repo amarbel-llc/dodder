@@ -28,13 +28,15 @@ func _() {
 	_ = x[DigestMetadataParentObjectId-115]
 	_ = x[DigestMetadataWithoutTai-110]
 	_ = x[DigestMetadata-109]
+	_ = x[ExternalObjectId-101]
+	_ = x[Field-70]
 	_ = x[CacheDormant-97]
 	_ = x[CacheTagImplicit-73]
 	_ = x[CacheTags-120]
 	_ = x[CacheTags2-121]
 }
 
-const _Binary_name = "UnknownBlobDescriptionContentLengthTagGenreCacheTagImplicitObjectIdSigParentMetadataParentObjectIdRepoPubKeyReferencesSigilTaiCacheDormantBlobReferencesCommentDigestMetadataDigestMetadataWithoutTaiRepoSigReferenceAliasesDigestMetadataParentObjectIdTypeCacheTagsCacheTags2"
+const _Binary_name = "UnknownBlobDescriptionContentLengthTagFieldGenreCacheTagImplicitObjectIdSigParentMetadataParentObjectIdRepoPubKeyReferencesSigilTaiCacheDormantBlobReferencesExternalObjectIdCommentDigestMetadataDigestMetadataWithoutTaiRepoSigReferenceAliasesDigestMetadataParentObjectIdTypeCacheTagsCacheTags2"
 
 var _Binary_map = map[Binary]string{
 	0:   _Binary_name[0:7],
@@ -42,25 +44,27 @@ var _Binary_map = map[Binary]string{
 	66:  _Binary_name[11:22],
 	67:  _Binary_name[22:35],
 	69:  _Binary_name[35:38],
-	71:  _Binary_name[38:43],
-	73:  _Binary_name[43:59],
-	75:  _Binary_name[59:67],
-	77:  _Binary_name[67:98],
-	80:  _Binary_name[98:108],
-	82:  _Binary_name[108:118],
-	83:  _Binary_name[118:123],
-	84:  _Binary_name[123:126],
-	97:  _Binary_name[126:138],
-	98:  _Binary_name[138:152],
-	107: _Binary_name[152:159],
-	109: _Binary_name[159:173],
-	110: _Binary_name[173:197],
-	113: _Binary_name[197:204],
-	114: _Binary_name[204:220],
-	115: _Binary_name[220:248],
-	116: _Binary_name[248:252],
-	120: _Binary_name[252:261],
-	121: _Binary_name[261:271],
+	70:  _Binary_name[38:43],
+	71:  _Binary_name[43:48],
+	73:  _Binary_name[48:64],
+	75:  _Binary_name[64:72],
+	77:  _Binary_name[72:103],
+	80:  _Binary_name[103:113],
+	82:  _Binary_name[113:123],
+	83:  _Binary_name[123:128],
+	84:  _Binary_name[128:131],
+	97:  _Binary_name[131:143],
+	98:  _Binary_name[143:157],
+	101: _Binary_name[157:173],
+	107: _Binary_name[173:180],
+	109: _Binary_name[180:194],
+	110: _Binary_name[194:218],
+	113: _Binary_name[218:225],
+	114: _Binary_name[225:241],
+	115: _Binary_name[241:269],
+	116: _Binary_name[269:273],
+	120: _Binary_name[273:282],
+	121: _Binary_name[282:292],
 }
 
 func (i Binary) String() string {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/_/primordial"
-	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/0/primordial"
+	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
 )
 
 func MakePrinter(file *os.File) printer {

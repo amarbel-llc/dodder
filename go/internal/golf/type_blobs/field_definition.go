@@ -1,6 +1,6 @@
 package type_blobs
 
-import "code.linenisgreat.com/dodder/go/internal/_/fields"
+import "code.linenisgreat.com/dodder/go/internal/0/fields"
 
 //go:generate tommy generate
 type FieldDefinition struct {

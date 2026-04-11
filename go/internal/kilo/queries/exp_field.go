@@ -3,7 +3,7 @@ package queries
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/_/fields"
+	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 )
 

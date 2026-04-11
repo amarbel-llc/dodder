@@ -1,6 +1,6 @@
 package stream_index_fixed
 
-import "code.linenisgreat.com/dodder/go/internal/_/key_bytes"
+import "code.linenisgreat.com/dodder/go/internal/0/key_bytes"
 
 const (
 	EntryWidth             = 256

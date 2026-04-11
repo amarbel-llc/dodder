@@ -3,7 +3,7 @@ package tag_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_lua"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/lua"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )

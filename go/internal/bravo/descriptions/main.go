@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/internal/_/doddish"
+	"code.linenisgreat.com/dodder/go/internal/0/doddish"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
 )

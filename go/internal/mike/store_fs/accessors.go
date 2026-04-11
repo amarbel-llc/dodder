@@ -1,7 +1,7 @@
 package store_fs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
+	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 )
 
 func (store *Store) GetFileEncoder() FileEncoder {

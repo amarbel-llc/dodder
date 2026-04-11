@@ -3,7 +3,7 @@ package repo_actions
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
+	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"

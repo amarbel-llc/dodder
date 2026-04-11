@@ -3,7 +3,7 @@ package quiter
 import (
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 func CollectSlice[ELEMENT any](

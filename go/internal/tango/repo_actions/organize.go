@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
-	"code.linenisgreat.com/dodder/go/lib/_/vim_cli_options_builder"
+	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"

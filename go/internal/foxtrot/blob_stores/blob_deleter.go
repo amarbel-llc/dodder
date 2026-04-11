@@ -1,6 +1,6 @@
 package blob_stores
 
-import "code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+import "code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 
 // BlobDeleter is implemented by blob stores that support removing individual
 // blobs by their content address. Used by Pack to delete loose blobs after

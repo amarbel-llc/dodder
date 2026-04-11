@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/_/fields"
+	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"

@@ -3,8 +3,8 @@ package inventory_list_store
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/_/options_print"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/box_format"
 	"code.linenisgreat.com/dodder/go/internal/hotel/object_finalizer"
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_coders"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"

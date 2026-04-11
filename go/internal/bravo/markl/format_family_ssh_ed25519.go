@@ -6,7 +6,7 @@ import (
 	"io"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

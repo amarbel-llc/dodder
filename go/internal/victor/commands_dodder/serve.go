@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/command_components"
 	"code.linenisgreat.com/dodder/go/internal/tango/remote_http"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/flags"
 	"tailscale.com/client/local"

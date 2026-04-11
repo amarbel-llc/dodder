@@ -3,7 +3,7 @@ package queries
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/_/doddish"
+	"code.linenisgreat.com/dodder/go/internal/0/doddish"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"

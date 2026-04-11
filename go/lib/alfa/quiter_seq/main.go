@@ -3,7 +3,7 @@ package quiter_seq
 import (
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 func Seq[ELEMENT any](elements ...ELEMENT) interfaces.Seq[ELEMENT] {

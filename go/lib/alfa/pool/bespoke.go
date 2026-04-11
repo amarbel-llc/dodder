@@ -1,6 +1,6 @@
 package pool
 
-import "code.linenisgreat.com/dodder/go/lib/_/interfaces"
+import "code.linenisgreat.com/dodder/go/lib/0/interfaces"
 
 type Bespoke[T any] struct {
 	FuncGet func() T

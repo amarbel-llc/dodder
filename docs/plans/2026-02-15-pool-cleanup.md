@@ -13,11 +13,11 @@
 ### Task 1: Simplify pool interfaces
 
 **Files:**
-- Modify: `go/lib/_/interfaces/pools.go`
+- Modify: `go/lib/0/interfaces/pools.go`
 
 **Step 1: Read the current file**
 
-Read `go/lib/_/interfaces/pools.go` to confirm current state.
+Read `go/lib/0/interfaces/pools.go` to confirm current state.
 
 **Step 2: Replace interface definitions**
 
@@ -195,8 +195,8 @@ Unexport Get/Put on concrete pool types
 - Create: `go/lib/alfa/pool/slice.go`
 - Modify: `go/lib/alfa/pool/common.go` (remove `_/pool_value` import)
 - Modify: `go/lib/alfa/errors/group.go` (switch to `alfa/pool`)
-- Delete: `go/internal/_/pool_value/main.go`
-- Delete: `go/internal/_/pool_value/slice.go`
+- Delete: `go/internal/0/pool_value/main.go`
+- Delete: `go/internal/0/pool_value/slice.go`
 
 **Step 1: Create `go/lib/alfa/pool/slice.go`**
 
@@ -206,7 +206,7 @@ package pool
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 type Slice[SWIMMER any, SWIMMER_SLICE ~[]SWIMMER] struct {
@@ -258,7 +258,7 @@ import (
 	"io"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 var (
@@ -347,7 +347,7 @@ var groupPool = pool.MakeSlice[error, Group]()
 
 **Step 4: Delete `_/pool_value/` package**
 
-Delete `go/internal/_/pool_value/main.go` and `go/internal/_/pool_value/slice.go`.
+Delete `go/internal/0/pool_value/main.go` and `go/internal/0/pool_value/slice.go`.
 
 **Step 5: Build**
 
@@ -552,7 +552,7 @@ Search for `ItemPool` usage to understand callers.
 package alfred
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 )
@@ -572,7 +572,7 @@ public interface:
 package alfred
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/charlie/catgut"
 )
@@ -639,7 +639,7 @@ Add proper resetters and update interface types:
 package store_fs
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"
 )
@@ -1152,8 +1152,8 @@ Format code after pool cleanup
 
 **Files:**
 - Modify: `go/lib/alfa/pool/CLAUDE.md`
-- Modify: `go/lib/_/interfaces/CLAUDE.md`
-- Delete: `go/internal/_/pool_value/CLAUDE.md`
+- Modify: `go/lib/0/interfaces/CLAUDE.md`
+- Delete: `go/internal/0/pool_value/CLAUDE.md`
 
 Update the CLAUDE.md files to reflect the new simplified pool API.
 

@@ -8,7 +8,7 @@ import (
 	"sort"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 

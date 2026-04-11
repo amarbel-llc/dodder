@@ -1,7 +1,7 @@
 package repo_id
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/xdg_location_type"
+	"code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

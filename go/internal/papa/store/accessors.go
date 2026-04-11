@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/juliett/inventory_list_store"
 	"code.linenisgreat.com/dodder/go/internal/juliett/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/internal/oscar/store_config"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/echo/thyme"
 )
 

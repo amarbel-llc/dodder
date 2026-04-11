@@ -57,7 +57,7 @@ Update all importers that reference the moved interfaces.
 
 ### Packages Moving to `go/lib/` (62 packages)
 
-#### lib/_/ (15 packages)
+#### lib/0/ (15 packages)
 
 - `bech32` — BIP173 encoding
 - `box_chars` — box drawing characters

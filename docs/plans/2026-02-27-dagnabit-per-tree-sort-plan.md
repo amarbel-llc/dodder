@@ -15,7 +15,7 @@
 ### Task 1: Change DependencyReader interface to return per-prefix edges
 
 **Files:**
-- Modify: `go/lib/_/dagnabit/main.go`
+- Modify: `go/lib/0/dagnabit/main.go`
 
 **Step 1: Update the interface**
 
@@ -31,13 +31,13 @@ type DependencyReader interface {
 
 **Step 2: Verify it compiles (expect failures)**
 
-Run: `cd go && go build ./lib/_/dagnabit/`
+Run: `cd go && go build ./lib/0/dagnabit/`
 Expected: FAIL — `GoListReader` and test stubs return `[]Edge`, not `map[string][]Edge`
 
 **Step 3: Commit**
 
 ```
-git add go/lib/_/dagnabit/main.go
+git add go/lib/0/dagnabit/main.go
 git commit -m "refactor(dagnabit): change DependencyReader to return per-prefix edges"
 ```
 
@@ -46,7 +46,7 @@ git commit -m "refactor(dagnabit): change DependencyReader to return per-prefix 
 ### Task 2: Update GoListReader to return per-prefix edges and filter cross-prefix deps
 
 **Files:**
-- Modify: `go/lib/_/dagnabit/go_list_reader.go`
+- Modify: `go/lib/0/dagnabit/go_list_reader.go`
 
 **Step 1: Update ReadDependencies to return map and filter cross-prefix edges**
 
@@ -132,7 +132,7 @@ dedup block from `ReadDependencies` into `readPrefix`, before the return):
 
 **Step 3: Verify it compiles**
 
-Run: `cd go && go build ./lib/_/dagnabit/`
+Run: `cd go && go build ./lib/0/dagnabit/`
 Expected: FAIL — `Repositioner` and test stubs still use old interface
 
 ---
@@ -140,7 +140,7 @@ Expected: FAIL — `Repositioner` and test stubs still use old interface
 ### Task 3: Update Repositioner to iterate per prefix
 
 **Files:**
-- Modify: `go/lib/_/dagnabit/repositioner.go`
+- Modify: `go/lib/0/dagnabit/repositioner.go`
 
 **Step 1: Update Run to iterate per prefix**
 
@@ -228,7 +228,7 @@ func (repositioner *Repositioner) runPrefix(prefix string, edges []Edge) error {
 
 **Step 2: Verify it compiles**
 
-Run: `cd go && go build ./lib/_/dagnabit/`
+Run: `cd go && go build ./lib/0/dagnabit/`
 Expected: FAIL — test stubs still use old interface
 
 ---
@@ -236,7 +236,7 @@ Expected: FAIL — test stubs still use old interface
 ### Task 4: Update test stubs and existing tests
 
 **Files:**
-- Modify: `go/lib/_/dagnabit/repositioner_test.go`
+- Modify: `go/lib/0/dagnabit/repositioner_test.go`
 
 **Step 1: Update stubReader to return map**
 
@@ -322,13 +322,13 @@ For `TestRepositionerMapperError`:
 
 **Step 4: Verify all existing tests pass**
 
-Run: `cd go && go test ./lib/_/dagnabit/`
+Run: `cd go && go test ./lib/0/dagnabit/`
 Expected: PASS
 
 **Step 5: Commit**
 
 ```
-git add go/lib/_/dagnabit/main.go go/lib/_/dagnabit/go_list_reader.go go/lib/_/dagnabit/repositioner.go go/lib/_/dagnabit/repositioner_test.go
+git add go/lib/0/dagnabit/main.go go/lib/0/dagnabit/go_list_reader.go go/lib/0/dagnabit/repositioner.go go/lib/0/dagnabit/repositioner_test.go
 git commit -m "refactor(dagnabit): sort each tree prefix independently
 
 DependencyReader now returns map[string][]Edge keyed by tree prefix.
@@ -342,7 +342,7 @@ packages in a particular tree."
 ### Task 5: Add test for cross-prefix edge filtering
 
 **Files:**
-- Modify: `go/lib/_/dagnabit/repositioner_test.go`
+- Modify: `go/lib/0/dagnabit/repositioner_test.go`
 
 **Step 1: Write the test**
 
@@ -433,13 +433,13 @@ func TestRepositionerMultiplePrefixesSortedIndependently(t *testing.T) {
 
 **Step 3: Run tests**
 
-Run: `cd go && go test ./lib/_/dagnabit/`
+Run: `cd go && go test ./lib/0/dagnabit/`
 Expected: PASS
 
 **Step 4: Commit**
 
 ```
-git add go/lib/_/dagnabit/repositioner_test.go
+git add go/lib/0/dagnabit/repositioner_test.go
 git commit -m "test(dagnabit): add tests for per-prefix independent sorting"
 ```
 
@@ -486,7 +486,7 @@ Expected: no output (lib/ packages should already be correctly placed)
 
 **Step 1: Run dagnabit unit tests**
 
-Run: `cd go && go test -v -tags test,debug ./lib/_/dagnabit/`
+Run: `cd go && go test -v -tags test,debug ./lib/0/dagnabit/`
 Expected: all PASS
 
 **Step 2: Run full Go unit tests**

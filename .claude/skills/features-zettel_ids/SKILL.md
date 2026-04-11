@@ -36,7 +36,7 @@ A triangular-number mapping converts each 2D `(Left, Right)` pair to a single 1D
 - **1D to 2D:** `n = round(sqrt(id * 2)); ext = Extrema(n); Left = id - ext.Left; Right = ext.Right - id`
 - **Extrema(n):** `Left = (n-1)*n/2 + 1`, `Right = n*(n+1)/2`
 
-**Source:** `go/internal/_/coordinates/kennung.go` -- `ZettelIdCoordinate{Left, Right uint32}`, `Id()`, `SetInt()`
+**Source:** `go/internal/0/coordinates/kennung.go` -- `ZettelIdCoordinate{Left, Right uint32}`, `Id()`, `SetInt()`
 
 ## ZettelId Index
 
@@ -95,7 +95,7 @@ The `Store` (`go/internal/tango/store/`) holds a `zettelIdIndex` field. When a z
 | Concern | Package |
 |---------|---------|
 | ZettelId type & parsing | `go/internal/echo/ids/zettel_id.go` |
-| Coordinate mapping | `go/internal/_/coordinates/kennung.go` |
+| Coordinate mapping | `go/internal/0/coordinates/kennung.go` |
 | Yin/Yang provider files | `go/internal/foxtrot/object_id_provider/` |
 | Index interface | `go/internal/india/zettel_id_index/main.go` |
 | v0 index (map-based, active) | `go/internal/india/zettel_id_index/v0/main.go` |

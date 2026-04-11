@@ -6,7 +6,7 @@ directory name alone makes the dependency direction visible.
 
 ## Layer Breakdown
 
-### Layer 0: `_` (External/Vendored)
+### Layer 0: `0` (External/Vendored)
 
 **Packages:** bech32, box_chars, coordinates, equality, exec, external_state,
 flag_policy, hecks, http_statuses, interfaces, mcp, object_change_type,
@@ -24,7 +24,7 @@ codebase. The `interfaces` package here defines core types like `PoolPtr`,
 collections_map, cmp, equals, quiter_collection, quiter_seq, analyzers,
 reflexive_interface_generator, unicorn
 
-Foundational primitives with no dependencies except stdlib and the `_` layer.
+Foundational primitives with no dependencies except stdlib and the `0` layer.
 Defines the generic pool with `GetWithRepool`/reset semantics, custom error
 handling with context and stack traces, generic collection types (maps, coding
 helpers), and iterator/sequence protocols (`quiter_*`). The `analyzers` package
@@ -373,7 +373,7 @@ To decide where a new package belongs:
 1. List every NATO layer it must import from.
 2. Identify the highest layer in that list.
 3. Place the new package one layer above that highest dependency.
-4. If no NATO imports are needed, place it in `alfa` (or `_` if it has zero
+4. If no NATO imports are needed, place it in `alfa` (or `0` if it has zero
    dodder dependencies).
 5. Prefer the lowest valid layer. Promote to a higher layer later if new
    dependencies arise.

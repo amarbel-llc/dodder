@@ -1,6 +1,6 @@
 package script_config
 
-import "code.linenisgreat.com/dodder/go/lib/_/equality"
+import "code.linenisgreat.com/dodder/go/lib/0/equality"
 
 //go:generate tommy generate
 type WithOutputFormat struct {

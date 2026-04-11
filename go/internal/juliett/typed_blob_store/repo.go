@@ -1,7 +1,7 @@
 package typed_blob_store
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_blobs"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"

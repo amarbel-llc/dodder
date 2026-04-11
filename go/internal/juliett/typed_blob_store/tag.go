@@ -3,7 +3,7 @@ package typed_blob_store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/india/env_lua"
 	"code.linenisgreat.com/dodder/go/internal/india/tag_blobs"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/lua"
 )

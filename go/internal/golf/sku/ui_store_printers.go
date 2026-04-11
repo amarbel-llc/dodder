@@ -1,6 +1,6 @@
 package sku
 
-import "code.linenisgreat.com/dodder/go/lib/_/interfaces"
+import "code.linenisgreat.com/dodder/go/lib/0/interfaces"
 
 type UIStorePrinters struct {
 	TransactedNew       interfaces.FuncIter[*Transacted]

@@ -1,6 +1,6 @@
 package catgut
 
-import "code.linenisgreat.com/dodder/go/lib/_/interfaces"
+import "code.linenisgreat.com/dodder/go/lib/0/interfaces"
 
 type (
 	StringFormatReader[T any] interface {

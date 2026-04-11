@@ -79,7 +79,7 @@ Create `go/internal/golf/blob_store_configs/toml_inventory_archive_v0.go`. Follo
 package blob_store_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/compression_type"
@@ -628,7 +628,7 @@ Create `go/internal/india/blob_stores/store_inventory_archive.go`:
 package blob_stores
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/echo/inventory_archive"
@@ -894,7 +894,7 @@ feat(india/blob_stores): implement AllBlobs with archive+loose dedup
 package blob_stores
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 )
 
@@ -962,7 +962,7 @@ Create `go/internal/lima/commands_madder/pack.go`:
 package commands_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/juliett/command"
 	"code.linenisgreat.com/dodder/go/internal/kilo/command_components_madder"

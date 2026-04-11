@@ -7,7 +7,7 @@ sole `internal/` dependency on `string_format_writer.LenStringMax`.
 
 **Architecture:** Replace the cross-tier constant reference with a local
 constant, `git mv` the package from `internal/foxtrot/` to `lib/delta/`, then
-update all 6 import sites. The package's dependencies (`lib/_/interfaces`,
+update all 6 import sites. The package's dependencies (`lib/0/interfaces`,
 `lib/bravo/errors`, `lib/charlie/ohio`) are all within delta's tier constraints.
 
 **Tech Stack:** Go, NATO tier hierarchy (`lib/delta` depends on `lib/charlie`
@@ -33,7 +33,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/lib/_/dagnabit"
+	"code.linenisgreat.com/dodder/go/lib/0/dagnabit"
 )
 
 func main() {

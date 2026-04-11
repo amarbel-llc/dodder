@@ -78,10 +78,10 @@ how to regenerate and commit fixtures after store format changes.
 
 The codebase is split into two directory trees:
 
-- `go/lib/` --- Domain-agnostic utility packages (62 packages across `_`, alfa,
+- `go/lib/` --- Domain-agnostic utility packages (62 packages across `0`, alfa,
   bravo, charlie, delta, echo tiers). These have no dodder-specific concepts and
   are reusable infrastructure.
-- `go/internal/` --- Dodder/madder-specific packages (everything else, from `_`
+- `go/internal/` --- Dodder/madder-specific packages (everything else, from `0`
   through yankee). These contain domain types, commands, and application logic.
 
 Both trees use NATO phonetic alphabet naming (alfa, bravo, charlie, etc.) to

@@ -92,7 +92,7 @@ package repo_blobs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
@@ -172,7 +172,7 @@ package repo_configs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
@@ -253,7 +253,7 @@ package genesis_configs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
@@ -353,7 +353,7 @@ package workspace_config_blobs
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/hyphence"
 )
 
@@ -524,7 +524,7 @@ Replace the struct with hardcoded stores with a map-based approach built from `s
 package type_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genres"

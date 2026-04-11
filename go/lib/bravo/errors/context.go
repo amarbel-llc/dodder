@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
 	"golang.org/x/xerrors"
 )
 

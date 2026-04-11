@@ -4,9 +4,9 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
+	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"

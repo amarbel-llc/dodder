@@ -3,7 +3,7 @@ package pool
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 type value[SWIMMER any] struct {

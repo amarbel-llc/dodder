@@ -1,8 +1,8 @@
 package checkout_options
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 type Options struct {

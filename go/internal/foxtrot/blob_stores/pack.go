@@ -1,9 +1,9 @@
 package blob_stores
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	tap "github.com/amarbel-llc/bob/packages/tap-dancer/go"
 )
 

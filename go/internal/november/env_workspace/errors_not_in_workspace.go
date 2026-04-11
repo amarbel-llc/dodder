@@ -2,7 +2,7 @@ package env_workspace
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

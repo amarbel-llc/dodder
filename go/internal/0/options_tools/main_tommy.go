@@ -4,15 +4,15 @@ package options_tools
 
 import (
 	"fmt"
-
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
-// Ensure imports are used.
 var (
 	_ = fmt.Errorf
 	_ cst.NodeKind
+	_ = strings.Contains
 )
 
 type OptionsDocument struct {
@@ -27,59 +27,71 @@ func DecodeOptions(input []byte) (*OptionsDocument, error) {
 		return nil, err
 	}
 
-	d := &OptionsDocument{cstDoc: doc, consumed: make(map[string]bool)}
-
-	if v, err := document.GetFromContainer[[]string](d.cstDoc, d.cstDoc.Root(), "merge"); err == nil {
-		d.data.Merge = v
-		d.consumed["merge"] = true
+	d := &OptionsDocument{
+		consumed: make(map[string]bool),
+		cstDoc:   doc,
 	}
 
+	for _, _kv := range d.cstDoc.Root().Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "merge":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				d.data.Merge = v
+				d.consumed["merge"] = true
+			}
+		}
+	}
 	return d, nil
 }
-
-func (d *OptionsDocument) Data() *Options { return &d.data }
-
+func (d *OptionsDocument) Data() *Options {
+	return &d.data
+}
 func (d *OptionsDocument) Encode() ([]byte, error) {
-	if err := d.cstDoc.SetInContainer(d.cstDoc.Root(), "merge", d.data.Merge); err != nil {
-		return nil, err
+	{
+		if err := cst.SetAny(d.cstDoc.Root(), "merge", d.data.Merge); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
 	}
-
 	return d.cstDoc.Bytes(), nil
 }
-
 func (d *OptionsDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
-
 func (d *OptionsDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
-
 func (d *OptionsDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
-
 func (d *OptionsDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
-
 func (d *OptionsDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
-
 func DecodeOptionsInto(data *Options, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
-	if v, err := document.GetFromContainer[[]string](doc, container, "merge"); err == nil {
-		data.Merge = v
-		consumed[keyPrefix+"merge"] = true
+	for _, _kv := range container.Children {
+		if _kv.Kind != cst.NodeKeyValue {
+			continue
+		}
+		switch cst.KeyValueName(_kv) {
+		case "merge":
+			if v, ok := cst.ExtractStringSlice(_kv); ok {
+				data.Merge = v
+				consumed[keyPrefix+"merge"] = true
+			}
+		}
 	}
-
 	return nil
 }
-
 func EncodeOptionsFrom(data *Options, doc *document.Document, container *cst.Node) error {
-	if err := doc.SetInContainer(container, "merge", data.Merge); err != nil {
-		return err
+	{
+		if err := cst.SetAny(container, "merge", data.Merge); err != nil {
+			return fmt.Errorf("%w", err)
+		}
 	}
-
 	return nil
 }

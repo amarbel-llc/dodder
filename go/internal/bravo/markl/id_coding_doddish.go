@@ -1,7 +1,7 @@
 package markl
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/doddish"
+	"code.linenisgreat.com/dodder/go/internal/0/doddish"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

@@ -26,7 +26,7 @@ below)
 |---------------|----------------------|---------------|
 | `TemporaryFS` struct + 4 methods | `os`, `lib/bravo/errors` | Yes |
 | `MakeHashBucketPath()` | `bytes`, `fmt`, `path/filepath`, `strings`, `lib/alfa/unicorn` | Yes |
-| `PathFromHeadAndTail()` | `path/filepath`, `lib/_/interfaces` | Yes |
+| `PathFromHeadAndTail()` | `path/filepath`, `lib/0/interfaces` | Yes |
 | `MakeHashBucketPathJoinFunc()` | (calls `MakeHashBucketPath`) | Yes |
 | `MakeDirIfNecessary()` | `os`, `path/filepath`, `lib/bravo/errors` | Yes |
 | `MakeDirIfNecessaryForStringerWithHeadAndTail()` | (calls `PathFromHeadAndTail`) | Yes |
@@ -43,7 +43,7 @@ below)
 | Import | Tier | Already imported? |
 |--------|------|-------------------|
 | `lib/alfa/unicorn` | alfa | No — new |
-| `lib/_/interfaces` | _ | Yes (in `dirnames_iter.go`) |
+| `lib/0/interfaces` | _ | Yes (in `dirnames_iter.go`) |
 | `lib/bravo/errors` | bravo | Yes |
 
 All within delta's tier constraints.
@@ -136,7 +136,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/unicorn"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
@@ -277,7 +277,7 @@ package env_dir
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
@@ -315,7 +315,7 @@ package env_dir
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/markl"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )
 

@@ -441,7 +441,7 @@ Ensure imports include `markl` and `domain_interfaces`:
 
 ``` go
 import (
-    "code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+    "code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
     "code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
     "code.linenisgreat.com/dodder/go/internal/alfa/genres"
     "code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -561,7 +561,7 @@ import (
     "os"
     "path/filepath"
 
-    "code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+    "code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
     "code.linenisgreat.com/dodder/go/internal/bravo/markl"
     "code.linenisgreat.com/dodder/go/internal/delta/objects"
     "code.linenisgreat.com/dodder/go/lib/bravo/errors"

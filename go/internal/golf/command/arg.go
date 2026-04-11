@@ -1,6 +1,6 @@
 package command
 
-import "code.linenisgreat.com/dodder/go/lib/_/interfaces"
+import "code.linenisgreat.com/dodder/go/lib/0/interfaces"
 
 type (
 	// Arg declares metadata for a single positional argument.

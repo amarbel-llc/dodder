@@ -3,7 +3,7 @@ package dagnabit
 import "fmt"
 
 var natoLevels = []string{
-	"_",
+	"0",
 	"alfa",
 	"bravo",
 	"charlie",

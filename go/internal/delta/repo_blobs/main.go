@@ -1,10 +1,10 @@
 package repo_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/_/remote_connection_types"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/remote_connection_types"
 	charlie_rb "code.linenisgreat.com/dodder/go/internal/charlie/repo_blobs"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
 	"code.linenisgreat.com/dodder/go/lib/echo/xdg"

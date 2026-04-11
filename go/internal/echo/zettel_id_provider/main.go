@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/coordinates"
+	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/files"
 )

@@ -16,7 +16,7 @@ import (
 // ModulePath is the Go module path (e.g., "code.linenisgreat.com/dodder/go").
 // Dir is the working directory to run `go list` from.
 // PackagePrefixes are directory prefixes containing packages (e.g., ["lib", "internal"]).
-// Node names in returned edges include the prefix (e.g., "lib/_/ohio_buffer").
+// Node names in returned edges include the prefix (e.g., "lib/0/ohio_buffer").
 type GoListReader struct {
 	ModulePath      string
 	Dir             string

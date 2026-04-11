@@ -122,7 +122,7 @@ but it becomes crash-safe.
 * `go/internal/echo/file_lock/lock.go` — current `LockSmith` implementation
 * `go/internal/foxtrot/zettel_id_index/v0/main.go` — current zettel ID index
   (gob-encoded `map[int]bool`)
-* `go/lib/_/interfaces/lock.go` — `LockSmith` interface
+* `go/lib/0/interfaces/lock.go` — `LockSmith` interface
 * `flock(2)` — POSIX advisory file locking, available on Linux and macOS.
   Go exposes it via `syscall.Flock`. Not safe on NFS (irrelevant here —
   workspaces are same-filesystem)

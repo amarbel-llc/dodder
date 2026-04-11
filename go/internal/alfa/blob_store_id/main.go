@@ -4,8 +4,8 @@ import (
 	"encoding"
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/_/xdg_location_type"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

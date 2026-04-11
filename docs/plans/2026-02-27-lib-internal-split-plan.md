@@ -23,7 +23,7 @@ creates `lib/`, moves packages, and rewrites all import paths.
 ### Task 1: Move StoreVersion interface to domain\_interfaces
 
 **Files:**
-- Modify: `go/lib/_/interfaces/store_version.go` (delete)
+- Modify: `go/lib/0/interfaces/store_version.go` (delete)
 - Modify: `go/internal/alfa/domain_interfaces/` (add StoreVersion)
 - Modify: all files importing `interfaces.StoreVersion` (14 files)
 
@@ -35,7 +35,7 @@ Add to `go/internal/alfa/domain_interfaces/store_version.go`:
 package domain_interfaces
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 // TODO combine with config_immutable.StoreVersion and make a sealed struct
@@ -48,7 +48,7 @@ type StoreVersion interface {
 **Step 2: Delete the old file**
 
 ```bash
-rm go/lib/_/interfaces/store_version.go
+rm go/lib/0/interfaces/store_version.go
 ```
 
 **Step 3: Update importers**
@@ -163,21 +163,21 @@ mkdir -p go/lib/echo
 **Step 2: Move underscore-tier packages (15 packages)**
 
 ```bash
-git mv go/internal/_/bech32 go/lib/_/bech32
-git mv go/internal/_/box_chars go/lib/_/box_chars
-git mv go/internal/_/equality go/lib/_/equality
-git mv go/internal/_/exec go/lib/_/exec
-git mv go/internal/_/flag_policy go/lib/_/flag_policy
-git mv go/internal/_/hecks go/lib/_/hecks
-git mv go/internal/_/http_statuses go/lib/_/http_statuses
-git mv go/internal/_/interfaces go/lib/_/interfaces
-git mv go/internal/_/mcp go/lib/_/mcp
-git mv go/internal/_/ohio_buffer go/lib/_/ohio_buffer
-git mv go/internal/_/primordial go/lib/_/primordial
-git mv go/internal/_/reflexive_interface_generator go/lib/_/reflexive_interface_generator
-git mv go/internal/_/reset go/lib/_/reset
-git mv go/internal/_/stack_frame go/lib/_/stack_frame
-git mv go/internal/_/vim_cli_options_builder go/lib/_/vim_cli_options_builder
+git mv go/internal/0/bech32 go/lib/0/bech32
+git mv go/internal/0/box_chars go/lib/0/box_chars
+git mv go/internal/0/equality go/lib/0/equality
+git mv go/internal/0/exec go/lib/0/exec
+git mv go/internal/0/flag_policy go/lib/0/flag_policy
+git mv go/internal/0/hecks go/lib/0/hecks
+git mv go/internal/0/http_statuses go/lib/0/http_statuses
+git mv go/internal/0/interfaces go/lib/0/interfaces
+git mv go/internal/0/mcp go/lib/0/mcp
+git mv go/internal/0/ohio_buffer go/lib/0/ohio_buffer
+git mv go/internal/0/primordial go/lib/0/primordial
+git mv go/internal/0/reflexive_interface_generator go/lib/0/reflexive_interface_generator
+git mv go/internal/0/reset go/lib/0/reset
+git mv go/internal/0/stack_frame go/lib/0/stack_frame
+git mv go/internal/0/vim_cli_options_builder go/lib/0/vim_cli_options_builder
 ```
 
 **Step 3: Move alfa-tier packages (11 packages)**
@@ -275,21 +275,21 @@ Run a sed command per package. The full list:
 cd /path/to/worktree
 
 # Underscore tier
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/bech32|go/lib/_/bech32|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/box_chars|go/lib/_/box_chars|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/equality|go/lib/_/equality|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/exec|go/lib/_/exec|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/flag_policy|go/lib/_/flag_policy|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/hecks|go/lib/_/hecks|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/http_statuses|go/lib/_/http_statuses|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/interfaces|go/lib/_/interfaces|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/mcp|go/lib/_/mcp|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/ohio_buffer|go/lib/_/ohio_buffer|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/primordial|go/lib/_/primordial|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/reflexive_interface_generator|go/lib/_/reflexive_interface_generator|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/reset|go/lib/_/reset|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/stack_frame|go/lib/_/stack_frame|g' {} +
-find go/ -name '*.go' -exec sed -i '' 's|go/internal/_/vim_cli_options_builder|go/lib/_/vim_cli_options_builder|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/bech32|go/lib/0/bech32|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/box_chars|go/lib/0/box_chars|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/equality|go/lib/0/equality|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/exec|go/lib/0/exec|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/flag_policy|go/lib/0/flag_policy|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/hecks|go/lib/0/hecks|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/http_statuses|go/lib/0/http_statuses|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/interfaces|go/lib/0/interfaces|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/mcp|go/lib/0/mcp|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/ohio_buffer|go/lib/0/ohio_buffer|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/primordial|go/lib/0/primordial|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/reflexive_interface_generator|go/lib/0/reflexive_interface_generator|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/reset|go/lib/0/reset|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/stack_frame|go/lib/0/stack_frame|g' {} +
+find go/ -name '*.go' -exec sed -i '' 's|go/internal/0/vim_cli_options_builder|go/lib/0/vim_cli_options_builder|g' {} +
 
 # Alfa tier
 find go/ -name '*.go' -exec sed -i '' 's|go/internal/alfa/analyzers|go/lib/alfa/analyzers|g' {} +

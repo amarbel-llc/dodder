@@ -1,6 +1,6 @@
 package errors
 
-import hs "code.linenisgreat.com/dodder/go/lib/_/http_statuses"
+import hs "code.linenisgreat.com/dodder/go/lib/0/http_statuses"
 
 func BadRequest(err error) error {
 	if Is400BadRequest(err) {

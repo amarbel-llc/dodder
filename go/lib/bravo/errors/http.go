@@ -3,7 +3,7 @@ package errors
 import (
 	"fmt"
 
-	hs "code.linenisgreat.com/dodder/go/lib/_/http_statuses"
+	hs "code.linenisgreat.com/dodder/go/lib/0/http_statuses"
 )
 
 func newHttpError(statusCode hs.Code) http {

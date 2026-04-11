@@ -10,8 +10,8 @@ func TestNATOLevelMapperHeight0(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if name != "_" {
-		t.Errorf("expected %q, got %q", "_", name)
+	if name != "0" {
+		t.Errorf("expected %q, got %q", "0", name)
 	}
 }
 

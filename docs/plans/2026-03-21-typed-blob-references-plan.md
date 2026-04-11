@@ -23,11 +23,11 @@ references.
 
 **Files:**
 
-- Modify: `go/internal/_/doddish/token_matcher.go:73-86`
+- Modify: `go/internal/0/doddish/token_matcher.go:73-86`
 
 **Step 1: Add typed blob reference matchers**
 
-In `go/internal/_/doddish/token_matcher.go`, replace the existing untyped blob
+In `go/internal/0/doddish/token_matcher.go`, replace the existing untyped blob
 reference matchers and add typed variants. The old `TokenMatcherBlobReference`
 and `TokenMatcherBlobReferenceAlias` are replaced --- hard cutover, no untyped
 blob refs survive.
@@ -82,7 +82,7 @@ no-sig variants as new names.
 
 **Step 2: Run unit tests**
 
-Run: `cd go && go test -v -tags test,debug ./internal/_/doddish/` Expected:
+Run: `cd go && go test -v -tags test,debug ./internal/0/doddish/` Expected:
 existing tests pass (no existing tests use the blob reference matchers).
 
 **Step 3: Commit**
@@ -95,11 +95,11 @@ existing tests pass (no existing tests use the blob reference matchers).
 
 **Files:**
 
-- Modify: `go/internal/_/doddish/seq_test.go`
+- Modify: `go/internal/0/doddish/seq_test.go`
 
 **Step 1: Add test cases for typed blob reference matching**
 
-Add to `getSeqTestCases()` in `go/internal/_/doddish/seq_test.go`:
+Add to `getSeqTestCases()` in `go/internal/0/doddish/seq_test.go`:
 
 ``` go
 // typed blob ref without alias: <@digest !type@sig
@@ -168,7 +168,7 @@ token-level scanning of typed blob reference inputs.
 
 **Step 2: Run tests**
 
-Run: `cd go && go test -v -tags test,debug ./internal/_/doddish/` Expected: PASS
+Run: `cd go && go test -v -tags test,debug ./internal/0/doddish/` Expected: PASS
 
 **Step 3: Commit**
 

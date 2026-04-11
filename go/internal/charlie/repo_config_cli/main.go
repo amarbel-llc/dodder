@@ -3,11 +3,11 @@ package repo_config_cli
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/_/options_print"
-	"code.linenisgreat.com/dodder/go/internal/_/options_tools"
+	"code.linenisgreat.com/dodder/go/internal/0/options_print"
+	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/alfa/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/foxtrot/config_cli"
 )
 

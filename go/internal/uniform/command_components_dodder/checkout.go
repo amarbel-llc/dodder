@@ -1,6 +1,6 @@
 package command_components_dodder
 
-import "code.linenisgreat.com/dodder/go/lib/_/interfaces"
+import "code.linenisgreat.com/dodder/go/lib/0/interfaces"
 
 type Checkout struct {
 	Delete   bool

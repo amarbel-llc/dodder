@@ -24,8 +24,8 @@ commit (e.g., by reference discovery) but lost on the next read from the store.
 
 Four files must be updated:
 
-1. **`internal/_/key_bytes/main.go`** — Add a new `Binary` constant (pick an
-   unused ASCII byte). Run `go generate ./internal/_/key_bytes/` to regenerate
+1. **`internal/0/key_bytes/main.go`** — Add a new `Binary` constant (pick an
+   unused ASCII byte). Run `go generate ./internal/0/key_bytes/` to regenerate
    `binary_string.go`.
 
 2. **`binary_field.go`** — Add the new key to `binaryFieldOrder`. Position

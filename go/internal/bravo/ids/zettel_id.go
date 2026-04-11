@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/_/coordinates"
-	"code.linenisgreat.com/dodder/go/internal/_/doddish"
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
+	"code.linenisgreat.com/dodder/go/internal/0/doddish"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

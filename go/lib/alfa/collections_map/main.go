@@ -1,7 +1,7 @@
 package collections_map
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 type Map[KEY comparable, VALUE any] map[KEY]VALUE

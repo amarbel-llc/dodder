@@ -24,7 +24,7 @@ Current `internal/echo/xdg` imports:
 
 | Import | Tree | Status |
 |--------|------|--------|
-| `lib/_/interfaces` | lib | OK |
+| `lib/0/interfaces` | lib | OK |
 | `lib/alfa/pool` | lib | OK |
 | `lib/bravo/errors` | lib | OK |
 | `lib/charlie/env_vars` | lib | OK |

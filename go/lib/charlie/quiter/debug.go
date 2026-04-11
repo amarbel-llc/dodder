@@ -1,7 +1,7 @@
 package quiter
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 func PrintPointer[T any, TPtr interfaces.Ptr[T]](e TPtr) (err error) {

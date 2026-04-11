@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 	"code.linenisgreat.com/dodder/go/lib/echo/age"
 )

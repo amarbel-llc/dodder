@@ -131,7 +131,7 @@ A new top-level flake output exposes the binary.
 
 ## More Information
 
-- Madder blob store interfaces: `go/internal/_/domain_interfaces/blob_store.go`
+- Madder blob store interfaces: `go/internal/0/domain_interfaces/blob_store.go`
 - `NamedBlobAccess` implementation:
   `go/internal/golf/env_repo/named_blob_access.go`
 - Blob store ID system: `go/internal/alfa/blob_store_id/`

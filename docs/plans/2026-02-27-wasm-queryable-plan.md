@@ -555,7 +555,7 @@ package wasm
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/errors"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"github.com/tetratelabs/wazero"
@@ -1070,7 +1070,7 @@ package sku_wasm
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/wasm"
 	"code.linenisgreat.com/dodder/go/internal/juliett/sku"

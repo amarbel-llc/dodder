@@ -5,7 +5,7 @@ import (
 	"io"
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
 )
 
 func Join(es ...error) error {

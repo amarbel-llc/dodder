@@ -200,9 +200,9 @@ feat: add Reset, ResetWith, and Equals support for References
 ### Task 4: Doddish operator and token matchers
 
 **Files:**
-- Modify: `go/internal/_/doddish/op.go:44-62` (add OpReference)
-- Modify: `go/internal/_/doddish/op.go:85-115` (add to operatorTypeMixedSeq)
-- Modify: `go/internal/_/doddish/token_matcher.go` (add new matchers)
+- Modify: `go/internal/0/doddish/op.go:44-62` (add OpReference)
+- Modify: `go/internal/0/doddish/op.go:85-115` (add to operatorTypeMixedSeq)
+- Modify: `go/internal/0/doddish/token_matcher.go` (add new matchers)
 
 **Step 1: Add OpReference operator**
 
@@ -459,7 +459,7 @@ feat: write referenced object locks in box format
 ### Task 9: Binary index — key_bytes constant and encoder
 
 **Files:**
-- Modify: `go/internal/_/key_bytes/main.go:13-39` (add References constant)
+- Modify: `go/internal/0/key_bytes/main.go:13-39` (add References constant)
 - Modify: `go/internal/india/stream_index/binary_field.go:14-24` (add to binaryFieldOrder)
 - Modify: `go/internal/india/stream_index/binary_encoder.go` (add case after Type)
 

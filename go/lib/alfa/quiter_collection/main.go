@@ -3,7 +3,7 @@ package quiter_collection
 import (
 	"iter"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 func Equals[ELEMENT interfaces.Stringer](

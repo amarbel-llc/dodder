@@ -3,7 +3,7 @@ package store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/india/tag_blobs"

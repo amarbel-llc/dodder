@@ -18,7 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_json_fmt"
 	"code.linenisgreat.com/dodder/go/internal/hotel/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/jsonrpc"

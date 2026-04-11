@@ -93,7 +93,7 @@ func (repositioner *Repositioner) runPrefix(prefix string, edges []Edge) error {
 	return nil
 }
 
-// extractTreePrefix returns the first path component (e.g., "lib" from "lib/_/ohio_buffer").
+// extractTreePrefix returns the first path component (e.g., "lib" from "lib/0/ohio_buffer").
 func extractTreePrefix(path string) string {
 	if idx := strings.IndexByte(path, '/'); idx >= 0 {
 		return path[:idx]
@@ -102,7 +102,7 @@ func extractTreePrefix(path string) string {
 	return path
 }
 
-// extractLevel returns the second path component (e.g., "_" from "lib/_/ohio_buffer").
+// extractLevel returns the second path component (e.g., "0" from "lib/0/ohio_buffer").
 func extractLevel(path string) string {
 	parts := strings.SplitN(path, "/", 3)
 	if len(parts) < 2 {
@@ -112,7 +112,7 @@ func extractLevel(path string) string {
 	return parts[1]
 }
 
-// extractPackageName returns the third path component (e.g., "ohio_buffer" from "lib/_/ohio_buffer").
+// extractPackageName returns the third path component (e.g., "ohio_buffer" from "lib/0/ohio_buffer").
 func extractPackageName(path string) string {
 	parts := strings.SplitN(path, "/", 3)
 	if len(parts) < 3 {

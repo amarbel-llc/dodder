@@ -5,8 +5,8 @@ import (
 	"os"
 	"os/exec"
 
-	"code.linenisgreat.com/dodder/go/internal/_/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/_/filesystem_ops"
+	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
+	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"

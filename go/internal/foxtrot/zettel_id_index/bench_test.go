@@ -3,7 +3,7 @@ package zettel_id_index
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/_/coordinates"
+	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"code.linenisgreat.com/dodder/go/lib/delta/collections"
 )

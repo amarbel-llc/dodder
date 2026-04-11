@@ -1,7 +1,7 @@
 package inventory_archive
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 )
 
 // BlobMetadata describes a blob candidate for delta packing.

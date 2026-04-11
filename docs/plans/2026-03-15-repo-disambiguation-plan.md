@@ -15,13 +15,13 @@
 ### Task 1: Extract `xdg_location_type` package
 
 **Files:**
-- Create: `go/internal/_/xdg_location_type/main.go`
-- Modify: `go/internal/_/blob_store_id/location.go`
-- Modify: `go/internal/_/blob_store_id/main.go`
+- Create: `go/internal/0/xdg_location_type/main.go`
+- Modify: `go/internal/0/blob_store_id/location.go`
+- Modify: `go/internal/0/blob_store_id/main.go`
 
 **Step 1: Create `xdg_location_type` package**
 
-Create `go/internal/_/xdg_location_type/main.go` with the `Type` enum extracted from `blob_store_id/location.go`. Keep the same values and prefix logic:
+Create `go/internal/0/xdg_location_type/main.go` with the `Type` enum extracted from `blob_store_id/location.go`. Keep the same values and prefix logic:
 
 ```go
 package xdg_location_type
@@ -111,7 +111,7 @@ Replace `location` type with a type alias to `xdg_location_type.typee`. Keep the
 ```go
 package blob_store_id
 
-import "code.linenisgreat.com/dodder/go/internal/_/xdg_location_type"
+import "code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
 
 type (
 	LocationType       = xdg_location_type.Type
@@ -149,7 +149,7 @@ Message: `refactor: extract xdg_location_type package from blob_store_id`
 ### Task 2: Create `repo_id` package
 
 **Files:**
-- Create: `go/internal/_/repo_id/main.go`
+- Create: `go/internal/0/repo_id/main.go`
 
 **Step 1: Create `repo_id/main.go`**
 
@@ -157,7 +157,7 @@ Message: `refactor: extract xdg_location_type package from blob_store_id`
 package repo_id
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/xdg_location_type"
+	"code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
@@ -252,7 +252,7 @@ Add field and flag registration. Read `DODDER_REPO_ID` env var as default:
 ```go
 import (
 	"os"
-	"code.linenisgreat.com/dodder/go/internal/_/repo_id"
+	"code.linenisgreat.com/dodder/go/internal/0/repo_id"
 )
 
 // In Config struct:

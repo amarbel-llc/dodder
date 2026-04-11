@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 func TestTypedMetadataCoderRoundtripWithBlobDigest(t *testing.T) {

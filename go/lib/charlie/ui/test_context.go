@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/_/stack_frame"
+	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
 	"code.linenisgreat.com/dodder/go/lib/alfa/test_ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

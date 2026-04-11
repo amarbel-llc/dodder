@@ -1,8 +1,8 @@
 package string_format_writer
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/_/options_print"
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/options_print"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

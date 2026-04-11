@@ -1,6 +1,6 @@
 package objects
 
-import "code.linenisgreat.com/dodder/go/internal/_/domain_interfaces"
+import "code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 
 func (metadata *metadata) GetBlobDigest() domain_interfaces.MarklId {
 	return &metadata.digBlob

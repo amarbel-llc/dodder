@@ -1,6 +1,6 @@
 package blob_store_id
 
-import "code.linenisgreat.com/dodder/go/internal/_/xdg_location_type"
+import "code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
 
 type (
 	LocationType       = xdg_location_type.Type

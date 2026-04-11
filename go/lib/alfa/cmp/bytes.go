@@ -3,7 +3,7 @@ package cmp
 import (
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/lib/_/interfaces"
+	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 )
 
 func CompareUTF8Bytes(left, right []byte, partial bool) Result {
