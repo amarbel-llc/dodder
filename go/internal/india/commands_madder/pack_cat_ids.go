@@ -17,7 +17,11 @@ type PackCatIds struct {
 
 func (cmd PackCatIds) GetDescription() command.Description {
 	return command.Description{
-		Short: "output ids from a packed blob",
+		Short: "list blob digests contained in archive files",
+		Long: "Output the blob digests stored in inventory archive pack " +
+			"files. With no arguments, lists digests from all archives " +
+			"across all stores. Pass archive checksums to filter to " +
+			"specific archive files.",
 	}
 }
 

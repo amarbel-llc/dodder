@@ -28,6 +28,12 @@ func (cmd *Read) GetArgs() []command.ArgGroup { return nil }
 func (cmd Read) GetDescription() command.Description {
 	return command.Description{
 		Short: "read blobs from JSON on stdin",
+		Long: "Read JSON objects from stdin and write each blob value into " +
+			"the content-addressable store. Each JSON object must have a " +
+			"\"blob\" field containing the content to store. An optional " +
+			"\"store\" field switches the target blob store for that entry. " +
+			"This command is the programmatic counterpart to 'write', " +
+			"accepting structured input rather than file paths.",
 	}
 }
 

@@ -43,6 +43,11 @@ func (cmd *InfoRepo) GetArgs() []command.ArgGroup {
 func (cmd InfoRepo) GetDescription() command.Description {
 	return command.Description{
 		Short: "display blob store configuration",
+		Long: "Show the configuration of a blob store in hyphence format. " +
+			"With no arguments, shows the default store's immutable config. " +
+			"Accepts a store ID and one or more config keys: " +
+			"config-immutable (default), config-path, dir-blob_stores, " +
+			"xdg, or any key from the store's typed config.",
 	}
 }
 

@@ -50,6 +50,14 @@ func (cmd *Sync) GetArgs() []command.ArgGroup {
 func (cmd Sync) GetDescription() command.Description {
 	return command.Description{
 		Short: "synchronize blobs between stores",
+		Long: "Copy blobs from a source blob store to one or more destination " +
+			"stores. The first store ID argument is the source; remaining " +
+			"arguments are destinations. With no arguments, the default " +
+			"store is the source and all other configured stores are " +
+			"destinations. When source and destination use different hash " +
+			"types, blobs are rehashed (source digests are not preserved in " +
+			"single-hash destinations). Use -limit to cap the number of " +
+			"blobs transferred. Output is TAP format with per-blob status.",
 	}
 }
 

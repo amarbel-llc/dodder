@@ -32,7 +32,13 @@ var _ interfaces.CommandComponentWriter = (*Pack)(nil)
 
 func (cmd Pack) GetDescription() command.Description {
 	return command.Description{
-		Short: "pack objects into a blob",
+		Short: "pack loose blobs into archive files",
+		Long: "Consolidate loose blobs in inventory archive stores into " +
+			"packed archive files for more efficient storage. With no " +
+			"arguments, all packable stores are processed. Use " +
+			"-delete-loose to remove loose blobs after successful " +
+			"packing, -max-pack-size to control archive file size, " +
+			"and -delta to enable delta compression.",
 	}
 }
 

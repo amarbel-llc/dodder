@@ -45,7 +45,11 @@ func (cmd *CatIds) GetArgs() []command.ArgGroup {
 
 func (cmd CatIds) GetDescription() command.Description {
 	return command.Description{
-		Short: "output object ids from a blob",
+		Short: "list all blob digests in a store",
+		Long: "Output every blob digest stored in one or more blob stores. " +
+			"With no arguments, lists digests from all configured stores. " +
+			"Pass store IDs to query specific stores. Use -format to " +
+			"control the output encoding of blob digests.",
 	}
 }
 

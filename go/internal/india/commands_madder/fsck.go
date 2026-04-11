@@ -29,6 +29,12 @@ type Fsck struct {
 func (cmd Fsck) GetDescription() command.Description {
 	return command.Description{
 		Short: "verify blob store integrity",
+		Long: "Verify the integrity of one or more blob stores by reading " +
+			"every blob and recomputing its content-addressable digest. " +
+			"Reports corrupt, missing, or unreadable blobs. With no " +
+			"arguments, all configured stores are checked. Pass store IDs " +
+			"to check specific stores. Output is TAP format with progress " +
+			"updates every 3 seconds.",
 	}
 }
 

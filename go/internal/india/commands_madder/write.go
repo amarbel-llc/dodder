@@ -38,6 +38,12 @@ var _ interfaces.CommandComponentWriter = (*Write)(nil)
 func (cmd Write) GetDescription() command.Description {
 	return command.Description{
 		Short: "write blobs to a store",
+		Long: "Write files or stdin into the content-addressable blob store. " +
+			"Each argument is a file path, '-' for stdin, or a blob store ID " +
+			"that switches the active store for subsequent writes. Output is " +
+			"TAP format with the computed digest and source path for each " +
+			"blob. Use -check to verify that files already exist in the " +
+			"store without writing them.",
 	}
 }
 

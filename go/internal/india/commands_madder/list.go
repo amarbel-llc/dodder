@@ -24,6 +24,10 @@ func (cmd *List) GetArgs() []command.ArgGroup { return nil }
 func (cmd List) GetDescription() command.Description {
 	return command.Description{
 		Short: "list configured blob stores",
+		Long: "List all blob stores configured for the current repository, " +
+			"showing each store's ID and description. Store IDs use prefixes " +
+			"to indicate scope: unprefixed for XDG user stores, '.' for " +
+			"CWD-relative stores, and '/' for XDG system stores.",
 	}
 }
 

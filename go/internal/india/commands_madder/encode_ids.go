@@ -21,7 +21,11 @@ var _ command.CommandWithArgs = (*EncodeIds)(nil)
 
 func (cmd EncodeIds) GetDescription() command.Description {
 	return command.Description{
-		Short: "convert hex digests to native ids",
+		Short: "convert hex digests to native markl IDs",
+		Long: "Read hex-encoded digests from stdin (one per line) and " +
+			"convert each to the native blech32-encoded markl ID format " +
+			"with the specified hash type prefix. Useful for migrating " +
+			"from external tools that produce hex digests.",
 	}
 }
 

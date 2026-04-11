@@ -27,6 +27,14 @@ func init() {
 			CompressionType:   compression_type.CompressionTypeDefault,
 			LockInternalFiles: true,
 		},
+		desc: command.Description{
+			Short: "initialize a local blob store",
+			Long: "Create a new local content-addressable blob store with " +
+				"hash-bucketed directory layout. The store is registered " +
+				"under the given store ID and uses the default compression " +
+				"and hash settings. Requires a store ID argument " +
+				"(e.g. 'default', '.archive').",
+		},
 	})
 
 	utility.AddCmd("init-pointer", &Init{
@@ -34,6 +42,12 @@ func init() {
 			ids.TypeTomlBlobStoreConfigPointerV0,
 		).TypeStruct,
 		blobStoreConfig: &blob_store_configs.TomlPointerV0{},
+		desc: command.Description{
+			Short: "initialize a pointer blob store",
+			Long: "Create a blob store that delegates to another store by " +
+				"reference. The pointer store does not hold blobs itself " +
+				"but redirects reads and writes to the target store.",
+		},
 	})
 
 	utility.AddCmd("init-sftp-explicit", &Init{
@@ -41,6 +55,13 @@ func init() {
 			ids.TypeTomlBlobStoreConfigSftpExplicitV0,
 		).TypeStruct,
 		blobStoreConfig: &blob_store_configs.TomlSFTPV0{},
+		desc: command.Description{
+			Short: "initialize an SFTP blob store with explicit credentials",
+			Long: "Create a blob store backed by an SFTP remote, using " +
+				"explicitly provided host, port, user, and key path. " +
+				"Use -discover to detect an existing remote store's " +
+				"configuration from its directory structure.",
+		},
 	})
 
 	utility.AddCmd("init-sftp-ssh_config", &Init{
@@ -48,6 +69,13 @@ func init() {
 			ids.TypeTomlBlobStoreConfigSftpViaSSHConfigV0,
 		).TypeStruct,
 		blobStoreConfig: &blob_store_configs.TomlSFTPViaSSHConfigV0{},
+		desc: command.Description{
+			Short: "initialize an SFTP blob store via ssh_config",
+			Long: "Create a blob store backed by an SFTP remote, resolving " +
+				"connection parameters from ~/.ssh/config host entries. " +
+				"Use -discover to detect an existing remote store's " +
+				"configuration from its directory structure.",
+		},
 	})
 
 	utility.AddCmd("init-inventory-archive", &Init{
@@ -62,6 +90,13 @@ func init() {
 				MaxBlobSize: 10485760,
 				SizeRatio:   2.0,
 			},
+		},
+		desc: command.Description{
+			Short: "initialize an inventory archive blob store",
+			Long: "Create a blob store using the inventory archive format, " +
+				"which packs blobs into indexed archive files for efficient " +
+				"storage and O(1) lookups. This is the current archive " +
+				"format version with optional delta compression support.",
 		},
 	})
 
@@ -78,6 +113,12 @@ func init() {
 				SizeRatio:   2.0,
 			},
 		},
+		desc: command.Description{
+			Short: "initialize an inventory archive blob store (v1)",
+			Long: "Create a blob store using inventory archive format " +
+				"version 1 with delta compression support. Prefer " +
+				"init-inventory-archive for the current version.",
+		},
 	})
 
 	utility.AddCmd("init-inventory-archive-v0", &Init{
@@ -85,6 +126,12 @@ func init() {
 			ids.TypeTomlBlobStoreConfigInventoryArchiveV0,
 		).TypeStruct,
 		blobStoreConfig: &blob_store_configs.TomlInventoryArchiveV0{},
+		desc: command.Description{
+			Short: "initialize an inventory archive blob store (v0)",
+			Long: "Create a blob store using the original inventory " +
+				"archive format (v0) without delta compression. Prefer " +
+				"init-inventory-archive for the current version.",
+		},
 	})
 }
 
@@ -92,6 +139,7 @@ type Init struct {
 	tipe            ids.TypeStruct
 	blobStoreConfig blob_store_configs.ConfigMutable
 	discover        bool
+	desc            command.Description
 
 	command_components_madder.EnvBlobStore
 	command_components_madder.Init
@@ -100,9 +148,7 @@ type Init struct {
 var _ interfaces.CommandComponentWriter = (*Init)(nil)
 
 func (cmd Init) GetDescription() command.Description {
-	return command.Description{
-		Short: "initialize a blob store",
-	}
+	return cmd.desc
 }
 
 func (cmd *Init) SetFlagDefinitions(

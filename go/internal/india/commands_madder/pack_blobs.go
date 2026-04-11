@@ -35,7 +35,12 @@ var _ interfaces.CommandComponentWriter = (*PackBlobs)(nil)
 
 func (cmd PackBlobs) GetDescription() command.Description {
 	return command.Description{
-		Short: "pack blobs into an archive",
+		Short: "write files and pack them into an archive",
+		Long: "Write files into the blob store and then pack just those " +
+			"blobs into an archive. Arguments are file paths, '-' for " +
+			"stdin, or blob store IDs that switch the active store. " +
+			"Unlike 'pack', which packs all loose blobs, this command " +
+			"targets only the blobs written from the given files.",
 	}
 }
 

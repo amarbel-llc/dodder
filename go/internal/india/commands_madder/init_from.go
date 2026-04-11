@@ -49,7 +49,12 @@ func (cmd *InitFrom) GetArgs() []command.ArgGroup {
 
 func (cmd InitFrom) GetDescription() command.Description {
 	return command.Description{
-		Short: "initialize a blob store from a configuration",
+		Short: "initialize a blob store from a configuration file",
+		Long: "Create a new blob store by reading its type and settings " +
+			"from a hyphence-encoded configuration file. The config is " +
+			"automatically upgraded to the current version if an older " +
+			"format is detected. Requires a store name and the path to " +
+			"the configuration file.",
 	}
 }
 

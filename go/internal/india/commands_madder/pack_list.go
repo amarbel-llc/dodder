@@ -32,7 +32,11 @@ func (cmd *PackList) GetArgs() []command.ArgGroup {
 
 func (cmd PackList) GetDescription() command.Description {
 	return command.Description{
-		Short: "list objects in a packed blob",
+		Short: "list archive files in inventory archive stores",
+		Long: "List the archive pack files in one or more inventory archive " +
+			"stores, showing each archive's checksum and the number of " +
+			"blobs it contains. With no arguments, lists archives from " +
+			"all packable stores.",
 	}
 }
 

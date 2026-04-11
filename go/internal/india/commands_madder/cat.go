@@ -37,6 +37,14 @@ var _ interfaces.CommandComponentWriter = (*Cat)(nil)
 func (cmd Cat) GetDescription() command.Description {
 	return command.Description{
 		Short: "output blob contents by digest",
+		Long: "Retrieve and output the raw contents of one or more blobs " +
+			"identified by their content-addressable digest. Arguments are " +
+			"markl IDs (e.g. blake2b256-...) or blob store IDs that switch " +
+			"the active store for subsequent lookups. When a digest is not " +
+			"found in the active store, remaining stores are searched " +
+			"automatically. Use -utility to pipe each blob through an " +
+			"external command before output, or -prefix-sha to prepend " +
+			"each output line with the blob digest.",
 	}
 }
 
