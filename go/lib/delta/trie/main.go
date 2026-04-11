@@ -161,5 +161,3 @@ func (n node) Abbreviate(v string, loc int) string {
 		}
 	}
 }
-
-

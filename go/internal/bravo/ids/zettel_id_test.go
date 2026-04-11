@@ -42,4 +42,3 @@ func TestMakeHeadAndTail(t1 *testing.T) {
 		t.Errorf("expected %q but got %q", ex, ac)
 	}
 }
-

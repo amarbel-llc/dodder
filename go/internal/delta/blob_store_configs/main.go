@@ -75,20 +75,20 @@ var (
 
 // Interface satisfaction checks
 var (
-	_ ConfigSFTPRemotePath    = &TomlSFTPV0{}
-	_ ConfigSFTPRemotePath    = &TomlSFTPViaSSHConfigV0{}
-	_ ConfigMutable           = &TomlSFTPV0{}
-	_ ConfigLocalHashBucketed = TomlLocalHashBucketedV1{}
-	_ ConfigUpgradeable       = TomlLocalHashBucketedV1{}
-	_ ConfigLocalMutable      = &TomlLocalHashBucketedV1{}
-	_ ConfigLocalHashBucketed = TomlLocalHashBucketedV2{}
-	_ ConfigUpgradeable       = TomlLocalHashBucketedV2{}
-	_ ConfigLocalMutable      = &TomlLocalHashBucketedV2{}
-	_ ConfigLocalHashBucketed = TomlV3{}
-	_ ConfigLocalMutable      = &TomlV3{}
-	_ ConfigMutable           = &TomlV3{}
-	_ ConfigPointer           = TomlPointerV0{}
-	_ ConfigMutable           = &TomlPointerV0{}
+	_ ConfigSFTPRemotePath        = &TomlSFTPV0{}
+	_ ConfigSFTPRemotePath        = &TomlSFTPViaSSHConfigV0{}
+	_ ConfigMutable               = &TomlSFTPV0{}
+	_ ConfigLocalHashBucketed     = TomlLocalHashBucketedV1{}
+	_ ConfigUpgradeable           = TomlLocalHashBucketedV1{}
+	_ ConfigLocalMutable          = &TomlLocalHashBucketedV1{}
+	_ ConfigLocalHashBucketed     = TomlLocalHashBucketedV2{}
+	_ ConfigUpgradeable           = TomlLocalHashBucketedV2{}
+	_ ConfigLocalMutable          = &TomlLocalHashBucketedV2{}
+	_ ConfigLocalHashBucketed     = TomlV3{}
+	_ ConfigLocalMutable          = &TomlV3{}
+	_ ConfigMutable               = &TomlV3{}
+	_ ConfigPointer               = TomlPointerV0{}
+	_ ConfigMutable               = &TomlPointerV0{}
 	_ ConfigInventoryArchive      = TomlInventoryArchiveV0{}
 	_ ConfigUpgradeable           = TomlInventoryArchiveV0{}
 	_ ConfigMutable               = &TomlInventoryArchiveV0{}
