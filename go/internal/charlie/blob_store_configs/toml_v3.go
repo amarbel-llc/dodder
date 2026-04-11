@@ -20,7 +20,6 @@ type TomlV3 struct {
 	LockInternalFiles bool                             `toml:"lock-internal-files"`
 }
 
-
 func (TomlV3) GetBlobStoreType() string {
 	return "local"
 }

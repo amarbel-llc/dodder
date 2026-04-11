@@ -17,7 +17,6 @@ type TomlInventoryArchiveV0 struct {
 	Encryption       markl.Id                         `toml:"encryption"`
 }
 
-
 func (TomlInventoryArchiveV0) GetBlobStoreType() string {
 	return "local-inventory-archive"
 }

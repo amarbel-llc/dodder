@@ -25,7 +25,6 @@ type TomlLocalHashBucketedV1 struct {
 	LockInternalFiles bool                             `toml:"lock-internal-files"`
 }
 
-
 func (TomlLocalHashBucketedV1) GetBlobStoreType() string {
 	return "local"
 }

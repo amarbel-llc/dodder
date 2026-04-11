@@ -26,11 +26,11 @@ type (
 )
 
 var (
-	DecodeV0                       = charlie_rc.DecodeV0
-	DecodeV1                       = charlie_rc.DecodeV1
-	DecodeV2                       = charlie_rc.DecodeV2
-	DecodeDefaultsV1OmitEmptyInto  = charlie_rc.DecodeDefaultsV1OmitEmptyInto
-	EncodeDefaultsV1OmitEmptyFrom  = charlie_rc.EncodeDefaultsV1OmitEmptyFrom
+	DecodeV0                      = charlie_rc.DecodeV0
+	DecodeV1                      = charlie_rc.DecodeV1
+	DecodeV2                      = charlie_rc.DecodeV2
+	DecodeDefaultsV1OmitEmptyInto = charlie_rc.DecodeDefaultsV1OmitEmptyInto
+	EncodeDefaultsV1OmitEmptyFrom = charlie_rc.EncodeDefaultsV1OmitEmptyFrom
 )
 
 type (

@@ -17,7 +17,6 @@ type TomlInventoryArchiveV2 struct {
 	MaxPackSize     uint64                           `toml:"max-pack-size"`
 }
 
-
 func (TomlInventoryArchiveV2) GetBlobStoreType() string {
 	return "local-inventory-archive"
 }

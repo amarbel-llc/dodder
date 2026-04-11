@@ -35,7 +35,6 @@ func MakeIndex(
 			err = errors.Wrap(err)
 			return i, err
 		}
-
 	} else {
 		if i, err = hinweis_index_v0.MakeIndex(
 			configCli,

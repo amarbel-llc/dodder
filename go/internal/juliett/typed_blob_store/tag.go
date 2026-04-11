@@ -257,7 +257,6 @@ func (noopBlobDecoder[BLOB, BLOB_PTR]) DecodeFrom(
 	reader io.Reader,
 ) (n int64, err error) {
 	n, err = io.Copy(io.Discard, reader)
-
 	if err != nil {
 		err = errors.Wrap(err)
 	}

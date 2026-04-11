@@ -47,7 +47,6 @@ type client struct {
 	http                     http.Client
 	repo                     *local_working_copy.Repo
 	inventoryListCoderCloset inventory_list_coders.Closet
-
 }
 
 func (client *client) Initialize() {
@@ -88,7 +87,6 @@ func (client *client) Initialize() {
 			"failed to read remote immutable config",
 		)
 	}
-
 }
 
 func (client *client) GetEnv() env_ui.Env {
