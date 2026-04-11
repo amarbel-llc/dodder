@@ -43,6 +43,11 @@ func (cmd *Edit) GetArgs() []command.ArgGroup {
 func (cmd Edit) GetDescription() command.Description {
 	return command.Description{
 		Short: "check out and edit objects in an editor",
+		Long: "Check out matching objects, open them in your configured " +
+			"editor, and commit changes when the editor exits. This is " +
+			"a shortcut combining checkout, edit, and checkin into a " +
+			"single operation. Arguments are doddish query terms. Use " +
+			"-mode to control the checkout format.",
 	}
 }
 

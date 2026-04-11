@@ -53,6 +53,12 @@ func (cmd *Show) GetArgs() []command.ArgGroup {
 func (cmd Show) GetDescription() command.Description {
 	return command.Description{
 		Short: "display objects from the store",
+		Long: "Query the store and display matching objects. Arguments are " +
+			"doddish query terms that are AND-combined: genre filters " +
+			"(:z, :t, :e), tag filters, and type filters (!md). With no " +
+			"arguments, lists all zettels. Use -format to control output " +
+			"(box, log, json, organize, text). Use -before and -after to " +
+			"filter by date, or -repo to query a remote repository.",
 	}
 }
 

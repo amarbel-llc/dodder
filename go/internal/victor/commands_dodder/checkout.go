@@ -41,6 +41,11 @@ func (cmd *Checkout) GetArgs() []command.ArgGroup {
 func (cmd Checkout) GetDescription() command.Description {
 	return command.Description{
 		Short: "check out objects to the workspace",
+		Long: "Copy objects from the store into the workspace as editable " +
+			"files. Arguments are doddish query terms selecting which " +
+			"objects to check out. The workspace must exist (see " +
+			"init-workspace). Use -organize to open the checked-out " +
+			"objects in an organize-text editor session.",
 	}
 }
 

@@ -25,6 +25,12 @@ func init() {
 func (cmd New) GetDescription() command.Description {
 	return command.Description{
 		Short: "create new zettels",
+		Long: "Create one or more new zettels in the store. With no " +
+			"arguments, creates a single empty zettel and opens it " +
+			"for editing. File path arguments import existing files " +
+			"as zettel blobs. Use -count to create multiple empty " +
+			"zettels, -description, -tags, and -type to set metadata, " +
+			"and -shas to attach blobs already in the store.",
 	}
 }
 

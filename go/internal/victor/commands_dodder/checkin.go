@@ -45,6 +45,13 @@ var _ interfaces.CommandComponentWriter = (*Checkin)(nil)
 func (cmd Checkin) GetDescription() command.Description {
 	return command.Description{
 		Short: "commit workspace changes to the store",
+		Long: "Commit checked-out objects from the workspace back into the " +
+			"store. With no arguments, commits all modified objects. " +
+			"Query arguments filter which objects to commit. Use " +
+			"-description, -tags, and -type to set metadata on new " +
+			"zettels created during checkin. Use -each-blob to run an " +
+			"external command on each blob before committing. Also " +
+			"available as 'add' and 'save'.",
 	}
 }
 

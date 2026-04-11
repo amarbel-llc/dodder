@@ -35,6 +35,13 @@ func init() {
 func (cmd Organize) GetDescription() command.Description {
 	return command.Description{
 		Short: "organize objects with a text editor",
+		Long: "Open a structured text representation of matching objects " +
+			"in your editor. The organize-text format groups objects " +
+			"under tag headings. Edits to the text are applied back " +
+			"to the store: moving objects between headings changes " +
+			"their tags, editing descriptions updates metadata, and " +
+			"deleting lines removes tags. See organize-text(7) for " +
+			"the format specification.",
 	}
 }
 

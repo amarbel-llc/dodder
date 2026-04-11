@@ -40,6 +40,11 @@ func (cmd *Init) GetArgs() []command.ArgGroup {
 func (cmd Init) GetDescription() command.Description {
 	return command.Description{
 		Short: "initialize a new repository",
+		Long: "Create a new dodder repository in the current directory. " +
+			"Generates cryptographic keys for signing, initializes the " +
+			"default blob store, and sets up the object index. The " +
+			"repo-id argument names the repository (used for remote " +
+			"synchronization).",
 	}
 }
 
