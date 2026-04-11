@@ -26,6 +26,18 @@ type Fsck struct {
 	command_components_madder.BlobStore
 }
 
+var _ command.CommandWithArgs = (*Fsck)(nil)
+
+func (cmd *Fsck) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "store-ids",
+			Description: "blob store IDs to verify (defaults to all configured stores)",
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd Fsck) GetDescription() command.Description {
 	return command.Description{
 		Short: "verify blob store integrity",

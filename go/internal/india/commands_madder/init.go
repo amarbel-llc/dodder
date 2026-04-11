@@ -145,7 +145,20 @@ type Init struct {
 	command_components_madder.Init
 }
 
-var _ interfaces.CommandComponentWriter = (*Init)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Init)(nil)
+	_ command.CommandWithArgs           = (*Init)(nil)
+)
+
+func (cmd *Init) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "store-id",
+			Description: "identifier for the new blob store (e.g. 'default', '.archive')",
+			Required:    true,
+		}},
+	}}
+}
 
 func (cmd Init) GetDescription() command.Description {
 	return cmd.desc

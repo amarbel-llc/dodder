@@ -33,7 +33,20 @@ type Write struct {
 	UtilityAfter  script_value.Utility
 }
 
-var _ interfaces.CommandComponentWriter = (*Write)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Write)(nil)
+	_ command.CommandWithArgs           = (*Write)(nil)
+)
+
+func (cmd *Write) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "args",
+			Description: "file paths, '-' for stdin, or blob store IDs to switch the active store",
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd Write) GetDescription() command.Description {
 	return command.Description{

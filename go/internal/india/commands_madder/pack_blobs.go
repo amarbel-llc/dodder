@@ -31,7 +31,20 @@ type PackBlobs struct {
 	Delta       bool
 }
 
-var _ interfaces.CommandComponentWriter = (*PackBlobs)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*PackBlobs)(nil)
+	_ command.CommandWithArgs           = (*PackBlobs)(nil)
+)
+
+func (cmd *PackBlobs) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "args",
+			Description: "file paths, '-' for stdin, or blob store IDs to switch the active store",
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd PackBlobs) GetDescription() command.Description {
 	return command.Description{

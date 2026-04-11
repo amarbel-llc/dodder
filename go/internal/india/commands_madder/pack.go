@@ -28,7 +28,20 @@ type Pack struct {
 	Delta            bool
 }
 
-var _ interfaces.CommandComponentWriter = (*Pack)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Pack)(nil)
+	_ command.CommandWithArgs           = (*Pack)(nil)
+)
+
+func (cmd *Pack) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "store-ids",
+			Description: "blob store IDs to pack (defaults to all packable stores)",
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd Pack) GetDescription() command.Description {
 	return command.Description{

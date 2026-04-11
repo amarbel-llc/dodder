@@ -15,6 +15,18 @@ type PackCatIds struct {
 	command_components_madder.EnvBlobStore
 }
 
+var _ command.CommandWithArgs = (*PackCatIds)(nil)
+
+func (cmd *PackCatIds) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "archive-checksums",
+			Description: "archive checksums to filter (defaults to all archives)",
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd PackCatIds) GetDescription() command.Description {
 	return command.Description{
 		Short: "list blob digests contained in archive files",

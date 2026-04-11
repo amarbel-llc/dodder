@@ -32,7 +32,20 @@ type Cat struct {
 	PrefixSha bool
 }
 
-var _ interfaces.CommandComponentWriter = (*Cat)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Cat)(nil)
+	_ command.CommandWithArgs           = (*Cat)(nil)
+)
+
+func (cmd *Cat) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "args",
+			Description: "markl IDs to retrieve, or blob store IDs to switch the active store",
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd Cat) GetDescription() command.Description {
 	return command.Description{
