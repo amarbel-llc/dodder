@@ -24,15 +24,6 @@
       inputs.purse-first.follows = "purse-first";
     };
 
-    just-us = {
-      url = "github:amarbel-llc/just-us";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-master.follows = "nixpkgs-master";
-      inputs.utils.follows = "utils";
-      inputs.purse-first.follows = "purse-first";
-      inputs.bob.follows = "bob";
-    };
-
     tommy = {
       url = "github:amarbel-llc/tommy";
       inputs.utils.follows = "utils";
@@ -47,7 +38,6 @@
       utils,
       gomod2nix,
       bob,
-      just-us,
       tommy,
       ...
     }:
@@ -60,7 +50,6 @@
             nixpkgs-master
             gomod2nix
             bob
-            just-us
             tommy
             system
             ;
