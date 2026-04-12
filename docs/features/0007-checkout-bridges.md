@@ -3,7 +3,7 @@ date: 2026-03-15
 promotion-criteria: CheckoutStore interface defined with Compile/Decompile
   methods; at least one concrete store (CalDAV or filesystem-bridge) passes a
   round-trip BATS test for a single object type
-status: exploring
+status: experimental
 ---
 
 # Pluggable Checkout Stores
@@ -76,7 +76,7 @@ references (FDR-0001) can decompose these into a normalized object graph:
                               field
 
   X-\* extensions, SEQUENCE,  opaque properties preserved in the object's blob
-  etc.                        
+  etc.
   -----------------------------------------------------------------------------
 
 On **decompilation** (checkout to external), the workspace walks the task
@@ -262,7 +262,7 @@ of a VTODO decompose into independent merges:
 
   -----------------------------------------------------------------------------
   CalDAV side   Dodder side changed   Merge result
-  changed                             
+  changed
   ------------- --------------------- -----------------------------------------
   Added VALARM  Changed description   No conflict --- new `!alarm` object +
                                       clean text merge on task
@@ -274,10 +274,10 @@ of a VTODO decompose into independent merges:
   date                                hyphence, user resolves
 
   Deleted       (no change)           Clean --- remove `!alarm` reference
-  VALARM                              
+  VALARM
 
   Added ATTACH  Added ATTACH          No conflict --- two new blob references
-                (different file)      
+                (different file)
   -----------------------------------------------------------------------------
 
 The hyphence format's line-oriented structure makes text merge viable:
@@ -535,60 +535,54 @@ Dry-run to preview sync without committing:
       papilio/uptown: tags updated
     (dry run — no changes committed)
 
-## Implementation Status (2026-04-04)
+## Implementation Status (2026-04-12)
 
 The first haustoria implementation (`haustoria_caldav`) is merged to master and
 tested against live Fastmail CalDAV with \~1100 tasks. This section documents
-how the implementation relates to the design above and identifies gaps.
+how the implementation relates to the design above and identifies remaining gaps.
+PR #100 added typed field round-tripping, meeting the promotion criteria for
+`experimental` status.
 
 ### What exists
 
 - Haustoria interface + CalDAV client + `haustoria_caldav` (StoreLike +
   CheckoutOne)
-- Multi-calendar workspace config with per-calendar type, tags, and status-tags
+- Multi-calendar workspace config with per-calendar type and tags
 - ExternalObjectId binding via binary stream index
 - status/checkin/checkout/new all work through unified query path
-- 10 BATS integration tests against per-test Radicale
+- 14 BATS integration tests against per-test Radicale + 4 round-trip tests
+- `!task` and `!chore` built-in types with `status`, `priority`, and `due`
+  fields, committed via opt-in genesis flag
+  (`BigBang.IncludeBuiltinActionableTypes`)
+- Compile path: VTODO → TOML blob → reader script projects fields into index
+- Decompile path: fields from index → inverse mapping → VTODO properties
 
 ### Where the implementation diverges from design
 
-**Flat metadata, no field projection.** The current implementation destructures
-VTODOs into flat dodder metadata: SUMMARY → description, CATEGORIES → tags,
-DESCRIPTION → blob, STATUS → mapped tag via `status-tags` config. This is the
-"lossy compilation" problem described in FDR-0000. CalDAV properties without
-dodder mapping (PRIORITY, RRULE, VALARM, DUE, DTSTART, X-\* extensions) are
-parsed but not persisted --- they survive in the CalDAV server but are not
-round-tripped through dodder.
+**Partial property coverage.** CalDAV properties beyond STATUS, PRIORITY, and
+DUE (RRULE, VALARM, DTSTART, X-\* extensions) are parsed but not persisted ---
+they survive in the CalDAV server but are not round-tripped through dodder.
+STATUS, PRIORITY, and DUE now round-trip via typed fields on `!task` (PR #100).
 
-**Status is a tag, not a field.** CalDAV STATUS (NEEDS-ACTION, COMPLETED, etc.)
-is mapped to a dodder tag via `status-tags` config (e.g. COMPLETED →
-`zz-archive-task-done`). This works for dormant filtering but loses the
-structured status value. A proper `status` field on `!task` (as described in the
-field mapping table above) would enable:
+**No three-way merge.** Conflict resolution is last-write-wins. Proper merge
+semantics block on #19.
 
-- Querying by status (`show : status=COMPLETED`)
-- Mutating status via organize or checkin
-- Decompiling status back to the correct CalDAV STATUS value
-- Status values beyond the binary active/archived dichotomy (e.g. IN-PROCESS,
-  CANCELLED)
+**No sub-object decomposition.** VALARMs, ATTACHments, and RELATED-TO are not
+decomposed into separate dodder objects. The current implementation treats each
+VTODO as a single `!task` object.
 
-See #92 (field mutation via organize/checkin), #93 (query by fields), #94 (typed
-status field on `!task`).
+**No sync state / ETag caching.** The haustoria fetches the full calendar on
+every `dodder status`. ETag/Last-Modified caching is tracked in #103.
 
-### `!task` status field (#94)
+### `!task` status field (#94) --- resolved
 
-The `!task` type needs a `status` field with at least:
-
-- `todo` (maps to CalDAV NEEDS-ACTION)
-- `in-progress` (maps to CalDAV IN-PROCESS)
-- `blocked` (no CalDAV equivalent --- dodder-native)
-- `completed` (maps to CalDAV COMPLETED)
-- `cancelled` (maps to CalDAV CANCELLED)
-
-This field should be defined in the type blob, not hardcoded --- so other types
-(`!chore`, `!project`) can define their own status values. The workspace
-config's field mapping (§Workspace Config above) would map `status` →
-`meta.status` for CalDAV compilation.
+The `!task` type now ships with a `status` enum field (`todo`, `in_progress`,
+`done`, `cancelled`), a `priority` enum (`p0`/`p1`/`p2`/`p3` mapped to VTODO
+PRIORITY 1/5/9/0), and a `due` string field. Fields are defined in the type blob
+via `[[fields]]` entries with `[fields-reader]` and `[fields-writer]` `yq`
+scripts. The old `status-tags` config was replaced by typed fields (PR #100). See
+`docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md` for the full
+design.
 
 ## Limitations
 

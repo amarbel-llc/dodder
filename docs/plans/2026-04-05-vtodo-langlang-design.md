@@ -1,5 +1,12 @@
 # !vtodo Type with Langlang PEG Grammar and Interface Mapping
 
+**Superseded** by
+`docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md` (PR #100).
+VTODO format is now a haustoria-side concern only --- the CalDAV haustoria
+parses VTODOs natively and populates `!task` fields directly, without a
+persisted `!vtodo` type or PEG grammar. See FDR-0007 for the updated
+implementation status.
+
 ## Context
 
 The field infrastructure (mild-elm branch) is complete: type blobs declare
