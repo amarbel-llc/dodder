@@ -556,6 +556,41 @@
         "type": "github"
       }
     },
+    "madder": {
+      "inputs": {
+        "bob": [
+          "bob"
+        ],
+        "gomod2nix": [
+          "gomod2nix"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-master": [
+          "nixpkgs-master"
+        ],
+        "tommy": [
+          "tommy"
+        ],
+        "utils": [
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1776186568,
+        "narHash": "sha256-EDKvkTa2s+/Yh629X1o7PdpW1i+sMqI2jdYcbMGJorQ=",
+        "owner": "amarbel-llc",
+        "repo": "madder",
+        "rev": "12e6380ac8f74300b360031e8b89c4c59cea2fb6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "madder",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1761468971,
@@ -766,6 +801,7 @@
       "inputs": {
         "bob": "bob",
         "gomod2nix": "gomod2nix_2",
+        "madder": "madder",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-master": "nixpkgs-master",
         "purse-first": "purse-first",

@@ -4,9 +4,9 @@ import (
 	"encoding"
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
 	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/madder/go/pkgs/xdg_location_type"
 )
 
 type Id struct {

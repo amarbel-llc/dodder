@@ -1,8 +1,8 @@
 package repo_id
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/xdg_location_type"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/madder/go/pkgs/xdg_location_type"
 )
 
 type Id struct {

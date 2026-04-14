@@ -24,6 +24,16 @@
       inputs.purse-first.follows = "purse-first";
     };
 
+    madder = {
+      url = "github:amarbel-llc/madder";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.gomod2nix.follows = "gomod2nix";
+      inputs.tommy.follows = "tommy";
+      inputs.bob.follows = "bob";
+    };
+
     tommy = {
       url = "github:amarbel-llc/tommy";
       inputs.utils.follows = "utils";

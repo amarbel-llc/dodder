@@ -7,6 +7,7 @@ require (
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0
+	github.com/amarbel-llc/madder/go v0.0.0-20260414170928-12e6380ac8f7
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tommy v0.0.0-20260405143331-87255e87bf37
 	github.com/brandondube/tai v0.1.0

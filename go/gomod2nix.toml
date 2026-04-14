@@ -32,6 +32,11 @@ schema = 3
     hash = 'sha256-pC95VLeYUZwmcosmo2mtzh1Ggk7N9rlUtXPmf7eGDpE='
     goVersion = '1.26'
 
+  [mod.'github.com/amarbel-llc/madder/go']
+    version = 'v0.0.0-20260414170928-12e6380ac8f7'
+    hash = 'sha256-OUV4Jod+2i5g3M6gIIz4UxoI7bvQpvrG1+/dW8jC6ag='
+    goVersion = '1.26'
+
   [mod.'github.com/amarbel-llc/purse-first/libs/dewey']
     version = 'v0.0.1'
     hash = 'sha256-d76ofGscwjMCpO9jIO77ehWXn2qMQlVdotLOs/+ZCTk='
