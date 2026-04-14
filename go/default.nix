@@ -28,8 +28,6 @@ let
       "cmd/der"
       "cmd/dodder"
       "cmd/dodder-gen_man"
-      "cmd/mad"
-      "cmd/madder"
     ];
     modules = ./gomod2nix.toml;
     go = pkgs-master.go_1_26;
