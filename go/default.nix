@@ -30,7 +30,6 @@ let
       "cmd/dodder-gen_man"
       "cmd/mad"
       "cmd/madder"
-      "cmd/madder-gen_man"
     ];
     modules = ./gomod2nix.toml;
     go = pkgs-master.go_1_26;
@@ -43,8 +42,7 @@ let
     postInstall = ''
       mkdir -p $out/share/man/man1
       $out/bin/dodder-gen_man $out/share/man/man1
-      $out/bin/madder-gen_man $out/share/man/man1
-      rm $out/bin/dodder-gen_man $out/bin/madder-gen_man
+      rm $out/bin/dodder-gen_man
     ''
     + pkgs-master.lib.optionalString (man7Src != null) ''
       mkdir -p $out/share/man/man7
