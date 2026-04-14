@@ -12,7 +12,6 @@ type TomlUriV0 struct {
 	Uri values.Uri `toml:"uri"`
 }
 
-
 func (config *TomlUriV0) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	flagSet.Var(
 		&config.Uri,

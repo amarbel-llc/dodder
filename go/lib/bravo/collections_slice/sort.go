@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 )
 
 func (slice *Slice[ELEMENT]) SortByStringFunc(getKey func(ELEMENT) string) {

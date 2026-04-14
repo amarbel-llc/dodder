@@ -3,7 +3,7 @@ package doddish
 import (
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 )
 
 func SeqsCompare(left, right []Seq) cmp.Result {

@@ -25,7 +25,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/flags"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/delta/delim_io"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/delim_io"
 	"code.linenisgreat.com/dodder/go/lib/delta/tommy_util"
 	"github.com/amarbel-llc/tommy/pkg/document"
 )

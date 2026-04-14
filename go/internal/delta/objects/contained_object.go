@@ -3,7 +3,7 @@ package objects
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 )
 
 type (

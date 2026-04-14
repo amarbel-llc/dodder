@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 

@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_value"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_value"
 )
 
 type (

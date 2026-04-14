@@ -4,9 +4,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
-	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 )
 
 // TomlLocalHashBucketedV1 is the V1 configuration for the local hash-bucketed blob store.
@@ -24,7 +24,6 @@ type TomlLocalHashBucketedV1 struct {
 	CompressionType   compression_type.CompressionType `toml:"compression-type"`
 	LockInternalFiles bool                             `toml:"lock-internal-files"`
 }
-
 
 func (TomlLocalHashBucketedV1) GetBlobStoreType() string {
 	return "local"

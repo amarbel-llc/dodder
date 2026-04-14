@@ -5,7 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/format"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/format"
 )
 
 type Text struct {

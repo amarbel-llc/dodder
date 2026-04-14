@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
-	"code.linenisgreat.com/dodder/go/lib/delta/format"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/format"
 )
 
 type TagSetGetter interface {

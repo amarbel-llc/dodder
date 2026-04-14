@@ -3,7 +3,7 @@ package repo_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/lib/delta/xdg_defaults"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/xdg_defaults"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"
 )
 

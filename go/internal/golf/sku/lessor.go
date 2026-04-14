@@ -1,7 +1,7 @@
 package sku
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 )
 
 func TransactedCompare(left, right *Transacted) cmp.Result {

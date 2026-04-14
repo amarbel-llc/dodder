@@ -19,7 +19,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections_ptr"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_ptr"
 )
 
 type inlineTypChecker struct {

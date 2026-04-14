@@ -8,7 +8,7 @@ import (
 	"unsafe"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio_buffer"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
