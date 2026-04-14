@@ -77,7 +77,7 @@ function cat_with_explicit_store { # @test
   assert_output --partial 'ok 1'
 
   # extract the blake2b256 hash from TAP output
-  sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
   run_dodder blob_store-cat .archive "$sha"
   assert_success
@@ -93,7 +93,7 @@ function cat_default_then_archive { # @test
 
   run_dodder blob_store-write .archive <(echo archive-content)
   assert_success
-  archive_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  archive_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
   # cat from default store (konfig sha), then switch to archive
   run_dodder blob_store-cat "$(get_konfig_sha)" .archive "$archive_sha"

@@ -1,5 +1,3 @@
-set output-format := "tap"
-
 bin_dir := env("BATS_BIN_DIR", "")
 # Exclude af_unix, haustoria, and sftp-tagged files; they need special sandbox options.
 _sandboxed_bats := `grep -L -e 'file_tags=.*af_unix' -e 'file_tags=.*haustoria' -e 'file_tags=.*sftp' current_version/*.bats | tr '\n' ' '`

@@ -1,16 +1,16 @@
 module code.linenisgreat.com/dodder/go
 
-go 1.26
+go 1.26.1
 
 require (
-	code.linenisgreat.com/chrest/go v0.0.0-20260307130930-9ae16a0979e6
+	code.linenisgreat.com/chrest/go v0.0.0-20260414180333-e8e81ae667b3
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
-	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.0.0-20260315125109-b2544a488327
-	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.4
-	github.com/amarbel-llc/tommy v0.0.0-20260405140817-8dfcca4c3fe1
+	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0
+	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
+	github.com/amarbel-llc/tommy v0.0.0-20260405143331-87255e87bf37
 	github.com/brandondube/tai v0.1.0
-	github.com/charmbracelet/huh v0.8.0
+	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/gabstv/go-bsdiff v1.0.5
 	github.com/google/go-cmp v0.7.0
@@ -18,49 +18,49 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/sftp v1.13.10
 	github.com/tetratelabs/wazero v1.11.0
-	github.com/yuin/gopher-lua v1.1.1
-	golang.org/x/crypto v0.49.0
-	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
-	golang.org/x/term v0.41.0
-	golang.org/x/text v0.35.0
-	golang.org/x/tools v0.43.0
+	github.com/yuin/gopher-lua v1.1.2
+	golang.org/x/crypto v0.50.0
+	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
+	golang.org/x/term v0.42.0
+	golang.org/x/text v0.36.0
+	golang.org/x/tools v0.44.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
-	tailscale.com v1.94.1
+	tailscale.com v1.96.5
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
+	github.com/amarbel-llc/purse-first/libs/dewey v0.0.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
-	github.com/charmbracelet/bubbles v0.21.1 // indirect
+	github.com/charmbracelet/bubbles v1.0.0 // indirect
 	github.com/charmbracelet/bubbletea v1.3.10 // indirect
-	github.com/charmbracelet/colorprofile v0.4.1 // indirect
-	github.com/charmbracelet/x/ansi v0.11.6 // indirect
+	github.com/charmbracelet/colorprofile v0.4.3 // indirect
+	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/exp/strings v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
-	github.com/clipperhouse/displaywidth v0.9.0 // indirect
-	github.com/clipperhouse/stringish v0.1.1 // indirect
-	github.com/clipperhouse/uax29/v2 v2.6.0 // indirect
+	github.com/clipperhouse/displaywidth v0.11.0 // indirect
+	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/dblohm7/wingoes v0.0.0-20250822163801-6d8e6105c62d // indirect
-	github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76 // indirect
+	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
-	github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e // indirect
+	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
+	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
+	github.com/mattn/go-isatty v0.0.21 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.19 // indirect
-	github.com/mdlayher/netlink v1.8.0 // indirect
-	github.com/mdlayher/socket v0.5.1 // indirect
+	github.com/mattn/go-runewidth v0.0.23 // indirect
+	github.com/mdlayher/netlink v1.11.0 // indirect
+	github.com/mdlayher/socket v0.6.0 // indirect
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
@@ -72,10 +72,10 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
-	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
-	mvdan.cc/sh/v3 v3.12.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.zx2c4.com/wireguard/windows v0.6.1 // indirect
+	mvdan.cc/sh/v3 v3.13.1 // indirect
 )

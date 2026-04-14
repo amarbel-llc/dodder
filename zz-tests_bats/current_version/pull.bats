@@ -1,54 +1,54 @@
 #! /usr/bin/env bats
 
 setup() {
-	load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
+  load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
 
-	# for shellcheck SC2154
-	export output
+  # for shellcheck SC2154
+  export output
 }
 
 teardown() {
-	chflags_nouchg
+  chflags_nouchg
 }
 
 # bats file_tags=user_story:pull,user_story:repo,user_store:xdg,user_story:remote
 
 function bootstrap_repo {
-	(
-		mkdir -p "$1"
-		pushd "$1" >/dev/null || exit 1
-		run_dodder_init
-		bootstrap_content
-	)
+  (
+    mkdir -p "$1"
+    pushd "$1" >/dev/null || exit 1
+    run_dodder_init
+    bootstrap_content
+  )
 }
 
 function bootstrap_repo_at_dir_with_name {
-	(
-		mkdir -p "$1"
-		pushd "$1" || exit 1
-		run_dodder_init -repo_id . "$1"
-		bootstrap_content
-	)
+  (
+    mkdir -p "$1"
+    pushd "$1" || exit 1
+    run_dodder_init -repo_id . "$1"
+    bootstrap_content
+  )
 }
 
 function bootstrap_content {
-	{
-		echo "---"
-		echo "# wow"
-		echo "- tag"
-		echo "! md"
-		echo "---"
-		echo
-		echo "body"
-	} >to_add
+  {
+    echo "---"
+    echo "# wow"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "body"
+  } >to_add
 
-	run_dodder new -edit=false to_add
-	assert_success
-	assert_output - <<-EOM
+  run_dodder new -edit=false to_add
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder new -edit=false - <<-EOM
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel with multiple etiketten
 		- this_is_the_first
@@ -59,25 +59,25 @@ function bootstrap_content {
 		zettel with multiple etiketten body
 	EOM
 
-	assert_success
-	assert_output - <<-EOM
+  assert_success
+  assert_output - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 	EOM
 
-	cat - >task.type <<-EOM
+  cat - >task.type <<-EOM
 		binary = false
 	EOM
 
-	run_dodder checkin -delete task.type
-	assert_success
-	assert_output - <<-EOM
+  run_dodder checkin -delete task.type
+  assert_success
+  assert_output - <<-EOM
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 		          deleted [task.type]
 	EOM
 }
 
 function try_add_new_after_pull {
-	run_dodder new -edit=false - <<-EOM
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel after clone description
 		! md
@@ -86,34 +86,34 @@ function try_add_new_after_pull {
 		zettel after clone body
 	EOM
 
-	assert_success
-	assert_output - <<-EOM
+  assert_success
+  assert_output - <<-EOM
 		[two/uno @blake2b256-kn7w3q7c3xvfa2p78wny0h79f7hd72nxtded0gvymu33wcnr2qmscl46ar !md "zettel after clone description"]
 	EOM
 }
 
 function pull_history_zettel_type_tag_no_conflicts { # @test
-	them="them"
-	bootstrap_repo "$them"
+  them="them"
+  bootstrap_repo "$them"
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder pull /them +zettel,typ,etikett
+  run_dodder pull /them +zettel,typ,etikett
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
@@ -122,29 +122,29 @@ function pull_history_zettel_type_tag_no_conflicts { # @test
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
-	try_add_new_after_pull
+  try_add_new_after_pull
 }
 
 function pull_history_zettel_type_tag_no_conflicts_stdio_local { # @test
-	bootstrap_repo_at_dir_with_name them
+  bootstrap_repo_at_dir_with_name them
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	# TODO make this actually use a socket
-	run_dodder pull /them +zettel,typ,etikett
+  # TODO make this actually use a socket
+  run_dodder pull /them +zettel,typ,etikett
 
-	assert_success
-	assert_output_unsorted --partial - <<-EOM
+  assert_success
+  assert_output_unsorted --partial - <<-EOM
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
@@ -153,47 +153,47 @@ function pull_history_zettel_type_tag_no_conflicts_stdio_local { # @test
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
-	try_add_new_after_pull
+  try_add_new_after_pull
 }
 
 # bats test_tags=timeout:long
 function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
-	BATS_TEST_TIMEOUT=60
-	them="them"
-	bootstrap_repo "$them"
+  BATS_TEST_TIMEOUT=60
+  them="them"
+  bootstrap_repo "$them"
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	copy_from_version "$DIR"
+  copy_from_version "$DIR"
 
-	run_dodder show one/dos+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/dos+
+  assert_success
+  assert_output - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
-	run_dodder show +z
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder show +z
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder pull /them +zettel,typ,etikett
+  run_dodder pull /them +zettel,typ,etikett
 
-	assert_failure
-	assert_output_unsorted --partial - <<-EOM
+  assert_failure
+  assert_output_unsorted --partial - <<-EOM
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
 		       conflicted [one/uno]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
@@ -203,31 +203,31 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 		import failed with conflicts, merging required
 	EOM
 
-	assert_output --partial - <<-EOM
+  assert_output --partial - <<-EOM
 		import failed with conflicts, merging required
 	EOM
 
-	run_dodder_init_workspace
-	tree -n .
+  run_dodder_init_workspace
+  tree -n .
 
-	run_dodder status
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder status
+  assert_success
+  assert_output_unsorted - <<-EOM
 		       conflicted [one/dos]
 		       conflicted [one/uno]
 	EOM
 
-	run_dodder show +z
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder show +z
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 
-	run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		          deleted [one/dos.conflict]
@@ -235,10 +235,10 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 		          deleted [one/]
 	EOM
 
-	# TODO make sure merging includes the REMOTE in addition to the MERGED
-	run_dodder show +z
-	assert_success
-	assert_output_unsorted - <<-EOM
+  # TODO make sure merging includes the REMOTE in addition to the MERGED
+  run_dodder show +z
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
@@ -246,9 +246,9 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder show -format text one/dos
-	assert_success
-	assert_output --regexp - <<EOM
+  run_dodder show -format text one/dos
+  assert_success
+  assert_output --regexp - <<EOM
 ---
 # zettel with multiple etiketten
 - this_is_the_first
@@ -258,23 +258,23 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 ---
 EOM
 
-	run_dodder show one/dos+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/dos+
+  assert_success
+  assert_output - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 	EOM
 
-	try_add_new_after_pull
+  try_add_new_after_pull
 }
 
 # bats test_tags=timeout:long
 function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @test
-	BATS_TEST_TIMEOUT=30
-	pushd "$BATS_TEST_TMPDIR" || exit 1
-	run_dodder_init_disable_age
+  BATS_TEST_TIMEOUT=30
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+  run_dodder_init_disable_age
 
-	run_dodder new -edit=false - <<-EOM
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel after clone description
 		! md
@@ -283,31 +283,31 @@ function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @te
 		zettel after clone body
 	EOM
 
-	assert_success
-	assert_output - <<-EOM
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-kn7w3q7c3xvfa2p78wny0h79f7hd72nxtded0gvymu33wcnr2qmscl46ar !md "zettel after clone description"]
 	EOM
 
-	them="them"
-	bootstrap_repo "$them"
-	assert_success
+  them="them"
+  bootstrap_repo "$them"
+  assert_success
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder pull -allow-merge-conflicts /them +zettel,typ,etikett
-	assert_success
-	# TODO address the bandaid of two `[tag]` objects
-	assert_output_unsorted - <<-EOM
+  run_dodder pull -allow-merge-conflicts /them +zettel,typ,etikett
+  assert_success
+  # TODO address the bandaid of two `[tag]` objects
+  assert_output_unsorted - <<-EOM
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
@@ -316,13 +316,13 @@ function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @te
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
-	run_dodder status
-	assert_success
-	assert_output_unsorted ''
+  run_dodder status
+  assert_success
+  assert_output_unsorted ''
 
-	run_dodder show -format text one/dos
-	assert_success
-	assert_output --regexp - <<EOM
+  run_dodder show -format text one/dos
+  assert_success
+  assert_output --regexp - <<EOM
 ---
 # zettel with multiple etiketten
 - this_is_the_first
@@ -332,9 +332,9 @@ function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @te
 ---
 EOM
 
-	run_dodder show one/uno+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/uno+
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-kn7w3q7c3xvfa2p78wny0h79f7hd72nxtded0gvymu33wcnr2qmscl46ar !md "zettel after clone description"]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
@@ -342,11 +342,11 @@ EOM
 
 # bats test_tags=timeout:long
 function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
-	BATS_TEST_TIMEOUT=30
-	pushd "$BATS_TEST_TMPDIR" || exit 1
-	run_dodder_init_disable_age
+  BATS_TEST_TIMEOUT=30
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+  run_dodder_init_disable_age
 
-	run_dodder new -edit=false - <<-EOM
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel after clone description
 		! md
@@ -355,31 +355,31 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
 		zettel after clone body
 	EOM
 
-	assert_success
-	assert_output - <<-EOM
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-kn7w3q7c3xvfa2p78wny0h79f7hd72nxtded0gvymu33wcnr2qmscl46ar !md "zettel after clone description"]
 	EOM
 
-	them="them"
-	bootstrap_repo "$them"
-	assert_success
+  them="them"
+  bootstrap_repo "$them"
+  assert_success
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder pull /them +zettel,typ,etikett
+  run_dodder pull /them +zettel,typ,etikett
 
-	assert_failure
-	assert_output_unsorted --partial - <<-EOM
+  assert_failure
+  assert_output_unsorted --partial - <<-EOM
 		       conflicted [one/uno]
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
@@ -389,27 +389,27 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
 		import failed with conflicts, merging required
 	EOM
 
-	assert_output --partial - <<-EOM
+  assert_output --partial - <<-EOM
 		import failed with conflicts, merging required
 	EOM
 
-	run_dodder status
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder status
+  assert_success
+  assert_output_unsorted - <<-EOM
 		       conflicted [one/uno]
 	EOM
 
-	run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
-	assert_success
-	assert_output - <<-EOM
+  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		          deleted [one/uno.conflict]
 		          deleted [one/]
 	EOM
 
-	run_dodder show -format text one/dos
-	assert_success
-	assert_output --regexp - <<EOM
+  run_dodder show -format text one/dos
+  assert_success
+  assert_output --regexp - <<EOM
 ---
 # zettel with multiple etiketten
 - this_is_the_first
@@ -419,148 +419,148 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
 ---
 EOM
 
-	run_dodder show one/uno+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/uno+
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-kn7w3q7c3xvfa2p78wny0h79f7hd72nxtded0gvymu33wcnr2qmscl46ar !md "zettel after clone description"]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 }
 
 function pull_history_default_no_conflict { # @test
-	them="them"
-	bootstrap_repo "$them"
+  them="them"
+  bootstrap_repo "$them"
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder pull /them
-	assert_success
+  run_dodder pull /them
+  assert_success
 
-	run_dodder show +?z,t,e
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder show +?z,t,e
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
-	run_dodder show one/dos+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/dos+
+  assert_success
+  assert_output - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 	EOM
 
-	run_dodder show !md:t
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show !md:t
+  assert_success
+  assert_output - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 	EOM
 
-	run_dodder show !task:t
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show !task:t
+  assert_success
+  assert_output - <<-EOM
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
-	try_add_new_after_pull
+  try_add_new_after_pull
 }
 
 function pull_history_zettel_one_abbr { # @test
-	# TODO add support for abbreviations in remote transfers
-	skip
-	them="them"
-	bootstrap_repo "$them"
-	assert_success
+  # TODO add support for abbreviations in remote transfers
+  skip
+  them="them"
+  bootstrap_repo "$them"
+  assert_success
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	run_dodder remote-add \
-		"$(realpath them)" \
-		them
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  run_dodder remote-add \
+    "$(realpath them)" \
+    them
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @[0-9a-z]+ !toml-repo-dotenv_xdg-v0]
 	EOM
 
-	run_dodder pull -include-blobs=false /them o/u+
+  run_dodder pull -include-blobs=false /them o/u+
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder show one/uno+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/uno+
+  assert_success
+  assert_output - <<-EOM
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 }
 
 function pull_history_zettels_no_conflict_no_blobs { # @test
-	them="them"
-	bootstrap_repo "$them"
+  them="them"
+  bootstrap_repo "$them"
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder pull -exclude-blobs /them +zettel
+  run_dodder pull -exclude-blobs /them +zettel
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder show one/dos+
-	assert_success
-	assert_output - <<-EOM
+  run_dodder show one/dos+
+  assert_success
+  assert_output - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 	EOM
 
-	run_dodder show -format blob one/dos
-	assert_failure
+  run_dodder show -format blob one/dos
+  assert_failure
 
-	try_add_new_after_pull
+  try_add_new_after_pull
 }
 
 function pull_direct_local_path_no_conflicts { # @test
-	them="them"
-	bootstrap_repo "$them"
+  them="them"
+  bootstrap_repo "$them"
 
-	pushd "$BATS_TEST_TMPDIR" || exit 1
+  pushd "$BATS_TEST_TMPDIR" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	run_dodder pull -direct "$(realpath them)" +zettel,typ,etikett
+  run_dodder pull -direct "$(realpath them)" +zettel,typ,etikett
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 (36 B)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc (5 B)
 		copied Blob blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e (15 B)
@@ -569,25 +569,25 @@ function pull_direct_local_path_no_conflicts { # @test
 		[!task @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
 	EOM
 
-	try_add_new_after_pull
+  try_add_new_after_pull
 }
 
 # bats test_tags=user_story:pull,user_story:referenced_objects
 function pull_direct_blob_references_transferred { # @test
-	them="$BATS_TEST_TMPDIR/them"
-	mkdir -p "$them"
+  them="$BATS_TEST_TMPDIR/them"
+  mkdir -p "$them"
 
-	pushd "$them" || exit 1
+  pushd "$them" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Write a standalone blob to the source store
-	run_dodder blob_store-write <(echo "referenced content")
-	assert_success
-	ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  # Write a standalone blob to the source store
+  run_dodder blob_store-write <(echo "referenced content")
+  assert_success
+  ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-	# Create a type with reference discovery for blob refs
-	cat >refblob.type <<-'TYPEFILE'
+  # Create a type with reference discovery for blob refs
+  cat >refblob.type <<-'TYPEFILE'
 		---
 		! toml-type-v2
 		---
@@ -600,11 +600,11 @@ function pull_direct_blob_references_transferred { # @test
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !refblob/'"
 	TYPEFILE
 
-	run_dodder checkin -delete refblob.type
-	assert_success
+  run_dodder checkin -delete refblob.type
+  assert_success
 
-	# Create a zettel whose body references the standalone blob
-	run_dodder new -edit=false - <<-EOM
+  # Create a zettel whose body references the standalone blob
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel with blob ref
 		! refblob
@@ -612,43 +612,43 @@ function pull_direct_blob_references_transferred { # @test
 
 		See blob @${ref_blob_sha} for details.
 	EOM
-	assert_success
+  assert_success
 
-	popd || exit 1
+  popd || exit 1
 
-	# Set up destination repo
-	us="$BATS_TEST_TMPDIR/us"
-	mkdir -p "$us"
-	pushd "$us" || exit 1
+  # Set up destination repo
+  us="$BATS_TEST_TMPDIR/us"
+  mkdir -p "$us"
+  pushd "$us" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Pull from source
-	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
-	assert_success
+  # Pull from source
+  run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+  assert_success
 
-	# Verify the referenced blob was transferred to the destination
-	run_dodder blob_store-cat "$ref_blob_sha"
-	assert_success
-	assert_output "$(printf "%s\n" "referenced content")"
+  # Verify the referenced blob was transferred to the destination
+  run_dodder blob_store-cat "$ref_blob_sha"
+  assert_success
+  assert_output "$(printf "%s\n" "referenced content")"
 }
 
 # bats test_tags=user_story:pull,user_story:referenced_objects
 function pull_direct_hyphenated_type_name_no_phantom { # @test
-	them="$BATS_TEST_TMPDIR/them"
-	mkdir -p "$them"
+  them="$BATS_TEST_TMPDIR/them"
+  mkdir -p "$them"
 
-	pushd "$them" || exit 1
+  pushd "$them" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Write a standalone blob to the source store
-	run_dodder blob_store-write <(echo "referenced content")
-	assert_success
-	ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  # Write a standalone blob to the source store
+  run_dodder blob_store-write <(echo "referenced content")
+  assert_success
+  ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-	# Create a type with hyphen in name and reference discovery
-	cat >ref-blob.type <<-'TYPEFILE'
+  # Create a type with hyphen in name and reference discovery
+  cat >ref-blob.type <<-'TYPEFILE'
 		---
 		! toml-type-v2
 		---
@@ -661,11 +661,11 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !ref-blob/'"
 	TYPEFILE
 
-	run_dodder checkin -delete ref-blob.type
-	assert_success
+  run_dodder checkin -delete ref-blob.type
+  assert_success
 
-	# Create a zettel whose body references the standalone blob
-	run_dodder new -edit=false - <<-EOM
+  # Create a zettel whose body references the standalone blob
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel with blob ref
 		! ref-blob
@@ -673,38 +673,38 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
 
 		See blob @${ref_blob_sha} for details.
 	EOM
-	assert_success
+  assert_success
 
-	popd || exit 1
+  popd || exit 1
 
-	# Set up destination repo
-	us="$BATS_TEST_TMPDIR/us"
-	mkdir -p "$us"
-	pushd "$us" || exit 1
+  # Set up destination repo
+  us="$BATS_TEST_TMPDIR/us"
+  mkdir -p "$us"
+  pushd "$us" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Pull from source — should NOT produce a phantom !ref type
-	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
-	assert_success
+  # Pull from source — should NOT produce a phantom !ref type
+  run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+  assert_success
 
-	# Verify the referenced blob was transferred to the destination
-	run_dodder blob_store-cat "$ref_blob_sha"
-	assert_success
-	assert_output "$(printf "%s\n" "referenced content")"
+  # Verify the referenced blob was transferred to the destination
+  run_dodder blob_store-cat "$ref_blob_sha"
+  assert_success
+  assert_output "$(printf "%s\n" "referenced content")"
 }
 
 # bats test_tags=user_story:pull,user_story:referenced_objects
 function pull_direct_blob_reference_alias_survives { # @test
-	them="$BATS_TEST_TMPDIR/them"
-	mkdir -p "$them"
+  them="$BATS_TEST_TMPDIR/them"
+  mkdir -p "$them"
 
-	pushd "$them" || exit 1
+  pushd "$them" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Create a zettel with an aliased blob reference
-	run_dodder new -edit=false - <<-'EOM'
+  # Create a zettel with an aliased blob reference
+  run_dodder new -edit=false - <<-'EOM'
 		---
 		# aliased blob ref
 		- hero-image < @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md
@@ -713,52 +713,52 @@ function pull_direct_blob_reference_alias_survives { # @test
 
 		content
 	EOM
-	assert_success
+  assert_success
 
-	# Verify alias exists in source
-	run_dodder show -format text one/uno:
-	assert_success
-	assert_output --partial 'hero-image'
+  # Verify alias exists in source
+  run_dodder show -format text one/uno:
+  assert_success
+  assert_output --partial 'hero-image'
 
-	popd || exit 1
+  popd || exit 1
 
-	# Set up destination repo
-	us="$BATS_TEST_TMPDIR/us"
-	mkdir -p "$us"
-	pushd "$us" || exit 1
+  # Set up destination repo
+  us="$BATS_TEST_TMPDIR/us"
+  mkdir -p "$us"
+  pushd "$us" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Pull from source
-	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
-	assert_success
+  # Pull from source
+  run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+  assert_success
 
-	# Verify alias survived the pull (binary stream index round-trip)
-	run_dodder show -format text one/uno:
-	assert_success
-	assert_output --partial 'hero-image'
+  # Verify alias survived the pull (binary stream index round-trip)
+  run_dodder show -format text one/uno:
+  assert_success
+  assert_output --partial 'hero-image'
 }
 
 # bats test_tags=user_story:pull,user_story:referenced_objects
 function pull_direct_multiple_blob_references_transferred { # @test
-	them="$BATS_TEST_TMPDIR/them"
-	mkdir -p "$them"
+  them="$BATS_TEST_TMPDIR/them"
+  mkdir -p "$them"
 
-	pushd "$them" || exit 1
+  pushd "$them" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Write two standalone blobs to the source store
-	run_dodder blob_store-write <(echo "first referenced blob")
-	assert_success
-	blob_sha_1="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  # Write two standalone blobs to the source store
+  run_dodder blob_store-write <(echo "first referenced blob")
+  assert_success
+  blob_sha_1="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-	run_dodder blob_store-write <(echo "second referenced blob")
-	assert_success
-	blob_sha_2="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  run_dodder blob_store-write <(echo "second referenced blob")
+  assert_success
+  blob_sha_2="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-	# Create a type with reference discovery for blob refs
-	cat >refblob.type <<-'TYPEFILE'
+  # Create a type with reference discovery for blob refs
+  cat >refblob.type <<-'TYPEFILE'
 		---
 		! toml-type-v2
 		---
@@ -771,11 +771,11 @@ function pull_direct_multiple_blob_references_transferred { # @test
 		script = "grep -oP '(@blake2b256-[a-z0-9]+|\\[\\[(.+?)\\]\\])' | sed 's/\\[\\[//;s/\\]\\]//' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !refblob/'"
 	TYPEFILE
 
-	run_dodder checkin -delete refblob.type
-	assert_success
+  run_dodder checkin -delete refblob.type
+  assert_success
 
-	# Create a zettel whose body references both standalone blobs
-	run_dodder new -edit=false - <<-EOM
+  # Create a zettel whose body references both standalone blobs
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel with two blob refs
 		! refblob
@@ -784,52 +784,52 @@ function pull_direct_multiple_blob_references_transferred { # @test
 		First: @${blob_sha_1}
 		Second: @${blob_sha_2}
 	EOM
-	assert_success
+  assert_success
 
-	popd || exit 1
+  popd || exit 1
 
-	# Set up destination repo
-	us="$BATS_TEST_TMPDIR/us"
-	mkdir -p "$us"
-	pushd "$us" || exit 1
+  # Set up destination repo
+  us="$BATS_TEST_TMPDIR/us"
+  mkdir -p "$us"
+  pushd "$us" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Pull from source
-	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
-	assert_success
+  # Pull from source
+  run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+  assert_success
 
-	# Verify both referenced blobs were transferred
-	run_dodder blob_store-cat "$blob_sha_1"
-	assert_success
-	assert_output "$(printf "%s\n" "first referenced blob")"
+  # Verify both referenced blobs were transferred
+  run_dodder blob_store-cat "$blob_sha_1"
+  assert_success
+  assert_output "$(printf "%s\n" "first referenced blob")"
 
-	run_dodder blob_store-cat "$blob_sha_2"
-	assert_success
-	assert_output "$(printf "%s\n" "second referenced blob")"
+  run_dodder blob_store-cat "$blob_sha_2"
+  assert_success
+  assert_output "$(printf "%s\n" "second referenced blob")"
 }
 
 # bats test_tags=user_story:pull,user_story:referenced_objects
 function pull_direct_transitive_blob_references_transferred { # @test
-	them="$BATS_TEST_TMPDIR/them"
-	mkdir -p "$them"
+  them="$BATS_TEST_TMPDIR/them"
+  mkdir -p "$them"
 
-	pushd "$them" || exit 1
+  pushd "$them" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Write a leaf blob (no further references)
-	run_dodder blob_store-write <(echo "leaf blob content")
-	assert_success
-	leaf_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  # Write a leaf blob (no further references)
+  run_dodder blob_store-write <(echo "leaf blob content")
+  assert_success
+  leaf_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-	# Write an intermediate blob whose content references the leaf blob
-	run_dodder blob_store-write <(echo "tree entry: @${leaf_blob_sha}")
-	assert_success
-	tree_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+')"
+  # Write an intermediate blob whose content references the leaf blob
+  run_dodder blob_store-write <(echo "tree entry: @${leaf_blob_sha}")
+  assert_success
+  tree_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-	# Create treeblob type: its discovery script emits blob refs from content
-	cat >treeblob.type <<-'TYPEFILE'
+  # Create treeblob type: its discovery script emits blob refs from content
+  cat >treeblob.type <<-'TYPEFILE'
 		---
 		! toml-type-v2
 		---
@@ -841,11 +841,11 @@ function pull_direct_transitive_blob_references_transferred { # @test
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !treeblob/'"
 	TYPEFILE
 
-	run_dodder checkin -delete treeblob.type
-	assert_success
+  run_dodder checkin -delete treeblob.type
+  assert_success
 
-	# Create refblob type: its discovery script emits blob refs with treeblob type
-	cat >refblob.type <<-'TYPEFILE'
+  # Create refblob type: its discovery script emits blob refs with treeblob type
+  cat >refblob.type <<-'TYPEFILE'
 		---
 		! toml-type-v2
 		---
@@ -858,11 +858,11 @@ function pull_direct_transitive_blob_references_transferred { # @test
 		script = "grep -oP '@blake2b256-[a-z0-9]+' | sed 's/^@\\(blake2b256-[a-z0-9]*\\)/@\\1 !treeblob/'"
 	TYPEFILE
 
-	run_dodder checkin -delete refblob.type
-	assert_success
+  run_dodder checkin -delete refblob.type
+  assert_success
 
-	# Create a zettel whose body references the intermediate (tree) blob
-	run_dodder new -edit=false - <<-EOM
+  # Create a zettel whose body references the intermediate (tree) blob
+  run_dodder new -edit=false - <<-EOM
 		---
 		# zettel with transitive blob refs
 		! refblob
@@ -870,40 +870,40 @@ function pull_direct_transitive_blob_references_transferred { # @test
 
 		See tree @${tree_blob_sha} for details.
 	EOM
-	assert_success
+  assert_success
 
-	popd || exit 1
+  popd || exit 1
 
-	# Set up destination repo
-	us="$BATS_TEST_TMPDIR/us"
-	mkdir -p "$us"
-	pushd "$us" || exit 1
+  # Set up destination repo
+  us="$BATS_TEST_TMPDIR/us"
+  mkdir -p "$us"
+  pushd "$us" || exit 1
 
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	# Pull from source — should transfer the zettel, both blobs transitively
-	run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
-	assert_success
+  # Pull from source — should transfer the zettel, both blobs transitively
+  run_dodder pull -direct "$(realpath "$them")" +zettel,typ,etikett
+  assert_success
 
-	# Verify the intermediate tree blob was transferred
-	run_dodder blob_store-cat "$tree_blob_sha"
-	assert_success
-	assert_output "$(printf "%s\n" "tree entry: @${leaf_blob_sha}")"
+  # Verify the intermediate tree blob was transferred
+  run_dodder blob_store-cat "$tree_blob_sha"
+  assert_success
+  assert_output "$(printf "%s\n" "tree entry: @${leaf_blob_sha}")"
 
-	# Verify the leaf blob was transferred transitively
-	run_dodder blob_store-cat "$leaf_blob_sha"
-	assert_success
-	assert_output "$(printf "%s\n" "leaf blob content")"
+  # Verify the leaf blob was transferred transitively
+  run_dodder blob_store-cat "$leaf_blob_sha"
+  assert_success
+  assert_output "$(printf "%s\n" "leaf blob content")"
 }
 
 function pull_direct_no_repo_at_path { # @test
-	pushd "$BATS_TEST_TMPDIR" || exit 1
-	run_dodder_init_disable_age
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+  run_dodder_init_disable_age
 
-	mkdir -p empty_dir
+  mkdir -p empty_dir
 
-	run_dodder pull -direct "$(realpath empty_dir)" +zettel
+  run_dodder pull -direct "$(realpath empty_dir)" +zettel
 
-	assert_failure
-	assert_output --partial 'not in a dodder directory'
+  assert_failure
+  assert_output --partial 'not in a dodder directory'
 }

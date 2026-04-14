@@ -1,5 +1,3 @@
-set output-format := "tap"
-
 dir_build := absolute_path("build")
 
 default: build
