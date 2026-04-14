@@ -1,8 +1,8 @@
 package tag_paths
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 )
 
 type (

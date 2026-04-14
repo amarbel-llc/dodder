@@ -18,7 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
-	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 )
 
 func TestMakeBlobReaderFromArchive(t *testing.T) {

@@ -17,7 +17,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/inventory_archive"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
-	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 )
 
 func TestPackV1WithDelta(t *testing.T) {

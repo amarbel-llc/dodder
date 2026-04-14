@@ -1,8 +1,8 @@
 package collections_delta
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_value"
 )
 

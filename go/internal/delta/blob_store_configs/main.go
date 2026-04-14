@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	charlie_bsc "code.linenisgreat.com/dodder/go/internal/charlie/blob_store_configs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
-	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 )
 
 // Re-export all types from charlie/blob_store_configs

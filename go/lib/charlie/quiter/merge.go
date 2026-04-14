@@ -3,9 +3,9 @@ package quiter
 import (
 	"iter"
 
+	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // merges the two sorted sequences into a single output sequence. when `funcCmp`

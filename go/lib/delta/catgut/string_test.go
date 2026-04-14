@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
 )
 
 func TestMain(m *testing.M) {

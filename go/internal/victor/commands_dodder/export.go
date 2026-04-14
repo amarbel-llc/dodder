@@ -15,7 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
-	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 	"code.linenisgreat.com/dodder/go/lib/echo/age"
 )
 

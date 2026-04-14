@@ -16,7 +16,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
-	"code.linenisgreat.com/dodder/go/lib/delta/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
 )
 
 type Index struct {
