@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/cmp"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/charlie/values"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
 )
 
 func makeTestFuncCmp(_ ui.T) cmp.Func[*values.Int] {

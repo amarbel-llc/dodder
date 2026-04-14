@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/charlie/values"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
 )
 

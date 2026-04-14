@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/charlie/values"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
 )
 
 func makeStringValues(vs ...string) (out []values.String) {

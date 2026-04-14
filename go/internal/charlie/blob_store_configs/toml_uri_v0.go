@@ -2,7 +2,7 @@ package blob_store_configs
 
 import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"code.linenisgreat.com/dodder/go/lib/charlie/values"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
 )
 
 // TODO move to a config_common package

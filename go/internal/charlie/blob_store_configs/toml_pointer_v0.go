@@ -2,8 +2,8 @@ package blob_store_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 //go:generate tommy generate
