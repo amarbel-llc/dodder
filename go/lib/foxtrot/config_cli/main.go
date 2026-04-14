@@ -3,7 +3,7 @@ package config_cli
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/cli"
 	"code.linenisgreat.com/dodder/go/lib/echo/debug"
 )

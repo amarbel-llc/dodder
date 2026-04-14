@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 // TODO remove and replace with BlobStore

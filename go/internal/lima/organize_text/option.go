@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 	"code.linenisgreat.com/dodder/go/lib/charlie/values"

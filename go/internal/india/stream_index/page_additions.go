@@ -2,7 +2,7 @@ package stream_index
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type additions interface {

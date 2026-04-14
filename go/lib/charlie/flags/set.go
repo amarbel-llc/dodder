@@ -1,6 +1,6 @@
 package flags
 
-import "code.linenisgreat.com/dodder/go/lib/0/interfaces"
+import "github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 
 type Definitions interface {
 	BoolVar(variable *bool, name string, defaultValue bool, usage string)

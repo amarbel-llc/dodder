@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{

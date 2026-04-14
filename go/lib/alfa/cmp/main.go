@@ -1,7 +1,7 @@
 package cmp
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type Func[ELEMENT any] func(ELEMENT, ELEMENT) Result

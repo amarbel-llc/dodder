@@ -3,7 +3,7 @@ package directory_layout
 import (
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/xdg"
 )

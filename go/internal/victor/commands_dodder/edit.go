@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func init() {

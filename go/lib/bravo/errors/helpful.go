@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func PrintHelpful(printer interfaces.Printer, helpful Helpful) {

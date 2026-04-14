@@ -1,12 +1,12 @@
 package command_components_madder
 
 import (
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 )
 
 type Complete struct {

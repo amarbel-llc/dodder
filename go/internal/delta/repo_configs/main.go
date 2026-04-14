@@ -3,12 +3,12 @@ package repo_configs
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 )
 
 type (
@@ -26,11 +26,11 @@ type (
 )
 
 var (
-	DecodeV0                       = charlie_rc.DecodeV0
-	DecodeV1                       = charlie_rc.DecodeV1
-	DecodeV2                       = charlie_rc.DecodeV2
-	DecodeDefaultsV1OmitEmptyInto  = charlie_rc.DecodeDefaultsV1OmitEmptyInto
-	EncodeDefaultsV1OmitEmptyFrom  = charlie_rc.EncodeDefaultsV1OmitEmptyFrom
+	DecodeV0                      = charlie_rc.DecodeV0
+	DecodeV1                      = charlie_rc.DecodeV1
+	DecodeV2                      = charlie_rc.DecodeV2
+	DecodeDefaultsV1OmitEmptyInto = charlie_rc.DecodeDefaultsV1OmitEmptyInto
+	EncodeDefaultsV1OmitEmptyFrom = charlie_rc.EncodeDefaultsV1OmitEmptyFrom
 )
 
 type (

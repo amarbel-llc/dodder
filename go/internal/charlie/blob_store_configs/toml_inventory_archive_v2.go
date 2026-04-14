@@ -2,10 +2,10 @@ package blob_store_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/delta/compression_type"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 )
 
 //go:generate tommy generate
@@ -16,7 +16,6 @@ type TomlInventoryArchiveV2 struct {
 	Delta           DeltaConfig                      `toml:"delta"`
 	MaxPackSize     uint64                           `toml:"max-pack-size"`
 }
-
 
 func (TomlInventoryArchiveV2) GetBlobStoreType() string {
 	return "local-inventory-archive"

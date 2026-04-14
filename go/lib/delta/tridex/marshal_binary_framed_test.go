@@ -6,7 +6,7 @@ import (
 	"io"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 // TestFramedMultiTridexRoundTrip replicates the store_abbr serialization

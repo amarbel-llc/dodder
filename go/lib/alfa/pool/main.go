@@ -3,7 +3,7 @@ package pool
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type pool[SWIMMER any, SWIMMER_PTR interfaces.Ptr[SWIMMER]] struct {

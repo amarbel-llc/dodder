@@ -3,7 +3,7 @@ package expansion
 import (
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_seq"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )

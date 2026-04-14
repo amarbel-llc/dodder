@@ -18,7 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/oscar/store_config"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 

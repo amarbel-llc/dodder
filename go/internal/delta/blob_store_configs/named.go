@@ -1,8 +1,8 @@
 package blob_store_configs
 
 import (
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 )
 
 type ConfigNamed struct {

@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	tap "github.com/amarbel-llc/bob/packages/tap-dancer/go"
 )
