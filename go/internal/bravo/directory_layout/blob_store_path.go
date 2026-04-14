@@ -1,41 +1,15 @@
 package directory_layout
 
 import (
+	madder_dl "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
+
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 )
 
-type BlobStorePath interface {
-	GetBase() string
-	GetConfig() string
-	GetId() blob_store_id.Id
-}
+type BlobStorePath = madder_dl.BlobStorePath
 
-type blobStorePath struct {
-	base   string
-	config string
-	id     blob_store_id.Id
-}
-
-var _ BlobStorePath = blobStorePath{}
-
-func MakeBlobStorePath(id blob_store_id.Id, base, config string) blobStorePath {
-	return blobStorePath{
-		id:     id,
-		base:   base,
-		config: config,
-	}
-}
-
-func (path blobStorePath) GetBase() string {
-	return path.base
-}
-
-func (path blobStorePath) GetConfig() string {
-	return path.config
-}
-
-func (path blobStorePath) GetId() blob_store_id.Id {
-	return path.id
+func MakeBlobStorePath(id blob_store_id.Id, base, config string) BlobStorePath {
+	return madder_dl.MakeBlobStorePath(id, base, config)
 }
 
 func GetDefaultBlobStore(
@@ -47,7 +21,7 @@ func GetDefaultBlobStore(
 	)
 }
 
-func getBlobStorePath(
+func GetBlobStorePath(
 	directoryLayout BlobStore,
 	idString string,
 ) BlobStorePath {
@@ -61,26 +35,13 @@ func getBlobStorePath(
 	)
 }
 
-func GetBlobStorePath(
-	directoryLayout BlobStore,
-	idString string,
-) BlobStorePath {
-	return getBlobStorePath(
-		directoryLayout,
-		idString,
-	)
-}
-
 func GetBlobStorePathForCustomPath(
 	idString,
 	basePath string,
 	configPath string,
 ) BlobStorePath {
-	return MakeBlobStorePath(
-		blob_store_id.MakeWithLocation(
-			idString,
-			blob_store_id.LocationTypeUnknown,
-		),
+	return madder_dl.GetBlobStorePathForCustomPath(
+		idString,
 		basePath,
 		configPath,
 	)
