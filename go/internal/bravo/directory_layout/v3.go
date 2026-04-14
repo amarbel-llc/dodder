@@ -3,7 +3,7 @@ package directory_layout
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )

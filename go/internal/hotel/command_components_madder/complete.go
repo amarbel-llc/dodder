@@ -1,7 +1,7 @@
 package command_components_madder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/blob_store_id"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/lib/0/interfaces"
