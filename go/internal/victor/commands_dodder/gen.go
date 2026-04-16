@@ -7,8 +7,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type Gen struct{}
@@ -26,6 +26,21 @@ func init() {
 		"gen",
 		&Gen{},
 	)
+}
+
+func (cmd *Gen) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "key-purposes",
+			Description: "key purpose identifiers to generate",
+			Variadic:    true,
+			EnumValues: []string{
+				markl.PurposeMadderPrivateKeyV0,
+				markl.PurposeMadderPrivateKeyV1,
+				markl.PurposeRepoPrivateKeyV1,
+			},
+		}},
+	}}
 }
 
 func (cmd Gen) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {}

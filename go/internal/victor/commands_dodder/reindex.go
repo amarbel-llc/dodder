@@ -24,6 +24,7 @@ type Reindex struct {
 
 var _ command.CommandWithArgs = (*Reindex)(nil)
 
+// GetArgs returns nil: reindex explicitly rejects positional arguments.
 func (cmd *Reindex) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd Reindex) Run(req command.Request) {

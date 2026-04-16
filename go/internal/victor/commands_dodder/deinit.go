@@ -37,6 +37,7 @@ var (
 	_ command.CommandWithArgs           = (*Deinit)(nil)
 )
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *Deinit) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd *Deinit) SetFlagDefinitions(

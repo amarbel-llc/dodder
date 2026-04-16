@@ -35,6 +35,24 @@ func init() {
 	)
 }
 
+func (cmd *Info) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "info-keys",
+			Description: "information keys to display (default: store-version)",
+			Variadic:    true,
+			EnumValues: []string{
+				"store-version",
+				"store-version-next",
+				"compression-type",
+				"age-encryption",
+				"env",
+				"xdg",
+			},
+		}},
+	}}
+}
+
 func (cmd Info) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {

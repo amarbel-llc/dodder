@@ -21,9 +21,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
 )
 
 func init() {
@@ -51,6 +51,16 @@ var _ interfaces.CommandComponentWriter = (*InitWorkspace)(nil)
 func (cmd InitWorkspace) GetDescription() command.Description {
 	return command.Description{
 		Short: "initialize a workspace directory",
+	}
+}
+
+func (cmd *InitWorkspace) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{
+		{Args: []command.Arg{{
+			Name:        "dir",
+			Description: "directory for the workspace (created if needed)",
+		}}},
+		cmd.Query.GetArgGroup(),
 	}
 }
 

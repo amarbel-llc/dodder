@@ -19,6 +19,7 @@ type InfoSSHAgent struct{}
 
 var _ command.CommandWithArgs = (*InfoSSHAgent)(nil)
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *InfoSSHAgent) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd InfoSSHAgent) GetDescription() command.Description {

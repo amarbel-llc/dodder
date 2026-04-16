@@ -19,6 +19,7 @@ type InstallMcp struct{}
 
 var _ command.CommandWithArgs = (*InstallMcp)(nil)
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *InstallMcp) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd InstallMcp) Run(req command.Request) {

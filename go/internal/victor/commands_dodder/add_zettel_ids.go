@@ -50,6 +50,7 @@ type AddZettelIds struct {
 
 var _ command.CommandWithArgs = (*AddZettelIds)(nil)
 
+// GetArgs returns nil: reads candidates from stdin, not positional args.
 func (cmd *AddZettelIds) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd AddZettelIds) Run(req command.Request) {

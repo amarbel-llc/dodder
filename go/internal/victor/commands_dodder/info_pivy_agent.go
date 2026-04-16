@@ -19,6 +19,7 @@ type InfoPivyAgent struct{}
 
 var _ command.CommandWithArgs = (*InfoPivyAgent)(nil)
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *InfoPivyAgent) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd InfoPivyAgent) GetDescription() command.Description {

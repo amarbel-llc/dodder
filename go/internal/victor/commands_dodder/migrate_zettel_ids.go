@@ -37,6 +37,7 @@ type MigrateZettelIds struct {
 
 var _ command.CommandWithArgs = (*MigrateZettelIds)(nil)
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *MigrateZettelIds) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd MigrateZettelIds) Run(req command.Request) {

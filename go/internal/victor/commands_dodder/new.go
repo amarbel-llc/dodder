@@ -13,9 +13,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/script_value"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func init() {
@@ -51,6 +51,16 @@ type New struct {
 }
 
 var _ interfaces.CommandComponentWriter = (*New)(nil)
+
+func (cmd *New) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "shas",
+			Description: "blob SHAs to create zettels from (requires -shas flag)",
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd *New) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 	flagSet.Var(&cmd.RepoId, "kasten", "none or Browser")

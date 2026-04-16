@@ -24,6 +24,7 @@ type CheckinJson struct {
 
 var _ command.CommandWithArgs = (*CheckinJson)(nil)
 
+// GetArgs returns nil: reads from stdin, not positional arguments.
 func (cmd *CheckinJson) GetArgs() []command.ArgGroup { return nil }
 
 type TomlBookmark struct {

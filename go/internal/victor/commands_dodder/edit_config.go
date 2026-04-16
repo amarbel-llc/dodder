@@ -28,6 +28,7 @@ type EditConfig struct {
 
 var _ command.CommandWithArgs = (*EditConfig)(nil)
 
+// GetArgs returns nil: edit-konfig pops args but ignores them with a warning.
 func (cmd *EditConfig) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd EditConfig) GetDescription() command.Description {

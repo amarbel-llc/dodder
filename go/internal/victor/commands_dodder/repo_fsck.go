@@ -36,6 +36,7 @@ type RepoFsck struct {
 
 var _ command.CommandWithArgs = (*RepoFsck)(nil)
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *RepoFsck) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd RepoFsck) Complete(

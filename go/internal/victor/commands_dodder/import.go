@@ -15,9 +15,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/romeo/remote_transfer"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/charmbracelet/huh"
 )
 
@@ -56,6 +56,17 @@ type Import struct {
 }
 
 var _ interfaces.CommandComponentWriter = (*Import)(nil)
+
+func (cmd *Import) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "inventory-list-paths",
+			Description: "paths to inventory list files to import",
+			Required:    true,
+			Variadic:    true,
+		}},
+	}}
+}
 
 func (cmd *Import) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,

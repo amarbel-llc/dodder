@@ -22,6 +22,7 @@ type Mcp struct {
 
 var _ command.CommandWithArgs = (*Mcp)(nil)
 
+// GetArgs returns nil: no positional arguments.
 func (cmd *Mcp) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd Mcp) Run(req command.Request) {

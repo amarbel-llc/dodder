@@ -41,6 +41,17 @@ type CheckinBlob struct {
 
 var _ interfaces.CommandComponentWriter = (*CheckinBlob)(nil)
 
+func (cmd *CheckinBlob) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{{
+		Args: []command.Arg{{
+			Name:        "zettel-id-filepath-pairs",
+			Description: "alternating zettel-id and filepath/sha pairs",
+			Required:    true,
+			Variadic:    true,
+		}},
+	}}
+}
+
 func (cmd *CheckinBlob) SetFlagDefinitions(
 	flagDefinitions interfaces.CLIFlagDefinitions,
 ) {

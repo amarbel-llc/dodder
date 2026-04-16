@@ -55,6 +55,10 @@ func (cmd Checkin) GetDescription() command.Description {
 	}
 }
 
+func (cmd *Checkin) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
+
 func (cmd *Checkin) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {

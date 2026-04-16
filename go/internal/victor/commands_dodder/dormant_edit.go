@@ -35,6 +35,7 @@ type DormantEdit struct {
 
 var _ command.CommandWithArgs = (*DormantEdit)(nil)
 
+// GetArgs returns nil: dormant-edit pops args but ignores them with a warning.
 func (cmd *DormantEdit) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd DormantEdit) Run(req command.Request) {
