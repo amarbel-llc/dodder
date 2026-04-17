@@ -168,12 +168,12 @@ SUMMARY:$summary
 STATUS:$status
 PRIORITY:$priority"
 
-  if [[ -n "$due" ]]; then
+  if [[ -n $due ]]; then
     ical="$ical
 DUE:$due"
   fi
 
-  if [[ -n "$description" ]]; then
+  if [[ -n $description ]]; then
     # Escape backslashes and newlines per RFC 5545.
     local escaped="${description//\\/\\\\}"
     escaped="${escaped//$'\n'/\\n}"
@@ -181,7 +181,7 @@ DUE:$due"
 DESCRIPTION:$escaped"
   fi
 
-  if [[ -n "$categories" ]]; then
+  if [[ -n $categories ]]; then
     ical="$ical
 CATEGORIES:$categories"
   fi
@@ -507,7 +507,7 @@ function status_shows_checked_out_after_checkin { # @test
   run_dodder status
   assert_success
   assert_output - <<-EOM
-		             same [ @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Bound task" test]
+		             same [one/uno @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Bound task" test]
 	EOM
   popd || return 1
 }

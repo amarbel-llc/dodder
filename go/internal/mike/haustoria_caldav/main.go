@@ -158,6 +158,10 @@ func (s *Store) queryCheckedOutForCalendar(
 
 		// Check if this CalDAV resource has an existing dodder binding.
 		if bound, ok := bindings[twm.Task.UID]; ok {
+			// Copy the zettel ID from the committed object onto the
+			// external side so it appears in status/show output.
+			external.GetObjectIdMutable().ResetWithObjectId(bound.GetObjectId())
+
 			sku.TransactedResetter.ResetWith(co.GetSku(), bound)
 
 			// Copy the type lock signature from the committed object onto
