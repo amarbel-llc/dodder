@@ -67,6 +67,10 @@ func (s *Store) QueryCheckedOut(
 	if err = s.supplies.ReadPrimitiveQuery(
 		nil,
 		func(object *sku.Transacted) error {
+			if object.GetObjectId().GetGenre() != genres.Zettel {
+				return nil
+			}
+
 			eoid := object.GetExternalObjectId()
 			if eoid.IsEmpty() {
 				return nil
@@ -155,6 +159,17 @@ func (s *Store) queryCheckedOutForCalendar(
 		// Check if this CalDAV resource has an existing dodder binding.
 		if bound, ok := bindings[twm.Task.UID]; ok {
 			sku.TransactedResetter.ResetWith(co.GetSku(), bound)
+
+			// Copy the type lock signature from the committed object onto
+			// the external side. The haustoria assigns the type from
+			// workspace config (not CalDAV), so the external type lock
+			// should match the internal one. Without this, the signature
+			// mismatch causes a perpetual "changed" state (#111).
+			boundTypeLock := bound.GetMetadata().GetTypeLock()
+			external.GetMetadataMutable().GetTypeLockMutable().GetValueMutable().ResetWithMarklId(
+				boundTypeLock.GetValue(),
+			)
+
 			co.SetState(checked_out_state.CheckedOut)
 		} else {
 			co.GetSku().GetObjectIdMutable().SetGenre(genres.Zettel)

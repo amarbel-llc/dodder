@@ -500,15 +500,14 @@ function status_shows_checked_out_after_checkin { # @test
   run_dodder checkin :
   assert_success
 
-  # After checkin: should show as checked out, not untracked. The blob
-  # digest is set during compile via buildTaskTomlBlob; since the bound
-  # in-memory object is not re-projected through the reader script during
-  # the status query (only on commit), the box format here doesn't show
-  # field columns — same as the untracked case.
+  # After checkin: the CalDAV resource is bound to a dodder object and
+  # the metadata matches — status should show "same". The binding lookup
+  # filters to zettel genre only (#111) and copies the type lock
+  # signature from the committed object onto the external side.
   run_dodder status
   assert_success
   assert_output - <<-EOM
-		          changed [ @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Bound task" test]
+		             same [ @blake2b256-4a2a979r54j2804n697c20mvhjg8t377knujfxc6t8szh2awkwts2whwug !task "Bound task" test]
 	EOM
   popd || return 1
 }

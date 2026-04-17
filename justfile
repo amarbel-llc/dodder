@@ -183,6 +183,18 @@ explore-haustoria-status: build
   cd /tmp/dodder-haustoria-explore/workspace
   dodder status
 
+live_workspace := env("HOME") / "workspaces/dodder-haustoria-caldav/workspace"
+
+# Run a dodder command in the live CalDAV workspace (no build).
+[group('explore')]
+explore-live *args:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  source "$HOME/.secrets.env"
+  export PATH="{{dir_build}}/debug:$PATH"
+  cd "{{live_workspace}}"
+  dodder {{args}}
+
 # Debug a specific bats test file with --no-tempdir-cleanup for inspection.
 [group('explore')]
 explore-bats-debug *targets: build
