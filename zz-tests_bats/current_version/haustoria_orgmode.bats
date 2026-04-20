@@ -305,7 +305,9 @@ function orgmode_file_without_heading_uses_preamble { # @test
 
   run_dodder status
   assert_success
-  assert_output --partial "Just a plain note"
+  assert_output - <<-'EOM'
+		        untracked [plain @blake2b256-k5jwcnwfnc2tadu5k32tfxywcn5nq3eyvqsehkncx8usj8jzacesr3gvq3 !md "Just a plain note"]
+	EOM
   popd || return 1
 }
 

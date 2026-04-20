@@ -5,9 +5,9 @@ go 1.26.1
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260414180333-e8e81ae667b3
 	filippo.io/age v1.3.1
-	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0
 	github.com/amarbel-llc/madder/go v0.0.0-20260414170928-12e6380ac8f7
+	github.com/amarbel-llc/purse-first/libs/dewey v0.0.1
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tommy v0.0.0-20260405143331-87255e87bf37
 	github.com/brandondube/tai v0.1.0
@@ -16,6 +16,7 @@ require (
 	github.com/gabstv/go-bsdiff v1.0.5
 	github.com/google/go-cmp v0.7.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/pkg/sftp v1.13.10
 	github.com/tetratelabs/wazero v1.11.0
@@ -32,8 +33,8 @@ require (
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
+	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
-	github.com/amarbel-llc/purse-first/libs/dewey v0.0.1 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
@@ -53,7 +54,6 @@ require (
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
 	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
 	github.com/kr/fs v0.1.0 // indirect

@@ -17,8 +17,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/orgmode"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 // FolderMapping associates a remote folder with a dodder type and optional
@@ -139,6 +139,23 @@ func (store *Store) queryCheckedOutForFolder(
 				continue
 			}
 			content = newContent
+		}
+
+		if len(headings) == 0 {
+			synth, ok := synthesizeHeadingFromContent(content, file.Path)
+			if !ok {
+				continue
+			}
+			if err = store.emitHeading(
+				folder,
+				synth,
+				content,
+				bindings,
+				output,
+			); err != nil {
+				return err
+			}
+			continue
 		}
 
 		for _, heading := range headings {
@@ -357,6 +374,21 @@ func (store *Store) Compile(req haustoria.CompileRequest) (haustoria.CompileResu
 				continue
 			}
 
+			if len(headings) == 0 {
+				synth, ok := synthesizeHeadingFromContent(content, file.Path)
+				if !ok || synth.ID != req.ExternalId {
+					continue
+				}
+				return haustoria.CompileResult{
+					ExternalId:  synth.ID,
+					Description: synth.Title,
+					Blob:        content[synth.BodyStart:synth.BodyEnd],
+					Tags:        append([]string(nil), folder.Tags...),
+					TypeId:      folder.TypeId,
+					ETag:        etag,
+				}, nil
+			}
+
 			for _, heading := range headings {
 				if heading.ID != req.ExternalId {
 					continue
@@ -446,6 +478,19 @@ func (store *Store) Discover() ([]haustoria.ExternalResource, error) {
 
 			headings, parseErr := parseFile(content)
 			if parseErr != nil {
+				continue
+			}
+
+			if len(headings) == 0 {
+				synth, ok := synthesizeHeadingFromContent(content, file.Path)
+				if !ok {
+					continue
+				}
+				resources = append(resources, haustoria.ExternalResource{
+					ExternalId:  synth.ID,
+					TypeId:      folder.TypeId,
+					Description: synth.Title,
+				})
 				continue
 			}
 

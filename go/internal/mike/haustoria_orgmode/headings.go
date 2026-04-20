@@ -51,6 +51,69 @@ type ParsedHeading struct {
 	DodderID string
 }
 
+// synthesizeHeadingFromContent produces a single ParsedHeading for files
+// that contain no top-level headings, so heading-less notes still surface
+// as externally-visible zettels. The ID is derived from the file stem
+// (stable across reads without mutating the file) and the title is the
+// first non-empty line.
+func synthesizeHeadingFromContent(
+	content []byte,
+	filePath string,
+) (ParsedHeading, bool) {
+	id := fileExternalId(filePath)
+	if id == "" {
+		return ParsedHeading{}, false
+	}
+
+	titleStart, titleEnd, bodyStart := firstNonEmptyLineBounds(content)
+	if titleStart == titleEnd {
+		return ParsedHeading{}, false
+	}
+
+	title := strings.TrimRight(
+		string(content[titleStart:titleEnd]),
+		" \t\r",
+	)
+
+	return ParsedHeading{
+		Title:     title,
+		BodyStart: bodyStart,
+		BodyEnd:   len(content),
+		ID:        id,
+	}, true
+}
+
+// firstNonEmptyLineBounds returns byte offsets for the first non-empty line
+// and the start of the line after it. If no non-empty line exists, both
+// bounds are len(content).
+func firstNonEmptyLineBounds(content []byte) (start, end, next int) {
+	pos := 0
+	for pos < len(content) {
+		lineEnd := bytes.IndexByte(content[pos:], '\n')
+		var lineStop int
+		if lineEnd < 0 {
+			lineStop = len(content)
+		} else {
+			lineStop = pos + lineEnd
+		}
+
+		line := content[pos:lineStop]
+		if len(bytes.TrimSpace(line)) > 0 {
+			nextLine := lineStop
+			if lineEnd >= 0 {
+				nextLine = lineStop + 1
+			}
+			return pos, lineStop, nextLine
+		}
+
+		if lineEnd < 0 {
+			break
+		}
+		pos = lineStop + 1
+	}
+	return len(content), len(content), len(content)
+}
+
 // parseFile parses orgmode content and returns one entry per top-level
 // heading in source order.
 func parseFile(content []byte) (headings []ParsedHeading, err error) {
