@@ -4,6 +4,10 @@ setup() {
   load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
   export output
 
+  # https://github.com/amarbel-llc/dodder/issues/118
+  # test-sftp-server never prints its READY line under the test sandbox.
+  skip "SFTP test server setup blocked by sandbox, see #118"
+
   start_sftp_server
 }
 

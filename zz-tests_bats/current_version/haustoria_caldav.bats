@@ -4,6 +4,10 @@ setup() {
   load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
   export output
 
+  # https://github.com/amarbel-llc/dodder/issues/117
+  # Radicale cannot create a socketpair(AF_UNIX) under the test sandbox.
+  skip "Radicale setup blocked by sandbox, see #117"
+
   start_radicale
 }
 
