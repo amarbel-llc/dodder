@@ -31,32 +31,12 @@ func (b Bridge) RunCommand(
 	cliArgs []string,
 	maxBytes int,
 ) (BridgeResult, error) {
-	return b.runCommand(ctx, cmdName, cliArgs, maxBytes, false)
-}
-
-func (b Bridge) RunWorkspaceCommand(
-	ctx context.Context,
-	cmdName string,
-	cliArgs []string,
-	maxBytes int,
-) (BridgeResult, error) {
-	return b.runCommand(ctx, cmdName, cliArgs, maxBytes, false)
-}
-
-func (b Bridge) runCommand(
-	ctx context.Context,
-	cmdName string,
-	cliArgs []string,
-	maxBytes int,
-	ignoreWorkspace bool,
-) (BridgeResult, error) {
 	outWriter := MakeLimitingWriter(maxBytes)
 	errWriter := MakeLimitingWriter(maxBytes)
 
 	config := repo_config_cli.Default()
 	config.CustomOut = outWriter
 	config.CustomErr = errWriter
-	config.IgnoreWorkspace = ignoreWorkspace
 
 	utility := command.MakeUtility("dodder", config)
 

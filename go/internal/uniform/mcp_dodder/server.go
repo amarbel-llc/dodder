@@ -893,7 +893,7 @@ func makeWorkspaceBridgeHandler(
 			}
 		}
 
-		result, err := bridge.RunWorkspaceCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
+		result, err := bridge.RunCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
 		if err != nil {
 			errMsg := formatErrorDetail(err)
 			if result.Stderr != "" {
