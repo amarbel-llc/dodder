@@ -49,6 +49,7 @@
       gomod2nix,
       bob,
       tommy,
+      madder,
       ...
     }:
     (utils.lib.eachDefaultSystem (
@@ -61,6 +62,7 @@
             gomod2nix
             bob
             tommy
+            madder
             system
             ;
           man7Src = ./docs/man.7;

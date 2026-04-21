@@ -4,6 +4,7 @@
   bob ? null,
   tommy,
   gomod2nix,
+  madder ? null,
   system,
   man7Src ? null,
 }:
@@ -102,6 +103,9 @@ in
     ++ pkgs-master.lib.optionals (bob != null) [
       bob.packages.${system}.batman
       bob.packages.${system}.tap-dancer
+    ]
+    ++ pkgs-master.lib.optionals (madder != null) [
+      madder.packages.${system}.default
     ];
 
     GOTOOLCHAIN = "local";
