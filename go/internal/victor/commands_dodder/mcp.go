@@ -27,9 +27,11 @@ func (cmd *Mcp) GetArgs() []command.ArgGroup { return nil }
 
 func (cmd Mcp) Run(req command.Request) {
 	repo := cmd.MakeLocalWorkingCopy(req)
-	envWorkspace := repo.GetEnvWorkspace()
-	envWorkspace.AssertNotTemporary(repo)
 
+	// The MCP server starts cleanly whether or not the CWD is a dodder
+	// workspace. mcp_dodder.RunServer inspects the workspace env and
+	// advertises only the tools that make sense in the current mode (see
+	// github.com/amarbel-llc/dodder/issues/116).
 	if err := mcp_dodder.RunServer(req.Utility, repo); err != nil {
 		req.Cancel(err)
 	}

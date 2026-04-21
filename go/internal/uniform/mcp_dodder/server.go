@@ -21,7 +21,7 @@ import (
 
 const defaultMaxBytes = 100_000
 
-const mcpInstructions = `Dodder is a distributed zettelkasten and content-addressable blob store.
+const mcpInstructionsCommon = `Dodder is a distributed zettelkasten and content-addressable blob store.
 
 ## Data Model
 
@@ -137,7 +137,9 @@ Examples:
 Markl resources contain repo signatures, public keys, and object digests.
 Most queries do not need this data — use only when verifying integrity or
 provenance.
+`
 
+const mcpInstructionsWorkspace = `
 ## Workspace Tools
 
 When dodder runs inside a workspace (directory with .dodder-workspace config),
@@ -190,7 +192,14 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 		typeBlobCoder: typeBlobCoder,
 	}
 
-	registerTools(tools, bridge, repo, index, tagIdx)
+	hasWorkspace := !repo.GetEnvWorkspace().IsTemporary()
+
+	instructions := mcpInstructionsCommon
+	if hasWorkspace {
+		instructions += mcpInstructionsWorkspace
+	}
+
+	registerTools(tools, bridge, repo, index, tagIdx, hasWorkspace)
 	registerResources(resources, index, tagIdx, bridge)
 
 	prompts := server.NewPromptRegistry()
@@ -203,7 +212,7 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 		Tools:         tools,
 		Resources:     provider,
 		Prompts:       prompts,
-		Instructions:  mcpInstructions,
+		Instructions:  instructions,
 	})
 	if err != nil {
 		return err
@@ -212,7 +221,7 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	return srv.Run(context.Background())
 }
 
-func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_working_copy.Repo, index *typeIndex, tagIdx *tagIndex) {
+func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_working_copy.Repo, index *typeIndex, tagIdx *tagIndex, hasWorkspace bool) {
 	tools.Register(
 		protocol.ToolV1{
 			Name:        "dodder_show",
@@ -565,6 +574,17 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		},
 		makeEditHandler(repo, bridge),
 	)
+
+	if !hasWorkspace {
+		// Workspace-scoped tools (status, checkin, diff, read_checked_out)
+		// operate on checked-out objects in a dodder workspace. Without a
+		// workspace they either assert inside the CLI command (status) or
+		// return empty/unanchored results (checkin, diff, read_checked_out).
+		// Advertising them anyway would mislead clients, so we simply skip
+		// registration — see
+		// github.com/amarbel-llc/dodder/issues/116.
+		return
+	}
 
 	tools.Register(
 		protocol.ToolV1{
