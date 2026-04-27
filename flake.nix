@@ -44,6 +44,12 @@
       madder,
       ...
     }:
+    let
+      # Burnt into binaries via the fork's auto-injected -ldflags.
+      # Single source of truth; `just bump-version` sed-rewrites this line.
+      dodderVersion = "0.1.0";
+      dodderCommit = self.shortRev or self.dirtyShortRev or "unknown";
+    in
     (utils.lib.eachDefaultSystem (
       system:
       let
@@ -55,6 +61,8 @@
             madder
             system
             ;
+          version = dodderVersion;
+          commit = dodderCommit;
           man7Src = ./docs/man.7;
         };
       in

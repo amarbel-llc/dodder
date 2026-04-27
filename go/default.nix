@@ -5,6 +5,13 @@
   madder ? null,
   system,
   man7Src ? null,
+  # Passed to buildGoApplication's `version` and `commit` attrs; the
+  # fork's nixpkgs auto-injects them as `-X main.version` and
+  # `-X main.commit` ldflags on every subPackage. Defaulted so direct
+  # `import ./go/default.nix` (outside the flake) still works; release
+  # builds always override via flake.nix.
+  version ? "dev",
+  commit ? "unknown",
 }:
 let
   pkgs = import nixpkgs {
@@ -16,7 +23,7 @@ let
 
   dodder = pkgs.buildGoApplication {
     pname = "dodder";
-    version = "0.0.1";
+    inherit version commit;
     src = ./.;
     pwd = ./.;
     subPackages = [

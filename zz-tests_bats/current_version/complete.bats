@@ -167,6 +167,7 @@ function complete_subcmd { # @test
 		show.*display objects from the store
 		status.*show workspace object state
 		update.*update type lock signatures
+		version.*print dodder build version and commit
 	EOM
 }
 
