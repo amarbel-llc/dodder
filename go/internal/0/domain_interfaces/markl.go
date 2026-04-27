@@ -1,97 +1,28 @@
 package domain_interfaces
 
 import (
-	"encoding"
-	"hash"
-	"io"
-
+	madder_di "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
+// These interfaces are byte-identical between dodder and madder. Aliased
+// from madder's public domain_interfaces facade so dodder ships a single
+// source of truth without forcing every importer to re-spell its imports.
 type (
-	MarklFormat interface {
-		GetSize() int
-		GetMarklFormatId() string
-	}
+	MarklFormat       = madder_di.MarklFormat
+	FormatHash        = madder_di.FormatHash
+	MarklFormatGetter = madder_di.MarklFormatGetter
+	Hash              = madder_di.Hash
+	MarklId           = madder_di.MarklId
+	MarklIdMutable    = madder_di.MarklIdMutable
+	MarklIdGetter     = madder_di.MarklIdGetter
+	DigestWriteMap    = madder_di.DigestWriteMap
+)
 
-	FormatHash interface {
-		MarklFormat
-
-		GetHash() (Hash, interfaces.FuncRepool)
-
-		GetMarklIdForString(input string) (MarklId, interfaces.FuncRepool)
-		GetMarklIdFromStringFormat(
-			format string,
-			args ...any,
-		) (MarklId, interfaces.FuncRepool)
-	}
-
-	MarklFormatGetter interface {
-		GetMarklFormat() MarklFormat
-	}
-
-	Hash interface {
-		hash.Hash
-		MarklFormatGetter
-		// TODO add `WriteToMarklId` method for reuse
-		GetMarklId() (MarklIdMutable, interfaces.FuncRepool)
-	}
-
-	MarklId interface {
-		// TODO consider removing Stringer and Setter
-
-		// TODO add WriteString and WriteStringWithFormat
-		interfaces.Stringer
-		StringWithFormat() string
-
-		encoding.BinaryMarshaler
-		// encoding.TextMarshaler
-		// io.WriterTo
-		GetBytes() []byte
-		// TODO rethink size as it works completely different between sha and
-		// merkle
-		GetSize() int
-		MarklFormatGetter
-		IsNull() bool
-		IsEmpty() bool
-
-		GetPurposeId() string
-
-		// Optional methods
-		GetIOWrapper() (interfaces.IOWrapper, error)
-		Verify(mes, sig MarklId) error
-		Sign(
-			mes MarklId,
-			sigDst MarklIdMutable,
-			sigPurpose string,
-		) (err error)
-	}
-
-	MarklIdMutable interface {
-		MarklId
-		interfaces.Setter
-		encoding.BinaryUnmarshaler
-		// encoding.TextUnmarshaler
-		// io.ReaderFrom
-		SetMarklId(formatId string, bites []byte) error
-		Reset()
-		ResetWithMarklId(MarklId)
-		SetPurposeId(string) error
-
-		// Optional methods
-		GeneratePrivateKey(
-			readerRand io.Reader,
-			formatId string,
-			purpose string,
-		) (err error)
-	}
-
-	MarklIdGetter interface {
-		GetMarklId() MarklId
-	}
-
-	DigestWriteMap map[string]MarklIdMutable
-
+// Lock and LockMutable are not yet exported from madder's pkgs/
+// domain_interfaces facade, so dodder still defines them locally. Once
+// madder exposes them, swap to type aliases as above.
+type (
 	Lock[
 		KEY interfaces.Value,
 		KEY_PTR interfaces.ValuePtr[KEY],

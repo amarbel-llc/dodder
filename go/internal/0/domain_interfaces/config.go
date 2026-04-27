@@ -1,46 +1,18 @@
 package domain_interfaces
 
+import (
+	madder_di "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+)
+
+// These interfaces are byte-identical between dodder and madder. Aliased
+// from madder's public domain_interfaces facade so dodder ships a single
+// source of truth without forcing every importer to re-spell its imports.
 type (
-	ConfigDryRunGetter interface {
-		IsDryRun() bool
-	}
-
-	ConfigDryRunSetter interface {
-		SetDryRun(bool)
-	}
-
-	MutableConfigDryRun interface {
-		ConfigDryRunGetter
-		ConfigDryRunSetter
-	}
-
-	Config interface {
-		UsePredictableZettelIds() bool
-		GetTypeStringFromExtension(t string) string
-		GetTypeExtension(string) string
-		ConfigDryRunGetter
-	}
-
-	MutableConfig interface {
-		Config
-		MutableConfigDryRun
-	}
-
-	// CLIConfigProvider provides base CLI configuration.
-	// Note: debug.Options is not included because this package cannot import
-	// delta/debug. Pass debug.Options separately where needed.
-	CLIConfigProvider interface {
-		GetVerbose() bool
-		GetQuiet() bool
-		GetTodo() bool
-		IsDryRun() bool
-	}
-
-	// RepoCLIConfigProvider extends CLIConfigProvider with repository-specific
-	// fields for dodder.
-	RepoCLIConfigProvider interface {
-		CLIConfigProvider
-		GetBasePath() string
-		GetIgnoreWorkspace() bool
-	}
+	ConfigDryRunGetter    = madder_di.ConfigDryRunGetter
+	ConfigDryRunSetter    = madder_di.ConfigDryRunSetter
+	MutableConfigDryRun   = madder_di.MutableConfigDryRun
+	Config                = madder_di.Config
+	MutableConfig         = madder_di.MutableConfig
+	CLIConfigProvider     = madder_di.CLIConfigProvider
+	RepoCLIConfigProvider = madder_di.RepoCLIConfigProvider
 )
