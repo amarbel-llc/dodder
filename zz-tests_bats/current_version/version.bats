@@ -27,7 +27,7 @@ function version_matches_flake_version_or_dev { # @test
   run "$DODDER_BIN" version
   assert_success
 
-  if [[ "$output" == "dev+unknown" ]]; then
+  if [[ $output == "dev+unknown" ]]; then
     skip "devshell go-build (no ldflags); flake-version match enforced on nix builds"
   fi
 
