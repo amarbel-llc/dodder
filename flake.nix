@@ -1,13 +1,8 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/4590696c8693fea477850fe379a01544293ca4e2";
+    nixpkgs.url = "github:amarbel-llc/nixpkgs";
     nixpkgs-master.url = "github:NixOS/nixpkgs/e2dde111aea2c0699531dc616112a96cd55ab8b5";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
-
-    gomod2nix = {
-      url = "github:amarbel-llc/gomod2nix";
-      inputs.nixpkgs.follows = "nixpkgs-master";
-    };
 
     purse-first = {
       url = "github:amarbel-llc/purse-first";
@@ -29,7 +24,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
-      inputs.gomod2nix.follows = "gomod2nix";
       inputs.tommy.follows = "tommy";
       inputs.bob.follows = "bob";
     };
@@ -44,9 +38,7 @@
     {
       self,
       nixpkgs,
-      nixpkgs-master,
       utils,
-      gomod2nix,
       bob,
       tommy,
       madder,
@@ -58,8 +50,6 @@
         result = import ./go/default.nix {
           inherit
             nixpkgs
-            nixpkgs-master
-            gomod2nix
             bob
             tommy
             madder

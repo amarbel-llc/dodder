@@ -1,9 +1,7 @@
 {
   nixpkgs,
-  nixpkgs-master,
   bob ? null,
   tommy,
-  gomod2nix,
   madder ? null,
   system,
   man7Src ? null,
@@ -12,12 +10,8 @@ let
   pkgs = import nixpkgs {
     inherit system;
     overlays = [
-      gomod2nix.overlays.default
+      nixpkgs.overlays.default
     ];
-  };
-
-  pkgs-master = import nixpkgs-master {
-    inherit system;
   };
 
   dodder = pkgs.buildGoApplication {
@@ -31,11 +25,11 @@ let
       "cmd/dodder-gen_man"
     ];
     modules = ./gomod2nix.toml;
-    go = pkgs-master.go_1_26;
+    go = pkgs.go_1_26;
     GOTOOLCHAIN = "local";
 
-    nativeBuildInputs = pkgs-master.lib.optionals (man7Src != null) [
-      pkgs-master.pandoc
+    nativeBuildInputs = pkgs.lib.optionals (man7Src != null) [
+      pkgs.pandoc
     ];
 
     postInstall = ''
@@ -43,14 +37,14 @@ let
       $out/bin/dodder-gen_man $out/share/man/man1
       rm $out/bin/dodder-gen_man
     ''
-    + pkgs-master.lib.optionalString (man7Src != null) ''
+    + pkgs.lib.optionalString (man7Src != null) ''
       mkdir -p $out/share/man/man7
       for f in ${man7Src}/*.md; do
         name="$(basename "$f" .md)"
         pandoc -s -t man "$f" -o "$out/share/man/man7/$name.7"
         # .ss 12 0 = disable double sentence spacing
         # .na = ragged-right (no justification)
-        ${pkgs-master.gnused}/bin/sed -i '3a\.\\" Formatting overrides\n.ss 12 0\n.na' "$out/share/man/man7/$name.7"
+        ${pkgs.gnused}/bin/sed -i '3a\.\\" Formatting overrides\n.ss 12 0\n.na' "$out/share/man/man7/$name.7"
       done
     '';
   };
@@ -61,7 +55,7 @@ in
     default = dodder;
   };
 
-  docker = pkgs-master.dockerTools.buildImage {
+  docker = pkgs.dockerTools.buildImage {
     name = "dodder";
     tag = "latest";
     copyToRoot = [ dodder ];
@@ -74,12 +68,12 @@ in
     };
   };
 
-  devShells.default = pkgs-master.mkShell {
+  devShells.default = pkgs.mkShell {
     packages = [
-      gomod2nix.packages.${system}.default
+      pkgs.gomod2nix
       tommy.packages.${system}.default
     ]
-    ++ (with pkgs-master; [
+    ++ (with pkgs; [
       bash-language-server
       delve
       fish
@@ -100,11 +94,11 @@ in
       shfmt
       yq-go
     ])
-    ++ pkgs-master.lib.optionals (bob != null) [
+    ++ pkgs.lib.optionals (bob != null) [
       bob.packages.${system}.batman
       bob.packages.${system}.tap-dancer
     ]
-    ++ pkgs-master.lib.optionals (madder != null) [
+    ++ pkgs.lib.optionals (madder != null) [
       madder.packages.${system}.default
     ];
 
