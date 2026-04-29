@@ -21,7 +21,7 @@ function blob_store_sync_twice { # @test
   run_dodder blob_store-init test
   assert_success
   assert_output --regexp - <<-EOM
-		Wrote config to .*/1-test.dodder-blob_store-config
+		Wrote config to .*/1-test.blob_store-config
 	EOM
 
   run_dodder blob_store-sync

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"path/filepath"
 
+	madder_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
-const FileNameBlobStoreConfig = "dodder-blob_store-config"
+const FileNameBlobStoreConfig = madder_directory_layout.FileNameBlobStoreConfig
 
 func GetBlobStoreConfigPaths(
 	ctx interfaces.ActiveContext,

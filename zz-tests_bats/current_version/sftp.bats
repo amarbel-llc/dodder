@@ -59,7 +59,7 @@ function stop_sftp_server {
 # initialized remote.
 function init_remote_blob_store_config {
   local remote_dir="$BATS_TEST_TMPDIR/remote-blobs"
-  local config_path="$remote_dir/dodder-blob_store-config"
+  local config_path="$remote_dir/blob_store-config"
 
   cat >"$config_path" <<'EOM'
 ---
@@ -155,7 +155,7 @@ function sftp_discover_infers_config { # @test
   assert_success
 
   # Remove the remote config file so discover has to infer it
-  rm "$BATS_TEST_TMPDIR/remote-blobs/dodder-blob_store-config"
+  rm "$BATS_TEST_TMPDIR/remote-blobs/blob_store-config"
 
   # Run init with --discover
   run_dodder blob_store-init-sftp-explicit \
@@ -171,7 +171,7 @@ function sftp_discover_infers_config { # @test
   assert_output --partial "discovered config"
 
   # The remote config should now exist again
-  [[ -f "$BATS_TEST_TMPDIR/remote-blobs/dodder-blob_store-config" ]]
+  [[ -f "$BATS_TEST_TMPDIR/remote-blobs/blob_store-config" ]]
 
   # Verify the discovered store works via fsck
   run_dodder blob_store-fsck .sftp-discovered
