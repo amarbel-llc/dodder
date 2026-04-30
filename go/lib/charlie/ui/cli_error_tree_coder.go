@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/0/box_chars"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type encoder struct{}

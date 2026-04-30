@@ -17,9 +17,9 @@ import (
 // organize`), so a haustoria workspace MUST satisfy them or organize
 // fails with "store does not support operation '**env_workspace.Store'".
 var (
-	_ store_workspace.ReadCheckedOutFromTransacted   = &Store{}
-	_ store_workspace.UpdateCheckoutFromCheckedOut   = &Store{}
-	_ store_workspace.Merge                          = &Store{}
+	_ store_workspace.ReadCheckedOutFromTransacted = &Store{}
+	_ store_workspace.UpdateCheckoutFromCheckedOut = &Store{}
+	_ store_workspace.Merge                        = &Store{}
 )
 
 // ReadCheckedOutFromTransacted returns the live external state of an

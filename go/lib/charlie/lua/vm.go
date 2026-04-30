@@ -1,8 +1,8 @@
 package lua
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	lua "github.com/yuin/gopher-lua"
 )
 

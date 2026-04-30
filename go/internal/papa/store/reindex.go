@@ -3,9 +3,9 @@ package store
 import (
 	"code.linenisgreat.com/dodder/go/internal/echo/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 // TODO-P2 add support for quiet reindexing

@@ -4,8 +4,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type fdCliFormat struct {

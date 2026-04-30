@@ -1,8 +1,8 @@
 package sku
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 var (

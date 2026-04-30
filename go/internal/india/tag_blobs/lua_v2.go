@@ -3,9 +3,9 @@ package tag_blobs
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_lua"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/charlie/lua"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func MakeLuaSelfApplyV2(

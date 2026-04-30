@@ -11,8 +11,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_box_builder"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func MakeBoxCheckedOut(

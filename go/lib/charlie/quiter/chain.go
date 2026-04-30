@@ -3,8 +3,8 @@ package quiter
 import (
 	"sync"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func Chain[T any](e T, wfs ...interfaces.FuncIter[T]) (err error) {

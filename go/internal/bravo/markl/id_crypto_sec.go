@@ -5,9 +5,9 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func (id *Id) GeneratePrivateKey(

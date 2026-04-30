@@ -1,8 +1,8 @@
 package quiter
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 // returns a function that executes `AddString` for the given `adder`

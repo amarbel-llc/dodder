@@ -3,8 +3,8 @@
 package errors
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 func PrintStackTracerIfNecessary(

@@ -10,10 +10,10 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 	"code.linenisgreat.com/dodder/go/lib/delta/pivy"
 	"code.linenisgreat.com/dodder/go/lib/echo/age"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 )
 
 func TestV1RoundTripFullEntriesOnly(t *testing.T) {

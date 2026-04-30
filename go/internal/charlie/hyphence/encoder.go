@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type Encoder[BLOB any] struct {
