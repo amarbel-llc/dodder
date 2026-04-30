@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
@@ -132,11 +132,11 @@ func (c Clean) runOrganize(
 ) (err error) {
 	opOrganize := repo_actions.MakeOrganize(
 		u,
-		organize_text.Metadata{
+		orgie.Metadata{
 			RepoId: qg.RepoId,
-			OptionCommentSet: organize_text.MakeOptionCommentSet(
+			OptionCommentSet: orgie.MakeOptionCommentSet(
 				nil,
-				&organize_text.OptionCommentUnknown{
+				&orgie.OptionCommentUnknown{
 					Value: "instructions: to clean an object, delete it entirely",
 				},
 			),
@@ -146,7 +146,7 @@ func (c Clean) runOrganize(
 
 	ui.Log().Print(qg)
 
-	var organizeResults organize_text.OrganizeResults
+	var organizeResults orgie.OrganizeResults
 
 	if organizeResults, err = opOrganize.RunWithQueryGroup(
 		qg,
@@ -155,9 +155,9 @@ func (c Clean) runOrganize(
 		return err
 	}
 
-	var changes organize_text.Changes
+	var changes orgie.Changes
 
-	if changes, err = organize_text.ChangesFromResults(
+	if changes, err = orgie.ChangesFromResults(
 		u.GetConfig().GetPrintOptions(),
 		organizeResults,
 	); err != nil {

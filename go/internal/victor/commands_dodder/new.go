@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
@@ -233,7 +233,7 @@ func (cmd *New) Run(req command.Request) {
 	}
 
 	if cmd.Organize {
-		opOrganize := repo_actions.MakeOrganize(repo, organize_text.Metadata{})
+		opOrganize := repo_actions.MakeOrganize(repo, orgie.Metadata{})
 
 		if err := opOrganize.Metadata.SetFromObjectMetadata(
 			&cmd.Metadata,
@@ -242,7 +242,7 @@ func (cmd *New) Run(req command.Request) {
 			repo.Cancel(err)
 		}
 
-		var results organize_text.OrganizeResults
+		var results orgie.OrganizeResults
 
 		{
 			var err error

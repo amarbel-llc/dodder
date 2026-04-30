@@ -1,4 +1,4 @@
-package organize_text_mode
+package orgie_mode
 
 import (
 	"strings"

@@ -1,4 +1,4 @@
-package organize_text
+package orgie
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"

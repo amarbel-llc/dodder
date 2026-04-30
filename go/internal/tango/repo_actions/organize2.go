@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -16,15 +16,15 @@ import (
 
 type Organize2 struct {
 	*repo
-	organize_text.Metadata
+	orgie.Metadata
 }
 
 func (op Organize2) Run(
 	skus sku.CheckedOutMutableSet,
-) (organizeResults organize_text.OrganizeResults, err error) {
+) (organizeResults orgie.OrganizeResults, err error) {
 	organizeResults.Original = skus
 
-	organizeFlags := organize_text.MakeFlagsWithMetadata(op.Metadata)
+	organizeFlags := orgie.MakeFlagsWithMetadata(op.Metadata)
 	ApplyToOrganizeOptions(op.repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
@@ -83,7 +83,7 @@ func (op Organize2) Run(
 
 		if organizeResults.After, err = readOrganizeTextOp.Run(
 			file,
-			organize_text.NewMetadataWithOptionCommentLookup(
+			orgie.NewMetadataWithOptionCommentLookup(
 				organizeResults.Before.GetRepoId(),
 				op.GetPrototypeOptionComments(),
 			),
@@ -107,7 +107,7 @@ func (cmd Organize2) handleReadChangesError(
 	envUI env_ui.Env,
 	err error,
 ) (tryAgain bool) {
-	var errorRead organize_text.ErrorRead
+	var errorRead orgie.ErrorRead
 
 	if err != nil && !errors.As(err, &errorRead) {
 		ui.Err().Printf("unrecoverable organize read failure: %s", err)

@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 )
@@ -44,7 +44,7 @@ func MakeCreateFromShas(r *local_working_copy.Repo) CreateFromShas {
 
 func MakeOrganize(
 	r *local_working_copy.Repo,
-	metadata organize_text.Metadata,
+	metadata orgie.Metadata,
 ) Organize {
 	return Organize{
 		repo:     r,
@@ -54,7 +54,7 @@ func MakeOrganize(
 
 func MakeOrganize2(
 	r *local_working_copy.Repo,
-	metadata organize_text.Metadata,
+	metadata orgie.Metadata,
 ) Organize2 {
 	return Organize2{
 		repo:     r,
@@ -90,7 +90,7 @@ func MakeEachBlob(
 
 func MakeCreateOrganizeFile(
 	r *local_working_copy.Repo,
-	options organize_text.Options,
+	options orgie.Options,
 ) CreateOrganizeFile {
 	return CreateOrganizeFile{
 		repo:    r,

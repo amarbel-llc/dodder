@@ -105,9 +105,9 @@ Replace `code.linenisgreat.com/dodder/go/internal/foxtrot/format` with
 
 1. `go/internal/golf/hyphence/coder_metadata.go`
 2. `go/internal/juliett/object_metadata_fmt_hyphence/formatter_components.go`
-3. `go/internal/papa/organize_text/main.go`
-4. `go/internal/papa/organize_text/metadata.go`
-5. `go/internal/papa/organize_text/writer.go`
+3. `go/internal/papa/orgie/main.go`
+4. `go/internal/papa/orgie/metadata.go`
+5. `go/internal/papa/orgie/writer.go`
 6. `go/internal/whiskey/local_working_copy/format_type.go`
 
 **Step 3: Build to verify**

@@ -163,13 +163,13 @@ These TODOs represent structural improvements that would improve code maintainab
 
 ### 8. Organize Feature (Medium Impact)
 
-- `src/papa/organize_text/constructor.go:39,74` - Use Type, fix tag issue
-- `src/papa/organize_text/constructor.go:305` - Explore using shas as keys
-- `src/papa/organize_text/metadata.go:42,45` - Replace with embedded *sku.Transacted, remove Matchers
-- `src/papa/organize_text/option.go:25` - Add config for automatic dry run
-- `src/papa/organize_text/option.go:110` - Add ApplyTo* support
-- `src/papa/organize_text/assignment.go:17` - Move to object_factory
-- `src/papa/organize_text/changeable.go:32` - Refactor to use single GetMetadataMutable() call
+- `src/papa/orgie/constructor.go:39,74` - Use Type, fix tag issue
+- `src/papa/orgie/constructor.go:305` - Explore using shas as keys
+- `src/papa/orgie/metadata.go:42,45` - Replace with embedded *sku.Transacted, remove Matchers
+- `src/papa/orgie/option.go:25` - Add config for automatic dry run
+- `src/papa/orgie/option.go:110` - Add ApplyTo* support
+- `src/papa/orgie/assignment.go:17` - Move to object_factory
+- `src/papa/orgie/changeable.go:32` - Refactor to use single GetMetadataMutable() call
 - `src/whiskey/user_ops/organize.go:22` - Migrate to Organize2
 - `src/whiskey/user_ops/organize2.go:65` - Refactor into common vim processing loop
 
@@ -192,7 +192,7 @@ These TODOs represent structural improvements that would improve code maintainab
 ### 10. Test Infrastructure (Low Impact)
 
 - `src/sierra/store_config/main_test.go:12` - Remove test
-- `src/papa/organize_text/reader_test.go:20,68` - Transition to TestContext, add pubkeys
+- `src/papa/orgie/reader_test.go:20,68` - Transition to TestContext, add pubkeys
 - `src/bravo/doddish/scanner_test.go:15` - Transition to TestCase framework
 - `src/bravo/ui/t.go:15` - Make private, switch to MakeTestContext
 - `src/bravo/ui/t.go:120` - Move to AssertNotEqual

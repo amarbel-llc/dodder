@@ -6,7 +6,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
 )
@@ -18,7 +18,7 @@ type ReadOrganizeFile struct {
 func (c ReadOrganizeFile) RunWithPath(
 	p string,
 	repoId ids.RepoId,
-) (ot *organize_text.Text, err error) {
+) (ot *orgie.Text, err error) {
 	var f *os.File
 
 	if f, err = files.Open(p); err != nil {
@@ -30,7 +30,7 @@ func (c ReadOrganizeFile) RunWithPath(
 
 	if ot, err = c.Run(
 		f,
-		organize_text.NewMetadata(repoId),
+		orgie.NewMetadata(repoId),
 	); err != nil {
 		err = errors.Wrapf(err, "Path: %q", p)
 		return ot, err
@@ -41,9 +41,9 @@ func (c ReadOrganizeFile) RunWithPath(
 
 func (c ReadOrganizeFile) Run(
 	r io.Reader,
-	om organize_text.Metadata,
-) (ot *organize_text.Text, err error) {
-	otFlags := organize_text.MakeFlags()
+	om orgie.Metadata,
+) (ot *orgie.Text, err error) {
+	otFlags := orgie.MakeFlags()
 	ApplyToOrganizeOptions(c.repo, &otFlags.Options)
 
 	o := otFlags.GetOptionsWithMetadata(
@@ -54,7 +54,7 @@ func (c ReadOrganizeFile) Run(
 		om,
 	)
 
-	if ot, err = organize_text.New(o); err != nil {
+	if ot, err = orgie.New(o); err != nil {
 		err = errors.Wrap(err)
 		return ot, err
 	}

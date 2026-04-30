@@ -1,4 +1,4 @@
-# organize_text
+# orgie
 
 Text-based organization format for hierarchical zettel assignments with hyphence support.
 

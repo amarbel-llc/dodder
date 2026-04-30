@@ -1,10 +1,10 @@
-# Research: Abstracting the organize_text Package
+# Research: Abstracting the orgie Package
 
-This document analyzes the `organize_text` package and identifies the changes needed to abstract it from `sku.SkuType` to support other element types.
+This document analyzes the `orgie` package and identifies the changes needed to abstract it from `sku.SkuType` to support other element types.
 
 ## Executive Summary
 
-The `organize_text` package (`src/papa/organize_text/`) is tightly coupled to the SKU system. To abstract it for generic use, approximately **15-20 interface definitions** and **significant refactoring** across **17 files** would be required. The core challenge is that the package deeply interweaves hierarchical organization logic with SKU-specific metadata operations.
+The `orgie` package (`src/papa/orgie/`) is tightly coupled to the SKU system. To abstract it for generic use, approximately **15-20 interface definitions** and **significant refactoring** across **17 files** would be required. The core challenge is that the package deeply interweaves hierarchical organization logic with SKU-specific metadata operations.
 
 ---
 
@@ -12,7 +12,7 @@ The `organize_text` package (`src/papa/organize_text/`) is tightly coupled to th
 
 ### 1.1 Package Location and Purpose
 
-**Path:** `src/papa/organize_text/`
+**Path:** `src/papa/orgie/`
 
 **Purpose:** Creates a textual, markdown-like representation of objects organized hierarchically by tags. Users can edit this in a git-rebase-like manner to reorganize, add tags, change descriptions, etc.
 
@@ -362,18 +362,18 @@ type Options struct {
 
 ### 5.3 Option C: Extract Core Logic (Recommended)
 
-Create a new `organize_text_core` package with abstract interfaces, then make `organize_text` a thin wrapper that provides SKU-specific implementations:
+Create a new `orgie_core` package with abstract interfaces, then make `orgie` a thin wrapper that provides SKU-specific implementations:
 
 ```
-src/lima/organize_text_core/   # New abstract package
+src/lima/orgie_core/   # New abstract package
     interfaces.go              # OrganizableElement, ElementFactory, etc.
     assignment.go              # Generic assignment tree
     refiner.go                 # Tag-based refinement
     reader_base.go             # Format parsing without element specifics
     writer_base.go             # Format writing without element specifics
 
-src/papa/organize_text/        # Existing package, now a wrapper
-    main.go                    # Instantiates organize_text_core with SKU types
+src/papa/orgie/        # Existing package, now a wrapper
+    main.go                    # Instantiates orgie_core with SKU types
     sku_element.go             # Implements OrganizableElement for SkuType
     sku_formatter.go           # Implements ElementFormatter for BoxCheckedOut
 ```
@@ -382,7 +382,7 @@ src/papa/organize_text/        # Existing package, now a wrapper
 - Backward compatible (existing API preserved)
 - Clean separation of concerns
 - Allows incremental adoption of generic version
-- Other element types can directly use `organize_text_core`
+- Other element types can directly use `orgie_core`
 
 **Cons:**
 - Two packages to maintain
@@ -509,8 +509,8 @@ The `reader` and `writer` structs use `box_format.BoxCheckedOut` for serializati
 - **Estimate:** 1-2 days
 
 ### 8.2 Core Package Extraction (Option C)
-- Extract `organize_text_core`: ~1500-2000 lines
-- Create SKU adapter in `organize_text`: ~300-500 lines
+- Extract `orgie_core`: ~1500-2000 lines
+- Create SKU adapter in `orgie`: ~300-500 lines
 - **Estimate:** 3-5 days
 
 ### 8.3 Testing and Migration
@@ -543,11 +543,11 @@ This would reduce effort to approximately **3-5 days** while still enabling diff
 1. **Implement `OrganizableElement`** interface for your element type
 2. **Implement `ElementFactory`** for creation/cloning
 3. **Implement `ElementFormatter`** for serialization
-4. **Use `organize_text_core`** (after extraction) directly
+4. **Use `orgie_core`** (after extraction) directly
 
 ### For Existing Code
 
-1. **Keep `organize_text` package** as the SKU-specific implementation
+1. **Keep `orgie` package** as the SKU-specific implementation
 2. **Gradually migrate** internal code to use interfaces
 3. **Maintain backward compatibility** through the adapter pattern
 

@@ -302,9 +302,9 @@ Replace the entire method body (lines 44-95) with:
 
 ``` go
 func (local *Repo) LockAndCommitOrganizeResults(
-    results organize_text.OrganizeResults,
-) (changeResults organize_text.Changes, err error) {
-    if changeResults, err = organize_text.ChangesFromResults(
+    results orgie.OrganizeResults,
+) (changeResults orgie.Changes, err error) {
+    if changeResults, err = orgie.ChangesFromResults(
         local.GetConfig().GetPrintOptions(),
         results,
     ); err != nil {

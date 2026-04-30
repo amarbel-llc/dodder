@@ -1,7 +1,7 @@
 # Doddish Parsing Overlap Analysis
 
 Analysis of common and redundant parsing across `charlie/doddish`,
-`kilo/box_format`, `november/queries`, and `oscar/organize_text`.
+`kilo/box_format`, `november/queries`, and `oscar/orgie`.
 
 ## Context
 
@@ -11,7 +11,7 @@ sequence interpretation:
 - **charlie/doddish** — scanner, tokenizer, Seq type, token matchers
 - **kilo/box_format** — reads `[objectId metadata...]` boxes into `*sku.Transacted`
 - **november/queries** — parses query expressions into filter/match trees
-- **oscar/organize_text** — hierarchical heading+object text format (delegates
+- **oscar/orgie** — hierarchical heading+object text format (delegates
   object parsing to box_format)
 
 Both box_format (`read.go:183`) and queries (`build_state.go:223`) have the same
@@ -65,9 +65,9 @@ expression trees), so the sharing would be limited to the match patterns
 themselves — which are already shared via `doddish.TokenMatcherType`,
 `doddish.TokenMatcherBlobDigest`, etc.
 
-### D. organize_text → box_format Delegation — ALREADY CLEAN
+### D. orgie → box_format Delegation — ALREADY CLEAN
 
-organize_text's `reader.readOneObj()` delegates all object format parsing to
+orgie's `reader.readOneObj()` delegates all object format parsing to
 `box_format.ReadStringFormat()`. No duplication exists here.
 
 ### E. inventory_list_coders/doddish — ALREADY CLEAN

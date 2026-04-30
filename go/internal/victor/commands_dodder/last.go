@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
@@ -110,12 +110,12 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 	if cmd.Organize {
 		opOrganize := repo_actions.MakeOrganize(
 			localWorkingCopy,
-			organize_text.Metadata{
-				OptionCommentSet: organize_text.MakeOptionCommentSet(nil),
+			orgie.Metadata{
+				OptionCommentSet: orgie.MakeOptionCommentSet(nil),
 			},
 		)
 
-		var results organize_text.OrganizeResults
+		var results orgie.OrganizeResults
 
 		{
 			var err error

@@ -1,4 +1,4 @@
-# organize_text_mode
+# orgie_mode
 
 Enum for text organization operation modes.
 

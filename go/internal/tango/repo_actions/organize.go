@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
@@ -21,13 +21,13 @@ import (
 // TODO migrate over to Organize2
 type Organize struct {
 	*repo
-	organize_text.Metadata
+	orgie.Metadata
 	DontUseQueryGroupForOrganizeMetadata bool
 }
 
 func (op Organize) RunWithQueryGroup(
 	qg *queries.Query,
-) (organizeResults organize_text.OrganizeResults, err error) {
+) (organizeResults orgie.OrganizeResults, err error) {
 	skus := sku.MakeSkuTypeSetMutable()
 	var l sync.RWMutex
 
@@ -57,7 +57,7 @@ func (op Organize) RunWithQueryGroup(
 func (op Organize) RunWithTransacted(
 	qg *queries.Query,
 	transacted sku.TransactedSet,
-) (organizeResults organize_text.OrganizeResults, err error) {
+) (organizeResults orgie.OrganizeResults, err error) {
 	skus := sku.MakeSkuTypeSetMutable()
 
 	for z := range transacted.All() {
@@ -80,7 +80,7 @@ func (op Organize) RunWithTransacted(
 func (op Organize) RunWithSkuType(
 	q *queries.Query,
 	skus sku.SkuTypeSet,
-) (organizeResults organize_text.OrganizeResults, err error) {
+) (organizeResults orgie.OrganizeResults, err error) {
 	organizeResults.Original = skus
 	organizeResults.QueryGroup = q
 
@@ -107,7 +107,7 @@ func (op Organize) RunWithSkuType(
 
 	organizeResults.QueryGroup.RepoId = repoId
 
-	organizeFlags := organize_text.MakeFlagsWithMetadata(op.Metadata)
+	organizeFlags := orgie.MakeFlagsWithMetadata(op.Metadata)
 	ApplyToOrganizeOptions(op.repo, &organizeFlags.Options)
 	organizeFlags.Skus = skus
 
@@ -170,7 +170,7 @@ func (op Organize) RunWithSkuType(
 
 		if organizeResults.After, err = readOrganizeTextOp.Run(
 			file,
-			organize_text.NewMetadataWithOptionCommentLookup(
+			orgie.NewMetadataWithOptionCommentLookup(
 				organizeResults.Before.GetRepoId(),
 				op.GetPrototypeOptionComments(),
 			),
@@ -194,7 +194,7 @@ func (cmd Organize) handleReadChangesError(
 	envUI env_ui.Env,
 	err error,
 ) (tryAgain bool) {
-	var errorRead organize_text.ErrorRead
+	var errorRead orgie.ErrorRead
 
 	if err != nil && !errors.As(err, &errorRead) {
 		ui.Err().Printf("unrecoverable organize read failure: %s", err)

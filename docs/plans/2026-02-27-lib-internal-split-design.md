@@ -145,7 +145,7 @@ lower-tier packages:
 - `_/coordinates`, `_/external_state`, `_/object_change_type`, `_/token_types`
 - `alfa/domain_interfaces`
 - `bravo/blob_store_id`, `bravo/checkout_mode`, `bravo/markl_io`,
-  `bravo/options_tools`, `bravo/organize_text_mode`,
+  `bravo/options_tools`, `bravo/orgie_mode`,
   `bravo/remote_connection_types`
 - `charlie/checkout_options`, `charlie/doddish`, `charlie/genres`,
   `charlie/key_bytes`, `charlie/options_print`, `charlie/store_version`

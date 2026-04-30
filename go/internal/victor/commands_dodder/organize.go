@@ -4,7 +4,7 @@ import (
 	"os"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/0/organize_text_mode"
+	"code.linenisgreat.com/dodder/go/internal/0/orgie_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
@@ -28,7 +28,7 @@ func init() {
 	utility.AddCmd(
 		"organize",
 		&Organize{
-			Flags: organize_text.MakeFlags(),
+			Flags: orgie.MakeFlags(),
 		})
 }
 
@@ -52,8 +52,8 @@ type Organize struct {
 
 	complete command_components_dodder.Complete
 
-	Flags organize_text.Flags
-	Mode  organize_text_mode.Mode
+	Flags orgie.Flags
+	Mode  orgie_mode.Mode
 
 	Filter script_value.ScriptValue
 }
@@ -182,11 +182,11 @@ func (cmd *Organize) Run(req command.Request) {
 	createOrganizeFileOp.TagSet = tags
 
 	switch cmd.Mode {
-	case organize_text_mode.ModeCommitDirectly:
+	case orgie_mode.ModeCommitDirectly:
 		ui.Log().Print("neither stdin or stdout is a tty")
 		ui.Log().Print("generate organize, read from stdin, commit")
 
-		var createOrganizeFileResults *organize_text.Text
+		var createOrganizeFileResults *orgie.Text
 
 		var file *os.File
 
@@ -212,7 +212,7 @@ func (cmd *Organize) Run(req command.Request) {
 			}
 		}
 
-		var organizeText *organize_text.Text
+		var organizeText *orgie.Text
 
 		readOrganizeTextOp := repo_actions.MakeReadOrganizeFile(repo)
 
@@ -221,7 +221,7 @@ func (cmd *Organize) Run(req command.Request) {
 
 			if organizeText, err = readOrganizeTextOp.Run(
 				os.Stdin,
-				organize_text.NewMetadata(queryGroup.RepoId),
+				orgie.NewMetadata(queryGroup.RepoId),
 			); err != nil {
 				repo.Cancel(err)
 			}
@@ -229,7 +229,7 @@ func (cmd *Organize) Run(req command.Request) {
 
 		if _, err := repo_actions.LockAndCommitOrganizeResults(
 			repo,
-			organize_text.OrganizeResults{
+			orgie.OrganizeResults{
 				Before:     createOrganizeFileResults,
 				After:      organizeText,
 				Original:   objects,
@@ -239,17 +239,17 @@ func (cmd *Organize) Run(req command.Request) {
 			repo.Cancel(err)
 		}
 
-	case organize_text_mode.ModeOutputOnly:
+	case orgie_mode.ModeOutputOnly:
 		ui.Log().Print("generate organize file and write to stdout")
 		if _, err := createOrganizeFileOp.RunAndWrite(os.Stdout); err != nil {
 			repo.Cancel(err)
 		}
 
-	case organize_text_mode.ModeInteractive:
+	case orgie_mode.ModeInteractive:
 		ui.Log().Print(
 			"generate temp file, write organize, open vim to edit, commit results",
 		)
-		var createOrganizeFileResults *organize_text.Text
+		var createOrganizeFileResults *orgie.Text
 
 		var f *os.File
 
@@ -280,7 +280,7 @@ func (cmd *Organize) Run(req command.Request) {
 			}
 		}
 
-		var organizeText *organize_text.Text
+		var organizeText *orgie.Text
 
 		{
 			var err error
@@ -302,7 +302,7 @@ func (cmd *Organize) Run(req command.Request) {
 
 		if _, err := repo_actions.LockAndCommitOrganizeResults(
 			repo,
-			organize_text.OrganizeResults{
+			orgie.OrganizeResults{
 				Before:     createOrganizeFileResults,
 				After:      organizeText,
 				Original:   objects,
@@ -320,9 +320,9 @@ func (cmd *Organize) Run(req command.Request) {
 func (cmd Organize) readFromVim(
 	repo *local_working_copy.Repo,
 	path string,
-	results *organize_text.Text,
+	results *orgie.Text,
 	queryGroup *queries.Query,
-) (ot *organize_text.Text, err error) {
+) (ot *orgie.Text, err error) {
 	openVimOp := repo_actions.MakeOpenEditor(repo)
 	openVimOp.VimOptions = vim_cli_options_builder.New().
 		WithFileType("dodder-organize").
@@ -356,7 +356,7 @@ func (cmd Organize) handleReadChangesError(
 	envUI env_ui.Env,
 	err error,
 ) (tryAgain bool) {
-	var errorRead organize_text.ErrorRead
+	var errorRead orgie.ErrorRead
 
 	if err != nil && !errors.As(err, &errorRead) {
 		ui.Err().Printf("unrecoverable organize read failure: %s", err)

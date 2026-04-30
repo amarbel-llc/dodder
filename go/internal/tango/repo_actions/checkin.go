@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -82,25 +82,25 @@ func (op Checkin) runOrganize(
 	query *queries.Query,
 	results sku.SkuTypeSetMutable,
 ) (err error) {
-	flagDelete := organize_text.OptionCommentBooleanFlag{
+	flagDelete := orgie.OptionCommentBooleanFlag{
 		Value:   &op.Delete,
 		Comment: "delete once checked in",
 	}
 
 	opOrganize := MakeOrganize2(
 		op.repo,
-		organize_text.Metadata{
+		orgie.Metadata{
 			TagSet: op.Proto.Metadata.GetTags(),
 			Type:   op.Proto.Metadata.GetType().ToType(),
 			RepoId: query.RepoId,
-			OptionCommentSet: organize_text.MakeOptionCommentSet(
-				map[string]organize_text.OptionComment{
+			OptionCommentSet: orgie.MakeOptionCommentSet(
+				map[string]orgie.OptionComment{
 					"delete": flagDelete,
 				},
-				&organize_text.OptionCommentUnknown{
+				&orgie.OptionCommentUnknown{
 					Value: "instructions: to prevent an object from being checked in, delete it entirely",
 				},
-				organize_text.OptionCommentWithKey{
+				orgie.OptionCommentWithKey{
 					Key:           "delete",
 					OptionComment: flagDelete,
 				},
@@ -110,16 +110,16 @@ func (op Checkin) runOrganize(
 
 	ui.Log().Print(query)
 
-	var organizeResults organize_text.OrganizeResults
+	var organizeResults orgie.OrganizeResults
 
 	if organizeResults, err = opOrganize.Run(results); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	var changes organize_text.Changes
+	var changes orgie.Changes
 
-	if changes, err = organize_text.ChangesFromResults(
+	if changes, err = orgie.ChangesFromResults(
 		op.GetConfig().GetPrintOptions(),
 		organizeResults,
 	); err != nil {

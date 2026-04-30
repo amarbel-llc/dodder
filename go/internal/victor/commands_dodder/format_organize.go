@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/tango/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -20,7 +20,7 @@ func init() {
 	utility.AddCmd(
 		"format-organize",
 		&FormatOrganize{
-			Flags: organize_text.MakeFlags(),
+			Flags: orgie.MakeFlags(),
 		})
 }
 
@@ -33,7 +33,7 @@ func (cmd FormatOrganize) GetDescription() command.Description {
 type FormatOrganize struct {
 	command_components_dodder.LocalWorkingCopy
 
-	Flags organize_text.Flags
+	Flags orgie.Flags
 }
 
 var (
@@ -94,7 +94,7 @@ func (cmd *FormatOrganize) Run(dep command.Request) {
 		defer errors.ContextMustClose(localWorkingCopy, f)
 	}
 
-	var ot *organize_text.Text
+	var ot *orgie.Text
 
 	readOrganizeTextOp := repo_actions.MakeReadOrganizeFile(localWorkingCopy)
 
@@ -105,7 +105,7 @@ func (cmd *FormatOrganize) Run(dep command.Request) {
 
 		if ot, err = readOrganizeTextOp.Run(
 			r,
-			organize_text.NewMetadata(repoId),
+			orgie.NewMetadata(repoId),
 		); err != nil {
 			localWorkingCopy.Cancel(err)
 		}

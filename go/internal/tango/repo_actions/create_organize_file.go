@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 // TODO support using query results for organize population
 type CreateOrganizeFile struct {
 	*repo
-	organize_text.Options
+	orgie.Options
 }
 
 func (cmd CreateOrganizeFile) RunAndWrite(
 	writer io.Writer,
-) (results *organize_text.Text, err error) {
+) (results *orgie.Text, err error) {
 	if results, err = cmd.Run(); err != nil {
 		err = errors.Wrap(err)
 		return results, err
@@ -30,7 +30,7 @@ func (cmd CreateOrganizeFile) RunAndWrite(
 	return results, err
 }
 
-func (cmd CreateOrganizeFile) Run() (results *organize_text.Text, err error) {
+func (cmd CreateOrganizeFile) Run() (results *orgie.Text, err error) {
 	count := cmd.Options.Skus.Len()
 
 	if cmd.Options.Limit == 0 && count > 30 && !cmd.GetCLIConfig().IsDryRun() {
@@ -46,7 +46,7 @@ func (cmd CreateOrganizeFile) Run() (results *organize_text.Text, err error) {
 		}
 	}
 
-	if results, err = organize_text.New(cmd.Options); err != nil {
+	if results, err = orgie.New(cmd.Options); err != nil {
 		err = errors.Wrap(err)
 		return results, err
 	}

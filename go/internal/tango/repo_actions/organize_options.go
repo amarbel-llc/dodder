@@ -6,16 +6,16 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 )
 
 func MakeOrganizeOptionsWithOrganizeMetadata(
 	repo *local_working_copy.Repo,
-	organizeFlags organize_text.Flags,
-	metadata organize_text.Metadata,
-) organize_text.Options {
+	organizeFlags orgie.Flags,
+	metadata orgie.Metadata,
+) orgie.Options {
 	options := organizeFlags.GetOptions(
 		repo.GetConfig().GetPrintOptions(),
 		nil,
@@ -31,9 +31,9 @@ func MakeOrganizeOptionsWithOrganizeMetadata(
 
 func MakeOrganizeOptionsWithQueryGroup(
 	repo *local_working_copy.Repo,
-	organizeFlags organize_text.Flags,
+	organizeFlags orgie.Flags,
 	qg *queries.Query,
-) organize_text.Options {
+) orgie.Options {
 	return organizeFlags.GetOptions(
 		repo.GetConfig().GetPrintOptions(),
 		queries.GetTags(qg),
@@ -45,9 +45,9 @@ func MakeOrganizeOptionsWithQueryGroup(
 
 func LockAndCommitOrganizeResults(
 	repo *local_working_copy.Repo,
-	results organize_text.OrganizeResults,
-) (changeResults organize_text.Changes, err error) {
-	if changeResults, err = organize_text.ChangesFromResults(
+	results orgie.OrganizeResults,
+) (changeResults orgie.Changes, err error) {
+	if changeResults, err = orgie.ChangesFromResults(
 		repo.GetConfig().GetPrintOptions(),
 		results,
 	); err != nil {
@@ -114,7 +114,7 @@ func LockAndCommitOrganizeResults(
 
 func ApplyToOrganizeOptions(
 	repo *local_working_copy.Repo,
-	oo *organize_text.Options,
+	oo *orgie.Options,
 ) {
 	oo.Config = repo.GetConfigPtr()
 	oo.Abbr = repo.GetStore().GetAbbrStore().GetAbbr()
@@ -125,7 +125,7 @@ func ApplyToOrganizeOptions(
 
 	oo.AddPrototypeAndOption(
 		"dry-run",
-		&organize_text.OptionCommentDryRun{
+		&orgie.OptionCommentDryRun{
 			MutableConfigDryRun: repo.GetConfigPtr(),
 		},
 	)

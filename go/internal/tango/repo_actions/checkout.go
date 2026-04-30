@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"code.linenisgreat.com/dodder/go/internal/lima/organize_text"
+	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
@@ -153,12 +153,12 @@ func (op Checkout) runOrganize(
 ) (qgModified *queries.Query, err error) {
 	opOrganize := MakeOrganize(
 		op.repo,
-		organize_text.Metadata{
+		orgie.Metadata{
 			RepoId: qgOriginal.RepoId,
-			OptionCommentSet: organize_text.MakeOptionCommentSet(
+			OptionCommentSet: orgie.MakeOptionCommentSet(
 				// TODO add other OptionComments
 				nil,
-				&organize_text.OptionCommentUnknown{
+				&orgie.OptionCommentUnknown{
 					Value: "instructions: to prevent an object from being checked out, delete it entirely",
 				},
 			),
@@ -171,7 +171,7 @@ func (op Checkout) runOrganize(
 	originalRepoId := qgOriginal.RepoId
 	qgOriginal.RepoId.Reset()
 
-	var organizeResults organize_text.OrganizeResults
+	var organizeResults orgie.OrganizeResults
 
 	if organizeResults, err = opOrganize.RunWithQueryGroup(
 		qgOriginal,
@@ -180,9 +180,9 @@ func (op Checkout) runOrganize(
 		return qgModified, err
 	}
 
-	var changeResults organize_text.Changes
+	var changeResults orgie.Changes
 
-	if changeResults, err = organize_text.ChangesFromResults(
+	if changeResults, err = orgie.ChangesFromResults(
 		op.GetConfig().GetPrintOptions(),
 		organizeResults,
 	); err != nil {
