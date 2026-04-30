@@ -16,10 +16,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
@@ -39,11 +41,12 @@ type InitWorkspace struct {
 
 	complete command_components_dodder.Complete
 
-	ExperimentalRepo  bool
-	ParentPath        string
-	Haustoria         string
-	DefaultQueryGroup values.String
-	Proto             sku.Proto
+	ExperimentalRepo      bool
+	ParentPath            string
+	Haustoria             string
+	EmitInventoryListPath string
+	DefaultQueryGroup     values.String
+	Proto                 sku.Proto
 }
 
 var _ interfaces.CommandComponentWriter = (*InitWorkspace)(nil)
@@ -86,6 +89,13 @@ func (cmd *InitWorkspace) SetFlagDefinitions(
 		"haustoria",
 		"",
 		"haustoria store type for external sync (caldav)",
+	)
+
+	flagSet.StringVar(
+		&cmd.EmitInventoryListPath,
+		"emit-inventory_list",
+		"",
+		"if set, write the inventory list selected by -query to this path (inventory_list-v2 format) before pulling; useful for offline reproduction with `der fsck -inventory_list-path`",
 	)
 
 	cmd.Genesis.SetFlagDefinitions(flagSet)
@@ -237,18 +247,30 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 
 	queryArgs := req.PopArgs()
 
-	queryGroup := cmd.MakeQueryIncludingWorkspace(
+	// Build the query against `remote` (the parent repo with all the tag
+	// definitions), not `local` (the brand-new empty workspace). Tag-name
+	// queries depend on the tag's typed-blob being readable through the
+	// objectProbeIndex (queries/build_state.go:466) — without it the tag
+	// expression collapses to a permissive bare ObjectId match that
+	// matches by partial tag-path comparison and pulls in unrelated
+	// objects. The new workspace has no tag objects yet so it cannot
+	// resolve `project-X` to its tag definition.
+	queryGroup := cmd.MakeQuery(
 		req,
 		queries.BuilderOptions(
 			queries.BuilderOptionDefaultSigil(
 				ids.SigilHistory,
 				ids.SigilHidden,
 			),
-			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+			queries.BuilderOptionDefaultGenres(genres.Zettel),
 		),
-		local,
+		remote,
 		queryArgs,
 	)
+
+	if cmd.EmitInventoryListPath != "" {
+		cmd.emitInventoryList(req, local, remote, queryGroup)
+	}
 
 	if err := local.PullQueryGroupFromRemote(
 		remote,
@@ -537,5 +559,119 @@ func (cmd *InitWorkspace) linkParentZettelIdProviders(
 
 	if files.Exists(parentYang) {
 		cmd.Genesis.BigBang.Yang = parentYang
+	}
+}
+
+func (cmd InitWorkspace) emitInventoryList(
+	req command.Request,
+	local *local_working_copy.Repo,
+	remote repo.Repo,
+	queryGroup *queries.Query,
+) {
+	list, err := remote.MakeInventoryList(queryGroup)
+	if err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	file, err := os.Create(cmd.EmitInventoryListPath)
+	if err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	defer errors.ContextMustClose(req, file)
+
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(file)
+	defer repoolBufferedWriter()
+	defer errors.ContextMustFlush(req, bufferedWriter)
+
+	closet := local.GetInventoryListCoderCloset()
+	remoteBlobStore := remote.GetBlobStore()
+
+	combined := func(yield func(*sku.Transacted, error) bool) {
+		// Pass 1: pointer objects (the inventory_list-v2 manifests).
+		for sk := range list.All() {
+			if !yield(sk, nil) {
+				return
+			}
+		}
+
+		// Pass 2: dereferenced blob contents (the actual zettels, types,
+		// tags inside each manifest). Each blob is the raw doddish stream
+		// for the manifest's type; the type comes from the pointer object,
+		// not a hyphence header. Decoding runs the type's afterDecoding
+		// hook (which is FinalizeAndVerify for v2), so we recover from
+		// ErrAfterDecoding and emit the object anyway — preserving the
+		// failing-verify state for downstream debugging.
+		//
+		// Only inventory_list objects have a dereferenceable manifest
+		// blob. Other genres (zettel, type, tag) have content blobs that
+		// aren't object lists, so we skip them in this pass.
+		for sk := range list.All() {
+			if sk.GetGenre() != genres.InventoryList {
+				continue
+			}
+
+			blobDigest := sk.GetBlobDigest()
+			if blobDigest.IsNull() {
+				continue
+			}
+
+			reader, openErr := remoteBlobStore.MakeBlobReader(blobDigest)
+			if openErr != nil {
+				if !yield(nil, errors.Wrapf(openErr, "blob: %s", blobDigest)) {
+					return
+				}
+				continue
+			}
+
+			listCoder := closet.GetCoderForType(sk.GetType().ToType())
+			bufferedReader, repoolBR := pool.GetBufferedReader(reader)
+
+			for {
+				inner, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
+
+				_, decodeErr := listCoder.DecodeFrom(inner, bufferedReader)
+				if decodeErr != nil {
+					if errors.IsEOF(decodeErr) {
+						break
+					}
+					if errors.Is(decodeErr, inventory_list_coders.ErrAfterDecoding{}) {
+						if !yield(inner, nil) {
+							repoolBR()
+							reader.Close()
+							return
+						}
+						continue
+					}
+					if !yield(nil, errors.Wrapf(decodeErr, "blob: %s", blobDigest)) {
+						repoolBR()
+						reader.Close()
+						return
+					}
+					break
+				}
+
+				if !yield(inner, nil) {
+					repoolBR()
+					reader.Close()
+					return
+				}
+			}
+
+			repoolBR()
+			reader.Close()
+		}
+	}
+
+	if _, err := closet.WriteTypedBlobToWriter(
+		req,
+		ids.GetOrPanic(local.GetImmutableConfigPublic().GetInventoryListTypeId()).TypeStruct,
+		combined,
+		bufferedWriter,
+	); err != nil {
+		req.Cancel(err)
+		return
 	}
 }

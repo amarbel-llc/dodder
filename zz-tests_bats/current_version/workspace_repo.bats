@@ -591,3 +591,48 @@ function workspace_repo_init_missing_parent_fails { # @test
 	assert_failure
 	assert_output --partial 'no dodder repo found'
 }
+
+# Covers the implicit-default-genre path. With a bare query like
+# `project-alpha` (no `:z` suffix), init-workspace's default genres
+# should select the tagged objects directly — NOT the inventory_list
+# snapshots that contain them. Edge expansion should still pull
+# referenced types. See dodder issue #133.
+function workspace_repo_init_bare_query_excludes_unrelated { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	# Bare project-alpha — NO `:z` suffix. Relies on init-workspace's
+	# default genres being something other than InventoryList.
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-lock-internal-files=false \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		project-alpha
+
+	assert_success
+
+	# Should have ONLY project-alpha zettels.
+	run_dodder show :z
+	assert_success
+	assert_output_unsorted --regexp - <<-'EOM'
+		\[one/dos @blake2b256-.+ !md "second zettel" priority-high project-alpha]
+		\[one/uno @blake2b256-.+ !md "first zettel" project-alpha]
+	EOM
+
+	# project-beta zettels must NOT be present (would be if the bare
+	# query matched inventory_list snapshots whose blobs contained
+	# both project-alpha and project-beta zettels committed together).
+	refute_output --partial 'project-beta'
+
+	# Edge expansion should have brought in the referenced !md type.
+	run_dodder show :t
+	assert_success
+	assert_output --partial '!md'
+}
