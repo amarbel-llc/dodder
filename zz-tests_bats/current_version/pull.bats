@@ -582,7 +582,7 @@ function pull_direct_blob_references_transferred { # @test
   run_dodder_init_disable_age
 
   # Write a standalone blob to the source store
-  run_dodder blob_store-write <(echo "referenced content")
+  run_madder write -format tap <(echo "referenced content")
   assert_success
   ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
@@ -628,7 +628,7 @@ function pull_direct_blob_references_transferred { # @test
   assert_success
 
   # Verify the referenced blob was transferred to the destination
-  run_dodder blob_store-cat "$ref_blob_sha"
+  run_madder cat "$ref_blob_sha"
   assert_success
   assert_output "$(printf "%s\n" "referenced content")"
 }
@@ -643,7 +643,7 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
   run_dodder_init_disable_age
 
   # Write a standalone blob to the source store
-  run_dodder blob_store-write <(echo "referenced content")
+  run_madder write -format tap <(echo "referenced content")
   assert_success
   ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
@@ -689,7 +689,7 @@ function pull_direct_hyphenated_type_name_no_phantom { # @test
   assert_success
 
   # Verify the referenced blob was transferred to the destination
-  run_dodder blob_store-cat "$ref_blob_sha"
+  run_madder cat "$ref_blob_sha"
   assert_success
   assert_output "$(printf "%s\n" "referenced content")"
 }
@@ -749,11 +749,11 @@ function pull_direct_multiple_blob_references_transferred { # @test
   run_dodder_init_disable_age
 
   # Write two standalone blobs to the source store
-  run_dodder blob_store-write <(echo "first referenced blob")
+  run_madder write -format tap <(echo "first referenced blob")
   assert_success
   blob_sha_1="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
-  run_dodder blob_store-write <(echo "second referenced blob")
+  run_madder write -format tap <(echo "second referenced blob")
   assert_success
   blob_sha_2="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
@@ -800,11 +800,11 @@ function pull_direct_multiple_blob_references_transferred { # @test
   assert_success
 
   # Verify both referenced blobs were transferred
-  run_dodder blob_store-cat "$blob_sha_1"
+  run_madder cat "$blob_sha_1"
   assert_success
   assert_output "$(printf "%s\n" "first referenced blob")"
 
-  run_dodder blob_store-cat "$blob_sha_2"
+  run_madder cat "$blob_sha_2"
   assert_success
   assert_output "$(printf "%s\n" "second referenced blob")"
 }
@@ -819,12 +819,12 @@ function pull_direct_transitive_blob_references_transferred { # @test
   run_dodder_init_disable_age
 
   # Write a leaf blob (no further references)
-  run_dodder blob_store-write <(echo "leaf blob content")
+  run_madder write -format tap <(echo "leaf blob content")
   assert_success
   leaf_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
   # Write an intermediate blob whose content references the leaf blob
-  run_dodder blob_store-write <(echo "tree entry: @${leaf_blob_sha}")
+  run_madder write -format tap <(echo "tree entry: @${leaf_blob_sha}")
   assert_success
   tree_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
@@ -886,12 +886,12 @@ function pull_direct_transitive_blob_references_transferred { # @test
   assert_success
 
   # Verify the intermediate tree blob was transferred
-  run_dodder blob_store-cat "$tree_blob_sha"
+  run_madder cat "$tree_blob_sha"
   assert_success
   assert_output "$(printf "%s\n" "tree entry: @${leaf_blob_sha}")"
 
   # Verify the leaf blob was transferred transitively
-  run_dodder blob_store-cat "$leaf_blob_sha"
+  run_madder cat "$leaf_blob_sha"
   assert_success
   assert_output "$(printf "%s\n" "leaf blob content")"
 }
