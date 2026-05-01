@@ -97,14 +97,12 @@ function complete_subcmd { # @test
 		blob_store-init.*initialize a local blob store
 		blob_store-init-from.*initialize a blob store from a configuration file
 		blob_store-init-pointer.*initialize a pointer blob store
-		blob_store-install-mcp.*install MCP server configuration
 		blob_store-init-sftp-explicit.*initialize an SFTP blob store with explicit credentials
 		blob_store-init-inventory-archive.*initialize an inventory archive blob store
 		blob_store-init-inventory-archive-v0.*initialize an inventory archive blob store \(v0\)
 		blob_store-init-inventory-archive-v1.*initialize an inventory archive blob store \(v1\)
 		blob_store-init-sftp-ssh_config.*initialize an SFTP blob store via ssh_config
 		blob_store-list.*list configured blob stores
-		blob_store-mcp.*start the MCP server
 		blob_store-pack.*pack loose blobs into archive files
 		blob_store-pack-cat-ids.*list blob digests contained in archive files
 		blob_store-pack-list.*list archive files in inventory archive stores

@@ -299,8 +299,8 @@ writer.digester = markl_io.MakeWriter(hash, nil)
 
 When adding a new subcommand to any binary (dodder, madder, der), also add it to
 the `complete_subcmd` test in `zz-tests_bats/complete.bats`. Madder commands are
-exposed in dodder under the `blob_store-` prefix (e.g., madder's `mcp` becomes
-dodder's `blob_store-mcp`), so adding a madder command also requires updating
+exposed in dodder under the `blob_store-` prefix (e.g., madder's `cat` becomes
+dodder's `blob_store-cat`), so adding a madder command also requires updating
 the dodder completion test.
 
 ### Testing Strategy
