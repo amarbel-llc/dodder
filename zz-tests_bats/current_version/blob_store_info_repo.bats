@@ -17,7 +17,7 @@ function info_repo_encryption_default_store { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-info-repo encryption
+	run_madder info-repo encryption
 	assert_success
 	assert_output ''
 }
@@ -26,7 +26,7 @@ function info_repo_compression_type_default_store { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-info-repo compression-type
+	run_madder info-repo compression-type
 	assert_success
 	assert_output 'zstd'
 }
@@ -35,7 +35,7 @@ function info_repo_hash_type_id_default_store { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-info-repo hash_type-id
+	run_madder info-repo hash_type-id
 	assert_success
 	assert_output 'blake2b256'
 }
@@ -44,10 +44,10 @@ function info_repo_archive_encryption { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-init-inventory-archive -encryption generate .archive
+	run_madder init-inventory-archive -encryption generate .archive
 	assert_success
 
-	run_dodder blob_store-info-repo .archive encryption
+	run_madder info-repo .archive encryption
 	assert_success
 	assert_output --regexp '.+'
 }
@@ -56,10 +56,10 @@ function info_repo_archive_delta_enabled { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-init-inventory-archive -delta .archive
+	run_madder init-inventory-archive -delta .archive
 	assert_success
 
-	run_dodder blob_store-info-repo .archive delta.enabled
+	run_madder info-repo .archive delta.enabled
 	assert_success
 	assert_output 'true'
 }
@@ -68,10 +68,10 @@ function info_repo_archive_max_pack_size { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-init-inventory-archive .archive
+	run_madder init-inventory-archive .archive
 	assert_success
 
-	run_dodder blob_store-info-repo .archive max-pack-size
+	run_madder info-repo .archive max-pack-size
 	assert_success
 	assert_output '0'
 }
@@ -80,6 +80,6 @@ function info_repo_unknown_key_fails { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-info-repo nonexistent-key
+	run_madder info-repo nonexistent-key
 	assert_failure
 }
