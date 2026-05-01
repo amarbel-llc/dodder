@@ -9,14 +9,14 @@ import (
 // from madder's public domain_interfaces facade so dodder ships a single
 // source of truth without forcing every importer to re-spell its imports.
 type (
-	MarklFormat       = madder_di.MarklFormat
-	FormatHash        = madder_di.FormatHash
-	MarklFormatGetter = madder_di.MarklFormatGetter
-	Hash              = madder_di.Hash
-	MarklId           = madder_di.MarklId
-	MarklIdMutable    = madder_di.MarklIdMutable
-	MarklIdGetter     = madder_di.MarklIdGetter
-	DigestWriteMap    = madder_di.DigestWriteMap
+	MarklFormat                                                         = madder_di.MarklFormat
+	FormatHash                                                          = madder_di.FormatHash
+	MarklFormatGetter                                                   = madder_di.MarklFormatGetter
+	Hash                                                                = madder_di.Hash
+	MarklId                                                             = madder_di.MarklId
+	MarklIdMutable                                                      = madder_di.MarklIdMutable
+	MarklIdGetter                                                       = madder_di.MarklIdGetter
+	DigestWriteMap                                                      = madder_di.DigestWriteMap
 	Lock[KEY interfaces.Value, KEY_PTR interfaces.ValuePtr[KEY]]        = madder_di.Lock[KEY, KEY_PTR]
 	LockMutable[KEY interfaces.Value, KEY_PTR interfaces.ValuePtr[KEY]] = madder_di.LockMutable[KEY, KEY_PTR]
 )

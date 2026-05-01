@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/inventory_archive"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/blob_store_configs"
+	"github.com/amarbel-llc/madder/go/pkgs/inventory_archive"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 )
 
