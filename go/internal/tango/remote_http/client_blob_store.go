@@ -35,7 +35,7 @@ func (client *client) GetBlobStore() blob_stores.BlobStoreInitialized {
 	}
 }
 
-func (client *client) GetBlobStoreConfig() blob_store_configs.Config {
+func (client *client) GetBlobStoreConfig() domain_interfaces.BlobStoreConfig {
 	panic(errors.Err501NotImplemented)
 }
 

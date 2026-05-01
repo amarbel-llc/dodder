@@ -82,7 +82,7 @@ func makeSftpStore(
 	return blobStore, err
 }
 
-func (blobStore *remoteSftp) GetBlobStoreConfig() blob_store_configs.Config {
+func (blobStore *remoteSftp) GetBlobStoreConfig() domain_interfaces.BlobStoreConfig {
 	return blobStore.config
 }
 

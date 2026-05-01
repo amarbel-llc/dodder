@@ -23,16 +23,6 @@ type (
 	TypedStore[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]] = madder_di.TypedStore[BLOB, BLOB_PTR]
 	SavedBlobFormatter                                  = madder_di.SavedBlobFormatter
 	BlobForeignDigestAdder                              = madder_di.BlobForeignDigestAdder
+	BlobStore                                           = madder_di.BlobStore
+	BlobStoreConfig                                     = madder_di.BlobStoreConfig
 )
-
-// BlobStore stays defined locally because madder's superset adds
-// GetBlobStoreConfig() per ADR 0005. Aliasing it requires dodder-side prep
-// (~24 impls + new BlobStoreConfig/MmapSource markers); tracked in #142.
-type BlobStore interface {
-	BlobAccess
-	BlobIOWrapperGetter
-
-	GetBlobStoreDescription() string
-	GetDefaultHashType() FormatHash
-	AllBlobs() interfaces.SeqError[MarklId]
-}

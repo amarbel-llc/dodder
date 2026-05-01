@@ -278,6 +278,10 @@ func (store *inventoryArchiveV1) rebuildIndex() (err error) {
 	return nil
 }
 
+func (store inventoryArchiveV1) GetBlobStoreConfig() domain_interfaces.BlobStoreConfig {
+	return store.config
+}
+
 func (store inventoryArchiveV1) GetBlobStoreDescription() string {
 	return "local inventory archive v1"
 }

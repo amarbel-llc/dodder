@@ -55,7 +55,7 @@ func makeLocalHashBucketed(
 	return store, err
 }
 
-func (blobStore localHashBucketed) GetBlobStoreConfig() blob_store_configs.Config {
+func (blobStore localHashBucketed) GetBlobStoreConfig() domain_interfaces.BlobStoreConfig {
 	return blobStore.config
 }
 
