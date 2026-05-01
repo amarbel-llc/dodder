@@ -17,27 +17,6 @@ type (
 	MarklIdMutable    = madder_di.MarklIdMutable
 	MarklIdGetter     = madder_di.MarklIdGetter
 	DigestWriteMap    = madder_di.DigestWriteMap
-)
-
-// Lock and LockMutable are not yet exported from madder's pkgs/
-// domain_interfaces facade, so dodder still defines them locally. Once
-// madder exposes them, swap to type aliases as above.
-type (
-	Lock[
-		KEY interfaces.Value,
-		KEY_PTR interfaces.ValuePtr[KEY],
-	] interface {
-		GetKey() KEY
-		GetValue() MarklId
-		IsEmpty() bool
-	}
-
-	LockMutable[
-		KEY interfaces.Value,
-		KEY_PTR interfaces.ValuePtr[KEY],
-	] interface {
-		Lock[KEY, KEY_PTR]
-		GetKeyMutable() KEY_PTR
-		GetValueMutable() MarklIdMutable
-	}
+	Lock[KEY interfaces.Value, KEY_PTR interfaces.ValuePtr[KEY]]        = madder_di.Lock[KEY, KEY_PTR]
+	LockMutable[KEY interfaces.Value, KEY_PTR interfaces.ValuePtr[KEY]] = madder_di.LockMutable[KEY, KEY_PTR]
 )
