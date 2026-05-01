@@ -14,7 +14,7 @@ var (
 	Err400BadRequest          = newHttpError(hs.Code400BadRequest)
 	Err405MethodNotAllowed    = newHttpError(hs.Code405MethodNotAllowed)
 	Err409Conflict            = newHttpError(hs.Code409Conflict)
-	Err422UnprocessableEntity = newHttpError(hs.Code409Conflict)
+	Err422UnprocessableEntity = newHttpError(hs.Code422UnprocessableEntity)
 	Err499ClientClosedRequest = newHttpError(hs.Code499ClientClosedRequest)
 	Err500InternalServerError = newHttpError(hs.Code500InternalServerError)
 	Err501NotImplemented      = newHttpError(hs.Code501NotImplemented)

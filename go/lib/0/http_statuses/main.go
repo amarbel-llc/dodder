@@ -15,8 +15,8 @@ func (code Code) String() string {
 const (
 	Code400BadRequest          = Code(http.StatusBadRequest)
 	Code405MethodNotAllowed    = Code(http.StatusMethodNotAllowed)
-	Code409Conflict            = Code(http.StatusUnprocessableEntity)
-	Code422UnprocessableEntity = Code(http.StatusConflict)
+	Code409Conflict            = Code(http.StatusConflict)
+	Code422UnprocessableEntity = Code(http.StatusUnprocessableEntity)
 	Code499ClientClosedRequest = Code(499)
 	Code500InternalServerError = Code(http.StatusInternalServerError)
 	Code501NotImplemented      = Code(http.StatusNotImplemented)
