@@ -54,8 +54,8 @@ func (roundTripper RoundTripperRetry) RoundTrip(
 			break
 		}
 
-		if roundTripper.RetryFunc(err) {
-			continue
+		if !roundTripper.RetryFunc(err) {
+			break
 		}
 	}
 
