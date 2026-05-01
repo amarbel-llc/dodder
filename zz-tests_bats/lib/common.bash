@@ -75,6 +75,9 @@ export cmd_dodder_def
 require_bin DODDER_BIN dodder
 DODDER_BIN="${DODDER_BIN:-dodder}"
 
+require_bin MADDER_BIN madder
+MADDER_BIN="${MADDER_BIN:-madder}"
+
 if [[ -z $DODDER_VERSION ]]; then
   export DODDER_VERSION
   DODDER_VERSION="v$("$DODDER_BIN" info store-version)"
@@ -109,6 +112,15 @@ function run_dodder {
   shift
   #shellcheck disable=SC2068
   run timeout --preserve-status "2s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
+}
+
+function run_madder {
+  cmd="$1"
+  shift
+  run env \
+    MADDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR" \
+    XDG_LOG_HOME="$BATS_TEST_TMPDIR/.xdg/log" \
+    timeout --preserve-status "2s" "$MADDER_BIN" "$cmd" "$@"
 }
 
 # TODO make this actually unify stderr
