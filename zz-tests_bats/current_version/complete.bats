@@ -88,28 +88,6 @@ function complete_subcmd { # @test
 		add.*commit workspace changes to the store
 		add-zettel-ids-yang.*add yang words to the zettel id pool
 		add-zettel-ids-yin.*add yin words to the zettel id pool
-		blob_store-cat.*output blob contents by digest
-		blob_store-cat-ids.*list all blob digests in a store
-		blob_store-encode-ids.*convert hex digests to native markl IDs
-		blob_store-complete.*complete a command-line
-		blob_store-fsck.*verify blob store integrity
-		blob_store-info-repo.*display blob store configuration
-		blob_store-init.*initialize a local blob store
-		blob_store-init-from.*initialize a blob store from a configuration file
-		blob_store-init-pointer.*initialize a pointer blob store
-		blob_store-init-sftp-explicit.*initialize an SFTP blob store with explicit credentials
-		blob_store-init-inventory-archive.*initialize an inventory archive blob store
-		blob_store-init-inventory-archive-v0.*initialize an inventory archive blob store \(v0\)
-		blob_store-init-inventory-archive-v1.*initialize an inventory archive blob store \(v1\)
-		blob_store-init-sftp-ssh_config.*initialize an SFTP blob store via ssh_config
-		blob_store-list.*list configured blob stores
-		blob_store-pack.*pack loose blobs into archive files
-		blob_store-pack-cat-ids.*list blob digests contained in archive files
-		blob_store-pack-list.*list archive files in inventory archive stores
-		blob_store-pack-blobs.*write files and pack them into an archive
-		blob_store-read.*read blobs from JSON on stdin
-		blob_store-sync.*synchronize blobs between stores
-		blob_store-write.*write blobs to a store
 		cat-alfred.*output objects in Alfred workflow format
 		cat-object.*output raw object content by markl id
 		check-workspace.*check workspace state
@@ -239,18 +217,6 @@ function complete_init_workspace { # @test
   assert_output_unsorted --regexp -- 'test/.*directory'
   # shellcheck disable=SC2016
   assert_output_unsorted --regexp -- '-type.*type used for new objects in `new` and `organize`'
-}
-
-function complete_blob_store_fsck { # @test
-  run_dodder complete blob_store-fsck
-  assert_success
-  assert_output --regexp '\.default'
-}
-
-function complete_blob_store_sync { # @test
-  run_dodder complete blob_store-sync
-  assert_success
-  assert_output --regexp '\.default'
 }
 
 function complete_repo_fsck { # @test
