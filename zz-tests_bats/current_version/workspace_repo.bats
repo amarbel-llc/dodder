@@ -70,7 +70,6 @@ function workspace_repo_clone_pull_push { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-repo_id . \
-		-lock-internal-files=false \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
@@ -151,7 +150,6 @@ function workspace_repo_clone_filtered_by_tag { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-repo_id . \
-		-lock-internal-files=false \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -192,7 +190,6 @@ function workspace_repo_pull_filtered_by_tag { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-repo_id . \
-		-lock-internal-files=false \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -254,7 +251,6 @@ function workspace_repo_init_experimental_repo { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -290,7 +286,6 @@ function workspace_repo_linked_zettel_ids_from_parent { # @test
 
 	run_dodder init-workspace \
 		-encryption none \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
@@ -347,7 +342,6 @@ function workspace_repo_implicit_parent_push_pull { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
@@ -414,7 +408,6 @@ function workspace_repo_init_experimental_repo_existing_repo { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -426,7 +419,6 @@ function workspace_repo_init_experimental_repo_existing_repo { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id-2 \
 		project-alpha:z
@@ -446,7 +438,6 @@ function workspace_repo_stale_parent_path { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -478,7 +469,6 @@ function workspace_repo_repo_id_rejected_with_experimental_repo { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-repo_id . \
 		-parent "$parent_path" \
 		workspace-repo-id \
@@ -501,7 +491,6 @@ function workspace_repo_init_experimental_repo_empty_query { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		nonexistent-tag:z
@@ -531,7 +520,6 @@ function workspace_repo_push_unfiltered { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-repo_id . \
-		-lock-internal-files=false \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
@@ -584,7 +572,6 @@ function workspace_repo_init_missing_parent_fails { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent /nonexistent/path \
 		workspace-repo-id
 
@@ -611,7 +598,6 @@ function workspace_repo_init_bare_query_excludes_unrelated { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha

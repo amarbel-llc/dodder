@@ -44,7 +44,6 @@ function bootstrap_workspace_repo {
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett

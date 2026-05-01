@@ -47,7 +47,7 @@ function blob_store_sync_cross_hash_multi_hash_destination { # @test
   blake_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
   # init a second store with sha256 (TomlV2 stores are multi-hash by default)
-  run_dodder blob_store-init -hash_type-id sha256 -encryption none -lock-internal-files=false .sha256
+  run_dodder blob_store-init -hash_type-id sha256 -encryption none .sha256
   assert_success
 
   # sync from default to sha256 store
@@ -74,7 +74,7 @@ function blob_store_sync_cross_hash_second_sync_skips { # @test
   assert_success
 
   # init a second store with sha256
-  run_dodder blob_store-init -hash_type-id sha256 -encryption none -lock-internal-files=false .sha256
+  run_dodder blob_store-init -hash_type-id sha256 -encryption none .sha256
   assert_success
 
   # first sync

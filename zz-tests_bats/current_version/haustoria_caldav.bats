@@ -255,7 +255,6 @@ function init_haustoria_parent {
     -yang <(cat_yang) \
     -encryption none \
     -repo_id . \
-    -lock-internal-files=false \
     -include-builtin-actionable-types \
     test-parent
   assert_success

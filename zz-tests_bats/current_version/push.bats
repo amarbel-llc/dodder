@@ -79,7 +79,6 @@ function bootstrap_archive {
 	run_dodder init \
 		-repo_id . \
 		-repo-type archive \
-		-lock-internal-files=false \
 		test-repo-id-them
 
 	run_dodder info-repo type

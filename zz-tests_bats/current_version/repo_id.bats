@@ -30,7 +30,6 @@ function repo_id_system_panics_with_not_implemented { # @test
 	run_dodder_stderr_unified init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-repo_id / \
 		test-repo-id
 
@@ -42,7 +41,6 @@ function dodder_repo_id_env_var_selects_cwd_repo { # @test
 	DODDER_REPO_ID=. run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		test-repo-id
 
 	assert_success
@@ -56,7 +54,6 @@ function repo_id_flag_overrides_env_var { # @test
 	DODDER_REPO_ID=/ run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-repo_id . \
 		test-repo-id
 

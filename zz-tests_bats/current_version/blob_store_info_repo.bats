@@ -40,15 +40,6 @@ function info_repo_hash_type_id_default_store { # @test
 	assert_output 'blake2b256'
 }
 
-function info_repo_lock_internal_files_default_store { # @test
-	run_dodder_init_disable_age
-	assert_success
-
-	run_dodder blob_store-info-repo lock-internal-files
-	assert_success
-	assert_output 'false'
-}
-
 function info_repo_archive_encryption { # @test
 	run_dodder_init_disable_age
 	assert_success

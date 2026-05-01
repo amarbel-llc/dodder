@@ -21,7 +21,6 @@ function init_fixture {
     -yang <(cat_yang) \
     -encryption none \
     -repo_id . \
-    -lock-internal-files=false \
     "$@" \
     test-repo-id
   assert_success

@@ -16,7 +16,6 @@ setup() {
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -lock-internal-files=false \
     -repo_id . \
     -encryption none \
     -blob_store-id shared \

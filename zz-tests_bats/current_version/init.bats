@@ -178,7 +178,7 @@ function init_and_init { # @test
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder init -lock-internal-files=false -repo_id . test-repo-id
+	run_dodder init -repo_id . test-repo-id
 	assert_failure
 	assert_output --partial ': file exists'
 
@@ -244,7 +244,6 @@ function init_with_existing_madder_store { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-lock-internal-files=false \
 		-encryption none \
 		-blob_store-id shared \
 		test-repo-id

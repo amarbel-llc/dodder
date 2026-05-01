@@ -59,7 +59,6 @@ function run_clone_default_with() {
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-repo_id . \
-		-lock-internal-files=false \
 		"$@"
 }
 

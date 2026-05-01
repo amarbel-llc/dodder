@@ -21,7 +21,6 @@ function init_with_pandoc_tools_creates_type_objects { # @test
 		-yang <(cat_yang) \
 		-encryption none \
 		-repo_id . \
-		-lock-internal-files=false \
 		-include-default-pandoc-tools \
 		test-repo-id
 
@@ -50,7 +49,6 @@ function format_blob_stdin_pandoc_normalizes_markdown { # @test
 		-yang <(cat_yang) \
 		-encryption none \
 		-repo_id . \
-		-lock-internal-files=false \
 		-include-default-pandoc-tools \
 		test-repo-id
 
