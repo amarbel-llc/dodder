@@ -50,6 +50,7 @@ type Fsck struct {
 	SkipProbes    bool
 	SkipBlobs     bool
 	TryV14Index   bool
+	Recompute     bool
 }
 
 func (cmd Fsck) GetDescription() command.Description {
@@ -103,6 +104,13 @@ func (cmd *Fsck) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 		"try-v14-index",
 		false,
 		"after verification, build a V14 fixed-length index in a temp directory and validate round-trip",
+	)
+
+	flagSet.BoolVar(
+		&cmd.Recompute,
+		"recompute",
+		false,
+		"recompute each object's digest from its metadata before verifying the signature, surfacing divergence between the stored digest and what would be computed today",
 	)
 
 	cmd.Duplicates.SetFlagDefinitions(flagSet)
@@ -161,6 +169,8 @@ func (cmd Fsck) runVerification(
 		WithVerifyOptions(cmd.VerifyOptions).
 		Build()
 
+	digestType := repo.GetEnvRepo().GetObjectDigestType()
+
 	if err := errors.RunChildContextWithPrintTicker(
 		repo,
 		func(ctx errors.Context) {
@@ -187,8 +197,17 @@ func (cmd Fsck) runVerification(
 					objectErrors = append(objectErrors, err)
 				}
 
-				if err := finalizer.Verify(object); err != nil {
-					objectErrors = append(objectErrors, err)
+				if cmd.Recompute {
+					if err := finalizer.FinalizeAndVerify(
+						object,
+						digestType,
+					); err != nil {
+						objectErrors = append(objectErrors, err)
+					}
+				} else {
+					if err := finalizer.Verify(object); err != nil {
+						objectErrors = append(objectErrors, err)
+					}
 				}
 
 				if !cmd.SkipProbes {

@@ -164,6 +164,25 @@ function fsck_from_version_skip_blobs { # @test
 	refute_output --partial "not ok"
 }
 
+function fsck_recompute_fresh_store { # @test
+	run_dodder_init_disable_age
+
+	f=test.md
+	{
+		echo "test content"
+	} >"$f"
+
+	run_dodder add -delete "$f"
+	assert_success
+
+	run_dodder fsck -recompute
+	assert_success
+	assert_output --partial "TAP version 14"
+	assert_output --partial "1.."
+	assert_output --partial "ok "
+	refute_output --partial "not ok"
+}
+
 function repo_fsck_tap14 { # @test
 	run_dodder_init_disable_age
 
