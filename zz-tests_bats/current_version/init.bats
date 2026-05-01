@@ -57,7 +57,7 @@ function init_compression { # @test
 	assert_success
 	output_immutable_config | assert_output --regexp -
 
-	run_dodder blob_store-cat "$(get_konfig_sha)"
+	run_madder cat "$(get_konfig_sha)"
 	assert_success
 	assert_output
 }
@@ -127,7 +127,7 @@ function init_and_with_another_age { # @test
 	run_dodder_init -yin <(cat_yin) -yang <(cat_yang) -encryption "$age_id" test-repo-id
 	assert_success
 
-	run_dodder blob_store-info-repo encryption
+	run_madder info-repo encryption
 	assert_success
 	assert_output "$age_id"
 }
@@ -216,7 +216,7 @@ function init_with_age { # @test
 
 	run test -f .xdg/data/dodder/config-permanent
 
-	run_dodder blob_store-info-repo encryption
+	run_madder info-repo encryption
 	assert_success
 	assert_output
 }
@@ -225,10 +225,10 @@ function init_inventory_archive_with_encryption { # @test
 	run_dodder_init_disable_age
 	assert_success
 
-	run_dodder blob_store-init-inventory-archive -encryption generate .archive
+	run_madder init-inventory-archive -encryption generate .archive
 	assert_success
 
-	run_dodder blob_store-info-repo .archive encryption
+	run_madder info-repo .archive encryption
 	assert_success
 	assert_output --regexp '.+'
 }
@@ -237,7 +237,7 @@ function init_with_existing_madder_store { # @test
 	set_xdg "$BATS_TEST_TMPDIR"
 
 	# Create a user-scoped madder blob store before dodder init
-	run_dodder blob_store-init shared
+	run_madder init shared
 	assert_success
 
 	# Init dodder with the pre-existing blob store
@@ -292,7 +292,7 @@ function init_with_json_inventory_list_type { # @test
 
 	run test -f .xdg/data/dodder/config-permanent
 
-	run_dodder blob_store-info-repo encryption
+	run_madder info-repo encryption
 	assert_success
 	assert_output
 }

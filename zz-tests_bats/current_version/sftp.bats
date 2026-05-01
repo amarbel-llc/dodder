@@ -76,7 +76,7 @@ EOM
 function init_sftp_explicit_store {
   local store_id="${1:-.sftp-test}"
 
-  run_dodder blob_store-init-sftp-explicit \
+  run_madder init-sftp-explicit \
     -host 127.0.0.1 \
     -port "$SFTP_PORT" \
     -user test \
@@ -95,11 +95,11 @@ function sftp_explicit_init_and_fsck { # @test
   init_sftp_explicit_store
 
   # Write a blob to the SFTP store
-  run_dodder blob_store-write .sftp-test <(echo "hello sftp")
+  run_madder write -format tap .sftp-test <(echo "hello sftp")
   assert_success
 
   # Verify blob exists via fsck
-  run_dodder blob_store-fsck .sftp-test
+  run_madder fsck -format tap .sftp-test
   assert_success
 }
 
@@ -113,7 +113,7 @@ function sftp_known_hosts_rejects_wrong_key { # @test
   echo "[127.0.0.1]:${SFTP_PORT} ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" \
     >"$BATS_TEST_TMPDIR/bogus_known_hosts"
 
-  run_dodder blob_store-init-sftp-explicit \
+  run_madder init-sftp-explicit \
     -host 127.0.0.1 \
     -port "$SFTP_PORT" \
     -user test \
@@ -125,7 +125,7 @@ function sftp_known_hosts_rejects_wrong_key { # @test
 
   # The init succeeds (just writes config), but using the store should fail
   # because the host key doesn't match
-  run_dodder blob_store-write .sftp-bogus <(echo "should fail")
+  run_madder write -format tap .sftp-bogus <(echo "should fail")
   assert_failure
 }
 
@@ -137,7 +137,7 @@ function sftp_remote_config_missing_errors { # @test
   init_sftp_explicit_store .sftp-no-config
 
   # Using the store should fail with a descriptive error about missing config
-  run_dodder blob_store-write .sftp-no-config <(echo "should fail")
+  run_madder write -format tap .sftp-no-config <(echo "should fail")
   assert_failure
   assert_output --partial "remote blob store config missing"
 }
@@ -151,14 +151,14 @@ function sftp_discover_infers_config { # @test
   # Write a blob directly to the remote directory using the local default store
   # to seed content for discover to find
   init_sftp_explicit_store .sftp-seed
-  run_dodder blob_store-write .sftp-seed <(echo "discover me")
+  run_madder write -format tap .sftp-seed <(echo "discover me")
   assert_success
 
   # Remove the remote config file so discover has to infer it
   rm "$BATS_TEST_TMPDIR/remote-blobs/blob_store-config"
 
   # Run init with --discover
-  run_dodder blob_store-init-sftp-explicit \
+  run_madder init-sftp-explicit \
     -host 127.0.0.1 \
     -port "$SFTP_PORT" \
     -user test \
@@ -174,6 +174,6 @@ function sftp_discover_infers_config { # @test
   [[ -f "$BATS_TEST_TMPDIR/remote-blobs/blob_store-config" ]]
 
   # Verify the discovered store works via fsck
-  run_dodder blob_store-fsck .sftp-discovered
+  run_madder fsck -format tap .sftp-discovered
   assert_success
 }

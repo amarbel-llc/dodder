@@ -91,7 +91,7 @@ EOM
 EOM
 
   # when
-  run_dodder blob_store-write <(echo the body but new)
+  run_madder write -format tap <(echo the body but new)
   assert_success
   assert_output --partial 'ok 1 - blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza'
 

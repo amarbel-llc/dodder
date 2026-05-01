@@ -196,7 +196,7 @@ function repo_fsck_tap14 { # @test
 function madder_fsck_tap14 { # @test
 	run_dodder_init_disable_age
 
-	run_dodder blob_store-fsck
+	run_madder fsck -format tap
 	assert_success
 	assert_output --partial "TAP version 14"
 	assert_output --partial "1.."

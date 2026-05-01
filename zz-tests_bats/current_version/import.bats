@@ -9,7 +9,7 @@ setup() {
   set_xdg "$BATS_TEST_TMPDIR"
 
   # Create a user-scoped blob store accessible by all repos
-  run_dodder blob_store-init shared
+  run_madder init shared
   assert_success
 
   # Init outer repo using the shared user-scoped store

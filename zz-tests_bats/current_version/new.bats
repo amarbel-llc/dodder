@@ -93,7 +93,7 @@ function can_duplicate_zettel_content { # @test
 }
 
 function use_blob_digests { # @test
-  run_dodder blob_store-write - <<-EOM
+  run_madder write -format tap - <<-EOM
 		  the blob
 	EOM
   assert_success
@@ -106,7 +106,7 @@ function use_blob_digests { # @test
 	EOM
 
   the_blob2_digest="blake2b256-65lys7dm4vfkag9y5j2hqhnah45qnc0kqvpdc46dw2cw63974a5q40q7xg"
-  run_dodder blob_store-write - <<-EOM
+  run_madder write -format tap - <<-EOM
 		  the blob2
 	EOM
   assert_success
