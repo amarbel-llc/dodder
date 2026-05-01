@@ -1,95 +1,38 @@
 package domain_interfaces
 
 import (
-	"io"
-
+	madder_di "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
+// These interfaces are byte-identical between dodder and madder. Aliased
+// from madder's public domain_interfaces facade so dodder ships a single
+// source of truth without forcing every importer to re-spell its imports.
 type (
-	BlobIOWrapper interface {
-		GetBlobEncryption() MarklId
-		GetBlobCompression() interfaces.IOWrapper
-	}
-
-	BlobIOWrapperGetter interface {
-		GetBlobIOWrapper() BlobIOWrapper
-	}
-
-	ReadAtSeeker interface {
-		io.ReaderAt
-		io.Seeker
-	}
-
-	BlobReader interface {
-		io.WriterTo
-		io.ReadCloser
-
-		ReadAtSeeker
-		MarklIdGetter
-	}
-
-	BlobWriter interface {
-		io.ReaderFrom
-		io.WriteCloser
-		MarklIdGetter
-	}
-
-	BlobReaderFactory interface {
-		MakeBlobReader(MarklId) (BlobReader, error)
-	}
-
-	BlobWriterFactory interface {
-		MakeBlobWriter(FormatHash) (BlobWriter, error)
-	}
-
-	BlobAccess interface {
-		HasBlob(MarklId) bool
-		BlobReaderFactory
-		BlobWriterFactory
-	}
-
-	NamedBlobAccess interface {
-		MakeNamedBlobReader(string) (BlobReader, error)
-		MakeNamedBlobWriter(string) (BlobWriter, error)
-	}
-
-	BlobStore interface {
-		BlobAccess
-		BlobIOWrapperGetter
-
-		GetBlobStoreDescription() string
-		GetDefaultHashType() FormatHash
-		AllBlobs() interfaces.SeqError[MarklId]
-	}
-
-	// Blobs represent persisted files, like blobs in Git. Blobs are used by
-	// Zettels, types, tags, config, and inventory lists.
-	BlobPool[BLOB any] interface {
-		GetBlob(MarklId) (BLOB, interfaces.FuncRepool, error)
-	}
-
-	Format[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]] interface {
-		SavedBlobFormatter
-		interfaces.CoderReadWriter[BLOB_PTR]
-	}
-
-	TypedStore[
-		BLOB any,
-		BLOB_PTR interfaces.Ptr[BLOB],
-	] interface {
-		// TODO remove and replace with two-step process
-		SaveBlobText(BLOB_PTR) (MarklId, int64, error)
-		Format[BLOB, BLOB_PTR]
-		// TODO remove
-		BlobPool[BLOB_PTR]
-	}
-
-	SavedBlobFormatter interface {
-		FormatSavedBlob(io.Writer, MarklId) (int64, error)
-	}
-
-	BlobForeignDigestAdder interface {
-		AddForeignBlobDigestForNativeDigest(foreign, native MarklId) error
-	}
+	BlobIOWrapper                                       = madder_di.BlobIOWrapper
+	BlobIOWrapperGetter                                 = madder_di.BlobIOWrapperGetter
+	ReadAtSeeker                                        = madder_di.ReadAtSeeker
+	BlobReader                                          = madder_di.BlobReader
+	BlobWriter                                          = madder_di.BlobWriter
+	BlobReaderFactory                                   = madder_di.BlobReaderFactory
+	BlobWriterFactory                                   = madder_di.BlobWriterFactory
+	BlobAccess                                          = madder_di.BlobAccess
+	NamedBlobAccess                                     = madder_di.NamedBlobAccess
+	BlobPool[BLOB any]                                  = madder_di.BlobPool[BLOB]
+	Format[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]]     = madder_di.Format[BLOB, BLOB_PTR]
+	TypedStore[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]] = madder_di.TypedStore[BLOB, BLOB_PTR]
+	SavedBlobFormatter                                  = madder_di.SavedBlobFormatter
+	BlobForeignDigestAdder                              = madder_di.BlobForeignDigestAdder
 )
+
+// BlobStore stays defined locally because madder's superset adds
+// GetBlobStoreConfig() per ADR 0005. Aliasing it requires dodder-side prep
+// (~24 impls + new BlobStoreConfig/MmapSource markers); tracked in #142.
+type BlobStore interface {
+	BlobAccess
+	BlobIOWrapperGetter
+
+	GetBlobStoreDescription() string
+	GetDefaultHashType() FormatHash
+	AllBlobs() interfaces.SeqError[MarklId]
+}
