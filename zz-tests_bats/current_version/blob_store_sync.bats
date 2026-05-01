@@ -18,19 +18,19 @@ function blob_store_sync_twice { # @test
   # NOTE: sync now outputs TAP-14 — assertions below need updating when unskipped.
   skip
   setup_repo
-  run_dodder blob_store-init test
+  run_madder init test
   assert_success
   assert_output --regexp - <<-EOM
 		Wrote config to .*/1-test.blob_store-config
 	EOM
 
-  run_dodder blob_store-sync
+  run_madder sync
   assert_success
   assert_output --regexp - <<-EOM
 		Successes: 14, Failures: 0, Ignored: 0, Total: 14
 	EOM
 
-  run_dodder blob_store-sync
+  run_madder sync
   assert_success
   assert_output --regexp - <<-EOM
 		Successes: 0, Failures: 0, Ignored: 14, Total: 14
@@ -42,25 +42,25 @@ function blob_store_sync_cross_hash_multi_hash_destination { # @test
   assert_success
 
   # write a blob to the default (blake2b256) store
-  run_dodder blob_store-write <(echo cross-hash-test)
+  run_madder write -format tap <(echo cross-hash-test)
   assert_success
   blake_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
 
   # init a second store with sha256 (TomlV2 stores are multi-hash by default)
-  run_dodder blob_store-init -hash_type-id sha256 -encryption none .sha256
+  run_madder init -hash_type-id sha256 -encryption none .sha256
   assert_success
 
   # sync from default to sha256 store
-  run_dodder blob_store-sync .default .sha256
+  run_madder sync .default .sha256
   assert_success
 
   # verify the blob exists in the sha256 store under both digests
-  run_dodder blob_store-cat-ids .sha256
+  run_madder cat-ids .sha256
   assert_success
   assert_output --partial "$blake_sha"
 
   # verify the blob content is readable from the sha256 store
-  run_dodder blob_store-cat .sha256 "$blake_sha"
+  run_madder cat .sha256 "$blake_sha"
   assert_success
   assert_line "cross-hash-test"
 }
@@ -70,18 +70,18 @@ function blob_store_sync_cross_hash_second_sync_skips { # @test
   assert_success
 
   # write a blob to the default (blake2b256) store
-  run_dodder blob_store-write <(echo idempotent-test)
+  run_madder write -format tap <(echo idempotent-test)
   assert_success
 
   # init a second store with sha256
-  run_dodder blob_store-init -hash_type-id sha256 -encryption none .sha256
+  run_madder init -hash_type-id sha256 -encryption none .sha256
   assert_success
 
   # first sync
-  run_dodder blob_store-sync .default .sha256
+  run_madder sync .default .sha256
   assert_success
 
   # second sync should skip already-synced blobs
-  run_dodder blob_store-sync .default .sha256
+  run_madder sync .default .sha256
   assert_success
 }
