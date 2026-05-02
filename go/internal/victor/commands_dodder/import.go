@@ -42,7 +42,6 @@ func (cmd Import) GetDescription() command.Description {
 type Import struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.InventoryLists
-	command_components_madder.BlobStore
 	command_components_madder.Complete
 
 	repo.ImporterOptions

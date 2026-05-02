@@ -11,8 +11,6 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_value"
 )
 
-// TODO refactor this to have a generic config field and for the commands_madder
-// and commands_dodder packages to alias a concrete version for their own use
 type Request struct {
 	errors.Context
 	Utility Utility
