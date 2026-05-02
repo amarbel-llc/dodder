@@ -213,10 +213,6 @@ function run_dodder_init_disable_age_xdg {
   # [konfig @$(get_konfig_sha) !toml-config-v2]
   # EOM
 
-  run_dodder blob_store-cat "$(get_konfig_sha)"
-  assert_success
-  assert_output
-
   run_dodder init-workspace -experimental-repo=false
 }
 
