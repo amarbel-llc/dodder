@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame"
 )
 
 type devPrinter struct {

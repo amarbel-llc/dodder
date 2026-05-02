@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 
 	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 // SkuRecordSize is the byte size of the flat SKU record layout:

@@ -6,7 +6,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"filippo.io/age"
 	"golang.org/x/crypto/chacha20poly1305"
 )

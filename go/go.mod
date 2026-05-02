@@ -25,7 +25,6 @@ require (
 	golang.org/x/term v0.42.0
 	golang.org/x/text v0.36.0
 	golang.org/x/tools v0.44.0
-	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 	tailscale.com v1.96.5
 )
 
@@ -78,6 +77,7 @@ require (
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	golang.zx2c4.com/wireguard/windows v0.6.1 // indirect
 	mvdan.cc/sh/v3 v3.13.1 // indirect
 )

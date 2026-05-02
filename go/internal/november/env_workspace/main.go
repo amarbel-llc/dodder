@@ -22,7 +22,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/mike/haustoria_caldav"
 	"code.linenisgreat.com/dodder/go/internal/mike/haustoria_orgmode"
 	"code.linenisgreat.com/dodder/go/internal/mike/store_fs"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"

@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"math/big"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"filippo.io/age"
 	"golang.org/x/crypto/chacha20poly1305"
 )

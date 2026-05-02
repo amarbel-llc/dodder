@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/lima/orgie"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 // TODO support using query results for organize population

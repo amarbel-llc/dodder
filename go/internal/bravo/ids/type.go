@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/doddish"
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 // TODO MAYBE move Type into its own package

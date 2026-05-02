@@ -1,7 +1,7 @@
 package repo_id
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/madder/go/pkgs/xdg_location_type"
 )
 

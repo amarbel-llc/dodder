@@ -7,7 +7,7 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio_buffer"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"

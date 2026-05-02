@@ -2,7 +2,7 @@ package directory_layout
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	madder_dl "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"

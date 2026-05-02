@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/page_id"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/object_probe_index"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 func (index *Index) ReadOneMarklIdAdded(

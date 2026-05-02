@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 // Scanner provides a convenient interface for reading data such as

@@ -81,7 +81,35 @@ codemod-go-move_package src dst: && codemod-go-fmt
   ag "$prefix/$original" -l0 </dev/null |
     xargs -0 sed -i'' "$sed_script" || true
 
-#    ____ _
+# [explore] one-shot: drop dodder's lib/bravo/errors and lib/0/stack_frame
+# vendored copies in favor of dewey's. ~500 import lines rewritten + the
+# two dodder packages deleted. Re-run go mod tidy + gomod2nix afterward.
+[group('explore')]
+explore-drop-dewey-vendored-forks:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd ..
+
+  dodder_errors='code.linenisgreat.com/dodder/go/lib/bravo/errors'
+  dewey_errors='github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors'
+  dodder_sf='code.linenisgreat.com/dodder/go/lib/0/stack_frame'
+  dewey_sf='github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame'
+
+  echo "==> rewriting imports in all *.go files under go/"
+  find go -name '*.go' -type f \
+    \! -path 'go/lib/bravo/errors/*' \
+    \! -path 'go/lib/0/stack_frame/*' \
+    -print0 | xargs -0 sed -i \
+      -e "s|${dodder_errors}|${dewey_errors}|g" \
+      -e "s|${dodder_sf}|${dewey_sf}|g"
+
+  echo "==> deleting dodder's vendored copies"
+  rm -rf go/lib/bravo/errors go/lib/0/stack_frame
+
+  # Drop empty parent dir if no other lib/0/* siblings remain
+  rmdir go/lib/0 2>/dev/null || true
+
+  echo "==> done. Run: just go/test-go-pkg ./internal/golf/env_repo/ to verify"
 #   / ___| | ___  __ _ _ __
 #  | |   | |/ _ \/ _` | '_ \
 #  | |___| |  __/ (_| | | | |

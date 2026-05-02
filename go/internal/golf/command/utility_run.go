@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"syscall"
 
-	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 

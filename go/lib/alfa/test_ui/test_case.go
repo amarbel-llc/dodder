@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/lib/0/stack_frame"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame"
 )
 
 type TestCaseInfo interface {

@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	hinweis_index_v0 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v0"
 	hinweis_index_v1 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v1"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 

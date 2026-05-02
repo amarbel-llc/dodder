@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/caldav"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_workspace"
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 // Compile-time interface checks for the optional store_workspace methods

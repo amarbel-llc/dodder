@@ -1,6 +1,6 @@
 package debug
 
-import "code.linenisgreat.com/dodder/go/lib/bravo/errors"
+import "github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 
 type (
 	pkgErrDisamb struct{}

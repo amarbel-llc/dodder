@@ -3,7 +3,7 @@ package repo
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 //go:generate stringer -type=RemoteConnection

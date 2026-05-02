@@ -1,6 +1,6 @@
 package local_working_copy
 
-import "code.linenisgreat.com/dodder/go/lib/bravo/errors"
+import "github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 
 func (local *Repo) Reindex() {
 	local.Must(errors.MakeFuncContextFromFuncErr(local.Lock))

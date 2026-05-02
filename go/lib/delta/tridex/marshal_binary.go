@@ -5,7 +5,7 @@ import (
 	"slices"
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 func (tridex *Tridex) MarshalBinary() (bs []byte, err error) {
