@@ -81,6 +81,29 @@ codemod-go-move_package src dst: && codemod-go-fmt
   ag "$prefix/$original" -l0 </dev/null |
     xargs -0 sed -i'' "$sed_script" || true
 
+# [explore] one-shot: drop dodder's lib/0/http_statuses vendored copy in
+# favor of dewey's. Byte-identical files modulo import paths.
+[group('explore')]
+explore-drop-http-statuses-fork:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd ..
+
+  dodder_hs='code.linenisgreat.com/dodder/go/lib/0/http_statuses'
+  dewey_hs='github.com/amarbel-llc/purse-first/libs/dewey/0/http_statuses'
+
+  echo "==> rewriting http_statuses imports in all *.go files under go/"
+  find go -name '*.go' -type f \
+    \! -path 'go/lib/0/http_statuses/*' \
+    -print0 | xargs -0 sed -i \
+      -e "s|${dodder_hs}|${dewey_hs}|g"
+
+  echo "==> deleting dodder's vendored http_statuses copy"
+  rm -rf go/lib/0/http_statuses
+  rmdir go/lib/0 2>/dev/null || true
+
+  echo "==> done"
+
 # [explore] one-shot: drop dodder's internal/charlie/fd vendored copy in
 # favor of madder's pkgs/fd. The only dodder-specific addition was an
 # (*FD).Remove(directoryLayout) method with zero callers (dead code) —

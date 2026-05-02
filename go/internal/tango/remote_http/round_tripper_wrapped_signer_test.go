@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/lib/0/http_statuses"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/http_statuses"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )

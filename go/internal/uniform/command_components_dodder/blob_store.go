@@ -5,9 +5,9 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
