@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
+	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"

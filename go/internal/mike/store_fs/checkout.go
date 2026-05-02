@@ -354,7 +354,17 @@ func (store *Store) FileExtensionForObject(
 func (store *Store) RemoveItem(fsItem *sku.FSItem) (err error) {
 	// TODO check conflict state
 	for fdItem := range fsItem.FDs.All() {
-		if err = fdItem.Remove(store.envRepo); err != nil {
+		path := fdItem.GetPath()
+		if path == "" {
+			continue
+		}
+
+		if err = store.envRepo.Delete(path); err != nil {
+			if errors.IsNotExist(err) {
+				err = nil
+				continue
+			}
+
 			err = errors.Wrap(err)
 			return err
 		}

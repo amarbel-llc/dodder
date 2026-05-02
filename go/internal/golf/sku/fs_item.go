@@ -5,7 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/fd"
+	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"

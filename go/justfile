@@ -81,6 +81,30 @@ codemod-go-move_package src dst: && codemod-go-fmt
   ag "$prefix/$original" -l0 </dev/null |
     xargs -0 sed -i'' "$sed_script" || true
 
+# [explore] one-shot: drop dodder's internal/charlie/fd vendored copy in
+# favor of madder's pkgs/fd. The only dodder-specific addition was an
+# (*FD).Remove(directoryLayout) method with zero callers (dead code) —
+# goes away with the package deletion.
+[group('explore')]
+explore-drop-charlie-fd-fork:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd ..
+
+  dodder_fd='code.linenisgreat.com/dodder/go/internal/charlie/fd'
+  madder_fd='github.com/amarbel-llc/madder/go/pkgs/fd'
+
+  echo "==> rewriting charlie/fd imports in all *.go files under go/"
+  find go -name '*.go' -type f \
+    \! -path 'go/internal/charlie/fd/*' \
+    -print0 | xargs -0 sed -i \
+      -e "s|${dodder_fd}|${madder_fd}|g"
+
+  echo "==> deleting dodder's charlie/fd fork"
+  rm -rf go/internal/charlie/fd
+
+  echo "==> done"
+
 # [explore] one-shot: drop dodder's lib/echo/thyme vendored copy in favor
 # of dewey's. Same shape as the lib/bravo/errors + lib/0/stack_frame drop.
 [group('explore')]
