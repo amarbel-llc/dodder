@@ -25,4 +25,7 @@ type (
 	BlobForeignDigestAdder                              = madder_di.BlobForeignDigestAdder
 	BlobStore                                           = madder_di.BlobStore
 	BlobStoreConfig                                     = madder_di.BlobStoreConfig
+	BlobWriteObserver                                   = madder_di.BlobWriteObserver
+	BlobWriteEvent                                      = madder_di.BlobWriteEvent
+	BlobWriteOp                                         = madder_di.BlobWriteOp
 )

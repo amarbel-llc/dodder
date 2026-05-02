@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/echo/debug"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
@@ -38,6 +39,9 @@ type Env interface {
 	MakeCommonEnv() map[string]string
 	MakeRelativePathStringFormatWriter() interfaces.StringEncoderTo[string]
 	AbsFromCwdOrSame(p string) (p1 string)
+
+	GetVerifyOnCollisionOverride() bool
+	GetBlobWriteObserver() domain_interfaces.BlobWriteObserver
 
 	Delete(paths ...string) (err error)
 }
@@ -171,6 +175,19 @@ func (env env) MakeCommonEnv() map[string]string {
 
 func (env env) MakeDirs(ds ...string) (err error) {
 	return env.MakeDirsPerms(0o755, ds...)
+}
+
+// GetVerifyOnCollisionOverride satisfies madder's env_dir.Env so dodder's
+// envs can be passed into madder's blob_stores.MakeBlobStores. Dodder does
+// not yet drive collision verification from this env.
+func (env env) GetVerifyOnCollisionOverride() bool {
+	return false
+}
+
+// GetBlobWriteObserver satisfies madder's env_dir.Env. Dodder does not run
+// an inventory log; nil is the documented "no observer" sentinel.
+func (env env) GetBlobWriteObserver() domain_interfaces.BlobWriteObserver {
+	return nil
 }
 
 func (env env) MakeDirsPerms(perms os.FileMode, ds ...string) (err error) {

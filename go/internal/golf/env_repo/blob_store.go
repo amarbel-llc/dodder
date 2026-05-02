@@ -2,18 +2,18 @@ package env_repo
 
 import (
 	"maps"
+	"os"
 	"path/filepath"
 	"slices"
 	"sort"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 )
 
 type BlobStoreEnv struct {
@@ -218,13 +218,23 @@ func (env *BlobStoreEnv) writeBlobStoreConfigIfNecessary(
 
 	blobStoreConfig := bigBang.TypedBlobStoreConfig
 
-	if err := hyphence.EncodeToFile(
-		blob_store_configs.Coder,
+	// madder's pkgs/hyphence does not yet expose EncodeToFile (see
+	// amarbel-llc/madder#107); use the Coder.EncodeTo method on a
+	// manually-opened file until that lands.
+	file, err := os.Create(blobStoreConfigPath)
+	if err != nil {
+		env.Cancel(err)
+		return
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	if _, err = blob_store_configs.Coder.EncodeTo(
 		&blob_store_configs.TypedConfig{
 			Type: blobStoreConfig.Type,
 			Blob: blobStoreConfig.Blob,
 		},
-		blobStoreConfigPath,
+		file,
 	); err != nil {
 		env.Cancel(err)
 		return
