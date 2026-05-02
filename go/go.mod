@@ -6,14 +6,13 @@ require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260414180333-e8e81ae667b3
 	filippo.io/age v1.3.1
 	github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0
-	github.com/amarbel-llc/madder/go v0.3.4
+	github.com/amarbel-llc/madder/go v0.3.6-0.20260502125151-088bc4bdfd6d
 	github.com/amarbel-llc/purse-first/libs/dewey v0.0.4
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tommy v0.0.0-20260405143331-87255e87bf37
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/gabstv/go-bsdiff v1.0.5
 	github.com/google/go-cmp v0.7.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
@@ -53,6 +52,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
+	github.com/gabstv/go-bsdiff v1.0.5 // indirect
 	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
