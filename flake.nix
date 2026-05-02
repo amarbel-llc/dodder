@@ -47,7 +47,7 @@
     let
       # Burnt into binaries via the fork's auto-injected -ldflags.
       # Single source of truth; `just bump-version` sed-rewrites this line.
-      dodderVersion = "0.1.2";
+      dodderVersion = "0.1.3";
       dodderCommit = self.shortRev or self.dirtyShortRev or "unknown";
     in
     (utils.lib.eachDefaultSystem (
