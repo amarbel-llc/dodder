@@ -81,6 +81,28 @@ codemod-go-move_package src dst: && codemod-go-fmt
   ag "$prefix/$original" -l0 </dev/null |
     xargs -0 sed -i'' "$sed_script" || true
 
+# [explore] one-shot: drop dodder's lib/echo/thyme vendored copy in favor
+# of dewey's. Same shape as the lib/bravo/errors + lib/0/stack_frame drop.
+[group('explore')]
+explore-drop-thyme-fork:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd ..
+
+  dodder_thyme='code.linenisgreat.com/dodder/go/lib/echo/thyme'
+  dewey_thyme='github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme'
+
+  echo "==> rewriting thyme imports in all *.go files under go/"
+  find go -name '*.go' -type f \
+    \! -path 'go/lib/echo/thyme/*' \
+    -print0 | xargs -0 sed -i \
+      -e "s|${dodder_thyme}|${dewey_thyme}|g"
+
+  echo "==> deleting dodder's vendored thyme copy"
+  rm -rf go/lib/echo/thyme
+
+  echo "==> done"
+
 # [explore] one-shot: drop dodder's lib/bravo/errors and lib/0/stack_frame
 # vendored copies in favor of dewey's. ~500 import lines rewritten + the
 # two dodder packages deleted. Re-run go mod tidy + gomod2nix afterward.

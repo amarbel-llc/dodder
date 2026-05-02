@@ -6,7 +6,7 @@ import (
 	tyme "time"
 
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/echo/thyme"
+	"github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme"
 )
 
 func TestTaiSet(t1 *testing.T) {
