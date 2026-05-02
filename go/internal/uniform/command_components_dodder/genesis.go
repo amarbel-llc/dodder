@@ -11,7 +11,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_local"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
-	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
 	"code.linenisgreat.com/dodder/go/internal/sierra/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
@@ -21,7 +20,7 @@ import (
 type Genesis struct {
 	env_repo.BigBang
 	LocalWorkingCopy
-	command_components_madder.Complete
+	BlobStore
 }
 
 var _ interfaces.CommandComponentWriter = (*Genesis)(nil)
@@ -62,7 +61,7 @@ func (cmd *Genesis) SetFlagDefinitions(
 	)
 
 	flagSet.Var(
-		cmd.Complete.GetFlagValueBlobIds(&cmd.BlobStoreId),
+		cmd.BlobStore.GetFlagValueBlobIds(&cmd.BlobStoreId),
 		"blob_store-id",
 		"The name of the existing madder blob store to use",
 	)

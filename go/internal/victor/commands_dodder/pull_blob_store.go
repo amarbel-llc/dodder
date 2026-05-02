@@ -6,7 +6,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
 	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/uniform/command_components_dodder"
@@ -26,7 +25,7 @@ func (cmd PullBlobStore) GetDescription() command.Description {
 
 type PullBlobStore struct {
 	command_components_dodder.LocalWorkingCopyWithQueryGroup
-	command_components_madder.BlobStore
+	command_components_dodder.BlobStore
 }
 
 var (

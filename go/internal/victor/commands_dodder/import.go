@@ -9,7 +9,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/hotel/command_components_madder"
 	"code.linenisgreat.com/dodder/go/internal/india/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/remote_transfer"
@@ -42,7 +41,7 @@ func (cmd Import) GetDescription() command.Description {
 type Import struct {
 	command_components_dodder.LocalWorkingCopy
 	command_components_dodder.InventoryLists
-	command_components_madder.Complete
+	command_components_dodder.BlobStore
 
 	repo.ImporterOptions
 
@@ -74,7 +73,7 @@ func (cmd *Import) SetFlagDefinitions(
 	cmd.Proto.SetFlagDefinitions(flagDefinitions)
 
 	flagDefinitions.Var(
-		cmd.Complete.GetFlagValueBlobIds(&cmd.BlobStoreId),
+		cmd.BlobStore.GetFlagValueBlobIds(&cmd.BlobStoreId),
 		"blob_store-id",
 		"The name of the existing madder blob store to use",
 	)
