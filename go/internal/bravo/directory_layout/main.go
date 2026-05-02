@@ -3,7 +3,7 @@ package directory_layout
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
+	madder_dl "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"
 )
@@ -11,15 +11,8 @@ import (
 type (
 	XDG = xdg.XDG
 
-	Common interface {
-		blob_store_id.LocationTypeGetter
-		cloneUninitialized() uninitializedXDG
-	}
-
-	BlobStore interface {
-		Common
-		MakePathBlobStore(...string) interfaces.DirectoryLayoutPath
-	}
+	BlobStore = madder_dl.BlobStore
+	Common    = madder_dl.Common
 
 	Repo interface {
 		MakeDirData(p ...string) interfaces.DirectoryLayoutPath
@@ -58,23 +51,10 @@ type (
 	}
 )
 
-type (
-	uninitializedXDG interface {
-		BlobStore
-		Repo
-		initialize(XDG) error
-	}
-
-	blobStoreUninitialized interface {
-		BlobStore
-		uninitializedXDG
-	}
-
-	repoUninitialized interface {
-		Repo
-		uninitializedXDG
-	}
-)
+type repoUninitialized interface {
+	Repo
+	initialize(XDG) error
+}
 
 func MakeRepo(
 	storeVersion store_version.Version,
@@ -94,23 +74,9 @@ func MakeBlobStore(
 	storeVersion store_version.Version,
 	xdg XDG,
 ) (BlobStore, error) {
-	var blobStore blobStoreUninitialized = &v3{}
-
-	if err := blobStore.initialize(xdg); err != nil {
-		err = errors.Wrap(err)
-		return nil, err
-	}
-
-	return blobStore, nil
+	return madder_dl.MakeBlobStore(xdg)
 }
 
 func CloneBlobStoreWithXDG(layout BlobStore, xdg XDG) (BlobStore, error) {
-	clone := layout.cloneUninitialized()
-
-	if err := clone.initialize(xdg); err != nil {
-		err = errors.Wrap(err)
-		return nil, err
-	}
-
-	return clone, nil
+	return madder_dl.CloneBlobStoreWithXDG(layout, xdg)
 }

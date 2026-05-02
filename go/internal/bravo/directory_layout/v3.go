@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/lib/bravo/errors"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
@@ -55,13 +54,6 @@ func (layout v3) MakeDirCache(
 	targets ...string,
 ) interfaces.DirectoryLayoutPath {
 	return layout.makeDirOrPanic(layout.xdg.GetDirCache(), targets...)
-}
-
-func (layout v3) MakePathBlobStore(
-	targets ...string,
-) interfaces.DirectoryLayoutPath {
-	return layout.xdg.GetDirData().MakePath(
-		stringSliceJoin("blob_stores", targets)...)
 }
 
 func (layout v3) FileCacheDormant() string {
@@ -156,14 +148,3 @@ func (layout v3) DirFirstBlobStoreBlobs() string {
 	panic(errors.Err405MethodNotAllowed)
 }
 
-func (layout v3) GetLocationType() blob_store_id.LocationType {
-	if layout.xdg.IsOverridden() {
-		return blob_store_id.LocationTypeCwd
-	}
-
-	return blob_store_id.LocationTypeXDGUser
-}
-
-func (layout v3) cloneUninitialized() uninitializedXDG {
-	return &layout
-}

@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_fmt_digest"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/blob_stores"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/object_finalizer"
