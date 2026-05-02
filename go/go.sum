@@ -18,6 +18,8 @@ github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0 h1:+8QbL84Q9IVcKUPm0DJ4
 github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0/go.mod h1:f/eBRNyz3TVY+bB5bnNmYioJEgNrmwbvscFq29VFyXc=
 github.com/amarbel-llc/madder/go v0.3.6-0.20260502125151-088bc4bdfd6d h1:FRiwzDnAvNo3OGuSywravBRqKdZWyi0iBmaMWAiNahE=
 github.com/amarbel-llc/madder/go v0.3.6-0.20260502125151-088bc4bdfd6d/go.mod h1:smcngGTxEmTD9topO9eMjNjoi+lj3T3JVXtmRxNaMdA=
+github.com/amarbel-llc/madder/go v0.3.6-0.20260502133533-54c1eab59d30 h1:44oR/kqLVFxUgQHcqcl9YPCpgb5IjZ8VXps+mSDmmRA=
+github.com/amarbel-llc/madder/go v0.3.6-0.20260502133533-54c1eab59d30/go.mod h1:smcngGTxEmTD9topO9eMjNjoi+lj3T3JVXtmRxNaMdA=
 github.com/amarbel-llc/purse-first/libs/dewey v0.0.4 h1:UUwBn2i/ZfsDruY4tfEl9VokANMQGwHWohbo1/aYoQE=
 github.com/amarbel-llc/purse-first/libs/dewey v0.0.4/go.mod h1:St7g+dt6IXHvkPOWaDto5qk+LJrALrWiDR6WLJdBnAE=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12 h1:vAuX5weS0oDmbA4d+Y+FQdIKjFZDInUtANnZmFOqR9c=
