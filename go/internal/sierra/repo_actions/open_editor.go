@@ -17,6 +17,7 @@ func (c OpenEditor) Run(
 
 	if e, err = editor.MakeEditorWithVimOptions(
 		c.PrinterHeader(),
+		c.GetEnvRepo(),
 		c.VimOptions,
 	); err != nil {
 		err = errors.Wrap(err)

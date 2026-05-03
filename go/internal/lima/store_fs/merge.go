@@ -15,6 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
+	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
@@ -484,6 +485,7 @@ func (store *Store) RunMergeTool(
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = dodder_exec.MergeOSEnvWithAdder(store.envRepo)
 
 	ui.Log().Print(cmd.Env)
 

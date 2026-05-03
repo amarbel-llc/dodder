@@ -12,21 +12,25 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type edgeExplorer struct {
 	objectStore sku.RepoStore
 	blobStore   mad_domain_interfaces.BlobStore
+	envAdder    interfaces.EnvVarsAdder
 }
 
 func MakeEdgeExplorer(
 	objectStore sku.RepoStore,
 	blobStore mad_domain_interfaces.BlobStore,
+	envAdder interfaces.EnvVarsAdder,
 ) sku.EdgeExplorer {
 	return &edgeExplorer{
 		objectStore: objectStore,
 		blobStore:   blobStore,
+		envAdder:    envAdder,
 	}
 }
 
@@ -115,9 +119,14 @@ func (e *edgeExplorer) discoverBlobEdges(
 
 	var stdout io.WriterTo
 
+	env := make(interfaces.EnvVars)
+	if e.envAdder != nil {
+		e.envAdder.AddToEnvVars(env)
+	}
+
 	if stdout, err = script_config.MakeWriterToWithStdin(
 		&referencesConfig.ScriptConfig,
-		nil,
+		env,
 		blobReader,
 	); err != nil {
 		if referencesConfig.Optional {

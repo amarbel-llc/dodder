@@ -1,8 +1,6 @@
 package env_dir
 
 import (
-	"os"
-
 	"code.linenisgreat.com/dodder/go/lib/bravo/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"
@@ -28,14 +26,6 @@ func (env *beforeXDG) initialize(
 	}
 
 	env.dryRun = debugOptions.DryRun
-
-	// TODO switch to useing MakeCommonEnv()
-	{
-		if err = os.Setenv(EnvBin, env.xdgInitArgs.ExecPath); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
-	}
 
 	return err
 }

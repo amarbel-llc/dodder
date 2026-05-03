@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -125,6 +126,7 @@ func (c Exec) runBash(
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+	cmd.Env = dodder_exec.MergeOSEnvWithAdder(u.GetEnvRepo())
 
 	if err = cmd.Run(); err != nil {
 		err = errors.Wrap(err)

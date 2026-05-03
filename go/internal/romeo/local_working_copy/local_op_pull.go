@@ -43,6 +43,7 @@ func (local *Repo) pullQueryGroupFromWorkingCopy(
 	explorer := store.MakeEdgeExplorer(
 		remote.GetObjectStore(),
 		remote.GetBlobStore(),
+		local.GetEnvRepo(),
 	)
 
 	edges, err := expandEdges(list, remote.GetObjectStore(), explorer)

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
 	"code.linenisgreat.com/dodder/go/lib/0/primordial"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -21,7 +22,8 @@ type Editor struct {
 
 	options []string
 
-	ui interfaces.FuncIter[string]
+	ui       interfaces.FuncIter[string]
+	envAdder interfaces.EnvVarsAdder
 }
 
 func getEditorUtility() string {
@@ -40,10 +42,12 @@ func getEditorUtility() string {
 
 func MakeEditorWithVimOptions(
 	funcUI interfaces.FuncIter[string],
+	envAdder interfaces.EnvVarsAdder,
 	options []string,
 ) (Editor, error) {
 	return MakeEditor(
 		funcUI,
+		envAdder,
 		map[Type][]string{
 			TypeVim: options,
 		},
@@ -52,10 +56,12 @@ func MakeEditorWithVimOptions(
 
 func MakeEditor(
 	funcUI interfaces.FuncIter[string],
+	envAdder interfaces.EnvVarsAdder,
 	options map[Type][]string,
 ) (editor Editor, err error) {
 	editor.utility = getEditorUtility()
 	editor.ui = funcUI
+	editor.envAdder = envAdder
 
 	var utility []string
 
@@ -129,6 +135,8 @@ func (editor Editor) openWithArgs(fs ...string) (err error) {
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	cmd.Env = dodder_exec.MergeOSEnvWithAdder(editor.envAdder)
 
 	if err = cmd.Run(); err != nil {
 		err = errors.Wrapf(err, "Cmd: %s", cmd)

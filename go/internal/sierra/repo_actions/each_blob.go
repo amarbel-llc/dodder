@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/google/shlex"
 )
@@ -57,6 +58,7 @@ func (c EachBlob) Run(
 	cmd.Stdout = c.GetOutFile()
 	cmd.Stdin = c.GetInFile()
 	cmd.Stderr = c.GetErrFile()
+	cmd.Env = dodder_exec.MergeOSEnvWithAdder(c.GetEnvRepo())
 
 	if err = cmd.Run(); err != nil {
 		err = errors.Wrap(err)

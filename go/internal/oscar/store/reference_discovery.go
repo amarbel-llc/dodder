@@ -125,11 +125,14 @@ func (store *Store) discoverReferences(
 
 	defer errors.DeferredCloser(&err, blobReader)
 
+	env := make(interfaces.EnvVars)
+	store.GetEnvRepo().AddToEnvVars(env)
+
 	var stdout io.WriterTo
 
 	if stdout, err = script_config.MakeWriterToWithStdin(
 		&objectReferences.ScriptConfig,
-		nil,
+		env,
 		blobReader,
 	); err != nil {
 		if objectReferences.Optional {

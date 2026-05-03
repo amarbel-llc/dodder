@@ -51,6 +51,7 @@ func (store *Store) openZettels(
 
 	if e, err = editor.MakeEditorWithVimOptions(
 		ph,
+		store.envRepo,
 		vim_cli_options_builder.New().
 			WithCursorLocation(2, 3).
 			WithFileType("dodder-object").

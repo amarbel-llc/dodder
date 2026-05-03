@@ -322,7 +322,8 @@ func (factory formatterComponents) writeBlob(
 	if factory.BlobFormatter != nil {
 		var writerTo io.WriterTo
 
-		env := factory.EnvDir.MakeCommonEnv()
+		env := make(interfaces.EnvVars)
+		factory.EnvDir.AddToEnvVars(env)
 
 		if factory.BlobTreeDir != "" {
 			env["DODDER_BLOB_TREE"] = factory.BlobTreeDir

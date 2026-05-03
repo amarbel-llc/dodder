@@ -255,7 +255,8 @@ func (cmd *FormatObject) FormatFromStdin(
 		return err
 	}
 
-	env := repo.GetEnvRepo().MakeCommonEnv()
+	env := make(interfaces.EnvVars)
+	repo.GetEnvRepo().AddToEnvVars(env)
 
 	if blobTreeDir != "" {
 		env["DODDER_BLOB_TREE"] = blobTreeDir

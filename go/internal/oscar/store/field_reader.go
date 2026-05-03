@@ -85,11 +85,14 @@ func (store *Store) tryReadFields(
 
 	defer errors.DeferredCloser(&err, blobReader)
 
+	env := make(interfaces.EnvVars)
+	store.GetEnvRepo().AddToEnvVars(env)
+
 	var stdout io.WriterTo
 
 	if stdout, err = script_config.MakeWriterToWithStdin(
 		fieldsReader,
-		nil,
+		env,
 		blobReader,
 	); err != nil {
 		return errors.Wrap(err)
