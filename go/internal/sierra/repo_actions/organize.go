@@ -1,0 +1,210 @@
+package repo_actions
+
+import (
+	"io"
+	"os"
+	"sync"
+
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
+	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
+	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+)
+
+// TODO migrate over to Organize2
+type Organize struct {
+	*repo
+	orgie.Metadata
+	DontUseQueryGroupForOrganizeMetadata bool
+}
+
+func (op Organize) RunWithQueryGroup(
+	qg *queries.Query,
+) (organizeResults orgie.OrganizeResults, err error) {
+	skus := sku.MakeSkuTypeSetMutable()
+	var l sync.RWMutex
+
+	if err = op.GetStore().QueryTransactedAsSkuType(
+		qg,
+		func(co sku.SkuType) (err error) {
+			l.Lock()
+			defer l.Unlock()
+
+			cloned, _ := co.Clone() //repool:owned
+			return skus.Add(cloned)
+		},
+	); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	if organizeResults, err = op.RunWithSkuType(qg, skus); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	return organizeResults, err
+}
+
+// TODO remove
+func (op Organize) RunWithTransacted(
+	qg *queries.Query,
+	transacted sku.TransactedSet,
+) (organizeResults orgie.OrganizeResults, err error) {
+	skus := sku.MakeSkuTypeSetMutable()
+
+	for z := range transacted.All() {
+		clone, _ := sku.CloneSkuTypeFromTransacted( //repool:owned
+			z.GetSku(),
+			checked_out_state.Internal,
+		)
+
+		skus.Add(clone)
+	}
+
+	if organizeResults, err = op.RunWithSkuType(qg, skus); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	return organizeResults, err
+}
+
+func (op Organize) RunWithSkuType(
+	q *queries.Query,
+	skus sku.SkuTypeSet,
+) (organizeResults orgie.OrganizeResults, err error) {
+	organizeResults.Original = skus
+	organizeResults.QueryGroup = q
+
+	var repoId ids.RepoId
+
+	if q != nil {
+		repoId = q.RepoId
+	}
+
+	if organizeResults.QueryGroup == nil ||
+		op.DontUseQueryGroupForOrganizeMetadata {
+		b := op.MakeQueryBuilder(
+			ids.MakeGenre(genres.All()...),
+			nil,
+		).WithExternalLike(
+			skus,
+		)
+
+		if organizeResults.QueryGroup, err = b.BuildQueryGroup(); err != nil {
+			err = errors.Wrap(err)
+			return organizeResults, err
+		}
+	}
+
+	organizeResults.QueryGroup.RepoId = repoId
+
+	organizeFlags := orgie.MakeFlagsWithMetadata(op.Metadata)
+	ApplyToOrganizeOptions(op.repo, &organizeFlags.Options)
+	organizeFlags.Skus = skus
+
+	createOrganizeFileOp := MakeCreateOrganizeFile(
+		op.repo,
+		MakeOrganizeOptionsWithQueryGroup(
+			op.repo,
+			organizeFlags,
+			organizeResults.QueryGroup,
+		),
+	)
+
+	types := queries.GetTypes(organizeResults.QueryGroup)
+
+	if types.Len() == 1 {
+		createOrganizeFileOp.Type = quiter_set.Any(types)
+	}
+
+	var file *os.File
+
+	if file, err = op.GetEnvRepo().GetTempLocal().FileTempWithTemplate(
+		"*." + op.GetConfig().GetFileExtensions().Organize,
+	); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	if organizeResults.Before, err = createOrganizeFileOp.RunAndWrite(
+		file,
+	); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	// TODO refactor into common vim processing loop
+	for {
+		openVimOp := MakeOpenEditor(op.repo)
+		openVimOp.VimOptions = vim_cli_options_builder.New().
+			WithFileType("dodder-organize").
+			Build()
+
+		if err = openVimOp.Run(file.Name()); err != nil {
+			err = errors.Wrap(err)
+			return organizeResults, err
+		}
+
+		// if err = op.Reset(); err != nil {
+		// 	err = errors.Wrap(err)
+		// 	return
+		// }
+
+		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
+
+		if _, err = file.Seek(0, io.SeekStart); err != nil {
+			err = errors.Wrap(err)
+			return organizeResults, err
+		}
+
+		if organizeResults.After, err = readOrganizeTextOp.Run(
+			file,
+			orgie.NewMetadataWithOptionCommentLookup(
+				organizeResults.Before.GetRepoId(),
+				op.GetPrototypeOptionComments(),
+			),
+		); err != nil {
+			if op.handleReadChangesError(op.repo, err) {
+				err = nil
+				continue
+			} else {
+				ui.Err().Printf("aborting organize")
+				return organizeResults, err
+			}
+		}
+
+		break
+	}
+
+	return organizeResults, err
+}
+
+func (cmd Organize) handleReadChangesError(
+	envUI env_ui.Env,
+	err error,
+) (tryAgain bool) {
+	var errorRead orgie.ErrorRead
+
+	if err != nil && !errors.As(err, &errorRead) {
+		ui.Err().Printf("unrecoverable organize read failure: %s", err)
+		tryAgain = false
+		return tryAgain
+	}
+
+	return envUI.Retry(
+		"reading changes failed",
+		"edit and try again?",
+		err,
+	)
+}

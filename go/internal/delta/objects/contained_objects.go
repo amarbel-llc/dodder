@@ -3,13 +3,13 @@ package objects
 import (
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
+	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"
-	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type ContainedObjects collections_slice.Slice[containedObject]

@@ -3,8 +3,8 @@ package directory_layout
 import (
 	"fmt"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type v3 struct {
@@ -147,4 +147,3 @@ func (layout v3) DirFirstBlobStoreInventoryLists() string {
 func (layout v3) DirFirstBlobStoreBlobs() string {
 	panic(errors.Err405MethodNotAllowed)
 }
-

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/delta/collections"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/collections"
 )
 
 // validCoordinateIds computes the set of valid coordinate IDs for a

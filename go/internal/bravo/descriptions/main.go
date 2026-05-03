@@ -6,8 +6,8 @@ import (
 	"unicode/utf8"
 
 	"code.linenisgreat.com/dodder/go/internal/0/doddish"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
 )
 
 // TODO-P1 move to catgut.String

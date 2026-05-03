@@ -1,0 +1,594 @@
+package stream_index
+
+import (
+	"bytes"
+	"io"
+
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/fields"
+	"code.linenisgreat.com/dodder/go/internal/0/key_bytes"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/charlie/tag_paths"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+)
+
+func makeBinary(s ids.Sigil) binaryDecoder {
+	return binaryDecoder{
+		queryGroup: sku.MakePrimitiveQueryGroupWithSigils(s),
+		sigil:      s,
+	}
+}
+
+func makeBinaryWithQueryGroup(
+	query sku.PrimitiveQueryGroup,
+	sigil ids.Sigil,
+) binaryDecoder {
+	if query == nil {
+		query = sku.MakePrimitiveQueryGroup()
+	}
+
+	if !query.HasHidden() {
+		sigil.Add(ids.SigilHidden)
+	}
+
+	return binaryDecoder{
+		queryGroup: query,
+		sigil:      sigil,
+	}
+}
+
+type binaryDecoder struct {
+	// TODO unembed
+	bytes.Buffer
+	// TODO unembed
+	binaryField
+
+	sigil         ids.Sigil
+	queryGroup    sku.PrimitiveQueryGroup
+	limitedReader io.LimitedReader
+}
+
+// TODO https://github.com/amarbel-llc/dodder/issues/27
+// Transition to panic semantics
+func (decoder *binaryDecoder) readFormatExactly(
+	readerAt io.ReaderAt,
+	object *objectWithCursorAndSigil,
+) (n int64, err error) {
+	decoder.binaryField.Reset()
+	decoder.Buffer.Reset()
+
+	var n1 int
+	var n2 int64
+
+	// TODO pool this
+	bites := make([]byte, object.ContentLength)
+
+	n1, err = readerAt.ReadAt(bites, object.Offset)
+	n += int64(n1)
+
+	if err == io.EOF {
+		err = nil
+	} else if err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
+	buffer := bytes.NewBuffer(bites)
+
+	n1, decoder.ContentLength, err = ohio.ReadFixedUInt16(buffer)
+	n += int64(n1)
+
+	if err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
+	n2, err = decoder.readSigil(object, buffer)
+	n += n2
+
+	if err != nil {
+		ui.Debug().Printf("%T: %x", readerAt, buffer.Bytes())
+		err = errors.Wrapf(
+			err,
+			"ExpectedContentLength: %d, ActualBytes: %d",
+			decoder.ContentLength,
+			buffer.Len(),
+		)
+		return n, err
+	}
+
+	for buffer.Len() > 0 {
+		n2, err = decoder.binaryField.ReadFrom(buffer)
+		n += n2
+
+		if err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+
+		if err = decoder.readFieldKey(object.Transacted); err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+	}
+
+	return n, err
+}
+
+func (decoder *binaryDecoder) readFormatAndMatchSigil(
+	reader io.Reader,
+	object *objectWithCursorAndSigil,
+) (n int64, err error) {
+	decoder.binaryField.Reset()
+	decoder.Buffer.Reset()
+
+	var n1 int
+	var n2 int64
+
+	// loop thru entries to find the next one that matches the current sigil
+	// when found, break the loop and deserialize it and return
+	for {
+		n1, decoder.ContentLength, err = ohio.ReadFixedUInt16(reader)
+		n += int64(n1)
+
+		if err != nil {
+			if errors.IsEOF(err) {
+				// no-op
+				// TODO why might this ever be the case
+			} else if errors.Is(err, io.ErrUnexpectedEOF) && n == 0 {
+				err = io.EOF
+			}
+
+			err = errors.WrapExceptSentinel(err, io.EOF)
+
+			return n, err
+		}
+
+		contentLength64 := int64(decoder.ContentLength)
+
+		decoder.limitedReader.R = reader
+		decoder.limitedReader.N = contentLength64
+
+		n2, err = decoder.readSigil(object, &decoder.limitedReader)
+		n += n2
+
+		if err != nil {
+			err = errors.Wrapf(
+				err,
+				"ExpectedContentLenght: %d",
+				contentLength64,
+			)
+			return n, err
+		}
+
+		n2, err = decoder.binaryField.ReadFrom(&decoder.limitedReader)
+		n += n2
+
+		if err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+
+		if err = decoder.readFieldKey(object.Transacted); err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+
+		genre := genres.Must(object.Transacted)
+		query, ok := decoder.queryGroup.Get(genre)
+
+		// TODO-D4 use query to decide whether to read and inflate or skip
+		if ok {
+			sigil := query.GetSigil()
+
+			wantsHidden := sigil.IncludesHidden()
+			wantsHistory := sigil.IncludesHistory()
+			isLatest := object.Contains(ids.SigilLatest)
+			isHidden := object.Contains(ids.SigilHidden)
+
+			if (wantsHistory && wantsHidden) ||
+				(wantsHidden && isLatest) ||
+				(wantsHistory && !isHidden) ||
+				(isLatest && !isHidden) {
+				break
+			}
+
+			if query.ContainsObjectId(object.GetObjectId()) &&
+				(sigil.ContainsOneOf(ids.SigilHistory) ||
+					object.ContainsOneOf(ids.SigilLatest)) {
+				break
+			}
+		}
+
+		// TODO-D4 replace with buffered seeker
+		// discard the next record
+		if _, err = io.Copy(io.Discard, &decoder.limitedReader); err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+	}
+
+	for decoder.limitedReader.N > 0 {
+		n2, err = decoder.binaryField.ReadFrom(&decoder.limitedReader)
+		n += n2
+
+		if err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+
+		if err = decoder.readFieldKey(object.Transacted); err != nil {
+			err = errors.Wrapf(err, "Sku: %#v", object.Transacted)
+			return n, err
+		}
+	}
+
+	return n, err
+}
+
+var errExpectedSigil = newPkgError("expected sigil")
+
+func (decoder *binaryDecoder) readSigil(
+	object *objectWithCursorAndSigil,
+	reader io.Reader,
+) (n int64, err error) {
+	if n, err = decoder.binaryField.ReadFrom(reader); err != nil {
+		err = errors.Wrapf(err, "Cursor: %q", object.Cursor)
+		return n, err
+	}
+
+	if decoder.Key != key_bytes.Sigil {
+		err = errors.Wrapf(
+			errExpectedSigil,
+			"Key: %s, ContentLength: %d, Reader: %T",
+			decoder.Key,
+			decoder.ContentLength,
+			reader,
+		)
+		return n, err
+	}
+
+	if _, err = object.Sigil.ReadFrom(&decoder.Content); err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
+	object.SetDormant(object.IncludesHidden())
+
+	return n, err
+}
+
+func (decoder *binaryDecoder) readFieldKey(
+	object *sku.Transacted,
+) (err error) {
+	metadata := object.GetMetadataMutable()
+
+	switch decoder.Key {
+	case key_bytes.Blob:
+		if err = metadata.GetBlobDigestMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.RepoPubKey:
+		if err = metadata.GetRepoPubKeyMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.RepoSig:
+		if err = metadata.GetObjectSigMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.Description:
+		if err = metadata.GetDescriptionMutable().Set(
+			decoder.Content.String(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.Tag:
+		var tag ids.TagStruct
+
+		if err = tag.Set(decoder.Content.String()); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		if err = object.AddTagPtrFast(tag); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.ObjectId:
+		if _, err = object.GetObjectIdMutable().ReadFrom(&decoder.Content); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.Tai:
+		if _, err = metadata.GetTaiMutable().ReadFrom(
+			&decoder.Content,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.Type:
+		marshaler := markl.MakeMutableLockCoderValueRequired(
+			metadata.GetTypeLockMutable(),
+		)
+
+		if err = marshaler.UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.References:
+		contentBytes := decoder.Content.Bytes()
+		nullIdx := bytes.IndexByte(contentBytes, 0)
+
+		var keyStr string
+		if nullIdx == -1 {
+			keyStr = string(contentBytes)
+		} else {
+			keyStr = string(contentBytes[:nullIdx])
+		}
+
+		var refId ids.SeqId
+		if err = refId.Set(keyStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		if err = metadata.AddReference(refId); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		refLock := metadata.GetReferencedObjectLockMutable(refId)
+		marshaler := markl.MakeMutableLockCoderValueRequired(refLock)
+
+		if err = marshaler.UnmarshalBinary(contentBytes); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.ReferenceAliases:
+		contentBytes := decoder.Content.Bytes()
+		nullIdx := bytes.IndexByte(contentBytes, 0)
+
+		if nullIdx == -1 {
+			err = errors.Errorf("invalid reference alias field: no separator")
+			return err
+		}
+
+		refIdStr := string(contentBytes[:nullIdx])
+		alias := string(contentBytes[nullIdx+1:])
+
+		var refId ids.SeqId
+		if err = refId.Set(refIdStr); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		if err = metadata.SetReferenceAlias(refId, alias); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.BlobReferences:
+		contentBytes := decoder.Content.Bytes()
+
+		// Read 2-byte length prefix for markl.Id bytes
+		if len(contentBytes) < 2 {
+			err = errors.Errorf("blob reference field too short")
+			return err
+		}
+
+		var idLen uint16
+		contentReader := bytes.NewReader(contentBytes)
+
+		if _, idLen, err = ohio.ReadFixedUInt16(contentReader); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		remaining := contentBytes[2:]
+
+		if int(idLen) > len(remaining) {
+			err = errors.Errorf(
+				"blob reference id length %d exceeds content length %d",
+				idLen,
+				len(remaining),
+			)
+			return err
+		}
+
+		idBytes := remaining[:idLen]
+		remaining = remaining[idLen:]
+
+		var blobId markl.Id
+		if err = blobId.UnmarshalBinary(idBytes); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
+		var aliasBytes []byte
+
+		// Detect format: null byte sentinel means new format with type lock
+		if len(remaining) > 0 && remaining[0] == 0 {
+			// New format: \x00 [2-byte typeLockLen] [typeLockBytes] [aliasBytes]
+			remaining = remaining[1:]
+
+			if len(remaining) >= 2 {
+				var typeLockLen uint16
+				typeLockReader := bytes.NewReader(remaining)
+
+				if _, typeLockLen, err = ohio.ReadFixedUInt16(typeLockReader); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				remaining = remaining[2:]
+
+				if int(typeLockLen) > len(remaining) {
+					err = errors.Errorf(
+						"blob reference type lock length %d exceeds remaining %d",
+						typeLockLen,
+						len(remaining),
+					)
+					return err
+				}
+
+				if typeLockLen > 0 {
+					typeLockBytes := remaining[:typeLockLen]
+					remaining = remaining[typeLockLen:]
+
+					marshaler := markl.MakeMutableLockCoderValueNotRequired(&typeLock)
+
+					if err = marshaler.UnmarshalBinary(typeLockBytes); err != nil {
+						err = errors.Wrap(err)
+						return err
+					}
+				}
+			}
+
+			aliasBytes = remaining
+		} else {
+			// Old format: [aliasBytes]
+			aliasBytes = remaining
+		}
+
+		metadata.AddBlobReference(blobId, typeLock)
+
+		if len(aliasBytes) > 0 {
+			if err = metadata.SetBlobReferenceAlias(
+				blobId,
+				string(aliasBytes),
+			); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
+	case key_bytes.SigParentMetadataParentObjectId:
+		if err = metadata.GetMotherObjectSigMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.DigestMetadataParentObjectId:
+		if err = metadata.GetObjectDigestMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.DigestMetadataWithoutTai:
+		if err = metadata.GetIndexMutable().GetSelfWithoutTaiMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.ExternalObjectId:
+		if err = object.GetExternalObjectIdMutable().UnmarshalBinary(
+			decoder.Content.Bytes(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+	case key_bytes.CacheTagImplicit:
+		var tag ids.TagStruct
+
+		if err = tag.Set(decoder.Content.String()); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		metadata.GetIndexMutable().AddTagsImplicitPtr(tag)
+
+	case key_bytes.CacheTags:
+		var tag tag_paths.PathWithType
+
+		if _, err = tag.ReadFrom(&decoder.Content); err != nil {
+			err = errors.WrapExceptSentinel(err, io.EOF)
+			return err
+		}
+
+		metadata.GetIndexMutable().GetTagPaths().AddPath(&tag)
+
+	case key_bytes.Field:
+		contentBytes := decoder.Content.Bytes()
+		// Wire format: key\x00value\x00typeBlobDigest
+		parts := bytes.SplitN(contentBytes, []byte{0}, 3)
+
+		if len(parts) < 2 {
+			err = errors.Errorf("invalid field entry: no null separator")
+			return err
+		}
+
+		field := fields.Field{
+			Key:   string(parts[0]),
+			Value: string(parts[1]),
+			Type:  fields.TypeUserData,
+		}
+
+		if len(parts) == 3 && len(parts[2]) > 0 {
+			digestDecoder := markl.IdBinaryDecodingTypeData{
+				MarklIdMutable: &field.TypeBlobDigest,
+			}
+
+			if err = digestDecoder.UnmarshalBinary(parts[2]); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
+		metadata.GetIndexMutable().GetFieldsMutable().Append(field)
+
+	default:
+		err = errors.ErrorWithStackf("unsupported key: %s", decoder.Key)
+		return err
+	}
+
+	return err
+}
+
+func unmarshalMarklId(id domain_interfaces.MarklIdMutable, bites []byte) (err error) {
+	unmarshaler := markl.IdBinaryDecodingFormatTypeData{
+		MarklIdMutable: id,
+	}
+
+	if err = unmarshaler.UnmarshalBinary(
+		bites,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
+}

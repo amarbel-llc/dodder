@@ -3,15 +3,16 @@
 package repo_configs
 
 import (
+	"fmt"
+	"strings"
+
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
-	"fmt"
+	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
-	"strings"
 )
 
 var (

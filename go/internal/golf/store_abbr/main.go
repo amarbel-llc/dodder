@@ -1,0 +1,309 @@
+package store_abbr
+
+import (
+	"encoding"
+	"encoding/binary"
+	"io"
+	"sync"
+
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	"code.linenisgreat.com/dodder/go/internal/0/options_print"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/tridex"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+)
+
+type indexCodable struct {
+	SeenIds  map[genres.Genre]interfaces.TridexMutable
+	MarklIds indexNotZettelId[markl.Id, *markl.Id]
+	ZettelId indexZettelId
+}
+
+type indexAbbr struct {
+	options_print.Options
+
+	lock    sync.Locker
+	once    *sync.Once
+	envRepo env_repo.Env
+
+	path string
+
+	indexCodable
+
+	didRead    bool
+	hasChanges bool
+}
+
+var _ sku.IdIndex = &indexAbbr{}
+
+func NewIndex(
+	options options_print.Options,
+	envRepo env_repo.Env,
+) (index *indexAbbr, err error) {
+	index = &indexAbbr{
+		Options: options,
+		lock:    &sync.Mutex{},
+		once:    &sync.Once{},
+		path:    envRepo.DirDataIndex("Abbr"),
+		envRepo: envRepo,
+		indexCodable: indexCodable{
+			SeenIds: map[genres.Genre]interfaces.TridexMutable{
+				genres.Repo:   tridex.Make(),
+				genres.Tag:    tridex.Make(),
+				genres.Type:   tridex.Make(),
+				genres.Zettel: tridex.Make(),
+			},
+			MarklIds: indexNotZettelId[markl.Id, *markl.Id]{
+				ObjectIds: tridex.Make(),
+			},
+			ZettelId: indexZettelId{
+				Heads: tridex.Make(),
+				Tails: tridex.Make(),
+			},
+		},
+	}
+
+	index.ZettelId.readFunc = index.readIfNecessary
+	index.MarklIds.readFunc = index.readIfNecessary
+
+	return index, err
+}
+
+func (index *indexAbbr) Flush() (err error) {
+	index.lock.Lock()
+	defer index.lock.Unlock()
+
+	if !index.hasChanges {
+		ui.Log().Print("no changes")
+		return err
+	}
+
+	var namedBlobWriter domain_interfaces.BlobWriter
+
+	if namedBlobWriter, err = index.envRepo.MakeNamedBlobWriter(
+		index.path,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	defer errors.DeferredCloser(&err, namedBlobWriter)
+
+	bufferedWriter, repool := pool.GetBufferedWriter(namedBlobWriter)
+	defer repool()
+
+	defer errors.DeferredFlusher(&err, bufferedWriter)
+
+	tridexes := []interfaces.TridexMutable{
+		index.SeenIds[genres.Repo],
+		index.SeenIds[genres.Tag],
+		index.SeenIds[genres.Type],
+		index.SeenIds[genres.Zettel],
+		index.MarklIds.ObjectIds,
+		index.ZettelId.Heads,
+		index.ZettelId.Tails,
+	}
+
+	for _, t := range tridexes {
+		marshaler := t.(encoding.BinaryMarshaler)
+
+		var bs []byte
+
+		if bs, err = marshaler.MarshalBinary(); err != nil {
+			err = errors.Wrapf(err, "failed to marshal tridex")
+			return err
+		}
+
+		if err = binary.Write(bufferedWriter, binary.BigEndian, uint32(len(bs))); err != nil {
+			err = errors.Wrapf(err, "failed to write tridex length")
+			return err
+		}
+
+		if _, err = bufferedWriter.Write(bs); err != nil {
+			err = errors.Wrapf(err, "failed to write tridex data")
+			return err
+		}
+	}
+
+	return err
+}
+
+func (index *indexAbbr) readIfNecessary() (err error) {
+	index.once.Do(
+		func() {
+			if index.didRead {
+				return
+			}
+
+			ui.Log().Print("reading")
+
+			index.didRead = true
+
+			var namedBlobReader io.ReadCloser
+
+			if namedBlobReader, err = index.envRepo.MakeNamedBlobReader(index.path); err != nil {
+				if errors.IsNotExist(err) {
+					err = nil
+				} else {
+					err = errors.Wrap(err)
+				}
+
+				return
+			}
+
+			defer errors.DeferredCloser(&err, namedBlobReader)
+
+			bufferedReader, repool := pool.GetBufferedReader(namedBlobReader)
+			defer repool()
+
+			ui.Log().Print("starting decode")
+
+			tridexes := []interfaces.TridexMutable{
+				index.SeenIds[genres.Repo],
+				index.SeenIds[genres.Tag],
+				index.SeenIds[genres.Type],
+				index.SeenIds[genres.Zettel],
+				index.MarklIds.ObjectIds,
+				index.ZettelId.Heads,
+				index.ZettelId.Tails,
+			}
+
+			for _, t := range tridexes {
+				var length uint32
+
+				if err = binary.Read(bufferedReader, binary.BigEndian, &length); err != nil {
+					if err == io.EOF {
+						err = nil
+					} else {
+						ui.Log().Printf("failed to read abbr cache (stale format?), rebuilding: %s", err)
+						err = nil
+					}
+
+					return
+				}
+
+				bs := make([]byte, length)
+
+				if _, err = io.ReadFull(bufferedReader, bs); err != nil {
+					ui.Log().Printf("failed to read abbr cache data (stale format?), rebuilding: %s", err)
+					err = nil
+					return
+				}
+
+				unmarshaler := t.(encoding.BinaryUnmarshaler)
+
+				if err = unmarshaler.UnmarshalBinary(bs); err != nil {
+					ui.Log().Printf("failed to unmarshal abbr cache (stale format?), rebuilding: %s", err)
+					err = nil
+					return
+				}
+			}
+
+			ui.Log().Print("finished decode")
+		},
+	)
+
+	return err
+}
+
+func (index *indexAbbr) GetAbbr() (out ids.Abbr) {
+	out.ZettelId.Expand = index.GetZettelIds().ExpandStringString
+	out.BlobId.Expand = index.GetBlobIds().ExpandStringString
+
+	if index.AbbreviateZettelIds {
+		out.ZettelId.Abbreviate = index.GetZettelIds().Abbreviate
+	}
+
+	if index.AbbreviateMarklIds {
+		out.BlobId.Abbreviate = index.GetBlobIds().Abbreviate
+	}
+
+	return out
+}
+
+func (index *indexAbbr) AddObjectToIdIndex(
+	object *sku.Transacted,
+) (err error) {
+	genre := genres.Must(object.GetGenre())
+
+	switch genre {
+	case genres.Config:
+		return err
+
+	case genres.InventoryList:
+		return err
+
+	case genres.Zettel, genres.Type, genres.Tag, genres.Repo:
+
+	default:
+		err = errors.ErrorWithStackf(
+			"unsupported object id: %qv",
+			object.GetObjectId(),
+		)
+		return err
+	}
+
+	if err = index.readIfNecessary(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	index.hasChanges = true
+
+	objectIdString := object.GetObjectId().String()
+	index.SeenIds[genre].Add(objectIdString)
+
+	if genre == genres.Zettel {
+		var zettelId ids.ZettelId
+
+		if err = zettelId.SetWithSeq(object.GetObjectId().ToSeq()); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		index.ZettelId.Heads.Add(zettelId.GetHead())
+		index.ZettelId.Tails.Add(zettelId.GetTail())
+	}
+
+	for tag := range object.GetMetadata().AllTags() {
+		index.SeenIds[genres.Tag].Add(tag.String())
+	}
+
+	// TODO add other markl ids
+	index.MarklIds.ObjectIds.Add(
+		object.GetBlobDigest().String(),
+	)
+
+	index.SeenIds[genres.Type].Add(object.GetType().String())
+	index.SeenIds[genres.Repo].Add(object.GetRepoId().String())
+
+	return err
+}
+
+func (index *indexAbbr) GetZettelIds() sku.IdAbbrIndexGeneric[ids.ZettelId, *ids.ZettelId] {
+	return &index.ZettelId
+}
+
+func (index *indexAbbr) GetBlobIds() sku.IdAbbrIndexGeneric[markl.Id, *markl.Id] {
+	return &index.MarklIds
+}
+
+func (index *indexAbbr) GetSeenIds() map[genres.Genre]interfaces.Collection[string] {
+	output := make(
+		map[genres.Genre]interfaces.Collection[string],
+		len(index.SeenIds),
+	)
+
+	for genre, tridex := range index.SeenIds {
+		output[genre] = tridex
+	}
+
+	return output
+}

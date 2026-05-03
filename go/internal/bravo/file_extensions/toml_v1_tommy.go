@@ -4,9 +4,10 @@ package file_extensions
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
-	"strings"
 )
 
 var (

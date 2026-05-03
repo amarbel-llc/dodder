@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 func TestWriter1(t1 *testing.T) {

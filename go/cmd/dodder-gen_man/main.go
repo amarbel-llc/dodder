@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/golf/man"
-	"code.linenisgreat.com/dodder/go/internal/victor/commands_dodder"
+	"code.linenisgreat.com/dodder/go/internal/echo/man"
+	"code.linenisgreat.com/dodder/go/internal/uniform/commands_dodder"
 )
 
 // Populated at link time by the fork's auto-injected -ldflags

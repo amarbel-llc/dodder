@@ -2,8 +2,8 @@ package zettel_id_log
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	charlie_zil "code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
 type (

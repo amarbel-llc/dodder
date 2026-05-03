@@ -7,10 +7,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/key_strings"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
 )
 
 type (

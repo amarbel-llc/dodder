@@ -2,8 +2,8 @@ package workspace_config_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 )
 
 type (

@@ -3,10 +3,10 @@ package ids
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
+	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_ptr"
 )
 

@@ -3,11 +3,11 @@ package objects
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/quiter_set"
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 // TODO transform into two views that satisfy the Metadata/MetadataMutable

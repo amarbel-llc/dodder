@@ -3,9 +3,9 @@ package tag_blobs_wasm
 import (
 	"context"
 
-	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal_experimental/hotel/sku_wasm"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 )
 
 type WasmV1 struct {

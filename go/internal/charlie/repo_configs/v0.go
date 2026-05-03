@@ -5,8 +5,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
+	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 )
 
 //go:generate tommy generate

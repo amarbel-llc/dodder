@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
+	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type (

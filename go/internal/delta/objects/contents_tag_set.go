@@ -2,8 +2,8 @@ package objects
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type (

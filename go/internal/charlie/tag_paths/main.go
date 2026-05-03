@@ -5,10 +5,10 @@ import (
 	"io"
 	"sort"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type (

@@ -3,7 +3,7 @@
 package store_browser
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/golf/sku"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 

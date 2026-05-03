@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
+	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 )
 
 func StringSansTai(metadata *metadata) string {

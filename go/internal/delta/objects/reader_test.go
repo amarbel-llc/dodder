@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 func Test1(t1 *testing.T) {

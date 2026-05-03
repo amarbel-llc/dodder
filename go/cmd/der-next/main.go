@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
-	"code.linenisgreat.com/dodder/go/internal/victor/commands_dodder"
+	"code.linenisgreat.com/dodder/go/internal/uniform/commands_dodder"
 )
 
 func main() {

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 )
 
 func TestBlech32(t1 *testing.T) {

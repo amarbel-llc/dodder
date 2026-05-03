@@ -1,8 +1,8 @@
 package objects
 
 import (
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 
 var (

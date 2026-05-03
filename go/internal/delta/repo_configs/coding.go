@@ -2,8 +2,8 @@ package repo_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 

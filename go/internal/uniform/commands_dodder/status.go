@@ -1,0 +1,66 @@
+package commands_dodder
+
+import (
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
+	pkg_query "code.linenisgreat.com/dodder/go/internal/juliett/queries"
+	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+)
+
+func init() {
+	utility.AddCmd("status", &Status{})
+}
+
+func (cmd Status) GetDescription() command.Description {
+	return command.Description{
+		Short: "show workspace object state",
+	}
+}
+
+type Status struct {
+	command_components_dodder.LocalWorkingCopyWithQueryGroup
+}
+
+var _ command.CommandWithArgs = (*Status)(nil)
+
+func (cmd *Status) GetArgs() []command.ArgGroup {
+	return []command.ArgGroup{cmd.Query.GetArgGroup()}
+}
+
+func (cmd Status) Run(req command.Request) {
+	localWorkingCopy := cmd.MakeLocalWorkingCopy(req)
+	localWorkingCopy.GetEnvWorkspace().AssertNotTemporary(req)
+
+	query := cmd.MakeQueryResolvingFilenames(
+		req,
+		pkg_query.BuilderOptions(
+			pkg_query.BuilderOptionDefaultGenres(genres.All()...),
+			pkg_query.BuilderOptionDefaultSigil(ids.SigilExternal),
+			pkg_query.BuilderOptionHidden(nil),
+		),
+		localWorkingCopy,
+		req.PopArgs(),
+	)
+
+	printer := localWorkingCopy.PrinterCheckedOut(
+		box_format.CheckedOutHeaderState{},
+	)
+
+	if err := localWorkingCopy.GetStore().QuerySkuType(
+		query,
+		func(co sku.SkuType) (err error) {
+			if err = printer(co); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			return err
+		},
+	); err != nil {
+		localWorkingCopy.Cancel(err)
+	}
+}

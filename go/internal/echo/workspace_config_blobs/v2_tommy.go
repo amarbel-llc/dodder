@@ -3,11 +3,12 @@
 package workspace_config_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
 	"fmt"
+	"strings"
+
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
-	"strings"
 )
 
 var (

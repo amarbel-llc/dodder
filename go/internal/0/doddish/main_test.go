@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
-	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
+	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 )
 
 func TestMain(m *testing.M) {

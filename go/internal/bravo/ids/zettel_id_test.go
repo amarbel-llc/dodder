@@ -3,7 +3,7 @@ package ids
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 )
 
 func TestMake(t1 *testing.T) {

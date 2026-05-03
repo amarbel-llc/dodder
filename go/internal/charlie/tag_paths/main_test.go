@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 )
 
 func TestMain(m *testing.M) {

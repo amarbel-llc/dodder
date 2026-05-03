@@ -3,8 +3,8 @@ package doddish
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 )
 
 type seqTestCase struct {

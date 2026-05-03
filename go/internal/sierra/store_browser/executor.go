@@ -8,10 +8,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/external_state"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/golf/sku"
-	"code.linenisgreat.com/dodder/go/internal/kilo/queries"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type executor struct {

@@ -1,7 +1,7 @@
 package doddish
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
+	"code.linenisgreat.com/dodder/go/lib/0/pool"
 )
 
 func ScanExactlyOneSeqWithDotAllowedInIdenfierFromString(

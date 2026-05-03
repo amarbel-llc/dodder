@@ -3,7 +3,7 @@ package doddish
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/google/go-cmp/cmp"
 )
 

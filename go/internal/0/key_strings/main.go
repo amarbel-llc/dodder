@@ -1,7 +1,7 @@
 package key_strings
 
 import (
-	"code.linenisgreat.com/dodder/go/lib/delta/catgut"
+	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 )
 
 var (

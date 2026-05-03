@@ -3,8 +3,8 @@ package doddish
 import (
 	"slices"
 
+	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 )
 
 type SeqBinaryCoding Seq
