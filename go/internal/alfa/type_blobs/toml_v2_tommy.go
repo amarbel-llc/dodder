@@ -3,12 +3,11 @@
 package type_blobs
 
 import (
-	"fmt"
-	"strings"
-
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
+	"fmt"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
+	"strings"
 )
 
 var (
