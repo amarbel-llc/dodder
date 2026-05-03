@@ -3,10 +3,25 @@ date: 2026-03-15
 promotion-criteria: CheckoutStore interface defined with Compile/Decompile
   methods; at least one concrete store (CalDAV or filesystem-bridge) passes a
   round-trip BATS test for a single object type
-status: experimental
+status: superseded
+superseded-by: 0013-cutting-garden-haustoria.md
+superseded-on: 2026-05-03
 ---
 
 # Pluggable Checkout Stores
+
+> **Superseded by [FDR-0013](0013-cutting-garden-haustoria.md).** The
+> design recorded here defined a `Haustoria` interface and per-store
+> implementations (`haustoria_caldav`, `haustoria_orgmode`, etc.) inside
+> dodder's Go tree. FDR-0013 reframes the haustoria substrate as
+> `cutting-garden` --- a madder-owned protocol whose plugins (CalDAV,
+> orgmode, web-capture, browser, ...) mature outside dodder and serve
+> non-dodder consumers. Dodder consumes the cutting-garden protocol; the
+> in-tree `Haustoria` interface becomes a thin adapter, and the design
+> work below is preserved as the historical record of what was tried
+> first. The implementation status section ("What exists" through
+> "`!task` status field --- resolved") describes shipped behavior that
+> is still load-bearing; FDR-0013 specifies the migration path.
 
 ## Problem Statement
 
