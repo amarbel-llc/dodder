@@ -7,7 +7,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/delta/zettel_id_log"
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
@@ -114,7 +114,7 @@ func (env Env) writeInventoryListLog() {
 	).TypeStruct
 
 	subject := hyphence.TypedBlobEmpty{
-		Type: tipe,
+		Type: tipe.ToMadder(),
 	}
 
 	if _, err := coder.EncodeTo(&subject, file); err != nil {

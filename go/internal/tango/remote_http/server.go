@@ -846,7 +846,7 @@ func (server *Server) handleGetConfigImmutable(
 	request Request,
 ) (response Response) {
 	configLoaded := &genesis_configs.TypedConfigPublic{
-		Type: server.Repo.GetImmutableConfigPublicType(),
+		Type: server.Repo.GetImmutableConfigPublicType().ToMadder(),
 		Blob: server.Repo.GetImmutableConfigPublic(),
 	}
 

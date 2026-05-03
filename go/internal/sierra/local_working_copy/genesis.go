@@ -279,7 +279,7 @@ func (local *Repo) prepareDefaultConfig(
 		return err
 	}
 
-	newConfig.GetMetadataMutable().GetTypeMutable().ResetWithType(typedBlob.Type)
+	newConfig.GetMetadataMutable().GetTypeMutable().ResetWithType(ids.TypeStruct(typedBlob.Type))
 
 	if err = builder.AddObject(newConfig, 0); err != nil {
 		err = errors.Wrap(err)

@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 )
@@ -74,7 +74,7 @@ func DefaultOverlay(
 	defaultType ids.TypeStruct,
 ) TypedBlob {
 	return TypedBlob{
-		Type: ids.DefaultOrPanic(genres.Config),
+		Type: ids.DefaultOrPanic(genres.Config).ToMadder(),
 		Blob: V2{
 			BlobStores: blobStores,
 			Defaults: DefaultsV1{

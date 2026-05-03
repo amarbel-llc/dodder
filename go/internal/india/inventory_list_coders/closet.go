@@ -8,8 +8,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	madder_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/box_format"
@@ -138,7 +139,7 @@ func (closet Closet) WriteObjectToWriter(
 ) (n int64, err error) {
 	// Create TypedBlob and reset its Blob field directly from source
 	typedBlob := &hyphence.TypedBlob[sku.Transacted]{
-		Type: tipe,
+		Type: tipe.ToMadder(),
 		// Blob field is zero-value sku.Transacted
 	}
 	sku.TransactedResetter.ResetWith(&typedBlob.Blob, object)
@@ -198,7 +199,7 @@ func (closet Closet) WriteTypedBlobToWriter(
 
 	if _, err = decoder.EncodeTo(
 		&hyphence.TypedBlob[sku.Seq]{
-			Type: tipe,
+			Type: tipe.ToMadder(),
 			Blob: seq,
 		},
 		bufferedWriter,
@@ -233,7 +234,7 @@ func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
 
 	if _, err = blobEncoder.EncodeTo(
 		&hyphence.TypedBlob[sku.Seq]{
-			Type: tipe,
+			Type: tipe.ToMadder(),
 			Blob: seq,
 		},
 		digestBufWriter,
@@ -257,7 +258,7 @@ func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
 
 	if n, err = encoder.EncodeTo(
 		&hyphence.TypedBlob[sku.Seq]{
-			Type:       tipe,
+			Type:       tipe.ToMadder(),
 			BlobDigest: blobDigest,
 			Blob:       seq,
 		},
@@ -349,7 +350,7 @@ func (closet Closet) AllDecodedObjectsFromStream(
 
 		if _, err := decoder.DecodeFrom(
 			&hyphence.TypedBlob[funcIterSeqError]{
-				Type: ids.TypeStruct{},
+				Type: madder_ids.TypeStruct{},
 				Blob: func(object *sku.Transacted, err error) bool {
 					return yield(object, err)
 				},
@@ -400,7 +401,7 @@ func (closet Closet) AllDecodedObjectsFromStreamWithBlobDigestValidation(
 		defer repoolBufferedReader()
 
 		typedBlob := &hyphence.TypedBlob[funcIterSeqError]{
-			Type: ids.TypeStruct{},
+			Type: madder_ids.TypeStruct{},
 			Blob: func(object *sku.Transacted, err error) bool {
 				return yield(object, err)
 			},
@@ -450,7 +451,7 @@ func (closet Closet) IterInventoryListBlobSkusFromBlobStore(
 
 		if _, err := decoder.DecodeFrom(
 			&hyphence.TypedBlob[funcIterSeq]{
-				Type: tipe,
+				Type: tipe.ToMadder(),
 				Blob: func(object *sku.Transacted) bool {
 					return yield(object, nil)
 				},
@@ -477,7 +478,7 @@ func (closet Closet) IterInventoryListBlobSkusFromReader(
 
 		if _, err := decoder.DecodeFrom(
 			&hyphence.TypedBlob[funcIterSeq]{
-				Type: tipe,
+				Type: tipe.ToMadder(),
 				Blob: func(object *sku.Transacted) bool {
 					return yield(object, nil)
 				},

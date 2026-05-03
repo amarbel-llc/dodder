@@ -8,8 +8,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	madder_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
@@ -72,7 +73,7 @@ func Make(
 	}
 
 	object := workspace_config_blobs.TypedConfig{
-		Type: ids.TypeStruct{},
+		Type: madder_ids.TypeStruct{},
 	}
 
 	dir := outputEnv.GetCwd()
@@ -367,7 +368,7 @@ func (env *env) GetWorkspaceConfigTyped() workspace_config_blobs.TypedConfig {
 	typeWorkspaceConfig := ids.GetOrPanic(typeString).TypeStruct
 
 	return workspace_config_blobs.TypedConfig{
-		Type: typeWorkspaceConfig,
+		Type: typeWorkspaceConfig.ToMadder(),
 		Blob: env.blob,
 	}
 }
@@ -455,7 +456,7 @@ func (env *env) CreateWorkspace(
 	typeWorkspaceConfig := ids.GetOrPanic(typeString).TypeStruct
 
 	object := workspace_config_blobs.TypedConfig{
-		Type: typeWorkspaceConfig,
+		Type: typeWorkspaceConfig.ToMadder(),
 		Blob: env.blob,
 	}
 

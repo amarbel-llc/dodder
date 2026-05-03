@@ -242,7 +242,7 @@ func (e *edgeExplorer) getReferencesConfig(
 	}
 
 	typedBlob := type_blobs.TypedBlob{
-		Type: ids.MustTypeStruct(tipeString),
+		Type: ids.MustTypeStruct(tipeString).ToMadder(),
 	}
 
 	bufferedReader, repoolBufferedReader := pool.GetBufferedReader(blobReader)

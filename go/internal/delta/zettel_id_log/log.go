@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
@@ -32,7 +32,7 @@ func (l Log) AppendEntry(entry Entry) (err error) {
 	defer errors.DeferredCloser(&err, file)
 
 	typedBlob := &hyphence.TypedBlob[Entry]{
-		Type: ids.GetOrPanic(ids.TypeZettelIdLogVCurrent).TypeStruct,
+		Type: ids.GetOrPanic(ids.TypeZettelIdLogVCurrent).TypeStruct.ToMadder(),
 		Blob: entry,
 	}
 

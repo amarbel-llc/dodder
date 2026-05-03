@@ -490,7 +490,7 @@ func (store *store) loadMutableConfigBlob(
 	defer errors.DeferredCloser(&err, blobReader)
 
 	typedBlob := repo_configs.TypedBlob{
-		Type: mutableConfigType,
+		Type: mutableConfigType.ToMadder(),
 	}
 
 	if _, err = repo_configs.Coder.DecodeFrom(

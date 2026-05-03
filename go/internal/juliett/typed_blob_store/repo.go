@@ -35,7 +35,7 @@ func (store RepoStore) ReadTypedBlob(
 	defer errors.DeferredCloser(&err, reader)
 
 	typedBlob := repo_blobs.TypedBlob{
-		Type: tipe.ToType(),
+		Type: tipe.ToType().ToMadder(),
 	}
 
 	bufferedReader, repoolBufferedReader := pool.GetBufferedReader(reader)
@@ -72,7 +72,7 @@ func (store RepoStore) WriteTypedBlob(
 
 	if n, err = repo_blobs.Coder.EncodeTo(
 		&repo_blobs.TypedBlob{
-			Type: tipe.ToType(),
+			Type: tipe.ToType().ToMadder(),
 			Blob: blob,
 		},
 		bufferedWriter,

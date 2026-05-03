@@ -98,7 +98,7 @@ func (client *client) GetImmutableConfigPublic() genesis_configs.ConfigPublic {
 }
 
 func (client *client) GetImmutableConfigPublicType() ids.TypeStruct {
-	return client.configImmutable.Type
+	return ids.TypeStruct(client.configImmutable.Type)
 }
 
 func (client *client) GetInventoryListStore() sku.InventoryListStore {

@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/delta/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/env_dir"

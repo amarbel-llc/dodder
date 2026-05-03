@@ -2,7 +2,7 @@ package repo_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	charlie_rb "code.linenisgreat.com/dodder/go/internal/charlie/repo_blobs"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )

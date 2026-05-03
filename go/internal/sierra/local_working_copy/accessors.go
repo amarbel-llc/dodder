@@ -30,7 +30,7 @@ func (local *Repo) GetImmutableConfigPublic() genesis_configs.ConfigPublic {
 }
 
 func (local *Repo) GetImmutableConfigPublicType() ids.TypeStruct {
-	return local.GetEnvRepo().GetConfigPublic().Type
+	return ids.TypeStruct(local.GetEnvRepo().GetConfigPublic().Type)
 }
 
 func (local *Repo) GetImmutableConfigPrivate() genesis_configs.TypedConfigPrivate {

@@ -2,7 +2,7 @@ package type_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	golf_tb "code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )

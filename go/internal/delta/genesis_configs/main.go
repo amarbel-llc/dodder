@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
@@ -59,7 +59,7 @@ func DefaultWithVersion(
 	return &TypedConfigPrivateMutable{
 		Type: ids.GetOrPanic(
 			ids.TypeTomlConfigImmutableV2,
-		).TypeStruct,
+		).TypeStruct.ToMadder(),
 		Blob: &TomlV2Private{
 			TomlV2Common: TomlV2Common{
 				StoreVersion:      storeVersion,

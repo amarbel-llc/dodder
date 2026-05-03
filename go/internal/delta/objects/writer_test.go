@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ui"
 )
 

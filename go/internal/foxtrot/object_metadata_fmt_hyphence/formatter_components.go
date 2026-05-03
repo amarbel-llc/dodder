@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/lib/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"

@@ -51,7 +51,7 @@ func (store Coder) SaveBlobText(
 
 	if n, err = CoderToTypedBlob.Blob.EncodeTo(
 		&TypedBlob{
-			Type: ids.MustTypeStruct(tipeString),
+			Type: ids.MustTypeStruct(tipeString).ToMadder(),
 			Blob: blob,
 		},
 		bufferedWriter,
@@ -92,7 +92,7 @@ func (store Coder) ParseTypedBlob(
 	}
 
 	typedBlob := TypedBlob{
-		Type: ids.MustTypeStruct(tipeString),
+		Type: ids.MustTypeStruct(tipeString).ToMadder(),
 	}
 
 	bufferedReader, repoolBufferedReader := pool.GetBufferedReader(reader)

@@ -2,7 +2,7 @@ package workspace_config_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 )
 

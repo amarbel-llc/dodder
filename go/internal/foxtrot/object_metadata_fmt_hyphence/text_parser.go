@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"code.linenisgreat.com/dodder/go/internal/charlie/hyphence"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/delta/script_config"
