@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
+	madder_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -30,7 +31,7 @@ type Env struct {
 
 	lockSmith interfaces.LockSmith
 
-	directoryLayoutBlobStore directory_layout.BlobStore
+	directoryLayoutBlobStore madder_directory_layout.BlobStore
 	directory_layout.Repo
 
 	BlobStoreEnv
@@ -96,8 +97,7 @@ func Make(
 		}
 	}
 
-	if env.directoryLayoutBlobStore, err = directory_layout.MakeBlobStore(
-		env.GetStoreVersion(),
+	if env.directoryLayoutBlobStore, err = madder_directory_layout.MakeBlobStore(
 		env.GetXDGForBlobStores(),
 	); err != nil {
 		err = errors.Wrap(err)

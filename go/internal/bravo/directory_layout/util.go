@@ -4,19 +4,17 @@ import (
 	"fmt"
 	"path/filepath"
 
-	madder_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
+	madder_dl "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
-const FileNameBlobStoreConfig = madder_directory_layout.FileNameBlobStoreConfig
-
 func GetBlobStoreConfigPaths(
 	ctx interfaces.ActiveContext,
-	directoryLayout BlobStore,
+	directoryLayout madder_dl.BlobStore,
 ) []string {
 	globPattern := DirBlobStore(
 		directoryLayout,
-		fmt.Sprintf("*/%s", FileNameBlobStoreConfig),
+		fmt.Sprintf("*/%s", madder_dl.FileNameBlobStoreConfig),
 	)
 
 	var configPaths []string
@@ -34,14 +32,14 @@ func GetBlobStoreConfigPaths(
 }
 
 func PathBlobStore(
-	layout BlobStore,
+	layout madder_dl.BlobStore,
 	targets ...string,
 ) interfaces.DirectoryLayoutPath {
 	return layout.MakePathBlobStore(targets...)
 }
 
 func DirBlobStore(
-	layout BlobStore,
+	layout madder_dl.BlobStore,
 	targets ...string,
 ) string {
 	return PathBlobStore(layout, targets...).String()

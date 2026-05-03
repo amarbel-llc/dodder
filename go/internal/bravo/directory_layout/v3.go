@@ -5,10 +5,11 @@ import (
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"
 )
 
 type v3 struct {
-	xdg XDG
+	xdg xdg.XDG
 }
 
 var (
@@ -17,9 +18,9 @@ var (
 )
 
 func (layout *v3) initialize(
-	xdg XDG,
+	x xdg.XDG,
 ) (err error) {
-	layout.xdg = xdg
+	layout.xdg = x
 	return err
 }
 
