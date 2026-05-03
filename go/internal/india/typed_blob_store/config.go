@@ -3,7 +3,8 @@ package typed_blob_store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -15,8 +16,8 @@ import (
 )
 
 type Config struct {
-	toml_v0 domain_interfaces.TypedStore[repo_configs.V0, *repo_configs.V0]
-	toml_v1 domain_interfaces.TypedStore[repo_configs.V1, *repo_configs.V1]
+	toml_v0 mad_domain_interfaces.TypedStore[repo_configs.V0, *repo_configs.V0]
+	toml_v1 mad_domain_interfaces.TypedStore[repo_configs.V1, *repo_configs.V1]
 }
 
 func MakeConfigStore(
@@ -84,7 +85,7 @@ func MakeConfigStore(
 
 func (a Config) ParseTypedBlob(
 	tipe ids.Type,
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (common repo_configs.ConfigOverlay, repool interfaces.FuncRepool, n int64, err error) {
 	switch tipe.String() {
 	case "", ids.TypeTomlConfigV0:
@@ -122,7 +123,7 @@ func (a Config) FormatTypedBlob(
 	tipe := object.GetType()
 	blobSha := object.GetBlobDigest()
 
-	var store domain_interfaces.SavedBlobFormatter
+	var store mad_domain_interfaces.SavedBlobFormatter
 	switch tipe.String() {
 	case "", ids.TypeTomlConfigV0:
 		store = a.toml_v0

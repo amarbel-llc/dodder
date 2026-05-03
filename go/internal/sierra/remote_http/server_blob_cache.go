@@ -3,7 +3,8 @@ package remote_http
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/tridex"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
@@ -14,7 +15,7 @@ import (
 
 type serverBlobCache struct {
 	ui             fd.Std
-	localBlobStore domain_interfaces.BlobStore
+	localBlobStore mad_domain_interfaces.BlobStore
 	shas           interfaces.TridexMutable
 	init           sync.Once
 }
@@ -42,7 +43,7 @@ func (serverBlobCache *serverBlobCache) populate() (err error) {
 }
 
 func (serverBlobCache *serverBlobCache) HasBlob(
-	blobSha domain_interfaces.MarklId,
+	blobSha mad_domain_interfaces.MarklId,
 ) (ok bool, err error) {
 	serverBlobCache.init.Do(
 		func() {

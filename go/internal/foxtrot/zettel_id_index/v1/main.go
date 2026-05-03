@@ -7,8 +7,9 @@ import (
 	"math/rand"
 	"sync"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -20,7 +21,7 @@ import (
 )
 
 type index struct {
-	namedBlobAccess domain_interfaces.NamedBlobAccess
+	namedBlobAccess mad_domain_interfaces.NamedBlobAccess
 
 	lock *sync.RWMutex
 	path string
@@ -38,7 +39,7 @@ type index struct {
 func MakeIndex(
 	configCli repo_config_cli.Config,
 	directoryLayout directory_layout.RepoMutable,
-	namedBlobAccess domain_interfaces.NamedBlobAccess,
+	namedBlobAccess mad_domain_interfaces.NamedBlobAccess,
 ) (i *index, err error) {
 	i = &index{
 		lock:               &sync.RWMutex{},
@@ -72,7 +73,7 @@ func (index *index) Flush() (err error) {
 
 	index.lock.RUnlock()
 
-	var namedBlobWriter domain_interfaces.BlobWriter
+	var namedBlobWriter mad_domain_interfaces.BlobWriter
 
 	if namedBlobWriter, err = index.namedBlobAccess.MakeNamedBlobWriter(index.path); err != nil {
 		err = errors.Wrap(err)
@@ -119,7 +120,7 @@ func (index *index) readIfNecessary() (err error) {
 
 	index.didRead = true
 
-	var namedBlobReader domain_interfaces.BlobReader
+	var namedBlobReader mad_domain_interfaces.BlobReader
 
 	if namedBlobReader, err = index.namedBlobAccess.MakeNamedBlobReader(
 		index.path,

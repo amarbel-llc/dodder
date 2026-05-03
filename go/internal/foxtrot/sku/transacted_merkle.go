@@ -1,8 +1,8 @@
 package sku
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_fmt_digest"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -102,7 +102,7 @@ func (transacted *Transacted) CalculateObjectDigest(
 
 func (transacted *Transacted) CalculateDigestForPurpose(
 	purposeId string,
-	digest domain_interfaces.MarklIdMutable,
+	digest mad_domain_interfaces.MarklIdMutable,
 ) (err error) {
 	if err = object_fmt_digest.WriteDigest(
 		purposeId,

@@ -5,7 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/bravo/debug"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -41,7 +42,7 @@ type Env interface {
 	AbsFromCwdOrSame(p string) (p1 string)
 
 	GetVerifyOnCollisionOverride() bool
-	GetBlobWriteObserver() domain_interfaces.BlobWriteObserver
+	GetBlobWriteObserver() mad_domain_interfaces.BlobWriteObserver
 
 	Delete(paths ...string) (err error)
 }
@@ -186,7 +187,7 @@ func (env env) GetVerifyOnCollisionOverride() bool {
 
 // GetBlobWriteObserver satisfies madder's env_dir.Env. Dodder does not run
 // an inventory log; nil is the documented "no observer" sentinel.
-func (env env) GetBlobWriteObserver() domain_interfaces.BlobWriteObserver {
+func (env env) GetBlobWriteObserver() mad_domain_interfaces.BlobWriteObserver {
 	return nil
 }
 

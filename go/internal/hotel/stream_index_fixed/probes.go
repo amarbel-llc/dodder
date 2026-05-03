@@ -6,12 +6,13 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/object_probe_index"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 func (index *Index) ReadOneMarklIdAdded(
-	marklId domain_interfaces.MarklId,
+	marklId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (ok bool) {
 	additionObject, ok := index.additionProbes.Get(string(marklId.GetBytes()))
@@ -25,7 +26,7 @@ func (index *Index) ReadOneMarklIdAdded(
 }
 
 func (index *Index) ReadOneMarklId(
-	marklId domain_interfaces.MarklId,
+	marklId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (ok bool) {
 	errors.PanicIfError(markl.AssertIdIsNotNull(marklId))
@@ -52,7 +53,7 @@ func (index *Index) ReadOneMarklId(
 }
 
 func (index *Index) ReadManyMarklId(
-	marklId domain_interfaces.MarklId,
+	marklId mad_domain_interfaces.MarklId,
 ) (objects []*sku.Transacted, err error) {
 	var locs []object_probe_index.Loc
 

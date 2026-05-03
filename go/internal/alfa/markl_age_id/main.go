@@ -3,7 +3,8 @@ package markl_age_id
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/0/bech32"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/bravo/age"
@@ -23,7 +24,7 @@ type Id struct {
 	Identities []*age.Identity `toml:"identities,omitempty"`
 }
 
-var _ domain_interfaces.MarklId = Id{}
+var _ mad_domain_interfaces.MarklId = Id{}
 
 func (id Id) String() string {
 	if len(id.Identities) == 0 {
@@ -179,7 +180,7 @@ func (id Id) GetSize() int {
 	panic(errors.Err405MethodNotAllowed)
 }
 
-func (id Id) GetMarklFormat() domain_interfaces.MarklFormat {
+func (id Id) GetMarklFormat() mad_domain_interfaces.MarklFormat {
 	if id.IsNull() {
 		return nil
 	} else {
@@ -230,13 +231,13 @@ func (id Id) GetIOWrapper() (ioWrapper interfaces.IOWrapper, err error) {
 	return ioWrapper, err
 }
 
-func (id Id) Verify(_, _ domain_interfaces.MarklId) (err error) {
+func (id Id) Verify(_, _ mad_domain_interfaces.MarklId) (err error) {
 	return errors.Err405MethodNotAllowed
 }
 
 func (id Id) Sign(
-	mes domain_interfaces.MarklId,
-	sigDst domain_interfaces.MarklIdMutable,
+	mes mad_domain_interfaces.MarklId,
+	sigDst mad_domain_interfaces.MarklIdMutable,
 	sigPurpose string,
 ) (err error) {
 	return errors.Err405MethodNotAllowed

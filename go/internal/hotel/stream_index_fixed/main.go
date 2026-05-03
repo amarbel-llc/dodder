@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/page_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -35,7 +36,7 @@ type Index struct {
 	preWrite   interfaces.FuncIter[*sku.Transacted]
 	path       string
 	entryWidth int
-	domain_interfaces.NamedBlobAccess
+	mad_domain_interfaces.NamedBlobAccess
 
 	pages [PageCount]page
 
@@ -257,7 +258,7 @@ func (index *Index) flushEverything(
 func PageIndexForObject(
 	width PageIndex,
 	object *sku.Transacted,
-	hashType domain_interfaces.FormatHash,
+	hashType mad_domain_interfaces.FormatHash,
 ) (n PageIndex, err error) {
 	if n, err = PageIndexForObjectId(
 		width,
@@ -274,7 +275,7 @@ func PageIndexForObject(
 func PageIndexForObjectId(
 	width PageIndex,
 	oid *ids.ObjectId,
-	hashType domain_interfaces.FormatHash,
+	hashType mad_domain_interfaces.FormatHash,
 ) (n PageIndex, err error) {
 	if n, err = page_id.PageIndexForString(
 		width,

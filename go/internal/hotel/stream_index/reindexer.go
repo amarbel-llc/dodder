@@ -1,9 +1,9 @@
 package stream_index
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 )
 
 type Reindexer struct {
@@ -27,14 +27,14 @@ func (reindexer *Reindexer) ObjectExists(
 }
 
 func (reindexer *Reindexer) ReadOneMarklIdAdded(
-	marklId domain_interfaces.MarklId,
+	marklId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (ok bool) {
 	return reindexer.index.ReadOneMarklIdAdded(marklId, object)
 }
 
 func (reindexer *Reindexer) ReadOneMarklId(
-	marklId domain_interfaces.MarklId,
+	marklId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (ok bool) {
 	return reindexer.index.ReadOneMarklId(marklId, object)

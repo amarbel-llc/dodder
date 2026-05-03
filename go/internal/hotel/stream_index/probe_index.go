@@ -3,7 +3,8 @@ package stream_index
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -72,7 +73,7 @@ func (index *probeIndex) Flush() (err error) {
 }
 
 func (index *probeIndex) readOneMarklIdLoc(
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (loc object_probe_index.Loc, err error) {
 	if loc, err = index.index.ReadOne(blobId); err != nil {
 		return loc, err
@@ -82,7 +83,7 @@ func (index *probeIndex) readOneMarklIdLoc(
 }
 
 func (index *probeIndex) readManyMarklIdLoc(
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (locs []object_probe_index.Loc, err error) {
 	if err = index.index.ReadMany(blobId, &locs); err != nil {
 		return locs, err

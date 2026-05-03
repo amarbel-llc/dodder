@@ -3,7 +3,8 @@ package env_dir
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
@@ -21,7 +22,7 @@ type MoveOptions struct {
 type localFileMover struct {
 	funcJoin func(string, ...string) string
 	file     *os.File
-	domain_interfaces.BlobWriter
+	mad_domain_interfaces.BlobWriter
 
 	basePath                  string
 	blobPath                  string
@@ -32,7 +33,7 @@ type localFileMover struct {
 func NewMover(
 	config Config,
 	moveOptions MoveOptions,
-) (domain_interfaces.BlobWriter, error) {
+) (mad_domain_interfaces.BlobWriter, error) {
 	// TODO make MoveOptions an interface and add support for localFileShaMover
 	// and localFinalPathMover
 	return newMover(config, moveOptions)

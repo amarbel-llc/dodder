@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -25,13 +26,13 @@ func MakeTypeStore(
 func (store Coder) SaveBlobText(
 	tipe domain_interfaces.ObjectId,
 	blob Blob,
-) (digest domain_interfaces.MarklId, n int64, err error) {
+) (digest mad_domain_interfaces.MarklId, n int64, err error) {
 	if err = genres.Type.AssertGenre(tipe); err != nil {
 		err = errors.Wrap(err)
 		return digest, n, err
 	}
 
-	var writer domain_interfaces.BlobWriter
+	var writer mad_domain_interfaces.BlobWriter
 
 	if writer, err = store.envRepo.GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
 		err = errors.Wrap(err)
@@ -72,11 +73,11 @@ func (store Coder) SaveBlobText(
 
 func (store Coder) ParseTypedBlob(
 	tipe domain_interfaces.ObjectId,
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (common Blob, repool interfaces.FuncRepool, n int64, err error) {
 	repool = func() {}
 
-	var reader domain_interfaces.BlobReader
+	var reader mad_domain_interfaces.BlobReader
 
 	if reader, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(blobId); err != nil {
 		err = errors.Wrap(err)

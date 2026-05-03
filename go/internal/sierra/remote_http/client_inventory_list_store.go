@@ -3,7 +3,8 @@ package remote_http
 import (
 	"net/http"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -18,7 +19,7 @@ func (client client) ReadLast() (max *sku.Transacted, err error) {
 }
 
 func (client client) AllInventoryListContents(
-	blobSha domain_interfaces.MarklId,
+	blobSha mad_domain_interfaces.MarklId,
 ) interfaces.SeqError[*sku.Transacted] {
 	return nil
 }

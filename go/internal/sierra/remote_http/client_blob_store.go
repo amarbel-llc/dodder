@@ -6,15 +6,16 @@ import (
 	"net/http"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/madder/go/pkgs/directory_layout"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	"github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -35,15 +36,15 @@ func (client *client) GetBlobStore() blob_stores.BlobStoreInitialized {
 	}
 }
 
-func (client *client) GetBlobStoreConfig() domain_interfaces.BlobStoreConfig {
+func (client *client) GetBlobStoreConfig() mad_domain_interfaces.BlobStoreConfig {
 	panic(errors.Err501NotImplemented)
 }
 
-func (client *client) GetDefaultHashType() domain_interfaces.FormatHash {
+func (client *client) GetDefaultHashType() mad_domain_interfaces.FormatHash {
 	panic(errors.Err501NotImplemented)
 }
 
-func (client *client) HasBlob(blobId domain_interfaces.MarklId) (ok bool) {
+func (client *client) HasBlob(blobId mad_domain_interfaces.MarklId) (ok bool) {
 	var request *http.Request
 
 	{
@@ -74,8 +75,8 @@ func (client *client) HasBlob(blobId domain_interfaces.MarklId) (ok bool) {
 }
 
 func (client *client) MakeBlobReader(
-	blobId domain_interfaces.MarklId,
-) (reader domain_interfaces.BlobReader, err error) {
+	blobId mad_domain_interfaces.MarklId,
+) (reader mad_domain_interfaces.BlobReader, err error) {
 	var request *http.Request
 
 	if request, err = client.newRequest(
@@ -124,12 +125,12 @@ func (client *client) MakeBlobReader(
 }
 
 func (client *client) WriteBlobToRemote(
-	localBlobStore domain_interfaces.BlobStore,
-	expected domain_interfaces.MarklId,
+	localBlobStore mad_domain_interfaces.BlobStore,
+	expected mad_domain_interfaces.MarklId,
 ) (err error) {
 	// Closed by the http client's transport (our roundtripper calling
 	// request.Write)
-	var reader domain_interfaces.BlobReader
+	var reader mad_domain_interfaces.BlobReader
 
 	if reader, err = localBlobStore.MakeBlobReader(
 		expected,
@@ -219,16 +220,16 @@ func (client *client) GetBlobStoreDescription() string {
 	panic(errors.Err501NotImplemented)
 }
 
-func (client *client) GetBlobIOWrapper() domain_interfaces.BlobIOWrapper {
+func (client *client) GetBlobIOWrapper() mad_domain_interfaces.BlobIOWrapper {
 	panic(errors.Err501NotImplemented)
 }
 
-func (client *client) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
+func (client *client) AllBlobs() interfaces.SeqError[mad_domain_interfaces.MarklId] {
 	panic(errors.Err501NotImplemented)
 }
 
 func (client *client) MakeBlobWriter(
-	marklHashType domain_interfaces.FormatHash,
-) (domain_interfaces.BlobWriter, error) {
+	marklHashType mad_domain_interfaces.FormatHash,
+) (mad_domain_interfaces.BlobWriter, error) {
 	panic(errors.Err501NotImplemented)
 }

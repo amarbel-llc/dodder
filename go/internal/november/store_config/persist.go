@@ -3,7 +3,8 @@ package store_config
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -475,9 +476,9 @@ func (store *store) flushStreamIndexSet(
 
 func (store *store) loadMutableConfigBlob(
 	mutableConfigType ids.TypeStruct,
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (err error) {
-	var blobReader domain_interfaces.BlobReader
+	var blobReader mad_domain_interfaces.BlobReader
 
 	if blobReader, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(
 		blobId,

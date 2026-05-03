@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -17,9 +18,9 @@ import (
 
 type streamPageReader struct {
 	*page
-	blobReader      domain_interfaces.BlobReader
+	blobReader      mad_domain_interfaces.BlobReader
 	bufferedReader  *bufio.Reader
-	namedBlobAccess domain_interfaces.NamedBlobAccess
+	namedBlobAccess mad_domain_interfaces.NamedBlobAccess
 }
 
 func (index *Index) makeStreamPageReader(

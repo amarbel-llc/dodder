@@ -1,7 +1,7 @@
 package objects
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
@@ -9,10 +9,10 @@ type keyValues struct {
 	SelfWithoutTai markl.Id // TODO move to a separate key-value store
 }
 
-func (index *index) GetSelfWithoutTai() domain_interfaces.MarklId {
+func (index *index) GetSelfWithoutTai() mad_domain_interfaces.MarklId {
 	return &index.SelfWithoutTai
 }
 
-func (index *index) GetSelfWithoutTaiMutable() domain_interfaces.MarklIdMutable {
+func (index *index) GetSelfWithoutTaiMutable() mad_domain_interfaces.MarklIdMutable {
 	return &index.SelfWithoutTai
 }

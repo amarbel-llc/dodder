@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/doddish"
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
@@ -19,9 +20,9 @@ import (
 )
 
 type textParser2 struct {
-	domain_interfaces.BlobWriterFactory
+	mad_domain_interfaces.BlobWriterFactory
 	ParserContext
-	hashType domain_interfaces.FormatHash
+	hashType mad_domain_interfaces.FormatHash
 	Blob     fd.FD
 }
 

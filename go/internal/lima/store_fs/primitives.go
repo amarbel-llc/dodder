@@ -4,8 +4,9 @@ import (
 	"io"
 	"os"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -136,7 +137,7 @@ func (store *Store) readOneExternalBlob(
 
 	// TODO use cache
 	{
-		var writeCloser domain_interfaces.BlobWriter
+		var writeCloser mad_domain_interfaces.BlobWriter
 
 		if writeCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
 			err = errors.Wrap(err)

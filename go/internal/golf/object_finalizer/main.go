@@ -3,7 +3,8 @@ package object_finalizer
 import (
 	"slices"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -80,7 +81,7 @@ func (finalizer finalizer) FinalizeUsingObject(
 // calculates the object digests using the provided repo pubkey
 func (finalizer finalizer) FinalizeUsingRepoPubKey(
 	object object,
-	pubKey domain_interfaces.MarklId,
+	pubKey mad_domain_interfaces.MarklId,
 	objectDigestMarklFormatId string,
 ) (err error) {
 	metadataMutable := object.GetMetadataMutable()

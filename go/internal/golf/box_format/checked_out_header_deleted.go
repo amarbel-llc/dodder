@@ -1,13 +1,13 @@
 package box_format
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 )
 
 type CheckedOutHeaderDeleted struct {
-	domain_interfaces.ConfigDryRunGetter
+	mad_domain_interfaces.ConfigDryRunGetter
 }
 
 func (f CheckedOutHeaderDeleted) WriteBoxHeader(

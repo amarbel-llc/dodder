@@ -8,7 +8,8 @@ import (
 	"path"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
@@ -169,7 +170,7 @@ func collectExistingWords(prov *zettel_id_provider.Provider) map[string]bool {
 
 func writeWordsAsBlob(
 	req command.Request,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 	words []string,
 ) markl.Id {
 	blobWriter, err := blobStore.MakeBlobWriter(nil)

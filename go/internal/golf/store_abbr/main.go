@@ -6,7 +6,8 @@ import (
 	"io"
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -85,7 +86,7 @@ func (index *indexAbbr) Flush() (err error) {
 		return err
 	}
 
-	var namedBlobWriter domain_interfaces.BlobWriter
+	var namedBlobWriter mad_domain_interfaces.BlobWriter
 
 	if namedBlobWriter, err = index.envRepo.MakeNamedBlobWriter(
 		index.path,

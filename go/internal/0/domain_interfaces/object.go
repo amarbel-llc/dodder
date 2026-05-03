@@ -1,21 +1,25 @@
 package domain_interfaces
 
+import (
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+)
+
 type ObjectIOFactory interface {
 	ObjectReaderFactory
 	ObjectWriterFactory
 }
 
 type ObjectReaderFactory interface {
-	ObjectReader(MarklIdGetter) (BlobReader, error)
+	ObjectReader(mad_domain_interfaces.MarklIdGetter) (mad_domain_interfaces.BlobReader, error)
 }
 
 type ObjectWriterFactory interface {
-	ObjectWriter() (BlobWriter, error)
+	ObjectWriter() (mad_domain_interfaces.BlobWriter, error)
 }
 
 type (
-	FuncObjectReader func(MarklIdGetter) (BlobReader, error)
-	FuncObjectWriter func() (BlobWriter, error)
+	FuncObjectReader func(mad_domain_interfaces.MarklIdGetter) (mad_domain_interfaces.BlobReader, error)
+	FuncObjectWriter func() (mad_domain_interfaces.BlobWriter, error)
 )
 
 type bespokeObjectReadWriterFactory struct {
@@ -46,8 +50,8 @@ func MakeBespokeObjectReadFactory(
 }
 
 func (b bespokeObjectReadFactory) ObjectReader(
-	sh MarklIdGetter,
-) (BlobReader, error) {
+	sh mad_domain_interfaces.MarklIdGetter,
+) (mad_domain_interfaces.BlobReader, error) {
 	return b.FuncObjectReader(sh)
 }
 
@@ -63,6 +67,6 @@ func MakeBespokeObjectWriteFactory(
 	}
 }
 
-func (b bespokeObjectWriterFactory) ObjectWriter() (BlobWriter, error) {
+func (b bespokeObjectWriterFactory) ObjectWriter() (mad_domain_interfaces.BlobWriter, error) {
 	return b.FuncObjectWriter()
 }

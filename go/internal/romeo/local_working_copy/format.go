@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_json_fmt"
@@ -740,7 +741,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			writer interfaces.WriterAndStringWriter,
 		) interfaces.FuncIter[*sku.Transacted] {
 			return func(object *sku.Transacted) (err error) {
-				var readCloser domain_interfaces.BlobReader
+				var readCloser mad_domain_interfaces.BlobReader
 
 				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
@@ -776,7 +777,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				}
 
 				if repo.GetConfig().IsInlineType(object.GetType()) {
-					var readCloser domain_interfaces.BlobReader
+					var readCloser mad_domain_interfaces.BlobReader
 
 					if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
 						object.GetBlobDigest(),
@@ -816,7 +817,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			cliFmt := repo.SkuFormatBoxTransactedNoColor()
 
 			return func(object *sku.Transacted) (err error) {
-				var readCloser domain_interfaces.BlobReader
+				var readCloser mad_domain_interfaces.BlobReader
 
 				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
@@ -1133,7 +1134,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			e := json.NewEncoder(writer)
 
 			return func(object *sku.Transacted) (err error) {
-				var readCloser domain_interfaces.BlobReader
+				var readCloser mad_domain_interfaces.BlobReader
 
 				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
@@ -1169,7 +1170,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				ui.TodoP3("limit to only zettels supporting toml")
 
-				var readCloser domain_interfaces.BlobReader
+				var readCloser mad_domain_interfaces.BlobReader
 
 				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),

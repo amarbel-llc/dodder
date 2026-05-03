@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -38,7 +39,7 @@ func (id *PageId) Path() string {
 func PageIndexForString(
 	width uint8,
 	value string,
-	hashType domain_interfaces.FormatHash,
+	hashType mad_domain_interfaces.FormatHash,
 ) (n uint8, err error) {
 	digest, repool := hashType.GetMarklIdForString(value)
 	defer repool()
@@ -53,7 +54,7 @@ func PageIndexForString(
 
 func PageIndexForDigest(
 	width uint8,
-	digest domain_interfaces.MarklId,
+	digest mad_domain_interfaces.MarklId,
 ) (n uint8, err error) {
 	var n1 int64
 

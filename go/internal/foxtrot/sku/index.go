@@ -3,12 +3,13 @@ package sku
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
 type (
 	FuncReadOne = func(
-		sh domain_interfaces.MarklId,
+		sh mad_domain_interfaces.MarklId,
 		sk *Transacted,
 	) (ok bool)
 
@@ -28,12 +29,12 @@ type (
 		// ) (ok bool)
 
 		ReadOneMarklIdAdded(
-			sh domain_interfaces.MarklId,
+			sh mad_domain_interfaces.MarklId,
 			sk *Transacted,
 		) (ok bool)
 
 		ReadOneMarklId(
-			sh domain_interfaces.MarklId,
+			sh mad_domain_interfaces.MarklId,
 			sk *Transacted,
 		) (ok bool)
 	}
@@ -52,7 +53,7 @@ type (
 		) (skus []*Transacted, err error)
 
 		ReadManyMarklId(
-			sh domain_interfaces.MarklId,
+			sh mad_domain_interfaces.MarklId,
 		) (skus []*Transacted, err error)
 	}
 

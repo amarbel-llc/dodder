@@ -1,9 +1,9 @@
 package blob_library
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -15,7 +15,7 @@ type Library[
 ] struct {
 	envRepo env_repo.Env
 	pool    interfaces.PoolPtr[BLOB, BLOB_PTR]
-	domain_interfaces.Format[BLOB, BLOB_PTR]
+	mad_domain_interfaces.Format[BLOB, BLOB_PTR]
 	resetFunc func(BLOB_PTR)
 }
 
@@ -24,7 +24,7 @@ func MakeBlobStore[
 	BLOB_PTR interfaces.Ptr[BLOB],
 ](
 	envRepo env_repo.Env,
-	format domain_interfaces.Format[BLOB, BLOB_PTR],
+	format mad_domain_interfaces.Format[BLOB, BLOB_PTR],
 	resetFunc func(BLOB_PTR),
 ) (blobStore *Library[BLOB, BLOB_PTR]) {
 	blobStore = &Library[BLOB, BLOB_PTR]{
@@ -38,9 +38,9 @@ func MakeBlobStore[
 }
 
 func (library *Library[BLOB, BLOB_PTR]) GetBlob(
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (blobPtr BLOB_PTR, repool interfaces.FuncRepool, err error) {
-	var readCloser domain_interfaces.BlobReader
+	var readCloser mad_domain_interfaces.BlobReader
 
 	if readCloser, err = library.envRepo.GetDefaultBlobStore().MakeBlobReader(
 		blobId,
@@ -75,8 +75,8 @@ func (library *Library[BLOB, BLOB_PTR]) PutBlob(blob BLOB_PTR) {
 // TODO re-evaluate this strategy
 func (library *Library[BLOB, BLOB_PTR]) SaveBlobText(
 	blob BLOB_PTR,
-) (digest domain_interfaces.MarklId, n int64, err error) {
-	var writeCloser domain_interfaces.BlobWriter
+) (digest mad_domain_interfaces.MarklId, n int64, err error) {
+	var writeCloser mad_domain_interfaces.BlobWriter
 
 	if writeCloser, err = library.envRepo.GetDefaultBlobStore().MakeBlobWriter(
 		nil,

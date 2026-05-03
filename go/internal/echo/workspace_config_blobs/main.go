@@ -1,8 +1,8 @@
 package workspace_config_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 )
 
@@ -29,7 +29,7 @@ type (
 
 	ConfigWithDryRun interface {
 		Config
-		domain_interfaces.ConfigDryRunGetter
+		mad_domain_interfaces.ConfigDryRunGetter
 	}
 
 	ConfigWithParentPath interface {

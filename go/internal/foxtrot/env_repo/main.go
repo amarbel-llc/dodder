@@ -3,7 +3,8 @@ package env_repo
 import (
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
@@ -203,7 +204,7 @@ func (env Env) GetStoreVersion() store_version.Version {
 	}
 }
 
-func (env Env) GetInventoryListBlobStore() domain_interfaces.BlobStore {
+func (env Env) GetInventoryListBlobStore() mad_domain_interfaces.BlobStore {
 	return env.GetDefaultBlobStore()
 }
 

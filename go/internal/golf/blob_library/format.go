@@ -3,7 +3,8 @@ package blob_library
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -13,7 +14,7 @@ type format[
 	BLOB_PTR interfaces.Ptr[BLOB],
 ] struct {
 	interfaces.DecoderFromReader[BLOB_PTR]
-	domain_interfaces.SavedBlobFormatter
+	mad_domain_interfaces.SavedBlobFormatter
 	interfaces.EncoderToWriter[BLOB_PTR]
 }
 
@@ -23,8 +24,8 @@ func MakeBlobFormat[
 ](
 	decoder interfaces.DecoderFromReader[BLOB_PTR],
 	encoder interfaces.EncoderToWriter[BLOB_PTR],
-	blobReader domain_interfaces.BlobReaderFactory,
-) domain_interfaces.Format[BLOB, BLOB_PTR] {
+	blobReader mad_domain_interfaces.BlobReaderFactory,
+) mad_domain_interfaces.Format[BLOB, BLOB_PTR] {
 	return format[BLOB, BLOB_PTR]{
 		DecoderFromReader:  decoder,
 		EncoderToWriter:    encoder,

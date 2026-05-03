@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -15,7 +16,7 @@ import (
 
 type writer struct {
 	repoolBufferedWriter  interfaces.FuncRepool
-	digester              domain_interfaces.BlobWriter
+	digester              mad_domain_interfaces.BlobWriter
 	tee                   io.Writer
 	compressor, encrypter io.WriteCloser
 	bufferedWriter        *bufio.Writer
@@ -92,6 +93,6 @@ func (writer *writer) Close() (err error) {
 	return err
 }
 
-func (writer *writer) GetMarklId() domain_interfaces.MarklId {
+func (writer *writer) GetMarklId() mad_domain_interfaces.MarklId {
 	return writer.digester.GetMarklId()
 }

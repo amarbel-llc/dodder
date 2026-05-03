@@ -1,9 +1,9 @@
 package sku_json_fmt
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -16,7 +16,7 @@ type WithDormant struct {
 func (json *WithDormant) FromStringAndMetadata(
 	objectId string,
 	metadata objects.MetadataMutable,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	if err = json.Transacted.FromObjectIdStringAndMetadata(
 		objectId,
@@ -34,7 +34,7 @@ func (json *WithDormant) FromStringAndMetadata(
 
 func (json *WithDormant) FromTransacted(
 	object *sku.Transacted,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	return json.FromStringAndMetadata(
 		object.GetObjectId().String(),
@@ -45,7 +45,7 @@ func (json *WithDormant) FromTransacted(
 
 func (json *WithDormant) ToTransacted(
 	object *sku.Transacted,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	if err = json.Transacted.ToTransacted(object, blobStore); err != nil {
 		err = errors.Wrap(err)

@@ -7,7 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
@@ -300,7 +301,7 @@ func (factory formatterComponents) writeBlob(
 	writer interfaces.WriterAndStringWriter,
 	formatterContext FormatterContext,
 ) (n int64, err error) {
-	var blobReader domain_interfaces.BlobReader
+	var blobReader mad_domain_interfaces.BlobReader
 
 	metadata := formatterContext.GetMetadata()
 

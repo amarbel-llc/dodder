@@ -3,7 +3,8 @@ package sku_json_fmt
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -19,7 +20,7 @@ type MCP struct {
 func (json *MCP) FromStringAndMetadata(
 	objectId string,
 	metadata objects.MetadataMutable,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	if err = json.Transacted.FromObjectIdStringAndMetadata(
 		objectId,
@@ -58,7 +59,7 @@ func (json *MCP) FromStringAndMetadata(
 
 func (json *MCP) FromTransacted(
 	object *sku.Transacted,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	return json.FromStringAndMetadata(
 		object.GetObjectId().String(),
@@ -69,7 +70,7 @@ func (json *MCP) FromTransacted(
 
 func (json *MCP) ToTransacted(
 	object *sku.Transacted,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	if err = json.Transacted.ToTransacted(object, blobStore); err != nil {
 		err = errors.Wrap(err)

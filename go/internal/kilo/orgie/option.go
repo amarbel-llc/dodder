@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -164,7 +165,7 @@ func (ocf optionCommentHide) ApplyToWriter(
 }
 
 type OptionCommentDryRun struct {
-	domain_interfaces.MutableConfigDryRun
+	mad_domain_interfaces.MutableConfigDryRun
 }
 
 func (ocf *OptionCommentDryRun) CloneOptionComment() OptionComment {

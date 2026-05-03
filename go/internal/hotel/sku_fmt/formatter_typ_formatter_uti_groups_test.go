@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"testing"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -20,7 +22,7 @@ type failingTypeBlobStore struct {
 
 func (s failingTypeBlobStore) ParseTypedBlob(
 	domain_interfaces.ObjectId,
-	domain_interfaces.MarklId,
+	mad_domain_interfaces.MarklId,
 ) (type_blobs.Blob, interfaces.FuncRepool, int64, error) {
 	return nil, func() {}, 0, s.err
 }

@@ -3,7 +3,8 @@ package typed_blob_store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -20,10 +21,10 @@ import (
 type Tag struct {
 	envRepo env_repo.Env
 	envLua  env_lua.Env
-	toml_v0 domain_interfaces.TypedStore[tag_blobs.V0, *tag_blobs.V0]
-	toml_v1 domain_interfaces.TypedStore[tag_blobs.TomlV1, *tag_blobs.TomlV1]
-	lua_v1  domain_interfaces.TypedStore[tag_blobs.LuaV1, *tag_blobs.LuaV1]
-	lua_v2  domain_interfaces.TypedStore[tag_blobs.LuaV2, *tag_blobs.LuaV2]
+	toml_v0 mad_domain_interfaces.TypedStore[tag_blobs.V0, *tag_blobs.V0]
+	toml_v1 mad_domain_interfaces.TypedStore[tag_blobs.TomlV1, *tag_blobs.TomlV1]
+	lua_v1  mad_domain_interfaces.TypedStore[tag_blobs.LuaV1, *tag_blobs.LuaV1]
+	lua_v2  mad_domain_interfaces.TypedStore[tag_blobs.LuaV2, *tag_blobs.LuaV2]
 }
 
 func MakeTagStore(
@@ -136,7 +137,7 @@ func (store Tag) GetBlob(
 	case ids.TypeLuaTagV1:
 		// TODO try to repool things here
 
-		var readCloser domain_interfaces.BlobReader
+		var readCloser mad_domain_interfaces.BlobReader
 
 		if readCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(
 			blobId,
@@ -167,7 +168,7 @@ func (store Tag) GetBlob(
 	case ids.TypeLuaTagV2:
 		// TODO try to repool things here
 
-		var readCloser domain_interfaces.BlobReader
+		var readCloser mad_domain_interfaces.BlobReader
 
 		if readCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(blobId); err != nil {
 			err = errors.Wrap(err)

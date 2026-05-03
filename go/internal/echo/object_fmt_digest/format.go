@@ -4,14 +4,15 @@ import (
 	"io"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/key_strings"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -235,7 +236,7 @@ func (format format) writeMetadataKeyStringTo(
 func (format format) writeMarklIdKey(
 	writer io.Writer,
 	key *catgut.String,
-	id domain_interfaces.MarklId,
+	id mad_domain_interfaces.MarklId,
 ) (n int, err error) {
 	if err = markl.AssertIdIsNotNull(id); err != nil {
 		err = errors.Wrap(err)
@@ -258,7 +259,7 @@ func (format format) writeMarklIdKey(
 func (format format) writeMarklIdKeyIfNotNull(
 	writer io.Writer,
 	key *catgut.String,
-	id domain_interfaces.MarklId,
+	id mad_domain_interfaces.MarklId,
 ) (n int, err error) {
 	if id.IsNull() {
 		return n, err
@@ -270,7 +271,7 @@ func (format format) writeMarklIdKeyIfNotNull(
 func (format format) writeMetadata(
 	writer io.Writer,
 	context FormatterContext,
-) (blobDigest domain_interfaces.MarklId, err error) {
+) (blobDigest mad_domain_interfaces.MarklId, err error) {
 	if context.GetMetadata().GetTai().IsEmpty() {
 		err = ErrEmptyTai
 		return blobDigest, err

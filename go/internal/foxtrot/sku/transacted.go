@@ -3,6 +3,8 @@ package sku
 import (
 	"strings"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/external_state"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
@@ -191,16 +193,16 @@ func (transacted *Transacted) SetDormant(v bool) {
 	transacted.GetMetadataMutable().GetIndexMutable().GetDormantMutable().SetBool(v)
 }
 
-func (transacted *Transacted) GetObjectDigest() domain_interfaces.MarklId {
+func (transacted *Transacted) GetObjectDigest() mad_domain_interfaces.MarklId {
 	return transacted.GetMetadataMutable().GetObjectDigest()
 }
 
-func (transacted *Transacted) GetBlobDigest() domain_interfaces.MarklId {
+func (transacted *Transacted) GetBlobDigest() mad_domain_interfaces.MarklId {
 	return transacted.GetMetadata().GetBlobDigest()
 }
 
 func (transacted *Transacted) SetBlobDigest(
-	merkleId domain_interfaces.MarklId,
+	merkleId mad_domain_interfaces.MarklId,
 ) (err error) {
 	if err = transacted.GetMetadataMutable().GetBlobDigestMutable().SetMarklId(
 		merkleId.GetMarklFormat().GetMarklFormatId(),

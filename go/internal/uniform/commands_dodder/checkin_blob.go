@@ -1,7 +1,6 @@
 package commands_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -9,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -200,7 +200,7 @@ func (pair *externalBlobPair) SetArgs(
 	return err
 }
 
-func (pair *externalBlobPair) GetDigest() domain_interfaces.MarklId {
+func (pair *externalBlobPair) GetDigest() mad_domain_interfaces.MarklId {
 	if !pair.BlobFD.IsEmpty() {
 		return pair.BlobFD.GetDigest()
 	} else {

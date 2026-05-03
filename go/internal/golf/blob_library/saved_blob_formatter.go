@@ -3,16 +3,17 @@ package blob_library
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type savedBlobFormatter struct {
-	blobReaderFactory domain_interfaces.BlobReaderFactory
+	blobReaderFactory mad_domain_interfaces.BlobReaderFactory
 }
 
 func MakeSavedBlobFormatter(
-	blobReaderFactory domain_interfaces.BlobReaderFactory,
+	blobReaderFactory mad_domain_interfaces.BlobReaderFactory,
 ) savedBlobFormatter {
 	return savedBlobFormatter{
 		blobReaderFactory: blobReaderFactory,
@@ -21,9 +22,9 @@ func MakeSavedBlobFormatter(
 
 func (formatter savedBlobFormatter) FormatSavedBlob(
 	writer io.Writer,
-	digest domain_interfaces.MarklId,
+	digest mad_domain_interfaces.MarklId,
 ) (n int64, err error) {
-	var blobReader domain_interfaces.BlobReader
+	var blobReader mad_domain_interfaces.BlobReader
 
 	if blobReader, err = formatter.blobReaderFactory.MakeBlobReader(
 		digest,

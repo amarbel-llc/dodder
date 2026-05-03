@@ -3,7 +3,8 @@ package store_fs
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -70,7 +71,7 @@ func (encoder *fileEncoder) EncodeObject(
 
 	inline := encoder.inlineTypeChecker.IsInlineType(object.GetType())
 
-	var blobReader domain_interfaces.BlobReader
+	var blobReader mad_domain_interfaces.BlobReader
 
 	if blobReader, err = encoder.envRepo.GetDefaultBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),
@@ -90,7 +91,7 @@ func (encoder *fileEncoder) EncodeObject(
 				blobPath,
 			); err != nil {
 				if errors.IsExist(err) {
-					var blobWriter domain_interfaces.BlobWriter
+					var blobWriter mad_domain_interfaces.BlobWriter
 
 					if blobWriter, err = encoder.envRepo.GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
 						err = errors.Wrap(err)

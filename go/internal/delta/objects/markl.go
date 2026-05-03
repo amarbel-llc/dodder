@@ -1,43 +1,45 @@
 package objects
 
-import "code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+import (
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+)
 
-func (metadata *metadata) GetBlobDigest() domain_interfaces.MarklId {
+func (metadata *metadata) GetBlobDigest() mad_domain_interfaces.MarklId {
 	return &metadata.digBlob
 }
 
-func (metadata *metadata) GetBlobDigestMutable() domain_interfaces.MarklIdMutable {
+func (metadata *metadata) GetBlobDigestMutable() mad_domain_interfaces.MarklIdMutable {
 	return &metadata.digBlob
 }
 
-func (metadata *metadata) GetObjectDigest() domain_interfaces.MarklId {
+func (metadata *metadata) GetObjectDigest() mad_domain_interfaces.MarklId {
 	return &metadata.digSelf
 }
 
-func (metadata *metadata) GetObjectDigestMutable() domain_interfaces.MarklIdMutable {
+func (metadata *metadata) GetObjectDigestMutable() mad_domain_interfaces.MarklIdMutable {
 	return &metadata.digSelf
 }
 
-func (metadata *metadata) GetMotherObjectSig() domain_interfaces.MarklId {
+func (metadata *metadata) GetMotherObjectSig() mad_domain_interfaces.MarklId {
 	return &metadata.sigMother
 }
 
-func (metadata *metadata) GetMotherObjectSigMutable() domain_interfaces.MarklIdMutable {
+func (metadata *metadata) GetMotherObjectSigMutable() mad_domain_interfaces.MarklIdMutable {
 	return &metadata.sigMother
 }
 
-func (metadata *metadata) GetRepoPubKey() domain_interfaces.MarklId {
+func (metadata *metadata) GetRepoPubKey() mad_domain_interfaces.MarklId {
 	return metadata.pubRepo
 }
 
-func (metadata *metadata) GetRepoPubKeyMutable() domain_interfaces.MarklIdMutable {
+func (metadata *metadata) GetRepoPubKeyMutable() mad_domain_interfaces.MarklIdMutable {
 	return &metadata.pubRepo
 }
 
-func (metadata *metadata) GetObjectSig() domain_interfaces.MarklId {
+func (metadata *metadata) GetObjectSig() mad_domain_interfaces.MarklId {
 	return &metadata.sigRepo
 }
 
-func (metadata *metadata) GetObjectSigMutable() domain_interfaces.MarklIdMutable {
+func (metadata *metadata) GetObjectSigMutable() mad_domain_interfaces.MarklIdMutable {
 	return &metadata.sigRepo
 }

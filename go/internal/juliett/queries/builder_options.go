@@ -1,13 +1,13 @@
 package queries
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 )
 
 // TODO consider moving this whole file into its own package
@@ -55,7 +55,7 @@ func BuilderOptionWorkspace(
 	var builder builderOptionWorkspace
 
 	var ignoreWorkspace bool
-	if repoConfig, ok := cliConfig.(domain_interfaces.RepoCLIConfigProvider); ok {
+	if repoConfig, ok := cliConfig.(mad_domain_interfaces.RepoCLIConfigProvider); ok {
 		ignoreWorkspace = repoConfig.GetIgnoreWorkspace()
 	}
 

@@ -3,8 +3,8 @@ package command_components_dodder
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/directory_layout"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
@@ -17,6 +17,7 @@ import (
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	"github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -135,7 +136,7 @@ func (cmd BlobStore) makeEnvBlobStore(
 	configAny := req.Utility.GetConfigAny()
 
 	var debugOptions debug.Options
-	var cliConfig domain_interfaces.CLIConfigProvider
+	var cliConfig mad_domain_interfaces.CLIConfigProvider
 	var envOptions env_ui.Options
 
 	switch c := configAny.(type) {

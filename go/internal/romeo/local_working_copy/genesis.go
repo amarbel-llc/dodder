@@ -1,7 +1,6 @@
 package local_working_copy
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
@@ -10,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -140,7 +140,7 @@ func (local *Repo) prepareDefaultType(
 		return objectIdType, err
 	}
 
-	var digest domain_interfaces.MarklId
+	var digest mad_domain_interfaces.MarklId
 
 	if digest, _, err = local.GetStore().GetTypedBlobStore().Type.SaveBlobText(
 		tipe,
@@ -220,7 +220,7 @@ func (local *Repo) prepareBuiltinActionableTypes(
 			return err
 		}
 
-		var digest domain_interfaces.MarklId
+		var digest mad_domain_interfaces.MarklId
 
 		blob := builtin.blob
 		if digest, _, err = local.GetStore().GetTypedBlobStore().Type.SaveBlobText(
@@ -253,7 +253,7 @@ func (local *Repo) prepareDefaultConfig(
 		return err
 	}
 
-	var blobId domain_interfaces.MarklId
+	var blobId mad_domain_interfaces.MarklId
 	var typedBlob repo_configs.TypedBlob
 
 	if blobId, typedBlob, err = writeDefaultMutableConfig(
@@ -293,12 +293,12 @@ func writeDefaultMutableConfig(
 	repo *Repo,
 	blobStores []blob_store_id.Id,
 	defaultType ids.TypeStruct,
-) (blobId domain_interfaces.MarklId, typedBlob repo_configs.TypedBlob, err error) {
+) (blobId mad_domain_interfaces.MarklId, typedBlob repo_configs.TypedBlob, err error) {
 	typedBlob = repo_configs.DefaultOverlay(blobStores, defaultType)
 
 	coder := repo.GetStore().GetConfigBlobCoder()
 
-	var blobWriter domain_interfaces.BlobWriter
+	var blobWriter mad_domain_interfaces.BlobWriter
 
 	if blobWriter, err = repo.GetEnvRepo().GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
 		err = errors.Wrap(err)

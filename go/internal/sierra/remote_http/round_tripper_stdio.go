@@ -7,7 +7,8 @@ import (
 	"os/exec"
 	"syscall"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
@@ -26,7 +27,7 @@ type RoundTripperStdio struct {
 func (roundTripper *RoundTripperStdio) InitializeWithLocal(
 	envRepo env_repo.Env,
 	config store_config.Config,
-	pubkey domain_interfaces.MarklId,
+	pubkey mad_domain_interfaces.MarklId,
 ) (err error) {
 	roundTripper.PublicKey = pubkey
 

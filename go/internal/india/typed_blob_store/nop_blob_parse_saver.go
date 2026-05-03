@@ -3,7 +3,8 @@ package typed_blob_store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -12,13 +13,13 @@ type nopBlobParseSaver[
 	OBJECT any,
 	OBJECT_PTR interfaces.Ptr[OBJECT],
 ] struct {
-	blobStore domain_interfaces.BlobWriterFactory
+	blobStore mad_domain_interfaces.BlobWriterFactory
 }
 
 func MakeNopBlobParseSaver[
 	OBJECT any,
 	OBJECT_PTR interfaces.Ptr[OBJECT],
-](awf domain_interfaces.BlobWriterFactory,
+](awf mad_domain_interfaces.BlobWriterFactory,
 ) nopBlobParseSaver[OBJECT, OBJECT_PTR] {
 	return nopBlobParseSaver[OBJECT, OBJECT_PTR]{
 		blobStore: awf,
@@ -29,7 +30,7 @@ func (parseSaver nopBlobParseSaver[OBJECT, OBJECT_PTR]) ParseBlob(
 	reader io.Reader,
 	object OBJECT_PTR,
 ) (n int64, err error) {
-	var blobWriter domain_interfaces.BlobWriter
+	var blobWriter mad_domain_interfaces.BlobWriter
 
 	if blobWriter, err = parseSaver.blobStore.MakeBlobWriter(nil); err != nil {
 		err = errors.Wrap(err)

@@ -1,13 +1,13 @@
 package env_dir
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
 )
 
 func MakeHashBucketPathFromMerkleId(
-	id domain_interfaces.MarklId,
+	id mad_domain_interfaces.MarklId,
 	buckets []int,
 	multiHash bool,
 	pathComponents ...string,

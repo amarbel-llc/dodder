@@ -1,13 +1,13 @@
 package command_components_dodder
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 )
 
 // TODO move to command_components
@@ -69,7 +69,7 @@ func (cmd EnvRepo) MakeEnvRepoFromEnvLocal(
 	var envRepo env_repo.Env
 
 	var basePath string
-	if repoConfig, ok := envLocal.GetCLIConfig().(domain_interfaces.RepoCLIConfigProvider); ok {
+	if repoConfig, ok := envLocal.GetCLIConfig().(mad_domain_interfaces.RepoCLIConfigProvider); ok {
 		basePath = repoConfig.GetBasePath()
 	}
 

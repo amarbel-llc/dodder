@@ -5,7 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -19,8 +20,8 @@ const (
 )
 
 type RoundTripperBufioWrappedSigner struct {
-	PublicKey  domain_interfaces.MarklId
-	HashFormat domain_interfaces.FormatHash
+	PublicKey  mad_domain_interfaces.MarklId
+	HashFormat mad_domain_interfaces.FormatHash
 	roundTripperBufio
 }
 
@@ -113,7 +114,7 @@ func (roundTripper *RoundTripperBufioWrappedSigner) RoundTrip(
 type verifyingBodyReader struct {
 	body       io.ReadCloser
 	response   *http.Response
-	hash       domain_interfaces.Hash
+	hash       mad_domain_interfaces.Hash
 	repoolHash interfaces.FuncRepool
 	pubkey     markl.Id
 	verified   bool

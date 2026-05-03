@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -48,7 +49,7 @@ func (err ErrBlobFormatterFailed) GetErrorType() pkgErrDisamb {
 
 func MakeErrHasInlineBlobAndFilePath(
 	blobFD *fd.FD,
-	inlineBlobDigest domain_interfaces.MarklId,
+	inlineBlobDigest mad_domain_interfaces.MarklId,
 ) (err *ErrHasInlineBlobAndFilePath) {
 	err = &ErrHasInlineBlobAndFilePath{}
 	err.BlobFD.ResetWith(blobFD)
@@ -80,7 +81,7 @@ func (err *ErrHasInlineBlobAndFilePath) GetErrorType() pkgErrDisamb {
 }
 
 func MakeErrHasInlineBlobAndMetadataBlobId(
-	inline, metadata domain_interfaces.MarklId,
+	inline, metadata mad_domain_interfaces.MarklId,
 ) (err *ErrHasInlineBlobAndMetadataDigest) {
 	err = &ErrHasInlineBlobAndMetadataDigest{}
 	err.metadata, _ = markl.Clone(metadata) //repool:owned
@@ -89,8 +90,8 @@ func MakeErrHasInlineBlobAndMetadataBlobId(
 }
 
 type ErrHasInlineBlobAndMetadataDigest struct {
-	Inline   domain_interfaces.MarklId
-	metadata domain_interfaces.MarklId
+	Inline   mad_domain_interfaces.MarklId
+	metadata mad_domain_interfaces.MarklId
 }
 
 func (err *ErrHasInlineBlobAndMetadataDigest) Error() string {

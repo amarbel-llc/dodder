@@ -7,8 +7,9 @@ import (
 	"os/exec"
 	"strings"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -224,13 +225,13 @@ func (c Diff) makeDo(
 
 func (c Diff) makeDoBlob(
 	w io.WriteCloser,
-	arf domain_interfaces.BlobReaderFactory,
-	sh domain_interfaces.MarklId,
+	arf mad_domain_interfaces.BlobReaderFactory,
+	sh mad_domain_interfaces.MarklId,
 ) errors.FuncErr {
 	return func() (err error) {
 		defer errors.DeferredCloser(&err, w)
 
-		var ar domain_interfaces.BlobReader
+		var ar mad_domain_interfaces.BlobReader
 
 		if ar, err = arf.MakeBlobReader(sh); err != nil {
 			err = errors.Wrap(err)

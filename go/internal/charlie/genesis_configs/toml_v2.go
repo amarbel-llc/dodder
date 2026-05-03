@@ -1,9 +1,9 @@
 package genesis_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -68,17 +68,17 @@ func (config *TomlV2Private) GetGenesisConfigPublic() ConfigPublic {
 	}
 }
 
-func (config *TomlV2Private) GetPrivateKey() domain_interfaces.MarklId {
+func (config *TomlV2Private) GetPrivateKey() mad_domain_interfaces.MarklId {
 	errors.PanicIfError(connectSSHSignerIfNecessary(&config.PrivateKey))
 	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(&config.PrivateKey))
 	return config.PrivateKey
 }
 
-func (config *TomlV2Private) GetPrivateKeyMutable() domain_interfaces.MarklIdMutable {
+func (config *TomlV2Private) GetPrivateKeyMutable() mad_domain_interfaces.MarklIdMutable {
 	return &config.PrivateKey
 }
 
-func (config *TomlV2Private) GetPublicKey() domain_interfaces.MarklId {
+func (config *TomlV2Private) GetPublicKey() mad_domain_interfaces.MarklId {
 	errors.PanicIfError(connectSSHSignerIfNecessary(&config.PrivateKey))
 	errors.PanicIfError(connectEcdsaP256SignerIfNecessary(&config.PrivateKey))
 	public, err := config.PrivateKey.GetPublicKey(markl.PurposeRepoPrivateKeyV1)
@@ -90,7 +90,7 @@ func (config *TomlV2Public) GetGenesisConfig() ConfigPublic {
 	return config
 }
 
-func (config TomlV2Public) GetPublicKey() domain_interfaces.MarklId {
+func (config TomlV2Public) GetPublicKey() mad_domain_interfaces.MarklId {
 	return config.PublicKey
 }
 

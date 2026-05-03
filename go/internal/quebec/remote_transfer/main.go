@@ -2,7 +2,6 @@ package remote_transfer
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
@@ -16,6 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -143,7 +143,7 @@ func (importer importer) importInventoryList(
 
 	if !importer.envRepo.GetDefaultBlobStore().HasBlob(blobDigest) {
 		err = env_dir.ErrBlobMissing{
-			BlobId: func() domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(), //repool:owned
+			BlobId: func() mad_domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(), //repool:owned
 		}
 
 		return checkedOut, err

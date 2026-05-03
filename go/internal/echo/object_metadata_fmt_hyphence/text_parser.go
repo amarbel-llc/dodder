@@ -3,7 +3,8 @@ package object_metadata_fmt_hyphence
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
@@ -13,8 +14,8 @@ import (
 )
 
 type textParser struct {
-	hashType      domain_interfaces.FormatHash
-	blobWriter    domain_interfaces.BlobWriterFactory
+	hashType      mad_domain_interfaces.FormatHash
+	blobWriter    mad_domain_interfaces.BlobWriterFactory
 	blobFormatter script_config.RemoteScript
 }
 
@@ -33,7 +34,7 @@ func (parser textParser) ParseMetadata(
 		ParserContext:     context,
 	}
 
-	var blobWriter domain_interfaces.BlobWriter
+	var blobWriter mad_domain_interfaces.BlobWriter
 
 	if blobWriter, err = parser.blobWriter.MakeBlobWriter(nil); err != nil {
 		err = errors.Wrap(err)

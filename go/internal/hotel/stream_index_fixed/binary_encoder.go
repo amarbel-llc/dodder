@@ -7,7 +7,8 @@ import (
 	"io"
 	"math"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/key_bytes"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -298,7 +299,7 @@ func (encoder *binaryEncoder) writeFieldKey(
 }
 
 func (encoder *binaryEncoder) writeMarklId(
-	marklId domain_interfaces.MarklId,
+	marklId mad_domain_interfaces.MarklId,
 	allowNull bool,
 ) (n int64, err error) {
 	if !allowNull {
@@ -338,7 +339,7 @@ func (encoder *binaryEncoder) writeFieldWriterTo(
 }
 
 func (encoder *binaryEncoder) writeFieldMerkleId(
-	merkleId domain_interfaces.MarklId,
+	merkleId mad_domain_interfaces.MarklId,
 	allowNull bool,
 	key string,
 ) (n int64, err error) {

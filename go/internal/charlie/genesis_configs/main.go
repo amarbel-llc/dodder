@@ -1,9 +1,9 @@
 package genesis_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -12,7 +12,7 @@ import (
 type (
 	Config interface {
 		GetStoreVersion() store_version.Version
-		GetPublicKey() domain_interfaces.MarklId
+		GetPublicKey() mad_domain_interfaces.MarklId
 		GetRepoId() ids.RepoId
 		GetInventoryListTypeId() string
 		GetObjectSigMarklTypeId() string
@@ -27,7 +27,7 @@ type (
 		Config
 		GetGenesisConfigPublic() ConfigPublic
 		GetGenesisConfig() ConfigPrivate
-		GetPrivateKey() domain_interfaces.MarklId
+		GetPrivateKey() mad_domain_interfaces.MarklId
 	}
 
 	ConfigPrivateMutable interface {
@@ -37,7 +37,7 @@ type (
 		SetInventoryListTypeId(string)
 		SetObjectSigMarklTypeId(string)
 		SetRepoId(ids.RepoId)
-		GetPrivateKeyMutable() domain_interfaces.MarklIdMutable
+		GetPrivateKeyMutable() mad_domain_interfaces.MarklIdMutable
 	}
 
 	TypedConfigPublic         = hyphence.TypedBlob[ConfigPublic]

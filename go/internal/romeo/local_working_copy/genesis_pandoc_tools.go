@@ -1,12 +1,12 @@
 package local_working_copy
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -31,7 +31,7 @@ func (local *Repo) prepareToolTypes(
 			return errors.Wrap(err)
 		}
 
-		var digest domain_interfaces.MarklId
+		var digest mad_domain_interfaces.MarklId
 
 		if digest, _, err = local.GetStore().GetTypedBlobStore().Type.SaveBlobText(
 			tipe,
@@ -62,7 +62,7 @@ func (local *Repo) prepareToolTypes(
 }
 
 func (local *Repo) writeRawBlob(content []byte) (digest markl.Id, err error) {
-	var writer domain_interfaces.BlobWriter
+	var writer mad_domain_interfaces.BlobWriter
 
 	if writer, err = local.GetEnvRepo().GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
 		return digest, errors.Wrap(err)

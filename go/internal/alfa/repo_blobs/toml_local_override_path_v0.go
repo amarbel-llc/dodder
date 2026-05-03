@@ -1,7 +1,7 @@
 package repo_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
@@ -11,11 +11,11 @@ type TomlLocalOverridePathV0 struct {
 	OverridePath string   `toml:"override-path"`
 }
 
-func (config TomlLocalOverridePathV0) GetPublicKey() domain_interfaces.MarklId {
+func (config TomlLocalOverridePathV0) GetPublicKey() mad_domain_interfaces.MarklId {
 	return config.PublicKey
 }
 
-func (config *TomlLocalOverridePathV0) SetPublicKey(id domain_interfaces.MarklId) {
+func (config *TomlLocalOverridePathV0) SetPublicKey(id mad_domain_interfaces.MarklId) {
 	config.PublicKey.ResetWithMarklId(id)
 }
 

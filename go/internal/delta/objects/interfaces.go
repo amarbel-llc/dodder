@@ -1,9 +1,9 @@
 package objects
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
@@ -16,11 +16,11 @@ type (
 	TagSet        = ids.Set[ids.TagStruct]
 	TagSetMutable = ids.SetMutable[ids.TagStruct]
 
-	IdLock        = domain_interfaces.Lock[SeqId, *SeqId]
-	IdLockMutable = domain_interfaces.LockMutable[SeqId, *SeqId]
+	IdLock        = mad_domain_interfaces.Lock[SeqId, *SeqId]
+	IdLockMutable = mad_domain_interfaces.LockMutable[SeqId, *SeqId]
 
-	TypeLock        = domain_interfaces.Lock[Type, TypeMutable]
-	TypeLockMutable = domain_interfaces.LockMutable[Type, TypeMutable]
+	TypeLock        = mad_domain_interfaces.Lock[Type, TypeMutable]
+	TypeLockMutable = mad_domain_interfaces.LockMutable[Type, TypeMutable]
 	TagLock         = IdLock
 	TagLockMutable  = IdLockMutable
 
@@ -50,11 +50,11 @@ type (
 		GetBlobReferenceAlias(markl.Id) string
 		GetBlobReferenceTypeLock(markl.Id) markl.Lock[ids.SeqId, *ids.SeqId]
 
-		GetBlobDigest() domain_interfaces.MarklId
-		GetObjectDigest() domain_interfaces.MarklId
-		GetMotherObjectSig() domain_interfaces.MarklId
-		GetRepoPubKey() domain_interfaces.MarklId
-		GetObjectSig() domain_interfaces.MarklId
+		GetBlobDigest() mad_domain_interfaces.MarklId
+		GetObjectDigest() mad_domain_interfaces.MarklId
+		GetMotherObjectSig() mad_domain_interfaces.MarklId
+		GetRepoPubKey() mad_domain_interfaces.MarklId
+		GetObjectSig() mad_domain_interfaces.MarklId
 	}
 
 	MetadataMutable interface {
@@ -72,12 +72,12 @@ type (
 
 		GetIndexMutable() IndexMutable
 
-		GetBlobDigestMutable() domain_interfaces.MarklIdMutable
+		GetBlobDigestMutable() mad_domain_interfaces.MarklIdMutable
 		GetDescriptionMutable() *descriptions.Description
-		GetMotherObjectSigMutable() domain_interfaces.MarklIdMutable
-		GetObjectDigestMutable() domain_interfaces.MarklIdMutable
-		GetObjectSigMutable() domain_interfaces.MarklIdMutable
-		GetRepoPubKeyMutable() domain_interfaces.MarklIdMutable
+		GetMotherObjectSigMutable() mad_domain_interfaces.MarklIdMutable
+		GetObjectDigestMutable() mad_domain_interfaces.MarklIdMutable
+		GetObjectSigMutable() mad_domain_interfaces.MarklIdMutable
+		GetRepoPubKeyMutable() mad_domain_interfaces.MarklIdMutable
 		GetTaiMutable() *ids.Tai
 		GetTypeMutable() TypeMutable
 		GetTypeLockMutable() TypeLockMutable
@@ -110,7 +110,7 @@ type (
 
 	DecoderContext interface {
 		GetterMutable
-		SetBlobDigest(domain_interfaces.MarklId) error
+		SetBlobDigest(mad_domain_interfaces.MarklId) error
 		// GetObjectIdMutable() ids.IdMutable
 	}
 )

@@ -5,7 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -65,8 +66,8 @@ func (local *Repo) MaterializeBlobTree(
 }
 
 func materializeOneBlob(
-	blobStore domain_interfaces.BlobStore,
-	blobId domain_interfaces.MarklId,
+	blobStore mad_domain_interfaces.BlobStore,
+	blobId mad_domain_interfaces.MarklId,
 	blobTreeDir string,
 	alias string,
 ) (err error) {
@@ -77,7 +78,7 @@ func materializeOneBlob(
 		return err
 	}
 
-	var reader domain_interfaces.BlobReader
+	var reader mad_domain_interfaces.BlobReader
 
 	if reader, err = blobStore.MakeBlobReader(blobId); err != nil {
 		err = errors.Wrap(err)

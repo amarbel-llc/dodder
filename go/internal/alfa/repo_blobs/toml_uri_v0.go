@@ -1,7 +1,7 @@
 package repo_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
 )
@@ -12,11 +12,11 @@ type TomlUriV0 struct {
 	Uri       values.Uri `toml:"uri"`
 }
 
-func (config TomlUriV0) GetPublicKey() domain_interfaces.MarklId {
+func (config TomlUriV0) GetPublicKey() mad_domain_interfaces.MarklId {
 	return config.PublicKey
 }
 
-func (config *TomlUriV0) SetPublicKey(id domain_interfaces.MarklId) {
+func (config *TomlUriV0) SetPublicKey(id mad_domain_interfaces.MarklId) {
 	config.PublicKey.ResetWithMarklId(id)
 }
 

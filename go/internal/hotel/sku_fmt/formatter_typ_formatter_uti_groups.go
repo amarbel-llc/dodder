@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -15,7 +17,7 @@ import (
 type TypeBlobStore interface {
 	ParseTypedBlob(
 		tipe domain_interfaces.ObjectId,
-		blobSha domain_interfaces.MarklId,
+		blobSha mad_domain_interfaces.MarklId,
 	) (common type_blobs.Blob, repool interfaces.FuncRepool, n int64, err error)
 }
 

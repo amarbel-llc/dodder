@@ -3,7 +3,8 @@ package orgie
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -27,7 +28,7 @@ var _ interfaces.CommandComponentWriter = (*Flags)(nil)
 type Options struct {
 	wasMade bool
 
-	Config domain_interfaces.MutableConfigDryRun
+	Config mad_domain_interfaces.MutableConfigDryRun
 
 	Metadata
 

@@ -3,7 +3,8 @@ package blob_transfers
 import (
 	"time"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -43,7 +44,7 @@ type Counts struct {
 }
 
 func (blobImporter *BlobImporter) ImportBlobIfNecessary(
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (err error) {
 	if len(blobImporter.Dsts) == 0 {
@@ -67,7 +68,7 @@ func (blobImporter *BlobImporter) ImportBlobIfNecessary(
 }
 
 func (blobImporter *BlobImporter) emitMissingBlob(
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (err error) {
 	blobCopyResult := sku.BlobCopyResult{
@@ -111,7 +112,7 @@ func (blobImporter *BlobImporter) emitCopyResultIfNecessary(
 
 func (blobImporter *BlobImporter) ImportBlobToStoreIfNecessary(
 	dst blob_stores.BlobStoreInitialized,
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,
 ) (copyResult sku.BlobCopyResult) {
 	copyResult.ObjectOrNil = object
@@ -123,7 +124,7 @@ func (blobImporter *BlobImporter) ImportBlobToStoreIfNecessary(
 		func(ctx errors.Context) {
 			blobImporter.Counts.Total++
 
-			var hashType domain_interfaces.FormatHash
+			var hashType mad_domain_interfaces.FormatHash
 
 			if blobImporter.UseDestinationHashType {
 				hashType = dst.GetDefaultHashType()

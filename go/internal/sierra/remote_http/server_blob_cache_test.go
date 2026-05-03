@@ -7,26 +7,27 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
-// stubBlobStoreForCache satisfies domain_interfaces.BlobStore for cache tests.
+// stubBlobStoreForCache satisfies mad_domain_interfaces.BlobStore for cache tests.
 // Only AllBlobs() is implemented; other methods panic if invoked, which keeps
 // the stub minimal and surfaces unexpected use during tests.
 type stubBlobStoreForCache struct {
-	domain_interfaces.BlobStore
+	mad_domain_interfaces.BlobStore
 
-	ids       []domain_interfaces.MarklId
+	ids       []mad_domain_interfaces.MarklId
 	yieldErr  error
 	calls     atomic.Int64
 	delayInit chan struct{}
 }
 
-func (s *stubBlobStoreForCache) AllBlobs() interfaces.SeqError[domain_interfaces.MarklId] {
-	return func(yield func(domain_interfaces.MarklId, error) bool) {
+func (s *stubBlobStoreForCache) AllBlobs() interfaces.SeqError[mad_domain_interfaces.MarklId] {
+	return func(yield func(mad_domain_interfaces.MarklId, error) bool) {
 		s.calls.Add(1)
 
 		if s.delayInit != nil {
@@ -40,16 +41,16 @@ func (s *stubBlobStoreForCache) AllBlobs() interfaces.SeqError[domain_interfaces
 		}
 
 		if s.yieldErr != nil {
-			var zero domain_interfaces.MarklId
+			var zero mad_domain_interfaces.MarklId
 			yield(zero, s.yieldErr)
 		}
 	}
 }
 
-func makeTestMarklIds(t1 *testing.T, hexes ...string) ([]domain_interfaces.MarklId, func()) {
+func makeTestMarklIds(t1 *testing.T, hexes ...string) ([]mad_domain_interfaces.MarklId, func()) {
 	t1.Helper()
 
-	ids := make([]domain_interfaces.MarklId, len(hexes))
+	ids := make([]mad_domain_interfaces.MarklId, len(hexes))
 	repools := make([]func(), 0, len(hexes))
 
 	for i, h := range hexes {

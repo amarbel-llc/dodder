@@ -16,8 +16,8 @@ import (
 	"syscall"
 	"time"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -35,6 +35,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -277,7 +278,7 @@ func (server *Server) addSignatureIfNecessary(
 }
 
 func (server *Server) signBodyTrailer(
-	bodyDigest domain_interfaces.MarklId,
+	bodyDigest mad_domain_interfaces.MarklId,
 	responseWriter http.ResponseWriter,
 ) {
 	sec := server.Repo.GetImmutableConfigPrivate().Blob.GetPrivateKey()
@@ -572,7 +573,7 @@ func (server *Server) handleBlobsHeadOrGet(
 			response.StatusCode = http.StatusNotFound
 		}
 	} else {
-		var rc domain_interfaces.BlobReader
+		var rc mad_domain_interfaces.BlobReader
 
 		{
 			var err error
@@ -652,10 +653,10 @@ func (server *Server) handleBlobsPost(request Request) (response Response) {
 
 func (server *Server) copyBlob(
 	reader io.ReadCloser,
-	expected domain_interfaces.MarklId,
+	expected mad_domain_interfaces.MarklId,
 ) (copyResult blob_stores.CopyResult, err error) {
 	var progressWriter env_ui.ProgressWriter
-	var writeCloser domain_interfaces.BlobWriter
+	var writeCloser mad_domain_interfaces.BlobWriter
 
 	if writeCloser, err = server.Repo.GetBlobStore().MakeBlobWriter(
 		nil,

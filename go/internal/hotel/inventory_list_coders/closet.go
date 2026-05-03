@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"io"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -15,6 +16,7 @@ import (
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -214,7 +216,7 @@ func (closet Closet) WriteTypedBlobToWriter(
 func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
 	ctx interfaces.ActiveContext,
 	tipe ids.TypeStruct,
-	hashFormat domain_interfaces.FormatHash,
+	hashFormat mad_domain_interfaces.FormatHash,
 	seq sku.Seq,
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
@@ -282,7 +284,7 @@ func (closet Closet) StreamInventoryListBlobSkus(
 		tipe := object.GetType()
 		blobDigest := object.GetBlobDigest()
 
-		var readCloser domain_interfaces.BlobReader
+		var readCloser mad_domain_interfaces.BlobReader
 
 		if blobDigest.IsNull() {
 			return
@@ -423,11 +425,11 @@ func (closet Closet) AllDecodedObjectsFromStreamWithBlobDigestValidation(
 
 func (closet Closet) IterInventoryListBlobSkusFromBlobStore(
 	tipe ids.TypeStruct,
-	blobStore domain_interfaces.BlobStore,
-	blobId domain_interfaces.MarklId,
+	blobStore mad_domain_interfaces.BlobStore,
+	blobId mad_domain_interfaces.MarklId,
 ) interfaces.SeqError[*sku.Transacted] {
 	return func(yield func(*sku.Transacted, error) bool) {
-		var readCloser domain_interfaces.BlobReader
+		var readCloser mad_domain_interfaces.BlobReader
 
 		{
 			var err error

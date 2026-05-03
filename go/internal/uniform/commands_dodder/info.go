@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -91,7 +92,7 @@ func (cmd Info) Run(req command.Request) {
 			ui.GetUI().Print(store_version.VNext)
 
 		case "compression-type":
-			if ioWrapper, ok := defaultBlobStoreConfig.(domain_interfaces.BlobIOWrapper); ok {
+			if ioWrapper, ok := defaultBlobStoreConfig.(mad_domain_interfaces.BlobIOWrapper); ok {
 				ui.GetUI().Print(
 					ioWrapper.GetBlobCompression(),
 				)
@@ -100,7 +101,7 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "age-encryption":
-			if ioWrapper, ok := defaultBlobStoreConfig.(domain_interfaces.BlobIOWrapper); ok {
+			if ioWrapper, ok := defaultBlobStoreConfig.(mad_domain_interfaces.BlobIOWrapper); ok {
 				ui.GetUI().Print(
 					ioWrapper.GetBlobEncryption(),
 				)

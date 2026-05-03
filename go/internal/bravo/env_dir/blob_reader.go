@@ -5,9 +5,10 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/lib/bravo/pivy"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
@@ -17,7 +18,7 @@ import (
 
 type blobReader struct {
 	readSeeker io.ReadSeeker
-	digester   domain_interfaces.BlobWriter
+	digester   mad_domain_interfaces.BlobWriter
 	decrypter  io.Reader
 	expander   io.ReadCloser
 	tee        io.Reader
@@ -65,7 +66,7 @@ func NewReader(
 func NewFileReaderOrErrNotExist(
 	config Config,
 	path string,
-) (blobReader domain_interfaces.BlobReader, err error) {
+) (blobReader mad_domain_interfaces.BlobReader, err error) {
 	var readSeeker io.ReadSeeker
 
 	if path == "-" {
@@ -95,14 +96,14 @@ func NewFileReaderOrErrNotExist(
 	return blobReader, err
 }
 
-func NewNopReader() (blobReader domain_interfaces.BlobReader, err error) {
+func NewNopReader() (blobReader mad_domain_interfaces.BlobReader, err error) {
 	return newFileReaderFromReadSeeker(DefaultConfig, bytes.NewReader(nil))
 }
 
 func newFileReaderFromReadSeeker(
 	config Config,
 	readSeeker io.ReadSeeker,
-) (blobReader domain_interfaces.BlobReader, err error) {
+) (blobReader mad_domain_interfaces.BlobReader, err error) {
 	// try the existing options. if they fail, try without encryption
 	if blobReader, err = NewReader(
 		config,
@@ -197,6 +198,6 @@ func (reader *blobReader) Close() (err error) {
 	return err
 }
 
-func (reader *blobReader) GetMarklId() domain_interfaces.MarklId {
+func (reader *blobReader) GetMarklId() mad_domain_interfaces.MarklId {
 	return reader.digester.GetMarklId()
 }

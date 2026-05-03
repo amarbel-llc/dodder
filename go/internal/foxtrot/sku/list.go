@@ -1,7 +1,7 @@
 package sku
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
@@ -11,7 +11,7 @@ type (
 	InventoryListStore interface {
 		WriteInventoryListObject(*Transacted) (err error)
 		ReadLast() (max *Transacted, err error)
-		AllInventoryListContents(domain_interfaces.MarklId) Seq
+		AllInventoryListContents(mad_domain_interfaces.MarklId) Seq
 		AllInventoryLists() Seq
 	}
 )

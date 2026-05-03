@@ -4,7 +4,8 @@ import (
 	"io"
 	"os"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
@@ -28,7 +29,7 @@ type Env interface {
 	GetOutFile() interfaces.WriterAndStringWriter
 	GetErr() fd.Std
 	GetErrFile() interfaces.WriterAndStringWriter
-	GetCLIConfig() domain_interfaces.CLIConfigProvider
+	GetCLIConfig() mad_domain_interfaces.CLIConfigProvider
 
 	Confirm(title, description string) (success bool)
 	Retry(header, retry string, err error) (tryAgain bool)
@@ -60,7 +61,7 @@ type env struct {
 
 	debug *debug.Context
 
-	cliConfig domain_interfaces.CLIConfigProvider
+	cliConfig mad_domain_interfaces.CLIConfigProvider
 }
 
 func MakeDefault(ctx errors.Context) *env {
@@ -74,7 +75,7 @@ func MakeDefault(ctx errors.Context) *env {
 
 func Make(
 	context errors.Context,
-	cliConfig domain_interfaces.CLIConfigProvider,
+	cliConfig mad_domain_interfaces.CLIConfigProvider,
 	debugOptions debug.Options,
 	options Options,
 ) *env {
@@ -177,6 +178,6 @@ func (w writerWithStringWriter) WriteString(s string) (int, error) {
 	return w.Write([]byte(s))
 }
 
-func (env *env) GetCLIConfig() domain_interfaces.CLIConfigProvider {
+func (env *env) GetCLIConfig() mad_domain_interfaces.CLIConfigProvider {
 	return env.cliConfig
 }

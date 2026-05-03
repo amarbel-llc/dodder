@@ -1,23 +1,23 @@
 package sku_fmt
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
 type itemDeletedStringFormatWriter struct {
-	domain_interfaces.Config
+	mad_domain_interfaces.Config
 	rightAlignedWriter   interfaces.StringEncoderTo[string]
 	idStringFormatWriter interfaces.StringEncoderTo[string]
 	fieldsFormatWriter   interfaces.StringEncoderTo[string_format_writer.Box]
 }
 
 func MakeItemDeletedStringWriterFormat(
-	config domain_interfaces.Config,
+	config mad_domain_interfaces.Config,
 	co string_format_writer.ColorOptions,
 	fieldsFormatWriter interfaces.StringEncoderTo[string_format_writer.Box],
 ) *itemDeletedStringFormatWriter {

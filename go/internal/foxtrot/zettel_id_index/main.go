@@ -1,13 +1,13 @@
 package zettel_id_index
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	hinweis_index_v0 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v0"
 	hinweis_index_v1 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v1"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -24,7 +24,7 @@ func MakeIndex(
 	config genesis_configs.ConfigPublic,
 	configCli repo_config_cli.Config,
 	directoryLayout directory_layout.RepoMutable,
-	cacheIOFactory domain_interfaces.NamedBlobAccess,
+	cacheIOFactory mad_domain_interfaces.NamedBlobAccess,
 ) (i Index, err error) {
 	if true {
 		if i, err = hinweis_index_v1.MakeIndex(

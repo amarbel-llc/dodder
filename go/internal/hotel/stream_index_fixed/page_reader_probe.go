@@ -3,7 +3,8 @@ package stream_index_fixed
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/page_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -29,7 +30,7 @@ func (index *Index) makeProbePageReader(
 	}
 
 	var err error
-	var blobReader domain_interfaces.BlobReader
+	var blobReader mad_domain_interfaces.BlobReader
 
 	if blobReader, err = index.envRepo.MakeNamedBlobReader(
 		pageReader.pageId.Path(),
@@ -46,7 +47,7 @@ func (index *Index) makeProbePageReader(
 	// Open overflow sidecar for probe reads.
 	ovId := overflowPageId(page.pageId)
 	overflowPath := ovId.Path()
-	var overflowBlobReader domain_interfaces.BlobReader
+	var overflowBlobReader mad_domain_interfaces.BlobReader
 
 	overflowBlobReader, err = env_repo.MakeNamedBlobReaderOrNullReader(
 		index.envRepo,

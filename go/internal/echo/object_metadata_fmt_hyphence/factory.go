@@ -1,14 +1,14 @@
 package object_metadata_fmt_hyphence
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 )
 
 type Factory struct {
 	EnvDir        env_dir.Env
-	BlobStore     domain_interfaces.BlobStore
+	BlobStore     mad_domain_interfaces.BlobStore
 	BlobFormatter script_config.RemoteScript
 	BlobTreeDir   string
 
@@ -43,7 +43,7 @@ func (factory Factory) MakeTextParser() Parser {
 	}
 }
 
-func (factory Factory) getBlobDigestType() domain_interfaces.FormatHash {
+func (factory Factory) getBlobDigestType() mad_domain_interfaces.FormatHash {
 	hashType := factory.BlobStore.GetDefaultHashType()
 
 	if hashType == nil {

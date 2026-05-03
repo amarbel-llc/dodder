@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -19,6 +19,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_ptr"
 )
 
@@ -179,7 +180,7 @@ func testEqualityNotSelf(t *ui.TestContext) {
 
 func makeTestTextFormatFactory(
 	envDir env_dir.Env,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) object_metadata_fmt_hyphence.Factory {
 	return object_metadata_fmt_hyphence.Factory{
 		AllowMissingTypeSig: true,
@@ -190,7 +191,7 @@ func makeTestTextFormatFactory(
 
 func makeTestTextFormat(
 	envDir env_dir.Env,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) object_metadata_fmt_hyphence.Format {
 	return makeTestTextFormatFactory(envDir, blobStore).Make()
 }
@@ -329,8 +330,8 @@ type blobReaderFactory struct {
 }
 
 func (blobStore blobReaderFactory) BlobReader(
-	digest domain_interfaces.MarklId,
-) (readCloser domain_interfaces.BlobReader, err error) {
+	digest mad_domain_interfaces.MarklId,
+) (readCloser mad_domain_interfaces.BlobReader, err error) {
 	var value string
 	var ok bool
 
@@ -359,7 +360,7 @@ func writeFormat(
 	includeBlob bool,
 	blobBody string,
 	options object_metadata_fmt_hyphence.FormatterOptions,
-	hashType domain_interfaces.FormatHash,
+	hashType mad_domain_interfaces.FormatHash,
 ) (out string) {
 	hash := sha256.New()
 	reader, repool := pool.GetStringReader(blobBody)

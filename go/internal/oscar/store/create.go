@@ -3,6 +3,8 @@ package store
 import (
 	"fmt"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -34,7 +36,7 @@ func (store *Store) CreateOrUpdate(
 
 func (store *Store) createOrUpdateBlobDigest(
 	objectId domain_interfaces.ObjectId,
-	blobDigest domain_interfaces.MarklId,
+	blobDigest mad_domain_interfaces.MarklId,
 ) (object *sku.Transacted, err error) {
 	if !store.GetEnvRepo().GetLockSmith().IsAcquired() {
 		err = file_lock.ErrLockRequired{
@@ -90,7 +92,7 @@ func (store *Store) createOrUpdateBlobDigest(
 
 type RevertId struct {
 	*ids.ObjectId
-	Sig domain_interfaces.MarklId
+	Sig mad_domain_interfaces.MarklId
 }
 
 func (store *Store) RevertTo(

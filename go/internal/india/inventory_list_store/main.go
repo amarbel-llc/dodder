@@ -3,6 +3,8 @@ package inventory_list_store
 import (
 	"sync"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -33,7 +35,7 @@ type Store struct {
 	clock        ids.Clock
 
 	inventoryListBlobStore
-	blobBlobStore domain_interfaces.BlobStore
+	blobBlobStore mad_domain_interfaces.BlobStore
 
 	box *box_format.BoxTransacted
 
@@ -43,14 +45,14 @@ type Store struct {
 var _ sku.InventoryListStore = &Store{}
 
 type inventoryListBlobStore interface {
-	domain_interfaces.BlobStore
+	mad_domain_interfaces.BlobStore
 	object_finalizer.FinalizerGetter
 
 	getType() ids.TypeStruct
 	getFormat() sku.ListCoder
 	GetInventoryListCoderCloset() inventory_list_coders.Closet
 
-	ReadOneBlobId(domain_interfaces.MarklId) (*sku.Transacted, error)
+	ReadOneBlobId(mad_domain_interfaces.MarklId) (*sku.Transacted, error)
 	WriteInventoryListObject(*sku.Transacted) error
 
 	AllInventoryLists() interfaces.SeqError[*sku.Transacted]
@@ -129,7 +131,7 @@ func (store *Store) GetEnvRepo() env_repo.Env {
 }
 
 func (store *Store) MakeWorkingList() (workingList *sku.WorkingList, err error) {
-	var mover domain_interfaces.BlobWriter
+	var mover mad_domain_interfaces.BlobWriter
 
 	if mover, err = store.blobBlobStore.MakeBlobWriter(
 		nil,
@@ -233,7 +235,7 @@ func (store *Store) Create(
 }
 
 func (store *Store) WriteInventoryListBlob(
-	remoteBlobStore domain_interfaces.BlobStore,
+	remoteBlobStore mad_domain_interfaces.BlobStore,
 	object *sku.Transacted,
 	list *sku.HeapTransacted,
 ) (err error) {
@@ -250,7 +252,7 @@ func (store *Store) WriteInventoryListBlob(
 		return err
 	}
 
-	var writeCloser domain_interfaces.BlobWriter
+	var writeCloser mad_domain_interfaces.BlobWriter
 
 	if writeCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobWriter(
 		nil,
@@ -315,7 +317,7 @@ func (store *Store) WriteInventoryListBlob(
 }
 
 func (store *Store) AllInventoryListContents(
-	blobSha domain_interfaces.MarklId,
+	blobSha mad_domain_interfaces.MarklId,
 ) sku.Seq {
 	return store.GetInventoryListCoderCloset().IterInventoryListBlobSkusFromBlobStore(
 		store.getType(),

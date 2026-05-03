@@ -1,7 +1,6 @@
 package store
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -18,6 +17,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/kilo/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -155,7 +155,7 @@ func (store *Store) SetUIDelegate(ud sku.UIStorePrinters) {
 }
 
 func (store *Store) UpdateKonfig(
-	blobId domain_interfaces.MarklId,
+	blobId mad_domain_interfaces.MarklId,
 ) (kt *sku.Transacted, err error) {
 	return store.createOrUpdateBlobDigest(
 		ids.Config,

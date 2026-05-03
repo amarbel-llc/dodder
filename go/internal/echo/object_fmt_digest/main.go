@@ -4,7 +4,8 @@ package object_fmt_digest
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/key_strings"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -110,7 +111,7 @@ func init() {
 func WriteDigest(
 	formatId string,
 	context FormatterContext,
-	output domain_interfaces.MarklIdMutable,
+	output mad_domain_interfaces.MarklIdMutable,
 ) (err error) {
 	format := GetFormatForPurpose(formatId)
 
@@ -121,7 +122,7 @@ func WriteDigest(
 		return err
 	}
 
-	var digest domain_interfaces.MarklId
+	var digest mad_domain_interfaces.MarklId
 
 	if digest, err = format.writeMetadata(nil, context); err != nil {
 		err = errors.Wrap(err)

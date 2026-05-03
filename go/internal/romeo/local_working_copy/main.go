@@ -1,7 +1,6 @@
 package local_working_copy
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
@@ -20,6 +19,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/oscar/env_box"
 	"code.linenisgreat.com/dodder/go/internal/oscar/store"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -59,7 +59,7 @@ func Make(
 	options Options,
 ) *Repo {
 	var basePath string
-	if repoConfig, ok := env.GetCLIConfig().(domain_interfaces.RepoCLIConfigProvider); ok {
+	if repoConfig, ok := env.GetCLIConfig().(mad_domain_interfaces.RepoCLIConfigProvider); ok {
 		basePath = repoConfig.GetBasePath()
 	}
 

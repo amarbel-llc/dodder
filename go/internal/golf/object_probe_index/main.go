@@ -3,7 +3,8 @@ package object_probe_index
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/page_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -105,7 +106,7 @@ func (index *Index) AddDigest(
 }
 
 func (index *Index) ReadOne(
-	originalId domain_interfaces.MarklId,
+	originalId mad_domain_interfaces.MarklId,
 ) (loc Loc, err error) {
 	id := originalId
 
@@ -133,7 +134,7 @@ func (index *Index) ReadOne(
 }
 
 func (index *Index) ReadMany(
-	originalId domain_interfaces.MarklId,
+	originalId mad_domain_interfaces.MarklId,
 	locations *[]Loc,
 ) (err error) {
 	id := originalId

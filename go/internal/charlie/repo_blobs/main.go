@@ -1,9 +1,9 @@
 package repo_blobs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/remote_connection_types"
 	charlie_rb "code.linenisgreat.com/dodder/go/internal/alfa/repo_blobs"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_value"
@@ -20,13 +20,13 @@ var TomlXDGV0FromXDG = charlie_rb.TomlXDGV0FromXDG
 
 type (
 	Blob interface {
-		GetPublicKey() domain_interfaces.MarklId
+		GetPublicKey() mad_domain_interfaces.MarklId
 		IsRemote() bool
 	}
 
 	BlobMutable interface {
 		Blob
-		SetPublicKey(domain_interfaces.MarklId)
+		SetPublicKey(mad_domain_interfaces.MarklId)
 	}
 
 	BlobXDG interface {

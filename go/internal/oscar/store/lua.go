@@ -3,7 +3,8 @@ package store
 import (
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/tag_blobs"
@@ -23,7 +24,7 @@ func (store *Store) MakeLuaVMPoolV1WithSku(
 		return lvp, err
 	}
 
-	var readCloser domain_interfaces.BlobReader
+	var readCloser mad_domain_interfaces.BlobReader
 
 	if readCloser, err = store.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(sk.GetBlobDigest()); err != nil {
 		err = errors.Wrap(err)

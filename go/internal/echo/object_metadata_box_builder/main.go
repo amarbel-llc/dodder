@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
@@ -16,7 +18,7 @@ import (
 type Builder string_format_writer.Box
 
 func (builder *Builder) AddBlobDigestIfNecessary(
-	digest domain_interfaces.MarklId,
+	digest mad_domain_interfaces.MarklId,
 	funcAbbreviate domain_interfaces.FuncAbbreviateString,
 ) {
 	value := digest.String()
@@ -94,7 +96,7 @@ func (builder *Builder) AddMotherSigIfNecessary(
 	}
 }
 
-func (builder *Builder) addMarklIdIfNotNull(id domain_interfaces.MarklId) {
+func (builder *Builder) addMarklIdIfNotNull(id mad_domain_interfaces.MarklId) {
 	if id.IsNull() {
 		return
 	}
@@ -102,12 +104,12 @@ func (builder *Builder) addMarklIdIfNotNull(id domain_interfaces.MarklId) {
 	builder.addMarklId(id)
 }
 
-func (builder *Builder) addMarklId(id domain_interfaces.MarklId) {
+func (builder *Builder) addMarklId(id mad_domain_interfaces.MarklId) {
 	builder.addMarklIdWithColorType(id, id.GetPurposeId(), fields.TypeHash)
 }
 
 func (builder *Builder) addMarklIdAbbreviated(
-	id domain_interfaces.MarklId,
+	id mad_domain_interfaces.MarklId,
 	funcAbbreviate domain_interfaces.FuncAbbreviateString,
 ) {
 	value := id.String()
@@ -138,14 +140,14 @@ func (builder *Builder) addMarklIdAbbreviated(
 
 func (builder *Builder) addMarklIdLockWithColorType(
 	key string,
-	value domain_interfaces.MarklId,
+	value mad_domain_interfaces.MarklId,
 	colorType fields.Type,
 ) {
 	builder.addMarklIdWithColorType(value, key, colorType)
 }
 
 func (builder *Builder) addMarklIdWithColorType(
-	value domain_interfaces.MarklId,
+	value mad_domain_interfaces.MarklId,
 	key string,
 	colorType fields.Type,
 ) {

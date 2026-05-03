@@ -4,7 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/0/remote_connection_types"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -156,7 +157,7 @@ func (cmd Remote) MakeRemoteAndObject(
 
 	remote = cmd.MakeRemoteFromBlobAndSetPublicKey(req, local, blob)
 
-	var blobId domain_interfaces.MarklId
+	var blobId mad_domain_interfaces.MarklId
 
 	{
 		var err error
@@ -382,7 +383,7 @@ func (cmd *Remote) MakeRemoteStdioLocal(
 	env env_local.Env,
 	dir string,
 	repo *local_working_copy.Repo,
-	pubkey domain_interfaces.MarklId,
+	pubkey mad_domain_interfaces.MarklId,
 ) (remoteHTTP repo.Repo) {
 	envRepo := cmd.MakeEnvRepo(req, false)
 

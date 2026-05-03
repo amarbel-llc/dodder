@@ -1,9 +1,9 @@
 package env_dir
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/compression_type"
@@ -12,10 +12,10 @@ import (
 // TODO move into own package
 
 func MakeConfig(
-	hashFormat domain_interfaces.FormatHash,
+	hashFormat mad_domain_interfaces.FormatHash,
 	funcJoin func(string, ...string) string,
 	compression interfaces.IOWrapper,
-	encryption domain_interfaces.MarklId,
+	encryption mad_domain_interfaces.MarklId,
 ) Config {
 	var ioWrapper interfaces.IOWrapper = defaultEncryptionIOWrapper
 
@@ -44,7 +44,7 @@ var (
 )
 
 type Config struct {
-	hashFormat domain_interfaces.FormatHash
+	hashFormat mad_domain_interfaces.FormatHash
 	// TODO replace with path generator interface
 	funcJoin    func(string, ...string) string
 	compression interfaces.IOWrapper

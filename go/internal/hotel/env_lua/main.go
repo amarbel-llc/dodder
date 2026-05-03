@@ -3,7 +3,8 @@ package env_lua
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -109,7 +110,7 @@ func (s *env) LuaRequire(ls *lua.LState) int {
 		panic(err)
 	}
 
-	var ar domain_interfaces.BlobReader
+	var ar mad_domain_interfaces.BlobReader
 
 	if ar, err = s.envRepo.GetDefaultBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),

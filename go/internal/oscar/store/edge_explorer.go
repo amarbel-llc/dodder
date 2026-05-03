@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"io"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
@@ -16,12 +17,12 @@ import (
 
 type edgeExplorer struct {
 	objectStore sku.RepoStore
-	blobStore   domain_interfaces.BlobStore
+	blobStore   mad_domain_interfaces.BlobStore
 }
 
 func MakeEdgeExplorer(
 	objectStore sku.RepoStore,
-	blobStore domain_interfaces.BlobStore,
+	blobStore mad_domain_interfaces.BlobStore,
 ) sku.EdgeExplorer {
 	return &edgeExplorer{
 		objectStore: objectStore,

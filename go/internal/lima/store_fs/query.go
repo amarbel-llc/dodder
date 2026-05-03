@@ -3,7 +3,8 @@ package store_fs
 import (
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -319,7 +320,7 @@ func (store *Store) queryUntracked(
 
 	addRecognizedIfNecessary := func(
 		object *sku.Transacted,
-		digest domain_interfaces.MarklId,
+		digest mad_domain_interfaces.MarklId,
 		digestCache map[string]interfaces.SetMutable[*sku.FSItem],
 	) (item *fsItemRecognized, err error) {
 		if digest.IsNull() {
