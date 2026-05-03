@@ -3,7 +3,7 @@ package objects
 import (
 	"strings"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/expansion"

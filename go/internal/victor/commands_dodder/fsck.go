@@ -10,7 +10,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/internal/charlie/tap_diagnostics"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_fmt_digest"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"

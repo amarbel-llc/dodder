@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"

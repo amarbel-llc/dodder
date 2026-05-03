@@ -3,7 +3,7 @@ package remote_transfer
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/internal/golf/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"code.linenisgreat.com/dodder/go/internal/quebec/repo"

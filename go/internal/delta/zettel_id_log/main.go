@@ -2,7 +2,7 @@ package zettel_id_log
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	charlie_zil "code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
 )
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
 func FromError(err error) map[string]string {

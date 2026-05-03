@@ -1,6 +1,6 @@
 package fields
 
-import "code.linenisgreat.com/dodder/go/internal/bravo/markl"
+import "github.com/amarbel-llc/madder/go/pkgs/markl"
 
 type Type byte
 

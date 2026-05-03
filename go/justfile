@@ -104,6 +104,30 @@ explore-drop-http-statuses-fork:
 
   echo "==> done"
 
+# [explore] one-shot: drop dodder's internal/bravo/markl fork in favor of
+# madder's pkgs/markl re-export. id_coding_doddish.go was already removed
+# (dead code, no callers). After this runs, build with `just build` to
+# surface any remaining references.
+[group('explore')]
+explore-drop-bravo-markl-fork:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd ..
+
+  dodder_markl='code.linenisgreat.com/dodder/go/internal/bravo/markl'
+  madder_markl='github.com/amarbel-llc/madder/go/pkgs/markl'
+
+  echo "==> rewriting bravo/markl imports in all *.go files under go/"
+  find go -name '*.go' -type f \
+    \! -path 'go/internal/bravo/markl/*' \
+    -print0 | xargs -0 sed -i \
+      -e "s|${dodder_markl}|${madder_markl}|g"
+
+  echo "==> deleting dodder's bravo/markl fork"
+  rm -rf go/internal/bravo/markl
+
+  echo "==> done"
+
 # [explore] one-shot: drop dodder's internal/charlie/fd vendored copy in
 # favor of madder's pkgs/fd. The only dodder-specific addition was an
 # (*FD).Remove(directoryLayout) method with zero callers (dead code) —

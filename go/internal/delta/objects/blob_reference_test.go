@@ -3,7 +3,7 @@ package objects
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_slice"
 )
 

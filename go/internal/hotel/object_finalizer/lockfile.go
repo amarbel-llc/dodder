@@ -2,7 +2,7 @@ package object_finalizer
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"

@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/key_strings"
 	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/bravo/markl"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"code.linenisgreat.com/dodder/go/lib/charlie/ohio"
 	"code.linenisgreat.com/dodder/go/lib/charlie/quiter"
