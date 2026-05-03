@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
-	"code.linenisgreat.com/dodder/go/internal/alfa/markl_io"
+	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
