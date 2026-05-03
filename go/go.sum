@@ -14,12 +14,10 @@ github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/akutz/memconn v0.1.0 h1:NawI0TORU4hcOMsMr11g7vwlCdkYeLKXBcxWu2W/P8A=
 github.com/akutz/memconn v0.1.0/go.mod h1:Jo8rI7m0NieZyLI5e2CDlRdRqRRB4S7Xp77ukDjH+Fw=
-github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0 h1:+8QbL84Q9IVcKUPm0DJ4emTwXndujB86ATqyNCem+KQ=
-github.com/amarbel-llc/bob/packages/tap-dancer/go v0.1.0/go.mod h1:f/eBRNyz3TVY+bB5bnNmYioJEgNrmwbvscFq29VFyXc=
-github.com/amarbel-llc/madder/go v0.3.6-0.20260502140335-26492b0aec15 h1:bitoykQtX4tOxBYjPVZM4H5JKlJyHFRHBxNiODqGPyo=
-github.com/amarbel-llc/madder/go v0.3.6-0.20260502140335-26492b0aec15/go.mod h1:smcngGTxEmTD9topO9eMjNjoi+lj3T3JVXtmRxNaMdA=
-github.com/amarbel-llc/purse-first/libs/dewey v0.0.4 h1:UUwBn2i/ZfsDruY4tfEl9VokANMQGwHWohbo1/aYoQE=
-github.com/amarbel-llc/purse-first/libs/dewey v0.0.4/go.mod h1:St7g+dt6IXHvkPOWaDto5qk+LJrALrWiDR6WLJdBnAE=
+github.com/amarbel-llc/bob/packages/tap-dancer/go v0.2.0 h1:0WgIOmnB8TylSi7oGiTA91YmfzFK6HijskBXtFhnwHU=
+github.com/amarbel-llc/bob/packages/tap-dancer/go v0.2.0/go.mod h1:OhtjCpf9l69bJ7Wb0tC5OP4NLUB7kKeb2oL0sX0nnPg=
+github.com/amarbel-llc/madder/go v0.3.8-0.20260503115502-daa1dd827edc h1:l09F10yEJQvgvxDbVGaIvSzIEgNVBJ5HkI7DKPCL3/U=
+github.com/amarbel-llc/madder/go v0.3.8-0.20260503115502-daa1dd827edc/go.mod h1:TpgGOI2PDq2FHz8f/UA4PQ9ujUHU0E+4Nd+2JcrX6Co=
 github.com/amarbel-llc/purse-first/libs/dewey v0.0.5-0.20260502174806-b2a96ca04331 h1:reNWRntkz1YsM4qM7rptDITSLwNRfjrHFyx3P+5HZqE=
 github.com/amarbel-llc/purse-first/libs/dewey v0.0.5-0.20260502174806-b2a96ca04331/go.mod h1:Z2O4fGt0BRR8wB5c1HpMRd/XG6Ymx4Ch7g4RfQmqnbI=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12 h1:vAuX5weS0oDmbA4d+Y+FQdIKjFZDInUtANnZmFOqR9c=
