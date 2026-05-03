@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
-	madder_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
+	mad_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
@@ -17,7 +17,7 @@ import (
 )
 
 type BlobStoreEnv struct {
-	madder_directory_layout.BlobStore
+	mad_directory_layout.BlobStore
 	env_local.Env
 
 	defaultBlobStoreIdString string
@@ -39,7 +39,7 @@ func makeBlobStoreEnvBase(
 
 	var err error
 
-	if env.BlobStore, err = madder_directory_layout.MakeBlobStore(
+	if env.BlobStore, err = mad_directory_layout.MakeBlobStore(
 		envLocal.GetXDGForBlobStores(),
 	); err != nil {
 		envLocal.Cancel(err)
@@ -198,7 +198,7 @@ func (env BlobStoreEnv) GetDefaultBlobStoreAndRemaining() (blob_stores.BlobStore
 
 func (env *BlobStoreEnv) writeBlobStoreConfigIfNecessary(
 	bigBang BigBang,
-	directoryLayout madder_directory_layout.BlobStore,
+	directoryLayout mad_directory_layout.BlobStore,
 ) {
 	if !bigBang.BlobStoreId.IsEmpty() {
 		return

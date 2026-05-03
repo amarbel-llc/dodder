@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	madder_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
+	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -350,7 +350,7 @@ func (closet Closet) AllDecodedObjectsFromStream(
 
 		if _, err := decoder.DecodeFrom(
 			&hyphence.TypedBlob[funcIterSeqError]{
-				Type: madder_ids.TypeStruct{},
+				Type: mad_ids.TypeStruct{},
 				Blob: func(object *sku.Transacted, err error) bool {
 					return yield(object, err)
 				},
@@ -401,7 +401,7 @@ func (closet Closet) AllDecodedObjectsFromStreamWithBlobDigestValidation(
 		defer repoolBufferedReader()
 
 		typedBlob := &hyphence.TypedBlob[funcIterSeqError]{
-			Type: madder_ids.TypeStruct{},
+			Type: mad_ids.TypeStruct{},
 			Blob: func(object *sku.Transacted, err error) bool {
 				return yield(object, err)
 			},

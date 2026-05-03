@@ -1,7 +1,7 @@
 package domain_interfaces
 
 import (
-	madder_di "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
@@ -9,23 +9,23 @@ import (
 // from madder's public domain_interfaces facade so dodder ships a single
 // source of truth without forcing every importer to re-spell its imports.
 type (
-	BlobIOWrapper                                       = madder_di.BlobIOWrapper
-	BlobIOWrapperGetter                                 = madder_di.BlobIOWrapperGetter
-	ReadAtSeeker                                        = madder_di.ReadAtSeeker
-	BlobReader                                          = madder_di.BlobReader
-	BlobWriter                                          = madder_di.BlobWriter
-	BlobReaderFactory                                   = madder_di.BlobReaderFactory
-	BlobWriterFactory                                   = madder_di.BlobWriterFactory
-	BlobAccess                                          = madder_di.BlobAccess
-	NamedBlobAccess                                     = madder_di.NamedBlobAccess
-	BlobPool[BLOB any]                                  = madder_di.BlobPool[BLOB]
-	Format[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]]     = madder_di.Format[BLOB, BLOB_PTR]
-	TypedStore[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]] = madder_di.TypedStore[BLOB, BLOB_PTR]
-	SavedBlobFormatter                                  = madder_di.SavedBlobFormatter
-	BlobForeignDigestAdder                              = madder_di.BlobForeignDigestAdder
-	BlobStore                                           = madder_di.BlobStore
-	BlobStoreConfig                                     = madder_di.BlobStoreConfig
-	BlobWriteObserver                                   = madder_di.BlobWriteObserver
-	BlobWriteEvent                                      = madder_di.BlobWriteEvent
-	BlobWriteOp                                         = madder_di.BlobWriteOp
+	BlobIOWrapper                                       = mad_domain_interfaces.BlobIOWrapper
+	BlobIOWrapperGetter                                 = mad_domain_interfaces.BlobIOWrapperGetter
+	ReadAtSeeker                                        = mad_domain_interfaces.ReadAtSeeker
+	BlobReader                                          = mad_domain_interfaces.BlobReader
+	BlobWriter                                          = mad_domain_interfaces.BlobWriter
+	BlobReaderFactory                                   = mad_domain_interfaces.BlobReaderFactory
+	BlobWriterFactory                                   = mad_domain_interfaces.BlobWriterFactory
+	BlobAccess                                          = mad_domain_interfaces.BlobAccess
+	NamedBlobAccess                                     = mad_domain_interfaces.NamedBlobAccess
+	BlobPool[BLOB any]                                  = mad_domain_interfaces.BlobPool[BLOB]
+	Format[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]]     = mad_domain_interfaces.Format[BLOB, BLOB_PTR]
+	TypedStore[BLOB any, BLOB_PTR interfaces.Ptr[BLOB]] = mad_domain_interfaces.TypedStore[BLOB, BLOB_PTR]
+	SavedBlobFormatter                                  = mad_domain_interfaces.SavedBlobFormatter
+	BlobForeignDigestAdder                              = mad_domain_interfaces.BlobForeignDigestAdder
+	BlobStore                                           = mad_domain_interfaces.BlobStore
+	BlobStoreConfig                                     = mad_domain_interfaces.BlobStoreConfig
+	BlobWriteObserver                                   = mad_domain_interfaces.BlobWriteObserver
+	BlobWriteEvent                                      = mad_domain_interfaces.BlobWriteEvent
+	BlobWriteOp                                         = mad_domain_interfaces.BlobWriteOp
 )

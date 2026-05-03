@@ -22,7 +22,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	madder_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
+	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
@@ -73,7 +73,7 @@ func Make(
 	}
 
 	object := workspace_config_blobs.TypedConfig{
-		Type: madder_ids.TypeStruct{},
+		Type: mad_ids.TypeStruct{},
 	}
 
 	dir := outputEnv.GetCwd()

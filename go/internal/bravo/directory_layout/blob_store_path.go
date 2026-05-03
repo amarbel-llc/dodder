@@ -2,12 +2,12 @@ package directory_layout
 
 import (
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	madder_dl "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
+	mad_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 )
 
 func GetDefaultBlobStore(
-	directoryLayout madder_dl.BlobStore,
-) madder_dl.BlobStorePath {
+	directoryLayout mad_directory_layout.BlobStore,
+) mad_directory_layout.BlobStorePath {
 	return GetBlobStorePath(
 		directoryLayout,
 		"default",
@@ -15,15 +15,15 @@ func GetDefaultBlobStore(
 }
 
 func GetBlobStorePath(
-	directoryLayout madder_dl.BlobStore,
+	directoryLayout mad_directory_layout.BlobStore,
 	idString string,
-) madder_dl.BlobStorePath {
-	return madder_dl.MakeBlobStorePath(
+) mad_directory_layout.BlobStorePath {
+	return mad_directory_layout.MakeBlobStorePath(
 		blob_store_id.MakeWithLocation(
 			idString,
 			directoryLayout.GetLocationType(),
 		),
 		DirBlobStore(directoryLayout, idString),
-		DirBlobStore(directoryLayout, idString, madder_dl.FileNameBlobStoreConfig),
+		DirBlobStore(directoryLayout, idString, mad_directory_layout.FileNameBlobStoreConfig),
 	)
 }
