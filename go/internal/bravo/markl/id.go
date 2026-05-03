@@ -282,6 +282,15 @@ func (id *Id) ResetWithPurpose(purpose string) {
 func (id *Id) ResetWith(src Id) {
 	id.purposeId = src.purposeId
 	id.format = src.format
+	// When src.data is empty, setData early-returns and would leave id.data
+	// at its previous length — which can produce the inconsistent state
+	// (data populated, format nil) that violates ADR-0001 and panics any
+	// observer that walks an Id's invariants. Truncate explicitly here so a
+	// copy from an empty src always yields an empty dst.
+	if len(src.data) == 0 {
+		id.data = id.data[:0]
+		return
+	}
 	errors.PanicIfError(id.setData(src.data))
 }
 

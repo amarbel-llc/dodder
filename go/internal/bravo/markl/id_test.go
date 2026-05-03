@@ -134,6 +134,41 @@ func testIdNullAndEqualFor(t *ui.TestContext, formatHash FormatHash) {
 	}
 }
 
+// TestResetWithEmptySrcClearsDstData covers a regression in (*Id).ResetWith
+// that surfaced via dodder #158. When `src` is empty (no data, no format),
+// the prior implementation copied src.format (nil) onto dst but left dst.data
+// at its previous length because setData(empty) early-returns. A previously-
+// populated dst (data=64, format=ed25519_sig) ended up as
+// (data=64, format=nil), violating ADR-0001.
+func TestResetWithEmptySrcClearsDstData(t1 *testing.T) {
+	ui.RunTestContext(t1, testResetWithEmptySrcClearsDstData)
+}
+
+func testResetWithEmptySrcClearsDstData(t *ui.TestContext) {
+	formatHash := FormatHashBlake2b256
+	hash, hashRepool := formatHash.Get()
+	defer hashRepool()
+
+	if _, err := io.WriteString(hash, "regression seed"); err != nil {
+		t.AssertNoError(err)
+	}
+
+	populated, populatedRepool := hash.GetMarklId()
+	defer populatedRepool()
+
+	var dst Id
+	dst.ResetWith(*populated.(*Id))
+	t.AssertFalse(dst.IsEmpty(), "dst should be populated after copying from non-empty src")
+
+	var emptySrc Id
+	dst.ResetWith(emptySrc)
+
+	t.AssertTrue(dst.IsEmpty(), "dst should be empty after copying from empty src")
+	t.AssertEqual(0, len(dst.GetBytes()))
+	t.AssertEqual(domain_interfaces.MarklFormat(nil), dst.GetMarklFormat())
+	t.AssertEqual("", dst.GetPurposeId())
+}
+
 func TestIdEncodeDecode(t1 *testing.T) {
 	ui.RunTestContext(t1, testIdEncodeDecode)
 }
