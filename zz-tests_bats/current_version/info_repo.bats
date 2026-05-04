@@ -27,35 +27,17 @@ function info_config_immutable { # @test
 	run_dodder info-repo config-immutable
 	assert_success
 
-	if [[ "$storeVersionCurrent" -le 10 ]]; then
-		assert_output --regexp - <<-EOM
-			---
-			! toml-config-immutable-v1
-			---
+	assert_output --regexp - <<-EOM
+		---
+		! toml-config-immutable-v2
+		---
 
-			public-key = "dodder-repo-public_key-v1.*"
-			store-version = $storeVersionCurrent
-			repo-type = "working-copy"
-			id = "test-repo-id"
-			inventory_list-type = "!inventory_list-v2"
-
-			\[blob-store]
-			compression-type = "zstd"
-			lock-internal-files = false
-		EOM
-	else
-		assert_output --regexp - <<-EOM
-			---
-			! toml-config-immutable-v2
-			---
-
-			public-key = "dodder-repo-public_key-v1.*"
-			store-version = $storeVersionCurrent
-			id = "test-repo-id"
-			inventory_list-type = "!inventory_list-v2"
-			object-sig-type = "dodder-object-sig-v2"
-		EOM
-	fi
+		public-key = "dodder-repo-public_key-v1.*"
+		store-version = $storeVersionCurrent
+		id = "test-repo-id"
+		inventory_list-type = "!inventory_list-v2"
+		object-sig-type = "dodder-object-sig-v2"
+	EOM
 }
 
 # bats test_tags=user_story:store_version

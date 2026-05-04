@@ -22,35 +22,17 @@ function init_compression { # @test
 	run_dodder_init_disable_age
 
 	function output_immutable_config() {
-		if [[ "$storeVersionCurrent" -le 10 ]]; then
-			cat - <<-EOM
-				---
-				! toml-config-immutable-v1
-				---
+		cat - <<-EOM
+			---
+			! toml-config-immutable-v2
+			---
 
-				public-key = "dodder-repo-public_key-v1.*"
-				store-version = $storeVersionCurrent
-				repo-type = "working-copy"
-				id = "test-repo-id"
-				inventory_list-type = "!inventory_list-v2"
-
-				\[blob-store]
-				compression-type = "zstd"
-				lock-internal-files = false
-			EOM
-		else
-			cat - <<-EOM
-				---
-				! toml-config-immutable-v2
-				---
-
-				public-key = "dodder-repo-public_key-v1.*"
-				store-version = $storeVersionCurrent
-				id = "test-repo-id"
-				inventory_list-type = "!inventory_list-v2"
-				object-sig-type = "dodder-object-sig-v2"
-			EOM
-		fi
+			public-key = "dodder-repo-public_key-v1.*"
+			store-version = $storeVersionCurrent
+			id = "test-repo-id"
+			inventory_list-type = "!inventory_list-v2"
+			object-sig-type = "dodder-object-sig-v2"
+		EOM
 	}
 
 	run_dodder info-repo config-immutable
