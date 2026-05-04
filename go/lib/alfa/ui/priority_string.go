@@ -21,8 +21,9 @@ const _Priority_name = "P0P1P2P3P4P5"
 var _Priority_index = [...]uint8{0, 2, 4, 6, 8, 10, 12}
 
 func (i Priority) String() string {
-	if i < 0 || i >= Priority(len(_Priority_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_Priority_index)-1 {
 		return "Priority(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _Priority_name[_Priority_index[i]:_Priority_index[i+1]]
+	return _Priority_name[_Priority_index[idx]:_Priority_index[idx+1]]
 }

@@ -23,8 +23,9 @@ const _RemoteConnection_name = "RemoteConnectionUnspecifiedRemoteConnectionNativ
 var _RemoteConnection_index = [...]uint8{0, 27, 49, 88, 114, 133, 159, 183, 203}
 
 func (i RemoteConnection) String() string {
-	if i < 0 || i >= RemoteConnection(len(_RemoteConnection_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_RemoteConnection_index)-1 {
 		return "RemoteConnection(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _RemoteConnection_name[_RemoteConnection_index[i]:_RemoteConnection_index[i+1]]
+	return _RemoteConnection_name[_RemoteConnection_index[idx]:_RemoteConnection_index[idx+1]]
 }

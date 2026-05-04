@@ -20,8 +20,9 @@ const _PathOption_name = "PathOptionDefaultPathOptionLeftPathOptionMiddlePathOpt
 var _PathOption_index = [...]uint8{0, 17, 31, 47, 62, 81}
 
 func (i PathOption) String() string {
-	if i < 0 || i >= PathOption(len(_PathOption_index)-1) {
+	idx := int(i) - 0
+	if i < 0 || idx >= len(_PathOption_index)-1 {
 		return "PathOption(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _PathOption_name[_PathOption_index[i]:_PathOption_index[i+1]]
+	return _PathOption_name[_PathOption_index[idx]:_PathOption_index[idx+1]]
 }
