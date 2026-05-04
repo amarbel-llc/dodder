@@ -6,7 +6,6 @@ import (
 	"slices"
 	"sort"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
@@ -204,7 +203,7 @@ func (env *BlobStoreEnv) writeBlobStoreConfigIfNecessary(
 		return
 	}
 
-	blobStoreConfigPath := directory_layout.GetDefaultBlobStore(
+	blobStoreConfigPath := mad_directory_layout.GetDefaultBlobStore(
 		directoryLayout,
 	).GetConfig()
 
