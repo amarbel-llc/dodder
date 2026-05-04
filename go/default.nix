@@ -16,9 +16,6 @@
 let
   pkgs = import nixpkgs {
     inherit system;
-    overlays = [
-      nixpkgs.overlays.default
-    ];
   };
 
   dodder = pkgs.buildGoApplication {
