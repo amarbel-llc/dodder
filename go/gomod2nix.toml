@@ -33,8 +33,8 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/madder/go']
-    version = 'v0.3.8-0.20260503115502-daa1dd827edc'
-    hash = 'sha256-xABiPh+iRdSOahPsv6CzQC/O/XeKUKolCshICEZMKrs='
+    version = 'v0.3.8-0.20260504001638-6308c57bd1e4'
+    hash = 'sha256-FU62Bps3ZN/tpfDHxTwyNBfUhy/oQAcYOLRaL2WWeB4='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/purse-first/libs/dewey']
@@ -45,6 +45,11 @@ schema = 3
   [mod.'github.com/amarbel-llc/purse-first/libs/go-mcp']
     version = 'v0.0.12'
     hash = 'sha256-lE+G+cxMITAOVyfMQCxmRtMa97OiLy2T8yfbn/PIt6U='
+    goVersion = '1.26'
+
+  [mod.'github.com/amarbel-llc/tap/go']
+    version = 'v0.1.2'
+    hash = 'sha256-yFpzdb1J+SPJpgFId9a/kG3w+ouF7HMocK2QuuL5cGo='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/tommy']
