@@ -7,9 +7,9 @@ import (
 	"testing"
 	"unicode"
 
-	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/alfa/unicorn"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 )
 
 func TestRingBufferReader(t1 *testing.T) {

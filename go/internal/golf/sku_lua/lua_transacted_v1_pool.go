@@ -2,9 +2,9 @@ package sku_lua
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 

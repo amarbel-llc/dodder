@@ -5,8 +5,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
-	"code.linenisgreat.com/dodder/go/lib/0/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/tetratelabs/wazero/api"
 )
