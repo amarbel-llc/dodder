@@ -11,14 +11,23 @@ import (
 	"strings"
 )
 
+// coderPackages enumerates dodder's versioned-coder packages — the ones
+// that hold a `map[string]coder` keyed by `!type-string` and call
+// registerTommy / registerBuiltinTypeString. The analyzer scans each of
+// these and cross-references against internal/bravo/ids/types_builtin.go.
+//
+// This list is curated, not auto-discovered — there's no naming
+// convention that reliably distinguishes "versioned-coder package"
+// from other `*_blobs`/`*_configs`/`*_stores` packages (e.g.
+// lib/charlie/config_cli is unrelated). When you add, remove, or move
+// a versioned-coder package, update this list.
 var coderPackages = []string{
-	"internal/delta/blob_store_configs",
-	"internal/delta/repo_blobs",
+	"internal/charlie/repo_blobs",
 	"internal/delta/repo_configs",
-	"internal/delta/genesis_configs",
+	"internal/charlie/genesis_configs",
 	"internal/delta/zettel_id_log",
 	"internal/echo/workspace_config_blobs",
-	"internal/hotel/type_blobs",
+	"internal/golf/type_blobs",
 }
 
 func main() {
