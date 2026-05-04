@@ -234,21 +234,8 @@ func SetWithGenre(
 	id *ObjectId,
 	value string,
 	genre domain_interfaces.GenreGetter,
-) (err error) {
+) error {
 	return id.SetWithGenre(value, genre)
-	if err = SetWithString(id, value); err != nil {
-		return err
-	}
-
-	{
-		genre := genres.Make(genre.GetGenre())
-
-		if err := genre.AssertGenre(id); err != nil {
-			return errors.Wrapf(wrapAsPkgError(err), "Id: %q", value)
-		}
-	}
-
-	return err
 }
 
 func SetOnlyNotUnknownGenre(
