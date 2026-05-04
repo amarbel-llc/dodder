@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/0/repo_id"
-	"code.linenisgreat.com/dodder/go/lib/bravo/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/echo/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"
 )
 
