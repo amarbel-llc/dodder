@@ -95,19 +95,19 @@ func (o *OsFilesystemOps) Merge(
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(basePath)
+	defer os.Remove(basePath) //defer:err-checked
 
 	currentPath, err := writeReaderToTempFile(current)
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(currentPath)
+	defer os.Remove(currentPath) //defer:err-checked
 
 	otherPath, err := writeReaderToTempFile(other)
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(otherPath)
+	defer os.Remove(otherPath) //defer:err-checked
 
 	resultFile, err := os.CreateTemp("", "merge-result-*")
 	if err != nil {
