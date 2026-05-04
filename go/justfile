@@ -277,8 +277,16 @@ update-flake-input input:
   if [[ -n "${rev}" ]]; then
     mod_path=$(awk '/^[[:space:]]*github\.com\/amarbel-llc\/{{input}}([\/].*)?[[:space:]]/ { print $1; exit }' go.mod)
     if [[ -n "${mod_path}" ]]; then
+      mod_before=$(grep -E "^[[:space:]]*${mod_path}[[:space:]]" go.mod || true)
       GOPROXY=direct go get "${mod_path}@${rev}"
       go mod tidy
+      mod_after=$(grep -E "^[[:space:]]*${mod_path}[[:space:]]" go.mod || true)
+      if [[ "${mod_before}" == "${mod_after}" ]]; then
+        echo "error: go.mod entry for ${mod_path} did not change after 'go get @${rev}'" >&2
+        echo "       before: ${mod_before}" >&2
+        echo "       after:  ${mod_after}" >&2
+        exit 1
+      fi
       gomod2nix
     fi
   fi
