@@ -1,9 +1,18 @@
-dir_build := absolute_path("go/build")
+dir_build := justfile_directory() / "go/build"
 
 # Prevent dodder's findWorkspaceFile from walking above the BATS temp dir and
-# discovering .dodder-workspace in the worktree. Without this, tests that expect
-# "no workspace" would pass incorrectly when TMPDIR is inside the repo tree.
-bats_ceiling := absolute_path("")
+# discovering .dodder-workspace in the worktree. Without this, tests that
+# expect "no workspace" would pass incorrectly when TMPDIR is inside the repo
+# tree. The same ceiling also bounds dodder's CWD-XDG-override discovery walk
+# (DODDER_CEILING_DIRECTORIES); without a stable ceiling, the walk can reach
+# .dodder/ inside fixture dirs and contaminate them.
+#
+# justfile_directory() resolves at parse time to the worktree root regardless
+# of the caller's CWD, so this stays correct even if the caller invokes just
+# from outside the worktree (e.g. some spinclass / pre-merge-hook flows).
+# absolute_path("") would resolve relative to just's invocation CWD, which is
+# fragile.
+bats_ceiling := justfile_directory()
 
 default: build test
 

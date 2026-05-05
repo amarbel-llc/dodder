@@ -20,3 +20,16 @@ build_options/
 # Rust
 target/
 Cargo.lock
+
+# Override common global gitignore patterns that match dodder/madder
+# state directories. Many users have `~/.config/git/ignore` lines like
+# `.dodder/` (dodder's own state dirs are typically uninteresting noise
+# in personal repos). That global pattern silently masks fixture
+# contamination: any process that writes to a fixture's `.dodder/` or
+# `.madder/` succeeds without git noticing, and the test suite then
+# reads the contaminated state on subsequent runs. Re-include the
+# fixture trees explicitly so `git status` flags any drift.
+!zz-tests_bats/previous_versions/*/.dodder/
+!zz-tests_bats/previous_versions/*/.dodder/**
+!zz-tests_bats/previous_versions/*/.madder/
+!zz-tests_bats/previous_versions/*/.madder/**
