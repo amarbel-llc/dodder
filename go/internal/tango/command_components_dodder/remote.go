@@ -91,9 +91,16 @@ func (cmd Remote) MakeHomeRepoRemote(
 		req.Cancel(err)
 	}
 
-	envDir := env_dir.MakeWithHomeAndInitialize(
+	ownDir := env_dir.MakeWithHomeAndInitialize(
 		req,
 		env_dir.XDGUtilityNameDodder,
+		home,
+		config.Debug,
+	)
+
+	madderDir := env_dir.MakeWithHomeAndInitialize(
+		req,
+		XDGUtilityNameMadder,
 		home,
 		config.Debug,
 	)
@@ -106,7 +113,8 @@ func (cmd Remote) MakeHomeRepoRemote(
 	)
 
 	return local_working_copy.Make(
-		env_local.Make(envUI, envDir),
+		env_local.Make(envUI, ownDir),
+		env_local.Make(envUI, madderDir),
 		local_working_copy.OptionsEmpty,
 	)
 }
@@ -227,10 +235,18 @@ func (cmd Remote) MakeRemoteFromBlob(
 	// TODO use cmd.RemoteConnectionType to determine connection type
 	switch blob := blob.(type) {
 	case repo_blobs.BlobXDG:
-		envDir := env_dir.MakeWithXDG(
+		ownXDG := blob.MakeXDG(req.Utility.GetName())
+
+		ownDir := env_dir.MakeWithXDG(
 			req,
 			config.Debug,
-			blob.MakeXDG(req.Utility.GetName()),
+			ownXDG,
+		)
+
+		madderDir := env_dir.MakeWithXDG(
+			req,
+			config.Debug,
+			ownXDG.CloneWithUtilityName(XDGUtilityNameMadder),
 		)
 
 		envUI := env_ui.Make(
@@ -241,15 +257,23 @@ func (cmd Remote) MakeRemoteFromBlob(
 		)
 
 		remote = local_working_copy.Make(
-			env_local.Make(envUI, envDir),
+			env_local.Make(envUI, ownDir),
+			env_local.Make(envUI, madderDir),
 			local_working_copy.OptionsEmpty,
 		)
 
 	case repo_blobs.BlobOverridePath:
-		envDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
+		ownDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
 			req,
 			blob.GetOverridePath(),
 			req.Utility.GetName(),
+			config.Debug,
+		)
+
+		madderDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
+			req,
+			blob.GetOverridePath(),
+			XDGUtilityNameMadder,
 			config.Debug,
 		)
 
@@ -264,7 +288,8 @@ func (cmd Remote) MakeRemoteFromBlob(
 		)
 
 		remote = local_working_copy.Make(
-			env_local.Make(envUI, envDir),
+			env_local.Make(envUI, ownDir),
+			env_local.Make(envUI, madderDir),
 			local_working_copy.OptionsEmpty,
 		)
 		// remote = cmd.MakeRemoteStdioLocal(

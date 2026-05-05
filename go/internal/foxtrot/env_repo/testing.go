@@ -38,18 +38,28 @@ func makeTestingWithBigBang(
 
 	dirTemp := t.TempDir()
 
-	envDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
+	ownDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
 		t.Context,
 		dirTemp,
 		env_dir.XDGUtilityNameDodder,
 		debug.Options{},
 	)
 
+	madderDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
+		t.Context,
+		dirTemp,
+		"madder",
+		debug.Options{},
+	)
+
+	envUI := env_ui.MakeDefault(t.Context)
+
 	{
 		var err error
 
 		if envRepo, err = Make(
-			env_local.Make(env_ui.MakeDefault(t.Context), envDir),
+			env_local.Make(envUI, ownDir),
+			env_local.Make(envUI, madderDir),
 			Options{
 				BasePath:                dirTemp,
 				PermitNoDodderDirectory: true,

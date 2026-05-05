@@ -58,19 +58,19 @@ type Env struct {
 // TODO https://github.com/amarbel-llc/dodder/issues/27
 // Stop returning error and cancel context instead
 //
-// Make takes a single env_local. Dodder's env_dir.GetXDGForBlobStores
-// hardcodes utility name "madder" — that bridge keeps blob-store XDG
-// pointing at madder's namespace while envLocal addresses dodder's
-// own state. #151 bucket B drops both the bridge and the env_dir
-// fork in the same commit; until then the single-env signature is
-// the right shape — constructing a separate madder-scope env_dir at
-// this layer would re-trigger initializeXDG and try to mkdir under
-// .madder/cache, which sandcastle blocks under development worktrees.
+// Make takes two env_locals. ownEnvLocal addresses dodder's own
+// state — its XDG namespace is "dodder" (config, cache, log, state).
+// madderEnvLocal addresses madder's blob-store namespace — its XDG
+// namespace is "madder". The two-env composition replaces the
+// previous bridge in dodder's env_dir.GetXDGForBlobStores (which
+// hardcoded utility name "madder") so the dodder env_dir / env_local
+// forks can be dropped (#151 bucket B Stage B).
 func Make(
-	envLocal env_local.Env,
+	ownEnvLocal env_local.Env,
+	madderEnvLocal env_local.Env,
 	options Options,
 ) (env Env, err error) {
-	env.Env = envLocal
+	env.Env = ownEnvLocal
 
 	if options.BasePath == "" {
 		options.BasePath = os.Getenv(dodder_env.EnvDir)
@@ -143,7 +143,7 @@ func Make(
 		return env, err
 	}
 
-	env.lockSmith = file_lock.New(envLocal, env.FileLock(), "repo")
+	env.lockSmith = file_lock.New(ownEnvLocal, env.FileLock(), "repo")
 
 	envVars := env_vars.Make(env)
 
@@ -151,10 +151,10 @@ func Make(
 	env.After(errors.MakeFuncContextFromFuncErr(envVars.Unset))
 
 	if configLoaded {
-		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(envLocal)
+		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(madderEnvLocal)
 	} else {
 		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnvWithoutStores(
-			envLocal,
+			madderEnvLocal,
 		)
 	}
 

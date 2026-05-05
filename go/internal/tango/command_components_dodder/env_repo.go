@@ -9,6 +9,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 )
 
+// XDGUtilityNameMadder is the literal scope segment for madder's XDG
+// namespace. Used as the second-env scope in env_repo.Make's two-env
+// composition.
+const XDGUtilityNameMadder = "madder"
+
 // TODO move to command_components
 type EnvRepo struct{}
 
@@ -18,18 +23,29 @@ func (cmd EnvRepo) MakeEnvRepo(
 ) env_repo.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
-	var dir env_dir.Env
+	var ownDir, madderDir env_dir.Env
 	if config.RepoId.IsCwd() || config.RepoId.IsSystem() {
-		dir = env_dir.MakeDefaultAndInitialize(
+		ownDir = env_dir.MakeDefaultAndInitialize(
 			req,
 			env_dir.XDGUtilityNameDodder,
 			config.Debug,
 			config.RepoId,
 		)
+		madderDir = env_dir.MakeDefaultAndInitialize(
+			req,
+			XDGUtilityNameMadder,
+			config.Debug,
+			config.RepoId,
+		)
 	} else {
-		dir = env_dir.MakeDefault(
+		ownDir = env_dir.MakeDefault(
 			req,
 			env_dir.XDGUtilityNameDodder,
+			config.Debug,
+		)
+		madderDir = env_dir.MakeDefault(
+			req,
+			XDGUtilityNameMadder,
 			config.Debug,
 		)
 	}
@@ -52,7 +68,8 @@ func (cmd EnvRepo) MakeEnvRepo(
 		var err error
 
 		if envRepo, err = env_repo.Make(
-			env_local.Make(envUI, dir),
+			env_local.Make(envUI, ownDir),
+			env_local.Make(envUI, madderDir),
 			envRepoOptions,
 		); err != nil {
 			envUI.Cancel(err)

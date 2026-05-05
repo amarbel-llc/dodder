@@ -396,9 +396,16 @@ func (cmd InitWorkspace) makeParentRemote(
 			req.Cancel(err)
 		}
 
-		envDir := env_dir.MakeWithHomeAndInitialize(
+		ownDir := env_dir.MakeWithHomeAndInitialize(
 			req,
 			env_dir.XDGUtilityNameDodder,
+			home,
+			config.Debug,
+		)
+
+		madderDir := env_dir.MakeWithHomeAndInitialize(
+			req,
+			command_components_dodder.XDGUtilityNameMadder,
 			home,
 			config.Debug,
 		)
@@ -411,7 +418,8 @@ func (cmd InitWorkspace) makeParentRemote(
 		)
 
 		return local_working_copy.Make(
-			env_local.Make(envUI, envDir),
+			env_local.Make(envUI, ownDir),
+			env_local.Make(envUI, madderDir),
 			local_working_copy.OptionsEmpty,
 		)
 	}

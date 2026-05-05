@@ -101,9 +101,16 @@ func (cmd Genesis) OnTheFirstDay(
 
 	cmd.GenesisConfig.Blob.SetRepoId(repoId)
 
-	dir := env_dir.MakeDefaultAndInitialize(
+	ownDir := env_dir.MakeDefaultAndInitialize(
 		req,
 		env_dir.XDGUtilityNameDodder,
+		config.Debug,
+		config.RepoId,
+	)
+
+	madderDir := env_dir.MakeDefaultAndInitialize(
+		req,
+		XDGUtilityNameMadder,
 		config.Debug,
 		config.RepoId,
 	)
@@ -119,7 +126,8 @@ func (cmd Genesis) OnTheFirstDay(
 		var err error
 
 		if envRepo, err = env_repo.Make(
-			env_local.Make(envUI, dir),
+			env_local.Make(envUI, ownDir),
+			env_local.Make(envUI, madderDir),
 			options,
 		); err != nil {
 			envUI.Cancel(err)

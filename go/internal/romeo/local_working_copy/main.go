@@ -55,11 +55,12 @@ type Repo struct {
 }
 
 func Make(
-	env env_local.Env,
+	ownEnv env_local.Env,
+	madderEnv env_local.Env,
 	options Options,
 ) *Repo {
 	var basePath string
-	if repoConfig, ok := env.GetCLIConfig().(mad_domain_interfaces.RepoCLIConfigProvider); ok {
+	if repoConfig, ok := ownEnv.GetCLIConfig().(mad_domain_interfaces.RepoCLIConfigProvider); ok {
 		basePath = repoConfig.GetBasePath()
 	}
 
@@ -73,10 +74,11 @@ func Make(
 		var err error
 
 		if envRepo, err = env_repo.Make(
-			env,
+			ownEnv,
+			madderEnv,
 			layoutOptions,
 		); err != nil {
-			env.Cancel(err)
+			ownEnv.Cancel(err)
 		}
 	}
 
