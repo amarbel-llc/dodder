@@ -7,7 +7,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 )
 
 // TODO move to command_components
@@ -57,34 +56,6 @@ func (cmd EnvRepo) MakeEnvRepo(
 			envRepoOptions,
 		); err != nil {
 			envUI.Cancel(err)
-		}
-	}
-
-	return envRepo
-}
-
-func (cmd EnvRepo) MakeEnvRepoFromEnvLocal(
-	envLocal env_local.Env,
-) env_repo.Env {
-	var envRepo env_repo.Env
-
-	var basePath string
-	if repoConfig, ok := envLocal.GetCLIConfig().(mad_domain_interfaces.RepoCLIConfigProvider); ok {
-		basePath = repoConfig.GetBasePath()
-	}
-
-	layoutOptions := env_repo.Options{
-		BasePath: basePath,
-	}
-
-	{
-		var err error
-
-		if envRepo, err = env_repo.Make(
-			envLocal,
-			layoutOptions,
-		); err != nil {
-			envLocal.Cancel(err)
 		}
 	}
 

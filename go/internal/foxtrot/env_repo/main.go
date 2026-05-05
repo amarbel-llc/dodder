@@ -3,16 +3,18 @@ package env_repo
 import (
 	"os"
 
+	mad_blob_store_env "github.com/amarbel-llc/madder/go/pkgs/blob_store_env"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
-	mad_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -27,19 +29,43 @@ const (
 	FileWorkspace         = ".dodder-workspace"
 )
 
+// BlobStoreEnv is dodder's stable name for madder's
+// blob_store_env.BlobStoreEnv. Aliased so existing call sites in
+// golf/blob_transfers and tango/command_components_dodder keep
+// compiling while #151 bucket B's mechanical sweep is staged
+// separately.
+type BlobStoreEnv = mad_blob_store_env.BlobStoreEnv
+
+// MakeBlobStoreEnv forwards to madder's blob_store_env.MakeBlobStoreEnv.
+// Same aliasing rationale as BlobStoreEnv.
+var MakeBlobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv
+
 type Env struct {
 	config genesis_configs.TypedConfigPrivate
 
 	lockSmith interfaces.LockSmith
 
-	directoryLayoutBlobStore mad_directory_layout.BlobStore
 	directory_layout.Repo
 
-	BlobStoreEnv
+	// Env is the own-scope env_local (utilityName="dodder"). Its XDG
+	// methods address dodder's config / cache / log / state directories.
+	// Blob-store XDG goes through blobStoreEnv, not this embed.
+	env_local.Env
+
+	blobStoreEnv mad_blob_store_env.BlobStoreEnv
 }
 
 // TODO https://github.com/amarbel-llc/dodder/issues/27
 // Stop returning error and cancel context instead
+//
+// Make takes a single env_local. Dodder's env_dir.GetXDGForBlobStores
+// hardcodes utility name "madder" — that bridge keeps blob-store XDG
+// pointing at madder's namespace while envLocal addresses dodder's
+// own state. #151 bucket B drops both the bridge and the env_dir
+// fork in the same commit; until then the single-env signature is
+// the right shape — constructing a separate madder-scope env_dir at
+// this layer would re-trigger initializeXDG and try to mkdir under
+// .madder/cache, which sandcastle blocks under development worktrees.
 func Make(
 	envLocal env_local.Env,
 	options Options,
@@ -47,7 +73,7 @@ func Make(
 	env.Env = envLocal
 
 	if options.BasePath == "" {
-		options.BasePath = os.Getenv(env_dir.EnvDir)
+		options.BasePath = os.Getenv(dodder_env.EnvDir)
 	}
 
 	if options.BasePath == "" {
@@ -98,13 +124,6 @@ func Make(
 		}
 	}
 
-	if env.directoryLayoutBlobStore, err = mad_directory_layout.MakeBlobStore(
-		env.GetXDGForBlobStores(),
-	); err != nil {
-		err = errors.Wrap(err)
-		return env, err
-	}
-
 	if env.Repo, err = directory_layout.MakeRepo(
 		env.GetStoreVersion(),
 		xdg,
@@ -132,7 +151,11 @@ func Make(
 	env.After(errors.MakeFuncContextFromFuncErr(envVars.Unset))
 
 	if configLoaded {
-		env.BlobStoreEnv = MakeBlobStoreEnv(envLocal)
+		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(envLocal)
+	} else {
+		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnvWithoutStores(
+			envLocal,
+		)
 	}
 
 	return env, err
@@ -142,8 +165,8 @@ func (env Env) GetEnv() env_ui.Env {
 	return env.Env
 }
 
-func (env Env) GetEnvBlobStore() BlobStoreEnv {
-	return env.BlobStoreEnv
+func (env Env) GetEnvBlobStore() mad_blob_store_env.BlobStoreEnv {
+	return env.blobStoreEnv
 }
 
 func (env Env) GetConfigPublic() genesis_configs.TypedConfigPublic {
@@ -210,4 +233,38 @@ func (env Env) GetInventoryListBlobStore() mad_domain_interfaces.BlobStore {
 
 func (env Env) GetPathConfigSeed() interfaces.DirectoryLayoutPath {
 	return env.GetXDG().Data.MakePath("config-seed")
+}
+
+// Delegation methods for the BlobStoreEnv API surface. With the
+// embedded BlobStoreEnv replaced by a named field, the existing
+// envRepo.GetDefaultBlobStore() / .GetBlobStores() / etc. call sites
+// would otherwise stop compiling.
+
+func (env Env) GetDefaultBlobStore() blob_stores.BlobStoreInitialized {
+	return env.blobStoreEnv.GetDefaultBlobStore()
+}
+
+func (env Env) GetBlobStores() blob_stores.BlobStoreMap {
+	return env.blobStoreEnv.GetBlobStores()
+}
+
+func (env Env) GetBlobStoresSorted() []blob_stores.BlobStoreInitialized {
+	return env.blobStoreEnv.GetBlobStoresSorted()
+}
+
+func (env Env) GetBlobStore(
+	id blob_store_id.Id,
+) blob_stores.BlobStoreInitialized {
+	return env.blobStoreEnv.GetBlobStore(id)
+}
+
+func (env Env) GetDefaultBlobStoreAndRemaining() (
+	blob_stores.BlobStoreInitialized,
+	blob_stores.BlobStoreMap,
+) {
+	return env.blobStoreEnv.GetDefaultBlobStoreAndRemaining()
+}
+
+func (env *Env) SetBlobStoreOrder(ids []blob_store_id.Id) {
+	env.blobStoreEnv.SetBlobStoreOrder(ids)
 }

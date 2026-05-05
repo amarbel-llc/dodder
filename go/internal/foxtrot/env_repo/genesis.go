@@ -11,6 +11,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
+	mad_blob_store_env "github.com/amarbel-llc/madder/go/pkgs/blob_store_env"
+	mad_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
@@ -19,13 +22,6 @@ import (
 )
 
 func (env *Env) Genesis(bigBang BigBang) {
-	if env.directoryLayoutBlobStore == nil {
-		errors.ContextCancelWithErrorf(
-			env,
-			"blob store directory layout not initialized",
-		)
-	}
-
 	if env.Repo == nil {
 		errors.ContextCancelWithErrorf(
 			env,
@@ -77,11 +73,13 @@ func (env *Env) Genesis(bigBang BigBang) {
 
 	env.writeInventoryListLog()
 	env.writeConfig(bigBang)
-	env.writeBlobStoreConfigIfNecessary(bigBang, env.directoryLayoutBlobStore)
+	env.writeBlobStoreConfigIfNecessary(bigBang, env.blobStoreEnv.BlobStore)
 
-	env.BlobStoreEnv = MakeBlobStoreEnv(
-		env.Env,
-	)
+	// Re-make the blob_store_env now that the on-disk config exists,
+	// so store discovery picks up the freshly-written config. Reuses
+	// the env_local embedded in the existing blobStoreEnv to avoid
+	// re-running env_dir.initializeXDG.
+	env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(env.blobStoreEnv.Env)
 
 	env.genesisObjectIds(bigBang)
 
@@ -127,6 +125,46 @@ func (env *Env) writeConfig(bigBang BigBang) {
 		genesis_configs.CoderPrivate,
 		&env.config,
 		env.GetPathConfigSeed().String(),
+	); err != nil {
+		env.Cancel(err)
+		return
+	}
+}
+
+// writeBlobStoreConfigIfNecessary writes the initial blob store
+// config to disk when the genesis bigBang did not specify a
+// pre-existing blob store id. Moved here from the deleted
+// env_repo/blob_store.go: it operates on the env_repo (uses
+// env.MakeDirs / env.Cancel) and on madder's directory_layout, so
+// belonging to env_repo as a method is the natural home.
+func (env *Env) writeBlobStoreConfigIfNecessary(
+	bigBang BigBang,
+	directoryLayout mad_directory_layout.BlobStore,
+) {
+	if !bigBang.BlobStoreId.IsEmpty() {
+		return
+	}
+
+	blobStoreConfigPath := mad_directory_layout.GetDefaultBlobStore(
+		directoryLayout,
+	).GetConfig()
+
+	blobStoreConfigDir := filepath.Dir(blobStoreConfigPath)
+
+	if err := env.MakeDirs(blobStoreConfigDir); err != nil {
+		env.Cancel(err)
+		return
+	}
+
+	blobStoreConfig := bigBang.TypedBlobStoreConfig
+
+	if err := hyphence.EncodeToFile(
+		blob_store_configs.Coder,
+		&blob_store_configs.TypedConfig{
+			Type: blobStoreConfig.Type,
+			Blob: blobStoreConfig.Blob,
+		},
+		blobStoreConfigPath,
 	); err != nil {
 		env.Cancel(err)
 		return
