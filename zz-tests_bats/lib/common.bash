@@ -213,6 +213,23 @@ function run_dodder_init_disable_age_xdg {
   # [konfig @$(get_konfig_sha) !toml-config-v2]
   # EOM
 
+  # Sanity check: the freshly-written konfig blob is reachable
+  # via madder. Confirms #151 bucket B's two-env composition
+  # actually routes dodder XDG-init blob storage through madder's
+  # XDG namespace (the gate that #144 phase 1 had to remove this
+  # check for, via #159).
+  #
+  # Extract the konfig sha from init's output — the fixture's
+  # FIXTURE_KONFIG_SHA can drift from what fresh init produces if
+  # dodder's default toml changes between fixture regenerations.
+  local konfig_sha
+  konfig_sha="$(echo "$output" | grep -oE 'konfig @blake2b256-[[:alnum:]]+' | grep -oE 'blake2b256-[[:alnum:]]+' | head -1)"
+  [[ -n $konfig_sha ]] || fail "could not extract konfig sha from init output: $output"
+
+  run_madder cat default "$konfig_sha"
+  assert_success
+  assert_output
+
   run_dodder init-workspace -experimental-repo=false
 }
 
