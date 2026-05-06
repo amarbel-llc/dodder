@@ -3,6 +3,7 @@ package env_box
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -90,7 +91,7 @@ func (env *env) StringFormatWriterSkuBoxTransacted(
 	return box_format.MakeBoxTransacted(
 		colorOptions,
 		printOptions,
-		env.StringFormatWriterFields(truncation, colorOptions),
+		env_ui.StringFormatWriterFields(truncation, colorOptions),
 		env.GetAbbr(),
 		env.storeFS,
 		env,
@@ -107,7 +108,7 @@ func (env *env) StringFormatWriterSkuBoxCheckedOut(
 	return box_format.MakeBoxCheckedOut(
 		colorOptions,
 		printOptions,
-		env.StringFormatWriterFields(truncation, colorOptions),
+		env_ui.StringFormatWriterFields(truncation, colorOptions),
 		env.GetAbbr(),
 		env.storeFS,
 		env,
@@ -116,7 +117,7 @@ func (env *env) StringFormatWriterSkuBoxCheckedOut(
 }
 
 func (env *env) SkuFormatBoxTransactedNoColor() *box_format.BoxTransacted {
-	colorOptions := env.FormatColorOptionsOut(env.config.GetPrintOptions())
+	colorOptions := env_ui.FormatColorOptionsOut(env, env.config.GetPrintOptions())
 	colorOptions.OffEntirely = true
 	options := env.config.GetPrintOptions().
 		WithPrintBlobDigests(true)
@@ -130,7 +131,7 @@ func (env *env) SkuFormatBoxTransactedNoColor() *box_format.BoxTransacted {
 }
 
 func (env *env) SkuFormatBoxCheckedOutNoColor() *box_format.BoxCheckedOut {
-	co := env.FormatColorOptionsOut(env.config.GetPrintOptions())
+	co := env_ui.FormatColorOptionsOut(env, env.config.GetPrintOptions())
 	co.OffEntirely = true
 	options := env.config.GetPrintOptions().WithPrintBlobDigests(false)
 	options.BoxPrintTime = false
@@ -152,7 +153,7 @@ func (env *env) PrinterTransacted() interfaces.FuncIter[*sku.Transacted] {
 
 	stringFormatWriter := env.StringFormatWriterSkuBoxTransacted(
 		printOptions,
-		env.FormatColorOptionsOut(printOptions),
+		env_ui.FormatColorOptionsOut(env, printOptions),
 		string_format_writer.CliFormatTruncation66CharEllipsis,
 	)
 
@@ -175,7 +176,7 @@ func (env *env) PrinterCheckedOut(
 ) interfaces.FuncIter[*sku.CheckedOut] {
 	po := env.config.GetPrintOptions().
 		WithPrintBlobDigests(true)
-	oo := env.FormatOutputOptions(po)
+	oo := env_ui.FormatOutputOptions(env, po)
 
 	out := string_format_writer.MakeDelim(
 		"\n",

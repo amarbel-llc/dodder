@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -187,7 +188,7 @@ func (cmd Import) Run(req command.Request) {
 		default:
 			printOptions := local.GetConfig().GetPrintOptions().
 				WithPrintSigs(true)
-			colorOptions := local.FormatColorOptionsErr(printOptions)
+			colorOptions := env_ui.FormatColorOptionsErr(local, printOptions)
 
 			boxFormatter := local.StringFormatWriterSkuBoxTransacted(
 				printOptions,

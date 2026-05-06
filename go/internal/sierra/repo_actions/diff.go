@@ -11,6 +11,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
@@ -148,7 +149,7 @@ func (op Diff) Run(
 
 	externalLabel := op.GetEnvRepo().Rel(externalFD.GetPath())
 
-	colorOptions := op.FormatColorOptionsOut(op.GetConfig().GetPrintOptions())
+	colorOptions := env_ui.FormatColorOptionsOut(op.GetEnv(), op.GetConfig().GetPrintOptions())
 	colorString := "always"
 
 	if colorOptions.OffEntirely {

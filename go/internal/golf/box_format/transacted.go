@@ -27,16 +27,13 @@ func MakeBoxTransactedArchive(
 		WithDescriptionInBox(true).
 		WithPrintSigs(true)
 
-	colorOptions := env.FormatColorOptionsOut(optionsOriginal)
+	colorOptions := env_ui.FormatColorOptionsOut(env, optionsOriginal)
 	colorOptions.OffEntirely = true
 
 	format := MakeBoxTransacted(
 		colorOptions,
 		options,
-		env.StringFormatWriterFields(
-			string_format_writer.CliFormatTruncationNone,
-			colorOptions,
-		),
+		env_ui.StringFormatWriterFields(string_format_writer.CliFormatTruncationNone, colorOptions),
 		ids.Abbr{},
 		nil,
 		nil,

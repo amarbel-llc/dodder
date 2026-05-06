@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/id_fmts"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
@@ -21,7 +22,7 @@ func (local *Repo) PrinterTransactedDeleted() interfaces.FuncIter[*sku.CheckedOu
 
 	stringEncoder := local.StringFormatWriterSkuBoxCheckedOut(
 		printOptions,
-		local.FormatColorOptionsOut(printOptions),
+		env_ui.FormatColorOptionsOut(local, printOptions),
 		string_format_writer.CliFormatTruncation66CharEllipsis,
 		box_format.CheckedOutHeaderDeleted{
 			ConfigDryRunGetter: local.GetConfig(),
@@ -47,7 +48,7 @@ func (local *Repo) PrinterFDDeleted() interfaces.FuncIter[*fd.FD] {
 	p := id_fmts.MakeFDDeletedStringWriterFormat(
 		local.GetConfig().IsDryRun(),
 		id_fmts.MakeFDCliFormat(
-			local.FormatColorOptionsOut(local.GetConfig().GetPrintOptions()),
+			env_ui.FormatColorOptionsOut(local, local.GetConfig().GetPrintOptions()),
 			local.envRepo.MakeRelativePathStringFormatWriter(),
 		),
 	)
@@ -67,9 +68,7 @@ func (local *Repo) PrinterHeader() interfaces.FuncIter[string] {
 			string_format_writer.MakeDefaultDatePrefixFormatWriter(
 				local,
 				string_format_writer.MakeColor(
-					local.FormatColorOptionsOut(
-						local.GetConfig().GetPrintOptions(),
-					),
+					env_ui.FormatColorOptionsOut(local, local.GetConfig().GetPrintOptions()),
 					string_format_writer.MakeString[string](),
 					fields.TypeHeading,
 				),

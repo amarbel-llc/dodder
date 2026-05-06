@@ -6,8 +6,6 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
-	"code.linenisgreat.com/dodder/go/internal/0/options_print"
-	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
@@ -33,20 +31,6 @@ type Env interface {
 
 	Confirm(title, description string) (success bool)
 	Retry(header, retry string, err error) (tryAgain bool)
-
-	FormatOutputOptions(
-		options_print.Options,
-	) (o string_format_writer.OutputOptions)
-	FormatColorOptionsOut(
-		options_print.Options,
-	) (o string_format_writer.ColorOptions)
-	FormatColorOptionsErr(
-		options_print.Options,
-	) (o string_format_writer.ColorOptions)
-	StringFormatWriterFields(
-		truncate string_format_writer.CliFormatTruncation,
-		co string_format_writer.ColorOptions,
-	) interfaces.StringEncoderTo[string_format_writer.Box]
 }
 
 type env struct {
