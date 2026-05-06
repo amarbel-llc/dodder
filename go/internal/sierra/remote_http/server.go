@@ -16,10 +16,10 @@ import (
 	"syscall"
 	"time"
 
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
@@ -579,7 +579,7 @@ func (server *Server) handleBlobsHeadOrGet(
 			var err error
 
 			if rc, err = server.Repo.GetBlobStore().MakeBlobReader(blobId); err != nil {
-				if env_dir.IsErrBlobMissing(err) {
+				if mad_blob_io.IsErrBlobMissing(err) {
 					response.StatusCode = http.StatusNotFound
 				} else {
 					response.Error(err)

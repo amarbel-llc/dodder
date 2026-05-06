@@ -10,7 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -18,6 +17,7 @@ import (
 	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -399,10 +399,8 @@ func (store *Store) GenerateConflictMarker(
 				return err
 			}
 
-			if _, err = env_dir.MakeDirIfNecessaryForStringerWithHeadAndTail(
-				zettelId,
-				store.fsOps.GetCwd(),
-			); err != nil {
+			if _, err = mad_blob_io.MakeDirIfNecessaryForStringerWithHeadAndTail(zettelId,
+				store.fsOps.GetCwd()); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}

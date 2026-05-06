@@ -2,13 +2,13 @@ package commands_dodder
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -92,7 +92,7 @@ func (cmd *PullBlobStore) Run(
 		queryGroup,
 		func(object *sku.Transacted) (err error) {
 			if err = importer.ImportBlobIfNecessary(object); err != nil {
-				if env_dir.IsErrBlobMissing(err) {
+				if mad_blob_io.IsErrBlobMissing(err) {
 					err = nil
 					localWorkingCopy.GetUI().Printf("Blob missing from remote: %q", object.GetBlobDigest())
 				} else {

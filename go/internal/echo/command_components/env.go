@@ -1,6 +1,7 @@
 package command_components
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
@@ -24,7 +25,7 @@ func (cmd *Env) MakeEnvWithOptions(
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 	layout := env_dir.MakeDefault(
 		req,
-		env_dir.XDGUtilityNameDodder,
+		dodder_env.XDGUtilityName,
 		config.Debug,
 	)
 

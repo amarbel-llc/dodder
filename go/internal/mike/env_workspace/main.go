@@ -8,7 +8,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/caldav"
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/0/webdav"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
@@ -20,6 +19,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_caldav"
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_orgmode"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
@@ -30,7 +30,7 @@ import (
 )
 
 type Env interface {
-	env_dir.Env
+	mad_env_dir.Env
 	GetWorkspaceDir() string
 	AssertNotTemporary(errors.Context)
 	AssertNotTemporaryOrOfferToCreate(errors.Context)

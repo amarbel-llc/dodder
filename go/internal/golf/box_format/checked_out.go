@@ -6,10 +6,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_box_builder"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -21,7 +21,7 @@ func MakeBoxCheckedOut(
 	boxWriter interfaces.StringEncoderTo[string_format_writer.Box],
 	abbr ids.Abbr,
 	fsItemReadWriter sku.FSItemReadWriter,
-	relativePath env_dir.RelativePath,
+	relativePath mad_env_dir.RelativePath,
 	headerWriter string_format_writer.HeaderWriter[*sku.CheckedOut],
 ) *BoxCheckedOut {
 	return &BoxCheckedOut{

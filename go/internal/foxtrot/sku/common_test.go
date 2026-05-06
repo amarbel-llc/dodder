@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_fmt_hyphence"
@@ -179,7 +179,7 @@ func testEqualityNotSelf(t *ui.TestContext) {
 }
 
 func makeTestTextFormatFactory(
-	envDir env_dir.Env,
+	envDir mad_env_dir.Env,
 	blobStore mad_domain_interfaces.BlobStore,
 ) object_metadata_fmt_hyphence.Factory {
 	return object_metadata_fmt_hyphence.Factory{
@@ -190,7 +190,7 @@ func makeTestTextFormatFactory(
 }
 
 func makeTestTextFormat(
-	envDir env_dir.Env,
+	envDir mad_env_dir.Env,
 	blobStore mad_domain_interfaces.BlobStore,
 ) object_metadata_fmt_hyphence.Format {
 	return makeTestTextFormatFactory(envDir, blobStore).Make()

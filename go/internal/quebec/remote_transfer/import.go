@@ -5,11 +5,11 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/oscar/env_box"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -174,7 +174,7 @@ func (importer importer) importOne(
 		*dedupCount++
 		err = nil
 		return hasConflicts, err
-	} else if env_dir.IsErrBlobMissing(err) {
+	} else if mad_blob_io.IsErrBlobMissing(err) {
 		checkedOut, _ := sku.GetCheckedOutPool().GetWithRepool() //repool:owned
 		sku.TransactedResetter.ResetWith(
 			checkedOut.GetSkuExternal(),

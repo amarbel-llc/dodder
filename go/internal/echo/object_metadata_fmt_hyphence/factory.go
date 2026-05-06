@@ -1,13 +1,13 @@
 package object_metadata_fmt_hyphence
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 )
 
 type Factory struct {
-	EnvDir        env_dir.Env
+	EnvDir        mad_env_dir.Env
 	BlobStore     mad_domain_interfaces.BlobStore
 	BlobFormatter script_config.RemoteScript
 	BlobTreeDir   string

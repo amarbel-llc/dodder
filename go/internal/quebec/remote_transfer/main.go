@@ -4,7 +4,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -14,6 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/kilo/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
@@ -142,7 +142,7 @@ func (importer importer) importInventoryList(
 	blobDigest := list.GetBlobDigest()
 
 	if !importer.envRepo.GetDefaultBlobStore().HasBlob(blobDigest) {
-		err = env_dir.ErrBlobMissing{
+		err = mad_blob_io.ErrBlobMissing{
 			BlobId: func() mad_domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(), //repool:owned
 		}
 

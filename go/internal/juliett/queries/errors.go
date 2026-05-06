@@ -3,7 +3,7 @@ package queries
 import (
 	"fmt"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -14,7 +14,7 @@ type (
 
 type ErrBlobMissing struct {
 	ObjectId
-	env_dir.ErrBlobMissing
+	mad_blob_io.ErrBlobMissing
 }
 
 // TODO add recovery text

@@ -1,12 +1,14 @@
 package command_components_dodder
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 )
 
 // XDGUtilityNameMadder is the literal scope segment for madder's XDG
@@ -23,11 +25,11 @@ func (cmd EnvRepo) MakeEnvRepo(
 ) env_repo.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
-	var ownDir, madderDir env_dir.Env
+	var ownDir, madderDir mad_env_dir.Env
 	if config.RepoId.IsCwd() || config.RepoId.IsSystem() {
 		ownDir = env_dir.MakeDefaultAndInitialize(
 			req,
-			env_dir.XDGUtilityNameDodder,
+			dodder_env.XDGUtilityName,
 			config.Debug,
 			config.RepoId,
 		)
@@ -40,7 +42,7 @@ func (cmd EnvRepo) MakeEnvRepo(
 	} else {
 		ownDir = env_dir.MakeDefault(
 			req,
-			env_dir.XDGUtilityNameDodder,
+			dodder_env.XDGUtilityName,
 			config.Debug,
 		)
 		madderDir = env_dir.MakeDefault(

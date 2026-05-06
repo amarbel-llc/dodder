@@ -1,7 +1,7 @@
 package env_repo
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -15,7 +15,7 @@ func MakeNamedBlobReaderOrNullReader(
 ) (blobReader mad_domain_interfaces.BlobReader, err error) {
 	if blobReader, err = blobAccess.MakeNamedBlobReader(path); err != nil {
 		if errors.IsNotExist(err) {
-			return env_dir.NewNopReader()
+			return mad_blob_io.NewNopReader()
 		} else {
 			err = errors.Wrap(err)
 			return blobReader, err
@@ -26,7 +26,7 @@ func MakeNamedBlobReaderOrNullReader(
 }
 
 func (env Env) MakeNamedBlobReader(path string) (mad_domain_interfaces.BlobReader, error) {
-	return env_dir.NewFileReaderOrErrNotExist(env_dir.DefaultConfig, path)
+	return mad_blob_io.NewFileReaderOrErrNotExist(mad_blob_io.DefaultConfig, path)
 }
 
 // MakeNamedBlobWriter returns an atomic-rename overwrite writer.

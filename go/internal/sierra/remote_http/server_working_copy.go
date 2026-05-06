@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
@@ -13,6 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
@@ -93,7 +93,7 @@ func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(
 		seq,
 		importer,
 	); err != nil {
-		if env_dir.IsErrBlobMissing(err) {
+		if mad_blob_io.IsErrBlobMissing(err) {
 			requestRetry = true
 		} else {
 			response.Error(err)

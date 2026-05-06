@@ -3,6 +3,7 @@ package command_components_dodder
 import (
 	"bufio"
 
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -103,7 +104,7 @@ func (cmd Genesis) OnTheFirstDay(
 
 	ownDir := env_dir.MakeDefaultAndInitialize(
 		req,
-		env_dir.XDGUtilityNameDodder,
+		dodder_env.XDGUtilityName,
 		config.Debug,
 		config.RepoId,
 	)

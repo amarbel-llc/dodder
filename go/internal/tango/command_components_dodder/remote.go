@@ -6,6 +6,7 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/0/remote_connection_types"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -93,7 +94,7 @@ func (cmd Remote) MakeHomeRepoRemote(
 
 	ownDir := env_dir.MakeWithHomeAndInitialize(
 		req,
-		env_dir.XDGUtilityNameDodder,
+		dodder_env.XDGUtilityName,
 		home,
 		config.Debug,
 	)

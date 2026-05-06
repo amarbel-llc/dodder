@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/0/tap_diagnostics"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
@@ -12,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	tap "github.com/amarbel-llc/bob/packages/tap-dancer/go"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -72,7 +72,7 @@ func (cmd RepoFsck) Run(req command.Request) {
 
 		diag := tap_diagnostics.FromError(err)
 
-		if env_dir.IsErrBlobMissing(err) {
+		if mad_blob_io.IsErrBlobMissing(err) {
 			diag["message"] = "blob missing"
 		}
 

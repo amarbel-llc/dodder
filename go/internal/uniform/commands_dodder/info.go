@@ -6,6 +6,7 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -110,7 +111,7 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "env":
-			dir := env_dir.MakeDefault(req, env_dir.XDGUtilityNameDodder, config.Debug)
+			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug)
 			envVars := env_vars.Make(dir)
 			var coder env_vars.BufferedCoderDotenv
 			bufferedWriter := bufio.NewWriter(ui.GetOutFile())
@@ -124,7 +125,7 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "xdg":
-			dir := env_dir.MakeDefault(req, env_dir.XDGUtilityNameDodder, config.Debug)
+			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug)
 			ecksDeeGee := dir.GetXDG()
 			envVars := env_vars.Make(ecksDeeGee)
 			var coder env_vars.BufferedCoderDotenv

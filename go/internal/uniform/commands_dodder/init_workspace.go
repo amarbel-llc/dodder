@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -342,7 +343,7 @@ func (cmd InitWorkspace) resolveParentPath(
 		dataHome = filepath.Join(home, ".local", "share")
 	}
 
-	absPath = filepath.Join(dataHome, env_dir.XDGUtilityNameDodder)
+	absPath = filepath.Join(dataHome, dodder_env.XDGUtilityName)
 	return absPath, true
 }
 
@@ -357,7 +358,7 @@ func (cmd InitWorkspace) validateParentRepo(
 	} else {
 		inventoryListLog = filepath.Join(
 			absPath,
-			"."+env_dir.XDGUtilityNameDodder,
+			"."+dodder_env.XDGUtilityName,
 			"local", "share",
 			"inventory_lists_log",
 		)
@@ -398,7 +399,7 @@ func (cmd InitWorkspace) makeParentRemote(
 
 		ownDir := env_dir.MakeWithHomeAndInitialize(
 			req,
-			env_dir.XDGUtilityNameDodder,
+			dodder_env.XDGUtilityName,
 			home,
 			config.Debug,
 		)
@@ -545,7 +546,7 @@ func (cmd *InitWorkspace) linkParentZettelIdProviders(
 	} else {
 		parentObjectIdDir = filepath.Join(
 			absParentPath,
-			"."+env_dir.XDGUtilityNameDodder,
+			"."+dodder_env.XDGUtilityName,
 			"local", "share",
 			"object_ids",
 		)

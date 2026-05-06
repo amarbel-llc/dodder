@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/page_id"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/object_probe_index"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -24,7 +24,7 @@ type pageWriter struct {
 	writtenPage *page
 	pageReader  streamPageReader
 
-	tempFS   env_dir.TemporaryFS
+	tempFS   mad_env_dir.TemporaryFS
 	pageId   page_id.PageId
 	preWrite interfaces.FuncIter[*sku.Transacted]
 	path     string

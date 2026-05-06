@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
@@ -97,7 +97,7 @@ func (client *client) MakeBlobReader(
 
 	switch {
 	case response.StatusCode == http.StatusNotFound:
-		err = env_dir.ErrBlobMissing{
+		err = mad_blob_io.ErrBlobMissing{
 			BlobId: blobId,
 		}
 
@@ -135,7 +135,7 @@ func (client *client) WriteBlobToRemote(
 	if reader, err = localBlobStore.MakeBlobReader(
 		expected,
 	); err != nil {
-		if env_dir.IsErrBlobMissing(err) {
+		if mad_blob_io.IsErrBlobMissing(err) {
 			// TODO make an option to collect this error at the present it, and
 			// an
 			// option to fetch it from another remote store

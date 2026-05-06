@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/oscar/env_box"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -65,7 +65,7 @@ func (imp importer) commitPlan(
 					errors.Is(importErr, errors.ErrExists) ||
 					genres.IsErrUnsupportedGenre(importErr) ||
 					IsErrDeduped(importErr) ||
-					env_dir.IsErrBlobMissing(importErr) {
+					mad_blob_io.IsErrBlobMissing(importErr) {
 					continue
 				}
 
@@ -220,7 +220,7 @@ func (imp importer) commitPlanEntryOverwrite(
 				err = errors.Wrap(err)
 				return err
 			}
-		} else if env_dir.IsErrBlobAlreadyExists(err) {
+		} else if mad_blob_io.IsErrBlobAlreadyExists(err) {
 			err = nil
 		} else {
 			err = errors.Wrap(err)

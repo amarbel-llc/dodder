@@ -9,12 +9,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -285,10 +285,8 @@ func (store *Store) SetFilenameForTransacted(
 			return err
 		}
 
-		if info.basename, err = env_dir.MakeDirIfNecessaryForStringerWithHeadAndTail(
-			zettelId,
-			cwd,
-		); err != nil {
+		if info.basename, err = mad_blob_io.MakeDirIfNecessaryForStringerWithHeadAndTail(zettelId,
+			cwd); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

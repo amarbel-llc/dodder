@@ -60,4 +60,3 @@ func (cmd *Env) MakeEnvWithXDGLayoutAndOptions(
 
 	return env_local.Make(ui, dir)
 }
-

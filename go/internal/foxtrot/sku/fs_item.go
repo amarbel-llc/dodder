@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
@@ -30,7 +30,7 @@ type FSItem struct {
 
 func (item *FSItem) WriteToSku(
 	external *Transacted,
-	dirLayout env_dir.Env,
+	dirLayout mad_env_dir.Env,
 ) (err error) {
 	if err = item.WriteToExternalObjectId(
 		external.GetExternalObjectIdMutable(),
@@ -45,7 +45,7 @@ func (item *FSItem) WriteToSku(
 
 func (item *FSItem) WriteToExternalObjectId(
 	eoid *ids.ExternalObjectId,
-	dirLayout env_dir.Env,
+	dirLayout mad_env_dir.Env,
 ) (err error) {
 	eoid.SetGenre(item.ExternalObjectId.GetGenre())
 
