@@ -14,27 +14,25 @@ teardown() {
 # bats file_tags=user_story:blob_store
 
 function blob_store_sync_twice { # @test
-  # TODO once migrated to madder blob stores for bats tests, enable this test again.
-  # NOTE: sync now outputs TAP-14 — assertions below need updating when unskipped.
-  skip
   setup_repo
   run_madder init test
   assert_success
-  assert_output --regexp - <<-EOM
-		Wrote config to .*/1-test.blob_store-config
-	EOM
+  assert_line --regexp '^ok 1 - init .*/\.madder/local/share/blob_stores/test/blob_store-config$'
+  assert_line "1..1"
 
   run_madder sync
   assert_success
-  assert_output --regexp - <<-EOM
-		Successes: 14, Failures: 0, Ignored: 0, Total: 14
-	EOM
+  assert_line "Successes: 16, Failures: 0, Ignored: 0, Total: 16"
+  # 1 header + 16 JSON lines, one per blob in the v15 fixture's
+  # default store.
+  [[ ${#lines[@]} -eq 17 ]] ||
+    fail "sync 1: expected 17 output lines, got ${#lines[@]}: ${output}"
 
   run_madder sync
   assert_success
-  assert_output --regexp - <<-EOM
-		Successes: 0, Failures: 0, Ignored: 14, Total: 14
-	EOM
+  assert_line "Successes: 0, Failures: 0, Ignored: 16, Total: 16"
+  [[ ${#lines[@]} -eq 17 ]] ||
+    fail "sync 2: expected 17 output lines, got ${#lines[@]}: ${output}"
 }
 
 function blob_store_sync_cross_hash_multi_hash_destination { # @test
