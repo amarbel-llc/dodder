@@ -1,203 +1,50 @@
+// Package env_dir provides dodder's blob I/O wrappers (NewReader,
+// NewWriter, NewMover) and its hash-bucket / temporary-file helpers,
+// plus thin forwarders for env_dir construction that delegate to
+// madder/pkgs/env_dir.
+//
+// #151 bucket B Stage B reduces this package to dodder-specific
+// concerns (blob I/O and utilities) — the env interface and its
+// concrete implementation now live in madder's pkgs/env_dir, with
+// dodder's Env type as a type alias preserving the import-path
+// surface so existing callers don't have to be rewritten en masse.
 package env_dir
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/echo/debug"
-	"github.com/amarbel-llc/purse-first/libs/dewey/echo/xdg"
+	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 )
 
 const (
-	EnvDir               = "DIR_DODDER" // TODO chang to dodder-prefixed
-	EnvBin               = "BIN_DODDER" // TODO change to dodder-prefixed
-	XDGUtilityNameDodder = "dodder"
+	// EnvDir is dodder's repository-base-path env var; honored by
+	// env_repo.Make. Mirrored from dodder_env.EnvDir for backward
+	// compatibility with callers that still reference it via this
+	// package.
+	EnvDir = dodder_env.EnvDir
+
+	// XDGUtilityNameDodder is dodder's XDG scope segment. Mirrored
+	// from dodder_env.XDGUtilityName.
+	XDGUtilityNameDodder = dodder_env.XDGUtilityName
 )
 
-type Env interface {
-	interfaces.ActiveContextGetter
-	interfaces.EnvVarsAdder
+// Env is aliased to madder's env_dir.Env — the env interface lives
+// upstream now. Concrete env values are produced by the madder
+// constructors invoked from this package's MakeXxx forwarders.
+type Env = mad_env_dir.Env
 
-	IsDryRun() bool
-	GetCwd() string
+// RelativePath is aliased upstream too. Implementations live in
+// madder; dodder callers reference the alias for stable import
+// paths.
+type RelativePath = mad_env_dir.RelativePath
 
-	GetXDG() xdg.XDG
-	GetXDGForBlobStores() xdg.XDG
-	GetXDGForBlobStoreId(blob_store_id.Id) xdg.XDG
+// Config is dodder's blob I/O config (hash format, compression,
+// encryption). Distinct from madder env_dir.Config (env-construction
+// inputs); the name overlap is local-only since callers import this
+// package as `env_dir` and madder's as `mad_env_dir`.
+//
+// (defined in blob_config.go)
 
-	GetExecPath() string
-	GetTempLocal() TemporaryFS
-	MakeDirs(dirs ...string) (err error)
-	MakeDirsPerms(perms os.FileMode, dirs ...string) (err error)
-	Rel(p string) (out string)
-	RelToCwdOrSame(p string) (p1 string)
-	MakeCommonEnv() map[string]string
-	MakeRelativePathStringFormatWriter() interfaces.StringEncoderTo[string]
-	AbsFromCwdOrSame(p string) (p1 string)
-
-	GetVerifyOnCollisionOverride() bool
-	GetBlobWriteObserver() mad_domain_interfaces.BlobWriteObserver
-
-	Delete(paths ...string) (err error)
-}
-
-type env struct {
-	errors.Context
-	beforeXDG
-
-	TempLocal, TempOS TemporaryFS
-
-	xdg.XDG
-}
-
-var _ Env = &env{}
-
-// sets XDG and creates tmp local
-func (env *env) initializeXDG() (err error) {
-	env.TempLocal.BasePath = env.Cache.MakePath(
-		fmt.Sprintf("tmp-%d", env.GetPid()),
-	).String()
-
-	if err = env.MakeDirs(env.GetTempLocal().BasePath); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	return err
-}
-
-func (env env) GetActiveContext() interfaces.ActiveContext {
-	return env.Context
-}
-
-func (env env) GetDebug() debug.Options {
-	return env.debugOptions
-}
-
-func (env env) IsDryRun() bool {
-	return env.dryRun
-}
-
-func (env env) GetPid() int {
-	return env.xdgInitArgs.Pid
-}
-
-func (env env) AddToEnvVars(envVars interfaces.EnvVars) {
-	envVars[EnvBin] = env.GetExecPath()
-}
-
-func (env env) GetExecPath() string {
-	return env.xdgInitArgs.ExecPath
-}
-
-func (env env) GetCwd() string {
-	return env.XDG.Cwd.ActualValue
-}
-
-func (env env) GetXDG() xdg.XDG {
-	return env.XDG
-}
-
-func (env env) GetXDGForBlobStores() xdg.XDG {
-	xdg := env.XDG.CloneWithUtilityName("madder")
-	return xdg
-}
-
-func (env env) GetXDGForBlobStoreId(id blob_store_id.Id) xdg.XDG {
-	madderXDG := env.GetXDGForBlobStores()
-
-	switch id.GetLocationType() {
-	default:
-		return madderXDG
-
-	case blob_store_id.LocationTypeXDGUser:
-		return madderXDG.CloneWithoutOverride()
-
-	case blob_store_id.LocationTypeCwd:
-		return madderXDG
-	}
-}
-
-func (env *env) SetXDG(x xdg.XDG) {
-	env.XDG = x
-}
-
-func (env env) GetTempLocal() TemporaryFS {
-	return env.TempLocal
-}
-
-func (env env) AbsFromCwdOrSame(p string) (p1 string) {
-	var err error
-	p1, err = filepath.Abs(p)
-	if err != nil {
-		p1 = p
-	}
-
-	return p1
-}
-
-func (env env) RelToCwdOrSame(p string) (p1 string) {
-	var err error
-
-	if p1, err = filepath.Rel(env.GetCwd(), p); err != nil {
-		p1 = p
-	}
-
-	return p1
-}
-
-func (env env) Rel(
-	p string,
-) (out string) {
-	out = p
-
-	p1, _ := filepath.Rel(env.GetCwd(), p)
-
-	if p1 != "" {
-		out = p1
-	}
-
-	return out
-}
-
-func (env env) MakeCommonEnv() map[string]string {
-	return map[string]string{
-		EnvBin: env.GetExecPath(),
-		// TODO determine if EnvDir is kept
-		// EnvDir: h.Dir(),
-	}
-}
-
-func (env env) MakeDirs(ds ...string) (err error) {
-	return env.MakeDirsPerms(0o755, ds...)
-}
-
-// GetVerifyOnCollisionOverride satisfies madder's env_dir.Env so dodder's
-// envs can be passed into madder's blob_stores.MakeBlobStores. Dodder does
-// not yet drive collision verification from this env.
-func (env env) GetVerifyOnCollisionOverride() bool {
-	return false
-}
-
-// GetBlobWriteObserver satisfies madder's env_dir.Env. Dodder does not run
-// an inventory log; nil is the documented "no observer" sentinel.
-func (env env) GetBlobWriteObserver() mad_domain_interfaces.BlobWriteObserver {
-	return nil
-}
-
-func (env env) MakeDirsPerms(perms os.FileMode, ds ...string) (err error) {
-	for _, d := range ds {
-		if err = os.MkdirAll(d, os.ModeDir|perms); err != nil {
-			err = errors.Wrapf(err, "Dir: %q", d)
-			return err
-		}
-	}
-
-	return err
-}
+// TemporaryFS is aliased upstream too.
+//
+// (defined in temp.go)
