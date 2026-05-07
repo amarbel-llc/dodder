@@ -1,14 +1,21 @@
 # env_dir
 
-Directory environment management for Dodder.
+Construction-arg shim around `madder/go/pkgs/env_dir`.
 
-## Key Types
+The package is a single file (`construction.go`) wrapping
+`mad_env_dir.MakeDefault`, `MakeWithHomeAndInitialize`, etc. Its only
+job is injecting `dodder_env.OwnConfig(debugOptions)` so dodder
+processes keep honoring `DODDER_XDG_UTILITY_OVERRIDE` regardless of
+the utility scope being constructed (own / madder).
 
-- `Env`: Interface for directory environment operations
+For everything else — types (`Env`, `RelativePath`, `TemporaryFS`,
+`Config`), helpers (`NewReader`, `NewWriter`, `MakeHashBucketPath`),
+errors (`ErrBlobMissing`, `IsErrBlobAlreadyExists`) — import the
+madder packages directly:
 
-## Features
+- `mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"`
+- `mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"`
 
-- XDG directory support
-- Temporary file management
-- Path resolution and manipulation
-- Directory creation with permissions
+The previous alias-forwarding `main.go` was deleted; no code outside
+this package should reference an `env_dir.X` symbol other than the
+constructor wrappers.

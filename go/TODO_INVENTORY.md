@@ -205,7 +205,7 @@ These TODOs represent structural improvements that would improve code maintainab
 - `src/juliett/blob_stores/store_remote_sftp.go:40,47` - Populate blobIOWrapper, extract struct
 - `src/juliett/blob_stores/store_remote_sftp.go:124` - Read remote blob store config
 - `src/juliett/blob_stores/store_remote_sftp.go:288` - Use hash type
-- `src/juliett/blob_stores/store_remote_sftp.go:356` - Explore using env_dir.Mover
+- `src/juliett/blob_stores/store_remote_sftp.go:356` - Explore using `mad_blob_io.NewMover` (madder's content-addressed publish helper)
 - `src/juliett/blob_stores/store_remote_sftp.go:575` - Combine with sftpReader
 - `src/juliett/blob_stores/main.go:71,72` - Pass custom UI, consolidate envDir/ctx
 
