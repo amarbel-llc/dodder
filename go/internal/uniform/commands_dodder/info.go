@@ -93,10 +93,8 @@ func (cmd Info) Run(req command.Request) {
 			ui.GetUI().Print(store_version.VNext)
 
 		case "compression-type":
-			if ioWrapper, ok := defaultBlobStoreConfig.(mad_domain_interfaces.BlobIOWrapper); ok {
-				ui.GetUI().Print(
-					ioWrapper.GetBlobCompression(),
-				)
+			if compressionType, ok := defaultBlobStoreConfig.(blob_store_configs.ConfigCompressionType); ok {
+				ui.GetUI().Print(compressionType.GetCompressionType())
 			} else {
 				errors.ContextCancelWithBadRequestf(ui, "default blob store does not support compression")
 			}
