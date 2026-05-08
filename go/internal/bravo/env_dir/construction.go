@@ -2,7 +2,6 @@ package env_dir
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
-	"code.linenisgreat.com/dodder/go/internal/0/repo_id"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/debug"
@@ -77,7 +76,7 @@ func MakeDefaultAndInitialize(
 	context errors.Context,
 	utilityName string,
 	do debug.Options,
-	repoId repo_id.Id,
+	repoId mad_env_dir.RepoId,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeDefaultAndInitialize(
 		context,

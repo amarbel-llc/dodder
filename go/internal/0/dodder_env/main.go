@@ -7,7 +7,6 @@ package dodder_env
 
 import (
 	"github.com/amarbel-llc/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/madder/go/pkgs/madder_env"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/debug"
 )
 
@@ -40,16 +39,6 @@ var EnvVarNames = env_dir.EnvVarNames{
 func OwnConfig(debugOptions debug.Options) env_dir.Config {
 	return env_dir.Config{
 		EnvVarNames:  EnvVarNames,
-		DebugOptions: debugOptions,
-	}
-}
-
-// MadderConfig builds an env_dir.Config for madder-scoped env_dir
-// constructors: madder's default env-var names, caller-supplied
-// debug options.
-func MadderConfig(debugOptions debug.Options) env_dir.Config {
-	return env_dir.Config{
-		EnvVarNames:  madder_env.DefaultEnvVarNames,
 		DebugOptions: debugOptions,
 	}
 }

@@ -5,7 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"

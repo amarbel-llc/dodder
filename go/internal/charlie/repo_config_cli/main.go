@@ -5,16 +5,16 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
-	"code.linenisgreat.com/dodder/go/internal/0/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )
 
 type Config struct {
 	config_cli.Config
 	BasePath string
-	RepoId   repo_id.Id
+	RepoId   mad_env_dir.RepoId
 
 	IgnoreHookErrors bool
 	Hooks            string
@@ -114,7 +114,7 @@ func (config Config) GetIgnoreWorkspace() bool {
 	return config.IgnoreWorkspace
 }
 
-func (config Config) GetRepoId() repo_id.Id {
+func (config Config) GetRepoId() mad_env_dir.RepoId {
 	return config.RepoId
 }
 

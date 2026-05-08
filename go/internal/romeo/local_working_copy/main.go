@@ -3,7 +3,7 @@ package local_working_copy
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/charlie/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"

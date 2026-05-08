@@ -1,7 +1,7 @@
 package command
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"code.linenisgreat.com/dodder/go/lib/bravo/cli"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 )

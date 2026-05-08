@@ -2,7 +2,7 @@ package sku_fmt
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"

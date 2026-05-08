@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"code.linenisgreat.com/dodder/go/internal/bravo/directory_layout"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
-	"code.linenisgreat.com/dodder/go/internal/charlie/env_local"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
