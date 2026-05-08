@@ -46,8 +46,15 @@ import (
 // Use context cancellation for HTTP errors
 
 type Server struct {
-	EnvLocal  env_local.Env
-	Repo      *local_working_copy.Repo
+	EnvLocal env_local.Env
+	Repo     *local_working_copy.Repo
+
+	// KeySource overrides the default Repo-backed key source used by
+	// the signing middleware. Leave nil in production; tests inject
+	// an in-memory keypair so the sign/verify round trip can be
+	// exercised without standing up a real Repo on disk.
+	KeySource KeySource
+
 	blobCache serverBlobCache
 
 	GetCertificate func(*tls.ClientHelloInfo) (*tls.Certificate, error)
@@ -254,12 +261,14 @@ func (server *Server) addSignatureIfNecessary(
 		return err
 	}
 
+	keys := server.keySource()
+
 	header.Set(
 		headerRepoPublicKey,
-		server.Repo.GetImmutableConfigPublic().GetPublicKey().String(),
+		keys.GetPublicKey().String(),
 	)
 
-	sec := server.Repo.GetImmutableConfigPrivate().Blob.GetPrivateKey()
+	sec := keys.GetPrivateKey()
 
 	var sig markl.Id
 
@@ -281,7 +290,7 @@ func (server *Server) signBodyTrailer(
 	bodyDigest mad_domain_interfaces.MarklId,
 	responseWriter http.ResponseWriter,
 ) {
-	sec := server.Repo.GetImmutableConfigPrivate().Blob.GetPrivateKey()
+	sec := server.keySource().GetPrivateKey()
 
 	var sig markl.Id
 
