@@ -31,7 +31,7 @@ func TestGetMCPResourcesShape(t1 *testing.T) {
 
 	for _, expected := range []string{
 		"dodder:///types",
-		"dodder:///word-index",
+		"dodder:///objects",
 	} {
 		if uris[expected] != 1 {
 			t.Fatalf("expected resource URI %q present exactly once, got count: %d (full list: %v)", expected, uris[expected], uris)
@@ -47,6 +47,41 @@ func TestGetMCPResourcesShape(t1 *testing.T) {
 		}
 		if r.MimeType != "application/json" {
 			t.Fatalf("resource %q has MimeType %q, want application/json", r.URI, r.MimeType)
+		}
+	}
+}
+
+func TestGetMCPResourceTemplatesShape(t1 *testing.T) {
+	t := ui.T{T: t1}
+
+	server := &Server{}
+	templates := server.getMCPResourceTemplates()
+
+	if len(templates) == 0 {
+		t.Fatalf("expected at least one MCP resource template, got: 0")
+	}
+
+	templatesByURI := make(map[string]int, len(templates))
+	for _, tpl := range templates {
+		templatesByURI[tpl.URITemplate]++
+	}
+
+	for _, expected := range []string{
+		"dodder:///objects/{objectId}",
+		"dodder:///blobs/{blobDigest}",
+		"dodder:///blobs/{blobDigest}/{mimeType}",
+	} {
+		if templatesByURI[expected] != 1 {
+			t.Fatalf("expected template %q present exactly once, got count: %d (full list: %v)", expected, templatesByURI[expected], templatesByURI)
+		}
+	}
+
+	for _, tpl := range templates {
+		if tpl.Name == "" {
+			t.Fatalf("template %q has empty Name", tpl.URITemplate)
+		}
+		if tpl.Description == "" {
+			t.Fatalf("template %q has empty Description", tpl.URITemplate)
 		}
 	}
 }
@@ -104,7 +139,6 @@ func TestReadMCPResourceUnknownPath(t1 *testing.T) {
 
 	cases := []string{
 		"dodder:///does-not-exist",
-		"dodder:///word-index",
 		"dodder:///",
 	}
 

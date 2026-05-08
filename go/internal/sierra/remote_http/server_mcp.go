@@ -106,6 +106,24 @@ func (server *Server) handleMCP(request Request) (response Response) {
 
 		resp.Result = resultBytes
 
+	case "resources/templates/list":
+		templates := server.getMCPResourceTemplates()
+		result := protocol.ResourceTemplatesListResult{ResourceTemplates: templates}
+
+		resultBytes, err := json.Marshal(result)
+		if err != nil {
+			response.MCPError(
+				http.StatusInternalServerError,
+				msg.ID,
+				jsonrpc.InternalError,
+				"Internal error",
+				nil,
+			)
+			return response
+		}
+
+		resp.Result = resultBytes
+
 	case "resources/read":
 		var params protocol.ResourceReadParams
 
@@ -173,25 +191,45 @@ func (server *Server) getMCPResources() []protocol.Resource {
 	resources := []protocol.Resource{
 		{
 			URI:         "dodder:///types",
-			Name:        "Objects",
+			Name:        "Types",
 			Description: "list of all available object types",
 			MimeType:    "application/json",
 		},
 		{
-			URI:         "dodder:///word-index",
-			Name:        "Objects that contain words",
-			Description: "A list of indexes corresponding to words, where the objects in the index contain the word somewhere in their blob or metadata",
+			URI:         "dodder:///objects",
+			Name:        "Objects",
+			Description: "list of all stored objects (zettels, types, tags)",
 			MimeType:    "application/json",
 		},
-		// {
-		// 	URI:         "dodder:///tags",
-		// 	Name:        "Objects",
-		// 	Description: "list of all available tags",
-		// 	MimeType:    "application/json",
-		// },
 	}
 
 	return resources
+}
+
+// getMCPResourceTemplates advertises the parameterized resource URIs
+// readMCPResource can serve. Templates are RFC 6570 (per the MCP
+// resources/templates/list spec); the dispatch in readMCPResource
+// matches via path-prefix rather than parsing the template, so the
+// advertised template is documentation for clients.
+func (server *Server) getMCPResourceTemplates() []protocol.ResourceTemplate {
+	return []protocol.ResourceTemplate{
+		{
+			URITemplate: "dodder:///objects/{objectId}",
+			Name:        "Object by id",
+			Description: "fetch a single object (zettel, type, or tag) by its object id",
+			MimeType:    "application/json",
+		},
+		{
+			URITemplate: "dodder:///blobs/{blobDigest}",
+			Name:        "Blob by digest",
+			Description: "fetch a blob by its content-addressed digest",
+		},
+		{
+			URITemplate: "dodder:///blobs/{blobDigest}/{mimeType}",
+			Name:        "Blob with mime type",
+			Description: "fetch a blob by digest with an explicit response mime type",
+		},
+	}
 }
 
 func (server *Server) readMCPResource(
