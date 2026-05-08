@@ -91,6 +91,7 @@ in
       govulncheck
       gum
       httpie
+      just
       lsof
       pandoc
       radicale
