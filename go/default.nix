@@ -97,6 +97,7 @@ in
       radicale
       shellcheck
       shfmt
+      tree
       yq-go
     ])
     ++ pkgs.lib.optionals (bob != null) [
