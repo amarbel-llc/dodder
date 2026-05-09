@@ -26,9 +26,8 @@ func TestCoderTommyLocalOverridePathV0_RoundTrip(t1 *testing.T) {
 	var buf bytes.Buffer
 	writer := bufio.NewWriter(&buf)
 	var blob Blob = original
-	if _, err := coder.EncodeTo(&blob, writer); err != nil {
-		t.Fatalf("EncodeTo failed: %v", err)
-	}
+	_, err := coder.EncodeTo(&blob, writer)
+	t.AssertNoError(err)
 	writer.Flush()
 	encoded := buf.Bytes()
 
@@ -38,18 +37,15 @@ func TestCoderTommyLocalOverridePathV0_RoundTrip(t1 *testing.T) {
 
 	var decoded Blob
 	reader := bufio.NewReader(bytes.NewReader(encoded))
-	if _, err := coder.DecodeFrom(&decoded, reader); err != nil {
-		t.Fatalf("DecodeFrom failed: %v", err)
-	}
+	_, err = coder.DecodeFrom(&decoded, reader)
+	t.AssertNoError(err)
 
 	got, ok := decoded.(*TomlLocalOverridePathV0)
 	if !ok {
 		t.Fatalf("decoded type = %T, want *TomlLocalOverridePathV0", decoded)
 	}
 
-	if got.OverridePath != original.OverridePath {
-		t.Errorf("OverridePath = %q, want %q", got.OverridePath, original.OverridePath)
-	}
+	t.AssertEqualStrings(original.OverridePath, got.OverridePath)
 }
 
 func TestCoderTommyLocalOverridePathV0_EncodeDecodeEncode(t1 *testing.T) {
@@ -66,29 +62,24 @@ func TestCoderTommyLocalOverridePathV0_EncodeDecodeEncode(t1 *testing.T) {
 	var buf1 bytes.Buffer
 	writer1 := bufio.NewWriter(&buf1)
 	var blob1 Blob = original
-	if _, err := coder.EncodeTo(&blob1, writer1); err != nil {
-		t.Fatalf("first EncodeTo failed: %v", err)
-	}
+	_, err := coder.EncodeTo(&blob1, writer1)
+	t.AssertNoError(err)
 	writer1.Flush()
 	firstEncode := buf1.Bytes()
 
 	var decoded Blob
 	reader := bufio.NewReader(bytes.NewReader(firstEncode))
-	if _, err := coder.DecodeFrom(&decoded, reader); err != nil {
-		t.Fatalf("DecodeFrom failed: %v", err)
-	}
+	_, err = coder.DecodeFrom(&decoded, reader)
+	t.AssertNoError(err)
 
 	var buf2 bytes.Buffer
 	writer2 := bufio.NewWriter(&buf2)
-	if _, err := coder.EncodeTo(&decoded, writer2); err != nil {
-		t.Fatalf("second EncodeTo failed: %v", err)
-	}
+	_, err = coder.EncodeTo(&decoded, writer2)
+	t.AssertNoError(err)
 	writer2.Flush()
 	secondEncode := buf2.Bytes()
 
-	if !bytes.Equal(firstEncode, secondEncode) {
-		t.Errorf("encode-decode-encode not stable:\nfirst:  %q\nsecond: %q", string(firstEncode), string(secondEncode))
-	}
+	t.AssertEqual(firstEncode, secondEncode)
 }
 
 func TestCoderTommyLocalOverridePathV0_IsCoderTommy(t1 *testing.T) {
