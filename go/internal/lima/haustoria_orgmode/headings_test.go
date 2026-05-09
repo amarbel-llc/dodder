@@ -3,6 +3,8 @@ package haustoria_orgmode
 import (
 	"strings"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 const sampleOrg = `* Nuisance distractions
@@ -25,7 +27,8 @@ SCHEDULED: <2025-08-25 Mon>
 body content here
 `
 
-func TestParseFile_Counts(t *testing.T) {
+func TestParseFile_Counts(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	headings, err := parseFile([]byte(sampleOrg))
 	if err != nil {
 		t.Fatal(err)
@@ -35,7 +38,8 @@ func TestParseFile_Counts(t *testing.T) {
 	}
 }
 
-func TestParseFile_Titles(t *testing.T) {
+func TestParseFile_Titles(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	headings, _ := parseFile([]byte(sampleOrg))
 	expected := []string{"Nuisance distractions", "Spinclass", "TODO Today important"}
 	for i, h := range headings {
@@ -45,7 +49,8 @@ func TestParseFile_Titles(t *testing.T) {
 	}
 }
 
-func TestParseFile_Tags(t *testing.T) {
+func TestParseFile_Tags(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	headings, _ := parseFile([]byte(sampleOrg))
 	if len(headings[1].Tags) != 2 {
 		t.Fatalf("heading 1: want 2 tags, got %d", len(headings[1].Tags))
@@ -55,7 +60,8 @@ func TestParseFile_Tags(t *testing.T) {
 	}
 }
 
-func TestParseFile_IDs(t *testing.T) {
+func TestParseFile_IDs(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	headings, _ := parseFile([]byte(sampleOrg))
 	if headings[0].ID != "e794126b-b510-45af-a233-ee4c9e4879f1" {
 		t.Errorf("heading 0: want ID e794126b..., got %q", headings[0].ID)
@@ -68,7 +74,8 @@ func TestParseFile_IDs(t *testing.T) {
 	}
 }
 
-func TestNormalizeIDs_AddsMissingIDs(t *testing.T) {
+func TestNormalizeIDs_AddsMissingIDs(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	headings, _ := parseFile([]byte(sampleOrg))
 
 	newContent, changed, err := normalizeIDs([]byte(sampleOrg), headings)
@@ -113,7 +120,8 @@ func TestNormalizeIDs_AddsMissingIDs(t *testing.T) {
 	}
 }
 
-func TestNormalizeIDs_Idempotent(t *testing.T) {
+func TestNormalizeIDs_Idempotent(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	headings, _ := parseFile([]byte(sampleOrg))
 	newContent, _, _ := normalizeIDs([]byte(sampleOrg), headings)
 
