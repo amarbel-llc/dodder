@@ -33,3 +33,67 @@ function serve_handshake_parses_addr { # @test
   [[ $server_addr == "127.0.0.1:$port" ]] || fail \
     "server_addr ($server_addr) != 127.0.0.1:port ($port)"
 }
+
+# curl_status hits a URL with the given method and body, returning
+# just the HTTP status code on stdout. Used by the per-endpoint tests
+# below to confirm sig-auth gating fires (400 without a nonce header)
+# rather than the route being missing (which would return 404).
+curl_status() {
+  local method="$1"
+  local path="$2"
+  local data="${3:-}"
+
+  local args=(-s -o /dev/null -w '%{http_code}' -X "$method")
+  if [[ -n $data ]]; then
+    args+=(-d "$data")
+  fi
+  args+=("http://${server_addr}${path}")
+
+  curl "${args[@]}"
+}
+
+# All five HTTP endpoints share sigMiddleware as the outermost wrap.
+# Without `X-Dodder-Challenge-Nonce`, the middleware short-circuits
+# with 400 before ever touching the handler. A 404 here would mean
+# the route isn't registered — failing back through the matcher to
+# the mux's default not-found.
+#
+# These tests are intentionally negative-path-only: stage 4 (HTTP
+# variants of clone/pull/push) covers the positive path through
+# RoundTripperBufioWrappedSigner once #166 lands.
+
+function serve_config_immutable_route_registered { # @test
+  run curl_status GET /config-immutable
+  assert_success
+  assert_output 400
+}
+
+function serve_blobs_route_registered { # @test
+  run curl_status GET /blobs/blake2b256-fakeplaceholder
+  assert_success
+  assert_output 400
+}
+
+function serve_query_route_registered { # @test
+  run curl_status GET /query/inventory_list/some_query
+  assert_success
+  assert_output 400
+}
+
+function serve_mcp_route_registered { # @test
+  run curl_status POST /mcp '{"jsonrpc":"2.0","method":"initialize","id":1}'
+  assert_success
+  assert_output 400
+}
+
+function serve_inventory_lists_route_registered { # @test
+  run curl_status GET /inventory_lists
+  assert_success
+  assert_output 400
+}
+
+function serve_unknown_route_returns_404 { # @test
+  run curl_status GET /no-such-endpoint
+  assert_success
+  assert_output 404
+}
