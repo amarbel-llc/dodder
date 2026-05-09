@@ -209,8 +209,8 @@ explore-live *args:
 explore-bats-debug *targets: build
   GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets --no-tempdir-cleanup {{targets}}
 
-# Run bats tests that need local network binding (e.g. haustoria CalDAV).
-test-bats-network *targets="current_version/haustoria_caldav.bats current_version/haustoria_orgmode.bats current_version/sftp.bats": build
+# Run bats tests that need local network binding (haustoria CalDAV, dodder serve).
+test-bats-network *targets="current_version/haustoria_caldav.bats current_version/haustoria_orgmode.bats current_version/sftp.bats current_version/serve.bats": build
   GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets --allow-local-binding --allow-unix-sockets {{targets}}
 
 #   ____      _

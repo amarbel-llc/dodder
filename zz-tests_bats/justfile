@@ -1,6 +1,8 @@
 bin_dir := env("BATS_BIN_DIR", "")
-# Exclude af_unix, haustoria, and sftp-tagged files; they need special sandbox options.
-_sandboxed_bats := `grep -L -e 'file_tags=.*af_unix' -e 'file_tags=.*haustoria' -e 'file_tags=.*sftp' current_version/*.bats | tr '\n' ' '`
+# Exclude af_unix, haustoria, sftp, and serve-tagged files; they need
+# special sandbox options (local network binding / unix sockets) and
+# run via test-bats-network instead.
+_sandboxed_bats := `grep -L -e 'file_tags=.*af_unix' -e 'file_tags=.*haustoria' -e 'file_tags=.*sftp' -e 'file_tags=.*serve' current_version/*.bats | tr '\n' ' '`
 _bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
 
 export DODDER_XDG_UTILITY_OVERRIDE := ""

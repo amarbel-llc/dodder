@@ -311,20 +311,46 @@ function start_server {
     fi
 
     # shellcheck disable=SC2068
-    "$DODDER_BIN" serve ${cmd_dodder_def[@]} tcp :0
+    "$DODDER_BIN" serve ${cmd_dodder_def[@]} -handshake
   }
 
-  # shellcheck disable=SC2154
-  # trap 'kill $server_PID' EXIT
-
-  read -r output <&"${server[0]}"
-
-  if [[ $output =~ (starting HTTP server on port: \"([0-9]+)\") ]]; then
-    export port="${BASH_REMATCH[2]}"
-  else
+  # Wait up to 5s for the handshake line. dodder serve -handshake binds
+  # to 127.0.0.1:0, then writes a single pipe-delimited line to stdout
+  # with the OS-assigned port:
+  #   1|1|tcp|127.0.0.1:PORT|dodder-http-v1
+  local line
+  if ! IFS= read -r -t 5 -u "${server[0]}" line; then
     fail <<-EOM
-			unable to get port info from dodder server.
-			server output: $output
+			no handshake from dodder serve within 5s.
+			server pid: ${server_PID:-unknown}
 		EOM
   fi
+
+  # 1|1|tcp|127.0.0.1:PORT|dodder-http-v1
+  local _core _app _net addr _proto
+  IFS='|' read -r _core _app _net addr _proto <<<"$line"
+
+  if [[ -z $addr ]]; then
+    fail <<-EOM
+			could not parse handshake line from dodder serve.
+			line: $line
+		EOM
+  fi
+
+  # Export the address (host:port) and just the port for callers.
+  # shellcheck disable=SC2154
+  export server_addr="$addr"
+  export port="${addr##*:}"
+}
+
+# stop_server tears down the coproc started by start_server. Solves the
+# subprocess-leak problem flagged in clone.bats:199's TODO. Safe to
+# call multiple times and from teardown.
+function stop_server {
+  if [[ -n ${server_PID:-} ]]; then
+    kill "$server_PID" 2>/dev/null || true
+    wait "$server_PID" 2>/dev/null || true
+    unset server_PID
+  fi
+  unset port server_addr
 }
