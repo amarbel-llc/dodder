@@ -110,7 +110,7 @@ func (client *client) GetInventoryListCoderCloset() inventory_list_coders.Closet
 }
 
 func (client *client) GetObjectStore() sku.RepoStore {
-	return nil
+	return &httpRemoteObjectStore{client: client}
 }
 
 func (client *client) MakeImporter(

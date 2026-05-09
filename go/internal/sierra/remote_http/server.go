@@ -215,6 +215,16 @@ func (server *Server) makeRouter(
 			"GET",
 		)
 
+	// Single-object lookup by OID. Used by the URL-transport client's
+	// remote object store to satisfy edge expansion during pull (#171).
+	router.HandleFunc(
+		"/objects/{object_id}",
+		makeHandler(server.handleGetObject),
+	).
+		Methods(
+			"GET",
+		)
+
 	router.HandleFunc("/mcp", makeHandler(server.handleMCP)).
 		Methods("POST")
 
@@ -810,6 +820,81 @@ func (server *Server) handleGetQuery(request Request) (response Response) {
 		server.Repo,
 		ids.GetOrPanic(listTypeString).TypeStruct,
 		quiter.MakeSeqErrorFromSeq(list.All()),
+		bufferedWriter,
+	); err != nil {
+		server.EnvLocal.Cancel(err)
+	}
+
+	if err := bufferedWriter.Flush(); err != nil {
+		server.EnvLocal.Cancel(err)
+	}
+
+	response.Body = ohio.NopCloser(buffer)
+
+	return response
+}
+
+// handleGetObject serves a single object lookup by OID for the
+// URL-transport client's remote object store (#171). The OID is
+// URL-escaped on send; the body, on hit, is a one-element inventory
+// list using the repo's configured list type — same wire format
+// /query/{list_type}/{query} produces for an N-element result, so
+// the client can decode it with the existing
+// inventoryListCoderCloset.ReadInventoryListBlob.
+func (server *Server) handleGetObject(request Request) (response Response) {
+	var oidString string
+
+	{
+		var err error
+
+		if oidString, err = url.QueryUnescape(
+			request.Vars()["object_id"],
+		); err != nil {
+			response.ErrorWithStatus(http.StatusBadRequest, err)
+			return response
+		}
+	}
+
+	var oid ids.ObjectId
+
+	if err := oid.Set(oidString); err != nil {
+		response.ErrorWithStatus(http.StatusBadRequest, err)
+		return response
+	}
+
+	fetched, repool := sku.GetTransactedPool().GetWithRepool()
+	defer repool()
+
+	if err := server.Repo.GetObjectStore().ReadOneInto(
+		&oid,
+		fetched,
+	); err != nil {
+		if errors.IsErrNotFound(err) {
+			response.StatusCode = http.StatusNotFound
+			return response
+		}
+
+		response.Error(err)
+		return response
+	}
+
+	listTypeString := server.Repo.GetImmutableConfigPublic().GetInventoryListTypeId()
+
+	buffer := bytes.NewBuffer(nil)
+
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(buffer)
+	defer repoolBufferedWriter()
+
+	inventoryListCoderCloset := server.Repo.GetInventoryListCoderCloset()
+
+	seqOne := func(yield func(*sku.Transacted) bool) {
+		yield(fetched)
+	}
+
+	if _, err := inventoryListCoderCloset.WriteBlobToWriter(
+		server.Repo,
+		ids.GetOrPanic(listTypeString).TypeStruct,
+		quiter.MakeSeqErrorFromSeq(seqOne),
 		bufferedWriter,
 	); err != nil {
 		server.EnvLocal.Cancel(err)
