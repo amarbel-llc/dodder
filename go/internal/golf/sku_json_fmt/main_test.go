@@ -31,100 +31,66 @@ func TestTransactedRoundTripAllLockKinds(t1 *testing.T) {
 	metadata := original.GetMetadataMutable()
 
 	// Object ID
-	if err := original.GetObjectIdMutable().Set("one/uno"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(original.GetObjectIdMutable().Set("one/uno"))
 
 	// Type + type lock
-	if err := metadata.GetTypeMutable().SetType("ref-blob"); err != nil {
-		t.Fatal(err)
-	}
-	if err := metadata.GetTypeLockMutable().GetValueMutable().Set(
+	t.AssertNoError(metadata.GetTypeMutable().SetType("ref-blob"))
+	t.AssertNoError(metadata.GetTypeLockMutable().GetValueMutable().Set(
 		testSig1,
-	); err != nil {
-		t.Fatal(err)
-	}
+	))
 
 	// Tags + tag locks
-	if err := metadata.AddTagString("project-alpha"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(metadata.AddTagString("project-alpha"))
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("project-alpha"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("project-alpha"))
 		tagLock := metadata.GetTagLockMutable(tag)
-		if err := tagLock.GetValueMutable().Set(
+		t.AssertNoError(tagLock.GetValueMutable().Set(
 			testSig2,
-		); err != nil {
-			t.Fatal(err)
-		}
+		))
 	}
 
 	// Referenced object + lock + alias
 	{
 		var refId ids.SeqId
-		if err := refId.Set("two/dos"); err != nil {
-			t.Fatal(err)
-		}
-		if err := metadata.AddReference(refId); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(refId.Set("two/dos"))
+		t.AssertNoError(metadata.AddReference(refId))
 		refLock := metadata.GetReferencedObjectLockMutable(refId)
-		if err := refLock.GetValueMutable().Set(
+		t.AssertNoError(refLock.GetValueMutable().Set(
 			testSig3,
-		); err != nil {
-			t.Fatal(err)
-		}
-		if err := metadata.SetReferenceAlias(refId, "blog-template"); err != nil {
-			t.Fatal(err)
-		}
+		))
+		t.AssertNoError(metadata.SetReferenceAlias(refId, "blog-template"))
 	}
 
 	// Blob reference + type lock + alias
 	{
 		var blobId markl.Id
-		if err := blobId.Set(testBlobDigest); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(blobId.Set(testBlobDigest))
 
 		var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
-		if err := typeLock.GetKeyMutable().SetType("img"); err != nil {
-			t.Fatal(err)
-		}
-		if err := typeLock.GetValueMutable().Set(
+		t.AssertNoError(typeLock.GetKeyMutable().SetType("img"))
+		t.AssertNoError(typeLock.GetValueMutable().Set(
 			testSig4,
-		); err != nil {
-			t.Fatal(err)
-		}
+		))
 
 		metadata.AddBlobReference(blobId, typeLock)
-		if err := metadata.SetBlobReferenceAlias(blobId, "hero-image"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(metadata.SetBlobReferenceAlias(blobId, "hero-image"))
 	}
 
 	// Encode
 	var jsonObj Transacted
-	if err := jsonObj.FromTransacted(original, nil); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(jsonObj.FromTransacted(original, nil))
 
 	// Verify JSON fields are populated
 	encoded, err := json.MarshalIndent(jsonObj, "", "  ")
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	t.Logf("JSON:\n%s", encoded)
 
 	// Decode into fresh object
 	decoded, repoolDecoded := sku.GetTransactedPool().GetWithRepool() //repool:owned
 	defer repoolDecoded()
 
-	if err := jsonObj.ToTransacted(decoded, nil); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(jsonObj.ToTransacted(decoded, nil))
 
 	decodedMeta := decoded.GetMetadataMutable()
 
@@ -137,9 +103,7 @@ func TestTransactedRoundTripAllLockKinds(t1 *testing.T) {
 	// Verify tag lock
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("project-alpha"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("project-alpha"))
 		originalLock := metadata.GetTagLock(tag)
 		decodedLock := decodedMeta.GetTagLock(tag)
 		if originalLock == nil || decodedLock == nil {
@@ -154,9 +118,7 @@ func TestTransactedRoundTripAllLockKinds(t1 *testing.T) {
 	// Verify referenced object lock + alias
 	{
 		var refId ids.SeqId
-		if err := refId.Set("two/dos"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(refId.Set("two/dos"))
 		originalLock := metadata.GetReferencedObjectLock(refId)
 		decodedLock := decodedMeta.GetReferencedObjectLock(refId)
 		if originalLock == nil || decodedLock == nil {
@@ -175,9 +137,7 @@ func TestTransactedRoundTripAllLockKinds(t1 *testing.T) {
 	// Verify blob reference + type lock + alias
 	{
 		var blobId markl.Id
-		if err := blobId.Set(testBlobDigest); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(blobId.Set(testBlobDigest))
 
 		originalTypeLock := metadata.GetBlobReferenceTypeLock(blobId)
 		decodedTypeLock := decodedMeta.GetBlobReferenceTypeLock(blobId)
@@ -208,55 +168,35 @@ func TestRoundTripJSONMarshalUnmarshal(t1 *testing.T) {
 
 	metadata := original.GetMetadataMutable()
 
-	if err := original.GetObjectIdMutable().Set("one/uno"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(original.GetObjectIdMutable().Set("one/uno"))
 
-	if err := metadata.GetTypeMutable().SetType("md"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(metadata.GetTypeMutable().SetType("md"))
 
-	if err := metadata.GetTypeLockMutable().GetValueMutable().Set(testSig1); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(metadata.GetTypeLockMutable().GetValueMutable().Set(testSig1))
 
-	if err := metadata.AddTagString("project-alpha"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(metadata.AddTagString("project-alpha"))
 
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("project-alpha"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("project-alpha"))
 		tagLock := metadata.GetTagLockMutable(tag)
-		if err := tagLock.GetValueMutable().Set(testSig2); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tagLock.GetValueMutable().Set(testSig2))
 	}
 
 	// Encode to struct, marshal to JSON bytes, unmarshal back, decode to object
 	var jsonObj Transacted
-	if err := jsonObj.FromTransacted(original, nil); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(jsonObj.FromTransacted(original, nil))
 
 	bytes, err := json.Marshal(jsonObj)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	var jsonObj2 Transacted
-	if err := json.Unmarshal(bytes, &jsonObj2); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(json.Unmarshal(bytes, &jsonObj2))
 
 	decoded, repoolDecoded := sku.GetTransactedPool().GetWithRepool() //repool:owned
 	defer repoolDecoded()
 
-	if err := jsonObj2.ToTransacted(decoded, nil); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(jsonObj2.ToTransacted(decoded, nil))
 
 	decodedMeta := decoded.GetMetadataMutable()
 
@@ -267,9 +207,7 @@ func TestRoundTripJSONMarshalUnmarshal(t1 *testing.T) {
 
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("project-alpha"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("project-alpha"))
 		decodedLock := decodedMeta.GetTagLock(tag)
 		if decodedLock == nil {
 			t.Fatal("tag lock missing after JSON marshal/unmarshal round-trip")
@@ -286,93 +224,61 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 
 	metadata := original.GetMetadataMutable()
 
-	if err := original.GetObjectIdMutable().Set("one/uno"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(original.GetObjectIdMutable().Set("one/uno"))
 
-	if err := metadata.GetTypeMutable().SetType("md"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(metadata.GetTypeMutable().SetType("md"))
 
 	// Two tags: one locked, one not
-	if err := metadata.AddTagString("locked-tag"); err != nil {
-		t.Fatal(err)
-	}
-	if err := metadata.AddTagString("unlocked-tag"); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(metadata.AddTagString("locked-tag"))
+	t.AssertNoError(metadata.AddTagString("unlocked-tag"))
 
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("locked-tag"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("locked-tag"))
 		tagLock := metadata.GetTagLockMutable(tag)
-		if err := tagLock.GetValueMutable().Set(testSig1); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tagLock.GetValueMutable().Set(testSig1))
 	}
 
 	// Reference with lock but no alias
 	{
 		var refId ids.SeqId
-		if err := refId.Set("two/dos"); err != nil {
-			t.Fatal(err)
-		}
-		if err := metadata.AddReference(refId); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(refId.Set("two/dos"))
+		t.AssertNoError(metadata.AddReference(refId))
 		refLock := metadata.GetReferencedObjectLockMutable(refId)
-		if err := refLock.GetValueMutable().Set(testSig2); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(refLock.GetValueMutable().Set(testSig2))
 		// No alias set
 	}
 
 	// Blob reference with type lock but no alias
 	{
 		var blobId markl.Id
-		if err := blobId.Set(testBlobDigest); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(blobId.Set(testBlobDigest))
 		var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
-		if err := typeLock.GetKeyMutable().SetType("img"); err != nil {
-			t.Fatal(err)
-		}
-		if err := typeLock.GetValueMutable().Set(testSig3); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(typeLock.GetKeyMutable().SetType("img"))
+		t.AssertNoError(typeLock.GetValueMutable().Set(testSig3))
 		metadata.AddBlobReference(blobId, typeLock)
 		// No alias set
 	}
 
 	// Encode → Decode
 	var jsonObj Transacted
-	if err := jsonObj.FromTransacted(original, nil); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(jsonObj.FromTransacted(original, nil))
 
 	encoded, err := json.MarshalIndent(jsonObj, "", "  ")
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	t.Logf("JSON:\n%s", encoded)
 
 	decoded, repoolDecoded := sku.GetTransactedPool().GetWithRepool() //repool:owned
 	defer repoolDecoded()
 
-	if err := jsonObj.ToTransacted(decoded, nil); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(jsonObj.ToTransacted(decoded, nil))
 
 	decodedMeta := decoded.GetMetadataMutable()
 
 	// Locked tag preserved
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("locked-tag"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("locked-tag"))
 		decodedLock := decodedMeta.GetTagLock(tag)
 		if decodedLock == nil {
 			t.Fatal("locked tag lock missing after round-trip")
@@ -383,9 +289,7 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 	// Unlocked tag has no lock
 	{
 		var tag ids.TagStruct
-		if err := tag.Set("unlocked-tag"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(tag.Set("unlocked-tag"))
 		decodedLock := decodedMeta.GetTagLock(tag)
 		if decodedLock != nil && !decodedLock.GetValue().IsEmpty() {
 			t.Fatalf("unlocked tag should have no lock, got: %s", decodedLock.GetValue())
@@ -395,9 +299,7 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 	// Reference lock preserved, alias is empty
 	{
 		var refId ids.SeqId
-		if err := refId.Set("two/dos"); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(refId.Set("two/dos"))
 		decodedLock := decodedMeta.GetReferencedObjectLock(refId)
 		if decodedLock == nil {
 			t.Fatal("reference lock missing after round-trip")
@@ -409,9 +311,7 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 	// Blob reference type lock preserved, alias is empty
 	{
 		var blobId markl.Id
-		if err := blobId.Set(testBlobDigest); err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(blobId.Set(testBlobDigest))
 		decodedTypeLock := decodedMeta.GetBlobReferenceTypeLock(blobId)
 		if decodedTypeLock.IsEmpty() {
 			t.Fatal("blob reference type lock missing after round-trip")
