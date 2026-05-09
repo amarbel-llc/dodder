@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 // validCoordinateIds computes the set of valid coordinate IDs for a
@@ -48,7 +48,7 @@ func makeBitsetFromCoordinates(lMax, rMax int) collections.Bitset {
 // --- Regression tests: prove the OLD MakeBitsetOn approach was wrong ---
 
 func TestOldResetBitsetSizeTooSmall(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	lMax := 3
 	rMax := 2
@@ -77,7 +77,7 @@ func TestOldResetBitsetSizeTooSmall(t1 *testing.T) {
 }
 
 func TestOldResetMissesValidIds(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	lMax := 3
 	rMax := 2
@@ -100,7 +100,7 @@ func TestOldResetMissesValidIds(t1 *testing.T) {
 }
 
 func TestCoordinateIdsAreNotSequential(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	lMax := 3
 	rMax := 2
@@ -130,7 +130,7 @@ func TestCoordinateIdsAreNotSequential(t1 *testing.T) {
 // --- Correctness tests: verify the fixed coordinate-aware Reset ---
 
 func TestFixedResetContainsAllValidIds(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	lMax := 3
 	rMax := 2
@@ -154,7 +154,7 @@ func TestFixedResetContainsAllValidIds(t1 *testing.T) {
 }
 
 func TestFixedResetContainsNoInvalidIds(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	lMax := 3
 	rMax := 2
@@ -177,7 +177,7 @@ func TestFixedResetContainsNoInvalidIds(t1 *testing.T) {
 }
 
 func TestFixedResetRoundTripCoordinates(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	lMax := 5
 	rMax := 4
@@ -211,7 +211,7 @@ func TestFixedResetRoundTripCoordinates(t1 *testing.T) {
 }
 
 func TestFixedResetRealisticSize(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Realistic word list sizes (dodder ships ~100 left, ~50 right words)
 	lMax := 99

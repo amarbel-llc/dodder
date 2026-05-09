@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 const (
@@ -153,7 +153,7 @@ func BenchmarkCreateZettelIdV1BitsetNthOn(b *testing.B) {
 // --- Memory: report allocation sizes ---
 
 func TestMemoryComparison(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// v0: map[int]bool
 	m := make(map[int]bool, benchLMax*benchRMax)
