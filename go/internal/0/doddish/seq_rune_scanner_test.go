@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestSeqRuneScanner(t1 *testing.T) {
@@ -21,24 +20,14 @@ func TestSeqRuneScanner(t1 *testing.T) {
 	readOne := func(t *ui.T, s *SeqRuneScanner, c rune) {
 		r, n, err := s.ReadRune()
 
-		if r != c {
-			t.Errorf("%s", cmp.Diff(string(c), string(r)))
-		}
-
-		if n != 1 {
-			t.Errorf("%s", cmp.Diff(1, n))
-		}
-
-		if err != nil {
-			t.Errorf("%s", cmp.Diff(nil, err))
-		}
+		t.AssertEqual(string(c), string(r))
+		t.AssertEqual(1, n)
+		t.AssertNoError(err)
 	}
 
 	unreadOne := func(t *ui.T, s *SeqRuneScanner) {
 		err := s.UnreadRune()
-		if err != nil {
-			t.Errorf("%s", err)
-		}
+		t.AssertNoError(err)
 	}
 
 	readMany := func(t *ui.T, s *SeqRuneScanner, cs ...rune) {

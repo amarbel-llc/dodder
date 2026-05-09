@@ -79,9 +79,7 @@ func makeSeqFromString(t *ui.T, input string) Seq {
 	var seq Seq
 
 	for scanner.ScanDotAllowedInIdentifiers() {
-		if index > 0 {
-			t.Errorf("more than one seq in scanner")
-		}
+		t.AssertFalse(index > 0, "more than one seq in scanner")
 
 		seq = scanner.GetSeq()
 		index++
