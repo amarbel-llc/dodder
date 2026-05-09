@@ -54,16 +54,7 @@ func TestExtractUniqueComponents(t1 *testing.T) {
 		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := ExtractUniqueComponents(tt.lines)
 
-			if len(got) != len(tt.expected) {
-				t.Fatalf("ExtractUniqueComponents() returned %d items, want %d: %v",
-					len(got), len(tt.expected), got)
-			}
-
-			for i := range got {
-				if got[i] != tt.expected[i] {
-					t.Errorf("index %d: got %q, want %q", i, got[i], tt.expected[i])
-				}
-			}
+			t.AssertEqual(tt.expected, got)
 		})
 	}
 }

@@ -22,9 +22,7 @@ func TestStripDiacritics(t1 *testing.T) {
 	for _, tt := range tests {
 		t.Run(ui.MakeTestCaseInfo(tt.input), func(t *ui.T) {
 			got := StripDiacritics(tt.input)
-			if got != tt.expected {
-				t.Errorf("StripDiacritics(%q) = %q, want %q", tt.input, got, tt.expected)
-			}
+			t.AssertEqualStrings(tt.expected, got)
 		})
 	}
 }
