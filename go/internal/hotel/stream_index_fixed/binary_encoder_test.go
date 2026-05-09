@@ -62,9 +62,7 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 
 	// Create a temp file for overflow (signed objects usually exceed 255 bytes).
 	overflowTempFile, err := os.CreateTemp("", "test-overflow-*")
-	if err != nil {
-		t.Fatalf("failed to create overflow temp file: %s", err)
-	}
+	t.AssertNoError(err)
 
 	defer os.Remove(overflowTempFile.Name()) //defer:err-checked
 	defer overflowTempFile.Close()           //defer:err-checked
@@ -74,25 +72,19 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 	// Encode to fixed-length entry.
 	var entryBuf bytes.Buffer
 
-	if err := encoder.writeFixedEntry(
+	t.AssertNoError(encoder.writeFixedEntry(
 		&entryBuf,
 		objectWithSigil{Transacted: expected, Sigil: ids.SigilLatest},
 		overflowW,
-	); err != nil {
-		t.Fatalf("encode failed: %s", err)
-	}
+	))
 
-	if entryBuf.Len() != EntryWidth {
-		t.Fatalf("expected %d bytes, got %d", EntryWidth, entryBuf.Len())
-	}
+	t.AssertEqual(EntryWidth, entryBuf.Len())
 
 	entryBytes := entryBuf.Bytes()
 
 	// Verify sigil at byte offset 3 (raw byte value, not character encoding).
 	decodedSigil := ids.Sigil(entryBytes[3])
-	if !decodedSigil.Contains(ids.SigilLatest) {
-		t.Fatalf("expected SigilLatest at byte 3, got %x", entryBytes[3])
-	}
+	t.AssertTrue(decodedSigil.Contains(ids.SigilLatest), "expected SigilLatest at byte 3")
 
 	hasOverflow := entryBytes[EntryWidth-1]&0x01 != 0
 	t.Logf("entry has overflow: %v", hasOverflow)
@@ -104,14 +96,12 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 	entryReader := bytes.NewReader(entryBytes)
 	overflowRA := &overflowReaderAt{readerAt: overflowTempFile}
 
-	if err := decoder.readFixedEntry(
+	t.AssertNoError(decoder.readFixedEntry(
 		entryReader,
 		overflowRA,
 		0,
 		actual,
-	); err != nil {
-		t.Fatalf("decode failed: %s", err)
-	}
+	))
 
 	if !sku.TransactedEqualer.Equals(expected, actual) {
 		t.Errorf(
@@ -132,15 +122,11 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 		updateSigil.Add(ids.SigilHistory)
 		updateSigil.Add(ids.SigilLatest)
 
-		if err := encoder.updateSigil(writerAt, updateSigil, 0); err != nil {
-			t.Fatalf("updateSigil failed: %s", err)
-		}
+		t.AssertNoError(encoder.updateSigil(writerAt, updateSigil, 0))
 
 		resultSigil := ids.Sigil(entryData[3])
 
-		if !resultSigil.Contains(ids.SigilLatest) {
-			t.Fatal("expected SigilLatest after update")
-		}
+		t.AssertTrue(resultSigil.Contains(ids.SigilLatest), "expected SigilLatest after update")
 	}
 }
 
@@ -233,17 +219,13 @@ func TestFixedBinaryZeroPadding(t1 *testing.T) {
 
 	var entryBuf bytes.Buffer
 
-	if err := encoder.writeFixedEntry(
+	t.AssertNoError(encoder.writeFixedEntry(
 		&entryBuf,
 		objectWithSigil{Transacted: object, Sigil: ids.SigilHistory},
 		nil,
-	); err != nil {
-		t.Fatalf("encode failed: %s", err)
-	}
+	))
 
-	if entryBuf.Len() != EntryWidth {
-		t.Fatalf("expected %d bytes, got %d", EntryWidth, entryBuf.Len())
-	}
+	t.AssertEqual(EntryWidth, entryBuf.Len())
 
 	entryBytes := entryBuf.Bytes()
 
