@@ -15,9 +15,7 @@ func TestTopologicalSortLinearChain(t1 *testing.T) {
 	}
 
 	heights, err := TopologicalSort(edges)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(err)
 
 	assertHeight(&t, heights, "c", 0)
 	assertHeight(&t, heights, "b", 1)
@@ -35,9 +33,7 @@ func TestTopologicalSortDiamondDependency(t1 *testing.T) {
 	}
 
 	heights, err := TopologicalSort(edges)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(err)
 
 	assertHeight(&t, heights, "a", 0)
 	assertHeight(&t, heights, "b", 1)
@@ -53,9 +49,7 @@ func TestTopologicalSortDisconnectedComponents(t1 *testing.T) {
 	}
 
 	heights, err := TopologicalSort(edges)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(err)
 
 	assertHeight(&t, heights, "b", 0)
 	assertHeight(&t, heights, "a", 1)
@@ -71,17 +65,13 @@ func TestTopologicalSortCycleDetection(t1 *testing.T) {
 	}
 
 	_, err := TopologicalSort(edges)
-	if err == nil {
-		t.Fatal("expected cycle error, got nil")
-	}
+	t.AssertError(err)
 }
 
 func TestTopologicalSortEmpty(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	heights, err := TopologicalSort(nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(err)
 
 	if len(heights) != 0 {
 		t.Fatalf("expected empty map, got %v", heights)
@@ -95,9 +85,7 @@ func TestTopologicalSortSingleNode(t1 *testing.T) {
 	}
 
 	heights, err := TopologicalSort(edges)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(err)
 
 	assertHeight(&t, heights, "b", 0)
 	assertHeight(&t, heights, "a", 1)

@@ -56,9 +56,7 @@ func TestRepositionerMovesPackageToCorrectLevel(t1 *testing.T) {
 		Mover:  mover,
 	}
 
-	if err := r.Run(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(r.Run())
 
 	// pkg_a depends on pkg_b, so pkg_a should be at level1
 	// pkg_b is already at level0 (correct), pkg_a needs to move from level0 to level1
@@ -67,9 +65,7 @@ func TestRepositionerMovesPackageToCorrectLevel(t1 *testing.T) {
 	}
 
 	expected := "tree/level0/pkg_a -> tree/level1/pkg_a"
-	if mover.moves[0] != expected {
-		t.Errorf("expected move %q, got %q", expected, mover.moves[0])
-	}
+	t.AssertEqualStrings(expected, mover.moves[0])
 }
 
 func TestRepositionerSkipsCorrectlyPlacedPackages(t1 *testing.T) {
@@ -91,9 +87,7 @@ func TestRepositionerSkipsCorrectlyPlacedPackages(t1 *testing.T) {
 		Mover:  mover,
 	}
 
-	if err := r.Run(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(r.Run())
 
 	if len(mover.moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d: %v", len(mover.moves), mover.moves)
@@ -120,9 +114,7 @@ func TestRepositionerDryRunDoesNotMove(t1 *testing.T) {
 		DryRun: true,
 	}
 
-	if err := r.Run(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(r.Run())
 
 	if len(mover.moves) != 0 {
 		t.Fatalf("expected 0 moves in dry run, got %d: %v", len(mover.moves), mover.moves)
@@ -142,9 +134,7 @@ func TestRepositionerReaderError(t1 *testing.T) {
 	}
 
 	err := r.Run()
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
+	t.AssertError(err)
 
 	if !strings.Contains(err.Error(), "read failed") {
 		t.Errorf("expected error to contain %q, got %q", "read failed", err.Error())
@@ -180,9 +170,7 @@ func TestRepositionerCycleError(t1 *testing.T) {
 	}
 
 	err := r.Run()
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
+	t.AssertError(err)
 
 	if !strings.Contains(err.Error(), "cycle") {
 		t.Errorf("expected error to mention cycle, got %q", err.Error())
@@ -210,9 +198,7 @@ func TestRepositionerMapperError(t1 *testing.T) {
 	}
 
 	err := r.Run()
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
+	t.AssertError(err)
 
 	if !strings.Contains(err.Error(), "mapping height") {
 		t.Errorf("expected error to contain %q, got %q", "mapping height", err.Error())
@@ -237,9 +223,7 @@ func TestRepositionerCrossPrefixEdgesIgnored(t1 *testing.T) {
 		Mover:  mover,
 	}
 
-	if err := r.Run(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(r.Run())
 
 	if len(mover.moves) != 0 {
 		t.Fatalf("expected 0 moves, got %d: %v", len(mover.moves), mover.moves)
@@ -268,9 +252,7 @@ func TestRepositionerMultiplePrefixesSortedIndependently(t1 *testing.T) {
 		Mover:  mover,
 	}
 
-	if err := r.Run(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	t.AssertNoError(r.Run())
 
 	// Both pkg_a and pkg_c should move from level0 to level1
 	if len(mover.moves) != 2 {
@@ -281,11 +263,6 @@ func TestRepositionerMultiplePrefixesSortedIndependently(t1 *testing.T) {
 	expected0 := "internal/level0/pkg_c -> internal/level1/pkg_c"
 	expected1 := "lib/level0/pkg_a -> lib/level1/pkg_a"
 
-	if mover.moves[0] != expected0 {
-		t.Errorf("move[0]: expected %q, got %q", expected0, mover.moves[0])
-	}
-
-	if mover.moves[1] != expected1 {
-		t.Errorf("move[1]: expected %q, got %q", expected1, mover.moves[1])
-	}
+	t.AssertEqualStrings(expected0, mover.moves[0])
+	t.AssertEqualStrings(expected1, mover.moves[1])
 }
