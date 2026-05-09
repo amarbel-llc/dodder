@@ -3,7 +3,6 @@ package sku
 import (
 	"crypto/sha256"
 	"io"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -34,9 +33,8 @@ func (t inlineTypChecker) IsInlineTyp(k ids.Type) bool {
 func makeTagSet(t *ui.TestContext, vs ...string) (es ids.TagSet) {
 	var err error
 
-	if es, err = collections_ptr.MakeValueSetString[ids.TagStruct](nil, vs...); err != nil {
-		t.Fatalf("%s", err)
-	}
+	es, err = collections_ptr.MakeValueSetString[ids.TagStruct](nil, vs...)
+	t.AssertNoError(err)
 
 	return es
 }
@@ -58,9 +56,7 @@ func readFormat(
 	)
 	t.AssertNoError(err)
 
-	if n != int64(len(contents)) {
-		t.Fatalf("expected to read %d but only read %d", len(contents), n)
-	}
+	t.AssertEqual(int64(len(contents)), n)
 
 	metadata = object.GetMetadataMutable()
 
@@ -81,52 +77,39 @@ func testMakeTags(t *ui.TestContext) {
 	var sutTagSet ids.TagSet
 	var err error
 
-	if sutTagSet, err = ids.MakeTagSetStrings(tagStrings...); err != nil {
-		t.Fatalf("%s", err)
-	}
+	sutTagSet, err = ids.MakeTagSetStrings(tagStrings...)
+	t.AssertNoError(err)
 
-	if sutTagSet.Len() != 3 {
-		t.Fatalf("expected len 3 but got %d", sutTagSet.Len())
-	}
+	t.AssertEqual(3, sutTagSet.Len())
 
 	{
 		actualLength := sutTagSet.Len()
 
-		if actualLength != 3 {
-			t.Fatalf("expected len 3 but got %d", actualLength)
-		}
+		t.AssertEqual(3, actualLength)
 	}
 
 	sutTagSet2 := sutTagSet
 
-	if sutTagSet2.Len() != 3 {
-		t.Fatalf("expected len 3 but got %d", sutTagSet2.Len())
-	}
+	t.AssertEqual(3, sutTagSet2.Len())
 
 	{
 		actual := quiter.SortedStrings(sutTagSet)
 
-		if !reflect.DeepEqual(actual, tagStrings) {
-			t.Fatalf("expected %q but got %q", tagStrings, actual)
-		}
+		t.AssertEqual(tagStrings, actual)
 	}
 
 	{
 		expected := "tag1, tag2, tag3"
 		actual := quiter.StringCommaSeparated(sutTagSet)
 
-		if actual != expected {
-			t.Fatalf("expected %q but got %q", expected, actual)
-		}
+		t.AssertEqualStrings(expected, actual)
 	}
 
 	{
 		expected := "tag1, tag2, tag3"
 		actual := quiter.StringCommaSeparated(sutTagSet)
 
-		if actual != expected {
-			t.Fatalf("expected %q but got %q", expected, actual)
-		}
+		t.AssertEqualStrings(expected, actual)
 	}
 }
 
@@ -145,9 +128,7 @@ func testEqualitySelf(t *ui.TestContext) {
 		)).
 		Build()
 
-	if !objects.Equaler.Equals(&text, &text) {
-		t.Fatalf("expected %v to equal itself", text)
-	}
+	t.AssertTrue(objects.Equaler.Equals(&text, &text), "expected text to equal itself")
 }
 
 func TestEqualityNotSelf(t1 *testing.T) {
@@ -173,9 +154,7 @@ func testEqualityNotSelf(t *ui.TestContext) {
 		WithTags(tags).
 		Build()
 
-	if !objects.Equaler.Equals(&text, &text1) {
-		t.Fatalf("expected %v to equal %v", text, text1)
-	}
+	t.AssertTrue(objects.Equaler.Equals(&text, &text1), "expected text to equal text1")
 }
 
 func makeTestTextFormatFactory(
@@ -234,9 +213,7 @@ func testReadWithoutBlob(t *ui.TestContext) {
 		)
 	}
 
-	if !actual.GetBlobDigest().IsNull() {
-		t.Fatalf("blob:\nexpected empty but got %q", actual.GetBlobDigest())
-	}
+	t.AssertTrue(actual.GetBlobDigest().IsNull(), "blob: expected empty")
 }
 
 func TestReadWithoutBlobWithMultilineDescription(t1 *testing.T) {
@@ -274,9 +251,7 @@ func testReadWithoutBlobWithMultilineDescription(t *ui.TestContext) {
 		t.Fatalf("zettel:\nexpected: %#v\n  actual: %#v", &expected, actual)
 	}
 
-	if !actual.GetBlobDigest().IsNull() {
-		t.Fatalf("blob:\nexpected empty but got %q", actual.GetBlobDigest())
-	}
+	t.AssertTrue(actual.GetBlobDigest().IsNull(), "blob: expected empty")
 }
 
 func TestReadWithBlob(t1 *testing.T) {
@@ -366,9 +341,7 @@ func writeFormat(
 	reader, repool := pool.GetStringReader(blobBody)
 	defer repool()
 	_, err := io.Copy(hash, reader)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
+	t.AssertNoError(err)
 
 	blobDigest, _ := hashType.GetMarklIdForString(blobBody) //repool:owned
 
