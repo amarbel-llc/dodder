@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestOmitTagsTransformRemovesMatchingTags(t *testing.T) {
+func TestOmitTagsTransformRemovesMatchingTags(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{"^tag-[12]$"})
 	if err != nil {
 		t.Fatal(err)
@@ -34,7 +36,8 @@ func TestOmitTagsTransformRemovesMatchingTags(t *testing.T) {
 	}
 }
 
-func TestOmitTagsTransformKeepsAllWhenNoMatch(t *testing.T) {
+func TestOmitTagsTransformKeepsAllWhenNoMatch(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{"^archived$"})
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +62,8 @@ func TestOmitTagsTransformKeepsAllWhenNoMatch(t *testing.T) {
 	}
 }
 
-func TestOmitTagsTransformMultiplePatterns(t *testing.T) {
+func TestOmitTagsTransformMultiplePatterns(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{"^tag-1$", "^tag-3$"})
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +89,8 @@ func TestOmitTagsTransformMultiplePatterns(t *testing.T) {
 	}
 }
 
-func TestOmitTagsTransformRemovesAllTags(t *testing.T) {
+func TestOmitTagsTransformRemovesAllTags(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{".*"})
 	if err != nil {
 		t.Fatal(err)
@@ -109,7 +114,8 @@ func TestOmitTagsTransformRemovesAllTags(t *testing.T) {
 	}
 }
 
-func TestOmitTagsTransformInvalidRegex(t *testing.T) {
+func TestOmitTagsTransformInvalidRegex(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	_, err := MakeOmitTagsTransform([]string{"[invalid"})
 	if err == nil {
 		t.Fatal("expected error for invalid regex")
