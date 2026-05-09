@@ -29,19 +29,14 @@ func testMakeTestingProducesValidKeypair(t *ui.TestContext) {
 
 	hash, repoolHash := markl.FormatHashSha256.GetHash()
 	defer repoolHash()
-	if _, err := hash.Write([]byte("smoke")); err != nil {
-		t.Fatalf("hash.Write: %v", err)
-	}
+	_, err := hash.Write([]byte("smoke"))
+	t.AssertNoError(err)
 
 	digest, repoolDigest := hash.GetMarklId()
 	defer repoolDigest()
 
 	var sig markl.Id
-	if err := priv.Sign(digest, &sig, markl.PurposeRequestRepoSigV1); err != nil {
-		t.Fatalf("priv.Sign: %v", err)
-	}
+	t.AssertNoError(priv.Sign(digest, &sig, markl.PurposeRequestRepoSigV1))
 
-	if err := pub.Verify(digest, sig); err != nil {
-		t.Fatalf("pub.Verify: keys do not form a valid pair: %v", err)
-	}
+	t.AssertNoError(pub.Verify(digest, sig))
 }
