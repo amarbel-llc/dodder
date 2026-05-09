@@ -12,9 +12,7 @@ import (
 func TestOmitTagsTransformRemovesMatchingTags(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{"^tag-[12]$"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	var object sku.Transacted
 	object.GetMetadataMutable().AddTagString("tag-1")
@@ -22,13 +20,9 @@ func TestOmitTagsTransformRemovesMatchingTags(t1 *testing.T) {
 	object.GetMetadataMutable().AddTagString("tag-3")
 
 	keep, err := transform(&object)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if !keep {
-		t.Fatal("expected keep=true")
-	}
+	t.AssertTrue(keep, "expected keep=true")
 
 	tags := collectTagStrings(&object)
 	if len(tags) != 1 || tags[0] != "tag-3" {
@@ -39,22 +33,16 @@ func TestOmitTagsTransformRemovesMatchingTags(t1 *testing.T) {
 func TestOmitTagsTransformKeepsAllWhenNoMatch(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{"^archived$"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	var object sku.Transacted
 	object.GetMetadataMutable().AddTagString("tag-1")
 	object.GetMetadataMutable().AddTagString("tag-2")
 
 	keep, err := transform(&object)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if !keep {
-		t.Fatal("expected keep=true")
-	}
+	t.AssertTrue(keep, "expected keep=true")
 
 	tags := collectTagStrings(&object)
 	if len(tags) != 2 {
@@ -65,9 +53,7 @@ func TestOmitTagsTransformKeepsAllWhenNoMatch(t1 *testing.T) {
 func TestOmitTagsTransformMultiplePatterns(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{"^tag-1$", "^tag-3$"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	var object sku.Transacted
 	object.GetMetadataMutable().AddTagString("tag-1")
@@ -75,13 +61,9 @@ func TestOmitTagsTransformMultiplePatterns(t1 *testing.T) {
 	object.GetMetadataMutable().AddTagString("tag-3")
 
 	keep, err := transform(&object)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if !keep {
-		t.Fatal("expected keep=true")
-	}
+	t.AssertTrue(keep, "expected keep=true")
 
 	tags := collectTagStrings(&object)
 	if len(tags) != 1 || tags[0] != "tag-2" {
@@ -92,21 +74,15 @@ func TestOmitTagsTransformMultiplePatterns(t1 *testing.T) {
 func TestOmitTagsTransformRemovesAllTags(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	transform, err := MakeOmitTagsTransform([]string{".*"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	var object sku.Transacted
 	object.GetMetadataMutable().AddTagString("tag-1")
 
 	keep, err := transform(&object)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if !keep {
-		t.Fatal("expected keep=true even when all tags removed")
-	}
+	t.AssertTrue(keep, "expected keep=true even when all tags removed")
 
 	tags := collectTagStrings(&object)
 	if len(tags) != 0 {
@@ -117,9 +93,7 @@ func TestOmitTagsTransformRemovesAllTags(t1 *testing.T) {
 func TestOmitTagsTransformInvalidRegex(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	_, err := MakeOmitTagsTransform([]string{"[invalid"})
-	if err == nil {
-		t.Fatal("expected error for invalid regex")
-	}
+	t.AssertError(err)
 }
 
 func collectTagStrings(object *sku.Transacted) []string {
