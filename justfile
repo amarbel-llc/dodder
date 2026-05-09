@@ -232,7 +232,12 @@ tag version message:
     gum log --level info "Previous: $prev"
     git log --oneline "$prev"..HEAD -- go/
   fi
-  git tag -s -m "{{message}}" "$tag"
+  msg_file=$(mktemp)
+  trap 'rm -f "$msg_file"' EXIT
+  cat >"$msg_file" <<'TAGMSG'
+  {{message}}
+  TAGMSG
+  git tag -s -F "$msg_file" "$tag"
   gum log --level info "Created tag: $tag"
   git push origin "$tag"
   gum log --level info "Pushed $tag"
