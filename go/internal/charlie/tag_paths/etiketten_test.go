@@ -21,11 +21,9 @@ func TestAddPaths(t1 *testing.T) {
 
 	{
 		area, _ := catgut.MakeFromString("area")
-		i, ok := es.All.ContainsTag(area)
+		_, ok := es.All.ContainsTag(area)
 
-		if !ok {
-			t.Errorf("expected some tag: %d, %t, %s", i, ok, es)
-		}
+		t.AssertTrue(ok, "expected some tag")
 	}
 
 	areaCareer, _ := catgut.MakeFromString("area-career")
@@ -37,11 +35,9 @@ func TestAddPaths(t1 *testing.T) {
 
 	{
 		area, _ := catgut.MakeFromString("area")
-		i, ok := es.All.ContainsTag(area)
+		_, ok := es.All.ContainsTag(area)
 
-		if !ok {
-			t.Errorf("expected some tag: %d, %t, %s", i, ok, es.All)
-		}
+		t.AssertTrue(ok, "expected some tag")
 	}
 }
 
@@ -61,9 +57,7 @@ func TestRealWorld(t1 *testing.T) {
 		e, _ := catgut.MakeFromString("req-comp-internet")
 		_, ok := es.All.ContainsTag(e)
 
-		if !ok {
-			t.Errorf("expected %s to be in %s", e, es)
-		}
+		t.AssertTrue(ok, "expected req-comp-internet to be in tag set")
 	}
 
 	project2022Recurse, _ := catgut.MakeFromString("project-2022-recurse")
@@ -76,9 +70,7 @@ func TestRealWorld(t1 *testing.T) {
 	e, _ := catgut.MakeFromString("req-comp-internet")
 	_, ok := es.All.ContainsTag(e)
 
-	if !ok {
-		t.Errorf("expected %s to be in %s", e, es)
-	}
+	t.AssertTrue(ok, "expected req-comp-internet to be in tag set")
 }
 
 func BenchmarkMatchFirstYes(b *testing.B) {

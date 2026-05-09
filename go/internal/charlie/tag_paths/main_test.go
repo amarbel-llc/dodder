@@ -30,9 +30,7 @@ func TestReadWrite(t1 *testing.T) {
 	{
 		n, err := sut.WriteTo(b)
 		t.AssertNoError(err)
-		if int(n) != b.Len() {
-			t.PrintDiff(b.Len(), n)
-		}
+		t.AssertEqual(b.Len(), int(n))
 	}
 
 	b.Reset()
@@ -41,24 +39,14 @@ func TestReadWrite(t1 *testing.T) {
 		n, err := sut.ReadFrom(b)
 		t.AssertEOF(err)
 
-		if int(n) != b.Len() {
-			t.PrintDiff(b.Len(), n)
-		}
+		t.AssertEqual(b.Len(), int(n))
 
-		if sut.Len() != 3 {
-			t.PrintDiff(3, sut.Len())
-		}
+		t.AssertEqual(3, sut.Len())
 
-		if !sut[0].EqualsString("one") {
-			t.PrintDiff("one", sut[0])
-		}
+		t.AssertTrue(sut[0].EqualsString("one"), "expected sut[0] to equal 'one'")
 
-		if !sut[1].EqualsString("two") {
-			t.PrintDiff("two", sut[1])
-		}
+		t.AssertTrue(sut[1].EqualsString("two"), "expected sut[1] to equal 'two'")
 
-		if !sut[2].EqualsString("three") {
-			t.PrintDiff("three", sut[2])
-		}
+		t.AssertTrue(sut[2].EqualsString("three"), "expected sut[2] to equal 'three'")
 	}
 }
