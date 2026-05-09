@@ -1,8 +1,13 @@
 package unicorn
 
-import "testing"
+import (
+	"testing"
 
-func TestExtractUniqueComponents(t *testing.T) {
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+)
+
+func TestExtractUniqueComponents(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		name     string
 		lines    []string
@@ -46,7 +51,7 @@ func TestExtractUniqueComponents(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := ExtractUniqueComponents(tt.lines)
 
 			if len(got) != len(tt.expected) {

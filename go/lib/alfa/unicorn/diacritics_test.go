@@ -1,8 +1,13 @@
 package unicorn
 
-import "testing"
+import (
+	"testing"
 
-func TestStripDiacritics(t *testing.T) {
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+)
+
+func TestStripDiacritics(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		input    string
 		expected string
@@ -15,7 +20,7 @@ func TestStripDiacritics(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.input), func(t *ui.T) {
 			got := StripDiacritics(tt.input)
 			if got != tt.expected {
 				t.Errorf("StripDiacritics(%q) = %q, want %q", tt.input, got, tt.expected)
