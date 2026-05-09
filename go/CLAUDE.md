@@ -38,8 +38,10 @@ tier ordering).
 
 ### Unit Test Conventions
 
-- **Always use `ui.T{T: t1}` in tests** --- never use bare `*testing.T`. The
-  `ui.T` wrapper is part of the test infrastructure.
+- **Always use `ui.MakeT(t1)` in tests** --- never use bare `*testing.T`. The
+  `ui.T` wrapper is part of the test infrastructure. Import is
+  `github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui`. Helpers take
+  `*ui.T`; callers pass `&t` because `MakeT` returns a value.
 - **Tests require the `test` build tag** --- this is why `just` recipes must be
   used instead of bare `go test`. The recipes pass `-tags test,debug`.
 - **Single package tests**: `just test-go-pkg ./path/to/package/` for a tight
