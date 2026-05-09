@@ -30,9 +30,7 @@ body content here
 func TestParseFile_Counts(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	headings, err := parseFile([]byte(sampleOrg))
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	if len(headings) != 3 {
 		t.Fatalf("want 3 headings, got %d", len(headings))
 	}
@@ -79,18 +77,12 @@ func TestNormalizeIDs_AddsMissingIDs(t1 *testing.T) {
 	headings, _ := parseFile([]byte(sampleOrg))
 
 	newContent, changed, err := normalizeIDs([]byte(sampleOrg), headings)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !changed {
-		t.Fatal("expected changed=true since heading 1 lacks an ID")
-	}
+	t.AssertNoError(err)
+	t.AssertTrue(changed, "expected changed=true since heading 1 lacks an ID")
 
 	// Re-parse the new content and verify all 3 headings now have IDs.
 	headings2, err := parseFile(newContent)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	if len(headings2) != 3 {
 		t.Fatalf("want 3 headings after normalize, got %d", len(headings2))
 	}
@@ -127,12 +119,8 @@ func TestNormalizeIDs_Idempotent(t1 *testing.T) {
 
 	headings2, _ := parseFile(newContent)
 	newContent2, changed, err := normalizeIDs(newContent, headings2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if changed {
-		t.Errorf("expected normalize to be a no-op on already-normalized content")
-	}
+	t.AssertNoError(err)
+	t.AssertFalse(changed, "expected normalize to be a no-op on already-normalized content")
 	if !equalBytes(newContent, newContent2) {
 		t.Errorf("normalized content changed on second pass")
 	}
