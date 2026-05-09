@@ -4,12 +4,15 @@ import (
 	"context"
 	_ "embed"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 //go:embed testdata/always_true.wasm
 var alwaysTrueWasm []byte
 
-func TestModulePoolBuilderRoundTrip(t *testing.T) {
+func TestModulePoolBuilderRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	ctx := context.Background()
 
 	rt, err := MakeRuntime(ctx)
@@ -34,7 +37,8 @@ func TestModulePoolBuilderRoundTrip(t *testing.T) {
 	}
 }
 
-func TestModulePoolReuse(t *testing.T) {
+func TestModulePoolReuse(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	ctx := context.Background()
 
 	rt, err := MakeRuntime(ctx)

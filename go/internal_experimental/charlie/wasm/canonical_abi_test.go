@@ -3,10 +3,12 @@ package wasm
 import (
 	"testing"
 
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestWriteStringRoundTrip(t *testing.T) {
+func TestWriteStringRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	memory := make([]byte, 1024)
 	allocator := MakeBumpAllocator(memory, 0)
 
@@ -23,7 +25,8 @@ func TestWriteStringRoundTrip(t *testing.T) {
 	}
 }
 
-func TestWriteStringListRoundTrip(t *testing.T) {
+func TestWriteStringListRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	memory := make([]byte, 4096)
 	allocator := MakeBumpAllocator(memory, 0)
 
