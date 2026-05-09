@@ -14,6 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type failingTypeBlobStore struct {
@@ -27,7 +28,8 @@ func (s failingTypeBlobStore) ParseTypedBlob(
 	return nil, func() {}, 0, s.err
 }
 
-func TestFormatReturnsErrorOnParseBlobFailure(t *testing.T) {
+func TestFormatReturnsErrorOnParseBlobFailure(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	expectedErr := errors.Errorf("blob parse failed")
 
 	typeObject, typeObjectRepool := sku.GetTransactedPool().GetWithRepool()
