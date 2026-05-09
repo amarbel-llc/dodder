@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func idWriteToReadFromData() []string {
@@ -19,7 +19,7 @@ func idWriteToReadFromData() []string {
 }
 
 func TestIdWriteToReadFrom(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	for _, value := range idWriteToReadFromData() {
 		var id ObjectId

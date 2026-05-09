@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_collection"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func stringSliceEquals(a, b []string) bool {
@@ -25,7 +25,7 @@ func stringSliceEquals(a, b []string) bool {
 }
 
 func TestStringSliceUnequal(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	expected := []string{
 		"this",
@@ -46,7 +46,7 @@ func TestStringSliceUnequal(t1 *testing.T) {
 }
 
 func TestStringSliceEquals(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	expected := []string{
 		"this",
@@ -68,7 +68,7 @@ func TestStringSliceEquals(t1 *testing.T) {
 }
 
 func TestExpansionAll(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	e := MustTag("this-is-a-tag")
 
 	ex := expansion.ExpandIntoSlice[TagStruct](
@@ -100,7 +100,7 @@ func TestExpansionAll(t1 *testing.T) {
 }
 
 func TestExpansionRight(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	e := MustTag("this-is-a-tag")
 
@@ -128,7 +128,7 @@ func TestExpansionRight(t1 *testing.T) {
 }
 
 func TestExpansionRightTypeNone(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	tipe := MustTypeStruct("md")
 
 	actual := expansion.ExpandIntoSlice[TypeStruct](

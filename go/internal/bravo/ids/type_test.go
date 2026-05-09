@@ -2,9 +2,12 @@ package ids
 
 import (
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestBlobExt(t *testing.T) {
+func TestBlobExt(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	var e TypeStruct
 	var err error
 
@@ -20,7 +23,8 @@ func TestBlobExt(t *testing.T) {
 	}
 }
 
-func TestBlobExt1(t *testing.T) {
+func TestBlobExt1(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	var e TypeStruct
 	var err error
 

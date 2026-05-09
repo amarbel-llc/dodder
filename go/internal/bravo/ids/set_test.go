@@ -8,9 +8,11 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/bravo/collections_delta"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestExpandedRight(t *testing.T) {
+func TestExpandedRight(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tags := MakeTagSetFromSlice(
 		MustTag("project-2021-dodder"),
 		MustTag("zz-archive-task-done"),
@@ -39,7 +41,8 @@ func TestExpandedRight(t *testing.T) {
 	}
 }
 
-func TestPrefixIntersection(t *testing.T) {
+func TestPrefixIntersection(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	s := MakeTagSetFromSlice(
 		MustTag("project-2021-dodder"),
 		MustTag("zz-archive-task-done"),
@@ -83,7 +86,8 @@ func TestPrefixIntersection(t *testing.T) {
 // 	}
 // }
 
-func TestDelta1(t *testing.T) {
+func TestDelta1(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	from := MakeTagSetFromSlice(
 		MustTag("project-2021-dodder"),
 		MustTag("task-todo"),

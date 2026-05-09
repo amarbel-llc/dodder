@@ -3,11 +3,11 @@ package ids
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestMake(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	in := "ceroplastes/midtown"
 	var sut ZettelId
 
@@ -24,7 +24,7 @@ func TestMake(t1 *testing.T) {
 }
 
 func TestMakeHeadAndTail(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	k := "ceroplastes"
 	s := "midtown"
 

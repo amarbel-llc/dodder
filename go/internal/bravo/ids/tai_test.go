@@ -5,12 +5,12 @@ import (
 	"testing"
 	tyme "time"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme"
 )
 
 func TestTaiSet(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	inSec := int64(2052235243)
 	inASec := int64(336092000000000000)
@@ -38,7 +38,7 @@ func TestTaiSet(t1 *testing.T) {
 }
 
 func TestTaiSet2(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	inSec := int64(2052235243)
 	inASec := int64(336092)
@@ -67,7 +67,7 @@ func TestTaiSet2(t1 *testing.T) {
 }
 
 func TestTaiWithIndex(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	u := int64(1673549470)
 
