@@ -7,13 +7,15 @@ import (
 	"testing"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 // TestFramedMultiTridexRoundTrip replicates the store_abbr serialization
 // pattern: 7 tridexes written as length-prefixed binary blobs, then read
 // back. The content mirrors what the bats fixture setup creates (yin=one/two/
 // three/.., yang=uno/dos/tres/.., two zettels with tags).
-func TestFramedMultiTridexRoundTrip(t *testing.T) {
+func TestFramedMultiTridexRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	// Build tridexes matching bats fixture state after create_test_zettels
 	repo := Make(".")
 	tags := Make("tag-1", "tag-2", "tag-3", "tag-4")
@@ -126,7 +128,8 @@ func TestFramedMultiTridexRoundTrip(t *testing.T) {
 
 // TestFramedEmptyTridexRoundTrip verifies that empty tridexes survive the
 // framing protocol (important for fresh repos where no objects exist yet).
-func TestFramedEmptyTridexRoundTrip(t *testing.T) {
+func TestFramedEmptyTridexRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	originals := make([]interfaces.TridexMutable, 7)
 	for i := range originals {
 		originals[i] = Make()

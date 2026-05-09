@@ -8,8 +8,8 @@ import (
 	"sort"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type testStringer string
@@ -52,7 +52,7 @@ func (t t) assertNotContainsExpansion(sut interfaces.Tridex, v string) {
 }
 
 func TestContains(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"123456",
@@ -96,7 +96,7 @@ func TestContains(t1 *testing.T) {
 }
 
 func TestLen(t1 *testing.T) {
-	t := t(ui.T{T: t1})
+	t := t(ui.MakeT(t1))
 
 	sut := Make("one")
 	t.assertLen(sut, 1)
@@ -178,7 +178,7 @@ func TestLen(t1 *testing.T) {
 }
 
 func TestAbbreviateOrphan(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"one",
@@ -196,7 +196,7 @@ func TestAbbreviateOrphan(t1 *testing.T) {
 }
 
 func TestAbbreviateDegenerate(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"mewtwo",
@@ -217,7 +217,7 @@ func TestAbbreviateDegenerate(t1 *testing.T) {
 }
 
 func TestExpandDegenerate(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"mewtwo",
@@ -238,7 +238,7 @@ func TestExpandDegenerate(t1 *testing.T) {
 }
 
 func TestAbbreviate(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"12",
@@ -273,7 +273,7 @@ func TestAbbreviate(t1 *testing.T) {
 }
 
 func TestExpandOrphan(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"654321",
@@ -292,7 +292,7 @@ func TestExpandOrphan(t1 *testing.T) {
 }
 
 func TestExpand(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := Make(
 		"12",
@@ -319,7 +319,7 @@ func TestExpand(t1 *testing.T) {
 }
 
 func TestDoesNotContainPrefix(t1 *testing.T) {
-	t := t(ui.T{T: t1})
+	t := t(ui.MakeT(t1))
 	makeSut := func() interfaces.TridexMutable {
 		return Make(
 			"121",
@@ -338,7 +338,7 @@ func TestDoesNotContainPrefix(t1 *testing.T) {
 }
 
 func TestRemove(t1 *testing.T) {
-	t := t(ui.T{T: t1})
+	t := t(ui.MakeT(t1))
 
 	makeSut := func() interfaces.TridexMutable {
 		return Make(
@@ -380,6 +380,7 @@ func TestRemove(t1 *testing.T) {
 }
 
 func TestAll(t1 *testing.T) {
+	tt := ui.MakeT(t1)
 	testCases := [][]string{
 		{
 			"12",
@@ -404,10 +405,10 @@ func TestAll(t1 *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		t1.Run(
-			fmt.Sprintf("test # %d", i),
-			func(t1 *testing.T) {
-				t := t(ui.T{T: t1})
+		tt.Run(
+			ui.MakeTestCaseInfo(fmt.Sprintf("test # %d", i)),
+			func(tInner *ui.T) {
+				t := t(*tInner)
 
 				expected := tc
 

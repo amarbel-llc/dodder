@@ -5,9 +5,12 @@ import (
 	"slices"
 	"sort"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestMarshalBinaryRoundTrip(t *testing.T) {
+func TestMarshalBinaryRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	testCases := []struct {
 		name     string
 		elements []string
@@ -55,7 +58,7 @@ func TestMarshalBinaryRoundTrip(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tc.name), func(t *ui.T) {
 			original := Make(tc.elements...)
 
 			marshaler := original.(*Tridex)
@@ -115,7 +118,8 @@ func TestMarshalBinaryRoundTrip(t *testing.T) {
 	}
 }
 
-func TestMarshalBinaryDeterministic(t *testing.T) {
+func TestMarshalBinaryDeterministic(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	elements := []string{"zz-archive", "person-john", "todo", "priority-0_must"}
 
 	first := Make(elements...)
