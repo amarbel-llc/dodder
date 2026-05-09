@@ -29,9 +29,7 @@ func TestUnescapeText(t1 *testing.T) {
 	for _, tt := range tests {
 		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := unescapeText(tt.input)
-			if got != tt.want {
-				t.Errorf("unescapeText(%q) = %q, want %q", tt.input, got, tt.want)
-			}
+			t.AssertEqualStrings(tt.want, got)
 		})
 	}
 }
@@ -55,9 +53,7 @@ func TestEscapeText(t1 *testing.T) {
 	for _, tt := range tests {
 		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := escapeText(tt.input)
-			if got != tt.want {
-				t.Errorf("escapeText(%q) = %q, want %q", tt.input, got, tt.want)
-			}
+			t.AssertEqualStrings(tt.want, got)
 		})
 	}
 }
@@ -76,9 +72,7 @@ func TestEscapeUnescapeRoundTrip(t1 *testing.T) {
 	for _, input := range inputs {
 		escaped := escapeText(input)
 		unescaped := unescapeText(escaped)
-		if unescaped != input {
-			t.Errorf("round-trip failed: %q -> %q -> %q", input, escaped, unescaped)
-		}
+		t.AssertEqualStrings(input, unescaped)
 	}
 }
 
@@ -135,9 +129,7 @@ func TestUnfoldLines(t1 *testing.T) {
 				t.Fatalf("unfoldLines(%q) got %d lines, want %d: %v", tt.input, len(filtered), len(tt.want), filtered)
 			}
 			for i := range filtered {
-				if filtered[i] != tt.want[i] {
-					t.Errorf("line %d: got %q, want %q", i, filtered[i], tt.want[i])
-				}
+				t.AssertEqualStrings(tt.want[i], filtered[i])
 			}
 		})
 	}
@@ -150,9 +142,7 @@ func TestFoldAndWrite(t1 *testing.T) {
 		foldAndWrite(&b, "SUMMARY:short")
 		got := b.String()
 		want := "SUMMARY:short\r\n"
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
+		t.AssertEqualStrings(want, got)
 	})
 
 	t.Run(ui.MakeTestCaseInfo("exactly 75 octets not folded"), func(t *ui.T) {
@@ -161,9 +151,7 @@ func TestFoldAndWrite(t1 *testing.T) {
 		foldAndWrite(&b, line)
 		got := b.String()
 		want := line + "\r\n"
-		if got != want {
-			t.Errorf("got %q, want %q", got, want)
-		}
+		t.AssertEqualStrings(want, got)
 	})
 
 	t.Run(ui.MakeTestCaseInfo("76 octets folded"), func(t *ui.T) {
@@ -233,10 +221,8 @@ func TestParsePropLine(t1 *testing.T) {
 	for _, tt := range tests {
 		t.Run(ui.MakeTestCaseInfo(tt.input), func(t *ui.T) {
 			name, value := parsePropLine(tt.input)
-			if name != tt.wantName || value != tt.wantValue {
-				t.Errorf("parsePropLine(%q) = (%q, %q), want (%q, %q)",
-					tt.input, name, value, tt.wantName, tt.wantValue)
-			}
+			t.AssertEqualStrings(tt.wantName, name)
+			t.AssertEqualStrings(tt.wantValue, value)
 		})
 	}
 }
@@ -259,9 +245,7 @@ func TestWriteDateProp(t1 *testing.T) {
 			var b strings.Builder
 			writeDateProp(&b, "DUE", tt.value, "")
 			got := b.String()
-			if got != tt.want {
-				t.Errorf("writeDateProp(DUE, %q) = %q, want %q", tt.value, got, tt.want)
-			}
+			t.AssertEqualStrings(tt.want, got)
 		})
 	}
 }
@@ -280,18 +264,14 @@ func TestParseVTODOCategories(t1 *testing.T) {
 			"END:VCALENDAR\r\n"
 
 		task, err := ParseVTODO(raw)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(err)
 		want := []string{"work", "urgent", "project-x", "team-a", "review"}
 		if len(task.Categories) != len(want) {
 			t.Fatalf("got %d categories %v, want %d %v",
 				len(task.Categories), task.Categories, len(want), want)
 		}
 		for i, cat := range task.Categories {
-			if cat != want[i] {
-				t.Errorf("category %d: got %q, want %q", i, cat, want[i])
-			}
+			t.AssertEqualStrings(want[i], cat)
 		}
 	})
 }
@@ -309,18 +289,14 @@ func TestParseVEVENTCategories(t1 *testing.T) {
 			"END:VCALENDAR\r\n"
 
 		event, err := ParseVEVENT(raw)
-		if err != nil {
-			t.Fatal(err)
-		}
+		t.AssertNoError(err)
 		want := []string{"meeting", "important", "recurring"}
 		if len(event.Categories) != len(want) {
 			t.Fatalf("got %d categories %v, want %d %v",
 				len(event.Categories), event.Categories, len(want), want)
 		}
 		for i, cat := range event.Categories {
-			if cat != want[i] {
-				t.Errorf("category %d: got %q, want %q", i, cat, want[i])
-			}
+			t.AssertEqualStrings(want[i], cat)
 		}
 	})
 }
@@ -337,19 +313,11 @@ func TestParseVTODOEscapedText(t1 *testing.T) {
 		"END:VCALENDAR\r\n"
 
 	task, err := ParseVTODO(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if task.Summary != "Meeting, Q2 review" {
-		t.Errorf("Summary: got %q, want %q", task.Summary, "Meeting, Q2 review")
-	}
-	if task.Description != "Line 1\nLine 2\nDone; next steps" {
-		t.Errorf("Description: got %q, want %q", task.Description, "Line 1\nLine 2\nDone; next steps")
-	}
-	if task.Location != "Room 42, Building A" {
-		t.Errorf("Location: got %q, want %q", task.Location, "Room 42, Building A")
-	}
+	t.AssertEqualStrings("Meeting, Q2 review", task.Summary)
+	t.AssertEqualStrings("Line 1\nLine 2\nDone; next steps", task.Description)
+	t.AssertEqualStrings("Room 42, Building A", task.Location)
 }
 
 func TestTaskToIcalEscaping(t1 *testing.T) {
@@ -376,18 +344,10 @@ func TestTaskToIcalEscaping(t1 *testing.T) {
 
 	// Round-trip: parse the serialized output back
 	parsed, err := ParseVTODO(ical)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if parsed.Summary != task.Summary {
-		t.Errorf("round-trip Summary: got %q, want %q", parsed.Summary, task.Summary)
-	}
-	if parsed.Description != task.Description {
-		t.Errorf("round-trip Description: got %q, want %q", parsed.Description, task.Description)
-	}
-	if parsed.Location != task.Location {
-		t.Errorf("round-trip Location: got %q, want %q", parsed.Location, task.Location)
-	}
+	t.AssertNoError(err)
+	t.AssertEqualStrings(task.Summary, parsed.Summary)
+	t.AssertEqualStrings(task.Description, parsed.Description)
+	t.AssertEqualStrings(task.Location, parsed.Location)
 }
 
 func TestWriteDatePropWithTZID(t1 *testing.T) {
@@ -408,9 +368,7 @@ func TestWriteDatePropWithTZID(t1 *testing.T) {
 			var b strings.Builder
 			writeDateProp(&b, "DUE", tt.value, tt.tzid)
 			got := b.String()
-			if got != tt.want {
-				t.Errorf("writeDateProp(DUE, %q, %q) = %q, want %q", tt.value, tt.tzid, got, tt.want)
-			}
+			t.AssertEqualStrings(tt.want, got)
 		})
 	}
 }
@@ -427,22 +385,12 @@ func TestParseVTODOTZIDPreservation(t1 *testing.T) {
 		"END:VCALENDAR\r\n"
 
 	task, err := ParseVTODO(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if task.Due != "20260405T170000" {
-		t.Errorf("Due: got %q, want %q", task.Due, "20260405T170000")
-	}
-	if task.DueTZID != "America/New_York" {
-		t.Errorf("DueTZID: got %q, want %q", task.DueTZID, "America/New_York")
-	}
-	if task.DtStart != "20260405T090000" {
-		t.Errorf("DtStart: got %q, want %q", task.DtStart, "20260405T090000")
-	}
-	if task.DtStartTZID != "Europe/Berlin" {
-		t.Errorf("DtStartTZID: got %q, want %q", task.DtStartTZID, "Europe/Berlin")
-	}
+	t.AssertEqualStrings("20260405T170000", task.Due)
+	t.AssertEqualStrings("America/New_York", task.DueTZID)
+	t.AssertEqualStrings("20260405T090000", task.DtStart)
+	t.AssertEqualStrings("Europe/Berlin", task.DtStartTZID)
 
 	// Round-trip: serialize and re-parse
 	ical := TaskToIcal(task)
@@ -454,15 +402,9 @@ func TestParseVTODOTZIDPreservation(t1 *testing.T) {
 	}
 
 	parsed, err := ParseVTODO(ical)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if parsed.DueTZID != "America/New_York" {
-		t.Errorf("round-trip DueTZID: got %q, want %q", parsed.DueTZID, "America/New_York")
-	}
-	if parsed.DtStartTZID != "Europe/Berlin" {
-		t.Errorf("round-trip DtStartTZID: got %q, want %q", parsed.DtStartTZID, "Europe/Berlin")
-	}
+	t.AssertNoError(err)
+	t.AssertEqualStrings("America/New_York", parsed.DueTZID)
+	t.AssertEqualStrings("Europe/Berlin", parsed.DtStartTZID)
 }
 
 func TestParseVTODODateTimeFormats(t1 *testing.T) {
@@ -471,42 +413,26 @@ func TestParseVTODODateTimeFormats(t1 *testing.T) {
 		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-1\r\nSUMMARY:test\r\n" +
 			"DUE:20260405T120000Z\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
 		task, err := ParseVTODO(raw)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if task.Due != "20260405T120000Z" {
-			t.Errorf("Due: got %q", task.Due)
-		}
-		if task.DueTZID != "" {
-			t.Errorf("DueTZID should be empty for UTC, got %q", task.DueTZID)
-		}
+		t.AssertNoError(err)
+		t.AssertEqualStrings("20260405T120000Z", task.Due)
+		t.AssertEqualStrings("", task.DueTZID)
 	})
 
 	t.Run(ui.MakeTestCaseInfo("floating datetime"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-2\r\nSUMMARY:test\r\n" +
 			"DUE:20260405T120000\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
 		task, err := ParseVTODO(raw)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if task.Due != "20260405T120000" {
-			t.Errorf("Due: got %q", task.Due)
-		}
-		if task.DueTZID != "" {
-			t.Errorf("DueTZID should be empty for floating, got %q", task.DueTZID)
-		}
+		t.AssertNoError(err)
+		t.AssertEqualStrings("20260405T120000", task.Due)
+		t.AssertEqualStrings("", task.DueTZID)
 	})
 
 	t.Run(ui.MakeTestCaseInfo("date-only VALUE=DATE"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-3\r\nSUMMARY:test\r\n" +
 			"DUE;VALUE=DATE:20260405\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
 		task, err := ParseVTODO(raw)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if task.Due != "20260405" {
-			t.Errorf("Due: got %q", task.Due)
-		}
+		t.AssertNoError(err)
+		t.AssertEqualStrings("20260405", task.Due)
 	})
 }
 
@@ -522,15 +448,9 @@ func TestParseVTODORecurrenceID(t1 *testing.T) {
 		"END:VCALENDAR\r\n"
 
 	task, err := ParseVTODO(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if task.RRule != "FREQ=WEEKLY;BYDAY=FR" {
-		t.Errorf("RRule: got %q", task.RRule)
-	}
-	if task.RecurrenceID != "20260410T090000Z" {
-		t.Errorf("RecurrenceID: got %q, want %q", task.RecurrenceID, "20260410T090000Z")
-	}
+	t.AssertNoError(err)
+	t.AssertEqualStrings("FREQ=WEEKLY;BYDAY=FR", task.RRule)
+	t.AssertEqualStrings("20260410T090000Z", task.RecurrenceID)
 
 	// Round-trip
 	ical := TaskToIcal(task)
@@ -556,19 +476,11 @@ func TestParseVTODOMultiComponentMaster(t1 *testing.T) {
 		"END:VCALENDAR\r\n"
 
 	task, err := ParseVTODO(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	// Should get the master, not the override
-	if task.Summary != "Take out trash" {
-		t.Errorf("expected master VTODO, got Summary=%q", task.Summary)
-	}
-	if task.RecurrenceID != "" {
-		t.Errorf("master should have no RecurrenceID, got %q", task.RecurrenceID)
-	}
-	if task.RRule != "FREQ=WEEKLY;BYDAY=TU" {
-		t.Errorf("RRule: got %q", task.RRule)
-	}
+	t.AssertEqualStrings("Take out trash", task.Summary)
+	t.AssertEqualStrings("", task.RecurrenceID)
+	t.AssertEqualStrings("FREQ=WEEKLY;BYDAY=TU", task.RRule)
 }
 
 func TestParseVEVENTTZIDPreservation(t1 *testing.T) {
@@ -583,16 +495,10 @@ func TestParseVEVENTTZIDPreservation(t1 *testing.T) {
 		"END:VCALENDAR\r\n"
 
 	event, err := ParseVEVENT(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if event.DtStartTZID != "America/Chicago" {
-		t.Errorf("DtStartTZID: got %q", event.DtStartTZID)
-	}
-	if event.DtEndTZID != "America/Chicago" {
-		t.Errorf("DtEndTZID: got %q", event.DtEndTZID)
-	}
+	t.AssertEqualStrings("America/Chicago", event.DtStartTZID)
+	t.AssertEqualStrings("America/Chicago", event.DtEndTZID)
 
 	// Round-trip
 	ical := EventToIcal(event)
