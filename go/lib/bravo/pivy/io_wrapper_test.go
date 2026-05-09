@@ -15,9 +15,7 @@ import (
 func TestIOWrapperRoundTrip(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	wrapper := &IOWrapper{
 		RecipientPubkey: privKey.PublicKey(),
@@ -29,49 +27,32 @@ func TestIOWrapperRoundTrip(t1 *testing.T) {
 	// Encrypt
 	var cipherBuf bytes.Buffer
 	w, err := wrapper.WrapWriter(&cipherBuf)
-	if err != nil {
-		t.Fatalf("WrapWriter: %v", err)
-	}
+	t.AssertNoError(err)
 
-	if _, err := w.Write(plaintext); err != nil {
-		t.Fatalf("Write: %v", err)
-	}
+	_, err = w.Write(plaintext)
+	t.AssertNoError(err)
 
-	if err := w.Close(); err != nil {
-		t.Fatalf("Close: %v", err)
-	}
+	t.AssertNoError(w.Close())
 
 	// Verify ciphertext is different from plaintext
-	if bytes.Equal(cipherBuf.Bytes(), plaintext) {
-		t.Fatal("ciphertext equals plaintext")
-	}
+	t.AssertFalse(bytes.Equal(cipherBuf.Bytes(), plaintext), "ciphertext equals plaintext")
 
 	// Decrypt
 	r, err := wrapper.WrapReader(bytes.NewReader(cipherBuf.Bytes()))
-	if err != nil {
-		t.Fatalf("WrapReader: %v", err)
-	}
+	t.AssertNoError(err)
 
 	decrypted, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatalf("ReadAll: %v", err)
-	}
+	t.AssertNoError(err)
 
-	if err := r.Close(); err != nil {
-		t.Fatalf("Close reader: %v", err)
-	}
+	t.AssertNoError(r.Close())
 
-	if !bytes.Equal(decrypted, plaintext) {
-		t.Fatalf("decrypted %q != plaintext %q", decrypted, plaintext)
-	}
+	t.AssertEqual(plaintext, decrypted)
 }
 
 func TestIOWrapperStreamingLargePayload(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	wrapper := &IOWrapper{
 		RecipientPubkey: privKey.PublicKey(),
@@ -80,39 +61,25 @@ func TestIOWrapperStreamingLargePayload(t1 *testing.T) {
 
 	// 256 KiB payload — spans multiple age STREAM chunks (64 KiB each)
 	plaintext := make([]byte, 256*1024)
-	if _, err := rand.Read(plaintext); err != nil {
-		t.Fatal(err)
-	}
+	_, err = rand.Read(plaintext)
+	t.AssertNoError(err)
 
 	var cipherBuf bytes.Buffer
 	w, err := wrapper.WrapWriter(&cipherBuf)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if _, err := w.Write(plaintext); err != nil {
-		t.Fatal(err)
-	}
+	_, err = w.Write(plaintext)
+	t.AssertNoError(err)
 
-	if err := w.Close(); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(w.Close())
 
 	r, err := wrapper.WrapReader(bytes.NewReader(cipherBuf.Bytes()))
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	decrypted, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
-	if err := r.Close(); err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(r.Close())
 
-	if !bytes.Equal(decrypted, plaintext) {
-		t.Fatal("large payload round-trip mismatch")
-	}
+	t.AssertEqual(plaintext, decrypted)
 }
