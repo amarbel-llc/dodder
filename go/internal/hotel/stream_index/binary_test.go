@@ -111,11 +111,7 @@ func TestBinaryOne(t1 *testing.T) {
 		t.AssertNoError(err)
 		t.Logf("%s", actual)
 
-		{
-			if n != expectedN {
-				t.Errorf("expected %d but got %d", expectedN, n)
-			}
-		}
+		t.AssertEqual(expectedN, n)
 	}
 
 	t.Logf("%s", sku.String(actual.Transacted))
@@ -221,15 +217,9 @@ func TestBinaryFieldRoundTrip(t1 *testing.T) {
 
 	actualField := actualFields.At(0)
 
-	if actualField.Key != "status" {
-		t.Errorf("expected field key %q but got %q", "status", actualField.Key)
-	}
+	t.AssertEqualStrings("status", actualField.Key)
 
-	if actualField.Value != "todo" {
-		t.Errorf("expected field value %q but got %q", "todo", actualField.Value)
-	}
+	t.AssertEqualStrings("todo", actualField.Value)
 
-	if actualField.Type != fields.TypeUserData {
-		t.Errorf("expected field type %d but got %d", fields.TypeUserData, actualField.Type)
-	}
+	t.AssertEqual(fields.TypeUserData, actualField.Type)
 }
