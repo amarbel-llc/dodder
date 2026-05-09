@@ -9,12 +9,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestFixedBinaryRoundTrip(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	encoder := binaryEncoder{Sigil: ids.SigilLatest}
 	expected, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
@@ -145,7 +145,7 @@ func TestFixedBinaryRoundTrip(t1 *testing.T) {
 }
 
 func TestFixedBinaryOverflow(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	encoder := binaryEncoder{Sigil: ids.SigilHistory}
 	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
@@ -220,7 +220,7 @@ func TestFixedBinaryOverflow(t1 *testing.T) {
 }
 
 func TestFixedBinaryZeroPadding(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	encoder := binaryEncoder{Sigil: ids.SigilHistory}
 	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
