@@ -4,14 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestWriter1(t1 *testing.T) {
-	t := ui.T{
-		T: t1,
-	}
+	t := ui.MakeT(t1)
 
 	expectedOut := `---
 metadatei
@@ -35,9 +33,7 @@ blob
 }
 
 func TestWriter2(t1 *testing.T) {
-	t := ui.T{
-		T: t1,
-	}
+	t := ui.MakeT(t1)
 
 	expectedOut := `---
 metadatei
@@ -58,9 +54,7 @@ metadatei
 }
 
 func TestWriter3(t1 *testing.T) {
-	t := ui.T{
-		T: t1,
-	}
+	t := ui.MakeT(t1)
 
 	expectedOut := `blob
 `

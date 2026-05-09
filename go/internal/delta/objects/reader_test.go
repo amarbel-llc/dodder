@@ -4,15 +4,13 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func Test1(t1 *testing.T) {
-	t := ui.T{
-		T: t1,
-	}
+	t := ui.MakeT(t1)
 
 	in := `---
 metadatei
@@ -61,9 +59,7 @@ body
 }
 
 func Test2(t1 *testing.T) {
-	t := ui.T{
-		T: t1,
-	}
+	t := ui.MakeT(t1)
 
 	in := `---
 metadatei

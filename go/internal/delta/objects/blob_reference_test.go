@@ -5,14 +5,16 @@ import (
 
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestBlobReferencesAddSortsByKey(t *testing.T) {
+func TestBlobReferencesAddSortsByKey(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	var refs BlobReferences
 
 	// Create three markl.Id values with distinct blech32 encodings.
 	// We add them in reverse order to verify sorting.
-	marklIds := makeThreeMarklIds(t)
+	marklIds := makeThreeMarklIds(&t)
 
 	// Add in reverse order: last, middle, first
 	refs.Add(marklIds[2], markl.Lock[SeqId, *SeqId]{})
@@ -39,7 +41,7 @@ func TestBlobReferencesAddSortsByKey(t *testing.T) {
 	}
 }
 
-func makeThreeMarklIds(t *testing.T) [3]markl.Id {
+func makeThreeMarklIds(t *ui.T) [3]markl.Id {
 	t.Helper()
 
 	format, err := markl.GetFormatOrError("blake2b256")
