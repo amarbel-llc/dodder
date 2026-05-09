@@ -48,11 +48,7 @@ func TestFormatReturnsErrorOnParseBlobFailure(t1 *testing.T) {
 	var buf bytes.Buffer
 
 	_, err := format.Format(&buf, object)
-	if err == nil {
-		t.Fatal("expected error, got nil")
-	}
+	t.AssertError(err)
 
-	if !errors.Is(err, expectedErr) {
-		t.Fatalf("expected %v, got %v", expectedErr, err)
-	}
+	t.AssertErrorEquals(expectedErr, err)
 }
