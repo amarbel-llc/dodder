@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 //go:embed testdata/always_true.wasm
@@ -14,7 +15,8 @@ var alwaysTrueWasm []byte
 //go:embed testdata/genre_filter.wasm
 var genreFilterWasm []byte
 
-func TestWasmVMPoolV1GetWithRepool(t *testing.T) {
+func TestWasmVMPoolV1GetWithRepool(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	ctx := context.Background()
 
 	rt, err := wasm.MakeRuntime(ctx)
@@ -40,7 +42,8 @@ func TestWasmVMPoolV1GetWithRepool(t *testing.T) {
 	}
 }
 
-func TestGenreFilterAcceptsZettel(t *testing.T) {
+func TestGenreFilterAcceptsZettel(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	ctx := context.Background()
 
 	rt, err := wasm.MakeRuntime(ctx)
@@ -77,7 +80,8 @@ func TestGenreFilterAcceptsZettel(t *testing.T) {
 	}
 }
 
-func TestGenreFilterRejectsNonZettel(t *testing.T) {
+func TestGenreFilterRejectsNonZettel(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	ctx := context.Background()
 
 	rt, err := wasm.MakeRuntime(ctx)
