@@ -27,9 +27,7 @@ blob
 
 	sut.WriteTo(out)
 
-	if out.String() != expectedOut {
-		t.Errorf("expected %q but got %q", expectedOut, out.String())
-	}
+	t.AssertEqualStrings(expectedOut, out.String())
 }
 
 func TestWriter2(t1 *testing.T) {
@@ -48,9 +46,7 @@ metadatei
 
 	sut.WriteTo(out)
 
-	if out.String() != expectedOut {
-		t.Errorf("expected %q but got %q", expectedOut, out.String())
-	}
+	t.AssertEqualStrings(expectedOut, out.String())
 }
 
 func TestWriter3(t1 *testing.T) {
@@ -67,7 +63,5 @@ func TestWriter3(t1 *testing.T) {
 
 	sut.WriteTo(out)
 
-	if out.String() != expectedOut {
-		t.Errorf("expected %q but got %q", expectedOut, out.String())
-	}
+	t.AssertEqualStrings(expectedOut, out.String())
 }

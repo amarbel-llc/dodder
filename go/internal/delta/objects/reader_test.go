@@ -37,25 +37,15 @@ body
 	defer repool()
 	n, err = r.ReadFrom(reader)
 
-	if n != nExpected {
-		t.Errorf("expected to read %d but read %d", nExpected, n)
-	}
+	t.AssertEqual(nExpected, n)
 
 	if err != nil {
 		t.Errorf("expected no error but got %s", err)
 	}
 
-	mActual := string(mr.Bytes())
+	t.AssertEqualStrings(mExpected, string(mr.Bytes()))
 
-	if mActual != mExpected {
-		t.Errorf("expected %q but got %q", mExpected, mActual)
-	}
-
-	bActual := string(ar.Bytes())
-
-	if bActual != bExpected {
-		t.Errorf("expected %q but got %q", bExpected, bActual)
-	}
+	t.AssertEqualStrings(bExpected, string(ar.Bytes()))
 }
 
 func Test2(t1 *testing.T) {
@@ -84,23 +74,13 @@ metadatei
 	defer repool()
 	n, err = r.ReadFrom(reader)
 
-	if n != nExpected {
-		t.Errorf("expected to read %d but read %d", nExpected, n)
-	}
+	t.AssertEqual(nExpected, n)
 
 	if err != nil {
 		t.Errorf("expected no error but got %s", err)
 	}
 
-	mActual := string(mr.Bytes())
+	t.AssertEqualStrings(mExpected, string(mr.Bytes()))
 
-	if mActual != mExpected {
-		t.Errorf("expected %q but got %q", mExpected, mActual)
-	}
-
-	bActual := string(ar.Bytes())
-
-	if bActual != bExpected {
-		t.Errorf("expected %q but got %q", bExpected, bActual)
-	}
+	t.AssertEqualStrings(bExpected, string(ar.Bytes()))
 }

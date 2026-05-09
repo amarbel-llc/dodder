@@ -45,9 +45,7 @@ func makeThreeMarklIds(t *ui.T) [3]markl.Id {
 	t.Helper()
 
 	format, err := markl.GetFormatOrError("blake2b256")
-	if err != nil {
-		t.Fatalf("getting blake2b256 format: %v", err)
-	}
+	t.AssertNoError(err)
 
 	size := format.GetSize()
 	var result [3]markl.Id
@@ -58,9 +56,8 @@ func makeThreeMarklIds(t *ui.T) [3]markl.Id {
 		for j := range data {
 			data[j] = byte((i + 1) * 50) // 50, 100, 150
 		}
-		if err := result[i].SetMarklId("blake2b256", data); err != nil {
-			t.Fatalf("setting markl id %d: %v", i, err)
-		}
+		err := result[i].SetMarklId("blake2b256", data)
+		t.AssertNoError(err)
 	}
 
 	// Sort by string to establish known order
