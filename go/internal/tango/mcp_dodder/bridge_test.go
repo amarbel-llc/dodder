@@ -19,7 +19,5 @@ func TestBridgeUnknownCommand(t1 *testing.T) {
 		nil,
 		100_000,
 	)
-	if err == nil {
-		t.Fatal("expected error for unknown command")
-	}
+	t.AssertError(err)
 }

@@ -31,9 +31,7 @@ func TestContains(t1 *testing.T) {
 	}
 
 	for _, e := range expectedContains {
-		if !sut.Contains(e) {
-			t.Errorf("expected %v to contain %s", sut, e)
-		}
+		t.AssertTrue(sut.Contains(e), "expected to contain "+e)
 	}
 
 	expectedNotContains := []string{
@@ -43,9 +41,7 @@ func TestContains(t1 *testing.T) {
 	}
 
 	for _, e := range expectedNotContains {
-		if sut.Contains(e) {
-			t.Errorf("expected %v to not contain %s", sut, e)
-		}
+		t.AssertFalse(sut.Contains(e), "expected to not contain "+e)
 	}
 }
 
@@ -70,9 +66,7 @@ func TestShortestUnique(t1 *testing.T) {
 	}
 
 	for e, c := range expectedContains {
-		if ca := sut.Abbreviate(e); ca != c {
-			t.Errorf("%q: expected shorted length %q but got %q", e, c, ca)
-		}
+		t.AssertEqualStrings(c, sut.Abbreviate(e))
 	}
 }
 
@@ -95,8 +89,6 @@ func TestExpand(t1 *testing.T) {
 	}
 
 	for a, e := range expectedContains {
-		if ca := sut.Expand(a); ca != e {
-			t.Errorf("%q: expected expanded %q but got %q", e, e, ca)
-		}
+		t.AssertEqualStrings(e, sut.Expand(a))
 	}
 }
