@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 // TODO transition this to ui.TestContext, and add a config object with a public
@@ -118,7 +118,7 @@ func assertEqualObjects(t *ui.T, expected, actual Objects) {
 }
 
 func TestAssignmentLineReaderOneHeadingNoZettels(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	input := `# wow
     `
 
@@ -151,7 +151,7 @@ func TestAssignmentLineReaderOneHeadingNoZettels(t1 *testing.T) {
 }
 
 func TestAssignmentLineReader2Heading2Zettels(t1 *testing.T) {
-	t := &ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := `# wow
 - [one/wow] uno
@@ -186,17 +186,17 @@ func TestAssignmentLineReader2Heading2Zettels(t1 *testing.T) {
 
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "one/wow", "uno"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "dos/wow", "two/wow"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "one/wow", "uno"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "dos/wow", "two/wow"))
 
 		actual := sub.root.Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 }
 
 func TestAssignmentLineReader1_1Heading2_2Zettels(t1 *testing.T) {
-	t := &ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := `# wow
 ## sub-wow
@@ -252,19 +252,19 @@ func TestAssignmentLineReader1_1Heading2_2Zettels(t1 *testing.T) {
 
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "one/wow", "uno"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "one/wow", "uno"))
 		expected.Add(
-			makeObjWithZettelIdAndDescription(t, "dos/wow", "two/wow"),
+			makeObjWithZettelIdAndDescription(&t, "dos/wow", "two/wow"),
 		)
 
 		actual := sub.root.Children[0].Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 }
 
 func TestAssignmentLineReader2_1Heading2_2_2Zettels(t1 *testing.T) {
-	t := &ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := `# wow
 
@@ -337,27 +337,27 @@ func TestAssignmentLineReader2_1Heading2_2_2Zettels(t1 *testing.T) {
 
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "one/wow", "uno"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "dos/wow", "two/wow"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "one/wow", "uno"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "dos/wow", "two/wow"))
 
 		actual := sub.root.Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "one/wow", "uno"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "dos/wow", "two/wow"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "one/wow", "uno"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "dos/wow", "two/wow"))
 
 		actual := sub.root.Children[1].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 }
 
 func TestAssignmentLineReader2_1Heading2_2_2ZettelsOffset(t1 *testing.T) {
-	t := &ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := `
 - [one/wow] uno
@@ -414,27 +414,27 @@ func TestAssignmentLineReader2_1Heading2_2_2ZettelsOffset(t1 *testing.T) {
 
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "four/wow", "quatro"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "three/wow", "tres"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "four/wow", "quatro"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "three/wow", "tres"))
 
 		actual := sub.root.Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "one/wow", "uno"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "dos/wow", "two/wow"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "one/wow", "uno"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "dos/wow", "two/wow"))
 
 		actual := sub.root.Children[1].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 }
 
 func TestAssignmentLineReaderBigCheese(t1 *testing.T) {
-	t := &ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := `# task
 - [one/wow] uno
@@ -476,12 +476,12 @@ func TestAssignmentLineReaderBigCheese(t1 *testing.T) {
 	// - [two/wow] dos/wow
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "one/wow", "uno"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "two/wow", "dos/wow"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "one/wow", "uno"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "two/wow", "dos/wow"))
 
 		actual := sub.root.Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 
 	// ## priority-1
@@ -514,22 +514,22 @@ func TestAssignmentLineReaderBigCheese(t1 *testing.T) {
 	// - [three/wow] tres
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "three/wow", "tres"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "three/wow", "tres"))
 
 		actual := sub.root.Children[0].Children[0].Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 
 	// ##
 	// - [four/wow] quatro
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "four/wow", "quatro"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "four/wow", "quatro"))
 
 		actual := sub.root.Children[0].Children[0].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 
 	// ## priority-2
@@ -538,11 +538,11 @@ func TestAssignmentLineReaderBigCheese(t1 *testing.T) {
 	// `
 	{
 		expected := make(Objects, 0)
-		expected.Add(makeObjWithZettelIdAndDescription(t, "five/wow", "cinco"))
-		expected.Add(makeObjWithZettelIdAndDescription(t, "six/wow", "seis"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "five/wow", "cinco"))
+		expected.Add(makeObjWithZettelIdAndDescription(&t, "six/wow", "seis"))
 
 		actual := sub.root.Children[0].Children[1].Objects
 
-		assertEqualObjects(t, expected, actual)
+		assertEqualObjects(&t, expected, actual)
 	}
 }
