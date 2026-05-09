@@ -3,12 +3,12 @@ package tag_paths
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestAddPaths(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	var es Tags
 
@@ -46,7 +46,7 @@ func TestAddPaths(t1 *testing.T) {
 }
 
 func TestRealWorld(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	var es Tags
 

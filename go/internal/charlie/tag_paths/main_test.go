@@ -4,17 +4,18 @@ import (
 	"bytes"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	dodder_ui "code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestMain(m *testing.M) {
-	ui.SetTesting()
+	dodder_ui.SetTesting()
 	m.Run()
 }
 
 func TestReadWrite(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	b := new(bytes.Buffer)
 	var sut Path
