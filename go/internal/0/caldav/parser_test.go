@@ -5,9 +5,12 @@ package caldav
 import (
 	"strings"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestUnescapeText(t *testing.T) {
+func TestUnescapeText(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		name  string
 		input string
@@ -24,7 +27,7 @@ func TestUnescapeText(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := unescapeText(tt.input)
 			if got != tt.want {
 				t.Errorf("unescapeText(%q) = %q, want %q", tt.input, got, tt.want)
@@ -33,7 +36,8 @@ func TestUnescapeText(t *testing.T) {
 	}
 }
 
-func TestEscapeText(t *testing.T) {
+func TestEscapeText(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		name  string
 		input string
@@ -49,7 +53,7 @@ func TestEscapeText(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := escapeText(tt.input)
 			if got != tt.want {
 				t.Errorf("escapeText(%q) = %q, want %q", tt.input, got, tt.want)
@@ -58,7 +62,8 @@ func TestEscapeText(t *testing.T) {
 	}
 }
 
-func TestEscapeUnescapeRoundTrip(t *testing.T) {
+func TestEscapeUnescapeRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	inputs := []string{
 		"simple text",
 		"text with, commas; and semicolons",
@@ -77,7 +82,8 @@ func TestEscapeUnescapeRoundTrip(t *testing.T) {
 	}
 }
 
-func TestUnfoldLines(t *testing.T) {
+func TestUnfoldLines(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		name  string
 		input string
@@ -116,7 +122,7 @@ func TestUnfoldLines(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			got := unfoldLines(tt.input)
 			// Filter empty trailing lines
 			var filtered []string
@@ -137,8 +143,9 @@ func TestUnfoldLines(t *testing.T) {
 	}
 }
 
-func TestFoldAndWrite(t *testing.T) {
-	t.Run("short line not folded", func(t *testing.T) {
+func TestFoldAndWrite(t1 *testing.T) {
+	t := ui.MakeT(t1)
+	t.Run(ui.MakeTestCaseInfo("short line not folded"), func(t *ui.T) {
 		var b strings.Builder
 		foldAndWrite(&b, "SUMMARY:short")
 		got := b.String()
@@ -148,7 +155,7 @@ func TestFoldAndWrite(t *testing.T) {
 		}
 	})
 
-	t.Run("exactly 75 octets not folded", func(t *testing.T) {
+	t.Run(ui.MakeTestCaseInfo("exactly 75 octets not folded"), func(t *ui.T) {
 		line := "SUMMARY:" + strings.Repeat("x", 67) // 8 + 67 = 75
 		var b strings.Builder
 		foldAndWrite(&b, line)
@@ -159,7 +166,7 @@ func TestFoldAndWrite(t *testing.T) {
 		}
 	})
 
-	t.Run("76 octets folded", func(t *testing.T) {
+	t.Run(ui.MakeTestCaseInfo("76 octets folded"), func(t *ui.T) {
 		line := "SUMMARY:" + strings.Repeat("x", 68) // 8 + 68 = 76
 		var b strings.Builder
 		foldAndWrite(&b, line)
@@ -181,7 +188,7 @@ func TestFoldAndWrite(t *testing.T) {
 		}
 	})
 
-	t.Run("long line multiple folds", func(t *testing.T) {
+	t.Run(ui.MakeTestCaseInfo("long line multiple folds"), func(t *ui.T) {
 		line := "DESCRIPTION:" + strings.Repeat("a", 200)
 		var b strings.Builder
 		foldAndWrite(&b, line)
@@ -210,7 +217,8 @@ func TestFoldAndWrite(t *testing.T) {
 	})
 }
 
-func TestParsePropLine(t *testing.T) {
+func TestParsePropLine(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		input     string
 		wantName  string
@@ -223,7 +231,7 @@ func TestParsePropLine(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.input), func(t *ui.T) {
 			name, value := parsePropLine(tt.input)
 			if name != tt.wantName || value != tt.wantValue {
 				t.Errorf("parsePropLine(%q) = (%q, %q), want (%q, %q)",
@@ -233,7 +241,8 @@ func TestParsePropLine(t *testing.T) {
 	}
 }
 
-func TestWriteDateProp(t *testing.T) {
+func TestWriteDateProp(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		name  string
 		value string
@@ -246,7 +255,7 @@ func TestWriteDateProp(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			var b strings.Builder
 			writeDateProp(&b, "DUE", tt.value, "")
 			got := b.String()
@@ -257,8 +266,9 @@ func TestWriteDateProp(t *testing.T) {
 	}
 }
 
-func TestParseVTODOCategories(t *testing.T) {
-	t.Run("multiple CATEGORIES lines accumulated", func(t *testing.T) {
+func TestParseVTODOCategories(t1 *testing.T) {
+	t := ui.MakeT(t1)
+	t.Run(ui.MakeTestCaseInfo("multiple CATEGORIES lines accumulated"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\n" +
 			"BEGIN:VTODO\r\n" +
 			"UID:test-1\r\n" +
@@ -286,8 +296,9 @@ func TestParseVTODOCategories(t *testing.T) {
 	})
 }
 
-func TestParseVEVENTCategories(t *testing.T) {
-	t.Run("multiple CATEGORIES lines accumulated", func(t *testing.T) {
+func TestParseVEVENTCategories(t1 *testing.T) {
+	t := ui.MakeT(t1)
+	t.Run(ui.MakeTestCaseInfo("multiple CATEGORIES lines accumulated"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\n" +
 			"BEGIN:VEVENT\r\n" +
 			"UID:event-1\r\n" +
@@ -314,7 +325,8 @@ func TestParseVEVENTCategories(t *testing.T) {
 	})
 }
 
-func TestParseVTODOEscapedText(t *testing.T) {
+func TestParseVTODOEscapedText(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	raw := "BEGIN:VCALENDAR\r\n" +
 		"BEGIN:VTODO\r\n" +
 		"UID:esc-1\r\n" +
@@ -340,7 +352,8 @@ func TestParseVTODOEscapedText(t *testing.T) {
 	}
 }
 
-func TestTaskToIcalEscaping(t *testing.T) {
+func TestTaskToIcalEscaping(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	task := &Task{
 		UID:         "esc-rt-1",
 		Summary:     "Buy milk, eggs; bread",
@@ -377,7 +390,8 @@ func TestTaskToIcalEscaping(t *testing.T) {
 	}
 }
 
-func TestWriteDatePropWithTZID(t *testing.T) {
+func TestWriteDatePropWithTZID(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	tests := []struct {
 		name  string
 		value string
@@ -390,7 +404,7 @@ func TestWriteDatePropWithTZID(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(ui.MakeTestCaseInfo(tt.name), func(t *ui.T) {
 			var b strings.Builder
 			writeDateProp(&b, "DUE", tt.value, tt.tzid)
 			got := b.String()
@@ -401,7 +415,8 @@ func TestWriteDatePropWithTZID(t *testing.T) {
 	}
 }
 
-func TestParseVTODOTZIDPreservation(t *testing.T) {
+func TestParseVTODOTZIDPreservation(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	raw := "BEGIN:VCALENDAR\r\n" +
 		"BEGIN:VTODO\r\n" +
 		"UID:tzid-1\r\n" +
@@ -450,8 +465,9 @@ func TestParseVTODOTZIDPreservation(t *testing.T) {
 	}
 }
 
-func TestParseVTODODateTimeFormats(t *testing.T) {
-	t.Run("UTC datetime", func(t *testing.T) {
+func TestParseVTODODateTimeFormats(t1 *testing.T) {
+	t := ui.MakeT(t1)
+	t.Run(ui.MakeTestCaseInfo("UTC datetime"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-1\r\nSUMMARY:test\r\n" +
 			"DUE:20260405T120000Z\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
 		task, err := ParseVTODO(raw)
@@ -466,7 +482,7 @@ func TestParseVTODODateTimeFormats(t *testing.T) {
 		}
 	})
 
-	t.Run("floating datetime", func(t *testing.T) {
+	t.Run(ui.MakeTestCaseInfo("floating datetime"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-2\r\nSUMMARY:test\r\n" +
 			"DUE:20260405T120000\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
 		task, err := ParseVTODO(raw)
@@ -481,7 +497,7 @@ func TestParseVTODODateTimeFormats(t *testing.T) {
 		}
 	})
 
-	t.Run("date-only VALUE=DATE", func(t *testing.T) {
+	t.Run(ui.MakeTestCaseInfo("date-only VALUE=DATE"), func(t *ui.T) {
 		raw := "BEGIN:VCALENDAR\r\nBEGIN:VTODO\r\nUID:dt-3\r\nSUMMARY:test\r\n" +
 			"DUE;VALUE=DATE:20260405\r\nEND:VTODO\r\nEND:VCALENDAR\r\n"
 		task, err := ParseVTODO(raw)
@@ -494,7 +510,8 @@ func TestParseVTODODateTimeFormats(t *testing.T) {
 	})
 }
 
-func TestParseVTODORecurrenceID(t *testing.T) {
+func TestParseVTODORecurrenceID(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	raw := "BEGIN:VCALENDAR\r\n" +
 		"BEGIN:VTODO\r\n" +
 		"UID:rec-1\r\n" +
@@ -522,7 +539,8 @@ func TestParseVTODORecurrenceID(t *testing.T) {
 	}
 }
 
-func TestParseVTODOMultiComponentMaster(t *testing.T) {
+func TestParseVTODOMultiComponentMaster(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	// A .ics with a master VTODO and an override — only master is extracted.
 	raw := "BEGIN:VCALENDAR\r\n" +
 		"BEGIN:VTODO\r\n" +
@@ -553,7 +571,8 @@ func TestParseVTODOMultiComponentMaster(t *testing.T) {
 	}
 }
 
-func TestParseVEVENTTZIDPreservation(t *testing.T) {
+func TestParseVEVENTTZIDPreservation(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	raw := "BEGIN:VCALENDAR\r\n" +
 		"BEGIN:VEVENT\r\n" +
 		"UID:ev-tzid-1\r\n" +
