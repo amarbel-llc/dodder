@@ -22,29 +22,18 @@ teardown() {
 # bats file_tags=serve,user_story:clone,user_story:repo,user_story:remote
 
 # clone_history_zettel_type_tag_port exercises the TCP/HTTP transport
-# path through RoundTripperBufioWrappedSigner. The harness (start_server,
-# stop_server, MADDER_XDG_UTILITY_OVERRIDE setup) from #150 gives us a
-# clean way to run `dodder serve` and reach the right endpoint, but the
-# response body of `GET /config-immutable` doesn't round-trip cleanly:
-# the client's hyphence type-map dispatcher sees typedBlob.Type=="" and
-# errors with "no coders available for type:". Tracked in
-# https://github.com/amarbel-llc/dodder/issues/170; un-skip this test
-# once that lands.
+# path. Skipped pending #171: the URL-transport client returns nil for
+# GetObjectStore(), which the pull path now requires. Sig-auth on the
+# URL transport is fixed (#170); the next layer of work is a remote
+# HTTP object-store proxy. Un-skip when #171 lands.
 function clone_history_zettel_type_tag_port { # @test
-  skip "blocked on https://github.com/amarbel-llc/dodder/issues/170"
+  skip "blocked on #171: URL transport has no remote object store"
 
   them="them"
   bootstrap "$them"
 
   start_server them
 
-  # MakeRemoteAndObject pops a "remote type" arg before the URL.
-  # toml-repo-uri-v0 is the type registered in ids/types_builtin.go
-  # (TypeTomlRepoUri) for HTTP/URI remotes. The originally-skipped
-  # version of this test in clone.bats:199 omitted the type arg, which
-  # made dodder try to parse "http://..." as the type and surfaced as
-  # a "more than one seq" doddish parse error — that was the wrapping
-  # symptom, not the actual cleanup-related issue the TODO blamed.
   run_clone_default_with \
     test-repo-id-us \
     toml-repo-uri-v0 \

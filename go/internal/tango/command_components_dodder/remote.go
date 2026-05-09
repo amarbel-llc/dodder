@@ -452,12 +452,24 @@ func (cmd *Remote) MakeRemoteUrl(
 ) (remoteHTTP repo.Repo) {
 	envRepo := cmd.MakeEnvRepo(req, false)
 
+	// Dial the URI's host:port directly and run requests through
+	// RoundTripperBufioWrappedSigner so the nonce-injection /
+	// trailer-verification path matches what stdio and unix-socket
+	// transports already do. The previous shape used
+	// RoundTripperHost + DefaultRoundTripper which bypassed sig-auth
+	// entirely (#170).
+	httpRoundTripper := &remote_http.RoundTripperBufioHost{}
+
+	if err := httpRoundTripper.Initialize(
+		uri,
+		repo.GetBlobStore().GetDefaultHashType(),
+	); err != nil {
+		env.Cancel(err)
+	}
+
 	remoteHTTP = remote_http.MakeClient(
 		envRepo,
-		&remote_http.RoundTripperHost{
-			UrlData:      remote_http.MakeUrlDataFromUri(uri),
-			RoundTripper: remote_http.DefaultRoundTripper,
-		},
+		httpRoundTripper,
 		repo,
 		cmd.MakeInventoryListCoderCloset(envRepo),
 	)
