@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestWriteStringRoundTrip(t1 *testing.T) {
@@ -20,9 +19,7 @@ func TestWriteStringRoundTrip(t1 *testing.T) {
 	}
 
 	got := ReadString(memory, ptr, length)
-	if got != input {
-		t.Fatalf("expected %q, got %q", input, got)
-	}
+	t.AssertEqualStrings(input, got)
 }
 
 func TestWriteStringListRoundTrip(t1 *testing.T) {
@@ -38,7 +35,5 @@ func TestWriteStringListRoundTrip(t1 *testing.T) {
 	}
 
 	got := ReadStringList(memory, ptr, count)
-	if diff := cmp.Diff(input, got); diff != "" {
-		t.Fatalf("mismatch (-want +got):\n%s", diff)
-	}
+	t.AssertEqual(input, got)
 }

@@ -16,25 +16,20 @@ func TestModulePoolBuilderRoundTrip(t1 *testing.T) {
 	ctx := context.Background()
 
 	rt, err := MakeRuntime(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	defer rt.Close(ctx) //defer:err-checked
 
 	builder := MakeModulePoolBuilder(rt)
 
 	pool, err := builder.WithBytes(alwaysTrueWasm).Build(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	mod, repool := pool.GetWithRepool()
 	defer repool()
 
 	// Verify generic WASM functionality via cabi_realloc.
-	if _, err := mod.CallCabiRealloc(ctx, 0, 0, 4, 64); err != nil {
-		t.Fatal(err)
-	}
+	_, err = mod.CallCabiRealloc(ctx, 0, 0, 4, 64)
+	t.AssertNoError(err)
 }
 
 func TestModulePoolReuse(t1 *testing.T) {
@@ -42,17 +37,13 @@ func TestModulePoolReuse(t1 *testing.T) {
 	ctx := context.Background()
 
 	rt, err := MakeRuntime(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 	defer rt.Close(ctx) //defer:err-checked
 
 	builder := MakeModulePoolBuilder(rt)
 
 	pool, err := builder.WithBytes(alwaysTrueWasm).Build(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
+	t.AssertNoError(err)
 
 	// Borrow, use, return, borrow again -- verify pool reuse works.
 	for i := range 3 {
