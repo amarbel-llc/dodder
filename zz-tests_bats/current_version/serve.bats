@@ -97,3 +97,19 @@ function serve_unknown_route_returns_404 { # @test
   assert_success
   assert_output 404
 }
+
+# /healthz is the one route that bypasses sigMiddleware. A bare GET
+# (no nonce header) must return 200, not 400 — that's the whole
+# point: a harness must be able to poll liveness without setting up
+# a keypair.
+function serve_healthz_returns_200_without_auth { # @test
+  run curl_status GET /healthz
+  assert_success
+  assert_output 200
+}
+
+function serve_healthz_body_is_ok { # @test
+  run curl -s "http://${server_addr}/healthz"
+  assert_success
+  assert_output "ok"
+}

@@ -218,6 +218,11 @@ func (server *Server) makeRouter(
 	router.HandleFunc("/mcp", makeHandler(server.handleMCP)).
 		Methods("POST")
 
+	// Liveness probe. Bypasses sigMiddleware (see the path check
+	// there) so harnesses can poll without setting up a keypair.
+	router.HandleFunc(pathHealthz, makeHandler(server.handleHealthz)).
+		Methods("GET")
+
 	{
 		router.HandleFunc(
 			"/inventory_lists",
@@ -309,9 +314,30 @@ func (server *Server) signBodyTrailer(
 	responseWriter.Header().Set(headerRepoSig, sig.String())
 }
 
+// pathHealthz is the liveness-probe route exempt from sigMiddleware.
+// Kept as a constant so the middleware's exemption check can't drift
+// from the route registration.
+const pathHealthz = "/healthz"
+
+func (server *Server) handleHealthz(request Request) (response Response) {
+	response.StatusCode = http.StatusOK
+	response.Headers().Set("Content-Type", "text/plain; charset=utf-8")
+	response.Body = ohio.NopCloser(strings.NewReader("ok\n"))
+	return response
+}
+
 func (server *Server) sigMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(responseWriter http.ResponseWriter, request *http.Request) {
+			// Liveness probe bypasses sig-auth entirely. Couples
+			// the middleware to one well-known path; alternative
+			// designs (separate router, per-route middleware) cost
+			// more in mux churn for no behavior gain.
+			if request.URL.Path == pathHealthz {
+				next.ServeHTTP(responseWriter, request)
+				return
+			}
+
 			if err := server.addSignatureIfNecessary(
 				request.Header.Get(headerChallengeNonce),
 				responseWriter.Header(),
