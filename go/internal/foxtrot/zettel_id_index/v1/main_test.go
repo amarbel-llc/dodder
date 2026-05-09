@@ -61,13 +61,7 @@ func TestOldResetBitsetSizeTooSmall(t1 *testing.T) {
 	}
 	actualMaxId := int(maxCoord.Id())
 
-	if oldSize >= actualMaxId {
-		t.Fatalf(
-			"expected old bitset size %d to be smaller than max coordinate ID %d",
-			oldSize,
-			actualMaxId,
-		)
-	}
+	t.AssertTrue(oldSize < actualMaxId, "expected old bitset size to be smaller than max coordinate ID")
 
 	t.Logf(
 		"old approach allocates %d bits but max coordinate ID is %d",
@@ -92,9 +86,7 @@ func TestOldResetMissesValidIds(t1 *testing.T) {
 		}
 	}
 
-	if missing == 0 {
-		t.Fatalf("expected some valid coordinate IDs to be missing from old bitset")
-	}
+	t.AssertFalse(missing == 0, "expected some valid coordinate IDs to be missing from old bitset")
 
 	t.Logf("old bitset is missing %d of %d valid coordinate IDs", missing, len(validIds))
 }
@@ -115,9 +107,7 @@ func TestCoordinateIdsAreNotSequential(t1 *testing.T) {
 		}
 	}
 
-	if outOfSequentialRange == 0 {
-		t.Fatalf("expected coordinate IDs to NOT be sequential 0..N-1")
-	}
+	t.AssertFalse(outOfSequentialRange == 0, "expected coordinate IDs to NOT be sequential 0..N-1")
 
 	t.Logf(
 		"%d of %d valid coordinate IDs are >= %d, proving non-sequential mapping",
@@ -144,13 +134,7 @@ func TestFixedResetContainsAllValidIds(t1 *testing.T) {
 		}
 	}
 
-	if bs.CountOn() != len(validIds) {
-		t.Errorf(
-			"expected CountOn=%d but got %d",
-			len(validIds),
-			bs.CountOn(),
-		)
-	}
+	t.AssertEqual(len(validIds), bs.CountOn())
 }
 
 func TestFixedResetContainsNoInvalidIds(t1 *testing.T) {
@@ -205,9 +189,7 @@ func TestFixedResetRoundTripCoordinates(t1 *testing.T) {
 		return nil
 	})
 
-	if bs.CountOn() != len(validIds) {
-		t.Errorf("expected %d ON bits but got %d", len(validIds), bs.CountOn())
-	}
+	t.AssertEqual(len(validIds), bs.CountOn())
 }
 
 func TestFixedResetRealisticSize(t1 *testing.T) {
@@ -220,9 +202,7 @@ func TestFixedResetRealisticSize(t1 *testing.T) {
 	bs := makeBitsetFromCoordinates(lMax, rMax)
 	expectedCount := (lMax + 1) * (rMax + 1)
 
-	if bs.CountOn() != expectedCount {
-		t.Errorf("expected %d available IDs but got %d", expectedCount, bs.CountOn())
-	}
+	t.AssertEqual(expectedCount, bs.CountOn())
 
 	maxCoord := coordinates.ZettelIdCoordinate{
 		Left:  coordinates.Int(lMax),
