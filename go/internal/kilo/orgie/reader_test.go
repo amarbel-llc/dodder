@@ -26,23 +26,15 @@ func TestMain(m *testing.M) {
 }
 
 func makeZettelId(t *ui.T, v string) (k *ids.ObjectId) {
-	var err error
-
 	var h ids.ZettelId
 
-	if err = h.Set(v); err != nil {
-		t.Fatalf("%s", err)
-	}
+	t.AssertNoError(h.Set(v))
 
 	return ids.MustObjectId(h)
 }
 
 func makeDescription(t *ui.T, v string) (b descriptions.Description) {
-	var err error
-
-	if err = b.Set(v); err != nil {
-		t.Fatalf("%s", err)
-	}
+	t.AssertNoError(b.Set(v))
 
 	return b
 }
