@@ -215,8 +215,6 @@ func (server *Server) makeRouter(
 			"GET",
 		)
 
-	// Single-object lookup by OID. Used by the URL-transport client's
-	// remote object store to satisfy edge expansion during pull (#171).
 	router.HandleFunc(
 		"/objects/{object_id}",
 		makeHandler(server.handleGetObject),
@@ -834,13 +832,9 @@ func (server *Server) handleGetQuery(request Request) (response Response) {
 	return response
 }
 
-// handleGetObject serves a single object lookup by OID for the
-// URL-transport client's remote object store (#171). The OID is
-// URL-escaped on send; the body, on hit, is a one-element inventory
-// list using the repo's configured list type — same wire format
-// /query/{list_type}/{query} produces for an N-element result, so
-// the client can decode it with the existing
-// inventoryListCoderCloset.ReadInventoryListBlob.
+// handleGetObject returns a single object by OID as a one-element
+// inventory list — same wire format as /query/{list_type}/{query} so
+// the client decodes via the existing inventory-list codec.
 func (server *Server) handleGetObject(request Request) (response Response) {
 	var oidString string
 

@@ -19,17 +19,12 @@ import (
 	_ "github.com/amarbel-llc/madder/go/pkgs/markl_registrations"
 )
 
-// TestHandleGetObjectMissingReturns404 exercises the 404 branch of
-// the new /objects/{object_id} route added for #171. The hit path is
-// covered end-to-end by clone_port.bats once the URL transport is
-// wired to httpRemoteObjectStore — that integration test is the
-// real verification that the encoded body decodes correctly on the
-// client side. This unit test pins the missing-OID semantics so
-// edgeExplorer's IsErrNotFound branch keeps working.
+// TestHandleGetObjectMissingReturns404 pins the missing-OID semantics
+// of /objects/{object_id} so edgeExplorer's IsErrNotFound branch keeps
+// working. The hit path is covered end-to-end by clone_port.bats.
 //
-// Bypasses sigMiddleware: that path is covered by sig_roundtrip_test.go.
-// We register only the /objects route on a fresh mux so the test
-// stays focused on handler behavior.
+// Bypasses sigMiddleware (covered by sig_roundtrip_test.go) by
+// registering only the route on a fresh mux.
 func TestHandleGetObjectMissingReturns404(t1 *testing.T) {
 	ui.RunTestContext(t1, testHandleGetObjectMissingReturns404)
 }
@@ -52,10 +47,9 @@ func testHandleGetObjectMissingReturns404(t *ui.TestContext) {
 		server.makeHandler(server.handleGetObject),
 	).Methods("GET")
 
-	// A valid type OID that doesn't exist in the freshly-initialized
-	// store. Picked because edgeExplorer's first edge-class is types,
-	// so a type that's referenced-but-missing is the realistic
-	// not-found shape.
+	// Type that doesn't exist in the freshly-initialized store —
+	// edgeExplorer's first edge class is types, so missing types
+	// are the realistic not-found shape.
 	missingOid := "!nonexistent-type-v1"
 
 	req := httptest.NewRequest(

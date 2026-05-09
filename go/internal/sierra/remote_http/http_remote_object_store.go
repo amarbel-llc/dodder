@@ -13,22 +13,19 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
-// httpRemoteObjectStore satisfies sku.RepoStore over HTTP, fronting
-// the URL-transport client for callers that need single-object lookup
-// (edge expansion during pull). Backs client.GetObjectStore(); without
-// it that method returned nil and the URL clone path crashed in
-// expandEdges (#171).
+// httpRemoteObjectStore satisfies sku.RepoStore over HTTP for the
+// URL-transport client. Backs client.GetObjectStore() so edge
+// expansion during pull can fetch parents over the wire.
 //
-// ReadPrimitiveQuery is left unimplemented — no caller exercises it
-// over the URL transport today (#172). When one appears, the wire
-// shape ("scan all transacted") is small and additive.
+// ReadPrimitiveQuery is left unimplemented (#172) — every existing
+// caller passes nil and runs against a local store.
 type httpRemoteObjectStore struct {
 	client *client
 }
 
 // ReadOneInto issues GET /objects/{oid} and decodes the one-element
-// inventory-list response into out. 404 maps to errors.MakeErrNotFound
-// so edgeExplorer's IsErrNotFound branch keeps working.
+// inventory-list body into out. 404 maps to errors.MakeErrNotFound so
+// edgeExplorer's IsErrNotFound branch keeps working.
 func (store *httpRemoteObjectStore) ReadOneInto(
 	oid domain_interfaces.ObjectId,
 	out *sku.Transacted,
@@ -65,11 +62,9 @@ func (store *httpRemoteObjectStore) ReadOneInto(
 
 	listTypeString := store.client.GetImmutableConfigPublic().GetInventoryListTypeId()
 
-	inventoryListCoderCloset := store.client.repo.GetInventoryListCoderCloset()
+	var fetched *sku.Transacted
 
-	var list *sku.HeapTransacted
-
-	if list, err = inventoryListCoderCloset.ReadInventoryListBlob(
+	if fetched, err = store.client.repo.GetInventoryListCoderCloset().ReadInventoryListObject(
 		store.client.repo.GetEnvRepo(),
 		ids.GetOrPanic(listTypeString).TypeStruct,
 		bufio.NewReader(response.Body),
@@ -78,29 +73,21 @@ func (store *httpRemoteObjectStore) ReadOneInto(
 		return err
 	}
 
-	if list.Len() == 0 {
-		// Server returned 200 with an empty list. Treat as not-found
-		// so callers don't see a successful-but-empty result.
+	if fetched == nil {
+		// 200 with empty body — treat as not-found rather than
+		// surfacing a successful-but-empty result.
 		err = errors.MakeErrNotFound(oid)
 		return err
 	}
 
-	first, ok := list.Peek()
-	if !ok {
-		err = errors.MakeErrNotFound(oid)
-		return err
-	}
-
-	sku.TransactedResetter.ResetWith(out, first)
+	sku.TransactedResetter.ResetWith(out, fetched)
 
 	return err
 }
 
-// ReadPrimitiveQuery is deferred to #172. Every existing caller of
-// ReadPrimitiveQuery passes nil ("scan all"), but none reach the HTTP
-// client today — they all run against in-process local stores. When
-// one appears, the wire shape is straightforward (a streaming "all
-// objects" endpoint). Until then, panic with a clear pointer.
+// ReadPrimitiveQuery is deferred to #172. Every existing caller passes
+// nil and runs against a local store; none reach the URL transport
+// today.
 func (store *httpRemoteObjectStore) ReadPrimitiveQuery(
 	qg sku.PrimitiveQueryGroup,
 	funcIter interfaces.FuncIter[*sku.Transacted],
