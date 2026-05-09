@@ -9,12 +9,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestBinaryOne(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	buffer := new(bytes.Buffer)
 
@@ -126,7 +126,7 @@ func TestBinaryOne(t1 *testing.T) {
 }
 
 func TestBinaryFieldRoundTrip(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	buffer := new(bytes.Buffer)
 
