@@ -11,9 +11,7 @@ func TestEquals(t1 *testing.T) {
 	p := ZettelIdCoordinate{Left: 1, Right: 1}
 	p1 := ZettelIdCoordinate{Left: 1, Right: 1}
 
-	if !p.Equals(p1) {
-		t.Errorf("expected equality")
-	}
+	t.AssertTrue(p.Equals(p1), "expected equality")
 }
 
 func TestNotEquals(t1 *testing.T) {
@@ -21,9 +19,7 @@ func TestNotEquals(t1 *testing.T) {
 	p := ZettelIdCoordinate{Left: 1, Right: 1}
 	p1 := ZettelIdCoordinate{Left: 0, Right: 1}
 
-	if p.Equals(p1) {
-		t.Errorf("expected inequality")
-	}
+	t.AssertFalse(p.Equals(p1), "expected inequality")
 }
 
 func TestToId1(t1 *testing.T) {
@@ -104,9 +100,7 @@ func assertFromId(t *ui.T, n string, expected ZettelIdCoordinate) {
 	p := &ZettelIdCoordinate{}
 	p.Set(n)
 
-	if !p.Equals(expected) {
-		t.Errorf("expected %v but got %v", expected, p)
-	}
+	t.AssertEqual(expected, *p)
 }
 
 func assertToId(t *ui.T, p ZettelIdCoordinate, expected Int) {
@@ -114,7 +108,5 @@ func assertToId(t *ui.T, p ZettelIdCoordinate, expected Int) {
 
 	id := p.Id()
 
-	if id != expected {
-		t.Errorf("expected %d but got %d", expected, id)
-	}
+	t.AssertEqual(expected, id)
 }
