@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/caldav"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestStatusValueRoundTrip(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	cases := []struct {
 		vtodo string
@@ -60,7 +60,7 @@ func TestStatusValueRoundTrip(t1 *testing.T) {
 }
 
 func TestPriorityValueRoundTrip(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Canonical numeric values from the §1 priority table.
 	canonicalCases := []struct {
@@ -113,7 +113,7 @@ func TestPriorityValueRoundTrip(t1 *testing.T) {
 }
 
 func TestBuildTaskTomlBlobBasic(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	task := &caldav.Task{
 		Status:      "COMPLETED",
@@ -136,7 +136,7 @@ func TestBuildTaskTomlBlobBasic(t1 *testing.T) {
 }
 
 func TestBuildTaskTomlBlobEmptyDefaults(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	task := &caldav.Task{} // all zero values
 
@@ -154,7 +154,7 @@ func TestBuildTaskTomlBlobEmptyDefaults(t1 *testing.T) {
 }
 
 func TestParseTaskTomlBlobRoundTrip(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	task := &caldav.Task{
 		Status:      "IN-PROCESS",
@@ -184,7 +184,7 @@ func TestParseTaskTomlBlobRoundTrip(t1 *testing.T) {
 }
 
 func TestParseTaskTomlBlobIgnoresBlankAndCommentLines(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	blob := []byte("# comment\n" +
 		"\n" +
@@ -205,7 +205,7 @@ func TestParseTaskTomlBlobIgnoresBlankAndCommentLines(t1 *testing.T) {
 }
 
 func TestParseTaskTomlBlobUnknownKeysIgnored(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	blob := []byte("status = \"todo\"\n" +
 		"unknown = \"some value\"\n" +
