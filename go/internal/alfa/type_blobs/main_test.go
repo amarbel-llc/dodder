@@ -14,13 +14,8 @@ func TestDefaultTaskType(t1 *testing.T) {
 
 	blob := DefaultTaskType()
 
-	if blob.FileExtension != "toml" {
-		t.Errorf("expected file-extension %q, got %q", "toml", blob.FileExtension)
-	}
-
-	if blob.VimSyntaxType != "toml" {
-		t.Errorf("expected vim-syntax-type %q, got %q", "toml", blob.VimSyntaxType)
-	}
+	t.AssertEqualStrings("toml", blob.FileExtension)
+	t.AssertEqualStrings("toml", blob.VimSyntaxType)
 
 	assertActionableFields(&t, blob.Fields)
 
@@ -50,9 +45,7 @@ func TestDefaultChoreType(t1 *testing.T) {
 
 	blob := DefaultChoreType()
 
-	if blob.FileExtension != "toml" {
-		t.Errorf("expected file-extension %q, got %q", "toml", blob.FileExtension)
-	}
+	t.AssertEqualStrings("toml", blob.FileExtension)
 
 	assertActionableFields(&t, blob.Fields)
 
@@ -60,13 +53,8 @@ func TestDefaultChoreType(t1 *testing.T) {
 	// this is enforced by both calling actionableFields/Reader/Writer.
 	taskBlob := DefaultTaskType()
 
-	if blob.FieldsReader.Script != taskBlob.FieldsReader.Script {
-		t.Errorf("chore and task FieldsReader scripts diverged")
-	}
-
-	if blob.FieldsWriter.Script != taskBlob.FieldsWriter.Script {
-		t.Errorf("chore and task FieldsWriter scripts diverged")
-	}
+	t.AssertEqualStrings(taskBlob.FieldsReader.Script, blob.FieldsReader.Script)
+	t.AssertEqualStrings(taskBlob.FieldsWriter.Script, blob.FieldsWriter.Script)
 }
 
 func assertActionableFields(t *ui.T, fields []FieldDefinition) {
@@ -105,17 +93,9 @@ func assertActionableFields(t *ui.T, fields []FieldDefinition) {
 	for i, want := range expected {
 		got := fields[i]
 
-		if got.Name != want.name {
-			t.Errorf("field %d: expected name %q, got %q", i, want.name, got.Name)
-		}
-
-		if got.Kind != want.kind {
-			t.Errorf("field %d: expected kind %q, got %q", i, want.kind, got.Kind)
-		}
-
-		if got.Default != want.dflt {
-			t.Errorf("field %d: expected default %q, got %q", i, want.dflt, got.Default)
-		}
+		t.AssertEqualStrings(want.name, got.Name)
+		t.AssertEqualStrings(want.kind, got.Kind)
+		t.AssertEqualStrings(want.dflt, got.Default)
 
 		if want.hasValues {
 			if len(got.Values) != len(want.values) {
@@ -123,9 +103,7 @@ func assertActionableFields(t *ui.T, fields []FieldDefinition) {
 			}
 
 			for j := range want.values {
-				if got.Values[j] != want.values[j] {
-					t.Errorf("field %d (%s) value %d: expected %q, got %q", i, want.name, j, want.values[j], got.Values[j])
-				}
+				t.AssertEqualStrings(want.values[j], got.Values[j])
 			}
 		} else {
 			if len(got.Values) != 0 {
