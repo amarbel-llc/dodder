@@ -4,7 +4,6 @@ package remote_http
 
 import (
 	"bufio"
-	"bytes"
 	"io"
 	"net"
 	"net/http"
@@ -60,9 +59,8 @@ func makeTrailerSigningHandler(
 			defer repoolHash()
 
 			digestWriter := markl_io.MakeWriter(hash, w)
-			if _, err := digestWriter.Write(body); err != nil {
-				t.Fatalf("body write: %v", err)
-			}
+			_, err := digestWriter.Write(body)
+			t.AssertNoError(err)
 
 			server.signBodyTrailer(digestWriter.GetMarklId(), w)
 		},
@@ -79,9 +77,8 @@ func makeNoTrailerHandler(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Trailer", headerRepoSig)
 			w.WriteHeader(http.StatusOK)
-			if _, err := w.Write(body); err != nil {
-				t.Fatalf("body write: %v", err)
-			}
+			_, err := w.Write(body)
+			t.AssertNoError(err)
 		},
 	)
 }
@@ -104,9 +101,7 @@ func makeFixture(
 	t.Cleanup(htServer.Close)
 
 	parsed, err := url.Parse(htServer.URL)
-	if err != nil {
-		t.Fatalf("url.Parse: %v", err)
-	}
+	t.AssertNoError(err)
 
 	return &sigRoundTripFixture{
 		repo:       repo,
@@ -126,9 +121,7 @@ func dialRoundTripper(
 	pubkey mad_domain_interfaces.MarklId,
 ) *RoundTripperBufioWrappedSigner {
 	conn, err := net.Dial("tcp", fixture.host)
-	if err != nil {
-		t.Fatalf("net.Dial: %v", err)
-	}
+	t.AssertNoError(err)
 	t.Cleanup(func() { _ = conn.Close() })
 
 	rt := &RoundTripperBufioWrappedSigner{
@@ -160,24 +153,16 @@ func testSigRoundTripPositive(t *ui.TestContext) {
 	rt := dialRoundTripper(t, fixture, pubkey)
 
 	req, err := http.NewRequest(http.MethodGet, fixture.htServer.URL+"/", nil)
-	if err != nil {
-		t.Fatalf("http.NewRequest: %v", err)
-	}
+	t.AssertNoError(err)
 
 	resp, err := rt.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("RoundTrip: %v", err)
-	}
+	t.AssertNoError(err)
 
 	got, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("ReadAll: %v", err)
-	}
+	t.AssertNoError(err)
 	_ = resp.Body.Close()
 
-	if !bytes.Equal(got, body) {
-		t.Fatalf("body mismatch: got %q, want %q", got, body)
-	}
+	t.AssertEqual(body, got)
 }
 
 func TestSigRoundTripPubkeyMismatch(t1 *testing.T) {
@@ -203,14 +188,10 @@ func testSigRoundTripPubkeyMismatch(t *ui.TestContext) {
 	rt := dialRoundTripper(t, fixture, otherKeys.pub)
 
 	req, err := http.NewRequest(http.MethodGet, fixture.htServer.URL+"/", nil)
-	if err != nil {
-		t.Fatalf("http.NewRequest: %v", err)
-	}
+	t.AssertNoError(err)
 
 	_, err = rt.RoundTrip(req)
-	if err == nil {
-		t.Fatalf("expected pubkey mismatch error, got nil")
-	}
+	t.AssertError(err)
 	if !strings.Contains(err.Error(), "expected pubkey") {
 		t.Fatalf("expected error to mention pubkey mismatch, got: %v", err)
 	}
@@ -233,9 +214,7 @@ func testSigRoundTripMissingNonceRejected(t *ui.TestContext) {
 	// Send a bare request — no nonce header. Use stdlib http.Client to
 	// bypass the wrapped signer's nonce injection entirely.
 	resp, err := http.Get(fixture.htServer.URL + "/")
-	if err != nil {
-		t.Fatalf("http.Get: %v", err)
-	}
+	t.AssertNoError(err)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusBadRequest {
@@ -262,21 +241,15 @@ func testSigRoundTripMissingTrailerFails(t *ui.TestContext) {
 	rt := dialRoundTripper(t, fixture, pubkey)
 
 	req, err := http.NewRequest(http.MethodGet, fixture.htServer.URL+"/", nil)
-	if err != nil {
-		t.Fatalf("http.NewRequest: %v", err)
-	}
+	t.AssertNoError(err)
 
 	resp, err := rt.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("RoundTrip: unexpected error before body read: %v", err)
-	}
+	t.AssertNoError(err)
 
 	_, err = io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
 
-	if err == nil {
-		t.Fatalf("expected error reading body without trailer, got nil")
-	}
+	t.AssertError(err)
 	if !strings.Contains(err.Error(), "trailer") {
 		t.Fatalf("expected error to mention trailer, got: %v", err)
 	}

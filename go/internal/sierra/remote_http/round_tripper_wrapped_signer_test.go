@@ -119,12 +119,8 @@ func TestVerifyingBodyReaderSuccess(t1 *testing.T) {
 	defer cleanup()
 
 	got, err := io.ReadAll(reader)
-	if err != nil {
-		t.Fatalf("io.ReadAll: unexpected err: %v", err)
-	}
-	if !bytes.Equal(got, body) {
-		t.Fatalf("body mismatch: got %q, want %q", got, body)
-	}
+	t.AssertNoError(err)
+	t.AssertEqual(body, got)
 }
 
 func TestVerifyingBodyReaderEmptyBodySuccess(t1 *testing.T) {
@@ -141,9 +137,7 @@ func TestVerifyingBodyReaderEmptyBodySuccess(t1 *testing.T) {
 	defer cleanup()
 
 	got, err := io.ReadAll(reader)
-	if err != nil {
-		t.Fatalf("io.ReadAll on empty body: unexpected err: %v", err)
-	}
+	t.AssertNoError(err)
 	if len(got) != 0 {
 		t.Fatalf("expected empty body, got %d bytes: %q", len(got), got)
 	}
@@ -160,9 +154,7 @@ func TestVerifyingBodyReaderMissingTrailerFails(t1 *testing.T) {
 	defer cleanup()
 
 	_, err := io.ReadAll(reader)
-	if err == nil {
-		t.Fatalf("expected error for missing trailer, got nil")
-	}
+	t.AssertError(err)
 	if !strings.Contains(err.Error(), "trailer") {
 		t.Fatalf("expected error to mention 'trailer', got: %v", err)
 	}
@@ -180,9 +172,7 @@ func TestVerifyingBodyReaderMalformedSignatureFails(t1 *testing.T) {
 	defer cleanup()
 
 	_, err := io.ReadAll(reader)
-	if err == nil {
-		t.Fatalf("expected error for malformed signature, got nil")
-	}
+	t.AssertError(err)
 }
 
 func TestVerifyingBodyReaderTamperedBodyFailsVerification(t1 *testing.T) {
@@ -201,9 +191,7 @@ func TestVerifyingBodyReaderTamperedBodyFailsVerification(t1 *testing.T) {
 	defer cleanup()
 
 	_, err := io.ReadAll(reader)
-	if err == nil {
-		t.Fatalf("expected verification error for tampered body, got nil")
-	}
+	t.AssertError(err)
 	if !errors.IsHTTPError(err, http_statuses.Code422UnprocessableEntity) {
 		t.Fatalf("expected 422 Unprocessable Entity (verification failure), got: %v", err)
 	}
@@ -224,9 +212,7 @@ func TestVerifyingBodyReaderWrongPubkeyFailsVerification(t1 *testing.T) {
 	defer cleanup()
 
 	_, err := io.ReadAll(reader)
-	if err == nil {
-		t.Fatalf("expected verification error for wrong pubkey, got nil")
-	}
+	t.AssertError(err)
 	if !errors.IsHTTPError(err, http_statuses.Code422UnprocessableEntity) {
 		t.Fatalf("expected 422 Unprocessable Entity (verification failure), got: %v", err)
 	}

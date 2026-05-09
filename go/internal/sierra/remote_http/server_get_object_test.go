@@ -37,9 +37,7 @@ func testHandleGetObjectMissingReturns404(t *ui.TestContext) {
 		Repo:     repo,
 	}
 
-	if err := server.init(); err != nil {
-		t.Fatalf("server.init: %v", err)
-	}
+	t.AssertNoError(server.init())
 
 	router := mux.NewRouter().UseEncodedPath()
 	router.HandleFunc(

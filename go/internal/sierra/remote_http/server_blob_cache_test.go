@@ -82,9 +82,7 @@ func TestServerBlobCacheHasBlobReturnsTrueForKnown(t1 *testing.T) {
 
 	for _, id := range ids {
 		ok, err := cache.HasBlob(id)
-		if err != nil {
-			t.Fatalf("HasBlob(%v) err: %v", id, err)
-		}
+		t.AssertNoError(err)
 		if !ok {
 			t.Fatalf("HasBlob(%v) = false, want true", id)
 		}
@@ -104,12 +102,8 @@ func TestServerBlobCacheHasBlobReturnsFalseForUnknown(t1 *testing.T) {
 	cache := &serverBlobCache{localBlobStore: stub}
 
 	ok, err := cache.HasBlob(ids[1])
-	if err != nil {
-		t.Fatalf("unexpected err: %v", err)
-	}
-	if ok {
-		t.Fatalf("HasBlob(unknown) = true, want false")
-	}
+	t.AssertNoError(err)
+	t.AssertFalse(ok, "HasBlob(unknown) = true, want false")
 }
 
 func TestServerBlobCacheInitRunsExactlyOnceConcurrent(t1 *testing.T) {
@@ -255,9 +249,7 @@ func TestServerBlobCachePopulateErrorPropagates(t1 *testing.T) {
 	cache := &serverBlobCache{localBlobStore: stub}
 
 	_, err := cache.HasBlob(ids[0])
-	if err == nil {
-		t.Fatalf("expected populate error to propagate to first caller, got nil")
-	}
+	t.AssertError(err)
 	if !errors.Is(err, wantErr) && !strings.Contains(err.Error(), wantErr.Error()) {
 		t.Fatalf("expected wrapped error to reference %q, got: %v", wantErr, err)
 	}

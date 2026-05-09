@@ -110,9 +110,7 @@ func TestReadMCPResourceWrongScheme(t1 *testing.T) {
 	server := &Server{}
 
 	_, err := server.readMCPResource("http://example.com/types")
-	if err == nil {
-		t.Fatalf("expected error for non-dodder scheme, got nil")
-	}
+	t.AssertError(err)
 	if !errors.Is400BadRequest(err) {
 		t.Fatalf("expected 400 Bad Request for wrong scheme, got: %v", err)
 	}
@@ -124,9 +122,7 @@ func TestReadMCPResourceNonEmptyHostRejected(t1 *testing.T) {
 	server := &Server{}
 
 	_, err := server.readMCPResource("dodder://somehost/types")
-	if err == nil {
-		t.Fatalf("expected error for non-empty host, got nil")
-	}
+	t.AssertError(err)
 	if !errors.Is400BadRequest(err) {
 		t.Fatalf("expected 400 Bad Request for non-empty host, got: %v", err)
 	}

@@ -69,14 +69,10 @@ func TestRoundTripperRetrySuccessFirstTry(t1 *testing.T) {
 	rt := MakeRoundTripperRetry(inner, 3, func(error) bool { return true })
 
 	req, err := http.NewRequest(http.MethodGet, "http://example.invalid/", nil)
-	if err != nil {
-		t.Fatalf("unexpected error building request: %v", err)
-	}
+	t.AssertNoError(err)
 
 	resp, err := rt.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("expected nil error, got: %v", err)
-	}
+	t.AssertNoError(err)
 	if resp != okResp {
 		t.Fatalf("expected scripted ok response, got: %v", resp)
 	}
@@ -105,14 +101,10 @@ func TestRoundTripperRetryRetriableErrorThenSuccess(t1 *testing.T) {
 	rt := MakeRoundTripperRetry(inner, 5, predicate)
 
 	req, err := http.NewRequest(http.MethodGet, "http://example.invalid/", nil)
-	if err != nil {
-		t.Fatalf("unexpected error building request: %v", err)
-	}
+	t.AssertNoError(err)
 
 	resp, err := rt.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("expected nil error after retries, got: %v", err)
-	}
+	t.AssertNoError(err)
 	if resp != okResp {
 		t.Fatalf("expected scripted ok response, got: %v", resp)
 	}
@@ -141,14 +133,10 @@ func TestRoundTripperRetryNonRetriableErrorBreaksEarly(t1 *testing.T) {
 	rt := MakeRoundTripperRetry(inner, 5, predicate)
 
 	req, err := http.NewRequest(http.MethodGet, "http://example.invalid/", nil)
-	if err != nil {
-		t.Fatalf("unexpected error building request: %v", err)
-	}
+	t.AssertNoError(err)
 
 	resp, err := rt.RoundTrip(req)
-	if err == nil {
-		t.Fatalf("expected error to propagate, got nil")
-	}
+	t.AssertError(err)
 	if !errors.Is(err, nonRetriable) && err.Error() != nonRetriable.Error() {
 		t.Fatalf("expected non-retriable error to propagate verbatim, got: %v", err)
 	}
@@ -179,14 +167,10 @@ func TestRoundTripperRetryExhaustionReturnsLastError(t1 *testing.T) {
 	rt := MakeRoundTripperRetry(inner, 3, predicate)
 
 	req, err := http.NewRequest(http.MethodGet, "http://example.invalid/", nil)
-	if err != nil {
-		t.Fatalf("unexpected error building request: %v", err)
-	}
+	t.AssertNoError(err)
 
 	resp, err := rt.RoundTrip(req)
-	if err == nil {
-		t.Fatalf("expected error after exhausting retries, got nil")
-	}
+	t.AssertError(err)
 	var netErr net.Error
 	if !errors.As(err, &netErr) || !netErr.Timeout() {
 		t.Fatalf("expected timeout error, got: %v", err)
@@ -212,14 +196,10 @@ func TestMakeRoundTripperRetryTimeoutsUsesIsNetTimeout(t1 *testing.T) {
 	rt := MakeRoundTripperRetryTimeouts(inner, 5)
 
 	req, err := http.NewRequest(http.MethodGet, "http://example.invalid/", nil)
-	if err != nil {
-		t.Fatalf("unexpected error building request: %v", err)
-	}
+	t.AssertNoError(err)
 
 	_, err = rt.RoundTrip(req)
-	if err == nil {
-		t.Fatalf("expected non-timeout error to propagate, got nil")
-	}
+	t.AssertError(err)
 	if inner.calls != 1 {
 		t.Fatalf("expected exactly 1 call (non-timeout error not retriable), got: %d", inner.calls)
 	}
