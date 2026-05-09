@@ -3,7 +3,6 @@ package tridex
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"slices"
 	"sort"
 	"testing"
@@ -67,9 +66,7 @@ func TestContains(t1 *testing.T) {
 	}
 
 	for _, e := range expectedContains {
-		if !sut.ContainsExpansion(e) {
-			t.Errorf("expected %v to contain %s", sut, e)
-		}
+		t.AssertTrue(sut.ContainsExpansion(e), "expected to contain "+e)
 	}
 
 	expectedNotContains := []string{
@@ -89,9 +86,7 @@ func TestContains(t1 *testing.T) {
 	}
 
 	for _, e := range expectedNotContains {
-		if sut.ContainsExpansion(e) {
-			t.Errorf("expected %v to not contain %s", sut, e)
-		}
+		t.AssertFalse(sut.ContainsExpansion(e), "expected to not contain "+e)
 	}
 }
 
@@ -189,9 +184,7 @@ func TestAbbreviateOrphan(t1 *testing.T) {
 	}
 
 	for e, c := range expectedContains {
-		if ca := sut.Abbreviate(e); ca != c {
-			t.Errorf("%q: expected shorted length %q but got %q", e, c, ca)
-		}
+		t.AssertEqualStrings(c, sut.Abbreviate(e))
 	}
 }
 
@@ -209,10 +202,11 @@ func TestAbbreviateDegenerate(t1 *testing.T) {
 	}
 
 	for e, c := range expectedContains {
-		if ca := sut.Abbreviate(e); ca != c {
+		ca := sut.Abbreviate(e)
+		if ca != c {
 			ui.Log().Printf("%#v", sut)
-			t.Errorf("%q: expected shorted length %q but got %q", e, c, ca)
 		}
+		t.AssertEqualStrings(c, ca)
 	}
 }
 
@@ -230,10 +224,11 @@ func TestExpandDegenerate(t1 *testing.T) {
 	}
 
 	for e, c := range expectedContains {
-		if ca := sut.Expand(e); ca != c {
+		ca := sut.Expand(e)
+		if ca != c {
 			ui.Log().Printf("%#v", sut)
-			t.Errorf("%q: expected expanded %q but got %q", e, c, ca)
 		}
+		t.AssertEqualStrings(c, ca)
 	}
 }
 
@@ -265,10 +260,11 @@ func TestAbbreviate(t1 *testing.T) {
 	}
 
 	for e, c := range expectedContains {
-		if ca := sut.Abbreviate(e); ca != c {
+		ca := sut.Abbreviate(e)
+		if ca != c {
 			ui.Log().Print(t, "%#v", sut)
-			t.Errorf("%q: expected shorted length %q but got %q", e, c, ca)
 		}
+		t.AssertEqualStrings(c, ca)
 	}
 }
 
@@ -285,9 +281,7 @@ func TestExpandOrphan(t1 *testing.T) {
 	}
 
 	for a, e := range expectedContains {
-		if ca := sut.Expand(a); ca != e {
-			t.Errorf("%q: expected expanded %q but got %q", e, e, ca)
-		}
+		t.AssertEqualStrings(e, sut.Expand(a))
 	}
 }
 
@@ -312,9 +306,7 @@ func TestExpand(t1 *testing.T) {
 	}
 
 	for a, e := range expectedContains {
-		if ca := sut.Expand(a); ca != e {
-			t.Errorf("%q: expected expanded %q but got %q", e, e, ca)
-		}
+		t.AssertEqualStrings(e, sut.Expand(a))
 	}
 }
 
@@ -408,8 +400,6 @@ func TestAll(t1 *testing.T) {
 		tt.Run(
 			ui.MakeTestCaseInfo(fmt.Sprintf("test # %d", i)),
 			func(tInner *ui.T) {
-				t := t(*tInner)
-
 				expected := tc
 
 				sut := Make(expected...)
@@ -419,9 +409,7 @@ func TestAll(t1 *testing.T) {
 				sort.Strings(expected)
 				sort.Strings(actual)
 
-				if !reflect.DeepEqual(expected, actual) {
-					t.Errorf("expected %v, but got %v", expected, actual)
-				}
+				tInner.AssertEqual(expected, actual)
 			},
 		)
 	}

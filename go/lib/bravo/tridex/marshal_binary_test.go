@@ -1,7 +1,6 @@
 package tridex
 
 import (
-	"reflect"
 	"slices"
 	"sort"
 	"testing"
@@ -64,16 +63,12 @@ func TestMarshalBinaryRoundTrip(t1 *testing.T) {
 			marshaler := original.(*Tridex)
 
 			bs, err := marshaler.MarshalBinary()
-			if err != nil {
-				t.Fatalf("MarshalBinary failed: %s", err)
-			}
+			t.AssertNoError(err)
 
 			restored := Make()
 			unmarshaler := restored.(*Tridex)
 
-			if err := unmarshaler.UnmarshalBinary(bs); err != nil {
-				t.Fatalf("UnmarshalBinary failed: %s", err)
-			}
+			t.AssertNoError(unmarshaler.UnmarshalBinary(bs))
 
 			expectedAll := slices.Collect(original.All())
 			actualAll := slices.Collect(restored.All())
@@ -81,38 +76,17 @@ func TestMarshalBinaryRoundTrip(t1 *testing.T) {
 			sort.Strings(expectedAll)
 			sort.Strings(actualAll)
 
-			if !reflect.DeepEqual(expectedAll, actualAll) {
-				t.Errorf(
-					"round-trip mismatch:\n  expected: %v\n  got:      %v",
-					expectedAll,
-					actualAll,
-				)
-			}
+			t.AssertEqual(expectedAll, actualAll)
 
-			if original.Len() != restored.Len() {
-				t.Errorf(
-					"Len mismatch: expected %d, got %d",
-					original.Len(),
-					restored.Len(),
-				)
-			}
+			t.AssertEqual(original.Len(), restored.Len())
 
 			for _, e := range tc.elements {
-				if !restored.ContainsExpansion(e) {
-					t.Errorf("restored tridex missing element %q", e)
-				}
+				t.AssertTrue(restored.ContainsExpansion(e), "restored tridex missing element "+e)
 
 				expectedAbbr := original.Abbreviate(e)
 				actualAbbr := restored.Abbreviate(e)
 
-				if expectedAbbr != actualAbbr {
-					t.Errorf(
-						"abbreviation mismatch for %q: expected %q, got %q",
-						e,
-						expectedAbbr,
-						actualAbbr,
-					)
-				}
+				t.AssertEqualStrings(expectedAbbr, actualAbbr)
 			}
 		})
 	}
@@ -124,17 +98,11 @@ func TestMarshalBinaryDeterministic(t1 *testing.T) {
 
 	first := Make(elements...)
 	bs1, err := first.(*Tridex).MarshalBinary()
-	if err != nil {
-		t.Fatalf("first MarshalBinary failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	second := Make(elements...)
 	bs2, err := second.(*Tridex).MarshalBinary()
-	if err != nil {
-		t.Fatalf("second MarshalBinary failed: %s", err)
-	}
+	t.AssertNoError(err)
 
-	if !reflect.DeepEqual(bs1, bs2) {
-		t.Errorf("MarshalBinary not deterministic: different bytes for same content")
-	}
+	t.AssertEqual(bs1, bs2)
 }

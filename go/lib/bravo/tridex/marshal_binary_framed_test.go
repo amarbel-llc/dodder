@@ -37,17 +37,12 @@ func TestFramedMultiTridexRoundTrip(t1 *testing.T) {
 
 	for _, tri := range originals {
 		bs, err := tri.(*Tridex).MarshalBinary()
-		if err != nil {
-			t.Fatalf("MarshalBinary failed: %s", err)
-		}
+		t.AssertNoError(err)
 
-		if err := binary.Write(&buf, binary.BigEndian, uint32(len(bs))); err != nil {
-			t.Fatalf("write length failed: %s", err)
-		}
+		t.AssertNoError(binary.Write(&buf, binary.BigEndian, uint32(len(bs))))
 
-		if _, err := buf.Write(bs); err != nil {
-			t.Fatalf("write data failed: %s", err)
-		}
+		_, err = buf.Write(bs)
+		t.AssertNoError(err)
 	}
 
 	// Read: same framing as store_abbr readIfNecessary
@@ -58,22 +53,17 @@ func TestFramedMultiTridexRoundTrip(t1 *testing.T) {
 		restored[i] = Make()
 	}
 
-	for i, tri := range restored {
+	for _, tri := range restored {
 		var length uint32
 
-		if err := binary.Read(reader, binary.BigEndian, &length); err != nil {
-			t.Fatalf("read length %d failed: %s", i, err)
-		}
+		t.AssertNoError(binary.Read(reader, binary.BigEndian, &length))
 
 		bs := make([]byte, length)
 
-		if _, err := io.ReadFull(reader, bs); err != nil {
-			t.Fatalf("read data %d failed: %s", i, err)
-		}
+		_, err := io.ReadFull(reader, bs)
+		t.AssertNoError(err)
 
-		if err := tri.(*Tridex).UnmarshalBinary(bs); err != nil {
-			t.Fatalf("UnmarshalBinary %d failed: %s", i, err)
-		}
+		t.AssertNoError(tri.(*Tridex).UnmarshalBinary(bs))
 	}
 
 	restoredHeads := restored[5]
@@ -84,22 +74,14 @@ func TestFramedMultiTridexRoundTrip(t1 *testing.T) {
 	expandedHead := restoredHeads.Expand("o")
 	expandedTail := restoredTails.Expand("u")
 
-	if expandedHead != "one" {
-		t.Errorf("head expansion: expected %q, got %q", "one", expandedHead)
-	}
-
-	if expandedTail != "uno" {
-		t.Errorf("tail expansion: expected %q, got %q", "uno", expandedTail)
-	}
+	t.AssertEqualStrings("one", expandedHead)
+	t.AssertEqualStrings("uno", expandedTail)
 
 	// Verify all tridexes round-tripped correctly
 	names := []string{"repo", "tags", "types", "zettels", "marklIds", "heads", "tails"}
 
-	for i, name := range names {
-		if originals[i].Len() != restored[i].Len() {
-			t.Errorf("%s: Len mismatch: expected %d, got %d",
-				name, originals[i].Len(), restored[i].Len())
-		}
+	for i := range names {
+		t.AssertEqual(originals[i].Len(), restored[i].Len())
 	}
 
 	// Verify specific expansions work
@@ -120,9 +102,7 @@ func TestFramedMultiTridexRoundTrip(t1 *testing.T) {
 
 	for _, et := range expandTests {
 		actual := et.tridex.Expand(et.abbr)
-		if actual != et.expects {
-			t.Errorf("%s: expected %q, got %q", et.name, et.expects, actual)
-		}
+		t.AssertEqualStrings(et.expects, actual)
 	}
 }
 
@@ -139,17 +119,12 @@ func TestFramedEmptyTridexRoundTrip(t1 *testing.T) {
 
 	for _, tri := range originals {
 		bs, err := tri.(*Tridex).MarshalBinary()
-		if err != nil {
-			t.Fatalf("MarshalBinary failed: %s", err)
-		}
+		t.AssertNoError(err)
 
-		if err := binary.Write(&buf, binary.BigEndian, uint32(len(bs))); err != nil {
-			t.Fatalf("write length failed: %s", err)
-		}
+		t.AssertNoError(binary.Write(&buf, binary.BigEndian, uint32(len(bs))))
 
-		if _, err := buf.Write(bs); err != nil {
-			t.Fatalf("write data failed: %s", err)
-		}
+		_, err = buf.Write(bs)
+		t.AssertNoError(err)
 	}
 
 	reader := bytes.NewReader(buf.Bytes())
@@ -157,24 +132,17 @@ func TestFramedEmptyTridexRoundTrip(t1 *testing.T) {
 	for i := 0; i < 7; i++ {
 		var length uint32
 
-		if err := binary.Read(reader, binary.BigEndian, &length); err != nil {
-			t.Fatalf("read length %d failed: %s", i, err)
-		}
+		t.AssertNoError(binary.Read(reader, binary.BigEndian, &length))
 
 		bs := make([]byte, length)
 
-		if _, err := io.ReadFull(reader, bs); err != nil {
-			t.Fatalf("read data %d failed: %s", i, err)
-		}
+		_, err := io.ReadFull(reader, bs)
+		t.AssertNoError(err)
 
 		restored := Make()
 
-		if err := restored.(*Tridex).UnmarshalBinary(bs); err != nil {
-			t.Fatalf("UnmarshalBinary %d failed: %s", i, err)
-		}
+		t.AssertNoError(restored.(*Tridex).UnmarshalBinary(bs))
 
-		if restored.Len() != 0 {
-			t.Errorf("tridex %d: expected empty, got Len=%d", i, restored.Len())
-		}
+		t.AssertEqual(0, restored.Len())
 	}
 }
