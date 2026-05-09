@@ -6,9 +6,11 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/tap_diagnostics"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestFromErrNotEqual(t *testing.T) {
+func TestFromErrNotEqual(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	var expected, actual markl.Id
 
 	err := markl.ErrNotEqual{
@@ -29,7 +31,8 @@ func TestFromErrNotEqual(t *testing.T) {
 	}
 }
 
-func TestFromErrIsNull(t *testing.T) {
+func TestFromErrIsNull(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	err := markl.ErrIsNull{Purpose: "object-dig"}
 
 	diag := tap_diagnostics.FromError(err)
@@ -42,7 +45,8 @@ func TestFromErrIsNull(t *testing.T) {
 	}
 }
 
-func TestFromGenericError(t *testing.T) {
+func TestFromGenericError(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	err := fmt.Errorf("something went wrong")
 
 	diag := tap_diagnostics.FromError(err)
