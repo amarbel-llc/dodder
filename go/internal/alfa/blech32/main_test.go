@@ -21,13 +21,13 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestBlech32(t1 *testing.T) {
 	t1.Skip()
 
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	type testCase struct {
 		str   string
@@ -142,7 +142,7 @@ func TestBlech32(t1 *testing.T) {
 
 func TestBlech32DataOnly(t1 *testing.T) {
 	// t1.Skip()
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	type testCase struct {
 		input string
