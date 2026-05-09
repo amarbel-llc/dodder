@@ -13,9 +13,7 @@ func TestBitset0CapGreaterAdd(t1 *testing.T) {
 	sut := MakeBitset(20)
 	sut.Add(19)
 
-	if !sut.Get(19) {
-		t.Errorf("expected bitset to contain idx %d", 19)
-	}
+	t.AssertTrue(sut.Get(19), "expected bitset to contain idx 19")
 }
 
 func TestBitset1CapLessAdd(t1 *testing.T) {
@@ -25,9 +23,7 @@ func TestBitset1CapLessAdd(t1 *testing.T) {
 	toAdd := int(21)
 	sut.Add(toAdd)
 
-	if !sut.Get(toAdd) {
-		t.Errorf("expected bitset to contain idx %d", toAdd)
-	}
+	t.AssertTrue(sut.Get(toAdd), "expected bitset to contain idx")
 }
 
 func TestBitset2CapLessAddRemove(t1 *testing.T) {
@@ -37,31 +33,21 @@ func TestBitset2CapLessAddRemove(t1 *testing.T) {
 	toAdd := int(256)
 	sut.Add(toAdd)
 
-	if !sut.Get(toAdd) {
-		t.Errorf("expected bitset to contain idx %d", toAdd)
-	}
+	t.AssertTrue(sut.Get(toAdd), "expected bitset to contain idx")
 
 	sut.Del(toAdd)
 
-	if sut.Get(toAdd) {
-		t.Errorf("expected bitset to not contain idx %d", toAdd)
-	}
+	t.AssertFalse(sut.Get(toAdd), "expected bitset to not contain idx")
 }
 
 func TestBitset3WouldGrowTooLarge(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	defer func() {
-		e := recover()
-
-		if e == nil {
-			t.Errorf("expected bitset to panic")
-		}
-	}()
-
-	sut := MakeBitset(20)
-	toAdd := int(MaxBitsetIdx + 1)
-	sut.Add(toAdd)
+	t.AssertPanic(func() {
+		sut := MakeBitset(20)
+		toAdd := int(MaxBitsetIdx + 1)
+		sut.Add(toAdd)
+	})
 }
 
 func TestBitset5Equals(t1 *testing.T) {
@@ -74,9 +60,7 @@ func TestBitset5Equals(t1 *testing.T) {
 	sut2 := MakeBitset(20)
 	sut2.Add(toAdd)
 
-	if !sut.Equals(sut2) {
-		t.Errorf("expected equality")
-	}
+	t.AssertTrue(sut.Equals(sut2), "expected equality")
 }
 
 func TestBitset6MakeOn(t1 *testing.T) {
@@ -85,14 +69,10 @@ func TestBitset6MakeOn(t1 *testing.T) {
 	sut := MakeBitsetOn(20)
 
 	for i := 0; i < 20; i++ {
-		if !sut.Get(i) {
-			t.Errorf("expected bit to be on: %d", i)
-		}
+		t.AssertTrue(sut.Get(i), "expected bit to be on")
 	}
 
-	if sut.Get(21) {
-		t.Errorf("expected bit outside range to be off")
-	}
+	t.AssertFalse(sut.Get(21), "expected bit outside range to be off")
 }
 
 func TestBitset7Each(t1 *testing.T) {
@@ -121,9 +101,7 @@ func TestBitset7Each(t1 *testing.T) {
 		t.Errorf("expected no error but got %s", err)
 	}
 
-	if i != m {
-		t.Errorf("expected to iterate to %d but only got %d", m, i)
-	}
+	t.AssertEqual(m, i)
 }
 
 func TestBitsetBinaryRoundTripSingle(t1 *testing.T) {
@@ -133,22 +111,14 @@ func TestBitsetBinaryRoundTripSingle(t1 *testing.T) {
 	sut.Add(12)
 
 	bs, err := sut.(*bitset).MarshalBinary()
-	if err != nil {
-		t.Fatalf("marshal failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	sut2 := MakeBitset(0)
-	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
-		t.Fatalf("unmarshal failed: %s", err)
-	}
+	t.AssertNoError(sut2.(*bitset).UnmarshalBinary(bs))
 
-	if !sut.Equals(sut2) {
-		t.Errorf("expected equality after round-trip")
-	}
+	t.AssertTrue(sut.Equals(sut2), "expected equality after round-trip")
 
-	if sut2.CountOn() != 1 {
-		t.Errorf("expected CountOn=1 but got %d", sut2.CountOn())
-	}
+	t.AssertEqual(1, sut2.CountOn())
 }
 
 func TestBitsetBinaryRoundTripMultiple(t1 *testing.T) {
@@ -163,27 +133,17 @@ func TestBitsetBinaryRoundTripMultiple(t1 *testing.T) {
 	sut.Add(199)
 
 	bs, err := sut.(*bitset).MarshalBinary()
-	if err != nil {
-		t.Fatalf("marshal failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	sut2 := MakeBitset(0)
-	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
-		t.Fatalf("unmarshal failed: %s", err)
-	}
+	t.AssertNoError(sut2.(*bitset).UnmarshalBinary(bs))
 
-	if !sut.Equals(sut2) {
-		t.Errorf("expected equality after round-trip")
-	}
+	t.AssertTrue(sut.Equals(sut2), "expected equality after round-trip")
 
-	if sut2.CountOn() != 6 {
-		t.Errorf("expected CountOn=6 but got %d", sut2.CountOn())
-	}
+	t.AssertEqual(6, sut2.CountOn())
 
 	for _, idx := range []int{0, 31, 32, 63, 100, 199} {
-		if !sut2.Get(idx) {
-			t.Errorf("expected bit %d to be set after round-trip", idx)
-		}
+		t.AssertTrue(sut2.Get(idx), "expected bit to be set after round-trip")
 	}
 }
 
@@ -193,18 +153,12 @@ func TestBitsetBinaryRoundTripEmpty(t1 *testing.T) {
 	sut := MakeBitset(20)
 
 	bs, err := sut.(*bitset).MarshalBinary()
-	if err != nil {
-		t.Fatalf("marshal failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	sut2 := MakeBitset(0)
-	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
-		t.Fatalf("unmarshal failed: %s", err)
-	}
+	t.AssertNoError(sut2.(*bitset).UnmarshalBinary(bs))
 
-	if sut2.CountOn() != 0 {
-		t.Errorf("expected CountOn=0 but got %d", sut2.CountOn())
-	}
+	t.AssertEqual(0, sut2.CountOn())
 }
 
 func TestBitsetBinaryRoundTripAllOn(t1 *testing.T) {
@@ -213,22 +167,14 @@ func TestBitsetBinaryRoundTripAllOn(t1 *testing.T) {
 	sut := MakeBitsetOn(200)
 
 	bs, err := sut.(*bitset).MarshalBinary()
-	if err != nil {
-		t.Fatalf("marshal failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	sut2 := MakeBitset(0)
-	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
-		t.Fatalf("unmarshal failed: %s", err)
-	}
+	t.AssertNoError(sut2.(*bitset).UnmarshalBinary(bs))
 
-	if !sut.Equals(sut2) {
-		t.Errorf("expected equality after round-trip")
-	}
+	t.AssertTrue(sut.Equals(sut2), "expected equality after round-trip")
 
-	if sut2.CountOn() != 200 {
-		t.Errorf("expected CountOn=200 but got %d", sut2.CountOn())
-	}
+	t.AssertEqual(200, sut2.CountOn())
 }
 
 func TestBitsetBinarySize(t1 *testing.T) {
@@ -239,14 +185,10 @@ func TestBitsetBinarySize(t1 *testing.T) {
 	sut.Add(63)
 
 	bs, err := sut.(*bitset).MarshalBinary()
-	if err != nil {
-		t.Fatalf("marshal failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	// 64 bits = 2 uint32s = 8 bytes
-	if len(bs) != 8 {
-		t.Errorf("expected 8 bytes for 64-bit bitset, got %d", len(bs))
-	}
+	t.AssertEqual(8, len(bs))
 }
 
 func TestBitsetBinaryCountOnAfterUnmarshal(t1 *testing.T) {
@@ -258,18 +200,12 @@ func TestBitsetBinaryCountOnAfterUnmarshal(t1 *testing.T) {
 	}
 
 	bs, err := sut.(*bitset).MarshalBinary()
-	if err != nil {
-		t.Fatalf("marshal failed: %s", err)
-	}
+	t.AssertNoError(err)
 
 	sut2 := MakeBitset(0)
-	if err := sut2.(*bitset).UnmarshalBinary(bs); err != nil {
-		t.Fatalf("unmarshal failed: %s", err)
-	}
+	t.AssertNoError(sut2.(*bitset).UnmarshalBinary(bs))
 
-	if sut2.CountOn() != 50 {
-		t.Errorf("expected CountOn=50 but got %d (countOn accumulation bug?)", sut2.CountOn())
-	}
+	t.AssertEqual(50, sut2.CountOn())
 }
 
 func TestNthOnBasic(t1 *testing.T) {
@@ -290,15 +226,11 @@ func TestNthOnBasic(t1 *testing.T) {
 			t.Errorf("NthOn(%d) returned not found", i)
 			continue
 		}
-		if idx != ex {
-			t.Errorf("NthOn(%d) = %d, want %d", i, idx, ex)
-		}
+		t.AssertEqual(ex, idx)
 	}
 
 	_, ok := sut.NthOn(6)
-	if ok {
-		t.Errorf("NthOn(6) should return not found for 6-element bitset")
-	}
+	t.AssertFalse(ok, "NthOn(6) should return not found for 6-element bitset")
 }
 
 func TestNthOnAllOn(t1 *testing.T) {
@@ -311,9 +243,7 @@ func TestNthOnAllOn(t1 *testing.T) {
 		if !ok {
 			t.Fatalf("NthOn(%d) returned not found", i)
 		}
-		if idx != i {
-			t.Errorf("NthOn(%d) = %d, want %d", i, idx, i)
-		}
+		t.AssertEqual(i, idx)
 	}
 }
 
@@ -323,9 +253,7 @@ func TestNthOnEmpty(t1 *testing.T) {
 	sut := MakeBitset(100)
 
 	_, ok := sut.NthOn(0)
-	if ok {
-		t.Errorf("NthOn(0) should return not found for empty bitset")
-	}
+	t.AssertFalse(ok, "NthOn(0) should return not found for empty bitset")
 }
 
 func TestNthOnSparse(t1 *testing.T) {
@@ -352,9 +280,7 @@ func TestNthOnSparse(t1 *testing.T) {
 			t.Errorf("NthOn(%d) returned not found", c.n)
 			continue
 		}
-		if idx != c.want {
-			t.Errorf("NthOn(%d) = %d, want %d", c.n, idx, c.want)
-		}
+		t.AssertEqual(c.want, idx)
 	}
 }
 
