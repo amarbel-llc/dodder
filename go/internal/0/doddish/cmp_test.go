@@ -3,8 +3,8 @@ package doddish
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type cmpTestCase struct {
@@ -49,7 +49,7 @@ func (testCase cmpTestCase) Test(t *ui.T) {
 }
 
 func TestCmp(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	for _, testCase := range getCmpTestCases() {
 		t.Run(

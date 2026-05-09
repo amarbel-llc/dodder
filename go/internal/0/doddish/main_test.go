@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestMain(m *testing.M) {
