@@ -3,12 +3,12 @@ package collections
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestBitset0CapGreaterAdd(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(20)
 	sut.Add(19)
@@ -19,7 +19,7 @@ func TestBitset0CapGreaterAdd(t1 *testing.T) {
 }
 
 func TestBitset1CapLessAdd(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(20)
 	toAdd := int(21)
@@ -31,7 +31,7 @@ func TestBitset1CapLessAdd(t1 *testing.T) {
 }
 
 func TestBitset2CapLessAddRemove(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(20)
 	toAdd := int(256)
@@ -49,7 +49,7 @@ func TestBitset2CapLessAddRemove(t1 *testing.T) {
 }
 
 func TestBitset3WouldGrowTooLarge(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	defer func() {
 		e := recover()
@@ -65,7 +65,7 @@ func TestBitset3WouldGrowTooLarge(t1 *testing.T) {
 }
 
 func TestBitset5Equals(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(20)
 	toAdd := 12
@@ -80,7 +80,7 @@ func TestBitset5Equals(t1 *testing.T) {
 }
 
 func TestBitset6MakeOn(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitsetOn(20)
 
@@ -96,7 +96,7 @@ func TestBitset6MakeOn(t1 *testing.T) {
 }
 
 func TestBitset7Each(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	m := 200
 	sut := MakeBitsetOn(m)
@@ -127,7 +127,7 @@ func TestBitset7Each(t1 *testing.T) {
 }
 
 func TestBitsetBinaryRoundTripSingle(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(20)
 	sut.Add(12)
@@ -152,7 +152,7 @@ func TestBitsetBinaryRoundTripSingle(t1 *testing.T) {
 }
 
 func TestBitsetBinaryRoundTripMultiple(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(200)
 	sut.Add(0)
@@ -188,7 +188,7 @@ func TestBitsetBinaryRoundTripMultiple(t1 *testing.T) {
 }
 
 func TestBitsetBinaryRoundTripEmpty(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(20)
 
@@ -208,7 +208,7 @@ func TestBitsetBinaryRoundTripEmpty(t1 *testing.T) {
 }
 
 func TestBitsetBinaryRoundTripAllOn(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitsetOn(200)
 
@@ -232,7 +232,7 @@ func TestBitsetBinaryRoundTripAllOn(t1 *testing.T) {
 }
 
 func TestBitsetBinarySize(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(64)
 	sut.Add(0)
@@ -250,7 +250,7 @@ func TestBitsetBinarySize(t1 *testing.T) {
 }
 
 func TestBitsetBinaryCountOnAfterUnmarshal(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(100)
 	for i := 0; i < 50; i++ {
@@ -273,7 +273,7 @@ func TestBitsetBinaryCountOnAfterUnmarshal(t1 *testing.T) {
 }
 
 func TestNthOnBasic(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(200)
 	sut.Add(0)
@@ -302,7 +302,7 @@ func TestNthOnBasic(t1 *testing.T) {
 }
 
 func TestNthOnAllOn(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitsetOn(100)
 
@@ -318,7 +318,7 @@ func TestNthOnAllOn(t1 *testing.T) {
 }
 
 func TestNthOnEmpty(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	sut := MakeBitset(100)
 
@@ -329,7 +329,7 @@ func TestNthOnEmpty(t1 *testing.T) {
 }
 
 func TestNthOnSparse(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Set bits at word boundaries to test cross-word skipping
 	sut := MakeBitset(1000)
