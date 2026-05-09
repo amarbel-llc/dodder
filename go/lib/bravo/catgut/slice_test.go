@@ -1,8 +1,6 @@
 package catgut
 
 import (
-	"bytes"
-	"reflect"
 	"testing"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
@@ -82,19 +80,12 @@ func TestSliceOverlap(t1 *testing.T) {
 
 		overlap, first, second := sut.Overlap()
 
-		if first != tc.ExpectedFirst {
-			t.AssertEqual(tc.ExpectedFirst, first)
-		}
-
-		if second != tc.ExpectedSecond {
-			t.AssertEqual(tc.ExpectedSecond, second)
-		}
+		t.AssertEqual(tc.ExpectedFirst, first)
+		t.AssertEqual(tc.ExpectedSecond, second)
 
 		actual := overlap[:first+second]
 
-		if !reflect.DeepEqual(actual, tc.ExpectedOverlap) {
-			t.AssertEqual(tc.ExpectedOverlap, actual)
-		}
+		t.AssertEqual(tc.ExpectedOverlap, actual)
 	}
 }
 
@@ -185,8 +176,6 @@ func TestSliceSlice(t1 *testing.T) {
 		sub := sut.Slice(tc.Left, tc.Right)
 		actual := sub.Bytes()
 
-		if !bytes.Equal(tc.ExpectedSliceData, actual) {
-			t.AssertEqual(tc.ExpectedSliceData, actual)
-		}
+		t.AssertEqual(tc.ExpectedSliceData, actual)
 	}
 }

@@ -24,15 +24,11 @@ func TestRingBufferReader(t1 *testing.T) {
 	n, err := io.Copy(&sb, sut)
 	t.AssertNoError(err)
 
-	if n != int64(len(expected)) {
-		t.Errorf("expected %d but got %d", len(expected), n)
-	}
+	t.AssertEqual(int64(len(expected)), n)
 
 	actual := sb.String()
 
-	if actual != expected {
-		t.PrintDiff(expected, actual)
-	}
+	t.AssertEqualStrings(expected, actual)
 }
 
 func TestRingBufferEmpty(t1 *testing.T) {
@@ -42,17 +38,13 @@ func TestRingBufferEmpty(t1 *testing.T) {
 	{
 		actual := sut.Len()
 
-		if sut.Len() != 0 {
-			t.Errorf("expected %d but got %d", 0, actual)
-		}
+		t.AssertEqual(0, actual)
 	}
 
 	{
 		n, err := sut.Write([]byte("test"))
 
-		if n != 4 {
-			t.Errorf("expected %d but got %d", 4, n)
-		}
+		t.AssertEqual(4, n)
 
 		t.AssertNoError(err)
 
@@ -60,9 +52,7 @@ func TestRingBufferEmpty(t1 *testing.T) {
 			expected := 4
 			actual := sut.Len()
 
-			if expected != actual {
-				t.Errorf("expected %d but got %d", expected, actual)
-			}
+			t.AssertEqual(expected, actual)
 		}
 	}
 
@@ -82,17 +72,13 @@ func TestRingBufferEmpty(t1 *testing.T) {
 		b := make([]byte, 4)
 		n, err := sut.Read(b)
 
-		if n != 4 {
-			t.Errorf("expected %d but got %d", 4, n)
-		}
+		t.AssertEqual(4, n)
 
 		t.AssertEOF(err)
 
 		actual := string(b)
 
-		if actual != "test" {
-			t.Errorf("expected %q but got %q", "test", actual)
-		}
+		t.AssertEqualStrings("test", actual)
 	}
 
 	// {
@@ -116,17 +102,13 @@ func TestRingBufferEmptyFindFromStartAndAdvance(t1 *testing.T) {
 	{
 		actual := sut.Len()
 
-		if sut.Len() != 0 {
-			t.Errorf("expected %d but got %d", 0, actual)
-		}
+		t.AssertEqual(0, actual)
 	}
 
 	{
 		n, err := sut.Write([]byte("test"))
 
-		if n != 4 {
-			t.Errorf("expected %d but got %d", 4, n)
-		}
+		t.AssertEqual(4, n)
 
 		t.AssertNoError(err)
 
@@ -134,9 +116,7 @@ func TestRingBufferEmptyFindFromStartAndAdvance(t1 *testing.T) {
 			expected := 4
 			actual := sut.Len()
 
-			if expected != actual {
-				t.Errorf("expected %d but got %d", expected, actual)
-			}
+			t.AssertEqual(expected, actual)
 		}
 	}
 }
@@ -149,9 +129,7 @@ func TestRingBufferEmptyTooBig(t1 *testing.T) {
 		{
 			n, err := sut.Write([]byte("test"))
 
-			if n != 4 {
-				t.Errorf("expected %d but got %d", 4, n)
-			}
+			t.AssertEqual(4, n)
 
 			t.AssertNoError(err)
 		}
@@ -160,9 +138,7 @@ func TestRingBufferEmptyTooBig(t1 *testing.T) {
 			b := make([]byte, 4)
 			n, err := sut.Read(b)
 
-			if n != 4 {
-				t.Errorf("expected %d but got %d", 4, n)
-			}
+			t.AssertEqual(4, n)
 
 			t.AssertEOF(err)
 
@@ -170,9 +146,7 @@ func TestRingBufferEmptyTooBig(t1 *testing.T) {
 				actual := string(b[:n])
 				expected := "test"
 
-				if actual != expected {
-					t.Errorf("expected %q but got %q", expected, actual)
-				}
+				t.AssertEqualStrings(expected, actual)
 			}
 		}
 	}
@@ -198,29 +172,21 @@ func TestRingBufferEmptyTooSmall(t1 *testing.T) {
 	{
 		n, err := sut.Write([]byte("teal"))
 
-		if n != 3 {
-			t.Errorf("expected %d but got %d", 4, n)
-		}
+		t.AssertEqual(3, n)
 
 		t.AssertEOF(err)
 
-		if sut.Len() != 3 {
-			t.Errorf("expected len 3 but got %d", sut.Len())
-		}
+		t.AssertEqual(3, sut.Len())
 	}
 
 	{
 		n, err := sut.Write([]byte("teal"))
 
-		if n != 0 {
-			t.Errorf("expected %d but got %d", 4, n)
-		}
+		t.AssertEqual(0, n)
 
 		t.AssertEOF(err)
 
-		if sut.Len() != 3 {
-			t.Errorf("expected len 3 but got %d", sut.Len())
-		}
+		t.AssertEqual(3, sut.Len())
 	}
 
 	{
@@ -229,13 +195,9 @@ func TestRingBufferEmptyTooSmall(t1 *testing.T) {
 
 		{
 			expected := 3
-			if n != expected {
-				t.Errorf("expected %d but got %d", expected, n)
-			}
+			t.AssertEqual(expected, n)
 
-			if sut.Len() != 0 {
-				t.Errorf("expected len 0 but got %d", sut.Len())
-			}
+			t.AssertEqual(0, sut.Len())
 		}
 
 		t.AssertEOF(err)
@@ -243,9 +205,7 @@ func TestRingBufferEmptyTooSmall(t1 *testing.T) {
 		actual := string(b[:n])
 		expected := "tea"
 
-		if actual != expected {
-			t.Errorf("expected %q but got %q", expected, actual)
-		}
+		t.AssertEqualStrings(expected, actual)
 	}
 
 	{
@@ -254,9 +214,7 @@ func TestRingBufferEmptyTooSmall(t1 *testing.T) {
 
 		{
 			expected := 0
-			if n != expected {
-				t.Errorf("expected %d but got %d", expected, n)
-			}
+			t.AssertEqual(expected, n)
 		}
 
 		t.AssertEOF(err)
@@ -276,33 +234,25 @@ func TestRingBufferDefault(t1 *testing.T) {
 	write := func() {
 		n, err := sut.Write(one_5)
 
-		if n != len(one_5) {
-			t2.Errorf("expected %d but got %d", len(one_5), n)
-		}
+		t2.AssertEqual(len(one_5), n)
 
 		l += n
 
 		t2.AssertNoError(err)
 
-		if sut.Len() != l {
-			t2.Errorf("expected len %d but got %d", l, sut.Len())
-		}
+		t2.AssertEqual(l, sut.Len())
 	}
 
 	read := func() {
 		n, err := sut.Read(half)
 
-		if n != len(half) {
-			t2.Errorf("expected %d but got %d", len(half), n)
-		}
+		t2.AssertEqual(len(half), n)
 
 		l -= n
 
 		t2.AssertNoError(err)
 
-		if sut.Len() != l {
-			t2.Errorf("expected len %d but got %d", l, sut.Len())
-		}
+		t2.AssertEqual(l, sut.Len())
 	}
 
 	write()
@@ -329,33 +279,25 @@ func TestRingBufferDefaultReadFrom(t1 *testing.T) {
 		n, err := sut.Fill()
 		one_5 = bytes.NewBuffer(make([]byte, 2730))
 
-		if int(n) != one_5.Len() {
-			t2.Errorf("expected %d but got %d", one_5.Len(), n)
-		}
+		t2.AssertEqual(one_5.Len(), int(n))
 
 		l += int(n)
 
 		t2.AssertNoError(err)
 
-		if sut.Len() != l {
-			t2.Errorf("expected len %d but got %d", l, sut.Len())
-		}
+		t2.AssertEqual(l, sut.Len())
 	}
 
 	read := func() {
 		n, err := sut.Read(half)
 
-		if n != len(half) {
-			t2.Errorf("expected %d but got %d", len(half), n)
-		}
+		t2.AssertEqual(len(half), n)
 
 		l -= n
 
 		t2.AssertNoError(err)
 
-		if sut.Len() != l {
-			t2.Errorf("expected len %d but got %d", l, sut.Len())
-		}
+		t2.AssertEqual(l, sut.Len())
 	}
 
 	write()

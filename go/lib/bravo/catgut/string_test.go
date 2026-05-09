@@ -49,9 +49,7 @@ func TestCompare(t1 *testing.T) {
 
 				actual := a.Compare(b)
 
-				if actual != tc.expected {
-					t.Errorf("expected %d but got %d", tc.expected, actual)
-				}
+				t.AssertEqual(tc.expected, actual)
 			},
 		)
 	}
@@ -93,9 +91,7 @@ func TestComparePartial(t1 *testing.T) {
 
 				actual := a.ComparePartial(b)
 
-				if actual != tc.expected {
-					t.Errorf("expected %d but got %d", tc.expected, actual)
-				}
+				t.AssertEqual(tc.expected, actual)
 			},
 		)
 	}

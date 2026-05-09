@@ -25,7 +25,5 @@ func TestSliceReader(t1 *testing.T) {
 	t.AssertNoError(err)
 	n := int(n1)
 
-	if n != input.Len() {
-		t.PrintDiff(input.Len(), n)
-	}
+	t.AssertEqual(input.Len(), n)
 }

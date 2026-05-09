@@ -48,17 +48,11 @@ func TestSliceRuneScannerValid(t1 *testing.T) {
 					widthEx := utf8.RuneLen(rEx)
 					r, width, ok := sut.Scan()
 
-					if !ok {
-						t.Errorf("expected successful scan")
-					}
+					t.AssertTrue(ok, "expected successful scan")
 
-					if r != rEx {
-						t.Errorf("expected %c but got %c", rEx, r)
-					}
+					t.AssertEqual(rEx, r)
 
-					if width != widthEx {
-						t.Errorf("expected %d but got %d", widthEx, width)
-					}
+					t.AssertEqual(widthEx, width)
 
 					t.AssertNoError(sut.UnreadRune())
 					sut.ReadRune()
@@ -66,9 +60,7 @@ func TestSliceRuneScannerValid(t1 *testing.T) {
 
 				_, _, ok := sut.Scan()
 
-				if ok {
-					t.Errorf("expected unsuccessful scan")
-				}
+				t.AssertFalse(ok, "expected unsuccessful scan")
 			},
 		)
 	}
@@ -92,9 +84,7 @@ func TestSliceRuneScannerInvalid(t1 *testing.T) {
 
 				_, _, ok := sut.Scan()
 
-				if ok {
-					t.Errorf("expected unsuccessful scan")
-				}
+				t.AssertFalse(ok, "expected unsuccessful scan")
 			},
 		)
 	}
