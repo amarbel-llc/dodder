@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/http_statuses"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 // These tests cover the response-body verification path of
@@ -106,12 +106,12 @@ func makeReaderForBody(
 }
 
 func TestVerifyingBodyReaderSuccess(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
-	keys := makeSignerTestKeys(t1)
+	keys := makeSignerTestKeys(t.T)
 
 	body := []byte("hello, signed world")
-	sig := signBodyForTest(t1, keys.priv, body)
+	sig := signBodyForTest(t.T, keys.priv, body)
 
 	trailer := http.Header{headerRepoSig: []string{sig}}
 
@@ -128,12 +128,12 @@ func TestVerifyingBodyReaderSuccess(t1 *testing.T) {
 }
 
 func TestVerifyingBodyReaderEmptyBodySuccess(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
-	keys := makeSignerTestKeys(t1)
+	keys := makeSignerTestKeys(t.T)
 
 	body := []byte{}
-	sig := signBodyForTest(t1, keys.priv, body)
+	sig := signBodyForTest(t.T, keys.priv, body)
 
 	trailer := http.Header{headerRepoSig: []string{sig}}
 
@@ -150,9 +150,9 @@ func TestVerifyingBodyReaderEmptyBodySuccess(t1 *testing.T) {
 }
 
 func TestVerifyingBodyReaderMissingTrailerFails(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
-	keys := makeSignerTestKeys(t1)
+	keys := makeSignerTestKeys(t.T)
 
 	body := []byte("body without a trailer")
 
@@ -169,9 +169,9 @@ func TestVerifyingBodyReaderMissingTrailerFails(t1 *testing.T) {
 }
 
 func TestVerifyingBodyReaderMalformedSignatureFails(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
-	keys := makeSignerTestKeys(t1)
+	keys := makeSignerTestKeys(t.T)
 
 	body := []byte("body with mangled trailer")
 	trailer := http.Header{headerRepoSig: []string{"not-a-valid-markl-id"}}
@@ -186,12 +186,12 @@ func TestVerifyingBodyReaderMalformedSignatureFails(t1 *testing.T) {
 }
 
 func TestVerifyingBodyReaderTamperedBodyFailsVerification(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
-	keys := makeSignerTestKeys(t1)
+	keys := makeSignerTestKeys(t.T)
 
 	originalBody := []byte("the original body")
-	sig := signBodyForTest(t1, keys.priv, originalBody)
+	sig := signBodyForTest(t.T, keys.priv, originalBody)
 
 	trailer := http.Header{headerRepoSig: []string{sig}}
 
@@ -210,13 +210,13 @@ func TestVerifyingBodyReaderTamperedBodyFailsVerification(t1 *testing.T) {
 }
 
 func TestVerifyingBodyReaderWrongPubkeyFailsVerification(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
-	signerKeys := makeSignerTestKeys(t1)
-	verifierKeys := makeSignerTestKeys(t1)
+	signerKeys := makeSignerTestKeys(t.T)
+	verifierKeys := makeSignerTestKeys(t.T)
 
 	body := []byte("signed by one key, verified with another")
-	sig := signBodyForTest(t1, signerKeys.priv, body)
+	sig := signBodyForTest(t.T, signerKeys.priv, body)
 
 	trailer := http.Header{headerRepoSig: []string{sig}}
 

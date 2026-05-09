@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type fakeRoundTripper struct {
@@ -57,7 +57,7 @@ func (fakeNonTimeoutNetError) Temporary() bool { return false }
 var _ net.Error = fakeNonTimeoutNetError{}
 
 func TestRoundTripperRetrySuccessFirstTry(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	okResp := makeOKResponse()
 	inner := &fakeRoundTripper{
@@ -86,7 +86,7 @@ func TestRoundTripperRetrySuccessFirstTry(t1 *testing.T) {
 }
 
 func TestRoundTripperRetryRetriableErrorThenSuccess(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	okResp := makeOKResponse()
 	inner := &fakeRoundTripper{
@@ -122,7 +122,7 @@ func TestRoundTripperRetryRetriableErrorThenSuccess(t1 *testing.T) {
 }
 
 func TestRoundTripperRetryNonRetriableErrorBreaksEarly(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	nonRetriable := fakeNonTimeoutNetError{}
 	inner := &fakeRoundTripper{
@@ -161,7 +161,7 @@ func TestRoundTripperRetryNonRetriableErrorBreaksEarly(t1 *testing.T) {
 }
 
 func TestRoundTripperRetryExhaustionReturnsLastError(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	inner := &fakeRoundTripper{
 		scripted: []roundTripResult{
@@ -200,7 +200,7 @@ func TestRoundTripperRetryExhaustionReturnsLastError(t1 *testing.T) {
 }
 
 func TestMakeRoundTripperRetryTimeoutsUsesIsNetTimeout(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	inner := &fakeRoundTripper{
 		scripted: []roundTripResult{

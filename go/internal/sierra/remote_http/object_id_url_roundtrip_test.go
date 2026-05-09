@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 	"github.com/gorilla/mux"
 )
 
@@ -23,7 +23,7 @@ import (
 // If this test fails, /objects/{oid} can't be implemented as planned —
 // the OID encoding scheme would need a different shape.
 func TestObjectIdRoundTripsThroughURLPath(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Cover each shape edgeExplorer can produce, plus a few defensive
 	// edge cases.

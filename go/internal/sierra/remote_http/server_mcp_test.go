@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 // Tests in this file cover the parts of server_mcp.go that do not require a
@@ -15,7 +15,7 @@ import (
 // (issue #150) where a real repo is wired up.
 
 func TestGetMCPResourcesShape(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 	resources := server.getMCPResources()
@@ -52,7 +52,7 @@ func TestGetMCPResourcesShape(t1 *testing.T) {
 }
 
 func TestGetMCPResourceTemplatesShape(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 	templates := server.getMCPResourceTemplates()
@@ -87,7 +87,7 @@ func TestGetMCPResourceTemplatesShape(t1 *testing.T) {
 }
 
 func TestReadMCPResourceMalformedURI(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 
@@ -105,7 +105,7 @@ func TestReadMCPResourceMalformedURI(t1 *testing.T) {
 }
 
 func TestReadMCPResourceWrongScheme(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 
@@ -119,7 +119,7 @@ func TestReadMCPResourceWrongScheme(t1 *testing.T) {
 }
 
 func TestReadMCPResourceNonEmptyHostRejected(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 
@@ -133,7 +133,7 @@ func TestReadMCPResourceNonEmptyHostRejected(t1 *testing.T) {
 }
 
 func TestReadMCPResourceUnknownPath(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 
@@ -154,7 +154,7 @@ func TestReadMCPResourceUnknownPath(t1 *testing.T) {
 }
 
 func TestReadMCPResourceConcurrentValidationDoesNotRace(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	server := &Server{}
 

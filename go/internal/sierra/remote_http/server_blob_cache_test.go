@@ -9,9 +9,9 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 // stubBlobStoreForCache satisfies mad_domain_interfaces.BlobStore for cache tests.
@@ -47,8 +47,8 @@ func (s *stubBlobStoreForCache) AllBlobs() interfaces.SeqError[mad_domain_interf
 	}
 }
 
-func makeTestMarklIds(t1 *testing.T, hexes ...string) ([]mad_domain_interfaces.MarklId, func()) {
-	t1.Helper()
+func makeTestMarklIds(t *ui.T, hexes ...string) ([]mad_domain_interfaces.MarklId, func()) {
+	t.Helper()
 
 	ids := make([]mad_domain_interfaces.MarklId, len(hexes))
 	repools := make([]func(), 0, len(hexes))
@@ -69,12 +69,12 @@ func makeTestMarklIds(t1 *testing.T, hexes ...string) ([]mad_domain_interfaces.M
 }
 
 func TestServerBlobCacheHasBlobReturnsTrueForKnown(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	hexA := "0000000000000000000000000000000000000000000000000000000000000001"
 	hexB := "0000000000000000000000000000000000000000000000000000000000000002"
 
-	ids, cleanup := makeTestMarklIds(t1, hexA, hexB)
+	ids, cleanup := makeTestMarklIds(&t, hexA, hexB)
 	defer cleanup()
 
 	stub := &stubBlobStoreForCache{ids: ids}
@@ -92,12 +92,12 @@ func TestServerBlobCacheHasBlobReturnsTrueForKnown(t1 *testing.T) {
 }
 
 func TestServerBlobCacheHasBlobReturnsFalseForUnknown(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	hexKnown := "0000000000000000000000000000000000000000000000000000000000000001"
 	hexUnknown := "00000000000000000000000000000000000000000000000000000000000000ff"
 
-	ids, cleanup := makeTestMarklIds(t1, hexKnown, hexUnknown)
+	ids, cleanup := makeTestMarklIds(&t, hexKnown, hexUnknown)
 	defer cleanup()
 
 	stub := &stubBlobStoreForCache{ids: ids[:1]}
@@ -113,14 +113,14 @@ func TestServerBlobCacheHasBlobReturnsFalseForUnknown(t1 *testing.T) {
 }
 
 func TestServerBlobCacheInitRunsExactlyOnceConcurrent(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	hexes := []string{
 		"0000000000000000000000000000000000000000000000000000000000000001",
 		"0000000000000000000000000000000000000000000000000000000000000002",
 		"0000000000000000000000000000000000000000000000000000000000000003",
 	}
-	ids, cleanup := makeTestMarklIds(t1, hexes...)
+	ids, cleanup := makeTestMarklIds(&t, hexes...)
 	defer cleanup()
 
 	gate := make(chan struct{})
@@ -159,18 +159,18 @@ func TestServerBlobCacheInitRunsExactlyOnceConcurrent(t1 *testing.T) {
 }
 
 func TestServerBlobCacheMixedReadPatternsConsistent(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	hexes := []string{
 		"00000000000000000000000000000000000000000000000000000000000000aa",
 		"00000000000000000000000000000000000000000000000000000000000000bb",
 		"00000000000000000000000000000000000000000000000000000000000000cc",
 	}
-	ids, cleanup := makeTestMarklIds(t1, hexes...)
+	ids, cleanup := makeTestMarklIds(&t, hexes...)
 	defer cleanup()
 
 	hexUnknown := "00000000000000000000000000000000000000000000000000000000000000ff"
-	unknownIds, cleanup2 := makeTestMarklIds(t1, hexUnknown)
+	unknownIds, cleanup2 := makeTestMarklIds(&t, hexUnknown)
 	defer cleanup2()
 
 	stub := &stubBlobStoreForCache{ids: ids}
@@ -201,13 +201,13 @@ func TestServerBlobCacheMixedReadPatternsConsistent(t1 *testing.T) {
 }
 
 func TestServerBlobCacheInstancesIndependent(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	hexA := "0000000000000000000000000000000000000000000000000000000000000001"
 	hexB := "0000000000000000000000000000000000000000000000000000000000000002"
-	idsA, cleanupA := makeTestMarklIds(t1, hexA)
+	idsA, cleanupA := makeTestMarklIds(&t, hexA)
 	defer cleanupA()
-	idsB, cleanupB := makeTestMarklIds(t1, hexB)
+	idsB, cleanupB := makeTestMarklIds(&t, hexB)
 	defer cleanupB()
 
 	stubA := &stubBlobStoreForCache{ids: idsA}
@@ -241,10 +241,10 @@ func TestServerBlobCacheInstancesIndependent(t1 *testing.T) {
 }
 
 func TestServerBlobCachePopulateErrorPropagates(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	hexA := "0000000000000000000000000000000000000000000000000000000000000001"
-	ids, cleanup := makeTestMarklIds(t1, hexA)
+	ids, cleanup := makeTestMarklIds(&t, hexA)
 	defer cleanup()
 
 	wantErr := errors.New("simulated populate failure")
