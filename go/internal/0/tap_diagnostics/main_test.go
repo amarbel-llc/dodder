@@ -20,15 +20,11 @@ func TestFromErrNotEqual(t1 *testing.T) {
 
 	diag := tap_diagnostics.FromError(err)
 
-	if diag["severity"] != "fail" {
-		t.Errorf("expected severity fail, got %q", diag["severity"])
-	}
-	if _, ok := diag["expected"]; !ok {
-		t.Error("expected 'expected' field to be set")
-	}
-	if _, ok := diag["actual"]; !ok {
-		t.Error("expected 'actual' field to be set")
-	}
+	t.AssertEqualStrings("fail", diag["severity"])
+	_, ok := diag["expected"]
+	t.AssertTrue(ok, "expected 'expected' field to be set")
+	_, ok = diag["actual"]
+	t.AssertTrue(ok, "expected 'actual' field to be set")
 }
 
 func TestFromErrIsNull(t1 *testing.T) {
@@ -37,12 +33,8 @@ func TestFromErrIsNull(t1 *testing.T) {
 
 	diag := tap_diagnostics.FromError(err)
 
-	if diag["severity"] != "fail" {
-		t.Errorf("expected severity fail, got %q", diag["severity"])
-	}
-	if diag["field"] != "object-dig" {
-		t.Errorf("expected field %q, got %q", "object-dig", diag["field"])
-	}
+	t.AssertEqualStrings("fail", diag["severity"])
+	t.AssertEqualStrings("object-dig", diag["field"])
 }
 
 func TestFromGenericError(t1 *testing.T) {
@@ -51,10 +43,6 @@ func TestFromGenericError(t1 *testing.T) {
 
 	diag := tap_diagnostics.FromError(err)
 
-	if diag["severity"] != "fail" {
-		t.Errorf("expected severity fail, got %q", diag["severity"])
-	}
-	if diag["message"] != "something went wrong" {
-		t.Errorf("expected message, got %q", diag["message"])
-	}
+	t.AssertEqualStrings("fail", diag["severity"])
+	t.AssertEqualStrings("something went wrong", diag["message"])
 }
