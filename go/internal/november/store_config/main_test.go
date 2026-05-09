@@ -15,30 +15,24 @@ func TestListCoderRoundTrip(t1 *testing.T) {
 
 	ta, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
-	if err := ta.GetObjectIdMutable().Set("test-tag"); err != nil {
-		t.Fatalf("failed to set object id: %s", err)
-	}
+	t.AssertNoError(ta.GetObjectIdMutable().Set("test-tag"))
 
 	var buf bytes.Buffer
 	var coder stream_index.ListCoder
 
 	writer := bufio.NewWriter(&buf)
 
-	if _, err := coder.EncodeTo(ta, writer); err != nil {
-		t.Fatalf("failed to encode: %s", err)
-	}
+	_, err := coder.EncodeTo(ta, writer)
+	t.AssertNoError(err)
 
-	if err := writer.Flush(); err != nil {
-		t.Fatalf("failed to flush: %s", err)
-	}
+	t.AssertNoError(writer.Flush())
 
 	reader := bufio.NewReader(&buf)
 
 	var actual sku.Transacted
 
-	if _, err := coder.DecodeFrom(&actual, reader); err != nil {
-		t.Fatalf("failed to decode: %s", err)
-	}
+	_, err = coder.DecodeFrom(&actual, reader)
+	t.AssertNoError(err)
 
 	t.AssertEqual(ta.GetObjectId().String(), actual.GetObjectId().String())
 }
