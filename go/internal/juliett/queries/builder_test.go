@@ -64,9 +64,7 @@ func TestFieldQuery(t1 *testing.T) {
 				},
 			)
 
-			if !m.containsSku(object) {
-				t.Errorf("expected query to match object with status=completed field")
-			}
+			t.AssertTrue(m.containsSku(object), "expected query to match object with status=completed field")
 		},
 	)
 
@@ -91,9 +89,7 @@ func TestFieldQuery(t1 *testing.T) {
 				},
 			)
 
-			if m.containsSku(object) {
-				t.Errorf("expected query not to match object with status=cancelled field")
-			}
+			t.AssertFalse(m.containsSku(object), "expected query not to match object with status=cancelled field")
 		},
 	)
 
@@ -118,9 +114,7 @@ func TestFieldQuery(t1 *testing.T) {
 				},
 			)
 
-			if !m.containsSku(object) {
-				t.Errorf("expected negated query to match object without status=cancelled field")
-			}
+			t.AssertTrue(m.containsSku(object), "expected negated query to match object without status=cancelled field")
 		},
 	)
 }
