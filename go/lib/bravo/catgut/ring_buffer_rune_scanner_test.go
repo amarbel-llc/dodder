@@ -29,16 +29,11 @@ func TestRingBufferRuneScanner(t1 *testing.T) {
 			t.Errorf("%s", cmp.Diff(1, n))
 		}
 
-		if err != nil {
-			t.Errorf("%s", cmp.Diff(nil, err))
-		}
+		t.AssertNoError(err)
 	}
 
 	unreadOne := func(t *ui.T, s *RingBufferRuneScanner) {
-		err := s.UnreadRune()
-		if err != nil {
-			t.Errorf("%s", err)
-		}
+		t.AssertNoError(s.UnreadRune())
 	}
 
 	readMany := func(t *ui.T, s *RingBufferRuneScanner, cs ...rune) {

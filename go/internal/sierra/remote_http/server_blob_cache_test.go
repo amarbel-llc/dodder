@@ -173,17 +173,13 @@ func TestServerBlobCacheMixedReadPatternsConsistent(t1 *testing.T) {
 	for round := 0; round < 5; round++ {
 		for _, id := range ids {
 			ok, err := cache.HasBlob(id)
-			if err != nil {
-				t.Fatalf("round %d: HasBlob(known) err: %v", round, err)
-			}
+			t.AssertNoError(err)
 			if !ok {
 				t.Fatalf("round %d: HasBlob(known) = false", round)
 			}
 		}
 		ok, err := cache.HasBlob(unknownIds[0])
-		if err != nil {
-			t.Fatalf("round %d: HasBlob(unknown) err: %v", round, err)
-		}
+		t.AssertNoError(err)
 		if ok {
 			t.Fatalf("round %d: HasBlob(unknown) = true", round)
 		}
@@ -214,9 +210,7 @@ func TestServerBlobCacheInstancesIndependent(t1 *testing.T) {
 		t.Fatalf("cacheA HasBlob(A): ok=%v err=%v", okAA, err)
 	}
 	okAB, err := cacheA.HasBlob(idsB[0])
-	if err != nil {
-		t.Fatalf("cacheA HasBlob(B) err: %v", err)
-	}
+	t.AssertNoError(err)
 	if okAB {
 		t.Fatalf("cacheA HasBlob(B) = true; should not see B's blobs")
 	}
@@ -226,9 +220,7 @@ func TestServerBlobCacheInstancesIndependent(t1 *testing.T) {
 		t.Fatalf("cacheB HasBlob(B): ok=%v err=%v", okBB, err)
 	}
 	okBA, err := cacheB.HasBlob(idsA[0])
-	if err != nil {
-		t.Fatalf("cacheB HasBlob(A) err: %v", err)
-	}
+	t.AssertNoError(err)
 	if okBA {
 		t.Fatalf("cacheB HasBlob(A) = true; should not see A's blobs")
 	}

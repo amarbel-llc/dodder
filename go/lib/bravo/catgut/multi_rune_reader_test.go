@@ -26,10 +26,7 @@ func TestMultiRuneReader(t1 *testing.T) {
 	}
 
 	unreadOne := func() {
-		err := mrr.UnreadRune()
-		if err != nil {
-			t.Errorf("%s", err)
-		}
+		t.AssertNoError(mrr.UnreadRune())
 	}
 
 	readMany := func(cs ...rune) {

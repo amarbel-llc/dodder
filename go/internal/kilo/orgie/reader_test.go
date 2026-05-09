@@ -159,9 +159,7 @@ func TestAssignmentLineReader2Heading2Zettels(t1 *testing.T) {
 		t1.Errorf("expected read amount to be greater than 0")
 	}
 
-	if err != nil {
-		t1.Fatalf("expected no error but got %q", err)
-	}
+	t.AssertNoError(err)
 
 	{
 		expected := ids.MakeTagSetFromSlice(ids.MustTag("wow"))
@@ -205,9 +203,7 @@ func TestAssignmentLineReader1_1Heading2_2Zettels(t1 *testing.T) {
 		t.Errorf("expected read amount to be greater than 0")
 	}
 
-	if err != nil {
-		t.Fatalf("expected no error but got %q", err)
-	}
+	t.AssertNoError(err)
 
 	{
 		expected := ids.MakeTagSetFromSlice(ids.MustTag("wow"))
@@ -283,9 +279,7 @@ func TestAssignmentLineReader2_1Heading2_2_2Zettels(t1 *testing.T) {
 		t1.Errorf("expected read amount to be greater than 0")
 	}
 
-	if err != nil {
-		t1.Fatalf("expected no error but got %q", err)
-	}
+	t.AssertNoError(err)
 
 	{
 		expected := ids.MakeTagSetFromSlice(ids.MustTag("wow"))
@@ -375,9 +369,7 @@ func TestAssignmentLineReader2_1Heading2_2_2ZettelsOffset(t1 *testing.T) {
 		t1.Errorf("expected read amount to be greater than 0")
 	}
 
-	if err != nil {
-		t1.Fatalf("expected no error but got %q", err)
-	}
+	t.AssertNoError(err)
 
 	{
 		expected := ids.MakeTagSetFromSlice(ids.MustTag("sub-wow"))
@@ -450,9 +442,7 @@ func TestAssignmentLineReaderBigCheese(t1 *testing.T) {
 		t1.Errorf("expected read amount to be greater than 0")
 	}
 
-	if err != nil {
-		t1.Fatalf("expected no error but got %q", err)
-	}
+	t.AssertNoError(err)
 
 	// `# task
 	{

@@ -39,9 +39,7 @@ body
 
 	t.AssertEqual(nExpected, n)
 
-	if err != nil {
-		t.Errorf("expected no error but got %s", err)
-	}
+	t.AssertNoError(err)
 
 	t.AssertEqualStrings(mExpected, string(mr.Bytes()))
 
@@ -76,9 +74,7 @@ metadatei
 
 	t.AssertEqual(nExpected, n)
 
-	if err != nil {
-		t.Errorf("expected no error but got %s", err)
-	}
+	t.AssertNoError(err)
 
 	t.AssertEqualStrings(mExpected, string(mr.Bytes()))
 

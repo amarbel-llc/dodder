@@ -110,15 +110,11 @@ func TestBlech32(t1 *testing.T) {
 				}
 
 				// Valid string decoding should result in no error.
-				if err != nil {
-					t.Errorf("expected string to be valid blech32: %v", err)
-				}
+				t.AssertNoError(err)
 
 				// Check that it encodes to the same string.
 				actual, err := Encode(hrp, decoded)
-				if err != nil {
-					t.Errorf("encoding failed: %v", err)
-				}
+				t.AssertNoError(err)
 				t.AssertEqualStrings(expected, string(actual))
 
 				// Flip a bit in the string an make sure it is caught.
@@ -195,9 +191,7 @@ func TestBlech32DataOnly(t1 *testing.T) {
 			func(t *ui.T) {
 				// Check that it encodes to the same string.
 				encoded, err := EncodeDataOnly([]byte(tc.input))
-				if err != nil {
-					t.Errorf("encoding failed: %v", err)
-				}
+				t.AssertNoError(err)
 				// if string(actual) != expected {
 				// 	t.Errorf(
 				// 		"expected data to encode to %v, but got %v",
