@@ -92,7 +92,10 @@ func (server *Server) InitializeListener(
 
 		addr := listener.Addr().(*net.TCPAddr)
 
-		server.EnvLocal.GetOut().Printf(
+		// Diagnostic; goes to stderr so the `serve -handshake`
+		// protocol contract (one handshake line on stdout, then
+		// silent) is preserved.
+		server.EnvLocal.GetUI().Printf(
 			"starting HTTP server on port: %q",
 			strconv.Itoa(addr.Port),
 		)
