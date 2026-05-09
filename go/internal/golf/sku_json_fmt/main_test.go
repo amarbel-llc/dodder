@@ -8,8 +8,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 )
 
 func TestTransactedRoundTripAllLockKinds(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Build an object with every lock kind populated
 	original, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
@@ -200,7 +200,7 @@ func TestTransactedRoundTripAllLockKinds(t1 *testing.T) {
 }
 
 func TestRoundTripJSONMarshalUnmarshal(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Build object with locks
 	original, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
@@ -279,7 +279,7 @@ func TestRoundTripJSONMarshalUnmarshal(t1 *testing.T) {
 }
 
 func TestRoundTripPartialLocks(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	original, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
 	defer repool()
