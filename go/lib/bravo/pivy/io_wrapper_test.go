@@ -8,9 +8,12 @@ import (
 	"crypto/rand"
 	"io"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestIOWrapperRoundTrip(t *testing.T) {
+func TestIOWrapperRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +66,8 @@ func TestIOWrapperRoundTrip(t *testing.T) {
 	}
 }
 
-func TestIOWrapperStreamingLargePayload(t *testing.T) {
+func TestIOWrapperStreamingLargePayload(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)

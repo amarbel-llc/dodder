@@ -6,9 +6,12 @@ import (
 	"crypto/ecdh"
 	"crypto/rand"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestRecipientWrapProducesValidStanza(t *testing.T) {
+func TestRecipientWrapProducesValidStanza(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +49,8 @@ func TestRecipientWrapProducesValidStanza(t *testing.T) {
 	}
 }
 
-func TestWrapUnwrapRoundTrip(t *testing.T) {
+func TestWrapUnwrapRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +88,8 @@ func TestWrapUnwrapRoundTrip(t *testing.T) {
 	}
 }
 
-func TestUnwrapWrongKeyFails(t *testing.T) {
+func TestUnwrapWrongKeyFails(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
@@ -117,7 +122,8 @@ func TestUnwrapWrongKeyFails(t *testing.T) {
 	}
 }
 
-func TestResolveAgentSocketPathFromEnv(t *testing.T) {
+func TestResolveAgentSocketPathFromEnv(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	t.Setenv("PIVY_AUTH_SOCK", "/tmp/test-pivy-agent.sock")
 
 	path, err := ResolveAgentSocketPath()
@@ -130,7 +136,8 @@ func TestResolveAgentSocketPathFromEnv(t *testing.T) {
 	}
 }
 
-func TestResolveAgentSocketPathUnset(t *testing.T) {
+func TestResolveAgentSocketPathUnset(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	t.Setenv("PIVY_AUTH_SOCK", "")
 
 	_, err := ResolveAgentSocketPath()
@@ -139,7 +146,8 @@ func TestResolveAgentSocketPathUnset(t *testing.T) {
 	}
 }
 
-func TestNewAgentIdentity(t *testing.T) {
+func TestNewAgentIdentity(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	privKey, err := ecdh.P256().GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatal(err)
