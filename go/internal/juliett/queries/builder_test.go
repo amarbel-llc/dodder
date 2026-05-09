@@ -7,11 +7,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestFieldQuery(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	t.Run(
 		ui.MakeTestCaseInfo("field query string"),
@@ -137,7 +137,7 @@ func TestQuery(t1 *testing.T) {
 		inputs                                   []string
 	}
 
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	testCases := []testCase{
 		{
