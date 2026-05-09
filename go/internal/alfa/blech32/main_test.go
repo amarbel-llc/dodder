@@ -119,13 +119,7 @@ func TestBlech32(t1 *testing.T) {
 				if err != nil {
 					t.Errorf("encoding failed: %v", err)
 				}
-				if string(actual) != expected {
-					t.Errorf(
-						"expected data to encode to %v, but got %v",
-						expected,
-						string(actual),
-					)
-				}
+				t.AssertEqualStrings(expected, string(actual))
 
 				// Flip a bit in the string an make sure it is caught.
 				pos := strings.LastIndexAny(expected, "1")

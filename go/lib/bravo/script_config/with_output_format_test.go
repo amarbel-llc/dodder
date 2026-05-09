@@ -23,19 +23,8 @@ cat
 
 	sut := doc.Data()
 
-	if sut.Description != "wow" {
-		t.Errorf("expected Description 'wow' but got %q", sut.Description)
-	}
-
-	if sut.FileExtension != "pdf" {
-		t.Errorf("expected FileExtension 'pdf' but got %q", sut.FileExtension)
-	}
-
-	if sut.UTI != "com.adobe.pdf" {
-		t.Errorf("expected UTI 'com.adobe.pdf' but got %q", sut.UTI)
-	}
-
-	if sut.Script != "cat\n" {
-		t.Errorf("expected Script 'cat\\n' but got %q", sut.Script)
-	}
+	t.AssertEqualStrings("wow", sut.Description)
+	t.AssertEqualStrings("pdf", sut.FileExtension)
+	t.AssertEqualStrings("com.adobe.pdf", sut.UTI)
+	t.AssertEqualStrings("cat\n", sut.Script)
 }
