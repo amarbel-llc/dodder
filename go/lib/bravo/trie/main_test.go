@@ -1,10 +1,15 @@
 package trie
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+)
 
 type testStringer string
 
-func TestContains(t *testing.T) {
+func TestContains(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	sut := Make(
 		"123456",
 		"654321",
@@ -44,7 +49,8 @@ func TestContains(t *testing.T) {
 	}
 }
 
-func TestShortestUnique(t *testing.T) {
+func TestShortestUnique(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	sut := Make(
 		"12",
 		"121",
@@ -70,7 +76,8 @@ func TestShortestUnique(t *testing.T) {
 	}
 }
 
-func TestExpand(t *testing.T) {
+func TestExpand(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	sut := Make(
 		"12",
 		"121",
