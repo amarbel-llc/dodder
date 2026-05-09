@@ -6,9 +6,11 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestBridgeUnknownCommand(t *testing.T) {
+func TestBridgeUnknownCommand(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	utility := command.MakeUtility("dodder", config_cli.Default())
 	bridge := MakeBridge(utility)
 	_, err := bridge.RunCommand(

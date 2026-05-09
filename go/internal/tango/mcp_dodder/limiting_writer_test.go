@@ -3,9 +3,12 @@ package mcp_dodder
 import (
 	"strings"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestLimitingWriterUnderLimit(t *testing.T) {
+func TestLimitingWriterUnderLimit(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	w := MakeLimitingWriter(100)
 	n, err := w.Write([]byte("hello"))
 	if err != nil {
@@ -22,7 +25,8 @@ func TestLimitingWriterUnderLimit(t *testing.T) {
 	}
 }
 
-func TestLimitingWriterOverLimit(t *testing.T) {
+func TestLimitingWriterOverLimit(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	w := MakeLimitingWriter(10)
 	data := strings.Repeat("x", 20)
 	n, err := w.Write([]byte(data))
@@ -43,7 +47,8 @@ func TestLimitingWriterOverLimit(t *testing.T) {
 	}
 }
 
-func TestLimitingWriterMultipleWrites(t *testing.T) {
+func TestLimitingWriterMultipleWrites(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	w := MakeLimitingWriter(10)
 	w.Write([]byte("12345"))
 	w.Write([]byte("67890"))
@@ -59,7 +64,8 @@ func TestLimitingWriterMultipleWrites(t *testing.T) {
 	}
 }
 
-func TestLimitingWriterStringWriter(t *testing.T) {
+func TestLimitingWriterStringWriter(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	w := MakeLimitingWriter(100)
 	n, err := w.WriteString("hello")
 	if err != nil {
