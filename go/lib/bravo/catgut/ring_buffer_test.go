@@ -7,13 +7,13 @@ import (
 	"testing"
 	"unicode"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/alfa/unicorn"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestRingBufferReader(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	expected := "all that content"
 	reader, repool := pool.GetStringReader(expected)
 	defer repool()
@@ -36,7 +36,7 @@ func TestRingBufferReader(t1 *testing.T) {
 }
 
 func TestRingBufferEmpty(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	sut := MakeRingBuffer(nil, 10)
 
 	{
@@ -110,7 +110,7 @@ func TestRingBufferEmpty(t1 *testing.T) {
 }
 
 func TestRingBufferEmptyFindFromStartAndAdvance(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	sut := MakeRingBuffer(nil, 10)
 
 	{
@@ -142,7 +142,7 @@ func TestRingBufferEmptyFindFromStartAndAdvance(t1 *testing.T) {
 }
 
 func TestRingBufferEmptyTooBig(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	sut := MakeRingBuffer(nil, 5)
 
 	for i := 0; i < 11; i++ {
@@ -192,7 +192,7 @@ func TestRingBufferEmptyTooBig(t1 *testing.T) {
 }
 
 func TestRingBufferEmptyTooSmall(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	sut := MakeRingBuffer(bytes.NewBuffer(nil), 3)
 
 	{
@@ -264,7 +264,7 @@ func TestRingBufferEmptyTooSmall(t1 *testing.T) {
 }
 
 func TestRingBufferDefault(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	t2 := t.Skip(1)
 	sut := MakeRingBuffer(nil, 0)
 
@@ -314,7 +314,7 @@ func TestRingBufferDefault(t1 *testing.T) {
 }
 
 func TestRingBufferDefaultReadFrom(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	t.SkipTest()
 
 	one_5 := bytes.NewBuffer(make([]byte, 2730))
@@ -367,7 +367,7 @@ func TestRingBufferDefaultReadFrom(t1 *testing.T) {
 }
 
 func TestRingBufferPeekUpto2(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	reader, repool := pool.GetStringReader("test with words")
 	defer repool()
 	sut := MakeRingBuffer(reader, 0)
@@ -397,7 +397,7 @@ func TestRingBufferPeekUpto2(t1 *testing.T) {
 }
 
 func TestRingBufferAdvanceToFirstMatch(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	reader, repool := pool.GetStringReader(" test with words")
 	defer repool()
 	rb := MakeRingBuffer(reader, 0)
@@ -444,7 +444,7 @@ func TestRingBufferAdvanceToFirstMatch(t1 *testing.T) {
 }
 
 func TestRingBufferAdvanceToFirstMatchLong(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	var sb strings.Builder
 
 	for i := 0; i < 5000; i += 2 {

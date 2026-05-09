@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type testCaseOverlap struct {
@@ -75,7 +75,7 @@ func getTestCasesOverlap() []testCaseOverlap {
 }
 
 func TestSliceOverlap(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	for _, tc := range getTestCasesOverlap() {
 		sut := tc.Slice
@@ -177,7 +177,7 @@ func getTestCasesSlice() []testCaseSlice {
 }
 
 func TestSliceSlice(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	for _, tc := range getTestCasesSlice() {
 		sut := tc.Slice

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestMain(m *testing.M) {
@@ -39,12 +39,11 @@ func getTestCasesCompare() []testCaseCompare {
 }
 
 func TestCompare(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	for _, tc := range getTestCasesCompare() {
-		t1.Run(
-			fmt.Sprintf("%#v", tc),
-			func(t1 *testing.T) {
-				t := ui.T{T: t1}
-
+		t.Run(
+			ui.MakeTestCaseInfo(fmt.Sprintf("%#v", tc)),
+			func(t *ui.T) {
 				a, _ := MakeFromString(tc.a) //repool:owned
 				b, _ := MakeFromString(tc.b) //repool:owned
 
@@ -84,12 +83,11 @@ func getTestCasesComparePartial() []testCaseCompare {
 }
 
 func TestComparePartial(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	for _, tc := range getTestCasesComparePartial() {
-		t1.Run(
-			fmt.Sprintf("%#v", tc),
-			func(t1 *testing.T) {
-				t := ui.T{T: t1}
-
+		t.Run(
+			ui.MakeTestCaseInfo(fmt.Sprintf("%#v", tc)),
+			func(t *ui.T) {
 				a, _ := MakeFromString(tc.a) //repool:owned
 				b, _ := MakeFromString(tc.b) //repool:owned
 

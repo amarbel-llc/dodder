@@ -4,7 +4,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func testSliceRuneScannerDataValid() []Slice {
@@ -37,12 +37,11 @@ func testSliceRuneScannerDataValid() []Slice {
 }
 
 func TestSliceRuneScannerValid(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	for _, expected := range testSliceRuneScannerDataValid() {
-		t1.Run(
-			expected.String(),
-			func(t2 *testing.T) {
-				t := ui.T{T: t2}
-
+		t.Run(
+			ui.MakeTestCaseInfo(expected.String()),
+			func(t *ui.T) {
 				sut := MakeSliceRuneScanner(expected)
 
 				for _, rEx := range expected.String() {
@@ -84,12 +83,11 @@ func testSliceRuneScannerDataInvalid() []Slice {
 }
 
 func TestSliceRuneScannerInvalid(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	for _, expected := range testSliceRuneScannerDataInvalid() {
-		t1.Run(
-			expected.String(),
-			func(t2 *testing.T) {
-				t := ui.T{T: t2}
-
+		t.Run(
+			ui.MakeTestCaseInfo(expected.String()),
+			func(t *ui.T) {
 				sut := MakeSliceRuneScanner(expected)
 
 				_, _, ok := sut.Scan()

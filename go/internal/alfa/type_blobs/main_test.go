@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestDefaultTaskType(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	blob := DefaultTaskType()
 
@@ -22,7 +22,7 @@ func TestDefaultTaskType(t1 *testing.T) {
 		t.Errorf("expected vim-syntax-type %q, got %q", "toml", blob.VimSyntaxType)
 	}
 
-	assertActionableFields(t, blob.Fields)
+	assertActionableFields(&t, blob.Fields)
 
 	if blob.FieldsReader == nil {
 		t.Fatalf("expected non-nil FieldsReader")
@@ -46,7 +46,7 @@ func TestDefaultTaskType(t1 *testing.T) {
 }
 
 func TestDefaultChoreType(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	blob := DefaultChoreType()
 
@@ -54,7 +54,7 @@ func TestDefaultChoreType(t1 *testing.T) {
 		t.Errorf("expected file-extension %q, got %q", "toml", blob.FileExtension)
 	}
 
-	assertActionableFields(t, blob.Fields)
+	assertActionableFields(&t, blob.Fields)
 
 	// chore and task currently share the exact same field set + scripts;
 	// this is enforced by both calling actionableFields/Reader/Writer.
@@ -69,7 +69,7 @@ func TestDefaultChoreType(t1 *testing.T) {
 	}
 }
 
-func assertActionableFields(t ui.T, fields []FieldDefinition) {
+func assertActionableFields(t *ui.T, fields []FieldDefinition) {
 	if len(fields) != 3 {
 		t.Fatalf("expected 3 fields, got %d", len(fields))
 	}

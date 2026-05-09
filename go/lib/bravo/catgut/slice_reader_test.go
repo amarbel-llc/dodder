@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestSliceReader(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 	input := Slice{
 		data: [2][]byte{
 			[]byte("test"),
