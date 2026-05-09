@@ -6,24 +6,25 @@ import (
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	dewey_ui "github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type testCaseCLITreeState struct {
-	TestCaseInfo
+	dewey_ui.TestCaseInfo
 	input    error
 	expected string
 }
 
 func TestCLITreeForwards(t *testing.T) {
-	RunTestContext(t, testCLITreeForwards)
+	dewey_ui.RunTestContext(t, testCLITreeForwards)
 }
 
-func testCLITreeForwards(t *TestContext) {
+func testCLITreeForwards(t *dewey_ui.TestContext) {
 	type testCase = testCaseCLITreeState
 
 	testCases := []testCase{
 		{
-			TestCaseInfo: MakeTestCaseInfo("error group three"),
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo("error group three"),
 			input: errors.Group{
 				newPkgError("one"),
 				newPkgError("two"),
@@ -36,7 +37,7 @@ func testCLITreeForwards(t *TestContext) {
 `,
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"error group three with nested child",
 			),
 			input: errors.Group{
@@ -53,7 +54,7 @@ func testCLITreeForwards(t *TestContext) {
 `,
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"error group three with double nested child",
 			),
 			input: errors.Group{
@@ -73,7 +74,7 @@ func testCLITreeForwards(t *TestContext) {
 `,
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"error group with one child",
 			),
 			input: errors.Group{
@@ -82,7 +83,7 @@ func testCLITreeForwards(t *TestContext) {
 			expected: "one\n",
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"error no stack",
 			),
 			input: errors.WithoutStack(
@@ -91,7 +92,7 @@ func testCLITreeForwards(t *TestContext) {
 			expected: "one\n",
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"nested group followed by sibling",
 			),
 			input: errors.Group{
@@ -109,7 +110,7 @@ func testCLITreeForwards(t *TestContext) {
 `,
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"nested group as first child with trailing siblings",
 			),
 			input: errors.Group{
@@ -129,7 +130,7 @@ func testCLITreeForwards(t *TestContext) {
 `,
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"wrapper in middle of group",
 			),
 			input: errors.Group{
@@ -147,7 +148,7 @@ func testCLITreeForwards(t *TestContext) {
 `,
 		},
 		{
-			TestCaseInfo: MakeTestCaseInfo(
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
 				"deeply nested single-child groups collapse",
 			),
 			input: errors.Group{
@@ -195,7 +196,7 @@ func testCLITreeForwards(t *TestContext) {
 	for _, testCase := range testCases {
 		t.Run(
 			testCase,
-			func(t *TestContext) {
+			func(t *dewey_ui.TestContext) {
 				var stringBuilder strings.Builder
 
 				bufferedWriter, repool := pool.GetBufferedWriter(&stringBuilder)
