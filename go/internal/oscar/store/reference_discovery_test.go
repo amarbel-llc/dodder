@@ -5,11 +5,11 @@ package store
 import (
 	"testing"
 
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 func TestParseReferenceOutputEmpty(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	refs, err := parseReferenceOutput("")
 	t.AssertNoError(err)
@@ -20,7 +20,7 @@ func TestParseReferenceOutputEmpty(t1 *testing.T) {
 }
 
 func TestParseReferenceOutputSimpleRefs(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := "one/dos\ntwo/uno\n"
 	refs, err := parseReferenceOutput(input)
@@ -37,7 +37,7 @@ func TestParseReferenceOutputSimpleRefs(t1 *testing.T) {
 }
 
 func TestParseReferenceOutputWithAliases(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := "blog-template = one/uno\none/dos\n"
 	refs, err := parseReferenceOutput(input)
@@ -54,7 +54,7 @@ func TestParseReferenceOutputWithAliases(t1 *testing.T) {
 }
 
 func TestParseReferenceOutputBinaryGarbage(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := "one/dos\n\x00\xff\xfe binary garbage\ntwo/uno\n"
 	refs, err := parseReferenceOutput(input)
@@ -72,7 +72,7 @@ func TestParseReferenceOutputBinaryGarbage(t1 *testing.T) {
 }
 
 func TestParseReferenceOutputPartialBlobRef(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	// Blob ref without digest — just "@"
 	input := "@\none/dos\n"
@@ -89,7 +89,7 @@ func TestParseReferenceOutputPartialBlobRef(t1 *testing.T) {
 }
 
 func TestParseReferenceOutputBlobRefWithAlias(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := "hero = @blake2b256-abc123 !image-png\n"
 	refs, err := parseReferenceOutput(input)
@@ -105,7 +105,7 @@ func TestParseReferenceOutputBlobRefWithAlias(t1 *testing.T) {
 }
 
 func TestParseReferenceOutputSkipsCommentsAndBlanks(t1 *testing.T) {
-	t := ui.T{T: t1}
+	t := ui.MakeT(t1)
 
 	input := "# this is a comment\n\none/dos\n  \n# another comment\n"
 	refs, err := parseReferenceOutput(input)
