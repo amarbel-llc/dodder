@@ -1,8 +1,13 @@
 package dagnabit
 
-import "testing"
+import (
+	"testing"
 
-func TestNATOLevelMapperHeight0(t *testing.T) {
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+)
+
+func TestNATOLevelMapperHeight0(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	m := MakeNATOLevelMapper()
 
 	name, err := m.LevelName(0)
@@ -15,7 +20,8 @@ func TestNATOLevelMapperHeight0(t *testing.T) {
 	}
 }
 
-func TestNATOLevelMapperHeight1(t *testing.T) {
+func TestNATOLevelMapperHeight1(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	m := MakeNATOLevelMapper()
 
 	name, err := m.LevelName(1)
@@ -28,7 +34,8 @@ func TestNATOLevelMapperHeight1(t *testing.T) {
 	}
 }
 
-func TestNATOLevelMapperMaxHeight(t *testing.T) {
+func TestNATOLevelMapperMaxHeight(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	m := MakeNATOLevelMapper()
 
 	name, err := m.LevelName(26)
@@ -41,7 +48,8 @@ func TestNATOLevelMapperMaxHeight(t *testing.T) {
 	}
 }
 
-func TestNATOLevelMapperOutOfRange(t *testing.T) {
+func TestNATOLevelMapperOutOfRange(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	m := MakeNATOLevelMapper()
 
 	_, err := m.LevelName(27)

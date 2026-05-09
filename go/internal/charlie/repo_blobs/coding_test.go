@@ -9,9 +9,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestCoderTommyLocalOverridePathV0_RoundTrip(t *testing.T) {
+func TestCoderTommyLocalOverridePathV0_RoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	coder := Coder.Blob[ids.TypeTomlRepoLocalOverridePath]
 	if coder == nil {
 		t.Fatal("no coder registered for TypeTomlRepoLocalOverridePath")
@@ -50,7 +52,8 @@ func TestCoderTommyLocalOverridePathV0_RoundTrip(t *testing.T) {
 	}
 }
 
-func TestCoderTommyLocalOverridePathV0_EncodeDecodeEncode(t *testing.T) {
+func TestCoderTommyLocalOverridePathV0_EncodeDecodeEncode(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	coder := Coder.Blob[ids.TypeTomlRepoLocalOverridePath]
 	if coder == nil {
 		t.Fatal("no coder registered")
@@ -88,7 +91,8 @@ func TestCoderTommyLocalOverridePathV0_EncodeDecodeEncode(t *testing.T) {
 	}
 }
 
-func TestCoderTommyLocalOverridePathV0_IsCoderTommy(t *testing.T) {
+func TestCoderTommyLocalOverridePathV0_IsCoderTommy(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	coder, ok := Coder.Blob[ids.TypeTomlRepoLocalOverridePath]
 	if !ok {
 		t.Fatal("TypeTomlRepoLocalOverridePath not in coder map")

@@ -2,9 +2,12 @@ package dagnabit
 
 import (
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
-func TestTopologicalSortLinearChain(t *testing.T) {
+func TestTopologicalSortLinearChain(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	// a -> b -> c (a depends on b, b depends on c)
 	edges := []Edge{
 		{Source: "a", Target: "b"},
@@ -16,12 +19,13 @@ func TestTopologicalSortLinearChain(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	assertHeight(t, heights, "c", 0)
-	assertHeight(t, heights, "b", 1)
-	assertHeight(t, heights, "a", 2)
+	assertHeight(&t, heights, "c", 0)
+	assertHeight(&t, heights, "b", 1)
+	assertHeight(&t, heights, "a", 2)
 }
 
-func TestTopologicalSortDiamondDependency(t *testing.T) {
+func TestTopologicalSortDiamondDependency(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	// d depends on both b and c; both b and c depend on a
 	edges := []Edge{
 		{Source: "d", Target: "b"},
@@ -35,13 +39,14 @@ func TestTopologicalSortDiamondDependency(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	assertHeight(t, heights, "a", 0)
-	assertHeight(t, heights, "b", 1)
-	assertHeight(t, heights, "c", 1)
-	assertHeight(t, heights, "d", 2)
+	assertHeight(&t, heights, "a", 0)
+	assertHeight(&t, heights, "b", 1)
+	assertHeight(&t, heights, "c", 1)
+	assertHeight(&t, heights, "d", 2)
 }
 
-func TestTopologicalSortDisconnectedComponents(t *testing.T) {
+func TestTopologicalSortDisconnectedComponents(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	edges := []Edge{
 		{Source: "a", Target: "b"},
 		{Source: "c", Target: "d"},
@@ -52,13 +57,14 @@ func TestTopologicalSortDisconnectedComponents(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	assertHeight(t, heights, "b", 0)
-	assertHeight(t, heights, "a", 1)
-	assertHeight(t, heights, "d", 0)
-	assertHeight(t, heights, "c", 1)
+	assertHeight(&t, heights, "b", 0)
+	assertHeight(&t, heights, "a", 1)
+	assertHeight(&t, heights, "d", 0)
+	assertHeight(&t, heights, "c", 1)
 }
 
-func TestTopologicalSortCycleDetection(t *testing.T) {
+func TestTopologicalSortCycleDetection(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	edges := []Edge{
 		{Source: "a", Target: "b"},
 		{Source: "b", Target: "a"},
@@ -70,7 +76,8 @@ func TestTopologicalSortCycleDetection(t *testing.T) {
 	}
 }
 
-func TestTopologicalSortEmpty(t *testing.T) {
+func TestTopologicalSortEmpty(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	heights, err := TopologicalSort(nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -81,7 +88,8 @@ func TestTopologicalSortEmpty(t *testing.T) {
 	}
 }
 
-func TestTopologicalSortSingleNode(t *testing.T) {
+func TestTopologicalSortSingleNode(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	edges := []Edge{
 		{Source: "a", Target: "b"},
 	}
@@ -91,11 +99,11 @@ func TestTopologicalSortSingleNode(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	assertHeight(t, heights, "b", 0)
-	assertHeight(t, heights, "a", 1)
+	assertHeight(&t, heights, "b", 0)
+	assertHeight(&t, heights, "a", 1)
 }
 
-func assertHeight(t *testing.T, heights map[string]int, node string, expected int) {
+func assertHeight(t *ui.T, heights map[string]int, node string, expected int) {
 	t.Helper()
 
 	actual, ok := heights[node]

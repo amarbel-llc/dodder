@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
 )
 
 type stubReader struct {
@@ -35,7 +37,8 @@ func (m *recordingMover) MovePackage(src, dst string) error {
 	return nil
 }
 
-func TestRepositionerMovesPackageToCorrectLevel(t *testing.T) {
+func TestRepositionerMovesPackageToCorrectLevel(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
 			"tree": {
@@ -69,7 +72,8 @@ func TestRepositionerMovesPackageToCorrectLevel(t *testing.T) {
 	}
 }
 
-func TestRepositionerSkipsCorrectlyPlacedPackages(t *testing.T) {
+func TestRepositionerSkipsCorrectlyPlacedPackages(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
 			"tree": {
@@ -96,7 +100,8 @@ func TestRepositionerSkipsCorrectlyPlacedPackages(t *testing.T) {
 	}
 }
 
-func TestRepositionerDryRunDoesNotMove(t *testing.T) {
+func TestRepositionerDryRunDoesNotMove(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
 			"tree": {
@@ -124,7 +129,8 @@ func TestRepositionerDryRunDoesNotMove(t *testing.T) {
 	}
 }
 
-func TestRepositionerReaderError(t *testing.T) {
+func TestRepositionerReaderError(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := errorReader{err: fmt.Errorf("read failed")}
 	mapper := sliceLevelMapper{levels: []string{"level0"}}
 	mover := &recordingMover{}
@@ -153,7 +159,8 @@ func (errorReader errorReader) ReadDependencies() (map[string][]Edge, error) {
 	return nil, errorReader.err
 }
 
-func TestRepositionerCycleError(t *testing.T) {
+func TestRepositionerCycleError(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
 			"tree": {
@@ -182,7 +189,8 @@ func TestRepositionerCycleError(t *testing.T) {
 	}
 }
 
-func TestRepositionerMapperError(t *testing.T) {
+func TestRepositionerMapperError(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	// With only 1 level defined, height 1 is out of range
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
@@ -211,7 +219,8 @@ func TestRepositionerMapperError(t *testing.T) {
 	}
 }
 
-func TestRepositionerCrossPrefixEdgesIgnored(t *testing.T) {
+func TestRepositionerCrossPrefixEdgesIgnored(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
 			"treeA": {},
@@ -237,7 +246,8 @@ func TestRepositionerCrossPrefixEdgesIgnored(t *testing.T) {
 	}
 }
 
-func TestRepositionerMultiplePrefixesSortedIndependently(t *testing.T) {
+func TestRepositionerMultiplePrefixesSortedIndependently(t1 *testing.T) {
+	t := ui.MakeT(t1)
 	reader := stubReader{
 		edgesByPrefix: map[string][]Edge{
 			"lib": {
