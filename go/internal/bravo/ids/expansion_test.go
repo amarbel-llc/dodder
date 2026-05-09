@@ -40,9 +40,7 @@ func TestStringSliceUnequal(t1 *testing.T) {
 		"tag",
 	}
 
-	if stringSliceEquals(expected, actual) {
-		t.Errorf("expected unequal slices")
-	}
+	t.AssertFalse(stringSliceEquals(expected, actual), "expected unequal slices")
 }
 
 func TestStringSliceEquals(t1 *testing.T) {
@@ -62,9 +60,7 @@ func TestStringSliceEquals(t1 *testing.T) {
 		"tag",
 	}
 
-	if !stringSliceEquals(expected, actual) {
-		t.Errorf("expected equal slices")
-	}
+	t.AssertTrue(stringSliceEquals(expected, actual), "expected equal slices")
 }
 
 func TestExpansionAll(t1 *testing.T) {

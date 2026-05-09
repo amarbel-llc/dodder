@@ -18,9 +18,7 @@ func TestMake(t1 *testing.T) {
 	ex := in
 	ac := sut.String()
 
-	if ex != ac {
-		t.Errorf("expected %q but got %q", ex, ac)
-	}
+	t.AssertEqualStrings(ex, ac)
 }
 
 func TestMakeHeadAndTail(t1 *testing.T) {
@@ -38,7 +36,5 @@ func TestMakeHeadAndTail(t1 *testing.T) {
 	ex := k + "/" + s
 	ac := sut.String()
 
-	if ex != ac {
-		t.Errorf("expected %q but got %q", ex, ac)
-	}
+	t.AssertEqualStrings(ex, ac)
 }

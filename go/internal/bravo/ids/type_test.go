@@ -9,33 +9,25 @@ import (
 func TestBlobExt(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	var e TypeStruct
-	var err error
 
-	if err = e.Set("!md"); err != nil {
-		t.Fatalf("%s", err)
-	}
+	err := e.Set("!md")
+	t.AssertNoError(err)
 
 	actual := e.StringSansOp()
 	expected := "md"
 
-	if expected != actual {
-		t.Fatalf("expected %q, but got %q", expected, actual)
-	}
+	t.AssertEqualStrings(expected, actual)
 }
 
 func TestBlobExt1(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	var e TypeStruct
-	var err error
 
-	if err = e.Set("md"); err != nil {
-		t.Fatalf("%s", err)
-	}
+	err := e.Set("md")
+	t.AssertNoError(err)
 
 	actual := e.StringSansOp()
 	expected := "md"
 
-	if expected != actual {
-		t.Fatalf("expected %q, but got %q", expected, actual)
-	}
+	t.AssertEqualStrings(expected, actual)
 }

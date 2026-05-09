@@ -104,15 +104,11 @@ func TestDelta1(t1 *testing.T) {
 		MustTag("zz-archive-task-done"),
 	)
 
-	if !quiter_set.Equals(c_expected, d.GetAdded()) {
-		t.Errorf("expected\n%s\nactual:\n%s", c_expected, d.GetAdded())
-	}
+	t.AssertTrue(quiter_set.Equals(c_expected, d.GetAdded()), "expected added set match")
 
 	d_expected := MakeTagSetFromSlice(
 		MustTag("task-todo"),
 	)
 
-	if !quiter_set.Equals(d_expected, d.GetRemoved()) {
-		t.Errorf("expected\n%s\nactual:\n%s", d_expected, d.GetRemoved())
-	}
+	t.AssertTrue(quiter_set.Equals(d_expected, d.GetRemoved()), "expected removed set match")
 }

@@ -18,23 +18,11 @@ func TestTaiSet(t1 *testing.T) {
 
 	var sut Tai
 
-	var err error
+	err := sut.Set(in)
+	t.AssertNoError(err)
 
-	if err = sut.Set(in); err != nil {
-		t.Fatalf("failed to parse value into tai: %q. %s", in, err)
-	}
-
-	if err != nil {
-		t.Fatalf("expected no error but got %s", err)
-	}
-
-	if sut.tai.Sec != inSec {
-		t.Fatalf("expected Sec value '%d' but got '%d'", inSec, sut.tai.Sec)
-	}
-
-	if sut.tai.Asec != inASec {
-		t.Fatalf("expected ASec value '%d' but got '%d'", inASec, sut.tai.Asec)
-	}
+	t.AssertEqual(inSec, sut.tai.Sec)
+	t.AssertEqual(inASec, sut.tai.Asec)
 }
 
 func TestTaiSet2(t1 *testing.T) {
@@ -47,23 +35,11 @@ func TestTaiSet2(t1 *testing.T) {
 
 	var sut Tai
 
-	var err error
+	err := sut.Set(in)
+	t.AssertNoError(err)
 
-	if err = sut.Set(in); err != nil {
-		t.Fatalf("failed to parse value into tai: %q. %s", in, err)
-	}
-
-	if err != nil {
-		t.Fatalf("expected no error but got %s", err)
-	}
-
-	if sut.tai.Sec != inSec {
-		t.Fatalf("expected Sec value '%d' but got '%d'", inSec, sut.tai.Sec)
-	}
-
-	if sut.tai.Asec != inASecEx {
-		t.Fatalf("expected ASec value '%d' but got '%d'", inASecEx, sut.tai.Asec)
-	}
+	t.AssertEqual(inSec, sut.tai.Sec)
+	t.AssertEqual(inASecEx, sut.tai.Asec)
 }
 
 func TestTaiWithIndex(t1 *testing.T) {
@@ -76,16 +52,9 @@ func TestTaiWithIndex(t1 *testing.T) {
 		1,
 	)
 
-	if sut.tai.Sec != 2052240707 {
-		t.Fatalf("expected Sec value '%d' but got '%d'", 2052240707, sut.tai.Sec)
-	}
-
-	if sut.tai.Asec != 1 {
-		t.Fatalf("expected ASec value '%d' but got '%d'", 1, sut.tai.Asec)
-	}
+	t.AssertEqual(int64(2052240707), sut.tai.Sec)
+	t.AssertEqual(int64(1), sut.tai.Asec)
 
 	ex := "2052240707.000000000000000001"
-	if sut.String() != ex {
-		t.Fatalf("expected .String() %q but got %q", ex, sut.String())
-	}
+	t.AssertEqualStrings(ex, sut.String())
 }

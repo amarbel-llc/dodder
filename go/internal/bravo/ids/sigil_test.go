@@ -12,43 +12,22 @@ func TestSigilContains(t1 *testing.T) {
 
 	sut := SigilAll
 
-	if !sut.ContainsOneOf(SigilLatest) {
-		t.Errorf("expected SigilAll to contain SigilLatest")
-	}
+	t.AssertTrue(sut.ContainsOneOf(SigilLatest), "expected SigilAll to contain SigilLatest")
 
 	sut = SigilLatest
 	sut.Add(SigilHidden)
 
-	if !sut.ContainsOneOf(SigilLatest) {
-		t.Errorf("expected sut to contain SigilTail")
-	}
-
-	if !sut.ContainsOneOf(SigilHidden) {
-		t.Errorf("expected sut to contain SigilHidden")
-	}
-
-	if !sut.ContainsOneOf(sut) {
-		t.Errorf("expected sut to contain sut")
-	}
-
-	if !sut.Contains(sut) {
-		t.Errorf("expected sut to contain sut")
-	}
+	t.AssertTrue(sut.ContainsOneOf(SigilLatest), "expected sut to contain SigilTail")
+	t.AssertTrue(sut.ContainsOneOf(SigilHidden), "expected sut to contain SigilHidden")
+	t.AssertTrue(sut.ContainsOneOf(sut), "expected sut to contain sut")
+	t.AssertTrue(sut.Contains(sut), "expected sut to contain sut")
 
 	other := SigilHistory
 	other.Add(SigilHidden)
 
-	if !sut.ContainsOneOf(other) {
-		t.Errorf("expected sut to contain one ofother")
-	}
-
-	if sut.Contains(other) {
-		t.Errorf("expected sut not to contain other")
-	}
-
-	if sut.ContainsOneOf(SigilExternal) {
-		t.Errorf("expected sut not to contain SigilCwd")
-	}
+	t.AssertTrue(sut.ContainsOneOf(other), "expected sut to contain one ofother")
+	t.AssertFalse(sut.Contains(other), "expected sut not to contain other")
+	t.AssertFalse(sut.ContainsOneOf(SigilExternal), "expected sut not to contain SigilCwd")
 }
 
 func TestSigilReadWrite(t1 *testing.T) {
