@@ -14,9 +14,7 @@ func TestParseReferenceOutputEmpty(t1 *testing.T) {
 	refs, err := parseReferenceOutput("")
 	t.AssertNoError(err)
 
-	if len(refs) != 0 {
-		t.Fatalf("expected 0 refs, got %d", len(refs))
-	}
+	t.AssertLen(0, refs, "refs")
 }
 
 func TestParseReferenceOutputSimpleRefs(t1 *testing.T) {
@@ -26,9 +24,7 @@ func TestParseReferenceOutputSimpleRefs(t1 *testing.T) {
 	refs, err := parseReferenceOutput(input)
 	t.AssertNoError(err)
 
-	if len(refs) != 2 {
-		t.Fatalf("expected 2 refs, got %d", len(refs))
-	}
+	t.AssertLen(2, refs, "refs")
 
 	t.AssertEqualStrings("one/dos", refs[0].ObjectId)
 	t.AssertEqualStrings("", refs[0].Alias)
@@ -43,9 +39,7 @@ func TestParseReferenceOutputWithAliases(t1 *testing.T) {
 	refs, err := parseReferenceOutput(input)
 	t.AssertNoError(err)
 
-	if len(refs) != 2 {
-		t.Fatalf("expected 2 refs, got %d", len(refs))
-	}
+	t.AssertLen(2, refs, "refs")
 
 	t.AssertEqualStrings("one/uno", refs[0].ObjectId)
 	t.AssertEqualStrings("blog-template", refs[0].Alias)
@@ -63,9 +57,7 @@ func TestParseReferenceOutputBinaryGarbage(t1 *testing.T) {
 	// Parser should yield refs for lines it can parse; garbage lines become
 	// object refs with the raw string (they'll fail downstream validation,
 	// but parseReferenceOutput itself shouldn't panic or error).
-	if len(refs) != 3 {
-		t.Fatalf("expected 3 refs, got %d", len(refs))
-	}
+	t.AssertLen(3, refs, "refs")
 
 	t.AssertEqualStrings("one/dos", refs[0].ObjectId)
 	t.AssertEqualStrings("two/uno", refs[2].ObjectId)
@@ -79,9 +71,7 @@ func TestParseReferenceOutputPartialBlobRef(t1 *testing.T) {
 	refs, err := parseReferenceOutput(input)
 	t.AssertNoError(err)
 
-	if len(refs) != 2 {
-		t.Fatalf("expected 2 refs, got %d", len(refs))
-	}
+	t.AssertLen(2, refs, "refs")
 
 	// Empty blob ID from bare "@"
 	t.AssertEqualStrings("", refs[0].BlobId)
@@ -95,9 +85,7 @@ func TestParseReferenceOutputBlobRefWithAlias(t1 *testing.T) {
 	refs, err := parseReferenceOutput(input)
 	t.AssertNoError(err)
 
-	if len(refs) != 1 {
-		t.Fatalf("expected 1 ref, got %d", len(refs))
-	}
+	t.AssertLen(1, refs, "refs")
 
 	t.AssertEqualStrings("blake2b256-abc123", refs[0].BlobId)
 	t.AssertEqualStrings("hero", refs[0].Alias)
@@ -111,9 +99,7 @@ func TestParseReferenceOutputSkipsCommentsAndBlanks(t1 *testing.T) {
 	refs, err := parseReferenceOutput(input)
 	t.AssertNoError(err)
 
-	if len(refs) != 1 {
-		t.Fatalf("expected 1 ref, got %d", len(refs))
-	}
+	t.AssertLen(1, refs, "refs")
 
 	t.AssertEqualStrings("one/dos", refs[0].ObjectId)
 }
