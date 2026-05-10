@@ -24,22 +24,16 @@ func TestRecipientWrapProducesValidStanza(t1 *testing.T) {
 	stanzas, err := recipient.Wrap(fileKey)
 	t.AssertNoError(err)
 
-	if len(stanzas) != 1 {
-		t.Fatalf("expected 1 stanza, got %d", len(stanzas))
-	}
+	t.AssertLen(1, stanzas, "stanzas")
 
 	s := stanzas[0]
 
 	t.AssertEqual(StanzaTypePivyEcdhP256, s.Type)
 
-	if len(s.Args) != 2 {
-		t.Fatalf("expected 2 args, got %d", len(s.Args))
-	}
+	t.AssertLen(2, s.Args, "stanza args")
 
 	// Body is wrapped file key: 16 bytes key + 16 bytes poly1305 tag = 32
-	if len(s.Body) != 32 {
-		t.Fatalf("body length: got %d, want 32", len(s.Body))
-	}
+	t.AssertLen(32, s.Body, "stanza body")
 }
 
 func TestWrapUnwrapRoundTrip(t1 *testing.T) {
@@ -118,7 +112,5 @@ func TestNewAgentIdentity(t1 *testing.T) {
 	// We can't test the actual agent call without pivy-agent running,
 	// but we verify the constructor works.
 	identity := NewAgentIdentity(privKey.PublicKey())
-	if identity == nil {
-		t.Fatal("expected non-nil identity")
-	}
+	t.AssertNotNil(identity, "agent identity")
 }
