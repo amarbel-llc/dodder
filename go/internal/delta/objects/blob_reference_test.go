@@ -27,9 +27,7 @@ func TestBlobReferencesAddSortsByKey(t1 *testing.T) {
 		got = append(got, id.String())
 	}
 
-	if len(got) != 3 {
-		t.Fatalf("expected 3 entries, got %d", len(got))
-	}
+	t.AssertLen(3, got, "blob reference entries")
 
 	for i := 1; i < len(got); i++ {
 		if got[i-1] >= got[i] {
