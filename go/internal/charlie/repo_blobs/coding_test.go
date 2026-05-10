@@ -15,9 +15,7 @@ import (
 func TestCoderTommyLocalOverridePathV0_RoundTrip(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	coder := Coder.Blob[ids.TypeTomlRepoLocalOverridePath]
-	if coder == nil {
-		t.Fatal("no coder registered for TypeTomlRepoLocalOverridePath")
-	}
+	t.AssertNotNil(coder, "no coder registered for TypeTomlRepoLocalOverridePath")
 
 	original := &TomlLocalOverridePathV0{
 		OverridePath: "/test/path",
@@ -51,9 +49,7 @@ func TestCoderTommyLocalOverridePathV0_RoundTrip(t1 *testing.T) {
 func TestCoderTommyLocalOverridePathV0_EncodeDecodeEncode(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	coder := Coder.Blob[ids.TypeTomlRepoLocalOverridePath]
-	if coder == nil {
-		t.Fatal("no coder registered")
-	}
+	t.AssertNotNil(coder, "no coder registered")
 
 	original := &TomlLocalOverridePathV0{
 		OverridePath: "/test/path",
