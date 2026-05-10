@@ -21,9 +21,7 @@ func TestMain(m *testing.M) {
 type t ui.T
 
 func (t t) assertLen(sut interfaces.Tridex, d int) {
-	if sut.Len() != d {
-		t.Fatalf("expected count %d but got %d", d, sut.Len())
-	}
+	(*ui.T)(&t).AssertLen(d, sut, "tridex")
 }
 
 func (t t) assertNotContains(sut interfaces.Tridex, v string) {
