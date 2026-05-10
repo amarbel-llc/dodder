@@ -33,9 +33,7 @@ func TestWasmVMPoolV1GetWithRepool(t1 *testing.T) {
 	vm, repool := vmPool.GetWithRepool()
 	defer repool()
 
-	if vm.Module == nil {
-		t.Fatal("expected non-nil module")
-	}
+	t.AssertNotNil(vm.Module, "vm.Module")
 }
 
 func TestGenreFilterAcceptsZettel(t1 *testing.T) {
