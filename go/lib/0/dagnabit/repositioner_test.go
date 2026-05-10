@@ -59,9 +59,7 @@ func TestRepositionerMovesPackageToCorrectLevel(t1 *testing.T) {
 
 	// pkg_a depends on pkg_b, so pkg_a should be at level1
 	// pkg_b is already at level0 (correct), pkg_a needs to move from level0 to level1
-	if len(mover.moves) != 1 {
-		t.Fatalf("expected 1 move, got %d: %v", len(mover.moves), mover.moves)
-	}
+	t.AssertLen(1, mover.moves, fmt.Sprintf("mover.moves: %v", mover.moves))
 
 	expected := "tree/level0/pkg_a -> tree/level1/pkg_a"
 	t.AssertEqualStrings(expected, mover.moves[0])
@@ -88,9 +86,7 @@ func TestRepositionerSkipsCorrectlyPlacedPackages(t1 *testing.T) {
 
 	t.AssertNoError(r.Run())
 
-	if len(mover.moves) != 0 {
-		t.Fatalf("expected 0 moves, got %d: %v", len(mover.moves), mover.moves)
-	}
+	t.AssertLen(0, mover.moves, fmt.Sprintf("mover.moves: %v", mover.moves))
 }
 
 func TestRepositionerDryRunDoesNotMove(t1 *testing.T) {
@@ -115,9 +111,7 @@ func TestRepositionerDryRunDoesNotMove(t1 *testing.T) {
 
 	t.AssertNoError(r.Run())
 
-	if len(mover.moves) != 0 {
-		t.Fatalf("expected 0 moves in dry run, got %d: %v", len(mover.moves), mover.moves)
-	}
+	t.AssertLen(0, mover.moves, fmt.Sprintf("dry run mover.moves: %v", mover.moves))
 }
 
 func TestRepositionerReaderError(t1 *testing.T) {
@@ -212,9 +206,7 @@ func TestRepositionerCrossPrefixEdgesIgnored(t1 *testing.T) {
 
 	t.AssertNoError(r.Run())
 
-	if len(mover.moves) != 0 {
-		t.Fatalf("expected 0 moves, got %d: %v", len(mover.moves), mover.moves)
-	}
+	t.AssertLen(0, mover.moves, fmt.Sprintf("mover.moves: %v", mover.moves))
 }
 
 func TestRepositionerMultiplePrefixesSortedIndependently(t1 *testing.T) {
@@ -242,9 +234,7 @@ func TestRepositionerMultiplePrefixesSortedIndependently(t1 *testing.T) {
 	t.AssertNoError(r.Run())
 
 	// Both pkg_a and pkg_c should move from level0 to level1
-	if len(mover.moves) != 2 {
-		t.Fatalf("expected 2 moves, got %d: %v", len(mover.moves), mover.moves)
-	}
+	t.AssertLen(2, mover.moves, fmt.Sprintf("mover.moves: %v", mover.moves))
 
 	// Sorted by prefix: internal first, then lib
 	expected0 := "internal/level0/pkg_c -> internal/level1/pkg_c"
