@@ -45,9 +45,7 @@ func TestOmitTagsTransformKeepsAllWhenNoMatch(t1 *testing.T) {
 	t.AssertTrue(keep, "expected keep=true")
 
 	tags := collectTagStrings(&object)
-	if len(tags) != 2 {
-		t.Fatalf("expected 2 tags, got %v", tags)
-	}
+	t.AssertLen(2, tags, "tags")
 }
 
 func TestOmitTagsTransformMultiplePatterns(t1 *testing.T) {
@@ -85,9 +83,7 @@ func TestOmitTagsTransformRemovesAllTags(t1 *testing.T) {
 	t.AssertTrue(keep, "expected keep=true even when all tags removed")
 
 	tags := collectTagStrings(&object)
-	if len(tags) != 0 {
-		t.Fatalf("expected no tags, got %v", tags)
-	}
+	t.AssertLen(0, tags, "tags")
 }
 
 func TestOmitTagsTransformInvalidRegex(t1 *testing.T) {
