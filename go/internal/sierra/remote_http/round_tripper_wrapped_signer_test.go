@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
@@ -154,10 +153,7 @@ func TestVerifyingBodyReaderMissingTrailerFails(t1 *testing.T) {
 	defer cleanup()
 
 	_, err := io.ReadAll(reader)
-	t.AssertError(err)
-	if !strings.Contains(err.Error(), "trailer") {
-		t.Fatalf("expected error to mention 'trailer', got: %v", err)
-	}
+	t.AssertErrorContains("trailer", err)
 }
 
 func TestVerifyingBodyReaderMalformedSignatureFails(t1 *testing.T) {

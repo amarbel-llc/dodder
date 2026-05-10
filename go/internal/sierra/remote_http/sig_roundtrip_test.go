@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"strings"
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
@@ -191,10 +190,7 @@ func testSigRoundTripPubkeyMismatch(t *ui.TestContext) {
 	t.AssertNoError(err)
 
 	_, err = rt.RoundTrip(req)
-	t.AssertError(err)
-	if !strings.Contains(err.Error(), "expected pubkey") {
-		t.Fatalf("expected error to mention pubkey mismatch, got: %v", err)
-	}
+	t.AssertErrorContains("expected pubkey", err)
 }
 
 func TestSigRoundTripMissingNonceRejected(t1 *testing.T) {
@@ -249,8 +245,5 @@ func testSigRoundTripMissingTrailerFails(t *ui.TestContext) {
 	_, err = io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
 
-	t.AssertError(err)
-	if !strings.Contains(err.Error(), "trailer") {
-		t.Fatalf("expected error to mention trailer, got: %v", err)
-	}
+	t.AssertErrorContains("trailer", err)
 }
