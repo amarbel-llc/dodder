@@ -13,9 +13,7 @@ func TestMakeTestingProducesValidKeypair(t1 *testing.T) {
 
 func testMakeTestingProducesValidKeypair(t *ui.TestContext) {
 	repo := MakeTesting(t, nil)
-	if repo == nil {
-		t.Fatalf("MakeTesting returned nil *Repo")
-	}
+	t.AssertNotNil(repo, "MakeTesting *Repo")
 
 	pub := repo.GetImmutableConfigPublic().GetPublicKey()
 	if pub.IsNull() {
