@@ -73,9 +73,7 @@ func TestTopologicalSortEmpty(t1 *testing.T) {
 	heights, err := TopologicalSort(nil)
 	t.AssertNoError(err)
 
-	if len(heights) != 0 {
-		t.Fatalf("expected empty map, got %v", heights)
-	}
+	t.AssertLen(0, heights, "heights")
 }
 
 func TestTopologicalSortSingleNode(t1 *testing.T) {

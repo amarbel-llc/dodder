@@ -2,7 +2,6 @@ package dagnabit
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
@@ -134,11 +133,7 @@ func TestRepositionerReaderError(t1 *testing.T) {
 	}
 
 	err := r.Run()
-	t.AssertError(err)
-
-	if !strings.Contains(err.Error(), "read failed") {
-		t.Errorf("expected error to contain %q, got %q", "read failed", err.Error())
-	}
+	t.AssertErrorContains("read failed", err)
 }
 
 type errorReader struct {
@@ -170,11 +165,7 @@ func TestRepositionerCycleError(t1 *testing.T) {
 	}
 
 	err := r.Run()
-	t.AssertError(err)
-
-	if !strings.Contains(err.Error(), "cycle") {
-		t.Errorf("expected error to mention cycle, got %q", err.Error())
-	}
+	t.AssertErrorContains("cycle", err)
 }
 
 func TestRepositionerMapperError(t1 *testing.T) {
@@ -198,11 +189,7 @@ func TestRepositionerMapperError(t1 *testing.T) {
 	}
 
 	err := r.Run()
-	t.AssertError(err)
-
-	if !strings.Contains(err.Error(), "mapping height") {
-		t.Errorf("expected error to contain %q, got %q", "mapping height", err.Error())
-	}
+	t.AssertErrorContains("mapping height", err)
 }
 
 func TestRepositionerCrossPrefixEdgesIgnored(t1 *testing.T) {
