@@ -19,17 +19,13 @@ func TestDefaultTaskType(t1 *testing.T) {
 
 	assertActionableFields(&t, blob.Fields)
 
-	if blob.FieldsReader == nil {
-		t.Fatalf("expected non-nil FieldsReader")
-	}
+	t.AssertNotNil(blob.FieldsReader, "FieldsReader")
 
 	if !strings.Contains(blob.FieldsReader.Script, "yq -p toml -o json") {
 		t.Errorf("FieldsReader script missing yq invocation: %q", blob.FieldsReader.Script)
 	}
 
-	if blob.FieldsWriter == nil {
-		t.Fatalf("expected non-nil FieldsWriter")
-	}
+	t.AssertNotNil(blob.FieldsWriter, "FieldsWriter")
 
 	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_FIELD_status") {
 		t.Errorf("FieldsWriter script missing DODDER_FIELD_status: %q", blob.FieldsWriter.Script)
@@ -58,9 +54,7 @@ func TestDefaultChoreType(t1 *testing.T) {
 }
 
 func assertActionableFields(t *ui.T, fields []FieldDefinition) {
-	if len(fields) != 3 {
-		t.Fatalf("expected 3 fields, got %d", len(fields))
-	}
+	t.AssertLen(3, fields, "fields")
 
 	expected := []struct {
 		name      string
