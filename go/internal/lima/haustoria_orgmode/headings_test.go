@@ -31,9 +31,7 @@ func TestParseFile_Counts(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	headings, err := parseFile([]byte(sampleOrg))
 	t.AssertNoError(err)
-	if len(headings) != 3 {
-		t.Fatalf("want 3 headings, got %d", len(headings))
-	}
+	t.AssertLen(3, headings, "headings")
 }
 
 func TestParseFile_Titles(t1 *testing.T) {
@@ -50,9 +48,7 @@ func TestParseFile_Titles(t1 *testing.T) {
 func TestParseFile_Tags(t1 *testing.T) {
 	t := ui.MakeT(t1)
 	headings, _ := parseFile([]byte(sampleOrg))
-	if len(headings[1].Tags) != 2 {
-		t.Fatalf("heading 1: want 2 tags, got %d", len(headings[1].Tags))
-	}
+	t.AssertLen(2, headings[1].Tags, "headings[1].Tags")
 	if headings[1].Tags[0] != "work" || headings[1].Tags[1] != "health" {
 		t.Errorf("heading 1: want [work health], got %v", headings[1].Tags)
 	}
@@ -83,9 +79,7 @@ func TestNormalizeIDs_AddsMissingIDs(t1 *testing.T) {
 	// Re-parse the new content and verify all 3 headings now have IDs.
 	headings2, err := parseFile(newContent)
 	t.AssertNoError(err)
-	if len(headings2) != 3 {
-		t.Fatalf("want 3 headings after normalize, got %d", len(headings2))
-	}
+	t.AssertLen(3, headings2, "headings2")
 	for i, h := range headings2 {
 		if h.ID == "" {
 			t.Errorf("heading %d: still has no ID after normalize", i)
