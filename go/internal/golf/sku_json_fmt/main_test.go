@@ -209,9 +209,7 @@ func TestRoundTripJSONMarshalUnmarshal(t1 *testing.T) {
 		var tag ids.TagStruct
 		t.AssertNoError(tag.Set("project-alpha"))
 		decodedLock := decodedMeta.GetTagLock(tag)
-		if decodedLock == nil {
-			t.Fatal("tag lock missing after JSON marshal/unmarshal round-trip")
-		}
+		t.AssertNotNil(decodedLock, "tag lock missing after JSON marshal/unmarshal round-trip")
 		t.AssertEqualStrings(testSig2, decodedLock.GetValue().String())
 	}
 }
@@ -280,9 +278,7 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 		var tag ids.TagStruct
 		t.AssertNoError(tag.Set("locked-tag"))
 		decodedLock := decodedMeta.GetTagLock(tag)
-		if decodedLock == nil {
-			t.Fatal("locked tag lock missing after round-trip")
-		}
+		t.AssertNotNil(decodedLock, "locked tag lock missing after round-trip")
 		t.AssertEqualStrings(testSig1, decodedLock.GetValue().String())
 	}
 
@@ -301,9 +297,7 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 		var refId ids.SeqId
 		t.AssertNoError(refId.Set("two/dos"))
 		decodedLock := decodedMeta.GetReferencedObjectLock(refId)
-		if decodedLock == nil {
-			t.Fatal("reference lock missing after round-trip")
-		}
+		t.AssertNotNil(decodedLock, "reference lock missing after round-trip")
 		t.AssertEqualStrings(testSig2, decodedLock.GetValue().String())
 		t.AssertEqualStrings("", decodedMeta.GetReferenceAlias(refId))
 	}
