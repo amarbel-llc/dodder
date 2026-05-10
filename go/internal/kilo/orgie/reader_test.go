@@ -223,11 +223,7 @@ func TestAssignmentLineReader1_1Heading2_2Zettels(t1 *testing.T) {
 			t.Fatalf("%v, %v", sub.root, sub.root.Children[0].Parent)
 		}
 
-		l := len(sub.root.Children[0].Children)
-
-		if l != 1 {
-			t.Fatalf("\nexpected: %d\n  actual: %d", 1, l)
-		}
+		t.AssertLen(1, sub.root.Children[0].Children, "sub.root.Children[0].Children")
 
 		actual := sub.root.Children[0].Children[0].Transacted.GetMetadata().GetTags()
 
