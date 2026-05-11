@@ -84,66 +84,75 @@ function complete_show_tags { # @test
 function complete_subcmd { # @test
   run_dodder complete
   assert_success
-  assert_output_unsorted --regexp - <<-'EOM'
-		add.*commit workspace changes to the store
-		add-zettel-ids-yang.*add yang words to the zettel id pool
-		add-zettel-ids-yin.*add yin words to the zettel id pool
-		cat-alfred.*output objects in Alfred workflow format
-		cat-object.*output raw object content by markl id
-		check-workspace.*check workspace state
-		checkin.*commit workspace changes to the store
-		checkin-blob.*commit blob changes with metadata updates
-		checkin-json.*commit objects from JSON on stdin
-		checkout.*check out objects to the workspace
-		clean.*remove checked-out objects from the workspace
-		clone.*clone a remote repository
-		complete.*complete a command-line
-		debug-print-probe-index.*print stream index probes
-		deinit.*remove repository and workspace directories
-		diff.*show differences between workspace and store
-		dormant-add.*add tags to the dormant index
-		dormant-edit.*edit dormant tags in an editor
-		dormant-remove.*remove tags from the dormant index
-		edit.*check out and edit objects in an editor
-		edit-config.*edit the repository configuration
-		exec.*execute a script stored as a blob
-		export.*export objects to an inventory list archive
-		find-missing.*find blob digests missing from stores
-		format-blob.*format an object's blob content
-		format-object.*format an object with a type formatter
-		format-organize.*format an organize file
-		fsck.*verify object integrity across stores
-		gen.*generate cryptographic keys
-		generate-zettel-id-components.*extract unique zettel id components from stdin
-		import.*import objects from inventory list files
-		info.*display repository information
-		info-pivy_agent.*list ECDSA keys in pivy-agent
-		info-ssh_agent.*list keys in the SSH agent
-		info-repo.*display repository configuration
-		info-workspace.*display workspace configuration
-		init.*initialize a new repository
-		init-workspace.*initialize a workspace directory
-		install-mcp.*install MCP server configuration
-		last.*display the most recently committed objects
-		mcp.*start the MCP server
-		merge-tool.*resolve merge conflicts with an external tool
-		migrate-zettel-ids.*migrate zettel id flat files to log format
-		new.*create new zettels
-		organize.*organize objects with a text editor
-		peek-zettel-ids.*preview available zettel ids
-		pull.*pull objects from a remote repository
-		pull-blob-store.*pull blobs from a remote blob store
-		push.*push objects to a remote repository
-		reindex.*rebuild store indices
-		remote-add.*add a remote repository
-		repo-fsck.*verify repository inventory list integrity
-		revert.*revert objects to their stored state
-		save.*commit workspace changes to the store
-		serve.*start the HTTP server
-		show.*display objects from the store
-		status.*show workspace object state
-		update.*update type lock signatures
-		version.*print dodder build version and commit
+  # Use per-line `assert_line --regexp` instead of
+  # `assert_output_unsorted --regexp` so the assertion is locale-
+  # collation independent. The latter sorts both the regex and the
+  # actual output before matching, and `.` (regex meta) sorts
+  # differently than the actual whitespace padding under the C locale,
+  # producing a sort-order mismatch even when every command is present.
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    assert_line --regexp "$line"
+  done <<-'EOM'
+		^add[[:space:]]+commit workspace changes to the store$
+		^add-zettel-ids-yang[[:space:]]+add yang words to the zettel id pool$
+		^add-zettel-ids-yin[[:space:]]+add yin words to the zettel id pool$
+		^cat-alfred[[:space:]]+output objects in Alfred workflow format$
+		^cat-object[[:space:]]+output raw object content by markl id$
+		^check-workspace[[:space:]]+check workspace state$
+		^checkin[[:space:]]+commit workspace changes to the store$
+		^checkin-blob[[:space:]]+commit blob changes with metadata updates$
+		^checkin-json[[:space:]]+commit objects from JSON on stdin$
+		^checkout[[:space:]]+check out objects to the workspace$
+		^clean[[:space:]]+remove checked-out objects from the workspace$
+		^clone[[:space:]]+clone a remote repository$
+		^complete[[:space:]]+complete a command-line$
+		^debug-print-probe-index[[:space:]]+print stream index probes$
+		^deinit[[:space:]]+remove repository and workspace directories$
+		^diff[[:space:]]+show differences between workspace and store$
+		^dormant-add[[:space:]]+add tags to the dormant index$
+		^dormant-edit[[:space:]]+edit dormant tags in an editor$
+		^dormant-remove[[:space:]]+remove tags from the dormant index$
+		^edit[[:space:]]+check out and edit objects in an editor$
+		^edit-config[[:space:]]+edit the repository configuration$
+		^exec[[:space:]]+execute a script stored as a blob$
+		^export[[:space:]]+export objects to an inventory list archive$
+		^find-missing[[:space:]]+find blob digests missing from stores$
+		^format-blob[[:space:]]+format an object's blob content$
+		^format-object[[:space:]]+format an object with a type formatter$
+		^format-organize[[:space:]]+format an organize file$
+		^fsck[[:space:]]+verify object integrity across stores$
+		^gen[[:space:]]+generate cryptographic keys$
+		^generate-zettel-id-components[[:space:]]+extract unique zettel id components from stdin$
+		^import[[:space:]]+import objects from inventory list files$
+		^info[[:space:]]+display repository information$
+		^info-pivy_agent[[:space:]]+list ECDSA keys in pivy-agent$
+		^info-ssh_agent[[:space:]]+list keys in the SSH agent$
+		^info-repo[[:space:]]+display repository configuration$
+		^info-workspace[[:space:]]+display workspace configuration$
+		^init[[:space:]]+initialize a new repository$
+		^init-workspace[[:space:]]+initialize a workspace directory$
+		^install-mcp[[:space:]]+install MCP server configuration$
+		^last[[:space:]]+display the most recently committed objects$
+		^mcp[[:space:]]+start the MCP server$
+		^merge-tool[[:space:]]+resolve merge conflicts with an external tool$
+		^migrate-zettel-ids[[:space:]]+migrate zettel id flat files to log format$
+		^new[[:space:]]+create new zettels$
+		^organize[[:space:]]+organize objects with a text editor$
+		^peek-zettel-ids[[:space:]]+preview available zettel ids$
+		^pull[[:space:]]+pull objects from a remote repository$
+		^pull-blob-store[[:space:]]+pull blobs from a remote blob store$
+		^push[[:space:]]+push objects to a remote repository$
+		^reindex[[:space:]]+rebuild store indices$
+		^remote-add[[:space:]]+add a remote repository$
+		^repo-fsck[[:space:]]+verify repository inventory list integrity$
+		^revert[[:space:]]+revert objects to their stored state$
+		^save[[:space:]]+commit workspace changes to the store$
+		^serve[[:space:]]+start the HTTP server$
+		^show[[:space:]]+display objects from the store$
+		^status[[:space:]]+show workspace object state$
+		^update[[:space:]]+update type lock signatures$
+		^version[[:space:]]+print dodder build version and commit$
 	EOM
 }
 

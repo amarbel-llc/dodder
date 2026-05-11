@@ -87,7 +87,7 @@ function mergetool_conflict_one_local { # @test
 	EOM
 
   # TODO add `-delete` option to `merge-tool`
-  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$0\" >\"\$3\"'" .
+  run_dodder merge-tool -merge-tool "bash -c 'cat \"\$0\" >\"\$3\"'" .
   assert_success
   assert_output - <<-EOM
 		          deleted [one/dos.conflict]
@@ -118,7 +118,7 @@ function mergetool_conflict_one_remote { # @test
   mergetool_conflict_base
 
   # TODO add `-delete` option to `merge-tool`
-  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
+  run_dodder merge-tool -merge-tool "bash -c 'cat \"\$2\" >\"\$3\"'" .
   assert_success
   assert_output - <<-EOM
 		[!txt !toml-type-v2]
@@ -166,7 +166,7 @@ function mergetool_conflict_one_merged { # @test
 	EOM
 
   # TODO add `-delete` option to `merge-tool`
-  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
+  run_dodder merge-tool -merge-tool "bash -c 'cat \"\$2\" >\"\$3\"'" .
   assert_success
   assert_output - <<-EOM
 		[!txt !toml-type-v2]

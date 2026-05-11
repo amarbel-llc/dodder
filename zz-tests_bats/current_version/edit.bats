@@ -19,7 +19,7 @@ function edit_and_change_workspace { # @test
   run_dodder init-workspace -experimental-repo=false
   assert_success
 
-  export EDITOR="/bin/bash -c 'echo \"this is the body 2\" > \"\$0\"'"
+  export EDITOR="bash -c 'echo \"this is the body 2\" > \"\$0\"'"
   run_dodder edit one/uno
   assert_success
   assert_output - <<-EOM
@@ -57,7 +57,7 @@ function edit_and_dont_change_workspace { # @test
 
 function edit_and_change_no_workspace { # @test
   skip
-  export EDITOR="/bin/bash -c 'echo \"this is the body 2\" > \"\$0\"'"
+  export EDITOR="bash -c 'echo \"this is the body 2\" > \"\$0\"'"
   run_dodder edit one/uno
   assert_success
   assert_output - <<-EOM

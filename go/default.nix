@@ -51,7 +51,12 @@ let
       { batsLaneOutputs = { }; fixtures-current = null; }
     else
       import ./bats.nix {
-        inherit pkgs batsSrc dodder dodder-test-sftp-server;
+        inherit pkgs batsSrc dodder-test-sftp-server;
+        # Lanes run against the debug-tagged binary to match what the
+        # existing batman test path exercises (subcommand surface,
+        # repool poisoning, etc.). The release `dodder` package stays
+        # untagged and ships via packages.default.
+        dodder = dodder-debug;
         # batsLane + bats-libs both come from amarbel-llc/bats so the
         # lane builder and its helper-lib path move together.
         batsLane = bats.lib.${system}.batsLane;
@@ -67,6 +72,32 @@ let
 
   batsLaneOutputs = batsAttrs.batsLaneOutputs;
   fixtures-current = batsAttrs.fixtures-current;
+
+  # dodder-debug: same source as `dodder` but compiled with `-tags
+  # debug`. The debug tag enables debug-only subcommands
+  # (debug-print-probe-index, etc.) and runtime pool-repool
+  # poisoning (see CLAUDE.md). It's what `just build` puts in
+  # `go/build/debug/` and what the existing batman bats path
+  # exercises. The bats nix lanes use this binary so test assertions
+  # that enumerate subcommands (complete_subcmd) match what the
+  # dev-shell path sees.
+  #
+  # Devshell-only: NOT in the `packages` output — release artifacts
+  # must not ship the debug instrumentation.
+  dodder-debug = pkgs.buildGoApplication {
+    pname = "dodder-debug";
+    inherit version commit;
+    src = ./.;
+    pwd = ./.;
+    subPackages = [
+      "cmd/der"
+      "cmd/dodder"
+    ];
+    modules = ./gomod2nix.toml;
+    go = pkgs.go_1_26;
+    GOTOOLCHAIN = "local";
+    tags = [ "debug" ];
+  };
 
   dodder = pkgs.buildGoApplication {
     pname = "dodder";

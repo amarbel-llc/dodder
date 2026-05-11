@@ -1245,7 +1245,7 @@ function organize_new_objects_default_tags { # @test
 
   export -f editor
 
-  export EDITOR="/bin/bash -c 'editor \$0'"
+  export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
@@ -1354,7 +1354,7 @@ function organize_default_tags_workspace { # @test
 
   export -f editor
 
-  export EDITOR="/bin/bash -c 'editor \$0'"
+  export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
@@ -1414,7 +1414,7 @@ function organize_dot_operator_workspace_delete_files { # @test
 
   export -f editor
 
-  export EDITOR="/bin/bash -c 'editor \$0'"
+  export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM

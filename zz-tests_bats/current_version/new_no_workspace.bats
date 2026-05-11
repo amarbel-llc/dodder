@@ -24,7 +24,7 @@ function new_empty_no_edit { # @test
 }
 
 function new_empty_edit { # @test
-  export EDITOR="/bin/bash -c 'echo \"this is the body\" > \"\$0\"'"
+  export EDITOR="bash -c 'echo \"this is the body\" > \"\$0\"'"
   run_dodder new
   assert_success
   assert_output - <<-EOM

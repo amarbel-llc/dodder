@@ -225,7 +225,7 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 
-  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
+  run_dodder merge-tool -merge-tool "bash -c 'cat \"\$2\" >\"\$3\"'" .
   assert_success
   assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
@@ -399,7 +399,7 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
 		       conflicted [one/uno]
 	EOM
 
-  run_dodder merge-tool -merge-tool "/bin/bash -c 'cat \"\$2\" >\"\$3\"'" .
+  run_dodder merge-tool -merge-tool "bash -c 'cat \"\$2\" >\"\$3\"'" .
   assert_success
   assert_output - <<-EOM
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]

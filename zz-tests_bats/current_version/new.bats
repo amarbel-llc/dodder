@@ -32,7 +32,7 @@ function new_count_3 { # @test
 }
 
 function new_empty_edit { # @test
-  export EDITOR="/bin/bash -c 'echo \"this is the body\" > \"\$0\"'"
+  export EDITOR="bash -c 'echo \"this is the body\" > \"\$0\"'"
   run_dodder new
   assert_success
   assert_output - <<-EOM
@@ -143,7 +143,7 @@ function new_empty_edit_workspace { # @test
   run_dodder init-workspace -experimental-repo=false -tags workspace-tags
   assert_success
 
-  export EDITOR="/bin/bash -c 'echo \"this is the body\" > \"\$0\"'"
+  export EDITOR="bash -c 'echo \"this is the body\" > \"\$0\"'"
   run_dodder new
   assert_success
   assert_output - <<-EOM

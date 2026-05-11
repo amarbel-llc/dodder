@@ -412,7 +412,7 @@ function checkin_explicit_workspace_delete_files { # @test
 
   export -f editor
 
-  export EDITOR="/bin/bash -c 'editor \$0'"
+  export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
