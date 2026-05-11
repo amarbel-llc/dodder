@@ -17,22 +17,33 @@
   those substrings appear in passing test names
   (e.g. `clean_fails_outside_workspace`).
 - **Unit tests only:** `just test-go`
-- **Integration tests only:** `just test-bats` (builds first, generates
-  fixtures, runs BATS)
-- **Specific test files:** `just test-bats-targets show.bats`
-- **Filter by tag:** `just test-bats-tags migration`
+- **Integration tests only:** `just test-bats` --- runs the full bats suite
+  in the nix sandbox via `pkgs.testers.batsLane` from amarbel-llc/bats.
+  No fixture-generation step; fixtures are committed and consumed
+  read-only by the lane.
+- **Filter by tag:** `just test-bats-tags <tag>` (e.g.
+  `just test-bats-tags haustoria`) --- runs the per-tag nix lane
+  generated from `# bats file_tags=` directives.
+- **Specific test files:** `just test-bats-targets show.bats` --- uses the
+  legacy batman path because the nix lane builder operates at the tag
+  level, not the file level. Use this for fast per-file dev-loop
+  iteration.
+- **Regenerate fixtures:** `just test-bats-update-fixtures` --- builds the
+  `fixtures-current` derivation in the nix sandbox and materializes the
+  result under `zz-tests_bats/previous_versions/v$V/`.
 
-**Always use just recipes from the repo root. Never run bats directly.** The
-root recipes set BATS_BIN_DIR, DODDER_VERSION, inject the binary via
-`--bin-dir`, and ensure fixtures exist. Running from `zz-tests_bats/` uses the
-system `dodder` binary instead of the freshly built one.
+**Always use just recipes from the repo root. Never run `bats` or
+`nix build .#bats-*` directly.** The recipes set GOMEMLIMIT, ceiling
+directories, and route through the right toolchain (nix lane vs. batman).
 
 **Capture test output to a file** so you don't need to re-run the suite just to
 read failures: `just test 2>&1 > /tmp/dodder-test.txt`. Then use `grep` to find
 failures and `sed`/`head`/`tail` to read details.
 
-**When a test fails**: run ONLY the failing test file with
-`just test-bats-targets <file>.bats`. Do NOT re-run the entire suite.
+**When a test fails**: for tag-level filtering use
+`just test-bats-tags <tag>` (re-runs only the matching files in the nix
+lane). For single-file iteration, `just test-bats-targets <file>.bats`
+runs ONLY that file via batman. Do NOT re-run the entire suite.
 
 ## Test Directory Layout
 

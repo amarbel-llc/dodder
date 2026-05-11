@@ -44,50 +44,62 @@ check:
 #    |_|\___||___/\__|
 #
 
-# Run all tests: build, unit tests, fixture generation (if needed), bats.
-test: build test-go test-bats test-bats-network
+# Run all tests: unit + bats integration. The bats lane builds dodder
+# internally inside the nix sandbox, so no `build` dep is needed for
+# this path.
+test: test-go test-bats
 
 # Run unit tests only.
 test-go *flags:
   just go/test-go-unit {{flags}}
 
-# Run bats integration tests, regenerating fixtures only if needed.
-test-bats: build _test-bats-ensure-fixtures _test-bats-run
+# Run the full bats integration suite inside the nix sandbox.
+# Wraps `pkgs.testers.batsLane` from amarbel-llc/bats; binaries are
+# injected via the lane's binaries map (DODDER_BIN, MADDER_BIN, …).
+# No fixture-generation step: fixtures are committed under
+# zz-tests_bats/previous_versions/v*/ and the lane consumes them
+# directly. To regenerate, run `just test-bats-update-fixtures`.
+test-bats:
+  nix build .#bats-default --no-link --print-build-logs
 
-# Run bats integration tests with existing fixtures (no generation).
-test-bats-quick: build _test-bats-run
+# Run a per-tag bats lane (e.g. `just test-bats-tags haustoria`).
+# The tag is the file_tags value from `# bats file_tags=foo`
+# directives. Tags with embedded `:` are quoted into the flake
+# attribute path automatically.
+test-bats-tags *tags:
+  nix build '.#bats-{{tags}}' --no-link --print-build-logs
 
-# Run specific bats test files.
+# Run a single bats test file (or list of files) via the legacy
+# batman path. Kept because the nix lane builder operates at the
+# tag level — there is no per-file nix lane to dispatch a single
+# `show.bats` against. For tag-level filtering, use
+# `test-bats-tags <tag>` (faster, hermetic) instead.
 test-bats-targets *targets: build
   GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
-
-# Run bats tests filtered by tag.
-test-bats-tags *tags: build
-  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags {{tags}}
-
-# Run bats tests requiring Unix sockets (no sandbox).
-test-bats-no-sandbox: build
-  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-tags-no-sandbox af_unix
 
 # Run bats with race-instrumented binary to detect data races in pool reuse.
 test-bats-race: build
   just go/test-bats-race
 
-# Force-regenerate fixtures. Review diff, then git add + commit.
-test-bats-update-fixtures: build
+# Force-regenerate fixtures inside the nix sandbox, then materialize
+# the result into the worktree. Review the diff and commit.
+test-bats-update-fixtures:
   #!/usr/bin/env bash
   set -euo pipefail
-  export PATH="{{dir_build}}/debug:$PATH"
-
-  echo "==> Regenerating fixtures..."
-  just zz-tests_bats/test-generate_fixtures
-
+  out=$(nix build .#fixtures-current --no-link --print-out-paths)
+  ver=$(basename "$out"/v*)
+  dest="zz-tests_bats/previous_versions/$ver"
+  echo "==> Materializing $ver from $out"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  cp -r --no-preserve=mode "$out/$ver"/. "$dest"/
+  bin/chflags.bash -R nouchg "$dest"
   echo ""
   echo "==> Fixture changes:"
-  git diff --stat -- zz-tests_bats/previous_versions/
+  git diff --stat -- "$dest"
   echo ""
-  echo "Review changes with: git diff -- zz-tests_bats/previous_versions/"
-  echo "Then: git add zz-tests_bats/previous_versions/ && git commit -m 'Update test fixtures'"
+  echo "Review with: git diff -- $dest"
+  echo "Then: git add $dest && git commit -m 'Update test fixtures'"
 
 # Snapshot current test suite for future reference.
 # Run BEFORE bumping VCurrent in store_version/main.go.
@@ -209,53 +221,6 @@ explore-live *args:
 explore-bats-debug *targets: build
   GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets --no-tempdir-cleanup {{targets}}
 
-# Run bats tests that need local network binding (haustoria CalDAV, dodder serve).
-test-bats-network *targets="current_version/haustoria_caldav.bats current_version/haustoria_orgmode.bats current_version/sftp.bats current_version/serve.bats current_version/clone_port.bats": build
-  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets --allow-local-binding --allow-unix-sockets {{targets}}
-
-#   _   _ _         _
-#  | \ | (_)_  __  | | __ _ _ __   ___  ___
-#  |  \| | \ \/ /  | |/ _` | '_ \ / _ \/ __|
-#  | |\  | |>  <   | | (_| | | | |  __/\__ \
-#  |_| \_|_/_/\_\  |_|\__,_|_| |_|\___||___/
-#
-# Hermetic bats lanes via pkgs.testers.batsLane. The existing
-# test-bats* recipes above are unchanged and continue to drive batman.
-# These nix-driven lanes are additive; once they're known-green they
-# become the default.
-
-# Run the full bats suite in the nix sandbox.
-test-bats-nix:
-  nix build .#bats-default --no-link --print-build-logs
-
-# Run a specific bats lane in nix (e.g. just test-bats-nix-lane sftp).
-# Lane name is the file_tags value with ':' separators preserved.
-test-bats-nix-lane lane:
-  nix build '.#bats-{{lane}}' --no-link --print-build-logs
-
-# Materialize fresh fixtures into the worktree via the
-# fixtures-current derivation. Builds dodder + runs the fixture
-# generator inside the sandbox, then copies the resulting tree into
-# zz-tests_bats/previous_versions/v${V}/. Review the diff before
-# committing.
-test-bats-update-fixtures-nix:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  out=$(nix build .#fixtures-current --no-link --print-out-paths)
-  ver=$(basename "$out"/v*)
-  dest="zz-tests_bats/previous_versions/$ver"
-  echo "==> Materializing $ver from $out"
-  rm -rf "$dest"
-  mkdir -p "$dest"
-  cp -r --no-preserve=mode "$out/$ver"/. "$dest"/
-  bin/chflags.bash -R nouchg "$dest"
-  echo ""
-  echo "==> Fixture changes:"
-  git diff --stat -- "$dest"
-  echo ""
-  echo "Review with: git diff -- $dest"
-  echo "Then: git add $dest && git commit -m 'Update test fixtures'"
-
 #   ____      _
 #  |  _ \ ___| | ___  __ _ ___  ___
 #  | |_) / _ \ |/ _ \/ _` / __|/ _ \
@@ -341,24 +306,3 @@ release version:
   fi
   just tag "{{version}}" "$msg"
 
-# Smart fixture generation: skip if fixtures exist for current store version.
-[private]
-_test-bats-ensure-fixtures $PATH=(dir_build / "debug" + ":" + env("PATH")):
-  #!/usr/bin/env bash
-  set -euo pipefail
-  current_version="v$(dodder info store-version)"
-  fixture_dir="zz-tests_bats/previous_versions/$current_version"
-
-  if [[ -d "$fixture_dir/.dodder" ]] && [[ -s "$fixture_dir/.fixtures.env" ]]; then
-    echo "==> Fixtures up-to-date (store version $current_version), skipping generation"
-  else
-    echo "==> Generating fixtures for store version $current_version..."
-    just zz-tests_bats/test-generate_fixtures
-  fi
-
-# Run bats tests (no build, no fixture generation).
-# GOMEMLIMIT caps each dodder process at 512 MiB to prevent OOM on leak (#68).
-[private]
-_test-bats-run:
-  @echo "==> Running bats integration tests..."
-  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test
