@@ -45,7 +45,7 @@ function version_der_matches_dodder { # @test
   # Both binaries call commands_dodder.SetVersion with their own
   # ldflag-injected (or default) values, so their reported identity
   # must match byte-for-byte. Detects ldflag drift between subPackages.
-  local der_bin="${BATS_BIN_DIR:-}/der"
+  local der_bin="$DODDER_DER_BIN"
 
   run "$DODDER_BIN" version
   assert_success

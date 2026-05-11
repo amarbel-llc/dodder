@@ -1,10 +1,16 @@
 {
   nixpkgs,
+  bats ? null,
   bob ? null,
   tommy,
   madder ? null,
   system,
   man7Src ? null,
+  # Source dir for the bats integration suite. Required by the
+  # `batsLaneOutputs` block; null disables it (so direct
+  # `import ./go/default.nix` callers without a flake context still
+  # work — they just don't get the bats-* lane outputs).
+  batsSrc ? null,
   # Passed to buildGoApplication's `version` and `commit` attrs; the
   # fork's nixpkgs auto-injects them as `-X main.version` and
   # `-X main.commit` ldflags on every subPackage. Defaulted so direct
@@ -17,6 +23,50 @@ let
   pkgs = import nixpkgs {
     inherit system;
   };
+
+  # Devshell-only test harness for SFTP integration tests. Intentionally
+  # NOT included in the `packages` output — release artifacts must not
+  # ship a server that accepts any password (mirrors madder/RFC 0001).
+  dodder-test-sftp-server = pkgs.buildGoApplication {
+    pname = "dodder-test-sftp-server";
+    version = "0.0.0";
+    src = ./.;
+    pwd = ./.;
+    subPackages = [ "cmd/dodder-test-sftp-server" ];
+    modules = ./gomod2nix.toml;
+    go = pkgs.go_1_26;
+    GOTOOLCHAIN = "local";
+  };
+
+  # bats integration test lanes + hermetic fixture generator. Auto-
+  # discovered file_tags become `bats-${tag}` flake outputs;
+  # `bats-default` runs everything; `fixtures-current` produces the
+  # `.dodder/.madder/.fixtures.env` payload for the active store
+  # version. Empty when batsSrc/bats/madder are absent (non-flake
+  # import path), so direct `import ./go/default.nix` callers without
+  # a flake context stay working — they just don't get the bats-* or
+  # fixtures-* outputs.
+  batsAttrs =
+    if batsSrc == null || bats == null || madder == null then
+      { batsLaneOutputs = { }; fixtures-current = null; }
+    else
+      import ./bats.nix {
+        inherit pkgs batsSrc dodder dodder-test-sftp-server;
+        # batsLane + bats-libs both come from amarbel-llc/bats so the
+        # lane builder and its helper-lib path move together.
+        batsLane = bats.lib.${system}.batsLane;
+        bats-libs = bats.packages.${system}.bats-libs;
+        madder-bin = madder.packages.${system}.default;
+        # version.bats greps dodderVersion out of the source-of-truth
+        # flake.nix; stage it via extraStagedFiles inside the lane.
+        flakeNixSrc = ../flake.nix;
+        # show.bats's pandoc-discover tests reference a worktree-root
+        # script directory that lives outside zz-tests_bats/.
+        pandocRefsSrc = ../zz-pandoc-refs;
+      };
+
+  batsLaneOutputs = batsAttrs.batsLaneOutputs;
+  fixtures-current = batsAttrs.fixtures-current;
 
   dodder = pkgs.buildGoApplication {
     pname = "dodder";
@@ -57,7 +107,9 @@ in
   packages = {
     inherit dodder;
     default = dodder;
-  };
+  } // batsLaneOutputs // (
+    if fixtures-current == null then { } else { inherit fixtures-current; }
+  );
 
   docker = pkgs.dockerTools.buildImage {
     name = "dodder";
@@ -74,6 +126,7 @@ in
 
   devShells.default = pkgs.mkShell {
     packages = [
+      dodder-test-sftp-server
       pkgs.gomod2nix
       tommy.packages.${system}.default
     ]

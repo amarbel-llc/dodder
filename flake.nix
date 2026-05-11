@@ -4,6 +4,11 @@
     nixpkgs-master.url = "github:NixOS/nixpkgs/e2dde111aea2c0699531dc616112a96cd55ab8b5";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
+    bats = {
+      url = "github:amarbel-llc/bats";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     purse-first = {
       url = "github:amarbel-llc/purse-first";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -39,6 +44,7 @@
       self,
       nixpkgs,
       utils,
+      bats,
       bob,
       tommy,
       madder,
@@ -56,6 +62,7 @@
         result = import ./go/default.nix {
           inherit
             nixpkgs
+            bats
             bob
             tommy
             madder
@@ -64,6 +71,7 @@
           version = dodderVersion;
           commit = dodderCommit;
           man7Src = ./docs/man.7;
+          batsSrc = ./zz-tests_bats;
         };
       in
       {

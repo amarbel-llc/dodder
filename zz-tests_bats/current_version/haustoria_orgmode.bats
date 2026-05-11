@@ -5,7 +5,7 @@ setup() {
   export output
 
   # https://github.com/amarbel-llc/dodder/issues/118
-  # test-sftp-server never prints its READY line under the test sandbox.
+  # dodder-test-sftp-server never prints its READY line under the test sandbox.
   skip "SFTP test server setup blocked by sandbox, see #118"
 
   start_sftp_server
@@ -22,9 +22,9 @@ function start_sftp_server {
   local remote_dir="$BATS_TEST_TMPDIR/remote-org"
   mkdir -p "$remote_dir/notes"
 
-  local server_bin="${BATS_BIN_DIR:-}/test-sftp-server"
+  local server_bin="$DODDER_TEST_SFTP_SERVER"
   if [[ ! -x $server_bin ]]; then
-    skip "test-sftp-server not found at $server_bin"
+    skip "dodder-test-sftp-server not found at $server_bin"
   fi
 
   coproc SFTP_SERVER {
@@ -40,7 +40,7 @@ function start_sftp_server {
     echo "$known_hosts_entry" >"$BATS_TEST_TMPDIR/known_hosts"
     SFTP_KNOWN_HOSTS="$BATS_TEST_TMPDIR/known_hosts"
   else
-    fail "test-sftp-server did not print expected READY line: $ready_line"
+    fail "dodder-test-sftp-server did not print expected READY line: $ready_line"
   fi
 
   export SFTP_PORT SFTP_KNOWN_HOSTS

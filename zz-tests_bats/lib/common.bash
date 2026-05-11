@@ -21,6 +21,18 @@ fi
 
 pushd "$BATS_TEST_TMPDIR" >/dev/null || exit 1
 
+# Make the test self-sufficient inside a build sandbox where HOME
+# defaults to /homeless-shelter and XDG_*_HOME inherits from the parent
+# shell. Outside the sandbox this is still a strict tightening:
+# BATS_TEST_TMPDIR is per-test, so dodder/madder can't accidentally
+# read or write the developer's real ~/.config. Tests that need a
+# specific HOME or XDG layout set their own values after sourcing.
+export HOME="$BATS_TEST_TMPDIR"
+export XDG_DATA_HOME="$BATS_TEST_TMPDIR/.xdg/data"
+export XDG_CONFIG_HOME="$BATS_TEST_TMPDIR/.xdg/config"
+export XDG_STATE_HOME="$BATS_TEST_TMPDIR/.xdg/state"
+export XDG_CACHE_HOME="$BATS_TEST_TMPDIR/.xdg/cache"
+
 bats_load_library "bats-support"
 bats_load_library "bats-assert"
 bats_load_library "bats-assert-additions"
@@ -74,6 +86,12 @@ export cmd_dodder_def
 
 require_bin DODDER_BIN dodder
 DODDER_BIN="${DODDER_BIN:-dodder}"
+
+require_bin DODDER_DER_BIN der
+DODDER_DER_BIN="${DODDER_DER_BIN:-der}"
+
+require_bin DODDER_TEST_SFTP_SERVER dodder-test-sftp-server
+DODDER_TEST_SFTP_SERVER="${DODDER_TEST_SFTP_SERVER:-dodder-test-sftp-server}"
 
 require_bin MADDER_BIN madder
 MADDER_BIN="${MADDER_BIN:-madder}"

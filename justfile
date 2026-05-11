@@ -213,6 +213,49 @@ explore-bats-debug *targets: build
 test-bats-network *targets="current_version/haustoria_caldav.bats current_version/haustoria_orgmode.bats current_version/sftp.bats current_version/serve.bats current_version/clone_port.bats": build
   GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets --allow-local-binding --allow-unix-sockets {{targets}}
 
+#   _   _ _         _
+#  | \ | (_)_  __  | | __ _ _ __   ___  ___
+#  |  \| | \ \/ /  | |/ _` | '_ \ / _ \/ __|
+#  | |\  | |>  <   | | (_| | | | |  __/\__ \
+#  |_| \_|_/_/\_\  |_|\__,_|_| |_|\___||___/
+#
+# Hermetic bats lanes via pkgs.testers.batsLane. The existing
+# test-bats* recipes above are unchanged and continue to drive batman.
+# These nix-driven lanes are additive; once they're known-green they
+# become the default.
+
+# Run the full bats suite in the nix sandbox.
+test-bats-nix:
+  nix build .#bats-default --no-link --print-build-logs
+
+# Run a specific bats lane in nix (e.g. just test-bats-nix-lane sftp).
+# Lane name is the file_tags value with ':' separators preserved.
+test-bats-nix-lane lane:
+  nix build '.#bats-{{lane}}' --no-link --print-build-logs
+
+# Materialize fresh fixtures into the worktree via the
+# fixtures-current derivation. Builds dodder + runs the fixture
+# generator inside the sandbox, then copies the resulting tree into
+# zz-tests_bats/previous_versions/v${V}/. Review the diff before
+# committing.
+test-bats-update-fixtures-nix:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  out=$(nix build .#fixtures-current --no-link --print-out-paths)
+  ver=$(basename "$out"/v*)
+  dest="zz-tests_bats/previous_versions/$ver"
+  echo "==> Materializing $ver from $out"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  cp -r --no-preserve=mode "$out/$ver"/. "$dest"/
+  bin/chflags.bash -R nouchg "$dest"
+  echo ""
+  echo "==> Fixture changes:"
+  git diff --stat -- "$dest"
+  echo ""
+  echo "Review with: git diff -- $dest"
+  echo "Then: git add $dest && git commit -m 'Update test fixtures'"
+
 #   ____      _
 #  |  _ \ ___| | ___  __ _ ___  ___
 #  | |_) / _ \ |/ _ \/ _` / __|/ _ \
