@@ -6,7 +6,9 @@ setup() {
 
   # https://github.com/amarbel-llc/dodder/issues/117
   # Radicale cannot create a socketpair(AF_UNIX) under the test sandbox.
-  skip "Radicale setup blocked by sandbox, see #117"
+  # Also deferred until haustoria/caldav is scoped to a release milestone,
+  # see https://github.com/amarbel-llc/dodder/issues/191
+  skip "Radicale setup blocked by sandbox (#117); deferred pending milestone scoping (#191)"
 
   start_radicale
 }

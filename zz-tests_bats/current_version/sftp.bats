@@ -6,7 +6,9 @@ setup() {
 
   # https://github.com/amarbel-llc/dodder/issues/118
   # dodder-test-sftp-server never prints its READY line under the test sandbox.
-  skip "SFTP test server setup blocked by sandbox, see #118"
+  # Also deferred until sftp remotes are scoped to a release milestone,
+  # see https://github.com/amarbel-llc/dodder/issues/191
+  skip "SFTP test server setup blocked by sandbox (#118); deferred pending milestone scoping (#191)"
 
   start_sftp_server
 }
