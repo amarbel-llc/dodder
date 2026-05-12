@@ -29,9 +29,13 @@ function ceiling_blocks_workspace_discovery { # @test
 
 	# With ceiling set to the test tmpdir, both the XDG override walk and the
 	# workspace walk are blocked. set_xdg provides sandbox-safe fallback paths
-	# so dodder can initialize without the override.
+	# so dodder can initialize without the override. The two-env composition
+	# means the madder side's discovery walk-up obeys MADDER_CEILING_DIRECTORIES,
+	# not DODDER_CEILING_DIRECTORIES — both must be set, or the madder side will
+	# climb past the intended ceiling and discover the workspace's .madder/.
 	set_xdg "$BATS_TEST_TMPDIR"
 	export DODDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR"
+	export MADDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR"
 
 	run_dodder info-workspace
 	assert_failure
