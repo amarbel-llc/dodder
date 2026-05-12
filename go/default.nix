@@ -73,6 +73,17 @@ let
   batsLaneOutputs = batsAttrs.batsLaneOutputs;
   fixtures-current = batsAttrs.fixtures-current;
 
+  # Sandboxed Go unit test lane. Runs `go test -tags test,debug ./...`
+  # inside a nix-build sandbox so tests cannot leak into the developer's
+  # real $HOME / XDG dirs (see go/go-tests.nix for the motivating bug).
+  # Unconditional — its only flake-input dependency is nixpkgs, which is
+  # always available.
+  goTestAttrs = import ./go-tests.nix {
+    inherit pkgs version commit;
+  };
+
+  dodder-go-test = goTestAttrs.dodder-go-test;
+
   # dodder-debug: same source as `dodder` but compiled with `-tags
   # debug`. The debug tag enables debug-only subcommands
   # (debug-print-probe-index, etc.) and runtime pool-repool
@@ -136,11 +147,18 @@ let
 in
 {
   packages = {
-    inherit dodder;
+    inherit dodder dodder-go-test;
     default = dodder;
   } // batsLaneOutputs // (
     if fixtures-current == null then { } else { inherit fixtures-current; }
   );
+
+  # Wired into the flake's `checks.<system>.*` so `nix flake check` runs
+  # the sandboxed Go unit-test lane. Additional checks (e.g. the bats
+  # lanes) can drop in here without further flake.nix changes.
+  checks = {
+    go-test = dodder-go-test;
+  };
 
   docker = pkgs.dockerTools.buildImage {
     name = "dodder";

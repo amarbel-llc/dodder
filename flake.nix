@@ -75,7 +75,7 @@
         };
       in
       {
-        inherit (result) packages;
+        inherit (result) packages checks;
         devShells.default = result.devShells.default;
       }
     ));

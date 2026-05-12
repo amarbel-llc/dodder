@@ -380,7 +380,7 @@ check-go-defererr: build-analyzer-defererr
 check-go-versions:
   go run ./lib/alfa/analyzers/versions
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions test-go-unit
 
 #   _____         _
 #  |_   _|__  ___| |_
@@ -389,8 +389,13 @@ check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-def
 #    |_|\___||___/\__|
 #
 
-test-go-unit *flags:
-  tap-dancer go-test {{flags}} -skip-empty -count=1 -tags test,debug ./...
+# Runs the Go unit test suite inside the nix sandbox (see go/go-tests.nix).
+# Sandboxing is load-bearing: madder's MakeBlobStores merges the developer's
+# real ~/.local/share/madder/ into any process-level XDG override, so bare
+# `go test` can leak across the test/dev boundary. For tight per-package
+# iteration, use `test-go-pkg` (the unsandboxed escape hatch).
+test-go-unit:
+  nix build .#dodder-go-test -L
 
 test-go-pkg pkg *flags:
   go test -tags test,debug -v -count=1 {{flags}} {{pkg}}
