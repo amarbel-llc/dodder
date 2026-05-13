@@ -1,17 +1,13 @@
 package commands_dodder
 
 import (
-	"bytes"
-	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
@@ -64,10 +60,6 @@ func (cmd *MigrateConfigSeedKey) SetFlagDefinitions(
 	)
 }
 
-var reConfigSeedPrivateKey = regexp.MustCompile(
-	`(?m)^(private-key\s*=\s*['"])([^'"]+)(['"])`,
-)
-
 func (cmd MigrateConfigSeedKey) Run(req command.Request) {
 	req.AssertNoMoreArgs()
 
@@ -83,28 +75,17 @@ func (cmd MigrateConfigSeedKey) Run(req command.Request) {
 		path = resolved
 	}
 
-	original, err := os.ReadFile(path)
+	result, err := env_repo.MigrateLegacyCombinedHRPConfigSeed(
+		path,
+		cmd.backup,
+		dryRun,
+	)
 	if err != nil {
-		errors.ContextCancelWithError(req, errors.Wrapf(err, "reading %s", path))
+		errors.ContextCancelWithError(req, err)
 		return
 	}
 
-	match := reConfigSeedPrivateKey.FindSubmatchIndex(original)
-	if match == nil {
-		errors.ContextCancelWithErrorf(
-			req,
-			"no private-key field found in %s",
-			path,
-		)
-		return
-	}
-
-	valueStart, valueEnd := match[4], match[5]
-	legacyWire := string(original[valueStart:valueEnd])
-
-	var probe markl.Id
-	decodeErr := probe.UnmarshalText([]byte(legacyWire))
-	if decodeErr == nil {
+	if result.AlreadyCanonical {
 		ui.Out().Printf(
 			"%s: private-key already in canonical split-HRP wire form, nothing to do",
 			path,
@@ -112,96 +93,21 @@ func (cmd MigrateConfigSeedKey) Run(req command.Request) {
 		return
 	}
 
-	var legacy markl.ErrLegacyCombinedHRPWireForm
-	if !errors.As(decodeErr, &legacy) {
-		errors.ContextCancelWithError(
-			req,
-			errors.Wrapf(decodeErr, "decoding private-key in %s", path),
-		)
-		return
-	}
-
-	var canonical markl.Id
-	if err := canonical.SetPurposeId(legacy.Purpose); err != nil {
-		errors.ContextCancelWithError(
-			req,
-			errors.Wrapf(err, "setting purpose %q", legacy.Purpose),
-		)
-		return
-	}
-
-	if err := canonical.SetMarklId(legacy.FormatId, legacy.Data); err != nil {
-		errors.ContextCancelWithError(
-			req,
-			errors.Wrapf(
-				err,
-				"setting format=%q data=%d bytes",
-				legacy.FormatId,
-				len(legacy.Data),
-			),
-		)
-		return
-	}
-
-	canonicalBytes, err := canonical.MarshalText()
-	if err != nil {
-		errors.ContextCancelWithError(
-			req,
-			errors.Wrapf(err, "re-marshaling private-key"),
-		)
-		return
-	}
-
-	canonicalWire := string(canonicalBytes)
-
-	if canonicalWire == legacyWire {
-		errors.ContextCancelWithErrorf(
-			req,
-			"re-encode produced identical wire form; refusing to write (purpose=%q, format=%q)",
-			legacy.Purpose,
-			legacy.FormatId,
-		)
-		return
-	}
-
 	ui.Out().Printf("legacy combined-HRP wire form detected at %s", path)
-	ui.Out().Printf("  purpose: %s", legacy.Purpose)
-	ui.Out().Printf("  format:  %s", legacy.FormatId)
-	ui.Out().Printf("  data:    %d bytes (preserved)", len(legacy.Data))
-	ui.Out().Printf("  before:  %s", legacyWire)
-	ui.Out().Printf("  after:   %s", canonicalWire)
+	ui.Out().Printf("  purpose: %s", result.Purpose)
+	ui.Out().Printf("  format:  %s", result.FormatId)
+	ui.Out().Printf("  data:    %d bytes (preserved)", result.DataBytes)
+	ui.Out().Printf("  before:  %s", result.LegacyWire)
+	ui.Out().Printf("  after:   %s", result.CanonicalWire)
 
 	if dryRun {
 		ui.Out().Print("dry-run: not writing")
 		return
 	}
 
-	var rewritten bytes.Buffer
-	rewritten.Grow(len(original))
-	rewritten.Write(original[:valueStart])
-	rewritten.WriteString(canonicalWire)
-	rewritten.Write(original[valueEnd:])
-
-	if cmd.backup {
-		backupPath := fmt.Sprintf("%s.bak.%d", path, time.Now().Unix())
-		if err := os.WriteFile(backupPath, original, 0o600); err != nil {
-			errors.ContextCancelWithError(
-				req,
-				errors.Wrapf(err, "writing backup %s", backupPath),
-			)
-			return
-		}
-		ui.Out().Printf("wrote backup: %s", backupPath)
+	if result.BackupPath != "" {
+		ui.Out().Printf("wrote backup: %s", result.BackupPath)
 	}
-
-	if err := os.WriteFile(path, rewritten.Bytes(), 0o600); err != nil {
-		errors.ContextCancelWithError(
-			req,
-			errors.Wrapf(err, "writing %s", path),
-		)
-		return
-	}
-
 	ui.Out().Printf("rewrote %s", path)
 }
 

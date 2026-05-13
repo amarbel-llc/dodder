@@ -102,7 +102,7 @@ func Make(
 			if errors.IsNotExist(err) {
 				err = nil
 			} else {
-				err = errors.Wrap(err)
+				err = wrapConfigSeedDecodeError(err, ownEnvLocal, fileConfigPermanent)
 				return env, err
 			}
 		} else {
@@ -116,7 +116,7 @@ func Make(
 			if errors.IsNotExist(err) {
 				err = errors.Wrap(ErrNotInDodderDir{Expected: fileConfigPermanent})
 			} else {
-				err = errors.Wrap(err)
+				err = wrapConfigSeedDecodeError(err, ownEnvLocal, fileConfigPermanent)
 			}
 			return env, err
 		} else {
