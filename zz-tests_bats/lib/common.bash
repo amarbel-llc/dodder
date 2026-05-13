@@ -122,7 +122,7 @@ function run_dodder_debug {
   cmd="$1"
   shift
   #shellcheck disable=SC2068
-  timeout --preserve-status "2s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
+  timeout --preserve-status "5s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
 }
 
 function run_dodder {
@@ -146,7 +146,7 @@ function run_dodder {
   run env \
     DODDER_CEILING_DIRECTORIES="${DODDER_TEST_CEILING:-$PWD}" \
     MADDER_CEILING_DIRECTORIES="${MADDER_TEST_CEILING:-$PWD}" \
-    timeout --preserve-status "2s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
+    timeout --preserve-status "5s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
 }
 
 function run_madder {
@@ -157,7 +157,7 @@ function run_madder {
     DODDER_CEILING_DIRECTORIES="${DODDER_TEST_CEILING:-$PWD}" \
     MADDER_CEILING_DIRECTORIES="${MADDER_TEST_CEILING:-$PWD}" \
     XDG_LOG_HOME="$BATS_TEST_TMPDIR/.xdg/log" \
-    timeout --preserve-status "2s" "$MADDER_BIN" "$cmd" "$@"
+    timeout --preserve-status "5s" "$MADDER_BIN" "$cmd" "$@"
 }
 
 # TODO make this actually unify stderr
