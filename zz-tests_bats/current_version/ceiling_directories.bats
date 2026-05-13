@@ -27,15 +27,20 @@ function ceiling_blocks_workspace_discovery { # @test
 	run_dodder info-workspace
 	assert_success
 
-	# With ceiling set to the test tmpdir, both the XDG override walk and the
-	# workspace walk are blocked. set_xdg provides sandbox-safe fallback paths
-	# so dodder can initialize without the override. The two-env composition
-	# means the madder side's discovery walk-up obeys MADDER_CEILING_DIRECTORIES,
-	# not DODDER_CEILING_DIRECTORIES — both must be set, or the madder side will
-	# climb past the intended ceiling and discover the workspace's .madder/.
+	# Ceiling semantics match git's GIT_CEILING_DIRECTORIES: the walk-up does
+	# not chdir UP ACROSS a listed dir, but the listed dir itself is still
+	# searched. To block discovery of the fixture's .dodder/ at
+	# $BATS_TEST_TMPDIR, set the ceiling at a strictly-deeper dir
+	# ($BATS_TEST_TMPDIR/child) so the walk stops one level above the ceiling
+	# before it can reach $BATS_TEST_TMPDIR.
+	#
+	# Both env vars are set because the dodder env_local (utilityName="dodder")
+	# obeys DODDER_CEILING_DIRECTORIES while the madder side (utilityName="madder")
+	# obeys MADDER_CEILING_DIRECTORIES. set_xdg provides sandbox-safe XDG paths
+	# so dodder can initialize without finding the fixture via CWD-override walk.
 	set_xdg "$BATS_TEST_TMPDIR"
-	export DODDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR"
-	export MADDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR"
+	export DODDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR/child"
+	export MADDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR/child"
 
 	run_dodder info-workspace
 	assert_failure

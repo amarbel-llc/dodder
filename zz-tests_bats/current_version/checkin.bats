@@ -466,27 +466,6 @@ function checkin_explicit_workspace_delete_files { # @test
 	EOM
 }
 
-# https://github.com/amarbel-llc/dodder/issues/40
-function checkin_type_file_creates_type_object { # @test
-	testdir="$BATS_TEST_TMPDIR/type-object"
-	mkdir -p "$testdir"
-	pushd "$testdir" || exit 1
-
-	run_dodder_init_disable_age
-
-	cat >img.type <<-'TYPEFILE'
-		---
-		! toml-type-v2
-		---
-
-		file-extension = "png"
-	TYPEFILE
-
-	run_dodder checkin -delete img.type
-	assert_success
-
-	# The type object !img should exist after checkin
-	run_dodder show '!img:t'
-	assert_success
-	assert_output --regexp '^\[!img @blake2b256-.+ !toml-type-v2\]$'
-}
+# checkin_type_file_creates_type_object moved to type_object.bats — its
+# fresh-init flow is incompatible with this file's copy_from_version setup
+# under the new git-matching XDG-override walk-up semantics (see #40).

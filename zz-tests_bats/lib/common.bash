@@ -128,15 +128,27 @@ function run_dodder_debug {
 function run_dodder {
   cmd="$1"
   shift
+  # Ceiling at $PWD (NOT $BATS_TEST_TMPDIR) blocks the walk-up above the
+  # caller's CWD. Under git-matching ceiling semantics (block ABOVE the
+  # listed dir), this is what's needed so that a fresh-init in a sub-CWD
+  # doesn't discover a fixture's `.dodder/` / `.madder/` parked in
+  # $BATS_TEST_TMPDIR by setup. Without this, the fresh init silently
+  # split-brains its writes across CWD's and the parent's stores. See
+  # https://github.com/amarbel-llc/dodder/issues/40.
   #shellcheck disable=SC2068
-  run timeout --preserve-status "2s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
+  run env \
+    DODDER_CEILING_DIRECTORIES="$PWD" \
+    MADDER_CEILING_DIRECTORIES="$PWD" \
+    timeout --preserve-status "2s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
 }
 
 function run_madder {
   cmd="$1"
   shift
+  # See run_dodder for ceiling=$PWD rationale.
   run env \
-    MADDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR" \
+    DODDER_CEILING_DIRECTORIES="$PWD" \
+    MADDER_CEILING_DIRECTORIES="$PWD" \
     XDG_LOG_HOME="$BATS_TEST_TMPDIR/.xdg/log" \
     timeout --preserve-status "2s" "$MADDER_BIN" "$cmd" "$@"
 }

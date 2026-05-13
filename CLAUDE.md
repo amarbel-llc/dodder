@@ -108,6 +108,15 @@ fixtures) - Adding new tests - Refactoring helpers
 
 ## Critical Conventions
 
+- **Bump a dep that's BOTH a flake input AND a Go module via
+  `just go/update-flake-input <name>`** (e.g. `madder`, `purse-first`).
+  That recipe updates `flake.lock`, runs `go get @<rev>`, and regenerates
+  `gomod2nix.toml` in one shot. Running `just go/build-nix-gomod` alone
+  only refreshes `gomod2nix.toml` and leaves the standalone binary from
+  the flake input pinned to the old rev --- bats lanes that exercise
+  both the dodder binary and the flake-provided madder binary will then
+  fail with cryptic wire-form mismatches.
+
 - **ALWAYS use `just test*` recipes** --- never run `bats`, `go test`, or
   fixture generation directly. The just recipes set BATS_BIN_DIR,
   DODDER_VERSION, inject the binary, and ensure fixtures exist.
