@@ -478,11 +478,16 @@ func (store *store) loadMutableConfigBlob(
 	mutableConfigType ids.TypeStruct,
 	blobId mad_domain_interfaces.MarklId,
 ) (err error) {
-	var blobReader mad_domain_interfaces.BlobReader
-
-	if blobReader, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(
-		blobId,
-	); err != nil {
+	// Try every enumerated madder blob store, default first, then
+	// remaining (matches madder.cat's fallback pattern). Dodder's mutable
+	// config blob is content-addressed: any store holding the blob is a
+	// valid source. Pinning the lookup to GetDefaultBlobStore() split-brains
+	// in multi-repo flows (clone/pull/push), where the local Repo's
+	// .default and a remote's .default may resolve to different
+	// directories in the same dodder process. See
+	// https://github.com/amarbel-llc/dodder/issues/196.
+	blobReader, err := store.openBlobReaderAcrossStores(blobId)
+	if err != nil {
 		ui.Debug().PrintDebug(store.envRepo.GetXDG())
 		err = errors.Wrap(err)
 		return err
@@ -505,4 +510,33 @@ func (store *store) loadMutableConfigBlob(
 	store.config.configRepo = typedBlob.Blob
 
 	return err
+}
+
+// openBlobReaderAcrossStores searches every enumerated madder blob store
+// for a content-addressed blob. Tries the default store first, then any
+// remaining stores returned by GetDefaultBlobStoreAndRemaining. Returns
+// the first reader that opens cleanly; surfaces the default store's
+// error only if every store misses, so the error message keeps pointing
+// at the canonical local path (matching the pre-multi-store behavior).
+func (store *store) openBlobReaderAcrossStores(
+	blobId mad_domain_interfaces.MarklId,
+) (mad_domain_interfaces.BlobReader, error) {
+	defaultStore, remaining := store.envRepo.GetDefaultBlobStoreAndRemaining()
+
+	reader, defaultErr := defaultStore.MakeBlobReader(blobId)
+	if defaultErr == nil {
+		return reader, nil
+	}
+
+	for _, blobStore := range remaining {
+		if !blobStore.HasBlob(blobId) {
+			continue
+		}
+
+		if r, err := blobStore.MakeBlobReader(blobId); err == nil {
+			return r, nil
+		}
+	}
+
+	return nil, defaultErr
 }
