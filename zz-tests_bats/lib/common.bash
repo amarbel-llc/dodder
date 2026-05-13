@@ -90,9 +90,6 @@ DODDER_BIN="${DODDER_BIN:-dodder}"
 require_bin DODDER_DER_BIN der
 DODDER_DER_BIN="${DODDER_DER_BIN:-der}"
 
-require_bin DODDER_TEST_SFTP_SERVER dodder-test-sftp-server
-DODDER_TEST_SFTP_SERVER="${DODDER_TEST_SFTP_SERVER:-dodder-test-sftp-server}"
-
 require_bin MADDER_BIN madder
 MADDER_BIN="${MADDER_BIN:-madder}"
 

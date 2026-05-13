@@ -5,9 +5,15 @@ setup() {
   export output
 
   # https://github.com/amarbel-llc/dodder/issues/118
-  # dodder-test-sftp-server never prints its READY line under the test sandbox.
+  # The SFTP test server never prints its READY line under the test sandbox.
   # Also deferred until haustoria/orgmode is scoped to a release milestone,
   # see https://github.com/amarbel-llc/dodder/issues/191
+  #
+  # When this lane is revived: dodder's own dodder-test-sftp-server has been
+  # deleted. Reach madder's equivalent (madder-test-sftp-server) instead via
+  # a MADDER_TEST_SFTP_SERVER env var once madder exposes it as a flake
+  # package output -- tracked in amarbel-llc/madder#177. Until that ships,
+  # madder-test-sftp-server is devshell-only on the madder flake.
   skip "SFTP test server setup blocked by sandbox (#118); deferred pending milestone scoping (#191)"
 
   start_sftp_server
@@ -24,9 +30,12 @@ function start_sftp_server {
   local remote_dir="$BATS_TEST_TMPDIR/remote-org"
   mkdir -p "$remote_dir/notes"
 
-  local server_bin="$DODDER_TEST_SFTP_SERVER"
+  # When reviving: switch to "$MADDER_TEST_SFTP_SERVER" once madder
+  # exposes madder-test-sftp-server as a flake package output
+  # (amarbel-llc/madder#177).
+  local server_bin="$MADDER_TEST_SFTP_SERVER"
   if [[ ! -x $server_bin ]]; then
-    skip "dodder-test-sftp-server not found at $server_bin"
+    skip "madder-test-sftp-server not found at $server_bin"
   fi
 
   coproc SFTP_SERVER {
@@ -42,7 +51,7 @@ function start_sftp_server {
     echo "$known_hosts_entry" >"$BATS_TEST_TMPDIR/known_hosts"
     SFTP_KNOWN_HOSTS="$BATS_TEST_TMPDIR/known_hosts"
   else
-    fail "dodder-test-sftp-server did not print expected READY line: $ready_line"
+    fail "test SFTP server did not print expected READY line: $ready_line"
   fi
 
   export SFTP_PORT SFTP_KNOWN_HOSTS

@@ -7,9 +7,9 @@
 # two flake inputs).
 #
 # Dodder-specific defaults: `bats-libs` from amarbel-llc/bats on
-# `BATS_LIB_PATH`, DODDER_BIN / DODDER_DER_BIN /
-# DODDER_TEST_SFTP_SERVER / MADDER_BIN exported via the `binaries`
-# map, `BATS_TEST_TIMEOUT` mirroring `zz-tests_bats/justfile`. The
+# `BATS_LIB_PATH`, DODDER_BIN / DODDER_DER_BIN / MADDER_BIN exported
+# via the `binaries` map, `BATS_TEST_TIMEOUT` mirroring
+# `zz-tests_bats/justfile`. The
 # `testFiles` parameter (amarbel-llc/nixpkgs#24, mirrored in
 # amarbel-llc/bats) explicitly enumerates dodder's two-subdir layout
 # so the lane builder doesn't fall back to its default top-level
@@ -30,7 +30,6 @@
   batsLane,
   bats-libs,
   dodder,
-  dodder-test-sftp-server,
   madder-bin,
   batsSrc,
   # Source-of-truth flake.nix, staged at stage/flake.nix so the
@@ -72,10 +71,6 @@ let
           inherit base;
           name = "der";
         };
-        DODDER_TEST_SFTP_SERVER = {
-          base = dodder-test-sftp-server;
-          name = "dodder-test-sftp-server";
-        };
         MADDER_BIN = {
           base = madder-bin;
           name = "madder";
@@ -102,11 +97,10 @@ let
       #          format_pandoc.bats, several fields.bats cases).
       # vim:     mergetool tests resolve the `vimdiff` script
       #          (current_version/mergetool.bats).
-      # dodder + madder + dodder-test-sftp-server: a handful of tests
-      #          invoke these binaries by bare name on PATH rather than
-      #          through their DODDER_BIN / MADDER_BIN /
-      #          DODDER_TEST_SFTP_SERVER env-var aliases. Putting the
-      #          packages on nativeBuildInputs gives both surfaces.
+      # dodder + madder: a handful of tests invoke these binaries by
+      #          bare name on PATH rather than through their DODDER_BIN /
+      #          MADDER_BIN env-var aliases. Putting the packages on
+      #          nativeBuildInputs gives both surfaces.
       nativeBuildInputs = (with pkgs; [
         tree
         curl
@@ -120,7 +114,6 @@ let
         yq-go
       ]) ++ [
         dodder
-        dodder-test-sftp-server
         madder-bin
       ];
       extraStagedFiles = [
@@ -228,7 +221,6 @@ let
     export HOME=$TMPDIR
     export DODDER_BIN=${dodder}/bin/dodder
     export DODDER_DER_BIN=${dodder}/bin/der
-    export DODDER_TEST_SFTP_SERVER=${dodder-test-sftp-server}/bin/dodder-test-sftp-server
     export MADDER_BIN=${madder-bin}/bin/madder
     export DODDER_VERSION="v$(${dodder}/bin/dodder info store-version)"
     export DODDER_CEILING_DIRECTORIES=/build

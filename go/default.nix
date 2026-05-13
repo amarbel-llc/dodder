@@ -24,20 +24,6 @@ let
     inherit system;
   };
 
-  # Devshell-only test harness for SFTP integration tests. Intentionally
-  # NOT included in the `packages` output — release artifacts must not
-  # ship a server that accepts any password (mirrors madder/RFC 0001).
-  dodder-test-sftp-server = pkgs.buildGoApplication {
-    pname = "dodder-test-sftp-server";
-    version = "0.0.0";
-    src = ./.;
-    pwd = ./.;
-    subPackages = [ "cmd/dodder-test-sftp-server" ];
-    modules = ./gomod2nix.toml;
-    go = pkgs.go_1_26;
-    GOTOOLCHAIN = "local";
-  };
-
   # bats integration test lanes + hermetic fixture generator. Auto-
   # discovered file_tags become `bats-${tag}` flake outputs;
   # `bats-default` runs everything; `fixtures-current` produces the
@@ -51,7 +37,7 @@ let
       { batsLaneOutputs = { }; fixtures-current = null; }
     else
       import ./bats.nix {
-        inherit pkgs batsSrc dodder-test-sftp-server;
+        inherit pkgs batsSrc;
         # Lanes run against the debug-tagged binary to match what the
         # existing batman test path exercises (subcommand surface,
         # repool poisoning, etc.). The release `dodder` package stays
@@ -175,7 +161,6 @@ in
 
   devShells.default = pkgs.mkShell {
     packages = [
-      dodder-test-sftp-server
       pkgs.gomod2nix
       tommy.packages.${system}.default
     ]
