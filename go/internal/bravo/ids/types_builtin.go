@@ -25,8 +25,6 @@ const (
 	TypeLuaTagV2                                    = "!lua-tag-v2"
 	TypeZettelIdLogV1                               = "!zettel_id_log-v1"
 	TypeZettelIdLogVCurrent                         = TypeZettelIdLogV1
-	TypeTomlBlobStoreConfigSftpExplicitV0           = "!toml-blob_store_config_sftp-explicit-v0"
-	TypeTomlBlobStoreConfigSftpViaSSHConfigV0       = "!toml-blob_store_config_sftp-ssh_config-v0"
 	TypeTomlBlobStoreConfigV1                       = "!toml-blob_store_config-v1"
 	TypeTomlBlobStoreConfigV2                       = "!toml-blob_store_config-v2"
 	TypeTomlBlobStoreConfigV3                       = "!toml-blob_store_config-v3"
@@ -105,16 +103,6 @@ func init() {
 	)
 	registerBuiltinTypeString(
 		TypeTomlBlobStoreConfigInventoryArchiveV2,
-		genres.Unknown,
-		false,
-	)
-	registerBuiltinTypeString(
-		TypeTomlBlobStoreConfigSftpExplicitV0,
-		genres.Unknown,
-		false,
-	)
-	registerBuiltinTypeString(
-		TypeTomlBlobStoreConfigSftpViaSSHConfigV0,
 		genres.Unknown,
 		false,
 	)

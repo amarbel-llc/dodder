@@ -321,36 +321,17 @@ the `complete_subcmd` test in `zz-tests_bats/complete.bats`.
 
 ## Common Development Pitfalls
 
-### When Adding New Blob Stores
+### Blob Stores Live in Madder, Not Dodder
 
-1.  **Type Registration**: New blob store configs need THREE registrations:
-    - Add type constant to `internal/echo/ids/types_builtin.go` (e.g.,
-      `TypeTomlBlobStoreConfigSftpV0`)
-    - Register in init() function of the same file
-    - Add to type map in `internal/echo/blob_store_configs/io.go`
-2.  **Interface Implementation Gotchas**:
-    - `TemporaryFS` uses `FileTempWithTemplate()` not `TempFile()`
-    - SHA writers are created with `sha.MakeWriter()` not `sha.NewWriter()`
-    - Implement `ReadFrom()` method when creating custom
-      `interfaces.ShaWriteCloser`
-    - `interfaces.Sha` is already a pointer type - never use `*interfaces.Sha`
-3.  **Build Commands**:
-    - `just build` may fail if dependencies are missing
-    - Use `go build -o build/dodder ./cmd/dodder/main.go` as fallback
-    - Dependencies are added with `go get` (e.g., `go get github.com/pkg/sftp`)
-4.  **SHA Type Handling**:
-    - Use `sha.WriteCloser` type alias which maps to `interfaces.ShaWriteCloser`
-    - Access SHA values via `GetShaLike()` method, not by dereferencing
-    - SHA paths use Git-like bucketing: first 2 chars as directory
-5.  **Streaming vs Temporary Files**:
-    - Remote blob stores should use remote temporary files with atomic moves
-    - Create temporary files on remote server, then rename to final location
-    - Use Git-like bucketing: `id.Path()` for final path generation
-    - Implement proper cleanup with defer statements
-6.  **Compression/Encryption Streaming**:
-    - Use `env_dir.WriteOptions` and custom writers for output streaming
-    - For input, implement custom readers that handle the full pipeline
-    - Chain: file -\> decryption -\> decompression -\> SHA calculation
-    - Avoid `env_dir.ReadOptions` for non-file streams (expects `*os.File`)
-7.  **Error Wrapping**: Always use `errors.Wrap()` or `errors.Wrapf()` for
-    consistent error handling
+Blob store implementations (filesystem, SFTP, etc.) and their TOML config
+types now live in `amarbel-llc/madder`, not in this repo. Dodder consumes
+the `madder` binary for write/fsck against remote blob stores. If you're
+adding a new blob store backend, do it in the madder repo --- the
+`!toml-blob_store_config-*` builtin type registrations in
+`internal/bravo/ids/types_builtin.go` are kept here only so dodder can
+recognize the type strings when they appear in an inventory stream.
+
+### Error Wrapping
+
+Always use `errors.Wrap()` or `errors.Wrapf()` for consistent error
+handling.
