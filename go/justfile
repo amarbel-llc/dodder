@@ -331,7 +331,7 @@ build-nix-gomod:
 
 # TODO improve performance of this
 build-nix: build-nix-gomod
-  nix build ..
+  nix build .. --no-link
 
 build-docker: build-nix-gomod
   docker load < "$(nix build "../#docker.x86_64-linux" --print-out-paths)"
