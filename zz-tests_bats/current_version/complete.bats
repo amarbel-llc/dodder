@@ -136,6 +136,7 @@ function complete_subcmd { # @test
 		^last[[:space:]]+display the most recently committed objects$
 		^mcp[[:space:]]+start the MCP server$
 		^merge-tool[[:space:]]+resolve merge conflicts with an external tool$
+		^migrate-config-seed-key[[:space:]]+re-encode config-seed private key in canonical split-HRP form$
 		^migrate-zettel-ids[[:space:]]+migrate zettel id flat files to log format$
 		^new[[:space:]]+create new zettels$
 		^organize[[:space:]]+organize objects with a text editor$
