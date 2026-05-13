@@ -128,27 +128,34 @@ function run_dodder_debug {
 function run_dodder {
   cmd="$1"
   shift
-  # Ceiling at $PWD (NOT $BATS_TEST_TMPDIR) blocks the walk-up above the
-  # caller's CWD. Under git-matching ceiling semantics (block ABOVE the
-  # listed dir), this is what's needed so that a fresh-init in a sub-CWD
-  # doesn't discover a fixture's `.dodder/` / `.madder/` parked in
-  # $BATS_TEST_TMPDIR by setup. Without this, the fresh init silently
-  # split-brains its writes across CWD's and the parent's stores. See
-  # https://github.com/amarbel-llc/dodder/issues/40.
+  # Default ceiling = $PWD (NOT $BATS_TEST_TMPDIR) blocks the walk-up
+  # above the caller's CWD. Under git-matching ceiling semantics (block
+  # ABOVE the listed dir), this is what's needed so that a fresh-init
+  # in a sub-CWD doesn't discover a fixture's `.dodder/` / `.madder/`
+  # parked in $BATS_TEST_TMPDIR by setup. Without this, the fresh init
+  # silently split-brains its writes across CWD's and the parent's
+  # stores. See https://github.com/amarbel-llc/dodder/issues/40.
+  #
+  # `DODDER_CEILING_DIRECTORIES` itself is already set by the outer just
+  # recipe (typically to /build or the worktree root) to bound the
+  # dev-loop's walk-up, so we can't use `${VAR:-$PWD}` here -- it would
+  # never default. Instead, tests that need walk-up (e.g. workspace
+  # discovery from a sub-CWD) export `DODDER_TEST_CEILING` (or
+  # `MADDER_TEST_CEILING`) -- variables the outer recipe leaves alone.
   #shellcheck disable=SC2068
   run env \
-    DODDER_CEILING_DIRECTORIES="$PWD" \
-    MADDER_CEILING_DIRECTORIES="$PWD" \
+    DODDER_CEILING_DIRECTORIES="${DODDER_TEST_CEILING:-$PWD}" \
+    MADDER_CEILING_DIRECTORIES="${MADDER_TEST_CEILING:-$PWD}" \
     timeout --preserve-status "2s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
 }
 
 function run_madder {
   cmd="$1"
   shift
-  # See run_dodder for ceiling=$PWD rationale.
+  # See run_dodder for ceiling=$PWD rationale and the per-test override path.
   run env \
-    DODDER_CEILING_DIRECTORIES="$PWD" \
-    MADDER_CEILING_DIRECTORIES="$PWD" \
+    DODDER_CEILING_DIRECTORIES="${DODDER_TEST_CEILING:-$PWD}" \
+    MADDER_CEILING_DIRECTORIES="${MADDER_TEST_CEILING:-$PWD}" \
     XDG_LOG_HOME="$BATS_TEST_TMPDIR/.xdg/log" \
     timeout --preserve-status "2s" "$MADDER_BIN" "$cmd" "$@"
 }

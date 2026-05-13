@@ -23,7 +23,15 @@ function ceiling_blocks_workspace_discovery { # @test
 	mkdir -p child/grandchild
 	pushd child/grandchild || exit 1
 
-	# Without ceiling, workspace is discovered from child dir
+	# Raise the ceiling above $BATS_TEST_TMPDIR so the walk-up from
+	# child/grandchild can reach the workspace there. common.bash's
+	# run_dodder defaults ceiling to $PWD; we need it higher for this
+	# assertion. DODDER_TEST_CEILING is the override hook (the real
+	# DODDER_CEILING_DIRECTORIES is already set by the outer just recipe).
+	export DODDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
+	export MADDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
+
+	# Without a restrictive ceiling, workspace is discovered from child dir
 	run_dodder info-workspace
 	assert_success
 
@@ -39,8 +47,8 @@ function ceiling_blocks_workspace_discovery { # @test
 	# obeys MADDER_CEILING_DIRECTORIES. set_xdg provides sandbox-safe XDG paths
 	# so dodder can initialize without finding the fixture via CWD-override walk.
 	set_xdg "$BATS_TEST_TMPDIR"
-	export DODDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR/child"
-	export MADDER_CEILING_DIRECTORIES="$BATS_TEST_TMPDIR/child"
+	export DODDER_TEST_CEILING="$BATS_TEST_TMPDIR/child"
+	export MADDER_TEST_CEILING="$BATS_TEST_TMPDIR/child"
 
 	run_dodder info-workspace
 	assert_failure
@@ -53,8 +61,8 @@ function ceiling_does_not_block_workspace_in_cwd { # @test
 	assert_success
 
 	# Ceiling at the test dir itself should not block finding .dodder-workspace
-	# in the current directory (only blocks walking *above* it)
-	export DODDER_CEILING_DIRECTORIES="$(dirname "$BATS_TEST_TMPDIR")"
+	# in the current directory (only blocks walking *above* it).
+	export DODDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
 
 	run_dodder info-workspace
 	assert_success
@@ -68,8 +76,13 @@ function ceiling_ignores_relative_paths { # @test
 	mkdir -p child
 	pushd child || exit 1
 
-	# Relative paths in ceiling list are silently ignored
-	export DODDER_CEILING_DIRECTORIES="relative/path"
+	# Relative paths in ceiling list are silently ignored. Set
+	# MADDER_TEST_CEILING explicitly (above $BATS_TEST_TMPDIR) so the
+	# madder-side walk-up isn't capped at $PWD by common.bash's default --
+	# the variable under test is the relative-path handling of the
+	# dodder-side ceiling, not the madder side.
+	export DODDER_TEST_CEILING="relative/path"
+	export MADDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
 
 	run_dodder info-workspace
 	assert_success

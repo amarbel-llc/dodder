@@ -224,6 +224,13 @@ function workspace_parent_directory { # @test
 
 	export BATS_TEST_BODY=true
 
+	# Raise the ceiling above $BATS_TEST_TMPDIR so the walk-up from child/
+	# can reach the workspace at $BATS_TEST_TMPDIR. common.bash defaults
+	# the ceiling to $PWD; that would block parent-directory discovery,
+	# which is exactly what this test exercises.
+	export DODDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
+	export MADDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
+
 	run_dodder info-repo xdg
 	assert_success
 	assert_output - <<-EOM
