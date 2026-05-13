@@ -9,19 +9,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    tap = {
+      url = "github:amarbel-llc/tap";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     purse-first = {
       url = "github:amarbel-llc/purse-first";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
-    };
-
-    bob = {
-      url = "github:amarbel-llc/bob";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.nixpkgs-master.follows = "nixpkgs-master";
-      inputs.utils.follows = "utils";
-      inputs.purse-first.follows = "purse-first";
     };
 
     madder = {
@@ -30,7 +27,6 @@
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
       inputs.tommy.follows = "tommy";
-      inputs.bob.follows = "bob";
     };
 
     tommy = {
@@ -45,7 +41,7 @@
       nixpkgs,
       utils,
       bats,
-      bob,
+      tap,
       tommy,
       madder,
       ...
@@ -63,7 +59,7 @@
           inherit
             nixpkgs
             bats
-            bob
+            tap
             tommy
             madder
             system

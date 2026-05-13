@@ -1,7 +1,7 @@
 {
   nixpkgs,
   bats ? null,
-  bob ? null,
+  tap ? null,
   tommy,
   madder ? null,
   system,
@@ -202,9 +202,11 @@ in
       tree
       yq-go
     ])
-    ++ pkgs.lib.optionals (bob != null) [
-      bob.packages.${system}.batman
-      bob.packages.${system}.tap-dancer
+    ++ pkgs.lib.optionals (bats != null) [
+      bats.packages.${system}.default
+    ]
+    ++ pkgs.lib.optionals (tap != null) [
+      tap.packages.${system}.tap-dancer
     ]
     ++ pkgs.lib.optionals (madder != null) [
       madder.packages.${system}.default

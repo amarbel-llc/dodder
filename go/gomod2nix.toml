@@ -27,11 +27,6 @@ schema = 3
     version = 'v0.1.0'
     hash = 'sha256-WOs/RQYjQbn41ui8ztHgWSd4jxydE+fvIrl/0dmHD9Y='
 
-  [mod.'github.com/amarbel-llc/bob/packages/tap-dancer/go']
-    version = 'v0.2.0'
-    hash = 'sha256-SXBynDyZr8xT1nSfDynjewNU0DxvNoXCfwtByB1hI8g='
-    goVersion = '1.26'
-
   [mod.'github.com/amarbel-llc/madder/go']
     version = 'v0.3.18-0.20260512142753-e6547b445cda'
     hash = 'sha256-dDsc6CsXoz/9ug9vouYONvtI2kL0lMUFm2beV36R31s='
