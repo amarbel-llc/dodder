@@ -1,5 +1,3 @@
-dir_build := justfile_directory() / "go/build"
-
 # Prevent dodder's findWorkspaceFile from walking above the BATS temp dir and
 # discovering .dodder-workspace in the worktree. Without this, tests that
 # expect "no workspace" would pass incorrectly when TMPDIR is inside the repo
@@ -73,12 +71,21 @@ test-bats-tags *tags:
 # batman path. Kept because the nix lane builder operates at the
 # tag level — there is no per-file nix lane to dispatch a single
 # `show.bats` against. For tag-level filtering, use
-# `test-bats-tags <tag>` (faster, hermetic) instead.
-test-bats-targets *targets: build
-  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets {{targets}}
+# `test-bats-tags <tag>` (faster, hermetic) instead. The debug-tagged
+# dodder binary is resolved through the flake so this recipe doesn't
+# need `just build` first.
+test-bats-targets *targets:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  GOMEMLIMIT=512MiB \
+    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    BATS_BIN_DIR="$bin/bin" \
+    just zz-tests_bats/test-targets {{targets}}
 
 # Run bats with race-instrumented binary to detect data races in pool reuse.
-test-bats-race: build
+test-bats-race:
   just go/test-bats-race
 
 # Force-regenerate fixtures inside the nix sandbox, then materialize
@@ -103,10 +110,11 @@ test-bats-update-fixtures:
 
 # Snapshot current test suite for future reference.
 # Run BEFORE bumping VCurrent in store_version/main.go.
-test-bats-snapshot-version: build
+test-bats-snapshot-version:
   #!/usr/bin/env bash
   set -euo pipefail
-  export PATH="{{dir_build}}/debug:$PATH"
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
   v="v$(dodder info store-version)"
   dest="zz-tests_bats/previous_versions/$v"
 
@@ -165,10 +173,11 @@ explore-radicale:
 # Requires Radicale running (just explore-radicale) and env vars set.
 # Creates a parent repo + workspace in /tmp/dodder-haustoria-explore/.
 [group('explore')]
-explore-haustoria-init: build
+explore-haustoria-init:
   #!/usr/bin/env bash
   set -euo pipefail
-  export PATH="{{dir_build}}/debug:$PATH"
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
 
   if [[ -z "${CALDAV_URL:-}" ]]; then
     echo "Set CALDAV_URL, CALDAV_USERNAME, CALDAV_PASSWORD first."
@@ -197,29 +206,38 @@ explore-haustoria-init: build
 
 # Show haustoria status for the explore workspace.
 [group('explore')]
-explore-haustoria-status: build
+explore-haustoria-status:
   #!/usr/bin/env bash
   set -euo pipefail
-  export PATH="{{dir_build}}/debug:$PATH"
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
   cd /tmp/dodder-haustoria-explore/workspace
   dodder status
 
 live_workspace := env("HOME") / "workspaces/dodder-haustoria-caldav/workspace"
 
-# Run a dodder command in the live CalDAV workspace (no build).
+# Run a dodder command in the live CalDAV workspace.
 [group('explore')]
 explore-live *args:
   #!/usr/bin/env bash
   set -euo pipefail
   source "$HOME/.secrets.env"
-  export PATH="{{dir_build}}/debug:$PATH"
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
   cd "{{live_workspace}}"
   dodder {{args}}
 
 # Debug a specific bats test file with --no-tempdir-cleanup for inspection.
 [group('explore')]
-explore-bats-debug *targets: build
-  GOMEMLIMIT=512MiB DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" BATS_BIN_DIR="{{dir_build}}/debug" just zz-tests_bats/test-targets --no-tempdir-cleanup {{targets}}
+explore-bats-debug *targets:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  GOMEMLIMIT=512MiB \
+    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    BATS_BIN_DIR="$bin/bin" \
+    just zz-tests_bats/test-targets --no-tempdir-cleanup {{targets}}
 
 #   ____      _
 #  |  _ \ ___| | ___  __ _ ___  ___

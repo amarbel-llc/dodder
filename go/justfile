@@ -321,10 +321,13 @@ build-go-binary tags output:
   mkdir -p '{{output}}'
   go build -tags '{{tags}}' -o '{{output}}' ./cmd/*
 
+# Native build retained for ad-hoc dev use (PATH-add build/debug/ and
+# run `dodder` directly). No justfile recipe consumes it after the
+# 2026 nix migration; bats/explore/check recipes all resolve binaries
+# via `nix build --no-link --print-out-paths .#<attr>`.
 build-go: \
     build-go-generate \
     (build-go-binary "debug" "build/debug") \
-    (build-go-binary "" "build/release") \
 
 build-nix-gomod:
   gomod2nix
@@ -335,14 +338,6 @@ build-nix: build-nix-gomod
 
 build-docker: build-nix-gomod
   docker load < "$(nix build "../#docker.x86_64-linux" --print-out-paths)"
-
-build-go-cover:
-  mkdir -p build/cover-bin
-  go build -tags debug -cover -covermode=atomic -o build/cover-bin/ ./cmd/*
-
-build-go-race:
-  mkdir -p build/race
-  go build -tags debug -race -o build/race/ ./cmd/*
 
 build: build-go check-go-repool check-go-seqerror check-go-defererr check-go-versions build-nix
 
@@ -359,23 +354,23 @@ check-go-vuln:
 check-go-vet:
   go vet -tags test,debug ./... || true
 
-build-analyzer-repool:
-  go build -o build/repool-analyzer ./lib/alfa/analyzers/repool/cmd/
+check-go-repool:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-analyzer-repool')
+  go vet -tags test,debug -vettool="$bin/bin/repool" ./... || true
 
-check-go-repool: build-analyzer-repool
-  go vet -tags test,debug -vettool=build/repool-analyzer ./... || true
+check-go-seqerror:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-analyzer-seqerror')
+  go vet -tags test,debug -vettool="$bin/bin/seqerror" ./...
 
-build-analyzer-seqerror:
-  go build -o build/seqerror-analyzer ./lib/alfa/analyzers/seqerror/cmd/
-
-check-go-seqerror: build-analyzer-seqerror
-  go vet -tags test,debug -vettool=build/seqerror-analyzer ./...
-
-build-analyzer-defererr:
-  go build -o build/defererr-analyzer ./lib/alfa/analyzers/defererr/cmd/
-
-check-go-defererr: build-analyzer-defererr
-  go vet -tags test,debug -vettool=build/defererr-analyzer ./...
+check-go-defererr:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-analyzer-defererr')
+  go vet -tags test,debug -vettool="$bin/bin/defererr" ./...
 
 check-go-versions:
   go run ./lib/alfa/analyzers/versions
@@ -402,38 +397,64 @@ test-go-pkg pkg *flags:
 
 test-go: test-go-unit
 
-test-bats-generate $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
+test-bats-generate:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
+  export PATH="$bin/bin:$PATH"
+  export DODDER_BIN="$bin/bin/dodder"
   just ../zz-tests_bats/test-generate_fixtures
 
-test-bats-run $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
+test-bats-run:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
+  export PATH="$bin/bin:$PATH"
+  export DODDER_BIN="$bin/bin/dodder"
+  export BATS_BIN_DIR="$bin/bin"
   just ../zz-tests_bats/test
 
-test-bats $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
+test-bats:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
+  export PATH="$bin/bin:$PATH"
+  export DODDER_BIN="$bin/bin/dodder"
+  export BATS_BIN_DIR="$bin/bin"
   just ../zz-tests_bats/test-generate_fixtures
   just ../zz-tests_bats/test
 
 # Runs all bats tests but filters output to only show failed test files
-test-bats-failed_files $PATH=(dir_build / "debug" + ":" + env("PATH")) $DODDER_BIN=(dir_build / "debug" / "dodder"):
+test-bats-failed_files:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
+  export PATH="$bin/bin:$PATH"
+  export DODDER_BIN="$bin/bin/dodder"
+  export BATS_BIN_DIR="$bin/bin"
   just ../zz-tests_bats/test-generate_fixtures
   just ../zz-tests_bats/test | \
     grep "#  in test file " | \
     grep -o '[^[:space:]]*\.bats' | \
     sort -u
 
-# Build coverage-instrumented binaries and run bats, writing coverage to build/cover-data.
-# GOCOVERDIR must be under /tmp so sandcastle's allowWrite permits it.
-test-bats-cover: build-go-cover
+# Coverage-instrumented bats run. Resolves the cover-instrumented
+# dodder via nix and runs bats externally so GOCOVERDIR points at a
+# /tmp scratch dir (under sandcastle's allowWrite). Coverage profile
+# lands under build/cover-data/.
+test-bats-cover:
   #!/usr/bin/env bash
   set -euo pipefail
   export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
   export MADDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
-  export PATH="{{dir_build}}/debug:$PATH"
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug-cover')
+  export PATH="$bin/bin:$PATH"
   just ../zz-tests_bats/test-generate_fixtures
   cover_data="/tmp/dodder-cover-$$"
   rm -rf "$cover_data"
   mkdir -p "$cover_data"
   GOCOVERDIR="$cover_data" \
-    BATS_BIN_DIR="{{dir_build}}/cover-bin" \
+    BATS_BIN_DIR="$bin/bin" \
     just ../zz-tests_bats/test
   mkdir -p "{{dir_build}}/cover-data"
   go tool covdata textfmt -i="$cover_data" -o="{{dir_build}}/cover-data/bats-coverage.out"
@@ -441,15 +462,17 @@ test-bats-cover: build-go-cover
   echo "==> Coverage written to {{dir_build}}/cover-data/bats-coverage.out"
   echo "    View with: go tool cover -func={{dir_build}}/cover-data/bats-coverage.out"
 
-# Build race-instrumented binaries and run bats to detect data races.
-test-bats-race: build-go-race
+# Race-instrumented bats run. Resolves the race-instrumented dodder
+# via nix and injects it via BATS_BIN_DIR.
+test-bats-race:
   #!/usr/bin/env bash
   set -euo pipefail
   export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
   export MADDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
-  export PATH="{{dir_build}}/debug:$PATH"
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug-race')
+  export PATH="$bin/bin:$PATH"
   just ../zz-tests_bats/test-generate_fixtures
-  BATS_BIN_DIR="{{dir_build}}/race" \
+  BATS_BIN_DIR="$bin/bin" \
     just ../zz-tests_bats/test
 
 test-bats-next *args:

@@ -72,15 +72,12 @@ let
 
   # dodder-debug: same source as `dodder` but compiled with `-tags
   # debug`. The debug tag enables debug-only subcommands
-  # (debug-print-probe-index, etc.) and runtime pool-repool
-  # poisoning (see CLAUDE.md). It's what `just build` puts in
-  # `go/build/debug/` and what the existing batman bats path
-  # exercises. The bats nix lanes use this binary so test assertions
-  # that enumerate subcommands (complete_subcmd) match what the
-  # dev-shell path sees.
-  #
-  # Devshell-only: NOT in the `packages` output — release artifacts
-  # must not ship the debug instrumentation.
+  # (debug-print-probe-index, etc.) and runtime pool-repool poisoning
+  # (see CLAUDE.md). The bats nix lanes use this binary so test
+  # assertions that enumerate subcommands (complete_subcmd) match
+  # what the dev-shell path sees. Surfaced as a flake output so
+  # dev-loop recipes (test-bats-targets, explore-*, etc.) resolve it
+  # via `nix build --no-link --print-out-paths .#dodder-debug`.
   dodder-debug = pkgs.buildGoApplication {
     pname = "dodder-debug";
     inherit version commit;
@@ -95,6 +92,57 @@ let
     GOTOOLCHAIN = "local";
     tags = [ "debug" ];
   };
+
+  # Race-instrumented variant of dodder-debug. The fork's
+  # pkgs.buildGoRace also runs `go test -race ./...` as a checkPhase,
+  # which needs the test build tag the dev-shell uses. Bats injects
+  # this binary externally and the dodder-go-test derivation already
+  # covers unit tests, so we just append -race to buildFlagsArray
+  # ourselves (mirroring the cover variant below) and skip the test
+  # phase.
+  dodder-debug-race = dodder-debug.overrideAttrs (old: {
+    pname = "${old.pname}-race";
+    CGO_ENABLED = 1;
+    preBuild = (old.preBuild or "") + ''
+      buildFlagsArray+=("-race")
+    '';
+  });
+
+  # Coverage-instrumented variant of dodder-debug. Bats runs externally
+  # (it writes its own GOCOVERDIR), so the build only needs the -cover
+  # flags — pkgs.buildGoCover's in-derivation coverIntegrationCommand
+  # is unnecessary. preBuild appends to buildFlagsArray, the bash array
+  # the fork's go-config-hook splats into the go install command.
+  dodder-debug-cover = dodder-debug.overrideAttrs (old: {
+    pname = "${old.pname}-cover";
+    preBuild = (old.preBuild or "") + ''
+      buildFlagsArray+=("-cover" "-covermode=atomic")
+    '';
+  });
+
+  # Custom go/analysis static analyzers. Each cmd/main.go is a thin
+  # singlechecker.Main wrapper under lib/alfa/analyzers/<name>/cmd;
+  # the check-go-* justfile recipes plumb the binaries into
+  # `go vet -vettool=...`. buildGoApplication names the binary after
+  # the cmd directory's basename ('cmd'), so postInstall renames it
+  # to the analyzer's name.
+  mkDodderAnalyzer = name: pkgs.buildGoApplication {
+    pname = "dodder-analyzer-${name}";
+    inherit version commit;
+    src = ./.;
+    pwd = ./.;
+    subPackages = [ "lib/alfa/analyzers/${name}/cmd" ];
+    modules = ./gomod2nix.toml;
+    go = pkgs.go_1_26;
+    GOTOOLCHAIN = "local";
+    postInstall = ''
+      mv $out/bin/cmd $out/bin/${name}
+    '';
+  };
+
+  dodder-analyzer-repool = mkDodderAnalyzer "repool";
+  dodder-analyzer-seqerror = mkDodderAnalyzer "seqerror";
+  dodder-analyzer-defererr = mkDodderAnalyzer "defererr";
 
   dodder = pkgs.buildGoApplication {
     pname = "dodder";
@@ -133,7 +181,16 @@ let
 in
 {
   packages = {
-    inherit dodder dodder-go-test;
+    inherit
+      dodder
+      dodder-debug
+      dodder-debug-race
+      dodder-debug-cover
+      dodder-analyzer-repool
+      dodder-analyzer-seqerror
+      dodder-analyzer-defererr
+      dodder-go-test
+      ;
     default = dodder;
   } // batsLaneOutputs // (
     if fixtures-current == null then { } else { inherit fixtures-current; }

@@ -6,9 +6,12 @@ are properly called.
 ## Usage
 
 ``` sh
-just check-go-repool          # build analyzer + run on all packages
-go vet -vettool=build/repool-analyzer ./...  # run directly
+just check-go-repool   # nix-builds the analyzer + runs on all packages
 ```
+
+The analyzer binary lives in the flake as `.#dodder-analyzer-repool`;
+the just recipe captures its store path with `nix build --no-link
+--print-out-paths` and passes it to `go vet -vettool=...`.
 
 ## What It Detects
 
