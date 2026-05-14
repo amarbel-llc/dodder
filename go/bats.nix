@@ -7,9 +7,9 @@
 # two flake inputs).
 #
 # Dodder-specific defaults: `bats-libs` from amarbel-llc/bats on
-# `BATS_LIB_PATH`, DODDER_BIN / DODDER_DER_BIN / MADDER_BIN exported
-# via the `binaries` map, `BATS_TEST_TIMEOUT` mirroring
-# `zz-tests_bats/justfile`. The
+# `BATS_LIB_PATH`, DODDER_BIN / DODDER_DER_BIN / MADDER_BIN /
+# MADDER_TEST_SFTP_SERVER exported via the `binaries` map,
+# `BATS_TEST_TIMEOUT` mirroring `zz-tests_bats/justfile`. The
 # `testFiles` parameter (amarbel-llc/nixpkgs#24, mirrored in
 # amarbel-llc/bats) explicitly enumerates dodder's two-subdir layout
 # so the lane builder doesn't fall back to its default top-level
@@ -31,6 +31,11 @@
   bats-libs,
   dodder,
   madder-bin,
+  # SFTP test harness sourced from the madder flake
+  # (amarbel-llc/madder#177). Wired into the lane as MADDER_TEST_SFTP_SERVER
+  # so haustoria_orgmode.bats can resolve it without rebuilding the binary
+  # in dodder.
+  madder-test-sftp-server-bin,
   batsSrc,
   # Source-of-truth flake.nix, staged at stage/flake.nix so the
   # version-burnin test (current_version/version.bats) can `grep
@@ -75,6 +80,10 @@ let
           base = madder-bin;
           name = "madder";
         };
+        MADDER_TEST_SFTP_SERVER = {
+          base = madder-test-sftp-server-bin;
+          name = "madder-test-sftp-server";
+        };
       };
       batsLibPath = [ bats-libs.batsLibPath ];
       # The lane runs in a stripped nix sandbox — anything not listed
@@ -97,10 +106,11 @@ let
       #          format_pandoc.bats, several fields.bats cases).
       # vim:     mergetool tests resolve the `vimdiff` script
       #          (current_version/mergetool.bats).
-      # dodder + madder: a handful of tests invoke these binaries by
-      #          bare name on PATH rather than through their DODDER_BIN /
-      #          MADDER_BIN env-var aliases. Putting the packages on
-      #          nativeBuildInputs gives both surfaces.
+      # dodder + madder + madder-test-sftp-server: a handful of tests
+      #          invoke these binaries by bare name on PATH rather than
+      #          through their DODDER_BIN / MADDER_BIN /
+      #          MADDER_TEST_SFTP_SERVER env-var aliases. Putting the
+      #          packages on nativeBuildInputs gives both surfaces.
       nativeBuildInputs = (with pkgs; [
         tree
         curl
@@ -115,6 +125,7 @@ let
       ]) ++ [
         dodder
         madder-bin
+        madder-test-sftp-server-bin
       ];
       extraStagedFiles = [
         { src = flakeNixSrc; dest = "flake.nix"; }

@@ -48,6 +48,11 @@ let
         batsLane = bats.lib.${system}.batsLane;
         bats-libs = bats.packages.${system}.bats-libs;
         madder-bin = madder.packages.${system}.default;
+        # SFTP test server for haustoria_orgmode bats lanes. Sourced
+        # from madder's flake (amarbel-llc/madder#177) rather than
+        # rebuilt locally — see haustoria_orgmode.bats for the
+        # consumption site.
+        madder-test-sftp-server-bin = madder.packages.${system}.madder-test-sftp-server;
         # version.bats greps dodderVersion out of the source-of-truth
         # flake.nix; stage it via extraStagedFiles inside the lane.
         flakeNixSrc = ../flake.nix;

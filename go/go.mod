@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260414180333-e8e81ae667b3
 	filippo.io/age v1.3.1
-	github.com/amarbel-llc/madder/go v0.3.18-0.20260512142753-e6547b445cda
+	github.com/amarbel-llc/madder/go v0.3.18-0.20260514212758-1ae2a3236726
 	github.com/amarbel-llc/purse-first/libs/dewey v0.1.0
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tap/go v0.1.2
