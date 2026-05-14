@@ -211,7 +211,7 @@ func testSigRoundTripMissingNonceRejected(t *ui.TestContext) {
 	// bypass the wrapped signer's nonce injection entirely.
 	resp, err := http.Get(fixture.htServer.URL + "/")
 	t.AssertNoError(err)
-	defer resp.Body.Close()
+	defer resp.Body.Close() //defer:err-checked
 
 	if resp.StatusCode != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", resp.StatusCode)
