@@ -5,8 +5,8 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260414180333-e8e81ae667b3
 	filippo.io/age v1.3.1
-	github.com/amarbel-llc/madder/go v0.3.18-0.20260514212758-1ae2a3236726
-	github.com/amarbel-llc/purse-first/libs/dewey v0.1.0
+	github.com/amarbel-llc/madder/go v0.3.19-0.20260515201829-3b4de1779b59
+	github.com/amarbel-llc/purse-first/libs/dewey v0.1.1-0.20260514213118-2be74f0104b8
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tap/go v0.1.2
 	github.com/amarbel-llc/tommy v0.0.0-20260405143331-87255e87bf37
@@ -20,10 +20,10 @@ require (
 	github.com/pkg/sftp v1.13.10
 	github.com/tetratelabs/wazero v1.11.0
 	github.com/yuin/gopher-lua v1.1.2
-	golang.org/x/crypto v0.50.0
+	golang.org/x/crypto v0.51.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/term v0.42.0
-	golang.org/x/text v0.36.0
+	golang.org/x/term v0.43.0
+	golang.org/x/text v0.37.0
 	golang.org/x/tools v0.44.0
 	tailscale.com v1.96.5
 )
@@ -74,9 +74,9 @@ require (
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
 	golang.org/x/mod v0.35.0 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	golang.zx2c4.com/wireguard/windows v0.6.1 // indirect
 	mvdan.cc/sh/v3 v3.13.1 // indirect

@@ -28,13 +28,13 @@ schema = 3
     hash = 'sha256-WOs/RQYjQbn41ui8ztHgWSd4jxydE+fvIrl/0dmHD9Y='
 
   [mod.'github.com/amarbel-llc/madder/go']
-    version = 'v0.3.18-0.20260514212758-1ae2a3236726'
-    hash = 'sha256-CUN4ptcvVkVE/gl4HuTOUIJlXAfjE5EzwIFJ7CHx+JY='
+    version = 'v0.3.19-0.20260515201829-3b4de1779b59'
+    hash = 'sha256-LQqLLAasMl2GcBBIFrdFAP3O+2My9it2gfhSQmRIjr4='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/purse-first/libs/dewey']
-    version = 'v0.1.0'
-    hash = 'sha256-hJsIQ7HraOte83sTUFUQexw4z7vUB/lWEYkR6An+P7Q='
+    version = 'v0.1.1-0.20260514213118-2be74f0104b8'
+    hash = 'sha256-90gMBC4gEzk1KmWBrse9yi2PCdsCwchEVgbk6B46o0E='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/purse-first/libs/go-mcp']
@@ -268,8 +268,8 @@ schema = 3
     hash = 'sha256-qFrVlacz5R3Lpkzqeg1/1MYew3DJzY9hG0Uh/ua+SOU='
 
   [mod.'golang.org/x/crypto']
-    version = 'v0.50.0'
-    hash = 'sha256-vC1BJT7+3UBWLyEE5n3to0NKhMo6m2HGow2HiFgpQLo='
+    version = 'v0.51.0'
+    hash = 'sha256-/R74sc1mcOaOuBeXRQzrXrHAgA5VhNWc6SfQJaxb17U='
     goVersion = '1.25.0'
 
   [mod.'golang.org/x/exp']
@@ -283,8 +283,8 @@ schema = 3
     goVersion = '1.25.0'
 
   [mod.'golang.org/x/net']
-    version = 'v0.53.0'
-    hash = 'sha256-G9gKLmyaf6lIV429NKX+YlL6oUPJwlv+BrG6qGhzvmU='
+    version = 'v0.54.0'
+    hash = 'sha256-/EoIXzTQzK/yP/lxOyx0Z/bhns4FdPTIF4uyt4gIP80='
     goVersion = '1.25.0'
 
   [mod.'golang.org/x/sync']
@@ -292,18 +292,18 @@ schema = 3
     hash = 'sha256-ybcjhCfK6lroUM0yswUvWooW8MOQZBXyiSqoxG6Uy0Y='
 
   [mod.'golang.org/x/sys']
-    version = 'v0.43.0'
-    hash = 'sha256-aDQXqSTZES2l/132PBxhZN4ywldpPyfm7LByYCHzzwM='
+    version = 'v0.44.0'
+    hash = 'sha256-JDlj+PKsG6I6kjv5JyOUNreY51u5An0oZ5OZMHZSk+A='
     goVersion = '1.25.0'
 
   [mod.'golang.org/x/term']
-    version = 'v0.42.0'
-    hash = 'sha256-FCiDvAfq7dgBGQuiDYDFJbj/JPawhrmPF2qdUEftQ1c='
+    version = 'v0.43.0'
+    hash = 'sha256-gFV1oGgs/vpRamvDWmu93voN57iyZMk/hh+oL8L9VrQ='
     goVersion = '1.25.0'
 
   [mod.'golang.org/x/text']
-    version = 'v0.36.0'
-    hash = 'sha256-/0t9C6Mc8kYjxweFB0us2lGKo8GovHhBiq5nlMOppC0='
+    version = 'v0.37.0'
+    hash = 'sha256-8XDOnlPIybcDRy89fkjG5VqtIt5Ku+LmaqYhgKl7i1E='
     goVersion = '1.25.0'
 
   [mod.'golang.org/x/tools']
