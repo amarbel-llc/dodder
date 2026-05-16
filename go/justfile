@@ -438,29 +438,118 @@ test-bats-failed_files:
     grep -o '[^[:space:]]*\.bats' | \
     sort -u
 
-# Coverage-instrumented bats run. Resolves the cover-instrumented
-# dodder via nix and runs bats externally so GOCOVERDIR points at a
-# /tmp scratch dir (under sandcastle's allowWrite). Coverage profile
-# lands under build/cover-data/.
-test-bats-cover:
+# test-bats-cover (legacy): broken on two fronts:
+#   1. test-generate_fixtures runs without GOCOVERDIR, so the cover
+#      binary emits `warning: GOCOVERDIR not set` into stdout, breaking
+#      the fixture-generation bats assertions.
+#   2. The downstream `bats --bin-dir $BATS_BIN_DIR` invocation uses
+#      a flag neither vanilla bats nor batman accepts anymore.
+# Use test-bats-cover-shim below. Retire when amarbel-llc/bats#15
+# (batsLane `extraPostCommands` hook) lets the cover lane run inside
+# the nix sandbox.
+# test-bats-cover:
+#   #!/usr/bin/env bash
+#   set -euo pipefail
+#   export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
+#   export MADDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
+#   bin=$(nix build --no-link --print-out-paths '..#dodder-debug-cover')
+#   export PATH="$bin/bin:$PATH"
+#   just ../zz-tests_bats/test-generate_fixtures
+#   cover_data="/tmp/dodder-cover-$$"
+#   rm -rf "$cover_data"
+#   mkdir -p "$cover_data"
+#   GOCOVERDIR="$cover_data" \
+#     BATS_BIN_DIR="$bin/bin" \
+#     just ../zz-tests_bats/test
+#   mkdir -p "{{dir_build}}/cover-data"
+#   go tool covdata textfmt -i="$cover_data" -o="{{dir_build}}/cover-data/bats-coverage.out"
+#   rm -rf "$cover_data"
+#   echo "==> Coverage written to {{dir_build}}/cover-data/bats-coverage.out"
+#   echo "    View with: go tool cover -func={{dir_build}}/cover-data/bats-coverage.out"
+
+# Coverage-instrumented bats run via env vars (DODDER_BIN / MADDER_BIN
+# / BATS_LIB_PATH), bypassing the broken `bats --bin-dir` path. Runs
+# bats outside the nix sandbox with `--no-sandbox` so the
+# cover-instrumented dodder can write GOCOVERDIR. Profile lands at
+# build/cover-data/bats-coverage.out. Retire when amarbel-llc/bats#15
+# lands and test-bats-cover is fixed.
+test-bats-cover-shim:
   #!/usr/bin/env bash
   set -euo pipefail
-  export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
-  export MADDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
   bin=$(nix build --no-link --print-out-paths '..#dodder-debug-cover')
-  export PATH="$bin/bin:$PATH"
-  just ../zz-tests_bats/test-generate_fixtures
-  cover_data="/tmp/dodder-cover-$$"
-  rm -rf "$cover_data"
-  mkdir -p "$cover_data"
-  GOCOVERDIR="$cover_data" \
-    BATS_BIN_DIR="$bin/bin" \
-    just ../zz-tests_bats/test
+  madder_bin=$(nix build --no-link --print-out-paths '..#madder-bin')
+  bats_libs_path=$(nix build --no-link --print-out-paths '..#bats-libs')
+  export DODDER_BIN="$bin/bin/dodder"
+  export DODDER_DER_BIN="$bin/bin/der"
+  export MADDER_BIN="$madder_bin/bin/madder"
+  export BATS_LIB_PATH="$bats_libs_path/share/bats"
+  export BATS_TEST_TIMEOUT=30
+  export GOMEMLIMIT=512MiB
+  export DODDER_XDG_UTILITY_OVERRIDE=""
+  export EDITOR=true
+  cover_data=$(mktemp -d -t dodder-bats-cover-XXX)
+  trap "rm -rf '$cover_data'" EXIT
+  export GOCOVERDIR="$cover_data"
+  cd ../zz-tests_bats
+  bats --no-sandbox --jobs $(nproc) \
+    current_version/*.bats previous_versions/main.bats \
+    >/tmp/dodder-bats-cover.log 2>&1 || true
+  cd -
   mkdir -p "{{dir_build}}/cover-data"
   go tool covdata textfmt -i="$cover_data" -o="{{dir_build}}/cover-data/bats-coverage.out"
-  rm -rf "$cover_data"
-  echo "==> Coverage written to {{dir_build}}/cover-data/bats-coverage.out"
+  echo "==> Bats coverage written to {{dir_build}}/cover-data/bats-coverage.out"
   echo "    View with: go tool cover -func={{dir_build}}/cover-data/bats-coverage.out"
+  go tool cover -func="{{dir_build}}/cover-data/bats-coverage.out" | tail -1
+
+# Combined unit + bats coverage report. Runs unit tests and the bats
+# suite under coverage, merges both binary cover-data dirs via
+# `go tool covdata`, writes a textfmt profile to
+# build/cover-data/combined.out, prints a one-line summary. Pair with
+# `test-cover-funcs <pattern>` to drill into specific symbols.
+test-cover-combined:
+  #!/usr/bin/env bash
+  set -euo pipefail
+
+  unit_cover=$(mktemp -d -t dodder-unit-cover-XXX)
+  bats_cover=$(mktemp -d -t dodder-bats-cover-XXX)
+  trap "rm -rf '$unit_cover' '$bats_cover'" EXIT
+
+  echo "==> Unit tests under coverage (GOCOVERDIR=$unit_cover)"
+  GOCOVERDIR="$unit_cover" \
+    go test -tags test,debug -cover -count=1 ./... >/dev/null
+
+  echo "==> Bats suite under coverage (GOCOVERDIR=$bats_cover)"
+  bin=$(nix build --no-link --print-out-paths '..#dodder-debug-cover')
+  madder_bin=$(nix build --no-link --print-out-paths '..#madder-bin')
+  bats_libs_path=$(nix build --no-link --print-out-paths '..#bats-libs')
+  export DODDER_BIN="$bin/bin/dodder"
+  export DODDER_DER_BIN="$bin/bin/der"
+  export MADDER_BIN="$madder_bin/bin/madder"
+  export BATS_LIB_PATH="$bats_libs_path/share/bats"
+  export BATS_TEST_TIMEOUT=30
+  export GOMEMLIMIT=512MiB
+  export DODDER_XDG_UTILITY_OVERRIDE=""
+  export EDITOR=true
+  export GOCOVERDIR="$bats_cover"
+  ( cd ../zz-tests_bats && \
+    bats --no-sandbox --jobs $(nproc) \
+      current_version/*.bats previous_versions/main.bats \
+      >/tmp/dodder-bats-cover.log 2>&1 || true )
+
+  echo "==> Merging cover data"
+  mkdir -p "{{dir_build}}/cover-data"
+  go tool covdata textfmt \
+    -i="$unit_cover,$bats_cover" \
+    -o="{{dir_build}}/cover-data/combined.out"
+  echo "==> Combined cover: {{dir_build}}/cover-data/combined.out"
+  go tool cover -func="{{dir_build}}/cover-data/combined.out" | tail -1
+
+# Filter the combined cover-funcs table by regex. Reads the profile
+# produced by test-cover-combined. Pair as
+# `just test-cover-combined && just test-cover-funcs MyChangedFn` to
+# confirm new code is exercised.
+test-cover-funcs pattern:
+  go tool cover -func={{dir_build}}/cover-data/combined.out | grep -E '{{pattern}}'
 
 # Race-instrumented bats run. Resolves the race-instrumented dodder
 # via nix and injects it via BATS_BIN_DIR.

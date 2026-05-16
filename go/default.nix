@@ -199,6 +199,15 @@ in
     default = dodder;
   } // batsLaneOutputs // (
     if fixtures-current == null then { } else { inherit fixtures-current; }
+  ) // (
+    # Re-surface the input-derived helper derivations as named packages
+    # so paved-path agent recipes (test-bats-cover-shim, test-cover-*)
+    # can resolve them via `nix build .#<name>` without reaching into
+    # the flake inputs by hand. Gated on the same null checks as
+    # batsLaneOutputs so non-flake imports stay working.
+    if madder == null then { } else { madder-bin = madder.packages.${system}.default; }
+  ) // (
+    if bats == null then { } else { bats-libs = bats.packages.${system}.bats-libs; }
   );
 
   # Wired into the flake's `checks.<system>.*` so `nix flake check` runs
