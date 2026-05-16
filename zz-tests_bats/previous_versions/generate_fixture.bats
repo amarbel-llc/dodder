@@ -48,10 +48,6 @@ function generate { # @test
   run_dodder show -format text :konfig
   assert_success
   assert_output - <<-EOM
-		---
-		! toml-config-v2
-		---
-
 		blob-stores = [".default"]
 
 		[defaults]

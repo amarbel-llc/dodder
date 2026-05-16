@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -296,8 +297,6 @@ func writeDefaultMutableConfig(
 ) (blobId mad_domain_interfaces.MarklId, typedBlob repo_configs.TypedBlob, err error) {
 	typedBlob = repo_configs.DefaultOverlay(blobStores, defaultType)
 
-	coder := repo.GetStore().GetConfigBlobCoder()
-
 	var blobWriter mad_domain_interfaces.BlobWriter
 
 	if blobWriter, err = repo.GetEnvRepo().GetDefaultBlobStore().MakeBlobWriter(nil); err != nil {
@@ -307,10 +306,18 @@ func writeDefaultMutableConfig(
 
 	defer errors.DeferredCloser(&err, blobWriter)
 
-	if _, err = coder.EncodeTo(
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(blobWriter)
+	defer repoolBufferedWriter()
+
+	if _, err = repo_configs.Coder.Blob.EncodeTo(
 		&typedBlob,
-		blobWriter,
+		bufferedWriter,
 	); err != nil {
+		err = errors.Wrap(err)
+		return blobId, typedBlob, err
+	}
+
+	if err = bufferedWriter.Flush(); err != nil {
 		err = errors.Wrap(err)
 		return blobId, typedBlob, err
 	}

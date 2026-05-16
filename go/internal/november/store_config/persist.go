@@ -499,9 +499,12 @@ func (store *store) loadMutableConfigBlob(
 		Type: mutableConfigType.ToMadder(),
 	}
 
-	if _, err = repo_configs.Coder.DecodeFrom(
+	bufferedReader, repoolBufferedReader := pool.GetBufferedReader(blobReader)
+	defer repoolBufferedReader()
+
+	if _, err = repo_configs.Coder.Blob.DecodeFrom(
 		&typedBlob,
-		blobReader,
+		bufferedReader,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
