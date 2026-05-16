@@ -385,10 +385,6 @@ function show_konfig { # @test
 
   run_dodder show -format text :konfig
   assert_output - <<-EOM
-		---
-		! toml-config-v2
-		---
-
 		blob-stores = [".default"]
 
 		[defaults]

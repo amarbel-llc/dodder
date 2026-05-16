@@ -1249,7 +1249,7 @@ function organize_new_objects_default_tags { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-2naaxn80x7cjwzttnual6r9rfupztyfrvkgelvl6zgepvatkyths409myg !toml-config-v2]
+		[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]
 	EOM
 
   run_dodder organize -mode output-only
@@ -1358,7 +1358,7 @@ function organize_default_tags_workspace { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-2naaxn80x7cjwzttnual6r9rfupztyfrvkgelvl6zgepvatkyths409myg !toml-config-v2]
+		[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]
 	EOM
 
   cat >.dodder-workspace <<-EOM
