@@ -1,9 +1,7 @@
-bin_dir := env("BATS_BIN_DIR", "")
 # Exclude af_unix, haustoria, sftp, and serve-tagged files; they need
 # special sandbox options (local network binding / unix sockets) and
 # run via test-bats-network instead.
 _sandboxed_bats := `grep -L -e 'file_tags=.*af_unix' -e 'file_tags=.*haustoria' -e 'file_tags=.*sftp' -e 'file_tags=.*serve' current_version/*.bats | tr '\n' ' '`
-_bin_dir_arg := if bin_dir != "" { "--bin-dir " + bin_dir } else { "" }
 
 export DODDER_XDG_UTILITY_OVERRIDE := ""
 
@@ -67,19 +65,19 @@ bats_timeout := "30"
 [group("test")]
 test-targets *targets="current_version/*.bats":
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats {{_bin_dir_arg}} --jobs {{num_cpus()}} {{targets}}
+    bats --jobs {{num_cpus()}} {{targets}}
 
 # runs specific bats test tags
 [group("test")]
 test-tags *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats {{_bin_dir_arg}} --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
+    bats --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
 
 # runs specific bats test tags without sandbox
 [group("test")]
 test-tags-no-sandbox *tags:
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats {{_bin_dir_arg}} --no-sandbox --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
+    bats --no-sandbox --jobs {{num_cpus()}} --filter-tags {{tags}} current_version/*.bats
 
 [group("test")]
 test-integration: (test-targets "current_version/*.bats")
