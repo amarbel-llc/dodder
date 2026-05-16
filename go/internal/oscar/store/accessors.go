@@ -2,7 +2,6 @@ package store
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index"
@@ -10,7 +9,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_store"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme"
 )
 
@@ -56,8 +54,4 @@ func (store *Store) GetConfigStoreMutable() store_config.StoreMutable {
 
 func (store *Store) GetStreamIndex() *stream_index.Index {
 	return store.streamIndex
-}
-
-func (store *Store) GetConfigBlobCoder() interfaces.CoderReadWriter[*repo_configs.TypedBlob] {
-	return store.configBlobCoder
 }

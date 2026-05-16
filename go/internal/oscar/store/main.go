@@ -2,7 +2,6 @@ package store
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index"
@@ -18,7 +17,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
 )
 
@@ -32,9 +30,8 @@ type Store struct {
 	inventoryListStore inventory_list_store.Store
 	Abbr               sku.IdIndex
 
-	workingList     *sku.WorkingList
-	configBlobCoder interfaces.CoderReadWriter[*repo_configs.TypedBlob]
-	envLua          env_lua.Env
+	workingList *sku.WorkingList
+	envLua      env_lua.Env
 
 	streamIndex   *stream_index.Index
 	finalizer     object_finalizer.Finalizer
@@ -111,8 +108,6 @@ func (store *Store) Initialize(
 	store.protoZettel = sku.MakeProto(
 		store.envWorkspace.GetDefaults(),
 	)
-
-	store.configBlobCoder = repo_configs.Coder
 
 	return err
 }
