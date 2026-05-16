@@ -74,6 +74,7 @@ func (env *Env) Genesis(bigBang BigBang) {
 	env.writeInventoryListLog()
 	env.writeConfig(bigBang)
 	env.writeBlobStoreConfigIfNecessary(bigBang, env.blobStoreEnv.BlobStore)
+	env.writeBlobStoreConfigInit(bigBang, env.blobStoreEnv.BlobStore)
 
 	// Re-make the blob_store_env now that the on-disk config exists,
 	// so store discovery picks up the freshly-written config. Reuses
@@ -163,6 +164,47 @@ func (env *Env) writeBlobStoreConfigIfNecessary(
 		&blob_store_configs.TypedConfig{
 			Type: blobStoreConfig.Type,
 			Blob: blobStoreConfig.Blob,
+		},
+		blobStoreConfigPath,
+	); err != nil {
+		env.Cancel(err)
+		return
+	}
+}
+
+// writeBlobStoreConfigInit writes bigBang.BlobStoreConfigInit to disk at
+// bigBang.BlobStoreId's blob_store-config path. Used by init-workspace
+// to install a pointer-store config under .<workspace-name>/ before
+// blob-store discovery re-runs. Skipped when either field is unset.
+func (env *Env) writeBlobStoreConfigInit(
+	bigBang BigBang,
+	directoryLayout mad_directory_layout.BlobStore,
+) {
+	if bigBang.BlobStoreConfigInit == nil {
+		return
+	}
+
+	if bigBang.BlobStoreId.IsEmpty() {
+		return
+	}
+
+	blobStorePath := mad_directory_layout.GetBlobStorePath(
+		directoryLayout,
+		bigBang.BlobStoreId.String(),
+	)
+	blobStoreConfigPath := blobStorePath.GetConfig()
+	blobStoreConfigDir := filepath.Dir(blobStoreConfigPath)
+
+	if err := env.MakeDirs(blobStoreConfigDir); err != nil {
+		env.Cancel(err)
+		return
+	}
+
+	if err := hyphence.EncodeToFile(
+		blob_store_configs.Coder,
+		&blob_store_configs.TypedConfig{
+			Type: bigBang.BlobStoreConfigInit.Type,
+			Blob: bigBang.BlobStoreConfigInit.Blob,
 		},
 		blobStoreConfigPath,
 	); err != nil {

@@ -24,6 +24,13 @@ type BigBang struct {
 	IncludeDefaultPandocTools     bool
 	IncludeBuiltinActionableTypes bool
 	BlobStoreId                   blob_store_id.Id
+
+	// BlobStoreConfigInit, when non-nil AND BlobStoreId is non-empty,
+	// causes Genesis to write this config to disk at the BlobStoreId's
+	// blob_store-config path before blob-store discovery. Used by
+	// init-workspace to install a TomlPointerV1 pointing at the parent
+	// repo's blob store.
+	BlobStoreConfigInit *blob_store_configs.TypedMutableConfig
 }
 
 func (bigBang *BigBang) SetDefaults() {
