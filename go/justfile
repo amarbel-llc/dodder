@@ -411,7 +411,6 @@ test-bats-run:
   bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
   export PATH="$bin/bin:$PATH"
   export DODDER_BIN="$bin/bin/dodder"
-  export BATS_BIN_DIR="$bin/bin"
   just ../zz-tests_bats/test
 
 test-bats:
@@ -420,7 +419,6 @@ test-bats:
   bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
   export PATH="$bin/bin:$PATH"
   export DODDER_BIN="$bin/bin/dodder"
-  export BATS_BIN_DIR="$bin/bin"
   just ../zz-tests_bats/test-generate_fixtures
   just ../zz-tests_bats/test
 
@@ -431,7 +429,6 @@ test-bats-failed_files:
   bin=$(nix build --no-link --print-out-paths '..#dodder-debug')
   export PATH="$bin/bin:$PATH"
   export DODDER_BIN="$bin/bin/dodder"
-  export BATS_BIN_DIR="$bin/bin"
   just ../zz-tests_bats/test-generate_fixtures
   just ../zz-tests_bats/test | \
     grep "#  in test file " | \
@@ -552,7 +549,7 @@ test-cover-funcs pattern:
   go tool cover -func={{dir_build}}/cover-data/combined.out | grep -E '{{pattern}}'
 
 # Race-instrumented bats run. Resolves the race-instrumented dodder
-# via nix and injects it via BATS_BIN_DIR.
+# via nix and injects it via PATH.
 test-bats-race:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -561,8 +558,7 @@ test-bats-race:
   bin=$(nix build --no-link --print-out-paths '..#dodder-debug-race')
   export PATH="$bin/bin:$PATH"
   just ../zz-tests_bats/test-generate_fixtures
-  BATS_BIN_DIR="$bin/bin" \
-    just ../zz-tests_bats/test
+  just ../zz-tests_bats/test
 
 test-bats-next *args:
   DODDER_BIN=der-next just ../zz-tests_bats/test-generate_fixtures

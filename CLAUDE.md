@@ -124,8 +124,8 @@ fixtures) - Adding new tests - Refactoring helpers
   fail with cryptic wire-form mismatches.
 
 - **ALWAYS use `just test*` recipes** --- never run `bats`, `go test`, or
-  fixture generation directly. The just recipes set BATS_BIN_DIR,
-  DODDER_VERSION, inject the binary, and ensure fixtures exist.
+  fixture generation directly. The just recipes set DODDER_VERSION, inject
+  the binary on PATH, and ensure fixtures exist.
 
 - **BATS fixture tests** use `$(get_fixture_type_sig)` for signatures (not
   deterministic). Fresh-store tests (`run_dodder_init_disable_age`) use

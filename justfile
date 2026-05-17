@@ -78,10 +78,10 @@ test-bats-targets *targets:
   #!/usr/bin/env bash
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
-    BATS_BIN_DIR="$bin/bin" \
     just zz-tests_bats/test-targets {{targets}}
 
 # Run bats with race-instrumented binary to detect data races in pool reuse.
@@ -233,10 +233,10 @@ explore-bats-debug *targets:
   #!/usr/bin/env bash
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
-    BATS_BIN_DIR="$bin/bin" \
     just zz-tests_bats/test-targets --no-tempdir-cleanup {{targets}}
 
 #   ____      _
