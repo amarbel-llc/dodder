@@ -90,17 +90,17 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 			}
 			{
-				var _ftCaldav *cst.Node
+				var _ftHaustoriaCaldav *cst.Node
 				for _, _ch := range d.cstDoc.Root().Children {
 					if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "haustoria.caldav" {
-						_ftCaldav = _ch
+						_ftHaustoriaCaldav = _ch
 						break
 					}
 				}
-				if _ftCaldav != nil {
+				if _ftHaustoriaCaldav != nil {
 					d.consumed["haustoria.caldav"] = true
 					calDAVVal := &CalDAVConfig{}
-					for _, _kv := range _ftCaldav.Children {
+					for _, _kv := range _ftHaustoriaCaldav.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
 						}
@@ -194,17 +194,17 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 			}
 			{
-				var _ftOrgmode *cst.Node
+				var _ftHaustoriaOrgmode *cst.Node
 				for _, _ch := range d.cstDoc.Root().Children {
 					if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "haustoria.orgmode" {
-						_ftOrgmode = _ch
+						_ftHaustoriaOrgmode = _ch
 						break
 					}
 				}
-				if _ftOrgmode != nil {
+				if _ftHaustoriaOrgmode != nil {
 					d.consumed["haustoria.orgmode"] = true
 					orgmodeVal := &OrgmodeConfig{}
-					for _, _kv := range _ftOrgmode.Children {
+					for _, _kv := range _ftHaustoriaOrgmode.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
 						}
@@ -217,17 +217,17 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						}
 					}
 					{
-						var _ftWebdav *cst.Node
+						var _ftHaustoriaOrgmodeWebdav *cst.Node
 						for _, _ch := range d.cstDoc.Root().Children {
 							if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "haustoria.orgmode.webdav" {
-								_ftWebdav = _ch
+								_ftHaustoriaOrgmodeWebdav = _ch
 								break
 							}
 						}
-						if _ftWebdav != nil {
+						if _ftHaustoriaOrgmodeWebdav != nil {
 							d.consumed["haustoria.orgmode.webdav"] = true
 							webDAVVal := &OrgmodeWebDAV{}
-							for _, _kv := range _ftWebdav.Children {
+							for _, _kv := range _ftHaustoriaOrgmodeWebdav.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -248,7 +248,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						} else {
 							webDAVVal := &OrgmodeWebDAV{}
 							_found := false
-							for _, _kv := range _ftOrgmode.Children {
+							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -273,17 +273,17 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						}
 					}
 					{
-						var _ftSftp *cst.Node
+						var _ftHaustoriaOrgmodeSftp *cst.Node
 						for _, _ch := range d.cstDoc.Root().Children {
 							if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "haustoria.orgmode.sftp" {
-								_ftSftp = _ch
+								_ftHaustoriaOrgmodeSftp = _ch
 								break
 							}
 						}
-						if _ftSftp != nil {
+						if _ftHaustoriaOrgmodeSftp != nil {
 							d.consumed["haustoria.orgmode.sftp"] = true
 							sFTPVal := &OrgmodeSFTP{}
-							for _, _kv := range _ftSftp.Children {
+							for _, _kv := range _ftHaustoriaOrgmodeSftp.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -319,7 +319,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						} else {
 							sFTPVal := &OrgmodeSFTP{}
 							_found := false
-							for _, _kv := range _ftOrgmode.Children {
+							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -813,17 +813,17 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 			}
 			{
-				var _ftCaldav *cst.Node
+				var _ftHaustoriaCaldav *cst.Node
 				for _, _ch := range doc.Root().Children {
 					if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"haustoria.caldav" {
-						_ftCaldav = _ch
+						_ftHaustoriaCaldav = _ch
 						break
 					}
 				}
-				if _ftCaldav != nil {
+				if _ftHaustoriaCaldav != nil {
 					consumed[keyPrefix+"haustoria.caldav"] = true
 					calDAVVal := &CalDAVConfig{}
-					for _, _kv := range _ftCaldav.Children {
+					for _, _kv := range _ftHaustoriaCaldav.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
 						}
@@ -917,17 +917,17 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 			}
 			{
-				var _ftOrgmode *cst.Node
+				var _ftHaustoriaOrgmode *cst.Node
 				for _, _ch := range doc.Root().Children {
 					if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"haustoria.orgmode" {
-						_ftOrgmode = _ch
+						_ftHaustoriaOrgmode = _ch
 						break
 					}
 				}
-				if _ftOrgmode != nil {
+				if _ftHaustoriaOrgmode != nil {
 					consumed[keyPrefix+"haustoria.orgmode"] = true
 					orgmodeVal := &OrgmodeConfig{}
-					for _, _kv := range _ftOrgmode.Children {
+					for _, _kv := range _ftHaustoriaOrgmode.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
 						}
@@ -940,17 +940,17 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						}
 					}
 					{
-						var _ftWebdav *cst.Node
+						var _ftHaustoriaOrgmodeWebdav *cst.Node
 						for _, _ch := range doc.Root().Children {
 							if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"haustoria.orgmode.webdav" {
-								_ftWebdav = _ch
+								_ftHaustoriaOrgmodeWebdav = _ch
 								break
 							}
 						}
-						if _ftWebdav != nil {
+						if _ftHaustoriaOrgmodeWebdav != nil {
 							consumed[keyPrefix+"haustoria.orgmode.webdav"] = true
 							webDAVVal := &OrgmodeWebDAV{}
-							for _, _kv := range _ftWebdav.Children {
+							for _, _kv := range _ftHaustoriaOrgmodeWebdav.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -971,7 +971,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						} else {
 							webDAVVal := &OrgmodeWebDAV{}
 							_found := false
-							for _, _kv := range _ftOrgmode.Children {
+							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -996,17 +996,17 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						}
 					}
 					{
-						var _ftSftp *cst.Node
+						var _ftHaustoriaOrgmodeSftp *cst.Node
 						for _, _ch := range doc.Root().Children {
 							if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"haustoria.orgmode.sftp" {
-								_ftSftp = _ch
+								_ftHaustoriaOrgmodeSftp = _ch
 								break
 							}
 						}
-						if _ftSftp != nil {
+						if _ftHaustoriaOrgmodeSftp != nil {
 							consumed[keyPrefix+"haustoria.orgmode.sftp"] = true
 							sFTPVal := &OrgmodeSFTP{}
-							for _, _kv := range _ftSftp.Children {
+							for _, _kv := range _ftHaustoriaOrgmodeSftp.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}
@@ -1042,7 +1042,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						} else {
 							sFTPVal := &OrgmodeSFTP{}
 							_found := false
-							for _, _kv := range _ftOrgmode.Children {
+							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
 								}

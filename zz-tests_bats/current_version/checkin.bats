@@ -406,8 +406,7 @@ function checkin_dot_organize_include_untracked_fs_blob_with_spaces() { # @test
 function checkin_explicit_workspace_delete_files { # @test
   # shellcheck disable=SC2317
   function editor() (
-    sed -i "s/tags = \\[]/tags = [\"zz-inbox\"]/" "$0"
-    # sed -i "/type = '!md'/a tags = 'hello'" "$0"
+    sed -i '/^\[defaults\]$/a tags = ["zz-inbox"]' "$0"
   )
 
   export -f editor
@@ -416,7 +415,7 @@ function checkin_explicit_workspace_delete_files { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]
+		[konfig @blake2b256-rcv7c737a20e3zk72wxk5d9u9krq6q8k0mausnw9pa83efhvf67q240yur !toml-config-v2]
 	EOM
 
   cat >.dodder-workspace <<-EOM

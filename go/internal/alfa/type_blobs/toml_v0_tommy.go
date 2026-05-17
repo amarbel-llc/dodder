@@ -66,17 +66,17 @@ func DecodeTomlV0(input []byte) (*TomlV0Document, error) {
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblExecCommand *cst.Node
 		for _, _ch := range d.cstDoc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "exec-command" {
-				_tbl = _ch
+				_tblExecCommand = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblExecCommand != nil {
 			d.consumed["exec-command"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "exec-command."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tblExecCommand, d.consumed, "exec-command."); err != nil {
 				return nil, fmt.Errorf("exec-command: %w", err)
 			}
 			d.data.ExecCommand = scriptConfigVal
@@ -279,17 +279,17 @@ func DecodeTomlV0Into(data *TomlV0, doc *document.Document, container *cst.Node,
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblExecCommand *cst.Node
 		for _, _ch := range doc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"exec-command" {
-				_tbl = _ch
+				_tblExecCommand = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblExecCommand != nil {
 			consumed[keyPrefix+"exec-command"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"exec-command."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tblExecCommand, consumed, keyPrefix+"exec-command."); err != nil {
 				return fmt.Errorf("exec-command: %w", err)
 			}
 			data.ExecCommand = scriptConfigVal

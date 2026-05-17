@@ -51,8 +51,10 @@ func (d *OptionsDocument) Data() *Options {
 }
 func (d *OptionsDocument) Encode() ([]byte, error) {
 	{
-		if err := cst.SetAny(d.cstDoc.Root(), "merge", d.data.Merge); err != nil {
-			return nil, fmt.Errorf("%w", err)
+		if len(d.data.Merge) > 0 || cst.HasValue(d.cstDoc.Root(), "merge") {
+			if err := cst.SetAny(d.cstDoc.Root(), "merge", d.data.Merge); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
 		}
 	}
 	return d.cstDoc.Bytes(), nil
@@ -89,8 +91,10 @@ func DecodeOptionsInto(data *Options, doc *document.Document, container *cst.Nod
 }
 func EncodeOptionsFrom(data *Options, doc *document.Document, container *cst.Node) error {
 	{
-		if err := cst.SetAny(container, "merge", data.Merge); err != nil {
-			return fmt.Errorf("%w", err)
+		if len(data.Merge) > 0 || cst.HasValue(container, "merge") {
+			if err := cst.SetAny(container, "merge", data.Merge); err != nil {
+				return fmt.Errorf("%w", err)
+			}
 		}
 	}
 	return nil

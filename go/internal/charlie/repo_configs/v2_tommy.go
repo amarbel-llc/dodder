@@ -118,16 +118,18 @@ func (d *V2Document) Data() *V2 {
 }
 func (d *V2Document) Encode() ([]byte, error) {
 	{
-		vals := make([]string, len(d.data.BlobStores))
-		for i, item := range d.data.BlobStores {
-			v, err := item.MarshalText()
-			if err != nil {
-				return nil, fmt.Errorf("blob-stores[%d]: %w", i, err)
+		if len(d.data.BlobStores) > 0 || cst.HasValue(d.cstDoc.Root(), "blob-stores") {
+			vals := make([]string, len(d.data.BlobStores))
+			for i, item := range d.data.BlobStores {
+				v, err := item.MarshalText()
+				if err != nil {
+					return nil, fmt.Errorf("blob-stores[%d]: %w", i, err)
+				}
+				vals[i] = string(v)
 			}
-			vals[i] = string(v)
-		}
-		if err := cst.SetAny(d.cstDoc.Root(), "blob-stores", vals); err != nil {
-			return nil, fmt.Errorf("%w", err)
+			if err := cst.SetAny(d.cstDoc.Root(), "blob-stores", vals); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
 		}
 	}
 	{
@@ -146,16 +148,18 @@ func (d *V2Document) Encode() ([]byte, error) {
 			}
 		}
 		{
-			vals := make([]string, len(d.data.Defaults.Tags))
-			for i, item := range d.data.Defaults.Tags {
-				v, err := item.MarshalText()
-				if err != nil {
-					return nil, fmt.Errorf("tags[%d]: %w", i, err)
+			if len(d.data.Defaults.Tags) > 0 || cst.HasValue(tableNode, "tags") {
+				vals := make([]string, len(d.data.Defaults.Tags))
+				for i, item := range d.data.Defaults.Tags {
+					v, err := item.MarshalText()
+					if err != nil {
+						return nil, fmt.Errorf("tags[%d]: %w", i, err)
+					}
+					vals[i] = string(v)
 				}
-				vals[i] = string(v)
-			}
-			if err := cst.SetAny(tableNode, "tags", vals); err != nil {
-				return nil, fmt.Errorf("%w", err)
+				if err := cst.SetAny(tableNode, "tags", vals); err != nil {
+					return nil, fmt.Errorf("%w", err)
+				}
 			}
 		}
 	}
@@ -273,16 +277,18 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 }
 func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 	{
-		vals := make([]string, len(data.BlobStores))
-		for i, item := range data.BlobStores {
-			v, err := item.MarshalText()
-			if err != nil {
-				return fmt.Errorf("blob-stores[%d]: %w", i, err)
+		if len(data.BlobStores) > 0 || cst.HasValue(container, "blob-stores") {
+			vals := make([]string, len(data.BlobStores))
+			for i, item := range data.BlobStores {
+				v, err := item.MarshalText()
+				if err != nil {
+					return fmt.Errorf("blob-stores[%d]: %w", i, err)
+				}
+				vals[i] = string(v)
 			}
-			vals[i] = string(v)
-		}
-		if err := cst.SetAny(container, "blob-stores", vals); err != nil {
-			return fmt.Errorf("%w", err)
+			if err := cst.SetAny(container, "blob-stores", vals); err != nil {
+				return fmt.Errorf("%w", err)
+			}
 		}
 	}
 	{
@@ -301,16 +307,18 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 			}
 		}
 		{
-			vals := make([]string, len(data.Defaults.Tags))
-			for i, item := range data.Defaults.Tags {
-				v, err := item.MarshalText()
-				if err != nil {
-					return fmt.Errorf("tags[%d]: %w", i, err)
+			if len(data.Defaults.Tags) > 0 || cst.HasValue(tableNode, "tags") {
+				vals := make([]string, len(data.Defaults.Tags))
+				for i, item := range data.Defaults.Tags {
+					v, err := item.MarshalText()
+					if err != nil {
+						return fmt.Errorf("tags[%d]: %w", i, err)
+					}
+					vals[i] = string(v)
 				}
-				vals[i] = string(v)
-			}
-			if err := cst.SetAny(tableNode, "tags", vals); err != nil {
-				return fmt.Errorf("%w", err)
+				if err := cst.SetAny(tableNode, "tags", vals); err != nil {
+					return fmt.Errorf("%w", err)
+				}
 			}
 		}
 	}

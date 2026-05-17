@@ -70,17 +70,17 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblExecCommand *cst.Node
 		for _, _ch := range d.cstDoc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "exec-command" {
-				_tbl = _ch
+				_tblExecCommand = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblExecCommand != nil {
 			d.consumed["exec-command"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "exec-command."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tblExecCommand, d.consumed, "exec-command."); err != nil {
 				return nil, fmt.Errorf("exec-command: %w", err)
 			}
 			d.data.ExecCommand = scriptConfigVal
@@ -235,16 +235,16 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 			}
 		}
 	}
-	var _fieldsNodes []*cst.Node
+	var _nodesFields []*cst.Node
 	for _, _ch := range d.cstDoc.Root().Children {
 		if _ch.Kind == cst.NodeArrayTable && cst.TableHeaderKey(_ch) == "fields" {
-			_fieldsNodes = append(_fieldsNodes, _ch)
+			_nodesFields = append(_nodesFields, _ch)
 		}
 	}
-	d.fields = make([]fieldDefinitionHandle, len(_fieldsNodes))
-	d.data.Fields = make([]FieldDefinition, len(_fieldsNodes))
+	d.fields = make([]fieldDefinitionHandle, len(_nodesFields))
+	d.data.Fields = make([]FieldDefinition, len(_nodesFields))
 	d.consumed["fields"] = true
-	for i, _node := range _fieldsNodes {
+	for i, _node := range _nodesFields {
 		d.fields[i] = fieldDefinitionHandle{node: _node}
 		for _, _kv := range _node.Children {
 			if _kv.Kind != cst.NodeKeyValue {
@@ -275,34 +275,34 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblFieldsReader *cst.Node
 		for _, _ch := range d.cstDoc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "fields-reader" {
-				_tbl = _ch
+				_tblFieldsReader = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblFieldsReader != nil {
 			d.consumed["fields-reader"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "fields-reader."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tblFieldsReader, d.consumed, "fields-reader."); err != nil {
 				return nil, fmt.Errorf("fields-reader: %w", err)
 			}
 			d.data.FieldsReader = scriptConfigVal
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblFieldsWriter *cst.Node
 		for _, _ch := range d.cstDoc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "fields-writer" {
-				_tbl = _ch
+				_tblFieldsWriter = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblFieldsWriter != nil {
 			d.consumed["fields-writer"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tbl, d.consumed, "fields-writer."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, d.cstDoc, _tblFieldsWriter, d.consumed, "fields-writer."); err != nil {
 				return nil, fmt.Errorf("fields-writer: %w", err)
 			}
 			d.data.FieldsWriter = scriptConfigVal
@@ -505,17 +505,17 @@ func DecodeTomlV2Into(data *TomlV2, doc *document.Document, container *cst.Node,
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblExecCommand *cst.Node
 		for _, _ch := range doc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"exec-command" {
-				_tbl = _ch
+				_tblExecCommand = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblExecCommand != nil {
 			consumed[keyPrefix+"exec-command"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"exec-command."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tblExecCommand, consumed, keyPrefix+"exec-command."); err != nil {
 				return fmt.Errorf("exec-command: %w", err)
 			}
 			data.ExecCommand = scriptConfigVal
@@ -670,11 +670,11 @@ func DecodeTomlV2Into(data *TomlV2, doc *document.Document, container *cst.Node,
 			}
 		}
 	}
-	var _fieldsNodes []*cst.Node
-	_fieldsNodes = doc.FindArrayTableNodes(keyPrefix + "fields")
-	data.Fields = make([]FieldDefinition, len(_fieldsNodes))
+	var _nodesFields []*cst.Node
+	_nodesFields = doc.FindArrayTableNodes(keyPrefix + "fields")
+	data.Fields = make([]FieldDefinition, len(_nodesFields))
 	consumed[keyPrefix+"fields"] = true
-	for i, _node := range _fieldsNodes {
+	for i, _node := range _nodesFields {
 		for _, _kv := range _node.Children {
 			if _kv.Kind != cst.NodeKeyValue {
 				continue
@@ -704,34 +704,34 @@ func DecodeTomlV2Into(data *TomlV2, doc *document.Document, container *cst.Node,
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblFieldsReader *cst.Node
 		for _, _ch := range doc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"fields-reader" {
-				_tbl = _ch
+				_tblFieldsReader = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblFieldsReader != nil {
 			consumed[keyPrefix+"fields-reader"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"fields-reader."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tblFieldsReader, consumed, keyPrefix+"fields-reader."); err != nil {
 				return fmt.Errorf("fields-reader: %w", err)
 			}
 			data.FieldsReader = scriptConfigVal
 		}
 	}
 	{
-		var _tbl *cst.Node
+		var _tblFieldsWriter *cst.Node
 		for _, _ch := range doc.Root().Children {
 			if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"fields-writer" {
-				_tbl = _ch
+				_tblFieldsWriter = _ch
 				break
 			}
 		}
-		if _tbl != nil {
+		if _tblFieldsWriter != nil {
 			consumed[keyPrefix+"fields-writer"] = true
 			scriptConfigVal := &script_config.ScriptConfig{}
-			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tbl, consumed, keyPrefix+"fields-writer."); err != nil {
+			if err := script_config.DecodeScriptConfigInto(scriptConfigVal, doc, _tblFieldsWriter, consumed, keyPrefix+"fields-writer."); err != nil {
 				return fmt.Errorf("fields-writer: %w", err)
 			}
 			data.FieldsWriter = scriptConfigVal
@@ -835,11 +835,11 @@ func EncodeTomlV2From(data *TomlV2, doc *document.Document, container *cst.Node)
 		}
 	}
 	{
-		fieldsExisting := cst.FindArrayTableNodes(doc.Root(), "fields")
+		_existFields := cst.FindArrayTableNodes(doc.Root(), "fields")
 		for i := range data.Fields {
 			var container *cst.Node
-			if i < len(fieldsExisting) {
-				container = fieldsExisting[i]
+			if i < len(_existFields) {
+				container = _existFields[i]
 			} else {
 				container = cst.AppendArrayTableEntryAfter(doc.Root(), "fields")
 			}
