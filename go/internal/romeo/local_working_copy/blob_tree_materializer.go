@@ -42,7 +42,7 @@ func (local *Repo) MaterializeBlobTree(
 		),
 	)
 
-	blobStore := local.GetEnvRepo().GetDefaultBlobStore()
+	blobStore := local.GetEnvRepo().GetReadBlobStore()
 
 	for blobId := range metadata.AllBlobReferences() {
 		alias := metadata.GetBlobReferenceAlias(blobId)

@@ -18,7 +18,7 @@ func MakeJsonTomlBookmark(
 	envRepo env_repo.Env,
 	tabs []any,
 ) (json JsonWithUrl, err error) {
-	if err = json.FromTransacted(object, envRepo.GetDefaultBlobStore()); err != nil {
+	if err = json.FromTransacted(object, envRepo.GetReadBlobStore()); err != nil {
 		err = errors.Wrap(err)
 		return json, err
 	}

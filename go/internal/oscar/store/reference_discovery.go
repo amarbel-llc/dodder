@@ -116,7 +116,7 @@ func (store *Store) discoverReferences(
 		return err
 	}
 
-	blobReader, err := store.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+	blobReader, err := store.GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 		daughter.GetBlobDigest(),
 	)
 	if err != nil {

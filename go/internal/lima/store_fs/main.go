@@ -31,7 +31,7 @@ func Make(
 	envRepo env_repo.Env,
 	fsOps filesystem_ops.V0,
 ) (store *Store, err error) {
-	blobStore := envRepo.GetDefaultBlobStore()
+	blobStore := envRepo.GetReadBlobStore()
 
 	store = &Store{
 		config:         config,

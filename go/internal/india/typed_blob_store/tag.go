@@ -139,7 +139,7 @@ func (store Tag) GetBlob(
 
 		var readCloser mad_domain_interfaces.BlobReader
 
-		if readCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(
+		if readCloser, err = store.envRepo.GetReadBlobStore().MakeBlobReader(
 			blobId,
 		); err != nil {
 			err = errors.Wrap(err)
@@ -170,7 +170,7 @@ func (store Tag) GetBlob(
 
 		var readCloser mad_domain_interfaces.BlobReader
 
-		if readCloser, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(blobId); err != nil {
+		if readCloser, err = store.envRepo.GetReadBlobStore().MakeBlobReader(blobId); err != nil {
 			err = errors.Wrap(err)
 			return blobGeneric, repool, err
 		}

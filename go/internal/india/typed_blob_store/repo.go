@@ -27,7 +27,7 @@ func (store RepoStore) ReadTypedBlob(
 ) (common repo_blobs.Blob, n int64, err error) {
 	var reader mad_domain_interfaces.BlobReader
 
-	if reader, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(blobSha); err != nil {
+	if reader, err = store.envRepo.GetReadBlobStore().MakeBlobReader(blobSha); err != nil {
 		err = errors.Wrap(err)
 		return common, n, err
 	}

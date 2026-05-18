@@ -79,7 +79,7 @@ func (store Coder) ParseTypedBlob(
 
 	var reader mad_domain_interfaces.BlobReader
 
-	if reader, err = store.envRepo.GetDefaultBlobStore().MakeBlobReader(blobId); err != nil {
+	if reader, err = store.envRepo.GetReadBlobStore().MakeBlobReader(blobId); err != nil {
 		err = errors.Wrap(err)
 		return common, repool, n, err
 	}

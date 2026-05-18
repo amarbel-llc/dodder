@@ -743,7 +743,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				var readCloser mad_domain_interfaces.BlobReader
 
-				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+				if readCloser, err = repo.GetStore().GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
 				); err != nil {
 					err = errors.Wrap(err)
@@ -779,7 +779,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				if repo.GetConfig().IsInlineType(object.GetType()) {
 					var readCloser mad_domain_interfaces.BlobReader
 
-					if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+					if readCloser, err = repo.GetStore().GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 						object.GetBlobDigest(),
 					); err != nil {
 						err = errors.Wrap(err)
@@ -819,7 +819,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				var readCloser mad_domain_interfaces.BlobReader
 
-				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+				if readCloser, err = repo.GetStore().GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
 				); err != nil {
 					err = errors.Wrap(err)
@@ -1136,7 +1136,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				var readCloser mad_domain_interfaces.BlobReader
 
-				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+				if readCloser, err = repo.GetStore().GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
 				); err != nil {
 					err = errors.Wrap(err)
@@ -1172,7 +1172,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 
 				var readCloser mad_domain_interfaces.BlobReader
 
-				if readCloser, err = repo.GetStore().GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+				if readCloser, err = repo.GetStore().GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 					object.GetBlobDigest(),
 				); err != nil {
 					err = errors.Wrap(err)

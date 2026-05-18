@@ -14,10 +14,22 @@ promotion-criteria: every dodder read site that loads a
   correctness via its own test suite); FDR linked from dodder
   issue #196 and references madder issues #195 (Multi manpage)
   and #196 (two-pass optimization)
-status: proposed
+status: accepted
+accepted: 2026-05-18
 ---
 
 # Multi-Store Blob Lookup
+
+> **Status (2026-05-18):** Accepted. Phases 1–4 shipped. All 23 reader
+> call sites identified in the Phase 3 list, plus 5 additional sites
+> surfaced during the Phase 3 caller audit (golf/sku_json_fmt/bookmark,
+> romeo/local_working_copy/blob_tree_materializer, quebec/remote_transfer's
+> inventory-list HasBlob check, lima/store_fs/main, lima/store_fs/file_encoder),
+> migrated to `env.GetReadBlobStore()`. Writers untouched (25 sites).
+> Go unit tests + 484 bats tests green. See FDR-0007's pattern: this
+> remains a living document; future per-store probe optimizations
+> ([madder#196](https://github.com/amarbel-llc/madder/issues/196))
+> will land when madder picks an approach.
 
 ## Problem Statement
 

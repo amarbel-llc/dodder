@@ -131,7 +131,7 @@ func (store *Store) Flush() (err error) {
 func (store *Store) getUrl(object *sku.Transacted) (u *url.URL, err error) {
 	var blobReader mad_domain_interfaces.BlobReader
 
-	if blobReader, err = store.externalStoreInfo.GetDefaultBlobStore().MakeBlobReader(
+	if blobReader, err = store.externalStoreInfo.GetReadBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),
 	); err != nil {
 		err = errors.Wrap(err)

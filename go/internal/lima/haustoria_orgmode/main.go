@@ -300,7 +300,7 @@ func (store *Store) CheckoutOne(
 }
 
 func (store *Store) readBlob(object *sku.Transacted) (content []byte, err error) {
-	blobReader, err := store.supplies.Env.GetDefaultBlobStore().MakeBlobReader(
+	blobReader, err := store.supplies.Env.GetReadBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),
 	)
 	if err != nil {

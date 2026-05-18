@@ -35,7 +35,7 @@ func MakeFileEncoder(
 	envRepo env_repo.Env,
 	inlineTypeChecker ids.InlineTypeChecker,
 ) *fileEncoder {
-	blobStore := envRepo.GetDefaultBlobStore()
+	blobStore := envRepo.GetReadBlobStore()
 
 	return &fileEncoder{
 		fsOps:             fsOps,
@@ -73,7 +73,7 @@ func (encoder *fileEncoder) EncodeObject(
 
 	var blobReader mad_domain_interfaces.BlobReader
 
-	if blobReader, err = encoder.envRepo.GetDefaultBlobStore().MakeBlobReader(
+	if blobReader, err = encoder.envRepo.GetReadBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),
 	); err != nil {
 		err = errors.Wrap(err)

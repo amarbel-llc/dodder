@@ -83,7 +83,7 @@ func makeKonfigTempFile(
 
 	var readCloser io.ReadCloser
 
-	if readCloser, err = repo.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+	if readCloser, err = repo.GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),
 	); err != nil {
 		err = errors.Wrap(err)

@@ -141,7 +141,7 @@ func (importer importer) importInventoryList(
 
 	blobDigest := list.GetBlobDigest()
 
-	if !importer.envRepo.GetDefaultBlobStore().HasBlob(blobDigest) {
+	if !importer.envRepo.GetReadBlobStore().HasBlob(blobDigest) {
 		err = mad_blob_io.ErrBlobMissing{
 			BlobId: func() mad_domain_interfaces.MarklId { c, _ := markl.Clone(blobDigest); return c }(), //repool:owned
 		}

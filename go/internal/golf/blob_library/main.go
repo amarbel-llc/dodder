@@ -42,7 +42,7 @@ func (library *Library[BLOB, BLOB_PTR]) GetBlob(
 ) (blobPtr BLOB_PTR, repool interfaces.FuncRepool, err error) {
 	var readCloser mad_domain_interfaces.BlobReader
 
-	if readCloser, err = library.envRepo.GetDefaultBlobStore().MakeBlobReader(
+	if readCloser, err = library.envRepo.GetReadBlobStore().MakeBlobReader(
 		blobId,
 	); err != nil {
 		err = errors.Wrap(err)

@@ -76,7 +76,7 @@ func (store *Store) tryReadFields(
 		return err
 	}
 
-	blobReader, err := store.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+	blobReader, err := store.GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 		daughter.GetBlobDigest(),
 	)
 	if err != nil {

@@ -112,7 +112,7 @@ func (store *Store) tryWriteFields(
 	}
 
 	// Read the current blob content
-	blobReader, err := store.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+	blobReader, err := store.GetEnvRepo().GetReadBlobStore().MakeBlobReader(
 		daughter.GetBlobDigest(),
 	)
 	if err != nil {

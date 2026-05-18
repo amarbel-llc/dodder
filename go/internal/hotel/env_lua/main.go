@@ -112,7 +112,7 @@ func (s *env) LuaRequire(ls *lua.LState) int {
 
 	var ar mad_domain_interfaces.BlobReader
 
-	if ar, err = s.envRepo.GetDefaultBlobStore().MakeBlobReader(
+	if ar, err = s.envRepo.GetReadBlobStore().MakeBlobReader(
 		object.GetBlobDigest(),
 	); err != nil {
 		panic(err)
