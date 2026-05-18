@@ -265,6 +265,40 @@ func (env Env) GetDefaultBlobStoreAndRemaining() (
 	return env.blobStoreEnv.GetDefaultBlobStoreAndRemaining()
 }
 
+// GetReadBlobStore returns a madder Multi blob store in write-through
+// mode that reads from every enumerated blob store (default first,
+// then walk-up ancestors and the XDG system store) and pins writes to
+// the default store. Prefer this over GetDefaultBlobStore for any
+// content-addressed read; the fallback prevents split-brain in
+// multi-repo flows where a process holds two env_repo.Env instances
+// rooted at different basePaths (clone, pull, push). See
+// docs/features/0015-multi-store-blob-lookup.md.
+func (env Env) GetReadBlobStore() mad_domain_interfaces.BlobStore {
+	defaultStore, remaining := env.blobStoreEnv.GetDefaultBlobStoreAndRemaining()
+
+	remainingStores := make(
+		[]blob_stores.BlobStoreInitialized,
+		0,
+		len(remaining),
+	)
+
+	for _, store := range remaining {
+		remainingStores = append(remainingStores, store)
+	}
+
+	multi, err := blob_stores.
+		NewMulti(env.GetActiveContext()).
+		WriteTo(defaultStore).
+		Read(remainingStores...).
+		ReadFill(false).
+		Build()
+	if err != nil {
+		env.Cancel(errors.Wrap(err))
+	}
+
+	return multi
+}
+
 func (env *Env) SetBlobStoreOrder(ids []blob_store_id.Id) {
 	env.blobStoreEnv.SetBlobStoreOrder(ids)
 }
