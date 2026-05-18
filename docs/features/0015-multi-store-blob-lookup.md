@@ -271,15 +271,16 @@ future feature requires multi-store writes, it gets its own FDR.
 
 ## Implementation Phases
 
-### Phase 1 — Stop-gap (Shipped)
+### Phase 1 — Stop-gap (Superseded by Phase 2)
 
 `loadMutableConfigBlob` in `internal/november/store_config/persist.go`
-has a private `openBlobReaderAcrossStores` helper that walks every
+gained a private `openBlobReaderAcrossStores` helper that walked every
 store. Closed [#196](https://github.com/amarbel-llc/dodder/issues/196).
-All 480 bats tests pass.
+All 480 bats tests passed.
 
-This is intentionally narrow. It demonstrates the pattern but does
-not generalize, and the same bug class lurks at ~30 other read sites.
+This was intentionally narrow — a demonstration of the pattern, not
+a general fix. The helper was removed in Phase 2 and the call site
+now uses `env.GetReadBlobStore().MakeBlobReader` directly.
 
 ### Phase 2 — Add the Multi-backed accessor on env_repo (Shipped)
 
