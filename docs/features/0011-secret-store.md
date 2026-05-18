@@ -5,7 +5,7 @@ promotion-criteria: a standalone binary in go/packages/ can put, get, list, and
   blobs are self-describing and the index is rebuildable from a full blob scan;
   age encryption and blob store scoping are inherited from madder with zero
   additional configuration
-status: exploring
+status: abandoned
 ---
 
 # Secret Store

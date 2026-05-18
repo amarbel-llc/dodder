@@ -1,13 +1,19 @@
 ---
 date: 2026-05-13
 promotion-criteria: every dodder read site that loads a
-  content-addressed blob from `env_repo` goes through a single shared
-  multi-store helper (no remaining `env_repo.GetDefaultBlobStore().MakeBlobReader`
-  calls); writes still pin to `GetDefaultBlobStore()` by design; the
-  helper has unit coverage exercising default-hit, fallback-hit, and
-  all-miss; the 5 clone_history_* bats tests stay green after the
-  stop-gap in `loadMutableConfigBlob` is rolled back in favor of the
-  shared helper; FDR linked from issue #196
+  content-addressed blob from `env_repo` goes through
+  `env.GetReadBlobStore()` (backed by madder's Multi blob store in
+  write-through mode) — no remaining
+  `env_repo.GetDefaultBlobStore().MakeBlobReader` calls; writes
+  still pin to `GetDefaultBlobStore()` by convention; the 5
+  `clone_history_*` bats tests stay green after the stop-gap in
+  `loadMutableConfigBlob` is rolled back in favor of the shared
+  accessor (bats coverage is the integration gate; dedicated Go
+  unit tests are deferred because building stub BlobStores would
+  recreate what bats already exercises and madder owns Multi's
+  correctness via its own test suite); FDR linked from dodder
+  issue #196 and references madder issues #195 (Multi manpage)
+  and #196 (two-pass optimization)
 status: proposed
 ---
 
@@ -97,57 +103,136 @@ what madder.cat already does for its read path.
 
 ### The shared helper
 
-Add one read-side helper to `env_repo.Env`:
+Back the read-fallback with madder's `Multi` blob store
+([madder `go/internal/foxtrot/blob_stores/multi.go`][madder-multi];
+documentation in progress at
+[amarbel-llc/madder#195][madder-issue-195]). `Multi` already
+implements ordered read fallback across a list of child stores;
+dodder consumes it rather than reimplementing the loop.
+
+Use **write-through mode**:
 
 ```go
-// OpenBlobReader returns a reader for the content-addressed blob,
-// searching the default store first and then every remaining
-// enumerated store. Returns the default store's error if no store
-// holds the blob, so diagnostics keep pointing at the canonical
-// local path.
-func (env Env) OpenBlobReader(
-    blobId mad_domain_interfaces.MarklId,
-) (mad_domain_interfaces.BlobReader, error)
+multi, err := blob_stores.NewMulti(ctx).
+    WriteTo(defaultStore).
+    Read(remaining...).
+    Build() // readFill defaults are fine; we never tee
 ```
 
-Implementation mirrors the
-[`Cat.blobFromRemainingStores`](https://github.com/amarbel-llc/madder/blob/main/internal/india/commands/cat.go)
-pattern: try `.default`, then iterate `GetDefaultBlobStoreAndRemaining`'s
-`remaining` map gated by `HasBlob`. The stop-gap's
-`openBlobReaderAcrossStores` in
-`internal/november/store_config/persist.go` becomes
-`env.OpenBlobReader` and the call site reduces to:
+Write-through (not mirror) because dodder pins writes to `.default`
+by design. A caller that obtains the Multi and accidentally calls
+`MakeBlobWriter` still lands in the default store — the type
+enforces the FDR's "writes are placement decisions" rule rather
+than relying on code review. (Mirror mode broadcasts writes to
+every child; wrong for dodder.)
+
+Single-store envs degrade cleanly:
+`NewMulti(ctx).WriteTo(default).Read().Build()` succeeds — Multi's
+`Build()` only requires a non-nil write store. Empty `Read(...)`
+is permitted.
+
+Expose the Multi as an accessor on `env_repo.Env`:
 
 ```go
-blobReader, err := store.envRepo.OpenBlobReader(blobId)
+// GetReadBlobStore returns a madder Multi blob store in
+// write-through mode that reads from every enumerated store
+// (default first, then walk-up ancestors and the XDG system
+// store) and pins writes to the default store.
+//
+// Prefer this over GetDefaultBlobStore for any content-addressed
+// read. Writes that intentionally pin to .default may still call
+// GetDefaultBlobStore directly; using GetReadBlobStore is equally
+// safe because Multi's write-through mode routes writes to the
+// same default store.
+func (env Env) GetReadBlobStore() mad_domain_interfaces.BlobStore
 ```
+
+The accessor builds the Multi on every call. Construction is
+cheap (a few struct fields, no I/O) and avoids cache-invalidation
+bugs — `blobStoreEnv` is re-made during genesis, so caching the
+Multi at `Env` construction time would hand callers stale stores.
+Order: `defaultStore` first, then `remaining` in whatever order
+`GetDefaultBlobStoreAndRemaining` returns it (madder owns that
+ordering).
+
+The return type is `mad_domain_interfaces.BlobStore` (Multi's
+interface) rather than `blob_stores.BlobStoreInitialized` (a
+struct wrapping `BlobStore` + `Path`). Multi doesn't have a
+`Path`; the wrapping struct is for individual filesystem stores
+that need provenance metadata. Reader call sites only need
+`.MakeBlobReader(blobId)`, which is on `BlobStore`.
+
+The call site reduces to standard `BlobStoreInitialized` use:
+
+```go
+blobReader, err := env.GetReadBlobStore().MakeBlobReader(blobId)
+```
+
+[madder-multi]: https://github.com/amarbel-llc/madder/blob/master/go/internal/foxtrot/blob_stores/multi.go
+[madder-issue-195]: https://github.com/amarbel-llc/madder/issues/195
 
 ### Migration
 
 Replace every existing
 `env.GetDefaultBlobStore().MakeBlobReader(blobId)` with
-`env.OpenBlobReader(blobId)` (matching for accessor-chain variants
-like `op.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(...)`).
-Writes stay as-is.
+`env.GetReadBlobStore().MakeBlobReader(blobId)` (matching for
+accessor-chain variants like
+`op.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(...)`).
+Writes stay on `GetDefaultBlobStore()` by convention — the type
+makes either choice safe, but explicit `GetDefaultBlobStore` on
+writes documents intent.
 
-Approximate scope: ~30 reader call sites across `internal/` (see Key
-Files). Most are mechanical single-line changes; a few thread a
-`BlobStore` value through a helper and would migrate by switching the
-helper's parameter from `BlobStoreInitialized` to `env_repo.Env` (or
-by giving the helper a `BlobReader`-returning accessor).
+Approximate scope: ~30 reader call sites across `internal/` (see
+Key Files). Most are mechanical single-line changes; helpers that
+take a `BlobStore` parameter migrate at the *caller* (caller
+passes `env.GetReadBlobStore()` instead of
+`env.GetDefaultBlobStore()`), not by changing the helper's
+signature. The helper continues to accept a `BlobStore` and the
+read-fallback travels with the value.
 
 ### Error surface
 
-`OpenBlobReader` returns the default store's error on all-miss. The
-existing single-store error message ("Blob with id ... does not exist
-locally: <path>") is the most useful diagnostic — it points at the
-file the user would look at first. Surfacing fallback-store paths in
-the error would clutter the message for the common case where the
-blob is genuinely missing.
+Multi returns `blob_io.ErrBlobMissing` on all-miss. The sentinel
+is a struct, not a bare value:
 
-If diagnostic depth proves valuable later, the helper can grow an
-options bag (`OpenBlobReaderOptions{IncludeFallbackPaths: true}`)
-without breaking call sites.
+```go
+type ErrBlobMissing struct {
+    BlobId domain_interfaces.MarklId
+    Path   string
+}
+```
+
+It implements `Is()` for `errors.Is` matching. Callers that
+branch on missing-vs-IO-error get a typed sentinel they can
+match cleanly. Callers that render to the user get the digest and
+one path (the default store's path) — same useful diagnostic the
+single-store world provided, in a typed envelope.
+
+`Path` carries only the default store's path today. Surfacing
+which fallback stores were tried is a madder concern; an upstream
+TODO on `ErrBlobMissing` notes "add blob store" as a future field.
+If diagnostic depth matters before that lands, dodder call sites
+can log fallback paths through `ui.Debug` without changing the
+error shape.
+
+### Performance footnote
+
+Multi's `MakeBlobReader` currently does two sequential calls per
+child store on the miss path: `HasBlob(id)` then
+`MakeBlobReader(id)`. For local filesystem stores the cost is two
+stat-equivalents — invisible in practice. For remote backends it
+becomes two round trips per probed store, which gets visible once
+a fallback chain has multiple remotes.
+
+Tracked upstream as
+[amarbel-llc/madder#196][madder-issue-196] — the planned
+direction is either a `PrefersProbe` opt-in flag or a unified
+`TryOpen` primitive that returns `ErrBlobMissing` on miss
+without a separate presence check. Dodder ships against today's
+two-pass code; the optimization lands when madder picks an
+approach.
+
+[madder-issue-196]: https://github.com/amarbel-llc/madder/issues/196
 
 ### What does NOT change
 
@@ -178,28 +263,35 @@ future feature requires multi-store writes, it gets its own FDR.
 
 `loadMutableConfigBlob` in `internal/november/store_config/persist.go`
 has a private `openBlobReaderAcrossStores` helper that walks every
-store. Closed `#196`. All 480 bats tests pass.
+store. Closed [#196](https://github.com/amarbel-llc/dodder/issues/196).
+All 480 bats tests pass.
 
 This is intentionally narrow. It demonstrates the pattern but does
 not generalize, and the same bug class lurks at ~30 other read sites.
 
-### Phase 2 — Lift the helper onto env_repo
+### Phase 2 — Add the Multi-backed accessor on env_repo (Shipped)
 
-1. Move `openBlobReaderAcrossStores` from
-   `store_config/persist.go` onto `env_repo.Env` as
-   `OpenBlobReader`.
-2. Update `loadMutableConfigBlob` to call `env.OpenBlobReader`
-   directly. The private helper is deleted.
-3. Add a unit test for `OpenBlobReader` covering default-hit,
-   fallback-hit, and all-miss (error path preserves the default
-   store's error message).
+1. `GetReadBlobStore()` added to `env_repo.Env`, returning a
+   Multi built in write-through mode from
+   `GetDefaultBlobStoreAndRemaining`. Built on every call rather
+   than cached — genesis re-makes `blobStoreEnv` so a cached
+   Multi would hand callers stale stores.
+2. `loadMutableConfigBlob` now calls
+   `env.GetReadBlobStore().MakeBlobReader(blobId)` directly. The
+   private `openBlobReaderAcrossStores` helper is deleted.
+3. Dedicated Go unit tests deferred: bats `clone.bats` (the
+   `clone_history_*` cluster) exercises the multi-store fallback
+   path end-to-end. Building stub BlobStores for a Go unit test
+   would recreate what bats already covers, and madder owns
+   Multi's correctness via its own test suite.
 
 ### Phase 3 — Migrate all reader call sites
 
 Sweep the ~30 sites enumerated below, replacing
-`GetDefaultBlobStore().MakeBlobReader` with `OpenBlobReader`.
-Each migration is a one-line change. Run the full bats suite
-(including the `clone_history_*` cluster) after each batch.
+`GetDefaultBlobStore().MakeBlobReader` with
+`GetReadBlobStore().MakeBlobReader`. Each migration is a one-line
+change. Run the full bats suite (including the `clone_history_*`
+cluster) after each batch.
 
 Migration target list (read sites that pass `MakeBlobReader(blobId)`
 on `GetDefaultBlobStore()`):
@@ -224,23 +316,29 @@ on `GetDefaultBlobStore()`):
 - `internal/uniform/commands_dodder/exec.go:97`
 - `internal/uniform/commands_dodder/dormant_edit.go:133`
 - `internal/november/store_config/persist.go:483` (in stop-gap form;
-  reduces to `env.OpenBlobReader(blobId)` in Phase 2)
+  reduces to `env.GetReadBlobStore().MakeBlobReader(blobId)` in Phase 2)
 
 Sites that take a `BlobStore` parameter (e.g. `typed_blob_store/config.go`,
 `typed_blob_store/tag.go` constructor params, `sku_fmt`) currently
 get the default store and pass it down. Phase 3 migrates the
 *caller*, not the typed helper. The helper continues to accept a
-`BlobStore`; the caller resolves it through `OpenBlobReader`.
+`BlobStore`; the caller passes `env.GetReadBlobStore()` instead of
+`env.GetDefaultBlobStore()` and the read-fallback travels with the
+value.
 
 ### Phase 4 — Writes stay pinned (no migration)
 
 `MakeBlobWriter` sites stay on `GetDefaultBlobStore()` unchanged.
+The Multi's write-through mode would also route writes to the
+default store, but keeping `GetDefaultBlobStore` on writes
+documents the placement decision at the call site.
 
 ### Phase 5 — Promotion
 
 When every reader migrates, the FDR moves from `proposed` to
 `accepted`. The stop-gap in `persist.go` collapses into a single
-`env.OpenBlobReader` call (Phase 2 already did this).
+`env.GetReadBlobStore().MakeBlobReader` call (Phase 2 already did
+this).
 
 ## Key Files
 
@@ -248,16 +346,14 @@ When every reader migrates, the FDR moves from `proposed` to
   File                                                Role
   --------------------------------------------------- ------------------
   `go/internal/foxtrot/env_repo/main.go`              Add
-                                                      `OpenBlobReader`
-                                                      method.
+                                                      `GetReadBlobStore`
+                                                      method; build the
+                                                      Multi from
+                                                      `GetDefaultBlobStoreAndRemaining`.
 
   `go/internal/november/store_config/persist.go`      Stop-gap site;
-                                                      collapses in
+                                                      collapsed in
                                                       Phase 2.
-
-  `go/internal/foxtrot/env_repo/main_test.go`         New: unit test
-                                                      for
-                                                      `OpenBlobReader`.
 
   (~30 reader call sites)                             Phase 3 migration
                                                       target list above.
@@ -269,9 +365,9 @@ Phase 1 (stop-gap, shipped) is already revertable on its own by
 restoring the single-store `GetDefaultBlobStore().MakeBlobReader`
 call. The 5 `clone_history_*` tests would fail again.
 
-Phase 2's `OpenBlobReader` is additive; reverting it means deleting
-the new method and restoring `loadMutableConfigBlob` to its stop-gap
-form.
+Phase 2's `GetReadBlobStore` is additive; reverting it means
+deleting the new accessor and restoring `loadMutableConfigBlob`
+to its stop-gap form.
 
 Phase 3 migrations are each one-line and individually revertable.
 
