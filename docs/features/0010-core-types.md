@@ -342,3 +342,11 @@ When picking this up:
 
 - [#46](https://github.com/amarbel-llc/dodder/issues/46) --- typed blob locks as
   tool/grammar/config references (origin of this FDR)
+- [#208](https://github.com/amarbel-llc/dodder/issues/208) --- flip the pandoc
+  tool tree from opt-in to opt-out at genesis (Phase 1 follow-up); blocked on a
+  fixture-helper system to absorb the test-suite cascade
+- [#209](https://github.com/amarbel-llc/dodder/issues/209) --- bootstrap the
+  pandoc tool tree into existing repos (the existing-repo half of #208; an
+  install command that adds the tool types and blob references to a repo that
+  was initialized before the on-ramp). Subsumed by Phase 3 (`dodder.net` seed
+  repo) once that lands.
