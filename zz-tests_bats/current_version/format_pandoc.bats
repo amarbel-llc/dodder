@@ -85,10 +85,11 @@ function format_blob_stdin_pandoc_normalizes_markdown { # @test
 	EOM
 }
 
-# Canary for opt-in -> opt-out flip: init WITHOUT the flag must not
-# create pandoc tool types and must leave !md formatter-free.
-# When we flip genesis to opt-out, this test SHOULD fail and become
-# the assertion that gets updated to reflect the new default.
+# Default init (without the opt-in flag) must not create pandoc tool
+# types and must leave !md formatter-free. When the opt-in -> opt-out
+# flip lands (see docs/plans/2026-03-27-pandoc-internal-formatting-
+# design.md), this test will fail and the assertions become the canary
+# for the flip itself.
 # bats test_tags=pandoc
 function init_without_pandoc_flag_produces_minimal_md_type { # @test
 	wd="$(mktemp -d)"
@@ -122,7 +123,7 @@ function init_without_pandoc_flag_produces_minimal_md_type { # @test
 	refute_output --partial 'formatters.text'
 }
 
-# Covers format_object.FormatFromStdin (currently 0% coverage).
+# Covers format_object.FormatFromStdin (previously 0% coverage).
 # Parallels format_blob_stdin_pandoc_normalizes_markdown to catch
 # regressions if the two stdin paths diverge.
 # bats test_tags=pandoc

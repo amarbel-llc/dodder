@@ -68,7 +68,7 @@ type_blob_sha=$(dodder show \
   -abbreviate-shas=false \
   -print-empty-shas=true \
   -format log '!md:t' 2>/dev/null |
-  sed 's/.*@\([^ ]*\) .*/\1/')
+  sed 's/.*\[!md @\([^ ]*\) .*/\1/')
 [[ -n $type_blob_sha ]] || {
   echo "ERROR: type_blob_sha extraction failed" >&2
   exit 1

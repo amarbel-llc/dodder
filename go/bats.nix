@@ -289,10 +289,15 @@ let
       -format log :konfig | sed 's/.*@\([^ ]*\) .*/\1/')
     [[ -n "$konfig_sha" ]] || { echo "ERROR: konfig_sha extraction failed" >&2; exit 1; }
 
+    # Anchor on the literal `[!md @` boundary: !md's box may now contain
+    # blob references like `<@blake2b256-...`; an unanchored greedy `.*@`
+    # would pick up the last blob ref's digest instead of !md's own.
+    # The `-format log` output carries a timestamp prefix so we can't
+    # anchor on `^` directly.
     type_blob_sha=$(${dodder}/bin/dodder show \
       -abbreviate-shas=false \
       -print-empty-shas=true \
-      -format log '!md:t' | sed 's/.*@\([^ ]*\) .*/\1/')
+      -format log '!md:t' | sed 's/.*\[!md @\([^ ]*\) .*/\1/')
     [[ -n "$type_blob_sha" ]] || { echo "ERROR: type_blob_sha extraction failed" >&2; exit 1; }
 
     cat > .fixtures.env <<EOF
