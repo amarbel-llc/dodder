@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "stdioServers": {
+    "dodder": {
+      "command": "@dodder@",
+      "args": ["mcp"]
+    }
+  }
+}

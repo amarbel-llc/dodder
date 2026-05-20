@@ -1,0 +1,11 @@
+{
+  "name": "dodder",
+  "version": "@version@",
+  "description": "Distributed zettelkasten and content-addressable blob store. Exposes dodder's MCP server (zettel/tag/type query + edit) and ships user-facing skills (onboarding, day-to-day usage, zettel ID model, blob store model).",
+  "skills": [
+    "./skills/dodder-onboarding",
+    "./skills/dodder-usage",
+    "./skills/features-zettel_ids",
+    "./skills/features-madder_blob_stores"
+  ]
+}

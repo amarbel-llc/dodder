@@ -183,6 +183,31 @@ let
       done
     '';
   };
+
+  # dodder-clown-plugin stages a clown plugin (see clown-plugin-protocol(7)
+  # / clown-json(5)) that exposes dodder's MCP server and ships user-facing
+  # skills (onboarding, usage, zettel IDs, blob stores). The clown plugin
+  # protocol disallows `${...}` expansion in stdioServers.command, so the
+  # binary path is baked in at build time via Nix substitution: the
+  # source-controlled `clown.json.in` uses an `@dodder@` placeholder
+  # rewritten to `${dodder}/bin/dodder` here. The `.claude-plugin/plugin.json`
+  # template similarly bakes in the dodder version so the manifest can't
+  # drift against the binary (mirrors amarbel-llc/madder#204). Consumers
+  # wire the plugin into clown by pointing `--plugin-dir` at
+  # `${dodder-clown-plugin}/share/purse-first/dodder/`.
+  dodder-clown-plugin = pkgs.runCommand "dodder-clown-plugin" { } ''
+    pluginRoot=$out/share/purse-first/dodder
+    mkdir -p $pluginRoot/.claude-plugin
+    cp -r ${../plugins/dodder/skills} $pluginRoot/skills
+    substitute \
+      ${../plugins/dodder/.claude-plugin/plugin.json.in} \
+      $pluginRoot/.claude-plugin/plugin.json \
+      --replace-fail '@version@' '${version}'
+    substitute \
+      ${../plugins/dodder/clown.json.in} \
+      $pluginRoot/clown.json \
+      --replace-fail '@dodder@' '${dodder}/bin/dodder'
+  '';
 in
 {
   packages = {
@@ -194,6 +219,7 @@ in
       dodder-analyzer-repool
       dodder-analyzer-seqerror
       dodder-analyzer-defererr
+      dodder-clown-plugin
       dodder-go-test
       ;
     default = dodder;
