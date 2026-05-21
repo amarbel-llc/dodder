@@ -1,6 +1,6 @@
 ---
 name: features-zettel_ids
-description: Use when working on the ZettelId internals --- the Yin/Yang provider, the triangular-number coordinate mapping, the Index interface and its v0/v1 implementations, GOB-encoded persistence, calls to `CreateZettelId` / `AddZettelId` / `PeekZettelIds`, ZettelId genesis from `dodder init`, or `ErrZettelIdsExhausted` debugging.
+description: Use when working on the ZettelId internals --- the Yin/Yang provider, the triangular-number coordinate mapping, the Index interface and its v0/v1 implementations, raw-binary persistence, calls to `CreateZettelId` / `AddZettelId` / `PeekZettelIds`, ZettelId genesis from `dodder init`, or `ErrZettelIdsExhausted` debugging.
 ---
 
 # ZettelId Internals
@@ -15,7 +15,7 @@ A `ZettelId` is a struct with `left` and `right` string fields, rendered as
 `left/right`. Both parts must be non-empty identifiers. Parsed via the
 doddish tokenizer (identifier `/` identifier).
 
-**Source:** `go/internal/echo/ids/zettel_id.go` --- `ZettelId` struct,
+**Source:** `go/internal/bravo/ids/zettel_id.go` --- `ZettelId` struct,
 `Set()`, `String()`.
 
 ## Provider Files (Yin/Yang)
@@ -33,14 +33,9 @@ time:
 Total ID space = `len(Yin) * len(Yang)` combinations. The provider lists
 are immutable after creation.
 
-**Source:** `go/internal/foxtrot/object_id_provider/factory.go` ---
-`Provider` struct with `yin`/`yang` fields, `New()` reads from
-`DirObjectId()`.
-
-**Provider type:** `go/internal/foxtrot/object_id_provider/main.go` ---
-`provider` is a `[]string`. Forward lookup via
-`MakeZettelIdFromCoordinates(i)` returns `provider[i]`. Reverse lookup via
-`ZettelId(v)` is a linear scan.
+**Source:** `go/internal/echo/zettel_id_provider/` --- `Provider` struct
+with `yin`/`yang` fields. Reverse lookup of a string -> coordinate is a
+linear scan.
 
 ## Coordinate System
 
@@ -57,7 +52,7 @@ integers.
 
 ## ZettelId Index
 
-The `Index` interface (`go/internal/india/zettel_id_index/main.go:16-22`)
+The `Index` interface (`go/internal/foxtrot/zettel_id_index/main.go`)
 tracks which IDs are available:
 
 ```go
@@ -70,7 +65,18 @@ type Index interface {
 }
 ```
 
-### v0 Implementation (active)
+The factory `MakeIndex` is gated behind a hardcoded `if true { v1 } else
+{ v0 }` switch --- v1 is the currently active implementation.
+
+### v1 Implementation (active)
+
+Uses `collections.Bitset` indexed by 1D coordinate integer. Persists via
+`encoding.BinaryMarshaler` on the bitset --- not gob, not the v0 uint32
+stream.
+
+**Source:** `go/internal/foxtrot/zettel_id_index/v1/main.go`.
+
+### v0 Implementation (dormant)
 
 Uses `map[int]bool` where each key is a 1D coordinate integer. Presence in
 the map = available.
@@ -87,21 +93,17 @@ the map = available.
 - **`PeekZettelIds(n)`** --- Preview up to `n` available IDs without
   consuming them.
 
-**Persistence:** GOB-encoded `encodedIds{AvailableIds}` struct at
-`FileCacheObjectId()` (resolves to `DirDataIndex("object_id")`).
-Lazy-loaded on first access, flushed on `Store.Flush()`.
+**Persistence:** raw big-endian uint32 stream at `FileCacheObjectId()`
+(resolves to `DirDataIndex("object_id")`). Layout: `uint32 count`,
+followed by `count` × `uint32` coordinate keys, via `binary.Write`.
+Earlier revisions used gob encoding; the migration off gob and a runtime
+sanity check on `count` were added to prevent multi-GB allocations when
+the on-disk format drifted (see the comment referencing
+amarbel-llc/dodder#68 in `v0/main.go`).
 
 **Thread safety:** `sync.Mutex` protects all map operations.
 
-**Source:** `go/internal/india/zettel_id_index/v0/main.go`.
-
-### v1 Implementation (disabled)
-
-Uses `collections.Bitset` instead of a map. Currently gated behind
-`if false` in the factory
-(`go/internal/india/zettel_id_index/main.go:30`).
-
-**Source:** `go/internal/india/zettel_id_index/v1/main.go`.
+**Source:** `go/internal/foxtrot/zettel_id_index/v0/main.go`.
 
 ## Allocation Modes
 
@@ -114,29 +116,31 @@ Controlled by `configCli.UsePredictableZettelIds()`:
 
 ## Exhaustion
 
-When `len(AvailableIds) == 0`, `CreateZettelId()` returns
+When the available set is empty, `CreateZettelId()` returns
 `ErrZettelIdsExhausted`.
 
-**Source:** `go/internal/foxtrot/object_id_provider/errors.go:33-60`.
+**Source:** `go/internal/echo/zettel_id_provider/errors.go`.
 
 ## Store Integration
 
-The `Store` (`go/internal/tango/store/`) holds a `zettelIdIndex` field.
+The `Store` (`go/internal/oscar/store/`) holds a `zettelIdIndex` field.
 When a zettel is written, `AddZettelId()` is called to mark it consumed.
-`CreateZettelId()` is called when minting new zettels. The index is
-flushed as part of `Store.Flush()`.
+`CreateZettelId()` is called when minting new zettels
+(`go/internal/sierra/repo_actions/write_new_zettels.go`,
+`checkin_haustoria.go`, `op_checkin.go` in `romeo/local_working_copy/`).
+The index is flushed as part of `Store.Flush()`.
 
 ## Key Source Locations
 
 | Concern | Package |
 |---------|---------|
-| ZettelId type & parsing | `go/internal/echo/ids/zettel_id.go` |
+| ZettelId type & parsing | `go/internal/bravo/ids/zettel_id.go` |
 | Coordinate mapping | `go/internal/0/coordinates/kennung.go` |
-| Yin/Yang provider files | `go/internal/foxtrot/object_id_provider/` |
-| Index interface | `go/internal/india/zettel_id_index/main.go` |
-| v0 index (map-based, active) | `go/internal/india/zettel_id_index/v0/main.go` |
-| v1 index (bitset, disabled) | `go/internal/india/zettel_id_index/v1/main.go` |
-| Genesis (Yin/Yang copy) | `go/internal/juliett/env_repo/genesis.go` --- `CopyFileLines` calls |
-| Directory layout paths | `go/internal/echo/directory_layout/v3.go` --- `DirObjectId()`, `FileCacheObjectId()` |
-| Exhaustion error | `go/internal/foxtrot/object_id_provider/errors.go` |
-| Store integration | `go/internal/tango/store/` |
+| Yin/Yang provider files | `go/internal/echo/zettel_id_provider/` |
+| Index interface & factory | `go/internal/foxtrot/zettel_id_index/main.go` |
+| v1 index (bitset, active) | `go/internal/foxtrot/zettel_id_index/v1/main.go` |
+| v0 index (map-based, dormant) | `go/internal/foxtrot/zettel_id_index/v0/main.go` |
+| Genesis (Yin/Yang copy) | `go/internal/foxtrot/env_repo/genesis.go` |
+| Directory layout paths | `go/internal/bravo/directory_layout/v3.go` --- `DirObjectId()`, `FileCacheObjectId()` |
+| Exhaustion error | `go/internal/echo/zettel_id_provider/errors.go` |
+| Store integration | `go/internal/oscar/store/` |
