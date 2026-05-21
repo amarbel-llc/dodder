@@ -27,8 +27,9 @@ type Log struct {
 //
 // Background: an earlier implementation wrapped every entry in a fresh
 // hyphence TypedBlob and emitted the full header per call, producing
-// stacked hyphence docs on disk (amarbel-llc/dodder#212). The reader
-// here keeps back-compat for those legacy files.
+// stacked hyphence docs on disk (amarbel-llc/dodder#212). v15 had not
+// shipped to users, so the legacy reader path was dropped along with
+// the fixture regen.
 func (l Log) AppendEntry(entry Entry) (err error) {
 	var file *os.File
 
@@ -156,18 +157,12 @@ func (l Log) ReadAllEntries() (entries []Entry, err error) {
 }
 
 // segmentBodies reads a zettel_id_log file and returns the entry bodies
-// (TOML key/value blocks) in order, ignoring any hyphence headers.
+// (TOML key/value blocks) in order.
 //
-// Handles both the current single-header shape and the legacy stacked-
-// doc shape (amarbel-llc/dodder#212):
-//
-//   - Current shape: file starts with `---\n! zettel_id_log-v1\n---\n`,
-//     then bodies separated by blank lines.
-//   - Legacy shape: each body is preceded by its own `---\n! type\n---\n`
-//     preamble.
-//
-// In both cases, this function strips header preambles and groups
-// non-blank, non-header lines into bodies.
+// File shape: a single hyphence header at the top
+// (`---\n! zettel_id_log-v1\n---\n`), then bodies separated by blank
+// lines. The header is skipped; bodies are collected line-by-line and
+// flushed on blank-line boundaries.
 func segmentBodies(reader *bufio.Reader) (bodies []string, err error) {
 	var current strings.Builder
 
@@ -179,9 +174,11 @@ func segmentBodies(reader *bufio.Reader) (bodies []string, err error) {
 		current.Reset()
 	}
 
-	// State machine: skip header preambles (`---`...`---`) and collect
-	// body lines until a blank line or the next header.
-	inHeader := false
+	// Skip the leading header block: a `---` line, then arbitrary
+	// header content, then a closing `---` line. Tolerate a missing
+	// header (e.g. a zero-length log).
+	sawOpeningBoundary := false
+	pastHeader := false
 
 	for line, errIter := range ohio.MakeLineSeqFromReader(reader) {
 		if errIter != nil {
@@ -191,26 +188,27 @@ func segmentBodies(reader *bufio.Reader) (bodies []string, err error) {
 
 		trimmedRight := strings.TrimSuffix(line, "\n")
 
-		if trimmedRight == hyphence.Boundary {
-			if inHeader {
-				// Closing boundary of a header.
-				inHeader = false
-			} else {
-				// Opening boundary of a header — finalize any
-				// previous body first.
-				flush()
-				inHeader = true
+		if !pastHeader {
+			if trimmedRight == hyphence.Boundary {
+				if sawOpeningBoundary {
+					pastHeader = true
+				} else {
+					sawOpeningBoundary = true
+				}
+				continue
 			}
-			continue
-		}
 
-		if inHeader {
-			// Header content (e.g. `! zettel_id_log-v1`); ignore.
-			continue
+			if !sawOpeningBoundary {
+				// Header missing or empty log; just treat the
+				// content as bodies from here on.
+				pastHeader = true
+			} else {
+				// Header content (e.g. `! zettel_id_log-v1`).
+				continue
+			}
 		}
 
 		if trimmedRight == "" {
-			// Blank line — body separator in the new shape.
 			flush()
 			continue
 		}
