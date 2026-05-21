@@ -215,6 +215,27 @@ function init_inventory_archive_with_encryption { # @test
 	assert_output --regexp '.+'
 }
 
+function init_blob_store_id_missing_fails_fast { # @test
+	# Counterpart to init_with_existing_madder_store: when the named
+	# store does NOT exist, `dodder init -blob_store-id` should fail
+	# with a useful error. Previously it reported success and produced
+	# an unusable repo that panicked on every subsequent command with
+	# "WriteTo: no write store given" (amarbel-llc/dodder#214).
+	set_xdg "$BATS_TEST_TMPDIR"
+
+	# Intentionally do NOT create the named store before init.
+	run_dodder init \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-encryption none \
+		-blob_store-id never-created \
+		test-repo-id
+
+	assert_failure
+	assert_output --partial 'blob store'
+	assert_output --partial 'never-created'
+}
+
 function init_with_existing_madder_store { # @test
 	set_xdg "$BATS_TEST_TMPDIR"
 

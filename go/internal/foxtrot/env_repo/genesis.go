@@ -66,6 +66,39 @@ func (env *Env) Genesis(bigBang BigBang) {
 	env.config.Type = bigBang.GenesisConfig.Type
 	env.config.Blob = bigBang.GenesisConfig.Blob
 
+	// Pre-flight: if the caller supplied -blob_store-id, the store must
+	// already exist on disk. writeBlobStoreConfigIfNecessary trusts the
+	// caller and early-returns without creating one, and subsequent
+	// commands will panic in env_repo.GetReadBlobStore with "no write
+	// store given" if the named store can't be resolved (#214).
+	//
+	// Make() calls MakeBlobStoreEnvWithoutStores for a fresh repo
+	// (no config on disk yet), so env.blobStoreEnv currently has zero
+	// stores enumerated. Force a real rebuild so the lookup can see any
+	// pre-existing user/system stores (e.g. one created via `madder
+	// init shared` before this dodder init), then validate that the
+	// named id resolves. Subsequent code paths perform another rebuild
+	// after writing the default-store config, so this early rebuild is
+	// purely for the lookup-and-validate step.
+	if !bigBang.BlobStoreId.IsEmpty() {
+		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(env.blobStoreEnv.Env)
+
+		// BlobStoreInitialized is a struct with two embedded interface
+		// fields; a missing store comes back with both nil. Probing
+		// the BlobStore field is sufficient since every real store
+		// has one.
+		store := env.blobStoreEnv.GetBlobStore(bigBang.BlobStoreId)
+		if store.BlobStore == nil {
+			env.Cancel(errors.ErrorWithStackf(
+				"blob store %q not found; create it first (e.g. `madder init %q` or `dodder blob_store-init %q`) before running init with -blob_store-id",
+				bigBang.BlobStoreId,
+				bigBang.BlobStoreId,
+				bigBang.BlobStoreId,
+			))
+			return
+		}
+	}
+
 	if err := env.MakeDirs(env.DirsGenesis()...); err != nil {
 		env.Cancel(err)
 		return
