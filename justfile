@@ -216,6 +216,65 @@ explore-haustoria-status:
 
 live_workspace := env("HOME") / "workspaces/dodder-haustoria-caldav/workspace"
 
+# Init a CWD-scoped dodder repo and wire `.claude/mcp.json` so this
+# session's Claude Code picks up `dodder mcp` as an MCP server.
+# Refuses to overwrite an existing .dodder/ in $PWD — clear it first
+# if you want to re-init.
+[group('explore')]
+explore-mcp-init:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # `.madder/` is the session-local blob store and is meant to persist
+  # across re-inits; only `.dodder/` blocks a fresh init.
+  if [[ -e .dodder ]]; then
+    echo "refusing to re-init: .dodder/ already in $(pwd)"
+    echo "  rm -rf .dodder .claude/mcp.json"
+    echo "to start fresh."
+    exit 1
+  fi
+
+  bin=$(nix build --no-link --print-out-paths .#dodder)
+  export PATH="$bin/bin:$PATH"
+
+  # Heredocs in justfile recipes inherit the recipe's leading indent,
+  # which would land inside the file content. Use printf + explicit
+  # newlines to keep wordlists and JSON clean.
+  mkdir -p .tmp
+  printf '%s\n' alpha bravo charlie delta echo foxtrot golf hotel india juliett > .tmp/yin
+  printf '%s\n' kilo lima mike november oscar papa quebec romeo sierra tango > .tmp/yang
+
+  # Clear any leftover session-local default store; an existing
+  # blob_store-config there blocks init with "file exists".
+  rm -rf .madder/local/share/blob_stores/default
+
+  dodder init \
+    -yin .tmp/yin \
+    -yang .tmp/yang \
+    -repo_id . \
+    -encryption none \
+    test-mcp
+
+  # Claude Code looks for `.mcp.json` at the project root, not under
+  # `.claude/`.
+  printf '%s\n' \
+    '{' \
+    '  "mcpServers": {' \
+    '    "dodder": {' \
+    "      \"command\": \"$bin/bin/dodder\"," \
+    '      "args": ["mcp"]' \
+    '    }' \
+    '  }' \
+    '}' \
+    > .mcp.json
+
+  echo ""
+  echo "==> Repo:        $(pwd)/.dodder"
+  echo "==> MCP config:  $(pwd)/.mcp.json"
+  echo "==> Binary:      $bin/bin/dodder"
+  echo ""
+  echo "Restart Claude Code (or reload MCP servers) to pick up the dodder MCP."
+  echo "Cleanup: rm -rf .dodder .mcp.json .tmp/yin .tmp/yang"
+
 # Run a dodder command in the live CalDAV workspace.
 [group('explore')]
 explore-live *args:
