@@ -7,11 +7,16 @@
     bats = {
       url = "github:amarbel-llc/bats";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
     };
 
     tap = {
       url = "github:amarbel-llc/tap";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.bats.follows = "bats";
     };
 
     purse-first = {
@@ -27,11 +32,17 @@
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
       inputs.tommy.follows = "tommy";
+      inputs.bats.follows = "bats";
+      inputs.purse-first.follows = "purse-first";
     };
 
     tommy = {
       url = "github:amarbel-llc/tommy";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
+      inputs.bats.follows = "bats";
+      inputs.tap.follows = "tap";
     };
   };
 
