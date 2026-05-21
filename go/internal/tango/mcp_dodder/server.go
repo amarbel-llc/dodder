@@ -341,6 +341,10 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				)
 			}
 
+			if output == "" {
+				output = emptyOutputMessage
+			}
+
 			return &protocol.ToolCallResultV1{
 				Content: []protocol.ContentBlockV1{
 					protocol.TextContentV1(output),
@@ -819,6 +823,15 @@ func describeError(err error) string {
 
 type paramTranslator func(args json.RawMessage) ([]string, error)
 
+// emptyOutputMessage is the placeholder text emitted when a bridge
+// produces no stdout (and no stderr / truncation suffix). MCP clients
+// (e.g. Claude Code's zod-based validator) reject content blocks whose
+// `text` field is the empty string with an `invalid_union` error.
+// Filling the block with a stable, predictable message keeps the
+// response well-formed and tells the model "the command ran but said
+// nothing." See amarbel-llc/dodder#213.
+const emptyOutputMessage = "no output"
+
 func makeBridgeHandler(
 	bridge Bridge,
 	cmdName string,
@@ -859,6 +872,10 @@ func makeBridgeHandler(
 
 		if result.Stderr != "" {
 			output += "\n\nstderr:\n" + result.Stderr
+		}
+
+		if output == "" {
+			output = emptyOutputMessage
 		}
 
 		return &protocol.ToolCallResultV1{
@@ -933,6 +950,10 @@ func makeWorkspaceBridgeHandler(
 
 		if result.Stderr != "" {
 			output += "\n\nstderr:\n" + result.Stderr
+		}
+
+		if output == "" {
+			output = emptyOutputMessage
 		}
 
 		return &protocol.ToolCallResultV1{
