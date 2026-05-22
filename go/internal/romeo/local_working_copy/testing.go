@@ -4,7 +4,7 @@ package local_working_copy
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 // MakeTesting builds a *Repo backed by a fresh tempdir-rooted env_repo

@@ -11,10 +11,10 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/alfa/collections_map"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/heap"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/heap"
 )
 
 type ListCoder = interfaces.CoderBufferedReadWriter[*Transacted]

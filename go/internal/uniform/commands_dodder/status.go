@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	pkg_query "code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func init() {

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 	"github.com/gorilla/mux"
 )
 

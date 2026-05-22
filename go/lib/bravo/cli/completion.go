@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // TODO add support for comma-separated values

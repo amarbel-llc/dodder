@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/tetratelabs/wazero"
 )
 

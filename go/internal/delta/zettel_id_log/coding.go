@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	charlie_zil "code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 var Coder = hyphence.CoderToTypedBlob[Entry]{

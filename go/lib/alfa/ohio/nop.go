@@ -3,7 +3,7 @@ package ohio
 import (
 	"io"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 // TODO move this file into src/charlie/ohio_nop

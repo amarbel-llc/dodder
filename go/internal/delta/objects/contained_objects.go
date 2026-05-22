@@ -7,9 +7,9 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 type ContainedObjects collections_slice.Slice[containedObject]

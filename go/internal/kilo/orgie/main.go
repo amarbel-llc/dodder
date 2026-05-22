@@ -4,8 +4,8 @@ import (
 	"io"
 
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/format"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/format"
 )
 
 type Text struct {

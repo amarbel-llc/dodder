@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 //go:embed testdata/always_true.wasm

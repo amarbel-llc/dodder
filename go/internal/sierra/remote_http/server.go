@@ -35,10 +35,10 @@ import (
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/gorilla/mux"
 )
 

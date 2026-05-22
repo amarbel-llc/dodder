@@ -2,8 +2,8 @@ package sku
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 )
 
 func makeCheckedOut() (*CheckedOut, interfaces.FuncRepool) {

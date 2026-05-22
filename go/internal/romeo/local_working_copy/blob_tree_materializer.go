@@ -8,7 +8,7 @@ import (
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 // MaterializeBlobTree writes all blob references from a type object into a

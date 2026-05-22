@@ -339,6 +339,12 @@ build-nix: build-nix-gomod
 build-docker: build-nix-gomod
   docker load < "$(nix build "../#docker.x86_64-linux" --print-out-paths)"
 
+# Verify the module graph compiles without the proxy (direct GitHub fetch).
+# Used when the proxy hasn't yet cached a new purse-first pre-release.
+[group('debug')]
+debug-build-direct:
+  GOPROXY=direct GONOSUMCHECK=* GOFLAGS=-mod=mod go build -tags test,debug ./...
+
 build: build-go check-go-repool check-go-seqerror check-go-defererr check-go-versions build-nix
 
 #    ____ _               _
@@ -357,19 +363,19 @@ check-go-vet:
 check-go-repool:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths '..#dodder-analyzer-repool')
+  bin=$(nix build --no-link --print-out-paths --inputs-from '../..' 'purse-first#repool')
   go vet -tags test,debug -vettool="$bin/bin/repool" ./... || true
 
 check-go-seqerror:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths '..#dodder-analyzer-seqerror')
+  bin=$(nix build --no-link --print-out-paths --inputs-from '../..' 'purse-first#seqerror')
   go vet -tags test,debug -vettool="$bin/bin/seqerror" ./...
 
 check-go-defererr:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths '..#dodder-analyzer-defererr')
+  bin=$(nix build --no-link --print-out-paths --inputs-from '../..' 'purse-first#defererr')
   go vet -tags test,debug -vettool="$bin/bin/defererr" ./...
 
 check-go-versions:

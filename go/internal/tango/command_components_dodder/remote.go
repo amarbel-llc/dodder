@@ -22,10 +22,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/sierra/remote_http"
 	"code.linenisgreat.com/dodder/go/lib/bravo/cli"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/values"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/values"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 )
 
 type Remote struct {

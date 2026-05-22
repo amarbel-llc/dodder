@@ -9,10 +9,10 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_value"
-	"github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_value"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/thyme"
 )
 
 // TODO rename to FS

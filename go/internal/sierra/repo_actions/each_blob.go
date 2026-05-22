@@ -6,7 +6,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/google/shlex"
 )
 

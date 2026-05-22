@@ -18,6 +18,10 @@ github.com/amarbel-llc/madder/go v0.3.19-0.20260515201829-3b4de1779b59 h1:zM3GxK
 github.com/amarbel-llc/madder/go v0.3.19-0.20260515201829-3b4de1779b59/go.mod h1:Hc32GjlGdGBQtEn1XcuOxUDECGPy27SeZIX155VUw9Q=
 github.com/amarbel-llc/purse-first/libs/dewey v0.1.1-0.20260514213118-2be74f0104b8 h1:YoCrjJ+7MsLQ80fogFXyAbAVvXxegvEBX1wDS8uhyj0=
 github.com/amarbel-llc/purse-first/libs/dewey v0.1.1-0.20260514213118-2be74f0104b8/go.mod h1:Z2O4fGt0BRR8wB5c1HpMRd/XG6Ymx4Ch7g4RfQmqnbI=
+github.com/amarbel-llc/purse-first/libs/dewey v0.1.1-0.20260517115810-09ce624c3856 h1:8tNcPf4/rIMeinpz1AHbmTB5S09CdbNMbxkdeu5D/ew=
+github.com/amarbel-llc/purse-first/libs/dewey v0.1.1-0.20260517115810-09ce624c3856/go.mod h1:zhf7U0L8ZNAAwrSdWSHUDadxu0Q6NaY49tnK3MzRfjo=
+github.com/amarbel-llc/purse-first/libs/dewey v0.1.1 h1:klM22tvqCDawPUu/Vg3qtx4z9ideaRPO8dMzyChdIYI=
+github.com/amarbel-llc/purse-first/libs/dewey v0.1.1/go.mod h1:zhf7U0L8ZNAAwrSdWSHUDadxu0Q6NaY49tnK3MzRfjo=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12 h1:vAuX5weS0oDmbA4d+Y+FQdIKjFZDInUtANnZmFOqR9c=
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12/go.mod h1:4QNwpEtQWg+aF++9BpxQq93cnj6puQfsARZ0Z4fHIHk=
 github.com/amarbel-llc/tap/go v0.1.2 h1:tBIB/1tUsq49CnynWPvSUzFGx1HsA6nmZWlLRs553uM=

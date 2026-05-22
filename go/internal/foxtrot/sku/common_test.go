@@ -16,10 +16,10 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/collections_ptr"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_ptr"
 )
 
 type inlineTypChecker struct {

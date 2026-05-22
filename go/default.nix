@@ -125,30 +125,6 @@ let
     '';
   });
 
-  # Custom go/analysis static analyzers. Each cmd/main.go is a thin
-  # singlechecker.Main wrapper under lib/alfa/analyzers/<name>/cmd;
-  # the check-go-* justfile recipes plumb the binaries into
-  # `go vet -vettool=...`. buildGoApplication names the binary after
-  # the cmd directory's basename ('cmd'), so postInstall renames it
-  # to the analyzer's name.
-  mkDodderAnalyzer = name: pkgs.buildGoApplication {
-    pname = "dodder-analyzer-${name}";
-    inherit version commit;
-    src = ./.;
-    pwd = ./.;
-    subPackages = [ "lib/alfa/analyzers/${name}/cmd" ];
-    modules = ./gomod2nix.toml;
-    go = pkgs.go_1_26;
-    GOTOOLCHAIN = "local";
-    postInstall = ''
-      mv $out/bin/cmd $out/bin/${name}
-    '';
-  };
-
-  dodder-analyzer-repool = mkDodderAnalyzer "repool";
-  dodder-analyzer-seqerror = mkDodderAnalyzer "seqerror";
-  dodder-analyzer-defererr = mkDodderAnalyzer "defererr";
-
   dodder = pkgs.buildGoApplication {
     pname = "dodder";
     inherit version commit;
@@ -216,9 +192,6 @@ in
       dodder-debug
       dodder-debug-race
       dodder-debug-cover
-      dodder-analyzer-repool
-      dodder-analyzer-seqerror
-      dodder-analyzer-defererr
       dodder-clown-plugin
       dodder-go-test
       ;

@@ -2,7 +2,7 @@ package tag_paths
 
 import (
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
 )
 
 type (

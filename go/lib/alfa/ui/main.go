@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 var (

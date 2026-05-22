@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 // TODO extract all of these components into an env_lua

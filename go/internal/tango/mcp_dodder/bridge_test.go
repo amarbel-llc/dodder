@@ -6,7 +6,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestBridgeUnknownCommand(t1 *testing.T) {

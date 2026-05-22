@@ -1,6 +1,6 @@
 package checkout_mode
 
-import "github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+import "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 
 type (
 	pkgErrDisamb struct{}

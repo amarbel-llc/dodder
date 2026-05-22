@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 // TODO transition this to ui.TestContext, and add a config object with a public

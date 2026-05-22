@@ -7,7 +7,7 @@ import (
 	"math/big"
 
 	"filippo.io/age"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

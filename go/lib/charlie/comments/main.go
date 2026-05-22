@@ -1,7 +1,7 @@
 package comments
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func Change(_ string)                 {}

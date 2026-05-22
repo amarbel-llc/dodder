@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/0/primordial"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
 )
 
 func MakePrinter(file *os.File) printer {

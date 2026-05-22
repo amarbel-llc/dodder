@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	dewey_ui "github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	dewey_ui "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 type testCaseCLITreeState struct {

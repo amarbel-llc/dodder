@@ -10,8 +10,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/command_components"
 	"code.linenisgreat.com/dodder/go/internal/sierra/remote_http"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"tailscale.com/client/local"
 )
 

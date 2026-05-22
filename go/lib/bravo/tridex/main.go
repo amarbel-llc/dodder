@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // TODO-P4 make generic

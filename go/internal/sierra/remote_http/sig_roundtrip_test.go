@@ -14,7 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 
 	// Side-effect: register format-purpose pairs (matches production binaries
 	// which pull this in via commands_dodder/main.go's blank import).

@@ -5,7 +5,7 @@ package commands_dodder
 import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func (cmd DebugPrintProbeIndex) GetDescription() command.Description {

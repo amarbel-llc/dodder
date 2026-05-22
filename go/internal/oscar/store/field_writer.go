@@ -9,8 +9,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (store *Store) tryWriteFields(

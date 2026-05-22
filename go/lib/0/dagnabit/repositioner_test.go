@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 type stubReader struct {

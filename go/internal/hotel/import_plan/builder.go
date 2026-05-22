@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/store_abbr"
 	"code.linenisgreat.com/dodder/go/lib/0/dagnabit"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	chai "github.com/brandondube/tai"
 )
 

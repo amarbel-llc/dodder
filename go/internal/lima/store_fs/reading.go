@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (store *Store) UpdateTransacted(internal *sku.Transacted) (err error) {

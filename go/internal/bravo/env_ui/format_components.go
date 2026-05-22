@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // These were Env methods until #151 bucket B Stage B follow-up.

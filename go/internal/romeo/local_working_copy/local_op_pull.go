@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/quebec/remote_transfer"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (local *Repo) PullQueryGroupFromRemote(

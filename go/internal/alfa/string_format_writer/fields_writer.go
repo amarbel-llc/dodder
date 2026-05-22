@@ -6,8 +6,8 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func needsQuoting(value string) bool {

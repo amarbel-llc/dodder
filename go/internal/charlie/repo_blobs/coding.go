@@ -4,7 +4,7 @@ import (
 	charlie_rb "code.linenisgreat.com/dodder/go/internal/alfa/repo_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type TypedBlob = hyphence.TypedBlob[Blob]

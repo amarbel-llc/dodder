@@ -4,7 +4,7 @@ import (
 	"slices"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 type SeqBinaryCoding Seq

@@ -1,6 +1,6 @@
 package catgut
 
-import "github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+import "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 
 type (
 	StringFormatReader[T any] interface {

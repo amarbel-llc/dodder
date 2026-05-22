@@ -8,8 +8,8 @@ import (
 	"unicode"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/unicorn"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestRingBufferReader(t1 *testing.T) {

@@ -4,7 +4,7 @@ package store_browser
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (store *Store) DeleteCheckedOut(co *sku.CheckedOut) (err error) {

@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Config struct {

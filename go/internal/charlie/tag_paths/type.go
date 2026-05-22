@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 //go:generate stringer -type=Type

@@ -4,8 +4,8 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
 )
 
 func (slice *Slice[ELEMENT]) SortByStringFunc(getKey func(ELEMENT) string) {

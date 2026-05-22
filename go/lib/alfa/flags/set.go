@@ -1,6 +1,6 @@
 package flags
 
-import "github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+import "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 
 type Definitions interface {
 	BoolVar(variable *bool, name string, defaultValue bool, usage string)

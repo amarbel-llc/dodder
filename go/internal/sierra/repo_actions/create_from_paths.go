@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_value"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 type CreateFromPaths struct {

@@ -1,6 +1,6 @@
 package command
 
-import "github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+import "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 
 type (
 	// Arg declares metadata for a single positional argument.

@@ -6,8 +6,8 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 type implicitTagMap map[string]ids.TagSetMutable

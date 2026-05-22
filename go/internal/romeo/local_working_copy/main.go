@@ -20,7 +20,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/oscar/store"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 type (

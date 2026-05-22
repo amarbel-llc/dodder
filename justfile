@@ -233,8 +233,12 @@ explore-mcp-init:
     exit 1
   fi
 
-  bin=$(nix build --no-link --print-out-paths .#dodder)
-  export PATH="$bin/bin:$PATH"
+  # Build into the `result` symlink (default for `nix build` without
+  # --no-link) so `.mcp.json` can point at `./result/bin/dodder` and
+  # pick up future rebuilds via the symlink refresh — no need to edit
+  # .mcp.json each time.
+  nix build .#dodder
+  export PATH="$(pwd)/result/bin:$PATH"
 
   # Heredocs in justfile recipes inherit the recipe's leading indent,
   # which would land inside the file content. Use printf + explicit
@@ -255,12 +259,15 @@ explore-mcp-init:
     test-mcp
 
   # Claude Code looks for `.mcp.json` at the project root, not under
-  # `.claude/`.
+  # `.claude/`. Pointing at the `./result/bin/dodder` symlink means
+  # rebuilds (`nix build .#dodder` or just re-running this recipe) are
+  # picked up automatically on the next MCP reconnect — no .mcp.json
+  # edit needed.
   printf '%s\n' \
     '{' \
     '  "mcpServers": {' \
     '    "dodder": {' \
-    "      \"command\": \"$bin/bin/dodder\"," \
+    '      "command": "./result/bin/dodder",' \
     '      "args": ["mcp"]' \
     '    }' \
     '  }' \
@@ -270,10 +277,12 @@ explore-mcp-init:
   echo ""
   echo "==> Repo:        $(pwd)/.dodder"
   echo "==> MCP config:  $(pwd)/.mcp.json"
-  echo "==> Binary:      $bin/bin/dodder"
+  echo "==> Binary:      $(pwd)/result/bin/dodder"
   echo ""
   echo "Restart Claude Code (or reload MCP servers) to pick up the dodder MCP."
-  echo "Cleanup: rm -rf .dodder .mcp.json .tmp/yin .tmp/yang"
+  echo "After a code change, re-run \`nix build .#dodder\` (refreshes the"
+  echo "symlink) and then reconnect; .mcp.json doesn't need editing."
+  echo "Cleanup: rm -rf .dodder .mcp.json result .tmp/yin .tmp/yang"
 
 # Run a dodder command in the live CalDAV workspace.
 [group('explore')]

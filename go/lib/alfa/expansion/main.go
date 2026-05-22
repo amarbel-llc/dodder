@@ -5,7 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/0/quiter_seq"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 var (

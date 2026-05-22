@@ -3,7 +3,7 @@ package collections_slice
 import (
 	"slices"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Slice[ELEMENT any] []ELEMENT

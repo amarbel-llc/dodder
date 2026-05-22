@@ -1,8 +1,8 @@
 package sku
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/heap"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/heap"
 )
 
 type HeapTransacted = heap.Heap[Transacted, *Transacted]

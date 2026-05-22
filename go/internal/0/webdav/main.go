@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 const requestTimeout = 30 * time.Second

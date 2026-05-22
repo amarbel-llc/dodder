@@ -8,9 +8,9 @@ import (
 
 	dodder_exec "code.linenisgreat.com/dodder/go/lib/0/exec"
 	"code.linenisgreat.com/dodder/go/lib/0/primordial"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 	"github.com/google/shlex"
 )
 

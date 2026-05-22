@@ -9,7 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/echo/command_components"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type LocalWorkingCopy struct {

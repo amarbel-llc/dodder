@@ -8,7 +8,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/key_bytes"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 var binaryFieldOrder = []key_bytes.Binary{

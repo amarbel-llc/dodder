@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestAddPaths(t1 *testing.T) {

@@ -1,7 +1,7 @@
 package quiter
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/0/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func PrintPointer[T any, TPtr interfaces.Ptr[T]](e TPtr) (err error) {

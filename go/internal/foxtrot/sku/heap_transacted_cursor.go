@@ -4,8 +4,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/0/reset"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
-	"github.com/amarbel-llc/purse-first/libs/dewey/alfa/cmp"
-	"github.com/amarbel-llc/purse-first/libs/dewey/delta/heap"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/heap"
 )
 
 type (

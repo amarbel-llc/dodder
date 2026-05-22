@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	tap "github.com/amarbel-llc/tap/go"
 	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
-	"github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 func init() {

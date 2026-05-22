@@ -5,8 +5,8 @@ import (
 	"testing"
 	tyme "time"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/charlie/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/thyme"
 )
 
 func TestTaiSet(t1 *testing.T) {

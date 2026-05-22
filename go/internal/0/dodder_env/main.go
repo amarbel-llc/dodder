@@ -7,7 +7,7 @@ package dodder_env
 
 import (
 	"github.com/amarbel-llc/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/purse-first/libs/dewey/echo/debug"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
 )
 
 const (
