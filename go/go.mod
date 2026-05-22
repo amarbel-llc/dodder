@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.0.0-20260414180333-e8e81ae667b3
 	filippo.io/age v1.3.1
-	github.com/amarbel-llc/madder/go v0.3.19-0.20260515201829-3b4de1779b59
+	github.com/amarbel-llc/madder/go v0.3.23
 	github.com/amarbel-llc/purse-first/libs/dewey v0.1.1
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tap/go v0.1.2
@@ -24,7 +24,7 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 	golang.org/x/term v0.43.0
 	golang.org/x/text v0.37.0
-	golang.org/x/tools v0.44.0
+	golang.org/x/tools v0.45.0
 	tailscale.com v1.96.5
 )
 
@@ -73,7 +73,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
-	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
