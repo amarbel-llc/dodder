@@ -5,7 +5,7 @@ package local_working_copy
 import (
 	"encoding/json"
 
-	"code.linenisgreat.com/chrest/go/src/bravo/client"
+	"code.linenisgreat.com/chrest/go/pkgs/client"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_json_fmt"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"

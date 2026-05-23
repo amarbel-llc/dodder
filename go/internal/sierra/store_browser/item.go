@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
+	"code.linenisgreat.com/chrest/go/pkgs/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"

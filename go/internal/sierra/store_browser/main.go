@@ -9,7 +9,7 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
-	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
+	"code.linenisgreat.com/chrest/go/pkgs/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"

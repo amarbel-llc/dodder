@@ -2,8 +2,8 @@ schema = 3
 
 [mod]
   [mod.'code.linenisgreat.com/chrest/go']
-    version = 'v0.1.5'
-    hash = 'sha256-uZwkspECUvHStsRFYv+1CQYSx8fZMsDL0Qs4G8PWTLY='
+    version = 'v0.2.0'
+    hash = 'sha256-CLvwe2enGTp7VMduNfiFG1ue87H6MOd9llTmxX+df70='
     goVersion = '1.26'
 
   [mod.'filippo.io/age']

@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"syscall"
 
-	"code.linenisgreat.com/chrest/go/src/charlie/browser_items"
+	"code.linenisgreat.com/chrest/go/pkgs/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/kilo/store_workspace"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"

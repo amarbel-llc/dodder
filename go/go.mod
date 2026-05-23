@@ -3,7 +3,7 @@ module code.linenisgreat.com/dodder/go
 go 1.26.2
 
 require (
-	code.linenisgreat.com/chrest/go v0.1.5
+	code.linenisgreat.com/chrest/go v0.2.0
 	filippo.io/age v1.3.1
 	github.com/amarbel-llc/madder/go v0.3.24
 	github.com/amarbel-llc/purse-first/libs/dewey v0.1.8
