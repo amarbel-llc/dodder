@@ -556,11 +556,12 @@ func (cmd InitWorkspace) makeHaustoriaConfig(
 // <dataHome>/madder. For the -parent path, the parent dir contains
 // .madder/local/share/ alongside .dodder/local/share/.
 //
-// TODO(#200): construct a parent env_dir for the madder utility and
-// ask it for the blob_stores path, rather than hardcoding the layout
-// here. The hardcoded form here may diverge from what
-// env_dir.MakeDefaultAndInitialize produces under non-default XDG
-// env vars (notably the bats sandbox's XDG_DATA_HOME override).
+// TODO https://github.com/amarbel-llc/dodder/issues/219
+// construct a parent env_dir for the madder utility and ask it
+// for the blob_stores path, rather than hardcoding the layout
+// here — the hardcoded form may diverge from what
+// env_dir.MakeDefaultAndInitialize produces under non-default
+// XDG env vars (notably the bats sandbox's XDG_DATA_HOME override).
 func (cmd *InitWorkspace) setupParentPointerBlobStore(
 	req command.Request,
 	workspaceRepoIdString string,

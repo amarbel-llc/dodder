@@ -307,22 +307,26 @@ These are described in the Design section but not yet implemented:
 
 ### Key Files
 
+References use `<package>/<file>` leaves instead of full `go/internal/<tier>/...`
+paths so they survive `dagnabit reposition` runs that shuffle NATO tiers.
+Bats tests retain their full path since `zz-tests_bats/` has no tier prefix.
+
 | File | Purpose |
 |------|---------|
-| `go/internal/uniform/commands_dodder/init_workspace.go` | `InitWorkspace` command with `runLightweight` and `runExperimentalRepo` paths; `setupParentPointerBlobStore` helper (#200) |
-| `go/internal/foxtrot/env_repo/big_bang.go` | `BigBang.BlobStoreConfigInit` field (#200) |
-| `go/internal/foxtrot/env_repo/genesis.go` | `writeBlobStoreConfigInit` hook + pre-flight skip when `BlobStoreConfigInit != nil` (#200) |
-| `go/internal/uniform/command_components_dodder/remote.go` | `ResolveImplicitDirectPath` — reads parent path from workspace config |
-| `go/internal/echo/workspace_config_blobs/v1.go` | V1 config struct with `ParentPath`, `SyncTai`, `SyncDigest` fields |
-| `go/internal/echo/workspace_config_blobs/main.go` | `ConfigWithParentPath`, `ConfigWithSyncBaseline` interfaces |
-| `go/internal/echo/workspace_config_blobs/io.go` | Coder registration for V0 and V1 |
-| `go/internal/november/env_workspace/main.go` | `GetParentPath()`, `CreateWorkspace` with V0/V1 type selection |
-| `go/internal/bravo/ids/types_builtin.go` | `TypeTomlWorkspaceConfigV1` constant |
-| `go/internal/victor/commands_dodder/pull.go` | Wires `ResolveImplicitDirectPath` |
-| `go/internal/victor/commands_dodder/push.go` | Wires `ResolveImplicitDirectPath` |
-| `go/internal/victor/commands_dodder/check_workspace.go` | `check-workspace dirty` command with exit-code-based status |
-| `zz-tests_bats/current_version/workspace_repo.bats` | 10 integration tests covering all workspace-repo scenarios |
-| `zz-tests_bats/current_version/check_workspace_dirty.bats` | 5 integration tests for `check-workspace dirty` |
+| `commands_dodder/init_workspace.go` | `InitWorkspace` command with `runLightweight` and `runExperimentalRepo` paths; `setupParentPointerBlobStore` helper (#200) |
+| `env_repo/big_bang.go` | `BigBang.BlobStoreConfigInit` field (#200) |
+| `env_repo/genesis.go` | `writeBlobStoreConfigInit` hook + pre-flight skip when `BlobStoreConfigInit != nil` (#200) |
+| `command_components_dodder/remote.go` | `ResolveImplicitDirectPath` — reads parent path from workspace config |
+| `workspace_config_blobs/v1.go` | V1 config struct with `ParentPath`, `SyncTai`, `SyncDigest` fields |
+| `workspace_config_blobs/main.go` | `ConfigWithParentPath`, `ConfigWithSyncBaseline` interfaces |
+| `workspace_config_blobs/io.go` | Coder registration for V0 and V1 |
+| `env_workspace/main.go` | `GetParentPath()`, `CreateWorkspace` with V0/V1 type selection |
+| `ids/types_builtin.go` | `TypeTomlWorkspaceConfigV1` constant |
+| `commands_dodder/pull.go` | Wires `ResolveImplicitDirectPath` |
+| `commands_dodder/push.go` | Wires `ResolveImplicitDirectPath` |
+| `commands_dodder/check_workspace.go` | `check-workspace dirty` command with exit-code-based status |
+| `zz-tests_bats/current_version/workspace_repo.bats` | Integration tests covering workspace-repo scenarios |
+| `zz-tests_bats/current_version/check_workspace_dirty.bats` | Integration tests for `check-workspace dirty` |
 
 ### Key Types and Interfaces
 
