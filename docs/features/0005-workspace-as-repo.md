@@ -33,9 +33,11 @@ loss from unreviewed automated changes.
 
 A new experimental workspace type backed by a full dodder repo. Created via
 `init-workspace -experimental-repo`, it produces a CWD-rooted repo (`.dodder/`
-directory) that clones a filtered subset of the parent repo's objects. The
-workspace-repo has its own store, inventory lists, signing key, and commit
-history.
+directory) that clones a filtered subset of the parent repo's inventory. The
+workspace-repo has its own inventory lists, signing key, and commit history.
+Blob storage is *not* independent --- the workspace's blob store is a
+[pointer](#blob-storage) to the parent's, so blob reads and writes flow
+through without copying.
 
 Push and pull between workspace and parent use the `-direct` mechanism from
 [FDR 0004](0004-bindingless-local-repo-transfer.md) — no stored remote object
@@ -103,14 +105,41 @@ commits** into its own history (merge-style integration).
 > - Selective commit transfer (choose which workspace commits to push)
 > - Rebase-style integration (replay workspace commits on top of parent HEAD)
 
+### Blob Storage
+
+The workspace-repo's inventory lists are local
+(`.dodder/local/share/inventory_lists_log/`), but its **blob storage points
+back at the parent repo**. At init time the workspace writes a `TomlPointerV1`
+config to its own `.madder/local/share/blob_stores/<workspace-name>/` directory
+naming the parent's default blob store by absolute path. All subsequent blob
+reads and writes from the workspace flow through to the parent's store; no
+blob is ever copied into the workspace.
+
+This avoids the original bug where filtered-pull workspaces could not resolve
+blobs that were not reachable from the queried inventory subset (e.g. the
+parent's `konfig` blob). See [#200](https://github.com/amarbel-llc/dodder/issues/200).
+
+The pointer is locked to an absolute path. If the parent's blob store moves,
+the pointer breaks and reads fail with a not-found error; recovery is by
+hand-editing the workspace's `blob_store-config`. If the parent has no default
+blob store at init time, `init-workspace` cancels with a clear error rather
+than producing a dangling pointer.
+
+The on-disk dir name for the pointer is the **bare workspace name** (no
+leading dot), matching the `default/` convention. The leading dot in the
+canonical `BlobStoreId` string (`.workspace-name`) is a Stringer-rendered
+location prefix; the dot is NOT part of the dir name on disk. See
+`writeBlobStoreConfigInit` (env_repo/genesis.go) for the convention.
+
 ### Checkout Store
 
 The workspace-repo's checkout store is specified at init time and recorded in the
 workspace config. Default is `store_fs` (filesystem checkout, current behavior).
 
 Alternative stores present the same objects through a domain-appropriate
-interface. The blob store and inventory lists are always local (`.dodder/`), but
-the checkout representation varies:
+interface. The inventory lists are always local (`.dodder/`) and the blob
+store is a pointer to the parent's (see [Blob Storage](#blob-storage)
+above), but the checkout representation varies:
 
 - `store_fs` — files on disk (default)
 - `store_browser` — browser-based UI
@@ -257,6 +286,16 @@ All core workspace-repo functionality is implemented and tested:
 - **Zettel ID provider linking** — workspace repos automatically discover and
   copy the parent's Yin/Yang word lists when `-yin`/`-yang` are not explicitly
   provided, enabling zettel creation without separate word list management
+- **Blob storage pointer to parent** ([#200](https://github.com/amarbel-llc/dodder/issues/200))
+  — `init-workspace -experimental-repo` writes a `TomlPointerV1` instead of
+  initializing an independent local blob store. Reads and writes flow through
+  to the parent's default blob store. Wired via
+  `env_repo.BigBang.BlobStoreConfigInit` + a new `writeBlobStoreConfigInit`
+  hook in `env_repo.Genesis`. The pre-flight `-blob_store-id` validation
+  (added in `6b4001f93`) is skipped when `BlobStoreConfigInit != nil`, since
+  the store is being created as part of init rather than required to
+  pre-exist. Negative case: init cancels with a clear error if the parent
+  has no default blob store.
 
 ### What's NOT Built
 
@@ -270,7 +309,9 @@ These are described in the Design section but not yet implemented:
 
 | File | Purpose |
 |------|---------|
-| `go/internal/victor/commands_dodder/init_workspace.go` | `InitWorkspace` command with `runLightweight` and `runExperimentalRepo` paths |
+| `go/internal/uniform/commands_dodder/init_workspace.go` | `InitWorkspace` command with `runLightweight` and `runExperimentalRepo` paths; `setupParentPointerBlobStore` helper (#200) |
+| `go/internal/foxtrot/env_repo/big_bang.go` | `BigBang.BlobStoreConfigInit` field (#200) |
+| `go/internal/foxtrot/env_repo/genesis.go` | `writeBlobStoreConfigInit` hook + pre-flight skip when `BlobStoreConfigInit != nil` (#200) |
 | `go/internal/uniform/command_components_dodder/remote.go` | `ResolveImplicitDirectPath` — reads parent path from workspace config |
 | `go/internal/echo/workspace_config_blobs/v1.go` | V1 config struct with `ParentPath`, `SyncTai`, `SyncDigest` fields |
 | `go/internal/echo/workspace_config_blobs/main.go` | `ConfigWithParentPath`, `ConfigWithSyncBaseline` interfaces |
@@ -317,6 +358,19 @@ with a tag filter (e.g. `project-alpha:z`), it doesn't know about the parent's
 full zettel ID space. Creating new zettels in the workspace may assign IDs that
 already exist in the parent, causing conflicts on push. The unfiltered clone
 (`+zettel,typ,etikett`) avoids this by syncing the full ID index.
+
+**Bare dir name vs. canonical Id string for the pointer store** (#200).
+The pointer config is written to `<madder>/blob_stores/<bare-name>/blob_store-config`
+using `BlobStoreId.GetName()`, NOT `BlobStoreId.String()`. The String form has
+a leading `.` (the Cwd-location prefix), but discovery's
+`MakeWithLocation(name, Cwd)` does *not* strip a leading dot from the raw value
+— it just stores the input verbatim and prepends another dot in String(). So
+writing the dir at `.workspace-name/` would yield a map key `..workspace-name`
+(double dot) while the konfig V2 references `.workspace-name` (single dot),
+causing a discovery miss whose symptom is a cryptic
+`WriteTo: no write store given` error from madder's `MultiBuilder`. The
+`default/` store follows the same bare-name convention; pointer stores
+inherit it.
 
 ## What Does NOT Change
 

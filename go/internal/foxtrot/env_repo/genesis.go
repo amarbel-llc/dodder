@@ -80,7 +80,12 @@ func (env *Env) Genesis(bigBang BigBang) {
 	// named id resolves. Subsequent code paths perform another rebuild
 	// after writing the default-store config, so this early rebuild is
 	// purely for the lookup-and-validate step.
-	if !bigBang.BlobStoreId.IsEmpty() {
+	//
+	// Skip when BlobStoreConfigInit is non-nil: the caller is creating
+	// the store as part of this Genesis (e.g. init-workspace writing a
+	// TomlPointerV1 to its parent), so requiring the store to pre-exist
+	// would be a chicken-and-egg failure.
+	if !bigBang.BlobStoreId.IsEmpty() && bigBang.BlobStoreConfigInit == nil {
 		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(env.blobStoreEnv.Env)
 
 		// BlobStoreInitialized is a struct with two embedded interface
@@ -107,6 +112,7 @@ func (env *Env) Genesis(bigBang BigBang) {
 	env.writeInventoryListLog()
 	env.writeConfig(bigBang)
 	env.writeBlobStoreConfigIfNecessary(bigBang, env.blobStoreEnv.BlobStore)
+	env.writeBlobStoreConfigInit(bigBang, env.blobStoreEnv.BlobStore)
 
 	// Re-make the blob_store_env now that the on-disk config exists,
 	// so store discovery picks up the freshly-written config. Reuses
@@ -190,6 +196,57 @@ func (env *Env) writeBlobStoreConfigIfNecessary(
 	}
 
 	blobStoreConfig := bigBang.TypedBlobStoreConfig
+
+	if err := hyphence.EncodeToFile(
+		blob_store_configs.Coder,
+		&blob_store_configs.TypedConfig{
+			Type: blobStoreConfig.Type,
+			Blob: blobStoreConfig.Blob,
+		},
+		blobStoreConfigPath,
+	); err != nil {
+		env.Cancel(err)
+		return
+	}
+}
+
+// writeBlobStoreConfigInit writes the caller-supplied
+// BlobStoreConfigInit (e.g. a TomlPointerV1 set by init-workspace
+// per #200) to disk at the blob store id's config path. Skipped when
+// either field is unset. Pairs with the pre-flight skip in Genesis:
+// the caller passes BlobStoreConfigInit + BlobStoreId together to
+// install a not-yet-existing store as part of the init.
+func (env *Env) writeBlobStoreConfigInit(
+	bigBang BigBang,
+	directoryLayout mad_directory_layout.BlobStore,
+) {
+	if bigBang.BlobStoreConfigInit == nil || bigBang.BlobStoreId.IsEmpty() {
+		return
+	}
+
+	// IMPORTANT: pass the BARE name (e.g. "workspace-repo-id"),
+	// NOT the canonical String form (".workspace-repo-id").
+	// `MakeWithLocation` in madder's discovery layer does not strip
+	// a leading dot from the raw value, so writing to a path
+	// `.workspace-repo-id/` would produce a discovery key
+	// "..workspace-repo-id" (double dot) and never match the konfig's
+	// `.workspace-repo-id` reference. The default store follows the
+	// same rule: written to `default/`, discovered as Id "default"
+	// (Cwd-scoped, single-dot String). See blob_store_id.MakeWithLocation
+	// and Id.String() (madder/internal/alfa/blob_store_id/main.go).
+	blobStorePath := mad_directory_layout.GetBlobStorePath(
+		directoryLayout,
+		bigBang.BlobStoreId.GetName(),
+	)
+	blobStoreConfigPath := blobStorePath.GetConfig()
+	blobStoreConfigDir := filepath.Dir(blobStoreConfigPath)
+
+	if err := env.MakeDirs(blobStoreConfigDir); err != nil {
+		env.Cancel(err)
+		return
+	}
+
+	blobStoreConfig := bigBang.BlobStoreConfigInit
 
 	if err := hyphence.EncodeToFile(
 		blob_store_configs.Coder,

@@ -274,6 +274,73 @@ function workspace_repo_init_experimental_repo { # @test
 	assert [ -f .dodder-workspace ]
 }
 
+# Covers the #200 pointer-blob-store path. The workspace's blob store
+# must be a TomlPointerV1 pointing at the parent repo's default
+# blob store, not a freshly-initialized local store. The on-disk
+# layout uses the bare workspace-repo-id (no leading dot — the dot
+# is a Stringer-rendered location prefix, not part of the dir name).
+function workspace_repo_init_pointer_to_parent { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_success
+
+	# Pointer config exists at the bare workspace-name directory.
+	assert [ -f ".madder/local/share/blob_stores/workspace-repo-id/blob_store-config" ]
+
+	# No locally-initialized default store in the workspace.
+	assert [ ! -d ".madder/local/share/blob_stores/default" ]
+
+	# The pointer config records the parent's default-store path.
+	run cat .madder/local/share/blob_stores/workspace-repo-id/blob_store-config
+	assert_success
+	assert_output --partial "$parent_path/.madder/local/share/blob_stores/default"
+
+	# Reads through the pointer resolve — the parent's konfig blob
+	# was the original bug case from #200 (was failing with
+	# "Blob with id ... does not exist locally").
+	run_dodder show -format text :konfig
+	assert_success
+}
+
+# Negative case for #200: when the parent repo has no default blob
+# store, init-workspace must cancel cleanly rather than write a
+# dangling pointer.
+function workspace_repo_init_pointer_parent_missing_blob_store { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# Remove the parent's default blob store after bootstrap.
+	rm -rf "$parent_path/.madder/local/share/blob_stores/default"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+
+	assert_failure
+	assert_output --partial "parent repo has no default blob store"
+}
+
 function workspace_repo_linked_zettel_ids_from_parent { # @test
 	parent="parent"
 	bootstrap_parent "$parent"

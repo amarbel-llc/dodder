@@ -32,11 +32,24 @@ independent history is maintained.
 
 Created with **dodder init-workspace -experimental-repo**. A full dodder
 repository (**.dodder/** directory) is created at the workspace location with
-its own store, signing key, and commit history. Changes accumulate in the
-workspace's history and propagate to the parent only on explicit **push**.
+its own inventory list, signing key, and commit history. Changes accumulate in
+the workspace's history and propagate to the parent only on explicit **push**.
 
 This provides an isolation boundary: automated tools can mutate the workspace
 freely, with a review gate before changes reach the parent.
+
+**Blob storage** is shared with the parent rather than independent. The
+workspace's **.madder/local/share/blob_stores/** holds a pointer config (a
+**!toml-blob_store_config-pointer-v1**, see **blob-store**(7)) that resolves
+by absolute path to the parent repo's default blob store. Reads through the
+pointer fetch from the parent's store; writes from the workspace land directly
+there. The workspace never maintains a separate copy of any blob.
+
+The pointer is locked to an absolute path at init time. If the parent's blob
+store moves, the pointer breaks --- recover by hand-editing the workspace's
+**blob_store-config** to point at the new location. If the parent has no
+default blob store at init time, **init-workspace** cancels with a clear
+error rather than producing a dangling pointer.
 
 # CONFIGURATION
 

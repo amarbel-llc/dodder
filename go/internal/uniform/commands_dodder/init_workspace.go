@@ -22,6 +22,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -75,7 +76,7 @@ func (cmd *InitWorkspace) SetFlagDefinitions(
 		&cmd.ExperimentalRepo,
 		"experimental-repo",
 		true,
-		"create a repo-backed workspace with independent store and commit history",
+		"create a repo-backed workspace with its own inventory and commit history; blob storage points back to the parent repo",
 	)
 
 	flagSet.StringVar(
@@ -242,7 +243,15 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 	cmd.Genesis.BigBang.ExcludeDefaultType = true
 	cmd.linkParentZettelIdProviders(absParentPath, parentIsHomeRepo)
 
-	local := cmd.OnTheFirstDay(req, req.PopArg("workspace repo id"))
+	workspaceRepoIdString := req.PopArg("workspace repo id")
+	cmd.setupParentPointerBlobStore(
+		req,
+		workspaceRepoIdString,
+		absParentPath,
+		parentIsHomeRepo,
+	)
+
+	local := cmd.OnTheFirstDay(req, workspaceRepoIdString)
 
 	remote := cmd.makeParentRemote(req, local, absParentPath, parentIsHomeRepo)
 
@@ -529,6 +538,76 @@ func (cmd InitWorkspace) makeHaustoriaConfig(
 			),
 		)
 		return nil
+	}
+}
+
+// setupParentPointerBlobStore configures Genesis.BigBang so that
+// init-workspace -experimental-repo writes a TomlPointerV1 instead of
+// a freshly-initialized local-hash-bucketed store (#200). The pointer
+// resolves to the parent repo's default blob store, so blob reads
+// (e.g. parent's konfig) flow through to where the parent actually
+// stores them.
+//
+// The pointer id is "." + workspaceRepoIdString (CWD-scoped, prefixed
+// with "." per dodder's blob_store_id convention). The base path is
+// the parent's <madder>/blob_stores/default directory — computed from
+// absParentPath and the madder XDG utility name. For the home-repo
+// parent, absParentPath is <dataHome>/dodder; the madder sibling is
+// <dataHome>/madder. For the -parent path, the parent dir contains
+// .madder/local/share/ alongside .dodder/local/share/.
+//
+// TODO(#200): construct a parent env_dir for the madder utility and
+// ask it for the blob_stores path, rather than hardcoding the layout
+// here. The hardcoded form here may diverge from what
+// env_dir.MakeDefaultAndInitialize produces under non-default XDG
+// env vars (notably the bats sandbox's XDG_DATA_HOME override).
+func (cmd *InitWorkspace) setupParentPointerBlobStore(
+	req command.Request,
+	workspaceRepoIdString string,
+	absParentPath string,
+	isHomeRepo bool,
+) {
+	var parentBlobStoreBasePath string
+	if isHomeRepo {
+		// absParentPath = <dataHome>/dodder; sibling = <dataHome>/madder.
+		parentBlobStoreBasePath = filepath.Join(
+			filepath.Dir(absParentPath),
+			command_components_dodder.XDGUtilityNameMadder,
+			"blob_stores", "default",
+		)
+	} else {
+		parentBlobStoreBasePath = filepath.Join(
+			absParentPath,
+			"."+command_components_dodder.XDGUtilityNameMadder,
+			"local", "share",
+			"blob_stores", "default",
+		)
+	}
+
+	if !files.Exists(parentBlobStoreBasePath) {
+		req.Cancel(
+			errors.BadRequestf(
+				"parent repo has no default blob store at %s",
+				parentBlobStoreBasePath,
+			),
+		)
+		return
+	}
+
+	pointerId := "." + workspaceRepoIdString
+
+	if err := cmd.Genesis.BigBang.BlobStoreId.Set(pointerId); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	pointerConfig := &blob_store_configs.TomlPointerV1{
+		BasePath: parentBlobStoreBasePath,
+	}
+
+	cmd.Genesis.BigBang.BlobStoreConfigInit = &blob_store_configs.TypedMutableConfig{
+		Type: blob_store_configs.TypeStructForConfig(pointerConfig),
+		Blob: pointerConfig,
 	}
 }
 
