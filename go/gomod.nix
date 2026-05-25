@@ -34,7 +34,7 @@
   # the filtered source tree. Extras patterns are anchored regexps
   # against the repo-relative path.
   #
-  # TODO[nixpkgs#TBD]: amarbel-llc/nixpkgs could derive these extras
+  # TODO[amarbel-llc/nixpkgs#60]: mkGoPkgs could derive these extras
   # automatically from `//go:embed` directives so consumers don't have
   # to hand-maintain the list.
   goPkgs = pkgs.mkGoPkgs {
