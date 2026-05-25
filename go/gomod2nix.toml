@@ -48,8 +48,8 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/tommy']
-    version = 'v0.0.0-20260416172442-0769146d4d1e'
-    hash = 'sha256-88+1qOvA2msOfTHNXOn+X9tVAW9Y2k+r0s676k8Y2o8='
+    version = 'v0.2.9-0.20260525110730-18761532c6c7'
+    hash = 'sha256-X7fJUF3yVozLZtiPitX50nBXL/EWppppOp19CMH+ofw='
     goVersion = '1.26'
 
   [mod.'github.com/atotto/clipboard']

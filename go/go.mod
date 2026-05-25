@@ -9,7 +9,7 @@ require (
 	github.com/amarbel-llc/purse-first/libs/dewey v0.1.8
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
 	github.com/amarbel-llc/tap/go v0.1.2
-	github.com/amarbel-llc/tommy v0.0.0-20260416172442-0769146d4d1e
+	github.com/amarbel-llc/tommy v0.2.9-0.20260525110730-18761532c6c7
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0

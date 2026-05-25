@@ -22,8 +22,8 @@ github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12 h1:vAuX5weS0oDmbA4d+Y+FQd
 github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12/go.mod h1:4QNwpEtQWg+aF++9BpxQq93cnj6puQfsARZ0Z4fHIHk=
 github.com/amarbel-llc/tap/go v0.1.2 h1:tBIB/1tUsq49CnynWPvSUzFGx1HsA6nmZWlLRs553uM=
 github.com/amarbel-llc/tap/go v0.1.2/go.mod h1:IdZE401kJKxolVd5dqpj1egiiW/q0HM5MDj3KhSg1QI=
-github.com/amarbel-llc/tommy v0.0.0-20260416172442-0769146d4d1e h1:dqDWgzSuI+njKyyLSBg2bfCLGol6tP4Xl8kiTU3OEh0=
-github.com/amarbel-llc/tommy v0.0.0-20260416172442-0769146d4d1e/go.mod h1:eAaOHBrPo/hzBU/CkWgXP67Qq6v5aMyVtiAZ3tYUuOc=
+github.com/amarbel-llc/tommy v0.2.9-0.20260525110730-18761532c6c7 h1:FSalj0XAOr8VnpqpbJFK96pjAe9mANLroMs3Ek1rnmM=
+github.com/amarbel-llc/tommy v0.2.9-0.20260525110730-18761532c6c7/go.mod h1:kG0fD+lPC5mevUK4ycd2746F9bXz84DY2UZRbPaIeYo=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aws/aws-sdk-go-v2 v1.41.7 h1:DWpAJt66FmnnaRIOT/8ASTucrvuDPZASqhhLey6tLY8=

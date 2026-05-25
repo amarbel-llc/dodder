@@ -3,11 +3,12 @@
 package genesis_configs
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"fmt"
+	"strings"
+
+	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	"github.com/amarbel-llc/tommy/pkg/cst"
 	"github.com/amarbel-llc/tommy/pkg/document"
-	"strings"
 )
 
 var (
