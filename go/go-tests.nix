@@ -14,13 +14,22 @@
   pkgs,
   version,
   commit,
+  # Filtered Go source tree (test-superset shape) from go/gomod.nix.
+  # Defaults to ./. so non-flake callers still work; flake callers
+  # thread `go-pkgs-test` in so the unit-test lane exercises the same
+  # artifact `dodder` builds itself from (#217).
+  goPkgsTest ? ./.,
+  # Flake-input bridge table (see ./gomod.nix). Defaults to {} so
+  # non-flake callers degrade to organic gomod2nix.toml resolution
+  # for cross-amarbel deps (#218).
+  goFlakeInputs ? { },
 }:
 let
   dodder-go-test = pkgs.buildGoApplication {
     pname = "dodder-go-test";
-    inherit version commit;
-    src = ./.;
-    pwd = ./.;
+    inherit version commit goFlakeInputs;
+    src = goPkgsTest;
+    pwd = goPkgsTest;
     # buildGoApplication insists on at least one subPackage to build. The
     # produced binary is incidental — only the checkPhase matters here.
     subPackages = [ "cmd/dodder" ];

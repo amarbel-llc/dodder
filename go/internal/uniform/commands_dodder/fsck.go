@@ -19,7 +19,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	tap "github.com/amarbel-llc/tap/go"
+	tap "github.com/amarbel-llc/tap/go/pkgs/writer"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
@@ -140,7 +140,7 @@ func (cmd Fsck) Run(req command.Request) {
 
 		seq = repo.GetStore().All(query)
 
-		tw.Comment(fmt.Sprintf("verification for %q objects in progress...", query))
+		tw.Comment("verification for %q objects in progress...", query)
 	} else {
 		seq = cmd.MakeSeqFromPath(
 			repo,
@@ -251,15 +251,15 @@ func (cmd Fsck) runVerification(
 			}
 		},
 		func(time time.Time) {
-			tw.Comment(fmt.Sprintf(
+			tw.Comment(
 				"(in progress) %d verified, %d errors",
 				count.Load(),
 				errorCount.Load(),
-			))
+			)
 		},
 		3*time.Second,
 	); err != nil {
-		tw.BailOut(err.Error())
+		tw.BailOut("%s", err)
 		repo.Cancel(err)
 		return
 	}
@@ -275,7 +275,7 @@ func (cmd Fsck) runV14IndexTrial(
 
 	tempDir, err := os.MkdirTemp("", "dodder-v14-trial-*")
 	if err != nil {
-		tw.BailOut(fmt.Sprintf("failed to create temp dir: %s", err))
+		tw.BailOut("failed to create temp dir: %s", err)
 		repo.Cancel(err)
 		return
 	}
@@ -291,7 +291,7 @@ func (cmd Fsck) runV14IndexTrial(
 		0,
 	)
 	if err != nil {
-		tw.BailOut(fmt.Sprintf("failed to create V14 index: %s", err))
+		tw.BailOut("failed to create V14 index: %s", err)
 		repo.Cancel(err)
 		return
 	}
@@ -350,31 +350,31 @@ func (cmd Fsck) runV14IndexTrial(
 			}
 		},
 		func(time time.Time) {
-			tw.Comment(fmt.Sprintf(
+			tw.Comment(
 				"(v14 adding) %d added, %d errors",
 				addCount.Load(),
 				addErrorCount.Load(),
-			))
+			)
 		},
 		3*time.Second,
 	); err != nil {
-		tw.BailOut(fmt.Sprintf("v14 add phase failed: %s", err))
+		tw.BailOut("v14 add phase failed: %s", err)
 		repo.Cancel(err)
 		return
 	}
 
-	tw.Comment(fmt.Sprintf(
+	tw.Comment(
 		"v14 add phase complete: %d objects, %d errors",
 		addCount.Load(),
 		addErrorCount.Load(),
-	))
+	)
 
 	// Flush the V14 index.
 	if err = v14Index.Flush(func(msg string) error {
-		tw.Comment(fmt.Sprintf("v14 flush: %s", msg))
+		tw.Comment("v14 flush: %s", msg)
 		return nil
 	}); err != nil {
-		tw.BailOut(fmt.Sprintf("v14 flush failed: %s", err))
+		tw.BailOut("v14 flush failed: %s", err)
 		repo.Cancel(err)
 		return
 	}
@@ -479,26 +479,26 @@ func (cmd Fsck) runV14IndexTrial(
 			}
 		},
 		func(time time.Time) {
-			tw.Comment(fmt.Sprintf(
+			tw.Comment(
 				"(v14 verifying) %d verified, %d errors",
 				verifyCount.Load(),
 				verifyErrorCount.Load(),
-			))
+			)
 		},
 		3*time.Second,
 	); err != nil {
-		tw.BailOut(fmt.Sprintf("v14 verify phase failed: %s", err))
+		tw.BailOut("v14 verify phase failed: %s", err)
 		repo.Cancel(err)
 		return
 	}
 
-	tw.Comment(fmt.Sprintf(
+	tw.Comment(
 		"v14 trial complete: %d verified, %d errors, %d inline, %d tai collisions",
 		verifyCount.Load(),
 		verifyErrorCount.Load(),
 		inlineCount.Load(),
 		taiCollisionCount.Load(),
-	))
+	)
 
 	return
 }

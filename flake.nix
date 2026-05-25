@@ -55,6 +55,7 @@
       tap,
       tommy,
       madder,
+      purse-first,
       ...
     }:
     let
@@ -66,6 +67,21 @@
     (utils.lib.eachDefaultSystem (
       system:
       let
+        # Needed for the mkGoPkgs producer call in go/gomod.nix.
+        # buildGoApplication / mkGoEnv consumers live in go/default.nix.
+        pkgs = import nixpkgs { inherit system; };
+
+        gomod = import ./go/gomod.nix {
+          inherit pkgs system madder tap tommy purse-first;
+          # Scope the producer at go/ so downstream consumers reference
+          # go-pkgs directly with no subPath. Dodder's repo root has
+          # no Go-relevant assets, so a full-repo filter would only
+          # bloat the closure.
+          src = self + "/go";
+        };
+
+        inherit (gomod.goPkgs) go-pkgs go-pkgs-test;
+
         result = import ./go/default.nix {
           inherit
             nixpkgs
@@ -75,6 +91,14 @@
             madder
             system
             ;
+          # Pivot self-consumption onto the published artifact: every
+          # buildGoApplication in go/default.nix uses this as `src`,
+          # so the same closure downstream consumers receive via
+          # go-pkgs-test is what dodder builds itself from. Contract
+          # test for the producer-side split — if the filter ever
+          # drops a file the build needs, this build breaks (#217).
+          goPkgsTest = go-pkgs-test;
+          inherit (gomod) goFlakeInputs;
           version = dodderVersion;
           commit = dodderCommit;
           man7Src = ./docs/man.7;
@@ -82,7 +106,8 @@
         };
       in
       {
-        inherit (result) packages checks;
+        packages = result.packages // { inherit go-pkgs go-pkgs-test; };
+        inherit (result) checks;
         devShells.default = result.devShells.default;
       }
     ));

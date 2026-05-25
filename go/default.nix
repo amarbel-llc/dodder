@@ -5,6 +5,19 @@
   tommy,
   madder ? null,
   system,
+  # Filtered Go source tree (test-superset shape) produced by
+  # mkGoPkgs in go/gomod.nix and threaded through flake.nix. Every
+  # buildGoApplication self-consumes this as `src`/`pwd` so dodder
+  # builds itself from the same artifact downstream consumers see —
+  # contract test for the go-pkgs / go-pkgs-test split (#217).
+  # Defaulted to ./. so non-flake callers (`import ./go/default.nix`
+  # without flake context) still work — they just build from the
+  # live worktree.
+  goPkgsTest ? ./.,
+  # Flake-input bridge table (see ./gomod.nix). Defaulted to {} so
+  # non-flake callers degrade to organic gomod2nix.toml resolution
+  # for cross-amarbel deps (#218).
+  goFlakeInputs ? { },
   man7Src ? null,
   # Source dir for the bats integration suite. Required by the
   # `batsLaneOutputs` block; null disables it (so direct
@@ -70,7 +83,7 @@ let
   # Unconditional — its only flake-input dependency is nixpkgs, which is
   # always available.
   goTestAttrs = import ./go-tests.nix {
-    inherit pkgs version commit;
+    inherit pkgs version commit goPkgsTest goFlakeInputs;
   };
 
   dodder-go-test = goTestAttrs.dodder-go-test;
@@ -85,9 +98,9 @@ let
   # via `nix build --no-link --print-out-paths .#dodder-debug`.
   dodder-debug = pkgs.buildGoApplication {
     pname = "dodder-debug";
-    inherit version commit;
-    src = ./.;
-    pwd = ./.;
+    inherit version commit goFlakeInputs;
+    src = goPkgsTest;
+    pwd = goPkgsTest;
     subPackages = [
       "cmd/der"
       "cmd/dodder"
@@ -127,9 +140,9 @@ let
 
   dodder = pkgs.buildGoApplication {
     pname = "dodder";
-    inherit version commit;
-    src = ./.;
-    pwd = ./.;
+    inherit version commit goFlakeInputs;
+    src = goPkgsTest;
+    pwd = goPkgsTest;
     subPackages = [
       "cmd/der"
       "cmd/dodder"
