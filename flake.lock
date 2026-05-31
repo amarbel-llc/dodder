@@ -253,11 +253,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780157533,
-        "narHash": "sha256-u/6olc73VVXiVzOOkmMIAvFjuxAR3mr4TzVHvU+/eSA=",
+        "lastModified": 1780246216,
+        "narHash": "sha256-fdM2pRhkiyoU1Hh9DHKh+Ee7kOsGH7Jzt+RwHiIHe4w=",
         "owner": "amarbel-llc",
         "repo": "madder",
-        "rev": "e7bbfb4075115222c0828fef4a1b9404e70d3250",
+        "rev": "00613b378127938f742922ae204f81bd40369996",
         "type": "github"
       },
       "original": {
