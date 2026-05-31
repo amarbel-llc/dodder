@@ -138,6 +138,16 @@ let
     '';
   });
 
+  # Non-stripped variant of dodder-debug for use with delve. nix's
+  # fixup phase strips .debug_* (DWARF) sections from the standard
+  # debug binary, which `dlv` needs for breakpoints and stack traces;
+  # dontStrip retains them. Investigation/explore aid (see the
+  # explore-trace-sftp-init justfile recipe); not shipped.
+  dodder-debug-dwarf = dodder-debug.overrideAttrs (old: {
+    pname = "${old.pname}-dwarf";
+    dontStrip = true;
+  });
+
   dodder = pkgs.buildGoApplication {
     pname = "dodder";
     inherit version commit goFlakeInputs;
@@ -205,6 +215,7 @@ in
       dodder-debug
       dodder-debug-race
       dodder-debug-cover
+      dodder-debug-dwarf
       dodder-clown-plugin
       dodder-go-test
       ;

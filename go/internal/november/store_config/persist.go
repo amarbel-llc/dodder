@@ -478,7 +478,14 @@ func (store *store) loadMutableConfigBlob(
 	mutableConfigType ids.TypeStruct,
 	blobId mad_domain_interfaces.MarklId,
 ) (err error) {
-	blobReader, err := store.envRepo.GetReadBlobStore().MakeBlobReader(blobId)
+	// Local-only: this is the bootstrap mutable-config blob read. The
+	// user-configured blob-store order isn't known yet (it's decoded
+	// from this very blob), so a remote fallback store could be probed
+	// before the local store that holds the config — and probing a
+	// remote store dials it. Restricting to local stores still finds the
+	// config across local ancestor/XDG stores (FDR-0015 / #196) without
+	// any network dial. See #223 for the principled fix.
+	blobReader, err := store.envRepo.GetLocalReadBlobStore().MakeBlobReader(blobId)
 	if err != nil {
 		ui.Debug().PrintDebug(store.envRepo.GetXDG())
 		err = errors.Wrap(err)

@@ -2,6 +2,7 @@ package env_repo
 
 import (
 	"os"
+	"strings"
 
 	mad_blob_store_env "github.com/amarbel-llc/madder/go/pkgs/blob_store_env"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
@@ -274,22 +275,64 @@ func (env Env) GetDefaultBlobStoreAndRemaining() (
 // rooted at different basePaths (clone, pull, push). See
 // docs/features/0015-multi-store-blob-lookup.md.
 func (env Env) GetReadBlobStore() mad_domain_interfaces.BlobStore {
-	defaultStore, remaining := env.blobStoreEnv.GetDefaultBlobStoreAndRemaining()
+	return env.makeReadBlobStore(nil)
+}
 
-	remainingStores := make(
+// GetLocalReadBlobStore is GetReadBlobStore restricted to local blob
+// stores: the default store plus only those fallback stores whose
+// transport is local (never SFTP/WebDAV/S3). Use it for content-
+// addressed reads that must not pay a network dial and that run before
+// the user-configured blob-store order is known — notably the bootstrap
+// mutable-config blob read, whose order can't be honored because the
+// order is decoded from the very blob being read (see
+// november/store_config/persist.go and issue #223). Remote stores are
+// classified out from their stored config without initializing them, so
+// excluding a remote store never dials it.
+func (env Env) GetLocalReadBlobStore() mad_domain_interfaces.BlobStore {
+	return env.makeReadBlobStore(isLocalBlobStore)
+}
+
+// makeReadBlobStore builds a madder Multi in write-through mode: writes
+// pin to the default store; reads fall back across the other configured
+// stores. The fallback list is built in a deterministic, user-controlled
+// order — GetBlobStoresSorted honors the user-configured blob-store
+// order (the repo config's blob-stores list, applied via
+// SetBlobStoreOrder) when set and falls back to a stable id sort
+// otherwise. This replaces ranging GetDefaultBlobStoreAndRemaining's
+// BlobStoreMap, whose Go-randomized iteration order meant the store
+// probed first on a default-store miss varied run to run — so a remote
+// store could be probed before the local store holding the blob, paying
+// a needless (and intermittent) network dial.
+//
+// includeReadStore, when non-nil, filters which fallback stores become
+// read sources; a nil predicate includes them all.
+func (env Env) makeReadBlobStore(
+	includeReadStore func(blob_stores.BlobStoreInitialized) bool,
+) mad_domain_interfaces.BlobStore {
+	defaultStore := env.blobStoreEnv.GetDefaultBlobStore()
+	defaultId := defaultStore.Path.GetId().String()
+	sorted := env.blobStoreEnv.GetBlobStoresSorted()
+
+	readStores := make(
 		[]blob_stores.BlobStoreInitialized,
 		0,
-		len(remaining),
+		len(sorted),
 	)
 
-	for _, store := range remaining {
-		remainingStores = append(remainingStores, store)
+	for _, store := range sorted {
+		if store.Path.GetId().String() == defaultId {
+			continue
+		}
+		if includeReadStore != nil && !includeReadStore(store) {
+			continue
+		}
+		readStores = append(readStores, store)
 	}
 
 	multi, err := blob_stores.
 		NewMulti(env.GetActiveContext()).
 		WriteTo(defaultStore).
-		Read(remainingStores...).
+		Read(readStores...).
 		ReadFill(false).
 		Build()
 	if err != nil {
@@ -297,6 +340,21 @@ func (env Env) GetReadBlobStore() mad_domain_interfaces.BlobStore {
 	}
 
 	return multi
+}
+
+// isLocalBlobStore reports whether store's transport is local
+// (filesystem-backed) rather than a network backend (SFTP/WebDAV/S3).
+// It reads the store's stored config blob-store-type and does not touch
+// the live BlobStore, so it never triggers a remote store's lazy
+// connect. madder names every filesystem transport with a "local"
+// prefix ("local", "local-inventory-archive", "local-pointer"); network
+// transports use bare scheme names.
+//
+// Caveat: a "local-pointer" config can indirect to a remote store and
+// is treated as local here; the principled fix (pinned provenance) is
+// tracked by #223.
+func isLocalBlobStore(store blob_stores.BlobStoreInitialized) bool {
+	return strings.HasPrefix(store.Config.Blob.GetBlobStoreType(), "local")
 }
 
 func (env *Env) SetBlobStoreOrder(ids []blob_store_id.Id) {

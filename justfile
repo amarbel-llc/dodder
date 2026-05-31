@@ -295,6 +295,24 @@ explore-live *args:
   cd "{{live_workspace}}"
   dodder {{args}}
 
+# Trace madder/dodder functions matching {{func_regexp}} while running
+# `dodder show {{query}}`, dumping a {{stack}}-deep call stack at each
+# hit. Builds the DWARF-retaining debug binary via nix (the standard
+# debug binary is stripped, which dlv can't trace). Runs from the
+# worktree root so CWD-store resolution matches an interactive
+# `dodder show`. Investigation aid for the multi-store eager-init
+# question; delete once root cause found.
+#
+# Examples:
+#   just explore-dlv-trace 'remoteSftp.*\.initialize$'   # who dials SFTP
+#   just explore-dlv-trace '\.HasBlob$' 0                # probe order/results
+[group('explore')]
+explore-dlv-trace func_regexp stack='80' query='ach/ab':
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug-dwarf)
+  dlv trace --exec "$bin/bin/dodder" --stack {{stack}} '{{func_regexp}}' -- show {{query}}
+
 # Debug a specific bats test file with --no-tempdir-cleanup for inspection.
 [group('explore')]
 explore-bats-debug *targets:
