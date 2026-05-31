@@ -85,9 +85,13 @@ config**, and lean on madder FDR-0009 for topology:
    every fallback.
 3. **Prefer a `multi` blob-store config as the default (madder
    FDR-0009).** FDR-0009 makes `multi` a first-class
-   `blob_store-config` (`store_type = "multi"`, authored via
-   `madder init-multi`): in write-through mode it names a `write_store`
-   and an ordered list of digest-bearing `read_stores`. If dodder's
+   `blob_store-config`, discriminated by its hyphence type tag
+   `!toml-blob_store_config-multi-v0` — there is no `store_type` field;
+   the tag *is* the type, per the established blob_store_config pattern
+   (`!toml-blob_store_config-v3`, `!toml-blob_store_config-pointer-v1`,
+   …). Authored via `madder init-multi`, its write-through body names a
+   `write_store` and an ordered list of digest-bearing `read_stores`.
+   If dodder's
    configured default store resolves to such a multi config, the
    read-fallback set and order are madder config (resolved by madder
    via the two-pass store-map build), so dodder stops building a
@@ -113,10 +117,11 @@ mutation of the immutable seed.
 
 This is **one half of a cross-repo move**; the other half is madder
 FDR-0009 "multi-store as a bonafide config type" (umbrella
-amarbel-llc/madder#217). FDR-0009 adds `store_type = "multi"` so a
-repo can have a multi-default store configured *in madder* (read
-fallback as config, resolved by madder), retiring per-command fallback
-and runtime Multi-building.
+amarbel-llc/madder#217). FDR-0009 adds the
+`!toml-blob_store_config-multi-v0` hyphence-typed config so a repo can
+have a multi-default store configured *in madder* (read fallback as
+config, resolved by madder), retiring per-command fallback and runtime
+Multi-building.
 
 - madder FDR-0009 is **proposed**, not shipped.
 - FDR-0009 depends on madder FDR-0008 Phase 2 (digest-bearing
