@@ -321,6 +321,14 @@ build-go-binary tags output:
   mkdir -p '{{output}}'
   go build -tags '{{tags}}' -o '{{output}}' ./cmd/*
 
+# [explore] run the already-built debug dodder binary with arbitrary args
+# (no nix rebuild, no workspace/secrets). Used to inspect `-help` output
+# while documenting the CLI. Requires `just build-go-binary debug build/debug`
+# to have run first.
+[group('explore')]
+explore-debug-bin *args:
+  build/debug/dodder {{args}}
+
 # Native build retained for ad-hoc dev use (PATH-add build/debug/ and
 # run `dodder` directly). No justfile recipe consumes it after the
 # 2026 nix migration; bats/explore/check recipes all resolve binaries
