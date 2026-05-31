@@ -5,11 +5,11 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.2.0
 	filippo.io/age v1.3.1
-	github.com/amarbel-llc/madder/go v0.3.29-0.20260525115055-39c4890aee78
-	github.com/amarbel-llc/purse-first/libs/dewey v0.1.8
-	github.com/amarbel-llc/purse-first/libs/go-mcp v0.0.12
-	github.com/amarbel-llc/tap/go v0.1.10-0.20260524212853-a0668c5d0020
-	github.com/amarbel-llc/tommy v0.2.9-0.20260525110730-18761532c6c7
+	github.com/amarbel-llc/madder/go v0.3.31-0.20260530161213-e7bbfb407511
+	github.com/amarbel-llc/purse-first/libs/dewey v0.2.6-0.20260530121752-67a6f4d5e72d
+	github.com/amarbel-llc/purse-first/libs/go-mcp v0.2.6-0.20260530121752-67a6f4d5e72d
+	github.com/amarbel-llc/tap/go v0.1.11-0.20260530160701-c3a844ec91f6
+	github.com/amarbel-llc/tommy v0.2.9-0.20260530160751-de8fc5dee430
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
