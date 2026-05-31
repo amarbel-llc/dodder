@@ -83,14 +83,24 @@ config**, and lean on madder FDR-0009 for topology:
    holding the seed/config blob** (provenance), so steady-state and
    clone reads resolve directly to the holding store instead of probing
    every fallback.
-3. **Prefer a madder multi-default store (FDR-0009).** If dodder's
-   default store is a madder `store_type = "multi"` that encodes the
-   read-fallback set and order, dodder stops building `Multi` at
-   runtime and `GetReadBlobStore` / `GetLocalReadBlobStore` retire.
-4. **Keep the local-only bootstrap read as the floor.** The very first
-   config-blob read still happens before any dodder config is loaded;
-   madder's discovery (local-first) remains the only thing available
-   there, and the shipped local-only read stays.
+3. **Prefer a `multi` blob-store config as the default (madder
+   FDR-0009).** FDR-0009 makes `multi` a first-class
+   `blob_store-config` (`store_type = "multi"`, authored via
+   `madder init-multi`): in write-through mode it names a `write_store`
+   and an ordered list of digest-bearing `read_stores`. If dodder's
+   configured default store resolves to such a multi config, the
+   read-fallback set and order are madder config (resolved by madder
+   via the two-pass store-map build), so dodder stops building a
+   `Multi` at runtime — `GetReadBlobStore` / `GetLocalReadBlobStore`
+   retire. The digest-bearing references double as the provenance
+   from (2).
+4. **Resolve the bootstrap read deterministically.** The very first
+   config-blob read happens before any dodder config is loaded, so it
+   can't use the consolidated config; today the shipped local-only
+   read (FDR-0015) is the floor. A stronger option, raised in review,
+   is to give dodder's critical seed/config blobs their own home — see
+   the dedicated-private-store open question below — so the bootstrap
+   path never depends on discovery/probing at all.
 
 ### Relationship to dodder#223
 
@@ -142,6 +152,17 @@ and runtime Multi-building.
   actually help the bootstrap read (that blob is itself read *through*
   stores), or is the local-only floor plus a madder multi-default
   store's discovery sufficient there?
+- **Dedicated private store for the critical seed/config blobs
+  (review feedback).** Should a dodder repo bootstrap a
+  *completely-private madder blob store* reserved for its critical
+  seed/config files, separate from the general blob store(s)? That
+  would give the bootstrap config read a known, private, always-local
+  home and remove its dependence on discovery/probing entirely —
+  a stronger guarantee than the local-only read floor. Open questions
+  this raises: how that private store is named/located so it's found
+  with zero config, whether it participates in clone/pull/push, and how
+  it composes with a `multi` default (the critical store would sit
+  outside the multi's read-fallback set).
 
 ## Key Files
 
