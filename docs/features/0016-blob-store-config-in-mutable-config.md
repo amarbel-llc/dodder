@@ -25,6 +25,38 @@ promotion-criteria: |
 > (see FDR-0015 and the local-only bootstrap read); this FDR is the
 > principled consolidation, not an urgent fix.
 
+## Revised design (2026-05-31): multi default, NOT a separate seed store
+
+The earlier direction below explored a **dedicated private "seed"
+blob store** for the konfig blob. That was implemented and **rejected**:
+dodder verifies every object's blob *through the default store*
+(`fsck.go:226` → `VerifyBlob(GetDefaultBlobStore(), digest)`; `VerifyBlob`
+is a generic `MakeBlobReader`), so a konfig blob living in a *separate*
+store — discoverable or not — is unreachable via the default and breaks
+`fsck`/`cat-ids`/transfer (proven: `fsck.bats` 6/13 failed).
+
+**Chosen mechanism (D1):** the repo's default store is a madder `multi`
+(FDR-0009, `!toml-blob_store_config-multi-v0`) whose `write_store` is a
+**local** store and whose `read_stores` are digest-pinned fallbacks. The
+konfig (and every object blob) is written **through the default** and
+lands in the local `write_store`; `fsck`/`cat`/transfer route through
+`GetDefaultBlobStore()` (= the multi) and find it via `MakeBlobReader`,
+unchanged. The bootstrap read is local-first → **no dial**, and because
+the `write_store` is always local the konfig is always locally readable
+even when fallbacks are remote — the structural fix for the
+remote-default bootstrap problem, with **no separate seed store**.
+
+Multi references are **digest-pinned** (FDR-0009 requires it; bare ids
+are rejected), so genesis mints each child store's FDR-0008 Phase-1
+config digest and emits `Id.WithDigest` references — making dodder the
+first persisted-reference call site (madder #220).
+
+**The full, current implementation plan, the rejection rationale, the
+open verifications, and the remaining phases live in
+[dodder #223](https://github.com/amarbel-llc/dodder/issues/223)** — start
+there. The sections below predate this revision and describe the
+abandoned seed-store framing; they are retained for history.
+
 ## Problem Statement
 
 dodder's blob-store configuration is split across three homes, and the
