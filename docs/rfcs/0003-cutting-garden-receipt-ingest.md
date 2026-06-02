@@ -102,44 +102,86 @@ The receipt blob is linked from the zettel's metadata via `BlobReferences`
 (`go/internal/delta/objects/blob_reference.go`), which is dodder's facility for
 referencing an external content-addressed blob by digest plus its own type:
 
-- `BlobReferences.Add(receiptMarklId, typeLock)` --- the type lock carries the
-  receipt's own type tag, `cutting_garden-capture_receipt-fs-v1`. This is the
-  "the receipt already has a type, use it directly" property: dodder records the
-  receipt's native type rather than reinterpreting its bytes.
-- `BlobReferences.SetAlias(receiptMarklId, "receipt")` --- a stable alias.
+Linking is a two-call sequence (there is no single "add reference with type and
+alias" constructor):
+
+- `Add(id markl.Id, typeLock markl.Lock[ids.SeqId, *ids.SeqId])` --- the type
+  lock carries the receipt's own type tag,
+  `cutting_garden-capture_receipt-fs-v1`. This is the "the receipt already has a
+  type, use it directly" property: dodder records the receipt's native type
+  rather than reinterpreting its bytes.
+- `SetAlias(id markl.Id, alias string) error` --- a stable alias (`"receipt"`).
+  This MUST be called after `Add`; it errors if the key was not already added.
+
+Callers typically reach these through the `objects.metadata` facade
+(`AddBlobReference`, `SetBlobReferenceAlias`) rather than the raw
+`BlobReferences` type.
 
 `BlobReferences` is the correct mechanism rather than `ContainedObjects`: the
 latter references *in-store* dodder objects by `SeqId`, whereas a receipt is an
 *external* content-addressed blob keyed by markl ID.
 
 This design adds no field to `objects.metadata` or `blobReferenceEntry`, and so
-requires no binary-codec change (see issue #38). It does, however, depend on the
-`blobReferenceEntry` triple --- key, type lock, and alias --- round-tripping
-through `india/stream_index` encode/decode. An implementer MUST verify this
-before relying on the alias; if the alias is not yet serialized, either omit it
-or extend the codec per the `india/stream_index` 4-file checklist.
+requires no binary-codec change (see issue #38). The `blobReferenceEntry` triple
+--- key, type lock, and alias --- is verified to round-trip through the binary
+stream index: the encoder/decoder in `hotel/stream_index`
+(`binary_encoder.go`, `binary_decoder.go`) serializes and restores all three
+parts, and the alias survival is covered end-to-end by the
+`pull_direct_blob_reference_alias_survives` bats test (`pull.bats`) and the
+box-format round-trip in `show.bats`. (Note: the codec lives in
+`hotel/stream_index`, not `india/stream_index`, which does not exist; older
+references --- including this repo's CLAUDE.md and issue #38 --- name the stale
+path.) Coverage of the alias through the *binary* codec is currently
+integration-test-only; a direct Go round-trip unit test would be cheap
+insurance for the importer.
 
-### Foreign-Key Resolution
+### Object Identity: Create vs. Update
 
-To make a re-capture land on the existing zettel, the importer MUST resolve
-foreign key to object identity. The foreign key lives in the blob (the source of
-truth), but blobs are not indexed for content lookup, and foreign keys (URLs,
-absolute paths) are not legal tag strings.
+To make a re-capture land on the existing zettel rather than a new one, *some*
+binding from foreign key to object identity is required. Automatic resolution
+--- deriving the existing zettel from the foreign key alone --- is explicitly
+**out of scope for v1** and is deferred to its own feature design record (see
+Future Work).
 
-The RECOMMENDED resolution is a derived, tag-safe lookup tag: a short digest of
-the foreign-key string, e.g. `cg-source-<digest>`, added to the zettel.
-Resolution is then a tag-plus-type query against the existing query system
-(which supports tag and genre filters). The tag is a lookup accelerator only;
-the blob's `foreign_key` remains authoritative, and the digest MUST be computed
-from the exact normalized foreign-key string the producer recorded.
+v1 instead uses dodder's existing **create/update** semantics, which require no
+new resolution machinery:
 
-Alternatives, retained for the record:
+- **Create** (no object-id supplied) --- the importer writes a new zettel via
+  `repo_actions.WriteNewZettels` / `sku.Proto`.
+- **Update** (object-id supplied) --- the importer loads and rewrites that exact
+  zettel via `repo_actions.UpdateObject`, and `store.Commit` chains the new
+  version onto the old (see Versioning and Deduplication).
 
-1.  **Linear scan.** Enumerate `!cutting_garden-receipt` zettels and match
+In v1 the foreign-key-to-object-id mapping is therefore the **caller's**
+responsibility: a re-capture becomes a new version only when the ingest carries
+the object-id of the zettel that earlier captured the same foreign key. The
+join blob's `foreign_key` remains the authoritative record of *what* was
+captured; nothing in v1 indexes it for lookup.
+
+### Future Work: Foreign-Key Resolution
+
+Automatic resolution belongs in a dedicated FDR
+(`docs/features/0017-type-defined-field-index.md`). The motivating idea is a
+**type-system-defined field index**: an index, incrementally maintained as
+objects are committed, over fields a type declares as indexable (e.g.
+`foreign_key` on `!cutting_garden-receipt`). With that in place, an ingest could
+resolve foreign key to object-id with no caller-supplied id, and a bare
+re-capture of the same URL or directory would find its zettel automatically.
+
+Candidate implementations to weigh in that FDR, retained here for the record:
+
+1.  **Derived lookup tag.** A short digest of the normalized foreign-key string,
+    e.g. `cg-source-<digest>`, added to the zettel; resolution is a tag-plus-type
+    query against the existing query system. Note the constraint: `ids.Tag`
+    validates against `^%?[-a-z0-9_]+$` and lowercases on parse
+    (`go/internal/bravo/ids/tag.go`), so the digest MUST be encoded as lowercase
+    `[a-z0-9_-]` (hex or lowercased base32, not a raw blech32/base64 markl
+    digest, which would be rejected or silently lowercased).
+2.  **Linear scan.** Enumerate `!cutting_garden-receipt` zettels and match
     `foreign_key`. Simplest; O(n) per import. Acceptable at small scale.
-2.  **Dedicated index or genre.** A foreign-key-keyed index, or a custom genre
-    whose identifier deterministically encodes the foreign key. Most direct
-    lookup, but the heaviest change.
+3.  **Type-defined field index.** The recommended direction: a foreign-key-keyed
+    index generated incrementally and driven by type-declared indexable fields.
+    Most direct lookup, the heaviest change, and the reason this is its own FDR.
 
 ### Versioning and Deduplication
 
@@ -153,17 +195,22 @@ deterministic receipt is a no-op.
 
 The import flow is therefore:
 
-1.  Read `captures.log`; for each entry derive the foreign key from `roots`.
-2.  Resolve the foreign key to a zettel.
-3.  **Found:** load it (`store.ReadOneObjectId`, via the
-    `repo_actions.UpdateObject` pattern in
-    `go/internal/sierra/repo_actions/update_object.go`), replace the
-    `BlobReferences` entry with the new `receipt_id`, rewrite the join blob's
-    `captured_at` and `receipt_id`, and commit. `sigMother` chains
-    automatically.
-4.  **Not found:** create a new zettel
-    (`repo_actions.WriteNewZettels` / `sku.Proto`) with the type, join blob,
-    blob reference, and lookup tag.
+1.  Ensure the `!cutting_garden-receipt` type object exists, creating it (a
+    checked-in TOML type blob) if absent.
+2.  Read `captures.log` (or accept explicit `receipt-id` / `roots` / `store-id`
+    for scripted use); for each single-root entry derive the foreign key from
+    `roots[0]`.
+3.  `HasBlob`-check the receipt against the repo's read blob store; warn and skip
+    if unreachable (see Blob Store Reachability).
+4.  **Update** (object-id supplied): load and rewrite that zettel via the
+    `repo_actions.UpdateObject` pattern
+    (`go/internal/sierra/repo_actions/update_object.go`), replacing the
+    `BlobReferences` entry with the new `receipt_id` and rewriting the join
+    blob's `captured_at` and `receipt_id`, then commit. `sigMother` chains
+    automatically; identical metadata short-circuits to a no-op.
+5.  **Create** (no object-id): write a new zettel
+    (`repo_actions.WriteNewZettels` / `sku.Proto`) with the type, join blob, and
+    blob reference.
 
 ### Blob Store Reachability
 
@@ -195,22 +242,35 @@ Implementation MUST observe dodder's pool rules: never dereference a
 `sku.Transacted`; use `ResetWith` / `CloneTransacted`. A new subcommand MUST be
 registered in the `complete_subcmd` bats test.
 
+### Resolved Decisions
+
+1.  **Granularity: one versioned zettel per object.** Each captured object is a
+    single zettel; re-capture chains a new version via `sigMother`. The
+    "each receipt is its own immutable object" alternative was rejected because
+    it discards the "edit and commit" history model that motivates the
+    integration.
+2.  **Direct blob vs. join wrapper: join wrapper.** The foreign key is absent
+    from the receipt blob and must be stored explicitly, so the zettel blob is
+    the TOML join document. The degenerate "receipt blob *is* the zettel blob"
+    variant would require carrying the foreign key entirely in a tag or
+    description and is not adopted.
+3.  **Resolution: deferred.** v1 uses explicit create/update semantics
+    (object-id presence); automatic foreign-key resolution is its own FDR (see
+    Object Identity and Future Work).
+4.  **Multi-root receipts: single-root only in v1.** A multi-root receipt is
+    skipped with a warning in v1. The eventual direction is one zettel per root
+    (each referencing the shared receipt); that fan-out is captured in the
+    resolution FDR alongside the field-index design.
+5.  **Type bootstrapping: auto-create if absent.** The importer checks in the
+    `!cutting_garden-receipt` type object on first run when it is missing.
+
 ### Open Questions
 
-1.  **Direct blob vs. join wrapper.** The join wrapper is specified because the
-    foreign key is absent from the receipt blob and must be stored explicitly. A
-    degenerate "receipt blob *is* the zettel blob" variant is possible only if
-    the foreign key is carried entirely in a tag or description; it is not
-    recommended.
-2.  **Resolution strategy.** Derived tag vs. linear scan vs. dedicated index ---
-    see Foreign-Key Resolution. The derived tag is recommended pending real
-    scale data.
-3.  **Multi-root receipts.** A capture group with multiple roots produces one
-    receipt for several foreign keys. Whether such a receipt maps to one zettel
-    per root (each referencing the shared receipt) or a single composite zettel
-    is left open; the single-root case is the primary target.
-4.  **Per-receipt vs. per-object granularity.** This document binds one zettel
-    per object with the receipt as its versioned blob reference. An alternative
-    that stores each receipt as its own immutable object and links them is
-    possible but discards the "edit and commit" history model that motivates the
-    integration.
+None blocking v1. The remaining design work --- the type-defined field index for
+automatic resolution, and the multi-root one-zettel-per-root fan-out --- is
+consolidated into FDR 0017 (`docs/features/0017-type-defined-field-index.md`).
+
+## More Information
+
+- FDR 0017: Type-Defined Field Index --- the deferred automatic-resolution and
+  multi-root design this document points to.
