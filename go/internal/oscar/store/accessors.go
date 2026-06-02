@@ -5,7 +5,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index"
-	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_store"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
@@ -52,6 +51,6 @@ func (store *Store) GetConfigStoreMutable() store_config.StoreMutable {
 	return store.storeConfig
 }
 
-func (store *Store) GetStreamIndex() *stream_index.Index {
+func (store *Store) GetStreamIndex() sku.StreamIndex {
 	return store.streamIndex
 }

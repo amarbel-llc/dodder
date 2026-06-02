@@ -10,11 +10,12 @@ import (
 
 //go:generate tommy generate
 type V2 struct {
-	BlobStores     []blob_store_id.Id     `toml:"blob-stores"`
-	Defaults       DefaultsV1             `toml:"defaults"`
-	FileExtensions file_extensions.TOMLV1 `toml:"file-extensions"`
-	PrintOptions   options_print.V2       `toml:"cli-output"`
-	Tools          options_tools.Options  `toml:"tools"`
+	BlobStores       []blob_store_id.Id     `toml:"blob-stores"`
+	Defaults         DefaultsV1             `toml:"defaults"`
+	FileExtensions   file_extensions.TOMLV1 `toml:"file-extensions"`
+	PrintOptions     options_print.V2       `toml:"cli-output"`
+	Tools            options_tools.Options  `toml:"tools"`
+	StreamIndexFixed bool                   `toml:"stream-index-fixed,omitempty"`
 }
 
 func (config *V2) Reset() {
@@ -23,6 +24,7 @@ func (config *V2) Reset() {
 	config.Defaults.Type = ids.TypeStruct{}
 	config.Defaults.Tags = make([]ids.TagStruct, 0)
 	config.PrintOptions = options_print.V2{}
+	config.StreamIndexFixed = false
 }
 
 func (config *V2) ResetWith(b *V2) {
@@ -37,6 +39,8 @@ func (config *V2) ResetWith(b *V2) {
 	copy(config.Defaults.Tags, b.Defaults.Tags)
 
 	config.PrintOptions = b.PrintOptions
+
+	config.StreamIndexFixed = b.StreamIndexFixed
 }
 
 func (config V2) GetDefaults() Defaults {
@@ -57,4 +61,8 @@ func (config V2) GetToolOptions() options_tools.Options {
 
 func (config V2) GetBlobStores() []blob_store_id.Id {
 	return config.BlobStores
+}
+
+func (config V2) GetStreamIndexFixed() bool {
+	return config.StreamIndexFixed
 }

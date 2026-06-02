@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
 	"code.linenisgreat.com/dodder/go/internal/hotel/env_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
+	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index_fixed"
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_store"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
@@ -33,7 +34,7 @@ type Store struct {
 	workingList *sku.WorkingList
 	envLua      env_lua.Env
 
-	streamIndex   *stream_index.Index
+	streamIndex   sku.StreamIndex
 	finalizer     object_finalizer.Finalizer
 	zettelIdIndex zettel_id_index.Index
 	dormantIndex  *dormant_index.Index
@@ -93,14 +94,27 @@ func (store *Store) Initialize(
 		return err
 	}
 
-	if store.streamIndex, err = stream_index.MakeIndex(
-		store.GetEnvRepo(),
-		store.applyDormantAndRealizeTags,
-		store.GetEnvRepo().DirIndexObjects(),
-		store.sunrise,
-	); err != nil {
-		err = errors.Wrap(err)
-		return err
+	if store.storeConfig.GetConfig().GetStreamIndexFixed() {
+		if store.streamIndex, err = stream_index_fixed.MakeIndex(
+			store.GetEnvRepo(),
+			store.applyDormantAndRealizeTags,
+			store.GetEnvRepo().DirIndexObjects(),
+			store.sunrise,
+			0,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	} else {
+		if store.streamIndex, err = stream_index.MakeIndex(
+			store.GetEnvRepo(),
+			store.applyDormantAndRealizeTags,
+			store.GetEnvRepo().DirIndexObjects(),
+			store.sunrise,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
 	}
 
 	store.finalizer = object_finalizer.Make()

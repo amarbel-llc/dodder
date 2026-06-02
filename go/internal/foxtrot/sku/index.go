@@ -5,6 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type (
@@ -72,6 +73,34 @@ type (
 	Reindexer interface {
 		IndexPrimitives
 		IndexMutation
+	}
+
+	// StreamIndex is the full behavioral contract of a concrete stream index
+	// implementation, allowing the store to remain agnostic about whether the
+	// variable-length or fixed-size-row-with-overflow index is in use.
+	StreamIndex interface {
+		IndexMutable
+
+		Reset() (err error)
+
+		Flush(
+			printerHeader interfaces.FuncIter[string],
+		) (err error)
+
+		ReadPrimitiveQuery(
+			queryGroup PrimitiveQueryGroup,
+			funcIter interfaces.FuncIter[*Transacted],
+		) (err error)
+
+		SetNeedsFlushHistory(changes []string)
+
+		VerifyObjectProbes(object *Transacted) (err error)
+
+		PrintAllProbes() (err error)
+
+		MakeReindexer(
+			ctx interfaces.ActiveContext,
+		) (reindexer Reindexer, err error)
 	}
 )
 

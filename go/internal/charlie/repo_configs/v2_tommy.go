@@ -53,6 +53,11 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 				d.consumed["blob-stores"] = true
 			}
+		case "stream-index-fixed":
+			if v, ok := cst.ExtractBool(_kv); ok {
+				d.data.StreamIndexFixed = v
+				d.consumed["stream-index-fixed"] = true
+			}
 		}
 	}
 	for _, _ch := range d.cstDoc.Root().Children {
@@ -130,6 +135,13 @@ func (d *V2Document) Encode() ([]byte, error) {
 		if err := cst.SetAny(d.cstDoc.Root(), "blob-stores", vals); err != nil {
 			return nil, fmt.Errorf("%w", err)
 		}
+	}
+	if d.data.StreamIndexFixed != false {
+		if err := cst.SetAny(d.cstDoc.Root(), "stream-index-fixed", d.data.StreamIndexFixed); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(d.cstDoc.Root(), "stream-index-fixed")
 	}
 	{
 		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "defaults")
@@ -211,6 +223,11 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 				consumed[keyPrefix+"blob-stores"] = true
 			}
+		case "stream-index-fixed":
+			if v, ok := cst.ExtractBool(_kv); ok {
+				data.StreamIndexFixed = v
+				consumed[keyPrefix+"stream-index-fixed"] = true
+			}
 		}
 	}
 	for _, _ch := range doc.Root().Children {
@@ -285,6 +302,13 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 		if err := cst.SetAny(container, "blob-stores", vals); err != nil {
 			return fmt.Errorf("%w", err)
 		}
+	}
+	if data.StreamIndexFixed != false {
+		if err := cst.SetAny(container, "stream-index-fixed", data.StreamIndexFixed); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(container, "stream-index-fixed")
 	}
 	{
 		tableNode := cst.EnsureChildTable(doc.Root(), container, "defaults")

@@ -187,6 +187,15 @@ func (index *Index) readOneLoc(
 	return
 }
 
+func (index *Index) PrintAllProbes() (err error) {
+	if index.probeIndex.index.PrintAll(index.envRepo); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
+}
+
 func (index *Index) VerifyObjectProbes(
 	object *sku.Transacted,
 ) (err error) {

@@ -66,6 +66,17 @@ func (config Config) GetBlobStores() []blob_store_id.Id {
 	return repo_configs.GetBlobStores(config.configRepo, nil)
 }
 
+// GetStreamIndexFixed resolves whether the fixed-size-row-with-overflow stream
+// index should be used. The persisted repo config overlay supplies the default;
+// the CLI flag (--stream-index-fixed) forces it on regardless of the overlay.
+func (config Config) GetStreamIndexFixed() bool {
+	if config.CLI.UseStreamIndexFixed() {
+		return true
+	}
+
+	return repo_configs.GetStreamIndexFixed(config.configRepo, false)
+}
+
 func (config Config) GetPrintOptions() options_print.Options {
 	return config.PrintOptions
 }

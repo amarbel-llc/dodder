@@ -47,6 +47,7 @@ type Index struct {
 var (
 	_ sku.Index        = &Index{}
 	_ sku.IndexMutable = &Index{}
+	_ sku.StreamIndex  = &Index{}
 )
 
 func MakeIndex(

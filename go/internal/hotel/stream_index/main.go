@@ -46,6 +46,7 @@ type Index struct {
 var (
 	_ sku.Index        = &Index{}
 	_ sku.IndexMutable = &Index{}
+	_ sku.StreamIndex  = &Index{}
 )
 
 func MakeIndex(
@@ -105,15 +106,15 @@ func (index *Index) Reset() (err error) {
 
 func (index *Index) MakeReindexer(
 	ctx interfaces.ActiveContext,
-) (reindexer *Reindexer, err error) {
+) (reindexer sku.Reindexer, err error) {
 	if err = index.Initialize(); err != nil {
 		err = errors.Wrap(err)
 		return reindexer, err
 	}
 
-	reindexer = &Reindexer{index: index}
+	concrete := &Reindexer{index: index}
 
-	for n := range reindexer.pages {
+	for n := range concrete.pages {
 		fb := &pageAdditionsFileBacked{}
 
 		if err = fb.initialize(index); err != nil {
@@ -121,11 +122,13 @@ func (index *Index) MakeReindexer(
 			return reindexer, err
 		}
 
-		reindexer.pages[n] = fb
+		concrete.pages[n] = fb
 		index.pages[n].additionsLatest = fb
 
 		errors.ContextCloseAfter(ctx, fb)
 	}
+
+	reindexer = concrete
 
 	return reindexer, err
 }

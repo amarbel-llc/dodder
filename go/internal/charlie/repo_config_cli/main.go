@@ -22,6 +22,7 @@ type Config struct {
 
 	CheckoutCacheEnabled bool
 	PredictableZettelIds bool
+	StreamIndexFixed     bool
 
 	printOptionsOverlay options_print.Overlay
 	ToolOptions         options_tools.Options
@@ -63,6 +64,13 @@ func (config *Config) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) 
 		"generate new zettel ids in order",
 	)
 
+	flagSet.BoolVar(
+		&config.StreamIndexFixed,
+		"stream-index-fixed",
+		false,
+		"use the fixed-size-row-with-overflow stream index instead of the variable-length index",
+	)
+
 	config.printOptionsOverlay.AddToFlags(flagSet)
 	config.ToolOptions.SetFlagDefinitions(flagSet)
 
@@ -100,6 +108,10 @@ func Default() (config *Config) {
 
 func (config Config) UsePredictableZettelIds() bool {
 	return config.PredictableZettelIds
+}
+
+func (config Config) UseStreamIndexFixed() bool {
+	return config.StreamIndexFixed
 }
 
 func (config Config) GetConfigCLI() config_cli.Config {

@@ -46,6 +46,7 @@ type (
 	ConfigOverlay2 interface {
 		ConfigOverlay
 		GetBlobStores() []blob_store_id.Id
+		GetStreamIndexFixed() bool
 	}
 )
 
@@ -98,6 +99,17 @@ func GetBlobStores(
 ) []blob_store_id.Id {
 	if config, ok := config.(ConfigOverlay2); ok {
 		return config.GetBlobStores()
+	} else {
+		return otherwise
+	}
+}
+
+func GetStreamIndexFixed(
+	config ConfigOverlay,
+	otherwise bool,
+) bool {
+	if config, ok := config.(ConfigOverlay2); ok {
+		return config.GetStreamIndexFixed()
 	} else {
 		return otherwise
 	}
