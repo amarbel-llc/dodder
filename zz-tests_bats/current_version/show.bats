@@ -389,6 +389,7 @@ function show_konfig { # @test
 
 		[defaults]
 		type = "!md"
+		tags = []
 
 		[file-extensions]
 		config = "konfig"

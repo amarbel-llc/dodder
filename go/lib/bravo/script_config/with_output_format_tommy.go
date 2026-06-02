@@ -120,10 +120,8 @@ func (d *WithOutputFormatDocument) Encode() ([]byte, error) {
 		}
 	}
 	{
-		if len(d.data.UTIS) > 0 || cst.HasValue(d.cstDoc.Root(), "utis") {
-			if err := cst.SetAny(d.cstDoc.Root(), "utis", d.data.UTIS); err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
+		if err := cst.SetAny(d.cstDoc.Root(), "utis", d.data.UTIS); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	if d.data.FileExtension != "" || cst.HasValue(d.cstDoc.Root(), "file-extension") {
@@ -233,10 +231,8 @@ func EncodeWithOutputFormatFrom(data *WithOutputFormat, doc *document.Document, 
 		}
 	}
 	{
-		if len(data.UTIS) > 0 || cst.HasValue(container, "utis") {
-			if err := cst.SetAny(container, "utis", data.UTIS); err != nil {
-				return fmt.Errorf("%w", err)
-			}
+		if err := cst.SetAny(container, "utis", data.UTIS); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	if data.FileExtension != "" || cst.HasValue(container, "file-extension") {

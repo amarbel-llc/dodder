@@ -144,7 +144,7 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 		}
 		if _ftReferences != nil {
 			d.consumed["references"] = true
-			referencesVal := &ReferencesConfig{}
+			referencesVal0 := &ReferencesConfig{}
 			for _, _kv := range _ftReferences.Children {
 				if _kv.Kind != cst.NodeKeyValue {
 					continue
@@ -152,39 +152,39 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 				switch cst.KeyValueName(_kv) {
 				case "description":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Description = v
+						referencesVal0.Description = v
 						d.consumed["references.description"] = true
 					}
 				case "shell":
 					if v, ok := cst.ExtractStringSlice(_kv); ok {
-						referencesVal.Shell = v
+						referencesVal0.Shell = v
 						d.consumed["references.shell"] = true
 					}
 				case "script":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Script = v
+						referencesVal0.Script = v
 						d.consumed["references.script"] = true
 					}
 				case "optional":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						referencesVal.Optional = v
+						referencesVal0.Optional = v
 						d.consumed["references.optional"] = true
 					}
 				}
 			}
 			for _, _ch := range d.cstDoc.Root().Children {
 				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "references.env" {
-					referencesVal.Env = cst.ExtractStringMap(_ch)
+					referencesVal0.Env = cst.ExtractStringMap(_ch)
 					d.consumed["references.env"] = true
-					for _ik := range referencesVal.Env {
+					for _ik := range referencesVal0.Env {
 						d.consumed["references.env"+"."+_ik] = true
 					}
 					break
 				}
 			}
-			d.data.References = referencesVal
+			d.data.References = referencesVal0
 		} else {
-			referencesVal := &ReferencesConfig{}
+			referencesVal0 := &ReferencesConfig{}
 			_found := false
 			for _, _kv := range d.cstDoc.Root().Children {
 				if _kv.Kind != cst.NodeKeyValue {
@@ -193,24 +193,24 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 				switch cst.KeyValueName(_kv) {
 				case "description":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Description = v
+						referencesVal0.Description = v
 						_found = true
 						d.consumed["description"] = true
 					}
 				case "shell":
 					if v, ok := cst.ExtractStringSlice(_kv); ok {
-						referencesVal.Shell = v
+						referencesVal0.Shell = v
 						d.consumed["shell"] = true
 					}
 				case "script":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Script = v
+						referencesVal0.Script = v
 						_found = true
 						d.consumed["script"] = true
 					}
 				case "optional":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						referencesVal.Optional = v
+						referencesVal0.Optional = v
 						_found = true
 						d.consumed["optional"] = true
 					}
@@ -218,17 +218,17 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 			}
 			for _, _ch := range d.cstDoc.Root().Children {
 				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "env" {
-					referencesVal.Env = cst.ExtractStringMap(_ch)
+					referencesVal0.Env = cst.ExtractStringMap(_ch)
 					_found = true
 					d.consumed["env"] = true
-					for _ik := range referencesVal.Env {
+					for _ik := range referencesVal0.Env {
 						d.consumed["env"+"."+_ik] = true
 					}
 					break
 				}
 			}
 			if _found {
-				d.data.References = referencesVal
+				d.data.References = referencesVal0
 			}
 		}
 	}
@@ -460,7 +460,7 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 		}
 		if _ftReferences != nil {
 			consumed[keyPrefix+"references"] = true
-			referencesVal := &ReferencesConfig{}
+			referencesVal0 := &ReferencesConfig{}
 			for _, _kv := range _ftReferences.Children {
 				if _kv.Kind != cst.NodeKeyValue {
 					continue
@@ -468,39 +468,39 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 				switch cst.KeyValueName(_kv) {
 				case "description":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Description = v
+						referencesVal0.Description = v
 						consumed[keyPrefix+"references.description"] = true
 					}
 				case "shell":
 					if v, ok := cst.ExtractStringSlice(_kv); ok {
-						referencesVal.Shell = v
+						referencesVal0.Shell = v
 						consumed[keyPrefix+"references.shell"] = true
 					}
 				case "script":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Script = v
+						referencesVal0.Script = v
 						consumed[keyPrefix+"references.script"] = true
 					}
 				case "optional":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						referencesVal.Optional = v
+						referencesVal0.Optional = v
 						consumed[keyPrefix+"references.optional"] = true
 					}
 				}
 			}
 			for _, _ch := range doc.Root().Children {
 				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"references.env" {
-					referencesVal.Env = cst.ExtractStringMap(_ch)
+					referencesVal0.Env = cst.ExtractStringMap(_ch)
 					consumed[keyPrefix+"references.env"] = true
-					for _ik := range referencesVal.Env {
+					for _ik := range referencesVal0.Env {
 						consumed[keyPrefix+"references.env"+"."+_ik] = true
 					}
 					break
 				}
 			}
-			data.References = referencesVal
+			data.References = referencesVal0
 		} else {
-			referencesVal := &ReferencesConfig{}
+			referencesVal0 := &ReferencesConfig{}
 			_found := false
 			for _, _kv := range container.Children {
 				if _kv.Kind != cst.NodeKeyValue {
@@ -509,24 +509,24 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 				switch cst.KeyValueName(_kv) {
 				case "description":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Description = v
+						referencesVal0.Description = v
 						_found = true
 						consumed["description"] = true
 					}
 				case "shell":
 					if v, ok := cst.ExtractStringSlice(_kv); ok {
-						referencesVal.Shell = v
+						referencesVal0.Shell = v
 						consumed["shell"] = true
 					}
 				case "script":
 					if v, ok := cst.ExtractString(_kv); ok {
-						referencesVal.Script = v
+						referencesVal0.Script = v
 						_found = true
 						consumed["script"] = true
 					}
 				case "optional":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						referencesVal.Optional = v
+						referencesVal0.Optional = v
 						_found = true
 						consumed["optional"] = true
 					}
@@ -534,17 +534,17 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 			}
 			for _, _ch := range doc.Root().Children {
 				if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == "env" {
-					referencesVal.Env = cst.ExtractStringMap(_ch)
+					referencesVal0.Env = cst.ExtractStringMap(_ch)
 					_found = true
 					consumed["env"] = true
-					for _ik := range referencesVal.Env {
+					for _ik := range referencesVal0.Env {
 						consumed["env"+"."+_ik] = true
 					}
 					break
 				}
 			}
 			if _found {
-				data.References = referencesVal
+				data.References = referencesVal0
 			}
 		}
 	}

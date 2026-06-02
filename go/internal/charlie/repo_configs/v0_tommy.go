@@ -78,18 +78,16 @@ func (d *DefaultsV0Document) Encode() ([]byte, error) {
 		}
 	}
 	{
-		if len(d.data.Etiketten) > 0 || cst.HasValue(d.cstDoc.Root(), "etiketten") {
-			vals := make([]string, len(d.data.Etiketten))
-			for i, item := range d.data.Etiketten {
-				v, err := item.MarshalText()
-				if err != nil {
-					return nil, fmt.Errorf("etiketten[%d]: %w", i, err)
-				}
-				vals[i] = string(v)
+		vals := make([]string, len(d.data.Etiketten))
+		for i, item := range d.data.Etiketten {
+			v, err := item.MarshalText()
+			if err != nil {
+				return nil, fmt.Errorf("etiketten[%d]: %w", i, err)
 			}
-			if err := cst.SetAny(d.cstDoc.Root(), "etiketten", vals); err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
+			vals[i] = string(v)
+		}
+		if err := cst.SetAny(d.cstDoc.Root(), "etiketten", vals); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	return d.cstDoc.Bytes(), nil
@@ -147,18 +145,16 @@ func EncodeDefaultsV0From(data *DefaultsV0, doc *document.Document, container *c
 		}
 	}
 	{
-		if len(data.Etiketten) > 0 || cst.HasValue(container, "etiketten") {
-			vals := make([]string, len(data.Etiketten))
-			for i, item := range data.Etiketten {
-				v, err := item.MarshalText()
-				if err != nil {
-					return fmt.Errorf("etiketten[%d]: %w", i, err)
-				}
-				vals[i] = string(v)
+		vals := make([]string, len(data.Etiketten))
+		for i, item := range data.Etiketten {
+			v, err := item.MarshalText()
+			if err != nil {
+				return fmt.Errorf("etiketten[%d]: %w", i, err)
 			}
-			if err := cst.SetAny(container, "etiketten", vals); err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			vals[i] = string(v)
+		}
+		if err := cst.SetAny(container, "etiketten", vals); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	return nil
@@ -308,34 +304,30 @@ func (d *V0Document) Encode() ([]byte, error) {
 			}
 		}
 		{
-			if len(d.data.Defaults.Etiketten) > 0 || cst.HasValue(tableNode, "etiketten") {
-				vals := make([]string, len(d.data.Defaults.Etiketten))
-				for i, item := range d.data.Defaults.Etiketten {
-					v, err := item.MarshalText()
-					if err != nil {
-						return nil, fmt.Errorf("etiketten[%d]: %w", i, err)
-					}
-					vals[i] = string(v)
+			vals := make([]string, len(d.data.Defaults.Etiketten))
+			for i, item := range d.data.Defaults.Etiketten {
+				v, err := item.MarshalText()
+				if err != nil {
+					return nil, fmt.Errorf("etiketten[%d]: %w", i, err)
 				}
-				if err := cst.SetAny(tableNode, "etiketten", vals); err != nil {
-					return nil, fmt.Errorf("%w", err)
-				}
+				vals[i] = string(v)
+			}
+			if err := cst.SetAny(tableNode, "etiketten", vals); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
 	}
 	{
-		if len(d.data.HiddenEtiketten) > 0 || cst.HasValue(d.cstDoc.Root(), "hidden-etiketten") {
-			vals := make([]string, len(d.data.HiddenEtiketten))
-			for i, item := range d.data.HiddenEtiketten {
-				v, err := item.MarshalText()
-				if err != nil {
-					return nil, fmt.Errorf("hidden-etiketten[%d]: %w", i, err)
-				}
-				vals[i] = string(v)
+		vals := make([]string, len(d.data.HiddenEtiketten))
+		for i, item := range d.data.HiddenEtiketten {
+			v, err := item.MarshalText()
+			if err != nil {
+				return nil, fmt.Errorf("hidden-etiketten[%d]: %w", i, err)
 			}
-			if err := cst.SetAny(d.cstDoc.Root(), "hidden-etiketten", vals); err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
+			vals[i] = string(v)
+		}
+		if err := cst.SetAny(d.cstDoc.Root(), "hidden-etiketten", vals); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -515,34 +507,30 @@ func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 			}
 		}
 		{
-			if len(data.Defaults.Etiketten) > 0 || cst.HasValue(tableNode, "etiketten") {
-				vals := make([]string, len(data.Defaults.Etiketten))
-				for i, item := range data.Defaults.Etiketten {
-					v, err := item.MarshalText()
-					if err != nil {
-						return fmt.Errorf("etiketten[%d]: %w", i, err)
-					}
-					vals[i] = string(v)
+			vals := make([]string, len(data.Defaults.Etiketten))
+			for i, item := range data.Defaults.Etiketten {
+				v, err := item.MarshalText()
+				if err != nil {
+					return fmt.Errorf("etiketten[%d]: %w", i, err)
 				}
-				if err := cst.SetAny(tableNode, "etiketten", vals); err != nil {
-					return fmt.Errorf("%w", err)
-				}
+				vals[i] = string(v)
+			}
+			if err := cst.SetAny(tableNode, "etiketten", vals); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		}
 	}
 	{
-		if len(data.HiddenEtiketten) > 0 || cst.HasValue(container, "hidden-etiketten") {
-			vals := make([]string, len(data.HiddenEtiketten))
-			for i, item := range data.HiddenEtiketten {
-				v, err := item.MarshalText()
-				if err != nil {
-					return fmt.Errorf("hidden-etiketten[%d]: %w", i, err)
-				}
-				vals[i] = string(v)
+		vals := make([]string, len(data.HiddenEtiketten))
+		for i, item := range data.HiddenEtiketten {
+			v, err := item.MarshalText()
+			if err != nil {
+				return fmt.Errorf("hidden-etiketten[%d]: %w", i, err)
 			}
-			if err := cst.SetAny(container, "hidden-etiketten", vals); err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			vals[i] = string(v)
+		}
+		if err := cst.SetAny(container, "hidden-etiketten", vals); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{

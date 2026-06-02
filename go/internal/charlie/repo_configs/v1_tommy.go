@@ -81,18 +81,16 @@ func (d *DefaultsV1Document) Encode() ([]byte, error) {
 		}
 	}
 	{
-		if len(d.data.Tags) > 0 || cst.HasValue(d.cstDoc.Root(), "tags") {
-			vals := make([]string, len(d.data.Tags))
-			for i, item := range d.data.Tags {
-				v, err := item.MarshalText()
-				if err != nil {
-					return nil, fmt.Errorf("tags[%d]: %w", i, err)
-				}
-				vals[i] = string(v)
+		vals := make([]string, len(d.data.Tags))
+		for i, item := range d.data.Tags {
+			v, err := item.MarshalText()
+			if err != nil {
+				return nil, fmt.Errorf("tags[%d]: %w", i, err)
 			}
-			if err := cst.SetAny(d.cstDoc.Root(), "tags", vals); err != nil {
-				return nil, fmt.Errorf("%w", err)
-			}
+			vals[i] = string(v)
+		}
+		if err := cst.SetAny(d.cstDoc.Root(), "tags", vals); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	return d.cstDoc.Bytes(), nil
@@ -154,18 +152,16 @@ func EncodeDefaultsV1From(data *DefaultsV1, doc *document.Document, container *c
 		}
 	}
 	{
-		if len(data.Tags) > 0 || cst.HasValue(container, "tags") {
-			vals := make([]string, len(data.Tags))
-			for i, item := range data.Tags {
-				v, err := item.MarshalText()
-				if err != nil {
-					return fmt.Errorf("tags[%d]: %w", i, err)
-				}
-				vals[i] = string(v)
+		vals := make([]string, len(data.Tags))
+		for i, item := range data.Tags {
+			v, err := item.MarshalText()
+			if err != nil {
+				return fmt.Errorf("tags[%d]: %w", i, err)
 			}
-			if err := cst.SetAny(container, "tags", vals); err != nil {
-				return fmt.Errorf("%w", err)
-			}
+			vals[i] = string(v)
+		}
+		if err := cst.SetAny(container, "tags", vals); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	return nil
@@ -418,18 +414,16 @@ func (d *V1Document) Encode() ([]byte, error) {
 			}
 		}
 		{
-			if len(d.data.Defaults.Tags) > 0 || cst.HasValue(tableNode, "tags") {
-				vals := make([]string, len(d.data.Defaults.Tags))
-				for i, item := range d.data.Defaults.Tags {
-					v, err := item.MarshalText()
-					if err != nil {
-						return nil, fmt.Errorf("tags[%d]: %w", i, err)
-					}
-					vals[i] = string(v)
+			vals := make([]string, len(d.data.Defaults.Tags))
+			for i, item := range d.data.Defaults.Tags {
+				v, err := item.MarshalText()
+				if err != nil {
+					return nil, fmt.Errorf("tags[%d]: %w", i, err)
 				}
-				if err := cst.SetAny(tableNode, "tags", vals); err != nil {
-					return nil, fmt.Errorf("%w", err)
-				}
+				vals[i] = string(v)
+			}
+			if err := cst.SetAny(tableNode, "tags", vals); err != nil {
+				return nil, fmt.Errorf("%w", err)
 			}
 		}
 	}
@@ -545,18 +539,16 @@ func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 			}
 		}
 		{
-			if len(data.Defaults.Tags) > 0 || cst.HasValue(tableNode, "tags") {
-				vals := make([]string, len(data.Defaults.Tags))
-				for i, item := range data.Defaults.Tags {
-					v, err := item.MarshalText()
-					if err != nil {
-						return fmt.Errorf("tags[%d]: %w", i, err)
-					}
-					vals[i] = string(v)
+			vals := make([]string, len(data.Defaults.Tags))
+			for i, item := range data.Defaults.Tags {
+				v, err := item.MarshalText()
+				if err != nil {
+					return fmt.Errorf("tags[%d]: %w", i, err)
 				}
-				if err := cst.SetAny(tableNode, "tags", vals); err != nil {
-					return fmt.Errorf("%w", err)
-				}
+				vals[i] = string(v)
+			}
+			if err := cst.SetAny(tableNode, "tags", vals); err != nil {
+				return fmt.Errorf("%w", err)
 			}
 		}
 	}

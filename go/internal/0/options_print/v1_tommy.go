@@ -105,7 +105,7 @@ func DecodeV1(input []byte) (*V1Document, error) {
 		}
 		if _ftAbbreviations != nil {
 			d.consumed["abbreviations"] = true
-			abbreviationsVal := &abbreviationsV1{}
+			abbreviationsVal0 := &abbreviationsV1{}
 			for _, _kv := range _ftAbbreviations.Children {
 				if _kv.Kind != cst.NodeKeyValue {
 					continue
@@ -113,19 +113,19 @@ func DecodeV1(input []byte) (*V1Document, error) {
 				switch cst.KeyValueName(_kv) {
 				case "zettel-ids":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.ZettelIds = &v
+						abbreviationsVal0.ZettelIds = &v
 						d.consumed["abbreviations.zettel-ids"] = true
 					}
 				case "shas":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.MarklIds = &v
+						abbreviationsVal0.MarklIds = &v
 						d.consumed["abbreviations.shas"] = true
 					}
 				}
 			}
-			d.data.Abbreviations = abbreviationsVal
+			d.data.Abbreviations = abbreviationsVal0
 		} else {
-			abbreviationsVal := &abbreviationsV1{}
+			abbreviationsVal0 := &abbreviationsV1{}
 			_found := false
 			for _, _kv := range d.cstDoc.Root().Children {
 				if _kv.Kind != cst.NodeKeyValue {
@@ -134,20 +134,20 @@ func DecodeV1(input []byte) (*V1Document, error) {
 				switch cst.KeyValueName(_kv) {
 				case "zettel-ids":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.ZettelIds = &v
+						abbreviationsVal0.ZettelIds = &v
 						_found = true
 						d.consumed["zettel-ids"] = true
 					}
 				case "shas":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.MarklIds = &v
+						abbreviationsVal0.MarklIds = &v
 						_found = true
 						d.consumed["shas"] = true
 					}
 				}
 			}
 			if _found {
-				d.data.Abbreviations = abbreviationsVal
+				d.data.Abbreviations = abbreviationsVal0
 			}
 		}
 	}
@@ -315,7 +315,7 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 		}
 		if _ftAbbreviations != nil {
 			consumed[keyPrefix+"abbreviations"] = true
-			abbreviationsVal := &abbreviationsV1{}
+			abbreviationsVal0 := &abbreviationsV1{}
 			for _, _kv := range _ftAbbreviations.Children {
 				if _kv.Kind != cst.NodeKeyValue {
 					continue
@@ -323,19 +323,19 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 				switch cst.KeyValueName(_kv) {
 				case "zettel-ids":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.ZettelIds = &v
+						abbreviationsVal0.ZettelIds = &v
 						consumed[keyPrefix+"abbreviations.zettel-ids"] = true
 					}
 				case "shas":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.MarklIds = &v
+						abbreviationsVal0.MarklIds = &v
 						consumed[keyPrefix+"abbreviations.shas"] = true
 					}
 				}
 			}
-			data.Abbreviations = abbreviationsVal
+			data.Abbreviations = abbreviationsVal0
 		} else {
-			abbreviationsVal := &abbreviationsV1{}
+			abbreviationsVal0 := &abbreviationsV1{}
 			_found := false
 			for _, _kv := range container.Children {
 				if _kv.Kind != cst.NodeKeyValue {
@@ -344,20 +344,20 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 				switch cst.KeyValueName(_kv) {
 				case "zettel-ids":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.ZettelIds = &v
+						abbreviationsVal0.ZettelIds = &v
 						_found = true
 						consumed["zettel-ids"] = true
 					}
 				case "shas":
 					if v, ok := cst.ExtractBool(_kv); ok {
-						abbreviationsVal.MarklIds = &v
+						abbreviationsVal0.MarklIds = &v
 						_found = true
 						consumed["shas"] = true
 					}
 				}
 			}
 			if _found {
-				data.Abbreviations = abbreviationsVal
+				data.Abbreviations = abbreviationsVal0
 			}
 		}
 	}

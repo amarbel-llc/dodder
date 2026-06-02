@@ -52,6 +52,7 @@ function generate { # @test
 
 		[defaults]
 		type = "!md"
+		tags = []
 
 		[file-extensions]
 		config = "konfig"

@@ -100,7 +100,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 				if _ftHaustoriaCaldav != nil {
 					d.consumed["haustoria.caldav"] = true
-					calDAVVal := &CalDAVConfig{}
+					calDAVVal0 := &CalDAVConfig{}
 					for _, _kv := range _ftHaustoriaCaldav.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
@@ -108,19 +108,19 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						switch cst.KeyValueName(_kv) {
 						case "url":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.URL = v
+								calDAVVal0.URL = v
 								d.consumed["haustoria.caldav.url"] = true
 							}
 						case "username":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.Username = v
+								calDAVVal0.Username = v
 								d.consumed["haustoria.caldav.username"] = true
 							}
 						}
 					}
-					d.data.Haustoria.CalDAV = calDAVVal
+					d.data.Haustoria.CalDAV = calDAVVal0
 				} else {
-					calDAVVal := &CalDAVConfig{}
+					calDAVVal0 := &CalDAVConfig{}
 					_found := false
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -129,20 +129,20 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						switch cst.KeyValueName(_kv) {
 						case "url":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.URL = v
+								calDAVVal0.URL = v
 								_found = true
 								d.consumed["url"] = true
 							}
 						case "username":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.Username = v
+								calDAVVal0.Username = v
 								_found = true
 								d.consumed["username"] = true
 							}
 						}
 					}
 					if _found {
-						d.data.Haustoria.CalDAV = calDAVVal
+						d.data.Haustoria.CalDAV = calDAVVal0
 					}
 				}
 			}
@@ -156,15 +156,15 @@ func DecodeV2(input []byte) (*V2Document, error) {
 					if !strings.HasPrefix(_hdr, "haustoria.calendars.") {
 						continue
 					}
-					_mk := _hdr[20:]
-					if strings.Contains(_mk, ".") {
+					_mk1 := _hdr[20:]
+					if strings.Contains(_mk1, ".") {
 						continue
 					}
 					if _mr == nil {
 						d.consumed["haustoria.calendars"] = true
 						_mr = make(map[string]CalendarConfig)
 					}
-					d.consumed["haustoria.calendars"+"."+_mk] = true
+					d.consumed["haustoria.calendars"+"."+_mk1] = true
 					var entry CalendarConfig
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -174,21 +174,21 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						case "url":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.URL = v
-								d.consumed["haustoria.calendars."+_mk+"."+"url"] = true
+								d.consumed["haustoria.calendars."+_mk1+".url"] = true
 							}
 						case "type":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.Type = v
-								d.consumed["haustoria.calendars."+_mk+"."+"type"] = true
+								d.consumed["haustoria.calendars."+_mk1+".type"] = true
 							}
 						case "tags":
 							if v, ok := cst.ExtractStringSlice(_kv); ok {
 								entry.Tags = v
-								d.consumed["haustoria.calendars."+_mk+"."+"tags"] = true
+								d.consumed["haustoria.calendars."+_mk1+".tags"] = true
 							}
 						}
 					}
-					_mr[_mk] = entry
+					_mr[_mk1] = entry
 				}
 				if _mr != nil {
 					d.data.Haustoria.Calendars = _mr
@@ -204,7 +204,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 				if _ftHaustoriaOrgmode != nil {
 					d.consumed["haustoria.orgmode"] = true
-					orgmodeVal := &OrgmodeConfig{}
+					orgmodeVal2 := &OrgmodeConfig{}
 					for _, _kv := range _ftHaustoriaOrgmode.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
@@ -212,7 +212,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						switch cst.KeyValueName(_kv) {
 						case "transport":
 							if v, ok := cst.ExtractString(_kv); ok {
-								orgmodeVal.Transport = v
+								orgmodeVal2.Transport = v
 								d.consumed["haustoria.orgmode.transport"] = true
 							}
 						}
@@ -227,7 +227,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						}
 						if _ftHaustoriaOrgmodeWebdav != nil {
 							d.consumed["haustoria.orgmode.webdav"] = true
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal3 := &OrgmodeWebDAV{}
 							for _, _kv := range _ftHaustoriaOrgmodeWebdav.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -235,19 +235,19 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal3.URL = v
 										d.consumed["haustoria.orgmode.webdav.url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal3.Username = v
 										d.consumed["haustoria.orgmode.webdav.username"] = true
 									}
 								}
 							}
-							orgmodeVal.WebDAV = webDAVVal
+							orgmodeVal2.WebDAV = webDAVVal3
 						} else {
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal3 := &OrgmodeWebDAV{}
 							_found := false
 							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -256,20 +256,20 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal3.URL = v
 										_found = true
 										d.consumed["url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal3.Username = v
 										_found = true
 										d.consumed["username"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.WebDAV = webDAVVal
+								orgmodeVal2.WebDAV = webDAVVal3
 							}
 						}
 					}
@@ -283,7 +283,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						}
 						if _ftHaustoriaOrgmodeSftp != nil {
 							d.consumed["haustoria.orgmode.sftp"] = true
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal4 := &OrgmodeSFTP{}
 							for _, _kv := range _ftHaustoriaOrgmodeSftp.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -291,34 +291,34 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal4.Host = v
 										d.consumed["haustoria.orgmode.sftp.host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal4.Port = v
 										d.consumed["haustoria.orgmode.sftp.port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal4.User = v
 										d.consumed["haustoria.orgmode.sftp.user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal4.PrivateKeyPath = v
 										d.consumed["haustoria.orgmode.sftp.private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal4.KnownHostsFile = v
 										d.consumed["haustoria.orgmode.sftp.known-hosts-file"] = true
 									}
 								}
 							}
-							orgmodeVal.SFTP = sFTPVal
+							orgmodeVal2.SFTP = sFTPVal4
 						} else {
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal4 := &OrgmodeSFTP{}
 							_found := false
 							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -327,44 +327,44 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal4.Host = v
 										_found = true
 										d.consumed["host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal4.Port = v
 										_found = true
 										d.consumed["port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal4.User = v
 										_found = true
 										d.consumed["user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal4.PrivateKeyPath = v
 										_found = true
 										d.consumed["private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal4.KnownHostsFile = v
 										_found = true
 										d.consumed["known-hosts-file"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.SFTP = sFTPVal
+								orgmodeVal2.SFTP = sFTPVal4
 							}
 						}
 					}
-					d.data.Haustoria.Orgmode = orgmodeVal
+					d.data.Haustoria.Orgmode = orgmodeVal2
 				} else {
-					orgmodeVal := &OrgmodeConfig{}
+					orgmodeVal2 := &OrgmodeConfig{}
 					_found := false
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -373,7 +373,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						switch cst.KeyValueName(_kv) {
 						case "transport":
 							if v, ok := cst.ExtractString(_kv); ok {
-								orgmodeVal.Transport = v
+								orgmodeVal2.Transport = v
 								_found = true
 								d.consumed["transport"] = true
 							}
@@ -389,7 +389,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						}
 						if _ftWebdav != nil {
 							d.consumed["webdav"] = true
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal5 := &OrgmodeWebDAV{}
 							for _, _kv := range _ftWebdav.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -397,19 +397,19 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal5.URL = v
 										d.consumed["webdav.url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal5.Username = v
 										d.consumed["webdav.username"] = true
 									}
 								}
 							}
-							orgmodeVal.WebDAV = webDAVVal
+							orgmodeVal2.WebDAV = webDAVVal5
 						} else {
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal5 := &OrgmodeWebDAV{}
 							_found := false
 							for _, _kv := range _ch.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -418,20 +418,20 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal5.URL = v
 										_found = true
 										d.consumed["url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal5.Username = v
 										_found = true
 										d.consumed["username"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.WebDAV = webDAVVal
+								orgmodeVal2.WebDAV = webDAVVal5
 							}
 						}
 					}
@@ -445,7 +445,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						}
 						if _ftSftp != nil {
 							d.consumed["sftp"] = true
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal6 := &OrgmodeSFTP{}
 							for _, _kv := range _ftSftp.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -453,34 +453,34 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal6.Host = v
 										d.consumed["sftp.host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal6.Port = v
 										d.consumed["sftp.port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal6.User = v
 										d.consumed["sftp.user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal6.PrivateKeyPath = v
 										d.consumed["sftp.private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal6.KnownHostsFile = v
 										d.consumed["sftp.known-hosts-file"] = true
 									}
 								}
 							}
-							orgmodeVal.SFTP = sFTPVal
+							orgmodeVal2.SFTP = sFTPVal6
 						} else {
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal6 := &OrgmodeSFTP{}
 							_found := false
 							for _, _kv := range _ch.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -489,43 +489,43 @@ func DecodeV2(input []byte) (*V2Document, error) {
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal6.Host = v
 										_found = true
 										d.consumed["host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal6.Port = v
 										_found = true
 										d.consumed["port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal6.User = v
 										_found = true
 										d.consumed["user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal6.PrivateKeyPath = v
 										_found = true
 										d.consumed["private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal6.KnownHostsFile = v
 										_found = true
 										d.consumed["known-hosts-file"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.SFTP = sFTPVal
+								orgmodeVal2.SFTP = sFTPVal6
 							}
 						}
 					}
 					if _found {
-						d.data.Haustoria.Orgmode = orgmodeVal
+						d.data.Haustoria.Orgmode = orgmodeVal2
 					}
 				}
 			}
@@ -539,15 +539,15 @@ func DecodeV2(input []byte) (*V2Document, error) {
 					if !strings.HasPrefix(_hdr, "haustoria.folders.") {
 						continue
 					}
-					_mk := _hdr[18:]
-					if strings.Contains(_mk, ".") {
+					_mk7 := _hdr[18:]
+					if strings.Contains(_mk7, ".") {
 						continue
 					}
 					if _mr == nil {
 						d.consumed["haustoria.folders"] = true
 						_mr = make(map[string]FolderConfig)
 					}
-					d.consumed["haustoria.folders"+"."+_mk] = true
+					d.consumed["haustoria.folders"+"."+_mk7] = true
 					var entry FolderConfig
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -557,21 +557,21 @@ func DecodeV2(input []byte) (*V2Document, error) {
 						case "path":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.Path = v
-								d.consumed["haustoria.folders."+_mk+"."+"path"] = true
+								d.consumed["haustoria.folders."+_mk7+".path"] = true
 							}
 						case "type":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.Type = v
-								d.consumed["haustoria.folders."+_mk+"."+"type"] = true
+								d.consumed["haustoria.folders."+_mk7+".type"] = true
 							}
 						case "tags":
 							if v, ok := cst.ExtractStringSlice(_kv); ok {
 								entry.Tags = v
-								d.consumed["haustoria.folders."+_mk+"."+"tags"] = true
+								d.consumed["haustoria.folders."+_mk7+".tags"] = true
 							}
 						}
 					}
-					_mr[_mk] = entry
+					_mr[_mk7] = entry
 				}
 				if _mr != nil {
 					d.data.Haustoria.Folders = _mr
@@ -823,7 +823,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 				if _ftHaustoriaCaldav != nil {
 					consumed[keyPrefix+"haustoria.caldav"] = true
-					calDAVVal := &CalDAVConfig{}
+					calDAVVal0 := &CalDAVConfig{}
 					for _, _kv := range _ftHaustoriaCaldav.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
@@ -831,19 +831,19 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						switch cst.KeyValueName(_kv) {
 						case "url":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.URL = v
+								calDAVVal0.URL = v
 								consumed[keyPrefix+"haustoria.caldav.url"] = true
 							}
 						case "username":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.Username = v
+								calDAVVal0.Username = v
 								consumed[keyPrefix+"haustoria.caldav.username"] = true
 							}
 						}
 					}
-					data.Haustoria.CalDAV = calDAVVal
+					data.Haustoria.CalDAV = calDAVVal0
 				} else {
-					calDAVVal := &CalDAVConfig{}
+					calDAVVal0 := &CalDAVConfig{}
 					_found := false
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -852,20 +852,20 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						switch cst.KeyValueName(_kv) {
 						case "url":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.URL = v
+								calDAVVal0.URL = v
 								_found = true
 								consumed["url"] = true
 							}
 						case "username":
 							if v, ok := cst.ExtractString(_kv); ok {
-								calDAVVal.Username = v
+								calDAVVal0.Username = v
 								_found = true
 								consumed["username"] = true
 							}
 						}
 					}
 					if _found {
-						data.Haustoria.CalDAV = calDAVVal
+						data.Haustoria.CalDAV = calDAVVal0
 					}
 				}
 			}
@@ -879,15 +879,15 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 					if !strings.HasPrefix(_hdr, keyPrefix+"haustoria.calendars.") {
 						continue
 					}
-					_mk := _hdr[len(keyPrefix)+len("haustoria.calendars."):]
-					if strings.Contains(_mk, ".") {
+					_mk1 := _hdr[len(keyPrefix)+len("haustoria.calendars."):]
+					if strings.Contains(_mk1, ".") {
 						continue
 					}
 					if _mr == nil {
 						consumed[keyPrefix+"haustoria.calendars"] = true
 						_mr = make(map[string]CalendarConfig)
 					}
-					consumed[keyPrefix+"haustoria.calendars"+"."+_mk] = true
+					consumed[keyPrefix+"haustoria.calendars"+"."+_mk1] = true
 					var entry CalendarConfig
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -897,21 +897,21 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						case "url":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.URL = v
-								consumed[keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"url"] = true
+								consumed[keyPrefix+"haustoria.calendars."+_mk1+".url"] = true
 							}
 						case "type":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.Type = v
-								consumed[keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"type"] = true
+								consumed[keyPrefix+"haustoria.calendars."+_mk1+".type"] = true
 							}
 						case "tags":
 							if v, ok := cst.ExtractStringSlice(_kv); ok {
 								entry.Tags = v
-								consumed[keyPrefix+keyPrefix+"haustoria.calendars."+_mk+"."+"tags"] = true
+								consumed[keyPrefix+"haustoria.calendars."+_mk1+".tags"] = true
 							}
 						}
 					}
-					_mr[_mk] = entry
+					_mr[_mk1] = entry
 				}
 				if _mr != nil {
 					data.Haustoria.Calendars = _mr
@@ -927,7 +927,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 				}
 				if _ftHaustoriaOrgmode != nil {
 					consumed[keyPrefix+"haustoria.orgmode"] = true
-					orgmodeVal := &OrgmodeConfig{}
+					orgmodeVal2 := &OrgmodeConfig{}
 					for _, _kv := range _ftHaustoriaOrgmode.Children {
 						if _kv.Kind != cst.NodeKeyValue {
 							continue
@@ -935,7 +935,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						switch cst.KeyValueName(_kv) {
 						case "transport":
 							if v, ok := cst.ExtractString(_kv); ok {
-								orgmodeVal.Transport = v
+								orgmodeVal2.Transport = v
 								consumed[keyPrefix+"haustoria.orgmode.transport"] = true
 							}
 						}
@@ -950,7 +950,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						}
 						if _ftHaustoriaOrgmodeWebdav != nil {
 							consumed[keyPrefix+"haustoria.orgmode.webdav"] = true
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal3 := &OrgmodeWebDAV{}
 							for _, _kv := range _ftHaustoriaOrgmodeWebdav.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -958,19 +958,19 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal3.URL = v
 										consumed[keyPrefix+"haustoria.orgmode.webdav.url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal3.Username = v
 										consumed[keyPrefix+"haustoria.orgmode.webdav.username"] = true
 									}
 								}
 							}
-							orgmodeVal.WebDAV = webDAVVal
+							orgmodeVal2.WebDAV = webDAVVal3
 						} else {
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal3 := &OrgmodeWebDAV{}
 							_found := false
 							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -979,20 +979,20 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal3.URL = v
 										_found = true
 										consumed["url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal3.Username = v
 										_found = true
 										consumed["username"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.WebDAV = webDAVVal
+								orgmodeVal2.WebDAV = webDAVVal3
 							}
 						}
 					}
@@ -1006,7 +1006,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						}
 						if _ftHaustoriaOrgmodeSftp != nil {
 							consumed[keyPrefix+"haustoria.orgmode.sftp"] = true
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal4 := &OrgmodeSFTP{}
 							for _, _kv := range _ftHaustoriaOrgmodeSftp.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -1014,34 +1014,34 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal4.Host = v
 										consumed[keyPrefix+"haustoria.orgmode.sftp.host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal4.Port = v
 										consumed[keyPrefix+"haustoria.orgmode.sftp.port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal4.User = v
 										consumed[keyPrefix+"haustoria.orgmode.sftp.user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal4.PrivateKeyPath = v
 										consumed[keyPrefix+"haustoria.orgmode.sftp.private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal4.KnownHostsFile = v
 										consumed[keyPrefix+"haustoria.orgmode.sftp.known-hosts-file"] = true
 									}
 								}
 							}
-							orgmodeVal.SFTP = sFTPVal
+							orgmodeVal2.SFTP = sFTPVal4
 						} else {
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal4 := &OrgmodeSFTP{}
 							_found := false
 							for _, _kv := range _ftHaustoriaOrgmode.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -1050,44 +1050,44 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal4.Host = v
 										_found = true
 										consumed["host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal4.Port = v
 										_found = true
 										consumed["port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal4.User = v
 										_found = true
 										consumed["user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal4.PrivateKeyPath = v
 										_found = true
 										consumed["private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal4.KnownHostsFile = v
 										_found = true
 										consumed["known-hosts-file"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.SFTP = sFTPVal
+								orgmodeVal2.SFTP = sFTPVal4
 							}
 						}
 					}
-					data.Haustoria.Orgmode = orgmodeVal
+					data.Haustoria.Orgmode = orgmodeVal2
 				} else {
-					orgmodeVal := &OrgmodeConfig{}
+					orgmodeVal2 := &OrgmodeConfig{}
 					_found := false
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -1096,7 +1096,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						switch cst.KeyValueName(_kv) {
 						case "transport":
 							if v, ok := cst.ExtractString(_kv); ok {
-								orgmodeVal.Transport = v
+								orgmodeVal2.Transport = v
 								_found = true
 								consumed["transport"] = true
 							}
@@ -1112,7 +1112,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						}
 						if _ftWebdav != nil {
 							consumed["webdav"] = true
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal5 := &OrgmodeWebDAV{}
 							for _, _kv := range _ftWebdav.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -1120,19 +1120,19 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal5.URL = v
 										consumed["webdav.url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal5.Username = v
 										consumed["webdav.username"] = true
 									}
 								}
 							}
-							orgmodeVal.WebDAV = webDAVVal
+							orgmodeVal2.WebDAV = webDAVVal5
 						} else {
-							webDAVVal := &OrgmodeWebDAV{}
+							webDAVVal5 := &OrgmodeWebDAV{}
 							_found := false
 							for _, _kv := range _ch.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -1141,20 +1141,20 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "url":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.URL = v
+										webDAVVal5.URL = v
 										_found = true
 										consumed["url"] = true
 									}
 								case "username":
 									if v, ok := cst.ExtractString(_kv); ok {
-										webDAVVal.Username = v
+										webDAVVal5.Username = v
 										_found = true
 										consumed["username"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.WebDAV = webDAVVal
+								orgmodeVal2.WebDAV = webDAVVal5
 							}
 						}
 					}
@@ -1168,7 +1168,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						}
 						if _ftSftp != nil {
 							consumed["sftp"] = true
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal6 := &OrgmodeSFTP{}
 							for _, _kv := range _ftSftp.Children {
 								if _kv.Kind != cst.NodeKeyValue {
 									continue
@@ -1176,34 +1176,34 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal6.Host = v
 										consumed["sftp.host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal6.Port = v
 										consumed["sftp.port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal6.User = v
 										consumed["sftp.user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal6.PrivateKeyPath = v
 										consumed["sftp.private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal6.KnownHostsFile = v
 										consumed["sftp.known-hosts-file"] = true
 									}
 								}
 							}
-							orgmodeVal.SFTP = sFTPVal
+							orgmodeVal2.SFTP = sFTPVal6
 						} else {
-							sFTPVal := &OrgmodeSFTP{}
+							sFTPVal6 := &OrgmodeSFTP{}
 							_found := false
 							for _, _kv := range _ch.Children {
 								if _kv.Kind != cst.NodeKeyValue {
@@ -1212,43 +1212,43 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 								switch cst.KeyValueName(_kv) {
 								case "host":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.Host = v
+										sFTPVal6.Host = v
 										_found = true
 										consumed["host"] = true
 									}
 								case "port":
 									if v, ok := cst.ExtractInt(_kv); ok {
-										sFTPVal.Port = v
+										sFTPVal6.Port = v
 										_found = true
 										consumed["port"] = true
 									}
 								case "user":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.User = v
+										sFTPVal6.User = v
 										_found = true
 										consumed["user"] = true
 									}
 								case "private-key-path":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.PrivateKeyPath = v
+										sFTPVal6.PrivateKeyPath = v
 										_found = true
 										consumed["private-key-path"] = true
 									}
 								case "known-hosts-file":
 									if v, ok := cst.ExtractString(_kv); ok {
-										sFTPVal.KnownHostsFile = v
+										sFTPVal6.KnownHostsFile = v
 										_found = true
 										consumed["known-hosts-file"] = true
 									}
 								}
 							}
 							if _found {
-								orgmodeVal.SFTP = sFTPVal
+								orgmodeVal2.SFTP = sFTPVal6
 							}
 						}
 					}
 					if _found {
-						data.Haustoria.Orgmode = orgmodeVal
+						data.Haustoria.Orgmode = orgmodeVal2
 					}
 				}
 			}
@@ -1262,15 +1262,15 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 					if !strings.HasPrefix(_hdr, keyPrefix+"haustoria.folders.") {
 						continue
 					}
-					_mk := _hdr[len(keyPrefix)+len("haustoria.folders."):]
-					if strings.Contains(_mk, ".") {
+					_mk7 := _hdr[len(keyPrefix)+len("haustoria.folders."):]
+					if strings.Contains(_mk7, ".") {
 						continue
 					}
 					if _mr == nil {
 						consumed[keyPrefix+"haustoria.folders"] = true
 						_mr = make(map[string]FolderConfig)
 					}
-					consumed[keyPrefix+"haustoria.folders"+"."+_mk] = true
+					consumed[keyPrefix+"haustoria.folders"+"."+_mk7] = true
 					var entry FolderConfig
 					for _, _kv := range _ch.Children {
 						if _kv.Kind != cst.NodeKeyValue {
@@ -1280,21 +1280,21 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 						case "path":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.Path = v
-								consumed[keyPrefix+keyPrefix+"haustoria.folders."+_mk+"."+"path"] = true
+								consumed[keyPrefix+"haustoria.folders."+_mk7+".path"] = true
 							}
 						case "type":
 							if v, ok := cst.ExtractString(_kv); ok {
 								entry.Type = v
-								consumed[keyPrefix+keyPrefix+"haustoria.folders."+_mk+"."+"type"] = true
+								consumed[keyPrefix+"haustoria.folders."+_mk7+".type"] = true
 							}
 						case "tags":
 							if v, ok := cst.ExtractStringSlice(_kv); ok {
 								entry.Tags = v
-								consumed[keyPrefix+keyPrefix+"haustoria.folders."+_mk+"."+"tags"] = true
+								consumed[keyPrefix+"haustoria.folders."+_mk7+".tags"] = true
 							}
 						}
 					}
-					_mr[_mk] = entry
+					_mr[_mk7] = entry
 				}
 				if _mr != nil {
 					data.Haustoria.Folders = _mr
