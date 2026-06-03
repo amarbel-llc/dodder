@@ -1,5 +1,8 @@
-#! /usr/bin/env bash -e
+#! /usr/bin/env -S bash -e
 
+# SC1003: the doubled backslash is a literal regex backslash for ag, not a
+# mis-escaped quote.
+# shellcheck disable=SC1003
 echo "1..$(ag '^do_lint \\' "$0" | wc -l | tr -d ' ')"
 
 do_lint() (

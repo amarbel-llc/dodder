@@ -8,6 +8,4 @@ if output="$(bats --tap "$da_test")"; then
   exit 0
 fi
 
-issues=()
-
 echo "$output" | grep -Pzo "(?s)(?<=\n)not ok.*?(?=\nok)"

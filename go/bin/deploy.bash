@@ -8,7 +8,11 @@ fi
 append_trap() {
   local sig="${2:-EXIT}"
   local cmd="$1"
-  local existing=$(trap -p "$sig" | sed "s/.*'\(.*\)'.*/\1/")
+  local existing
+  existing=$(trap -p "$sig" | sed "s/.*'\(.*\)'.*/\1/")
+  # SC2064: expand $existing/$cmd now, at trap-set time, to chain onto any
+  # already-registered handler — intentional.
+  # shellcheck disable=SC2064
   trap "${existing:+$existing; }$cmd" "$sig"
 }
 

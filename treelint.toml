@@ -52,3 +52,12 @@ includes = ["*.nix"]
 command = "shfmt"
 options = ["-w", "-i", "2", "-s", "-ci"]
 includes = ["*.sh", "*.bash"]
+
+# Linter: shellcheck runs read-only in `treelint check` (no repair-command, so
+# it is a no-op in repair mode). Catches shell bugs the formatters miss.
+[linter.shellcheck]
+command = "shellcheck"
+includes = ["*.sh", "*.bash"]
+# go/vimdiff.bash is the vendored upstream git-vimdiff mergetool test harness;
+# it carries ~40 shellcheck findings we don't own. shfmt still formats it.
+excludes = ["go/vimdiff.bash"]

@@ -239,6 +239,7 @@ let
           pkgs.gotools
           pkgs.nixfmt
           pkgs.shfmt
+          pkgs.shellcheck
         ];
         text = ''exec treelint "$@"'';
       };

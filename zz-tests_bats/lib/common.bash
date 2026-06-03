@@ -1,7 +1,11 @@
 #! /bin/bash -e
 
+# SC2154: bats injects $output/$status/$lines into the test scope at runtime;
+# they are not assigned in this helper.
+# shellcheck disable=SC2154
+
 if [[ -z $BATS_TEST_TMPDIR ]]; then
-  echo 'common.bash loaded before $BATS_TEST_TMPDIR set. aborting.' >&2
+  echo 'common.bash loaded before BATS_TEST_TMPDIR is set. aborting.' >&2
 
   cat >&2 <<-'EOM'
     only load this file from `.bats` files like so:
