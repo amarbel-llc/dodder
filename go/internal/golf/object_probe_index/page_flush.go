@@ -5,9 +5,9 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func (page *page) makeSeqReadFromFile(

@@ -37,13 +37,15 @@ func (transacted *Transacted) SetMother(mother *Transacted) (err error) {
 
 func (transacted *Transacted) AssertObjectDigestAndObjectSigNotNull() (err error) {
 	if err = markl.AssertIdIsNotNull(
-		transacted.GetMetadata().GetObjectDigest()); err != nil {
+		transacted.GetMetadata().GetObjectDigest(),
+	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
 	if err = markl.AssertIdIsNotNull(
-		transacted.GetMetadata().GetObjectSig()); err != nil {
+		transacted.GetMetadata().GetObjectSig(),
+	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

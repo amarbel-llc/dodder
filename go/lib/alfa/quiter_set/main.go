@@ -2,8 +2,8 @@ package quiter_set
 
 import (
 	"code.linenisgreat.com/dodder/go/lib/0/quiter_seq"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func Any[ELEMENT any](set interfaces.Set[ELEMENT]) (element ELEMENT) {

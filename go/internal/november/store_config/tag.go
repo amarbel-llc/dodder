@@ -59,7 +59,8 @@ func (tag *tag) Equals(b *tag) bool {
 
 	if !quiter_set.Equals(
 		tag.Transacted.GetMetadata().GetIndex().GetImplicitTags(),
-		b.Transacted.GetMetadata().GetIndex().GetImplicitTags()) {
+		b.Transacted.GetMetadata().GetIndex().GetImplicitTags(),
+	) {
 		return false
 	}
 

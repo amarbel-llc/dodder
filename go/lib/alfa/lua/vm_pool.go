@@ -3,9 +3,9 @@ package lua
 import (
 	"io"
 
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	lua "github.com/yuin/gopher-lua"
 )
 

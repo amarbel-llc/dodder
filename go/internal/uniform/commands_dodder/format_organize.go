@@ -11,9 +11,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func init() {
@@ -21,7 +21,8 @@ func init() {
 		"format-organize",
 		&FormatOrganize{
 			Flags: orgie.MakeFlags(),
-		})
+		},
+	)
 }
 
 func (cmd FormatOrganize) GetDescription() command.Description {

@@ -16,10 +16,10 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_ptr"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 type inlineTypChecker struct {
@@ -121,7 +121,8 @@ func testEqualitySelf(t *ui.TestContext) {
 	text := objects.MakeBuilder().
 		WithDescription("the title").
 		WithType("text").
-		WithTags(makeTagSet(t,
+		WithTags(makeTagSet(
+			t,
 			"tag1",
 			"tag2",
 			"tag3",
@@ -136,7 +137,8 @@ func TestEqualityNotSelf(t1 *testing.T) {
 }
 
 func testEqualityNotSelf(t *ui.TestContext) {
-	tags := makeTagSet(t,
+	tags := makeTagSet(
+		t,
 		"tag1",
 		"tag2",
 		"tag3",
@@ -198,7 +200,8 @@ func testReadWithoutBlob(t *ui.TestContext) {
 	expected := objects.MakeBuilder().
 		WithDescription("the title").
 		WithType("md").
-		WithTags(makeTagSet(t,
+		WithTags(makeTagSet(
+			t,
 			"tag1",
 			"tag2",
 			"tag3",
@@ -240,7 +243,8 @@ func testReadWithoutBlobWithMultilineDescription(t *ui.TestContext) {
 	expected := objects.MakeBuilder().
 		WithDescription("the title continues").
 		WithType("md").
-		WithTags(makeTagSet(t,
+		WithTags(makeTagSet(
+			t,
 			"tag1",
 			"tag2",
 			"tag3",
@@ -287,7 +291,8 @@ the body`,
 		WithDescription("the title").
 		WithType("md").
 		WithBlobDigest(expectedBlobDigest).
-		WithTags(makeTagSet(t,
+		WithTags(makeTagSet(
+			t,
 			"tag1",
 			"tag2",
 			"tag3",
@@ -372,7 +377,8 @@ func testWriteWithoutBlob(t *ui.TestContext) {
 	object := objects.MakeBuilder().
 		WithDescription("the title").
 		WithType("md").
-		WithTags(makeTagSet(t,
+		WithTags(makeTagSet(
+			t,
 			"tag1",
 			"tag2",
 			"tag3",
@@ -422,7 +428,8 @@ func testWriteWithInlineBlob(t *ui.TestContext) {
 	object := objects.MakeBuilder().
 		WithDescription("the title").
 		WithType("md").
-		WithTags(makeTagSet(t,
+		WithTags(makeTagSet(
+			t,
 			"tag1",
 			"tag2",
 			"tag3",

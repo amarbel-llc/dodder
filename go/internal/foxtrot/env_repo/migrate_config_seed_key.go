@@ -18,14 +18,14 @@ var reConfigSeedPrivateKey = regexp.MustCompile(
 // ConfigSeedMigrationResult records the outcome of a single config-seed
 // private-key re-encode pass.
 type ConfigSeedMigrationResult struct {
-	Path          string
-	Purpose       string
-	FormatId      string
-	DataBytes     int
-	LegacyWire    string
-	CanonicalWire string
-	BackupPath    string
-	Migrated      bool
+	Path             string
+	Purpose          string
+	FormatId         string
+	DataBytes        int
+	LegacyWire       string
+	CanonicalWire    string
+	BackupPath       string
+	Migrated         bool
 	AlreadyCanonical bool
 }
 

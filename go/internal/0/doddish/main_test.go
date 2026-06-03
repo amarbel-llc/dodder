@@ -33,7 +33,8 @@ type testSeq []testToken
 
 func makeTestSeq(tokens ...any) (ts testSeq) {
 	for i := 0; i < len(tokens); i += 2 {
-		ts = append(ts,
+		ts = append(
+			ts,
 			makeTestToken(
 				tokens[i].(TokenType),
 				tokens[i+1].(string),

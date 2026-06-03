@@ -14,7 +14,8 @@ import (
 func init() {
 	utility.AddCmd(
 		"remote-add",
-		&RemoteAdd{})
+		&RemoteAdd{},
+	)
 }
 
 func (cmd RemoteAdd) GetDescription() command.Description {

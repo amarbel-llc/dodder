@@ -14,8 +14,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func init() {
@@ -23,7 +23,8 @@ func init() {
 		"format-object",
 		&FormatObject{
 			CheckoutMode: checkout_mode.Make(checkout_mode.Blob),
-		})
+		},
+	)
 }
 
 func (cmd FormatObject) GetDescription() command.Description {

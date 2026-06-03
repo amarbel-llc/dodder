@@ -10,8 +10,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func (store *Store) Commit(
@@ -268,7 +268,8 @@ func (commitFacilitator commitFacilitator) commit(
 			store_version.V11,
 		) {
 			if err = markl.AssertIdIsNotNull(
-				daughter.GetMetadata().GetObjectSig()); err != nil {
+				daughter.GetMetadata().GetObjectSig(),
+			); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}

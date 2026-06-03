@@ -8,8 +8,8 @@ import (
 	hinweis_index_v0 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v0"
 	hinweis_index_v1 "code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index/v1"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Index interface {

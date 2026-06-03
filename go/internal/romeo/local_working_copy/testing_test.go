@@ -3,8 +3,8 @@ package local_working_copy
 import (
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestMakeTestingProducesValidKeypair(t1 *testing.T) {

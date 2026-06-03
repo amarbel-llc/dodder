@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	charlie_zil "code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	charlie_zil "code.linenisgreat.com/dodder/go/internal/charlie/zettel_id_log"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"

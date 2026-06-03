@@ -311,7 +311,8 @@ func (finalizer finalizer) FinalizeAndSign(
 	}
 
 	if err = markl.AssertIdIsNotNull(
-		transacted.GetMetadataMutable().GetObjectDigest()); err != nil {
+		transacted.GetMetadataMutable().GetObjectDigest(),
+	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

@@ -19,9 +19,9 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 var ErrEmptyInventoryList = newPkgError("empty inventory list")
@@ -155,7 +155,8 @@ func (store *Store) MakeWorkingList() (workingList *sku.WorkingList, err error) 
 			}
 
 			return err
-		})
+		},
+	)
 
 	return workingList, err
 }

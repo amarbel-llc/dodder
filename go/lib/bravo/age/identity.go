@@ -8,9 +8,9 @@ import (
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"filippo.io/age"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // necessary because the age.Identity interface does not include Stringer, but

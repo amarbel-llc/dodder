@@ -1,9 +1,9 @@
 package quiter
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func AppendSeq[ELEMENT any, APPENDER interface{ Append(...ELEMENT) }](

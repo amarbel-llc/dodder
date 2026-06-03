@@ -19,7 +19,8 @@ func init() {
 			CheckoutOptions: checkout_options.Options{
 				CheckoutMode: checkout_mode.Make(checkout_mode.Default),
 			},
-		})
+		},
+	)
 }
 
 type Checkout struct {

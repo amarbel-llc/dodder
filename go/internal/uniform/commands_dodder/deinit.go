@@ -12,8 +12,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func init() {
@@ -113,7 +113,8 @@ func (cmd Deinit) Run(req command.Request) {
 			fmt.Sprintf(
 				`The following directories and files would be deleted:
 
-%s`, strings.Join(filesAndDirectories, "\n")),
+%s`, strings.Join(filesAndDirectories, "\n"),
+			),
 		) {
 		ui.Err().Print("permission denied and -force not specified, aborting")
 		return

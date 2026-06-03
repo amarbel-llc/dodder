@@ -18,7 +18,7 @@ func (seq Seq) At(idx int) Token {
 }
 
 func (seq *Seq) GetSlice() collections_slice.Slice[Token] {
-	return (collections_slice.Slice[Token])(*seq)
+	return collections_slice.Slice[Token](*seq)
 }
 
 func (seq *Seq) GetSliceMutable() *collections_slice.Slice[Token] {
@@ -76,7 +76,7 @@ func (seq Seq) GetTokenTypes() TokenTypes {
 }
 
 func (seq Seq) GetBinaryMarshaler() SeqBinaryCoding {
-	return (SeqBinaryCoding)(seq)
+	return SeqBinaryCoding(seq)
 }
 
 func (seq *Seq) GetBinaryUnmarshaler() *SeqBinaryCoding {

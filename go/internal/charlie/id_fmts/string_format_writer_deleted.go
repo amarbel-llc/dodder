@@ -3,8 +3,8 @@ package id_fmts
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type fdDeletedStringWriterFormat struct {

@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/0/flag_policy"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func MakeWithPolicy(

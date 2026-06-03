@@ -3,9 +3,9 @@ package sku_lua
 import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 type LuaVMV2 struct {

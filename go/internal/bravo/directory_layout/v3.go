@@ -3,8 +3,8 @@ package directory_layout
 import (
 	"fmt"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
 )
 
@@ -91,7 +91,8 @@ func (layout v3) DirDataIndex(p ...string) string {
 
 func (layout v3) DirCacheRepo(p ...string) string {
 	return layout.xdg.GetDirCache().MakePath(
-		stringSliceJoin("repo", p)...).String()
+		stringSliceJoin("repo", p)...,
+	).String()
 }
 
 func (layout v3) DirLostAndFound() string {

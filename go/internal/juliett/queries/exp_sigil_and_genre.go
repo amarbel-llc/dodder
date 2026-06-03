@@ -174,7 +174,8 @@ func (expSigilAndGenre *expSigilAndGenre) Merge(
 
 	expSigilAndGenre.expTagsOrTypes.Children = append(
 		expSigilAndGenre.expTagsOrTypes.Children,
-		exp.expTagsOrTypes.Children...)
+		exp.expTagsOrTypes.Children...,
+	)
 
 	return err
 }

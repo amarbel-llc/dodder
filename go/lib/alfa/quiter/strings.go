@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // Deprecated: use collections_slice.SortedValuesBy

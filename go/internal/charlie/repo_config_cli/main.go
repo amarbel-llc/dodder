@@ -90,7 +90,7 @@ func (config *Config) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) 
 
 func Default() (config *Config) {
 	config = &Config{
-		Config: *(config_cli.Default()),
+		Config: *config_cli.Default(),
 	}
 
 	if envRepoId := os.Getenv("DODDER_REPO_ID"); envRepoId != "" {

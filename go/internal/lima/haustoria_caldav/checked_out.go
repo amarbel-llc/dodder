@@ -54,7 +54,8 @@ func (s *Store) ReadCheckedOutFromTransacted(
 
 	meta, err := s.client.GetTask(href)
 	if err != nil {
-		return nil, errors.Wrapf(err,
+		return nil, errors.Wrapf(
+			err,
 			"fetch CalDAV task %s for organize merge", eoid.String(),
 		)
 	}
@@ -99,7 +100,8 @@ func (s *Store) ReadCheckedOutFromTransacted(
 
 	blob := buildTaskTomlBlob(&meta.Task)
 	if err = s.writeBlob(external, blob); err != nil {
-		return nil, errors.Wrapf(err,
+		return nil, errors.Wrapf(
+			err,
 			"rewrite blob for %s during merge fetch", eoid.String(),
 		)
 	}
@@ -163,7 +165,8 @@ func (s *Store) UpdateCheckoutFromCheckedOut(
 	var blobBytes []byte
 	if len(blobDigest.GetBytes()) > 0 {
 		if blobBytes, err = s.readBlob(external.GetSku()); err != nil {
-			return errors.Wrapf(err,
+			return errors.Wrapf(
+				err,
 				"read blob for %s during organize push", eoid.String(),
 			)
 		}
@@ -190,7 +193,8 @@ func (s *Store) UpdateCheckoutFromCheckedOut(
 	href := cal.URL + task.UID + ".ics"
 
 	if err = s.client.PutTask(href, ical, ""); err != nil {
-		return errors.Wrapf(err,
+		return errors.Wrapf(
+			err,
 			"PUT VTODO %s to CalDAV during organize push", task.UID,
 		)
 	}

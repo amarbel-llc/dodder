@@ -2,8 +2,8 @@ package string_format_writer
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func colorForType(t fields.Type) string {

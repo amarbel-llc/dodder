@@ -10,7 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/webdav"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -20,12 +19,13 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_orgmode"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
 )
 
@@ -349,7 +349,8 @@ func (env *env) AssertNotTemporaryOrOfferToCreate(context errors.Context) {
 			ErrNotInWorkspace{
 				env:           env,
 				offerToCreate: true,
-			})
+			},
+		)
 	}
 }
 

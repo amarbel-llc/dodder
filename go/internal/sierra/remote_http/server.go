@@ -22,7 +22,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
@@ -33,12 +32,13 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
 	"github.com/gorilla/mux"
 )
 
@@ -655,7 +655,8 @@ func (server *Server) handleBlobsPost(request Request) (response Response) {
 
 		response.StatusCode = http.StatusCreated
 		response.Body = ohio.NopCloser(
-			strings.NewReader(copyResult.BlobId.String()))
+			strings.NewReader(copyResult.BlobId.String()),
+		)
 
 		return response
 	}
@@ -692,7 +693,8 @@ func (server *Server) handleBlobsPost(request Request) (response Response) {
 
 	response.StatusCode = http.StatusCreated
 	response.Body = ohio.NopCloser(
-		strings.NewReader(copyResult.BlobId.String()))
+		strings.NewReader(copyResult.BlobId.String()),
+	)
 
 	return response
 }

@@ -120,7 +120,8 @@ func (o *OsFilesystemOps) Merge(
 		currentPath, basePath, otherPath,
 	)
 
-	cmd.Env = append(os.Environ(),
+	cmd.Env = append(
+		os.Environ(),
 		"GIT_CONFIG_GLOBAL=/dev/null",
 		"GIT_CONFIG_NOSYSTEM=1",
 	)

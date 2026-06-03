@@ -7,8 +7,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func MakeSkuMapWithOrder(c int) (out SkuMapWithOrder) {
@@ -154,7 +154,8 @@ func ChangesFrom(
 			Before:   a,
 			After:    b,
 			Original: original,
-		}); err != nil {
+		},
+	); err != nil {
 		err = errors.Wrap(err)
 		return c, err
 	}

@@ -81,7 +81,8 @@ func (op NewHaustoria) Run(
 
 	for object := range results.All() {
 		if _, decompileErr := op.decompileObject(object); decompileErr != nil {
-			return results, errors.Wrapf(decompileErr,
+			return results, errors.Wrapf(
+				decompileErr,
 				"decompile %s", object.GetObjectId(),
 			)
 		}

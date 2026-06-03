@@ -3,8 +3,8 @@ package repo_blobs
 import (
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg_defaults"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg_defaults"
 )
 
 //go:generate tommy generate

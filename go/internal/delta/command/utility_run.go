@@ -5,8 +5,8 @@ import (
 	"syscall"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
 )
 
 func extendNameIfNecessary(name string) string {

@@ -20,7 +20,8 @@ func init() {
 					ExcludeDefaultType: true,
 				},
 			},
-		})
+		},
+	)
 }
 
 type Clone struct {

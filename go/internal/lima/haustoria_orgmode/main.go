@@ -17,8 +17,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/kilo/store_workspace"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // FolderMapping associates a remote folder with a dodder type and optional
@@ -261,7 +261,8 @@ func (store *Store) CheckoutOne(
 	var blob []byte
 	if !object.GetBlobDigest().IsNull() {
 		if blob, err = store.readBlob(object); err != nil {
-			return nil, errors.Wrapf(err,
+			return nil, errors.Wrapf(
+				err,
 				"read blob for %s", object.GetObjectId(),
 			)
 		}
@@ -275,7 +276,8 @@ func (store *Store) CheckoutOne(
 		TypeId:      typeId,
 	})
 	if err != nil {
-		return nil, errors.Wrapf(err,
+		return nil, errors.Wrapf(
+			err,
 			"decompile %s to orgmode", object.GetObjectId(),
 		)
 	}

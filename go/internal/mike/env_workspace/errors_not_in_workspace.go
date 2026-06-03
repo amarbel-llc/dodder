@@ -2,8 +2,8 @@ package env_workspace
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type ErrNotInWorkspace struct {
