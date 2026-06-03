@@ -503,35 +503,6 @@ test-bats-failed_files:
     grep -o '[^[:space:]]*\.bats' | \
     sort -u
 
-# test-bats-cover (legacy): broken on two fronts:
-#   1. test-generate_fixtures runs without GOCOVERDIR, so the cover
-#      binary emits `warning: GOCOVERDIR not set` into stdout, breaking
-#      the fixture-generation bats assertions.
-#   2. The downstream `bats --bin-dir $BATS_BIN_DIR` invocation uses
-#      a flag neither vanilla bats nor batman accepts anymore.
-# Use test-bats-cover-shim below. Retire when amarbel-llc/bats#15
-# (batsLane `extraPostCommands` hook) lets the cover lane run inside
-# the nix sandbox.
-# test-bats-cover:
-#   #!/usr/bin/env bash
-#   set -euo pipefail
-#   export DODDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
-#   export MADDER_CEILING_DIRECTORIES="{{absolute_path("..")}}"
-#   bin=$(nix build --no-link --print-out-paths '..#dodder-debug-cover')
-#   export PATH="$bin/bin:$PATH"
-#   just ../zz-tests_bats/test-generate_fixtures
-#   cover_data="/tmp/dodder-cover-$$"
-#   rm -rf "$cover_data"
-#   mkdir -p "$cover_data"
-#   GOCOVERDIR="$cover_data" \
-#     BATS_BIN_DIR="$bin/bin" \
-#     just ../zz-tests_bats/test
-#   mkdir -p "{{dir_build}}/cover-data"
-#   go tool covdata textfmt -i="$cover_data" -o="{{dir_build}}/cover-data/bats-coverage.out"
-#   rm -rf "$cover_data"
-#   echo "==> Coverage written to {{dir_build}}/cover-data/bats-coverage.out"
-#   echo "    View with: go tool cover -func={{dir_build}}/cover-data/bats-coverage.out"
-
 # Coverage-instrumented bats run via env vars (DODDER_BIN / MADDER_BIN
 # / BATS_LIB_PATH), bypassing the broken `bats --bin-dir` path. Runs
 # bats outside the nix sandbox with `--no-sandbox` so the
