@@ -4,6 +4,7 @@
   tap ? null,
   tommy,
   madder ? null,
+  treelint ? null,
   system,
   # Filtered Go source tree (test-superset shape) produced by
   # mkGoPkgs in go/gomod.nix and threaded through flake.nix. Every
@@ -47,7 +48,10 @@ let
   # fixtures-* outputs.
   batsAttrs =
     if batsSrc == null || bats == null || madder == null then
-      { batsLaneOutputs = { }; fixtures-current = null; }
+      {
+        batsLaneOutputs = { };
+        fixtures-current = null;
+      }
     else
       import ./bats.nix {
         inherit pkgs batsSrc;
@@ -83,7 +87,13 @@ let
   # Unconditional — its only flake-input dependency is nixpkgs, which is
   # always available.
   goTestAttrs = import ./go-tests.nix {
-    inherit pkgs version commit goPkgsTest goFlakeInputs;
+    inherit
+      pkgs
+      version
+      commit
+      goPkgsTest
+      goFlakeInputs
+      ;
   };
 
   dodder-go-test = goTestAttrs.dodder-go-test;
@@ -207,6 +217,31 @@ let
       $pluginRoot/clown.json \
       --replace-fail '@dodder@' '${dodder}/bin/dodder'
   '';
+
+  # treelint (treefmt successor) wrapped with the formatter binaries its
+  # ./treelint.toml drives on PATH, so `treelint`/`treelint check` resolve
+  # goimports (gotools) / gofumpt / nixfmt / shfmt without depending on the
+  # caller's shell. Mirrors amarbel-llc/purse-first's treelintFmt wrapper.
+  # The codemod-go-fmt (repair) and check-treelint (gate) justfile recipes
+  # resolve this via `nix build '..#treelint-fmt'`, and it is the flake's
+  # `nix fmt` formatter. gofumpt/gotools are the same igloo `pkgs` builds the
+  # dev-shell carries, so treelint's Go output matches the dev-loop formatter.
+  # null on the non-flake `import ./go/default.nix` path (treelint absent).
+  treelint-fmt =
+    if treelint == null then
+      null
+    else
+      pkgs.writeShellApplication {
+        name = "treelint-fmt";
+        runtimeInputs = [
+          treelint.packages.${system}.default
+          pkgs.gofumpt
+          pkgs.gotools
+          pkgs.nixfmt
+          pkgs.shfmt
+        ];
+        text = ''exec treelint "$@"'';
+      };
 in
 {
   packages = {
@@ -220,18 +255,23 @@ in
       dodder-go-test
       ;
     default = dodder;
-  } // batsLaneOutputs // (
-    if fixtures-current == null then { } else { inherit fixtures-current; }
-  ) // (
+  }
+  // batsLaneOutputs
+  // (if fixtures-current == null then { } else { inherit fixtures-current; })
+  // (
     # Re-surface the input-derived helper derivations as named packages
     # so paved-path agent recipes (test-bats-cover-shim, test-cover-*)
     # can resolve them via `nix build .#<name>` without reaching into
     # the flake inputs by hand. Gated on the same null checks as
     # batsLaneOutputs so non-flake imports stay working.
     if madder == null then { } else { madder-bin = madder.packages.${system}.default; }
-  ) // (
-    if bats == null then { } else { bats-libs = bats.packages.${system}.bats-libs; }
-  );
+  )
+  // (if bats == null then { } else { bats-libs = bats.packages.${system}.bats-libs; })
+  // (if treelint-fmt == null then { } else { inherit treelint-fmt; });
+
+  # `nix fmt` entry point: the wrapped treelint. Null on the non-flake
+  # import path (treelint absent); flake.nix always supplies treelint.
+  formatter = treelint-fmt;
 
   # Wired into the flake's `checks.<system>.*` so `nix flake check` runs
   # the sandboxed Go unit-test lane. Additional checks (e.g. the bats
@@ -274,6 +314,7 @@ in
       httpie
       just
       lsof
+      nixfmt
       pandoc
       radicale
       shellcheck
@@ -289,6 +330,9 @@ in
     ]
     ++ pkgs.lib.optionals (madder != null) [
       madder.packages.${system}.default
+    ]
+    ++ pkgs.lib.optionals (treelint != null) [
+      treelint.packages.${system}.default
     ];
 
     GOTOOLCHAIN = "local";

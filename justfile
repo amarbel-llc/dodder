@@ -12,7 +12,20 @@
 # fragile.
 bats_ceiling := justfile_directory()
 
-default: build test
+default: lint build test
+
+#   _     _       _
+#  | |   (_)_ __ | |_
+#  | |   | | '_ \| __|
+#  | |___| | | | | |_
+#  |_____|_|_| |_|\__|
+#
+
+# Read-only formatting gate (treelint check). Runs first in the default lane
+# so a formatting drift fails fast, before the expensive build/test. This is
+# what the spinclass pre-merge hook (bare `just`) enforces.
+lint:
+  just go/check-treelint
 
 #   ____        _ _     _
 #  | __ ) _   _(_) | __| |

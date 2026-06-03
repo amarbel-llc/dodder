@@ -44,6 +44,13 @@
       inputs.bats.follows = "bats";
       inputs.tap.follows = "tap";
     };
+
+    treelint = {
+      url = "github:amarbel-llc/treelint";
+      inputs.igloo.follows = "igloo";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+    };
   };
 
   outputs =
@@ -56,6 +63,7 @@
       tommy,
       madder,
       purse-first,
+      treelint,
       ...
     }:
     let
@@ -72,7 +80,14 @@
         pkgs = import igloo { inherit system; };
 
         gomod = import ./go/gomod.nix {
-          inherit pkgs system madder tap tommy purse-first;
+          inherit
+            pkgs
+            system
+            madder
+            tap
+            tommy
+            purse-first
+            ;
           # Scope the producer at go/ so downstream consumers reference
           # go-pkgs directly with no subPath. Dodder's repo root has
           # no Go-relevant assets, so a full-repo filter would only
@@ -89,6 +104,7 @@
             tap
             tommy
             madder
+            treelint
             system
             ;
           # Pivot self-consumption onto the published artifact: every
@@ -106,9 +122,12 @@
         };
       in
       {
-        packages = result.packages // { inherit go-pkgs go-pkgs-test; };
+        packages = result.packages // {
+          inherit go-pkgs go-pkgs-test;
+        };
         inherit (result) checks;
         devShells.default = result.devShells.default;
+        formatter = result.formatter;
       }
     ));
 }

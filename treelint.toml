@@ -1,0 +1,54 @@
+# treelint (treefmt successor) configuration. Canonical formatter driver for
+# the repo, replacing the old `just go/codemod-go-fmt` goimports+gofumpt pair.
+# Run via `treelint` (repair, applies fixes) or `treelint check` (read-only,
+# exits non-zero on drift). The justfile resolves the wrapped binary
+# (go/default.nix `treelint-fmt`, which bundles the formatters below on PATH)
+# via `nix build '..#treelint-fmt'`.
+
+# Generated / locked / prose / frozen test data — not formatted.
+excludes = [
+  "flake.lock",
+  "go.sum",
+  "gomod2nix.toml",
+  "LICENSE",
+  "*.md",
+  "result",
+  "result-*",
+  ".tmp/**",
+  ".direnv/**",
+  "go/build/**",
+  # Frozen fixtures + snapshotted bats suites. Reformatting these would break
+  # migration conformance (previous_versions/main.bats) and fixture hashes.
+  "zz-tests_bats/previous_versions/**",
+  # bats formatting deferred for now (large suite; would churn). Revisit as a
+  # followup once we decide on bats shfmt style.
+  "*.bats",
+  # treelint's own config has intentional layout; leave it be.
+  "treelint.toml",
+]
+
+# Go: goimports (priority 1) runs before gofumpt (priority 2) so gofumpt
+# re-canonicalizes the import-grouped output. -w writes in place (required for
+# treelint's sandbox check to observe drift). Matches the dev-shell's igloo
+# gofumpt/gotools builds so output is identical to the old codemod-go-fmt.
+[formatter.goimports]
+command = "goimports"
+options = ["-w"]
+includes = ["*.go"]
+priority = 1
+
+[formatter.gofumpt]
+command = "gofumpt"
+options = ["-w"]
+includes = ["*.go"]
+priority = 2
+
+[formatter.nixfmt]
+command = "nixfmt"
+includes = ["*.nix"]
+
+# Project shell style: 2-space indent, simplify, case-branch indent. -w writes.
+[formatter.shfmt]
+command = "shfmt"
+options = ["-w", "-i", "2", "-s", "-ci"]
+includes = ["*.sh", "*.bash"]

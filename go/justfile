@@ -47,9 +47,15 @@ codemod-go-fix_redundant_import_aliases:
 
 files_go := "internal/ lib/ cmd/"
 
+# Format the whole repo via treelint (treefmt successor): goimports + gofumpt
+# for Go, nixfmt for *.nix, shfmt for shell. Replaces the old direct
+# goimports/gofumpt pair. Resolves the wrapped treelint (which bundles those
+# formatters on PATH) from the flake so it works regardless of the dev-shell.
 codemod-go-fmt: codemod-go-fix_redundant_import_aliases
-  goimports -w {{files_go}}
-  gofumpt -l -w internal lib
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#treelint-fmt')
+  "$bin/bin/treelint-fmt"
 
 # Reposition packages across NATO tiers based on their import graph. Runs
 # the dagnabit binary against ./lib and ./internal so packages with no
@@ -334,7 +340,11 @@ update: update-go
 #  |____/ \__,_|_|_|\__,_|
 #
 
-build-go-generate:
+# The tommy/peg generators emit code that is not goimports/gofumpt-clean
+# (e.g. no blank line between top-level funcs), so treelint (via codemod-go-fmt)
+# runs afterward to canonicalize the generated output. Without this the
+# treelint check gate would fail after every build (which regenerates codegen).
+build-go-generate: && codemod-go-fmt
   nix develop .. -c go generate ./lib/...
   nix develop .. -c go generate ./lib/0/...
   nix develop .. -c go generate ./internal/...
@@ -423,7 +433,17 @@ check-go-defererr:
 check-go-versions:
   go run ./lib/alfa/analyzers/versions
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions test-go-unit
+# Read-only formatting/lint gate via treelint. Exits non-zero if any file would
+# be reformatted (drift). Resolves the wrapped treelint from the flake so the
+# formatter binaries are always on PATH. Wired into the pre-merge lane via the
+# root `lint` recipe.
+check-treelint:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#treelint-fmt')
+  "$bin/bin/treelint-fmt" check
+
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-treelint test-go-unit
 
 #   _____         _
 #  |_   _|__  ___| |_
