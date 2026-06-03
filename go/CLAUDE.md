@@ -263,7 +263,7 @@ type TomlV2Common struct {
 ### Pool Repool Lifecycle Rules
 
 `GetWithRepool()` returns `(element, FuncRepool)`. The repool function must be
-called exactly once when the caller is done with the element. Three tools
+called exactly once when the caller is done with the element. Two tools
 enforce this:
 
 1.  **Static analyzer** (`just check-go-repool`): CFG-based `go vet` checker in
@@ -274,10 +274,6 @@ enforce this:
     every repool function with an `atomic.Bool` guard that panics on
     double-repool. Tracks outstanding borrows via `pool.OutstandingBorrows()`.
     Zero overhead in release builds (`repool_release.go`).
-
-3.  **Lint check** (`bin/lint.bash`): Grep-based check for discarded repool
-    functions missing `//repool:owned` annotations (currently TODO-P2, pending
-    annotation of existing intentional discards).
 
 **Common repool pitfall --- hash lifetime in blob readers/writers:**
 
