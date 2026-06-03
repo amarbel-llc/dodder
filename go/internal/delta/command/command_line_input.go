@@ -50,7 +50,9 @@ func (commandLine CommandLineInput) LastCompleteArg() (arg string, ok bool) {
 
 	if argc > 0 {
 		ok = true
-		arg = commandLine.FlagsOrArgs.Last()
+		// The "complete" arg is the one before the in-progress token, i.e.
+		// FlagsOrArgs[argc-1] after the decrement — not .Last() (#182).
+		arg = commandLine.FlagsOrArgs[argc-1]
 	}
 
 	return arg, ok

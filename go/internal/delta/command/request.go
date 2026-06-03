@@ -136,10 +136,12 @@ func (req *Request) AssertNoMoreArgs() {
 }
 
 func (req Request) LastArg() (arg string, ok bool) {
-	if req.RemainingArgCount() > 0 {
-		ok = true
-		arg = req.PopArgs()[req.RemainingArgCount()-1]
+	if req.RemainingArgCount() == 0 {
+		return arg, ok
 	}
 
-	return arg, ok
+	// PopArgs() advances Argi to the end, so RemainingArgCount() would be 0
+	// afterward — index off the returned slice, not a re-read count (#183).
+	rest := req.PopArgs()
+	return rest[len(rest)-1], true
 }
