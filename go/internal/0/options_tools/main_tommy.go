@@ -47,9 +47,11 @@ func DecodeOptions(input []byte) (*OptionsDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *OptionsDocument) Data() *Options {
 	return &d.data
 }
+
 func (d *OptionsDocument) Encode() ([]byte, error) {
 	{
 		if err := cst.SetAny(d.cstDoc.Root(), "merge", d.data.Merge); err != nil {
@@ -58,21 +60,27 @@ func (d *OptionsDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *OptionsDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *OptionsDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *OptionsDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *OptionsDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *OptionsDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeOptionsInto(data *Options, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -88,6 +96,7 @@ func DecodeOptionsInto(data *Options, doc *document.Document, container *cst.Nod
 	}
 	return nil
 }
+
 func EncodeOptionsFrom(data *Options, doc *document.Document, container *cst.Node) error {
 	{
 		if err := cst.SetAny(container, "merge", data.Merge); err != nil {

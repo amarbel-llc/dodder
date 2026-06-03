@@ -234,9 +234,11 @@ func DecodeTomlV1(input []byte) (*TomlV1Document, error) {
 	}
 	return d, nil
 }
+
 func (d *TomlV1Document) Data() *TomlV1 {
 	return &d.data
 }
+
 func (d *TomlV1Document) Encode() ([]byte, error) {
 	if d.data.Binary != false {
 		if err := cst.SetAny(d.cstDoc.Root(), "binary", d.data.Binary); err != nil {
@@ -334,21 +336,27 @@ func (d *TomlV1Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlV1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlV1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlV1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlV1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -550,6 +558,7 @@ func DecodeTomlV1Into(data *TomlV1, doc *document.Document, container *cst.Node,
 	}
 	return nil
 }
+
 func EncodeTomlV1From(data *TomlV1, doc *document.Document, container *cst.Node) error {
 	if data.Binary != false {
 		if err := cst.SetAny(container, "binary", data.Binary); err != nil {

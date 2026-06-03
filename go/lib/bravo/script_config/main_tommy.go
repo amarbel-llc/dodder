@@ -67,9 +67,11 @@ func DecodeScriptConfig(input []byte) (*ScriptConfigDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *ScriptConfigDocument) Data() *ScriptConfig {
 	return &d.data
 }
+
 func (d *ScriptConfigDocument) Encode() ([]byte, error) {
 	if d.data.Description != "" || cst.HasValue(d.cstDoc.Root(), "description") {
 		if err := cst.SetAny(d.cstDoc.Root(), "description", d.data.Description); err != nil {
@@ -101,21 +103,27 @@ func (d *ScriptConfigDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *ScriptConfigDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *ScriptConfigDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *ScriptConfigDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *ScriptConfigDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *ScriptConfigDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeScriptConfigInto(data *ScriptConfig, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -151,6 +159,7 @@ func DecodeScriptConfigInto(data *ScriptConfig, doc *document.Document, containe
 	}
 	return nil
 }
+
 func EncodeScriptConfigFrom(data *ScriptConfig, doc *document.Document, container *cst.Node) error {
 	if data.Description != "" || cst.HasValue(container, "description") {
 		if err := cst.SetAny(container, "description", data.Description); err != nil {

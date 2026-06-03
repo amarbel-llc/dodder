@@ -153,9 +153,11 @@ func DecodeV0(input []byte) (*V0Document, error) {
 	}
 	return d, nil
 }
+
 func (d *V0Document) Data() *V0 {
 	return &d.data
 }
+
 func (d *V0Document) Encode() ([]byte, error) {
 	if d.data.Abbreviations != nil {
 		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "abbreviations")
@@ -227,21 +229,27 @@ func (d *V0Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *V0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *V0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *V0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *V0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *V0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -363,6 +371,7 @@ func DecodeV0Into(data *V0, doc *document.Document, container *cst.Node, consume
 	}
 	return nil
 }
+
 func EncodeV0From(data *V0, doc *document.Document, container *cst.Node) error {
 	if data.Abbreviations != nil {
 		tableNode := cst.EnsureChildTable(doc.Root(), container, "abbreviations")
@@ -471,9 +480,11 @@ func DecodeabbreviationsV0(input []byte) (*abbreviationsV0Document, error) {
 	}
 	return d, nil
 }
+
 func (d *abbreviationsV0Document) Data() *abbreviationsV0 {
 	return &d.data
 }
+
 func (d *abbreviationsV0Document) Encode() ([]byte, error) {
 	if d.data.ZettelIds != nil {
 		if err := cst.SetAny(d.cstDoc.Root(), "hinweisen", *d.data.ZettelIds); err != nil {
@@ -487,21 +498,27 @@ func (d *abbreviationsV0Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *abbreviationsV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *abbreviationsV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *abbreviationsV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *abbreviationsV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *abbreviationsV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeabbreviationsV0Into(data *abbreviationsV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -522,6 +539,7 @@ func DecodeabbreviationsV0Into(data *abbreviationsV0, doc *document.Document, co
 	}
 	return nil
 }
+
 func EncodeabbreviationsV0From(data *abbreviationsV0, doc *document.Document, container *cst.Node) error {
 	if data.ZettelIds != nil {
 		if err := cst.SetAny(container, "hinweisen", *data.ZettelIds); err != nil {

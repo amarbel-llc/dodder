@@ -82,9 +82,11 @@ func DecodeWithOutputFormat(input []byte) (*WithOutputFormatDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *WithOutputFormatDocument) Data() *WithOutputFormat {
 	return &d.data
 }
+
 func (d *WithOutputFormatDocument) Encode() ([]byte, error) {
 	if d.data.Description != "" || cst.HasValue(d.cstDoc.Root(), "description") {
 		if err := cst.SetAny(d.cstDoc.Root(), "description", d.data.Description); err != nil {
@@ -131,21 +133,27 @@ func (d *WithOutputFormatDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *WithOutputFormatDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *WithOutputFormatDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *WithOutputFormatDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *WithOutputFormatDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *WithOutputFormatDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeWithOutputFormatInto(data *WithOutputFormat, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -196,6 +204,7 @@ func DecodeWithOutputFormatInto(data *WithOutputFormat, doc *document.Document, 
 	}
 	return nil
 }
+
 func EncodeWithOutputFormatFrom(data *WithOutputFormat, doc *document.Document, container *cst.Node) error {
 	if data.Description != "" || cst.HasValue(container, "description") {
 		if err := cst.SetAny(container, "description", data.Description); err != nil {

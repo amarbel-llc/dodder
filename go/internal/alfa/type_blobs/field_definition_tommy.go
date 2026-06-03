@@ -62,9 +62,11 @@ func DecodeFieldDefinition(input []byte) (*FieldDefinitionDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *FieldDefinitionDocument) Data() *FieldDefinition {
 	return &d.data
 }
+
 func (d *FieldDefinitionDocument) Encode() ([]byte, error) {
 	if d.data.Name != "" || cst.HasValue(d.cstDoc.Root(), "name") {
 		if err := cst.SetAny(d.cstDoc.Root(), "name", d.data.Name); err != nil {
@@ -92,21 +94,27 @@ func (d *FieldDefinitionDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *FieldDefinitionDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *FieldDefinitionDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *FieldDefinitionDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *FieldDefinitionDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *FieldDefinitionDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeFieldDefinitionInto(data *FieldDefinition, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -137,6 +145,7 @@ func DecodeFieldDefinitionInto(data *FieldDefinition, doc *document.Document, co
 	}
 	return nil
 }
+
 func EncodeFieldDefinitionFrom(data *FieldDefinition, doc *document.Document, container *cst.Node) error {
 	if data.Name != "" || cst.HasValue(container, "name") {
 		if err := cst.SetAny(container, "name", data.Name); err != nil {

@@ -56,9 +56,11 @@ func DecodeTomlUriV0(input []byte) (*TomlUriV0Document, error) {
 	}
 	return d, nil
 }
+
 func (d *TomlUriV0Document) Data() *TomlUriV0 {
 	return &d.data
 }
+
 func (d *TomlUriV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
@@ -80,21 +82,27 @@ func (d *TomlUriV0Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlUriV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlUriV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlUriV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlUriV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlUriV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlUriV0Into(data *TomlUriV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -119,6 +127,7 @@ func DecodeTomlUriV0Into(data *TomlUriV0, doc *document.Document, container *cst
 	}
 	return nil
 }
+
 func EncodeTomlUriV0From(data *TomlUriV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()

@@ -72,9 +72,11 @@ func DecodeTomlV2Private(input []byte) (*TomlV2PrivateDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *TomlV2PrivateDocument) Data() *TomlV2Private {
 	return &d.data
 }
+
 func (d *TomlV2PrivateDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PrivateKey.MarshalText()
@@ -111,21 +113,27 @@ func (d *TomlV2PrivateDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlV2PrivateDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlV2PrivateDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlV2PrivateDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlV2PrivateDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlV2PrivateDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlV2PrivateInto(data *TomlV2Private, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -165,6 +173,7 @@ func DecodeTomlV2PrivateInto(data *TomlV2Private, doc *document.Document, contai
 	}
 	return nil
 }
+
 func EncodeTomlV2PrivateFrom(data *TomlV2Private, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PrivateKey.MarshalText()
@@ -257,9 +266,11 @@ func DecodeTomlV2Public(input []byte) (*TomlV2PublicDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *TomlV2PublicDocument) Data() *TomlV2Public {
 	return &d.data
 }
+
 func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
@@ -296,21 +307,27 @@ func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlV2PublicDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlV2PublicDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlV2PublicDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlV2PublicDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlV2PublicDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlV2PublicInto(data *TomlV2Public, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -350,6 +367,7 @@ func DecodeTomlV2PublicInto(data *TomlV2Public, doc *document.Document, containe
 	}
 	return nil
 }
+
 func EncodeTomlV2PublicFrom(data *TomlV2Public, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()

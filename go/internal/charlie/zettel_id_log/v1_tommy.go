@@ -68,9 +68,11 @@ func DecodeV1(input []byte) (*V1Document, error) {
 	}
 	return d, nil
 }
+
 func (d *V1Document) Data() *V1 {
 	return &d.data
 }
+
 func (d *V1Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Side.MarshalText()
@@ -106,21 +108,27 @@ func (d *V1Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *V1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *V1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *V1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *V1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *V1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -157,6 +165,7 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 	}
 	return nil
 }
+
 func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Side.MarshalText()

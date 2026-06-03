@@ -11,5 +11,3 @@ fi
 issues=()
 
 echo "$output" | grep -Pzo "(?s)(?<=\n)not ok.*?(?=\nok)"
-
-

@@ -51,7 +51,7 @@ substring() {
   START=$2
   LEN=$3
 
-  echo "$STRING" | cut -c$((START + 1))-$((START + $LEN))
+  echo "$STRING" | cut -c$((START + 1))-$((START + LEN))
 }
 
 gen_cmd_aux() {
@@ -316,15 +316,15 @@ diff_cmd_help() {
   TOOL=$1
 
   case "$TOOL" in
-  nvimdiff*)
-    printf "Use Neovim"
-    ;;
-  gvimdiff*)
-    printf "Use gVim (requires a graphical session)"
-    ;;
-  vimdiff*)
-    printf "Use Vim"
-    ;;
+    nvimdiff*)
+      printf "Use Neovim"
+      ;;
+    gvimdiff*)
+      printf "Use gVim (requires a graphical session)"
+      ;;
+    vimdiff*)
+      printf "Use Vim"
+      ;;
   esac
 
   return 0
@@ -341,21 +341,21 @@ merge_cmd() {
   fi
 
   case "$TOOL" in
-  *vimdiff)
-    if test -z "$layout"; then
-      # Default layout when none is specified
-      layout="(LOCAL,BASE,REMOTE)/MERGED"
-    fi
-    ;;
-  *vimdiff1)
-    layout="@LOCAL,REMOTE"
-    ;;
-  *vimdiff2)
-    layout="LOCAL,MERGED,REMOTE"
-    ;;
-  *vimdiff3)
-    layout="MERGED"
-    ;;
+    *vimdiff)
+      if test -z "$layout"; then
+        # Default layout when none is specified
+        layout="(LOCAL,BASE,REMOTE)/MERGED"
+      fi
+      ;;
+    *vimdiff1)
+      layout="@LOCAL,REMOTE"
+      ;;
+    *vimdiff2)
+      layout="LOCAL,MERGED,REMOTE"
+      ;;
+    *vimdiff3)
+      layout="MERGED"
+      ;;
   esac
 
   gen_cmd "$layout"
@@ -383,16 +383,16 @@ merge_cmd() {
 
   if test "$ret" -eq 0; then
     case "$FINAL_TARGET" in
-    LOCAL)
-      source_path="$LOCAL"
-      ;;
-    REMOTE)
-      source_path="$REMOTE"
-      ;;
-    MERGED | *)
-      # Do nothing
-      source_path=
-      ;;
+      LOCAL)
+        source_path="$LOCAL"
+        ;;
+      REMOTE)
+        source_path="$REMOTE"
+        ;;
+      MERGED | *)
+        # Do nothing
+        source_path=
+        ;;
     esac
 
     if test -n "$source_path"; then
@@ -407,30 +407,30 @@ merge_cmd_help() {
   TOOL=$1
 
   case "$TOOL" in
-  nvimdiff*)
-    printf "Use Neovim "
-    ;;
-  gvimdiff*)
-    printf "Use gVim (requires a graphical session) "
-    ;;
-  vimdiff*)
-    printf "Use Vim "
-    ;;
+    nvimdiff*)
+      printf "Use Neovim "
+      ;;
+    gvimdiff*)
+      printf "Use gVim (requires a graphical session) "
+      ;;
+    vimdiff*)
+      printf "Use Vim "
+      ;;
   esac
 
   case "$TOOL" in
-  *1)
-    echo "with a 2 panes layout (LOCAL and REMOTE)"
-    ;;
-  *2)
-    echo "with a 3 panes layout (LOCAL, MERGED and REMOTE)"
-    ;;
-  *3)
-    echo "where only the MERGED file is shown"
-    ;;
-  *)
-    echo "with a custom layout (see \`git help mergetool\`'s \`BACKEND SPECIFIC HINTS\` section)"
-    ;;
+    *1)
+      echo "with a 2 panes layout (LOCAL and REMOTE)"
+      ;;
+    *2)
+      echo "with a 3 panes layout (LOCAL, MERGED and REMOTE)"
+      ;;
+    *3)
+      echo "where only the MERGED file is shown"
+      ;;
+    *)
+      echo "with a custom layout (see \`git help mergetool\`'s \`BACKEND SPECIFIC HINTS\` section)"
+      ;;
   esac
 
   return 0
@@ -438,15 +438,15 @@ merge_cmd_help() {
 
 translate_merge_tool_path() {
   case "$1" in
-  nvimdiff*)
-    echo nvim
-    ;;
-  gvimdiff*)
-    echo gvim
-    ;;
-  vimdiff*)
-    echo vim
-    ;;
+    nvimdiff*)
+      echo nvim
+      ;;
+    gvimdiff*)
+      echo gvim
+      ;;
+    vimdiff*)
+      echo vim
+      ;;
   esac
 }
 

@@ -5,4 +5,3 @@ if [[ "$(uname -s)" != "Darwin" ]]; then
 fi
 
 chflags "$@"
-

@@ -67,9 +67,11 @@ func DecodeTOMLV0(input []byte) (*TOMLV0Document, error) {
 	}
 	return d, nil
 }
+
 func (d *TOMLV0Document) Data() *TOMLV0 {
 	return &d.data
 }
+
 func (d *TOMLV0Document) Encode() ([]byte, error) {
 	if d.data.Organize != nil {
 		if err := cst.SetAny(d.cstDoc.Root(), "organize", *d.data.Organize); err != nil {
@@ -98,21 +100,27 @@ func (d *TOMLV0Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TOMLV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TOMLV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TOMLV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TOMLV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TOMLV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTOMLV0Into(data *TOMLV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -148,6 +156,7 @@ func DecodeTOMLV0Into(data *TOMLV0, doc *document.Document, container *cst.Node,
 	}
 	return nil
 }
+
 func EncodeTOMLV0From(data *TOMLV0, doc *document.Document, container *cst.Node) error {
 	if data.Organize != nil {
 		if err := cst.SetAny(container, "organize", *data.Organize); err != nil {

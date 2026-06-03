@@ -7,18 +7,28 @@
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-master, utils }:
-    utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      nixpkgs-master,
+      utils,
+    }:
+    utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs { inherit system; };
         name = "generate";
-        buildInputs = with pkgs; [ jq yq-go just ];
-        generate = (
-          pkgs.writeScriptBin name (builtins.readFile ./generate.bash)
-        ).overrideAttrs(old: {
+        buildInputs = with pkgs; [
+          jq
+          yq-go
+          just
+        ];
+        generate = (pkgs.writeScriptBin name (builtins.readFile ./generate.bash)).overrideAttrs (old: {
           buildCommand = "${old.buildCommand}\n patchShebangs $out";
         });
-      in rec {
+      in
+      rec {
         packages.generate = pkgs.symlinkJoin {
           name = name;
           paths = [ generate ] ++ buildInputs;
@@ -29,13 +39,16 @@
         defaultPackage = packages.generate;
 
         devShells.default = pkgs.mkShell {
-          packages = (with pkgs; [
-            jq
-            yq-go
-            just
-          ]);
+          packages = (
+            with pkgs;
+            [
+              jq
+              yq-go
+              just
+            ]
+          );
 
-          inputsFrom = [];
+          inputsFrom = [ ];
         };
       }
     );

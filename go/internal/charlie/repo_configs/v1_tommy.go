@@ -63,9 +63,11 @@ func DecodeDefaultsV1(input []byte) (*DefaultsV1Document, error) {
 	}
 	return d, nil
 }
+
 func (d *DefaultsV1Document) Data() *DefaultsV1 {
 	return &d.data
 }
+
 func (d *DefaultsV1Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Type.MarshalText()
@@ -95,21 +97,27 @@ func (d *DefaultsV1Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *DefaultsV1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *DefaultsV1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *DefaultsV1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *DefaultsV1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *DefaultsV1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeDefaultsV1Into(data *DefaultsV1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -137,6 +145,7 @@ func DecodeDefaultsV1Into(data *DefaultsV1, doc *document.Document, container *c
 	}
 	return nil
 }
+
 func EncodeDefaultsV1From(data *DefaultsV1, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Type.MarshalText()
@@ -210,9 +219,11 @@ func DecodeDefaultsV1OmitEmpty(input []byte) (*DefaultsV1OmitEmptyDocument, erro
 	}
 	return d, nil
 }
+
 func (d *DefaultsV1OmitEmptyDocument) Data() *DefaultsV1OmitEmpty {
 	return &d.data
 }
+
 func (d *DefaultsV1OmitEmptyDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.Type.MarshalText()
@@ -244,21 +255,27 @@ func (d *DefaultsV1OmitEmptyDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *DefaultsV1OmitEmptyDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *DefaultsV1OmitEmptyDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *DefaultsV1OmitEmptyDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *DefaultsV1OmitEmptyDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *DefaultsV1OmitEmptyDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeDefaultsV1OmitEmptyInto(data *DefaultsV1OmitEmpty, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -286,6 +303,7 @@ func DecodeDefaultsV1OmitEmptyInto(data *DefaultsV1OmitEmpty, doc *document.Docu
 	}
 	return nil
 }
+
 func EncodeDefaultsV1OmitEmptyFrom(data *DefaultsV1OmitEmpty, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.Type.MarshalText()
@@ -394,9 +412,11 @@ func DecodeV1(input []byte) (*V1Document, error) {
 	}
 	return d, nil
 }
+
 func (d *V1Document) Data() *V1 {
 	return &d.data
 }
+
 func (d *V1Document) Encode() ([]byte, error) {
 	{
 		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "defaults")
@@ -447,21 +467,27 @@ func (d *V1Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *V1Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *V1Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *V1Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *V1Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *V1Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _ch := range doc.Root().Children {
 		if _ch.Kind == cst.NodeTable && cst.TableHeaderKey(_ch) == keyPrefix+"defaults" {
@@ -522,6 +548,7 @@ func DecodeV1Into(data *V1, doc *document.Document, container *cst.Node, consume
 	}
 	return nil
 }
+
 func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 	{
 		tableNode := cst.EnsureChildTable(doc.Root(), container, "defaults")

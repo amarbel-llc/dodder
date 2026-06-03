@@ -66,7 +66,12 @@ let
       base ? dodder,
     }:
     batsLane {
-      inherit base filter batsSrc testFiles;
+      inherit
+        base
+        filter
+        batsSrc
+        testFiles
+        ;
       binaries = {
         DODDER_BIN = {
           inherit base;
@@ -111,29 +116,37 @@ let
       #          through their DODDER_BIN / MADDER_BIN /
       #          MADDER_TEST_SFTP_SERVER env-var aliases. Putting the
       #          packages on nativeBuildInputs gives both surfaces.
-      nativeBuildInputs = (with pkgs; [
-        tree
-        curl
-        openssh
-        git
-        pandoc
-        vim
-        # yq-go: the field-script tests pipe blob contents through
-        #        `yq -p toml -o json '...'` to project structured
-        #        fields (current_version/fields.bats family).
-        yq-go
-      ]) ++ [
-        dodder
-        madder-bin
-        madder-test-sftp-server-bin
-      ];
+      nativeBuildInputs =
+        (with pkgs; [
+          tree
+          curl
+          openssh
+          git
+          pandoc
+          vim
+          # yq-go: the field-script tests pipe blob contents through
+          #        `yq -p toml -o json '...'` to project structured
+          #        fields (current_version/fields.bats family).
+          yq-go
+        ])
+        ++ [
+          dodder
+          madder-bin
+          madder-test-sftp-server-bin
+        ];
       extraStagedFiles = [
-        { src = flakeNixSrc; dest = "flake.nix"; }
+        {
+          src = flakeNixSrc;
+          dest = "flake.nix";
+        }
         # show_zettel_with_pandoc_discovered_* call pandoc with a Lua
         # filter that lives in zz-pandoc-refs/ at the worktree root,
         # outside zz-tests_bats/. Stage it parallel to the bats source
         # so the tests' relative path resolves the same as in dev.
-        { src = pandocRefsSrc + "/discover-refs.lua"; dest = "zz-pandoc-refs/discover-refs.lua"; }
+        {
+          src = pandocRefsSrc + "/discover-refs.lua";
+          dest = "zz-pandoc-refs/discover-refs.lua";
+        }
       ];
       extraEnv = {
         BATS_TEST_TIMEOUT = batsTestTimeout;
@@ -163,9 +176,7 @@ let
       entries = builtins.readDir dir;
       isSnapshotDir =
         name: type:
-        type == "directory"
-        && prefix == "previous_versions/"
-        && (builtins.match "v[0-9]+" name) != null;
+        type == "directory" && prefix == "previous_versions/" && (builtins.match "v[0-9]+" name) != null;
     in
     lib.flatten (
       lib.mapAttrsToList (
@@ -199,15 +210,18 @@ let
     if tagLines == [ ] then
       [ ]
     else
-      map trim (
-        lib.splitString "," (lib.removePrefix "# bats file_tags=" (builtins.head tagLines))
-      );
+      map trim (lib.splitString "," (lib.removePrefix "# bats file_tags=" (builtins.head tagLines)));
 
   allFileTags = lib.unique (lib.concatMap extractFileTags batsFiles);
 
   batsLaneOutputs =
     lib.listToAttrs (
-      map (tag: lib.nameValuePair "bats-${tag}" (mkDodderBatsLane { filter = tag; })) allFileTags
+      map (
+        tag:
+        lib.nameValuePair "bats-${tag}" (mkDodderBatsLane {
+          filter = tag;
+        })
+      ) allFileTags
     )
     // {
       bats-default = mkDodderBatsLane { };
@@ -220,102 +234,105 @@ let
   # by re-running dodder against the captured store. Output is meant
   # to be materialized into the worktree by a justfile recipe — this
   # derivation itself does not write to the worktree.
-  fixtures-current = pkgs.runCommand "dodder-fixtures" {
-    nativeBuildInputs = [
-      pkgs.bats
-      pkgs.parallel
-      dodder
-    ];
-  } ''
-    set -euo pipefail
+  fixtures-current =
+    pkgs.runCommand "dodder-fixtures"
+      {
+        nativeBuildInputs = [
+          pkgs.bats
+          pkgs.parallel
+          dodder
+        ];
+      }
+      ''
+            set -euo pipefail
 
-    export HOME=$TMPDIR
-    export DODDER_BIN=${dodder}/bin/dodder
-    export DODDER_DER_BIN=${dodder}/bin/der
-    export MADDER_BIN=${madder-bin}/bin/madder
-    export DODDER_VERSION="v$(${dodder}/bin/dodder info store-version)"
-    export DODDER_CEILING_DIRECTORIES=/build
-    export MADDER_CEILING_DIRECTORIES=/build
-    export DODDER_XDG_UTILITY_OVERRIDE=
-    export GOMEMLIMIT=512MiB
-    export BATS_LIB_PATH="${bats-libs.batsLibPath}"
-    export BATS_TEST_TIMEOUT=30
+            export HOME=$TMPDIR
+            export DODDER_BIN=${dodder}/bin/dodder
+            export DODDER_DER_BIN=${dodder}/bin/der
+            export MADDER_BIN=${madder-bin}/bin/madder
+            export DODDER_VERSION="v$(${dodder}/bin/dodder info store-version)"
+            export DODDER_CEILING_DIRECTORIES=/build
+            export MADDER_CEILING_DIRECTORIES=/build
+            export DODDER_XDG_UTILITY_OVERRIDE=
+            export GOMEMLIMIT=512MiB
+            export BATS_LIB_PATH="${bats-libs.batsLibPath}"
+            export BATS_TEST_TIMEOUT=30
 
-    # Stage a writable copy of the bats source; bats walks it from
-    # CWD and writes to BATS_RUN_TMPDIR underneath.
-    mkdir -p stage
-    cp -r ${batsSrc}/. stage/
-    chmod -R u+w stage
-    cd stage
+            # Stage a writable copy of the bats source; bats walks it from
+            # CWD and writes to BATS_RUN_TMPDIR underneath.
+            mkdir -p stage
+            cp -r ${batsSrc}/. stage/
+            chmod -R u+w stage
+            cd stage
 
-    # --no-tempdir-cleanup keeps the per-test scratch alive so we
-    # can lift .dodder/.madder out of it. The 2>&1 is load-bearing:
-    # bats prints the `BATS_RUN_TMPDIR: ...` summary line to STDERR,
-    # and we grep for it below. (Mirrors the existing zz-tests_bats/
-    # previous_versions/generate_fixture.bash:17 — tee without 2>&1
-    # silently drops the line and the script exits before the missing-
-    # dir error message can fire.)
-    bats --no-tempdir-cleanup \
-         previous_versions/generate_fixture.bats 2>&1 \
-      | tee bats.out
+            # --no-tempdir-cleanup keeps the per-test scratch alive so we
+            # can lift .dodder/.madder out of it. The 2>&1 is load-bearing:
+            # bats prints the `BATS_RUN_TMPDIR: ...` summary line to STDERR,
+            # and we grep for it below. (Mirrors the existing zz-tests_bats/
+            # previous_versions/generate_fixture.bash:17 — tee without 2>&1
+            # silently drops the line and the script exits before the missing-
+            # dir error message can fire.)
+            bats --no-tempdir-cleanup \
+                 previous_versions/generate_fixture.bats 2>&1 \
+              | tee bats.out
 
-    bats_dir=$(grep "BATS_RUN_TMPDIR" bats.out | head -1 | cut -d' ' -f2)
-    if [[ -z "$bats_dir" ]]; then
-      echo "ERROR: BATS_RUN_TMPDIR not found in bats output" >&2
-      exit 1
-    fi
-    if [[ ! -d "$bats_dir/test/1/.dodder" ]]; then
-      echo "ERROR: expected fixture dir not found: $bats_dir/test/1/.dodder" >&2
-      exit 1
-    fi
+            bats_dir=$(grep "BATS_RUN_TMPDIR" bats.out | head -1 | cut -d' ' -f2)
+            if [[ -z "$bats_dir" ]]; then
+              echo "ERROR: BATS_RUN_TMPDIR not found in bats output" >&2
+              exit 1
+            fi
+            if [[ ! -d "$bats_dir/test/1/.dodder" ]]; then
+              echo "ERROR: expected fixture dir not found: $bats_dir/test/1/.dodder" >&2
+              exit 1
+            fi
 
-    out_dir="$out/$DODDER_VERSION"
-    mkdir -p "$out_dir"
-    cp -r "$bats_dir/test/1/.dodder" "$out_dir/.dodder"
-    cp -r "$bats_dir/test/1/.madder" "$out_dir/.madder"
-    chmod -R u+w "$out_dir"
+            out_dir="$out/$DODDER_VERSION"
+            mkdir -p "$out_dir"
+            cp -r "$bats_dir/test/1/.dodder" "$out_dir/.dodder"
+            cp -r "$bats_dir/test/1/.madder" "$out_dir/.madder"
+            chmod -R u+w "$out_dir"
 
-    # Extract fixture-specific values for test assertions. Mirrors
-    # zz-tests_bats/previous_versions/generate_fixture.bash verbatim
-    # — sigs and shas are load-bearing.
-    pushd "$out_dir" >/dev/null
+            # Extract fixture-specific values for test assertions. Mirrors
+            # zz-tests_bats/previous_versions/generate_fixture.bash verbatim
+            # — sigs and shas are load-bearing.
+            pushd "$out_dir" >/dev/null
 
-    type_sig=$(${dodder}/bin/dodder show -format type-sig one/uno)
-    [[ -n "$type_sig" ]] || { echo "ERROR: type_sig extraction failed" >&2; exit 1; }
+            type_sig=$(${dodder}/bin/dodder show -format type-sig one/uno)
+            [[ -n "$type_sig" ]] || { echo "ERROR: type_sig extraction failed" >&2; exit 1; }
 
-    konfig_sha=$(${dodder}/bin/dodder show \
-      -abbreviate-shas=false \
-      -print-empty-shas=true \
-      -format log :konfig | sed 's/.*@\([^ ]*\) .*/\1/')
-    [[ -n "$konfig_sha" ]] || { echo "ERROR: konfig_sha extraction failed" >&2; exit 1; }
+            konfig_sha=$(${dodder}/bin/dodder show \
+              -abbreviate-shas=false \
+              -print-empty-shas=true \
+              -format log :konfig | sed 's/.*@\([^ ]*\) .*/\1/')
+            [[ -n "$konfig_sha" ]] || { echo "ERROR: konfig_sha extraction failed" >&2; exit 1; }
 
-    # Anchor on the literal `[!md @` boundary: !md's box may now contain
-    # blob references like `<@blake2b256-...`; an unanchored greedy `.*@`
-    # would pick up the last blob ref's digest instead of !md's own.
-    # The `-format log` output carries a timestamp prefix so we can't
-    # anchor on `^` directly.
-    type_blob_sha=$(${dodder}/bin/dodder show \
-      -abbreviate-shas=false \
-      -print-empty-shas=true \
-      -format log '!md:t' | sed 's/.*\[!md @\([^ ]*\) .*/\1/')
-    [[ -n "$type_blob_sha" ]] || { echo "ERROR: type_blob_sha extraction failed" >&2; exit 1; }
+            # Anchor on the literal `[!md @` boundary: !md's box may now contain
+            # blob references like `<@blake2b256-...`; an unanchored greedy `.*@`
+            # would pick up the last blob ref's digest instead of !md's own.
+            # The `-format log` output carries a timestamp prefix so we can't
+            # anchor on `^` directly.
+            type_blob_sha=$(${dodder}/bin/dodder show \
+              -abbreviate-shas=false \
+              -print-empty-shas=true \
+              -format log '!md:t' | sed 's/.*\[!md @\([^ ]*\) .*/\1/')
+            [[ -n "$type_blob_sha" ]] || { echo "ERROR: type_blob_sha extraction failed" >&2; exit 1; }
 
-    cat > .fixtures.env <<EOF
-# Auto-generated by the fixtures-current nix derivation -- do not edit
-FIXTURE_TYPE_SIG=$type_sig
-FIXTURE_KONFIG_SHA=$konfig_sha
-FIXTURE_TYPE_BLOB_SHA=$type_blob_sha
-EOF
+            cat > .fixtures.env <<EOF
+        # Auto-generated by the fixtures-current nix derivation -- do not edit
+        FIXTURE_TYPE_SIG=$type_sig
+        FIXTURE_KONFIG_SHA=$konfig_sha
+        FIXTURE_TYPE_BLOB_SHA=$type_blob_sha
+        EOF
 
-    # Sanity checks: the generated store actually contains the
-    # zettel + konfig the suite expects.
-    ${dodder}/bin/dodder show one/uno >/dev/null \
-      || { echo "ERROR: fixture store missing zettel one/uno" >&2; exit 1; }
-    ${dodder}/bin/dodder show :konfig >/dev/null \
-      || { echo "ERROR: fixture store missing konfig" >&2; exit 1; }
+            # Sanity checks: the generated store actually contains the
+            # zettel + konfig the suite expects.
+            ${dodder}/bin/dodder show one/uno >/dev/null \
+              || { echo "ERROR: fixture store missing zettel one/uno" >&2; exit 1; }
+            ${dodder}/bin/dodder show :konfig >/dev/null \
+              || { echo "ERROR: fixture store missing konfig" >&2; exit 1; }
 
-    popd >/dev/null
-  '';
+            popd >/dev/null
+      '';
 in
 {
   inherit mkDodderBatsLane batsLaneOutputs fixtures-current;

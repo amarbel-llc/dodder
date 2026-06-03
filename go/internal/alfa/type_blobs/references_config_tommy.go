@@ -72,9 +72,11 @@ func DecodeReferencesConfig(input []byte) (*ReferencesConfigDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *ReferencesConfigDocument) Data() *ReferencesConfig {
 	return &d.data
 }
+
 func (d *ReferencesConfigDocument) Encode() ([]byte, error) {
 	if d.data.Description != "" || cst.HasValue(d.cstDoc.Root(), "description") {
 		if err := cst.SetAny(d.cstDoc.Root(), "description", d.data.Description); err != nil {
@@ -113,21 +115,27 @@ func (d *ReferencesConfigDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *ReferencesConfigDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *ReferencesConfigDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *ReferencesConfigDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *ReferencesConfigDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *ReferencesConfigDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeReferencesConfigInto(data *ReferencesConfig, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -168,6 +176,7 @@ func DecodeReferencesConfigInto(data *ReferencesConfig, doc *document.Document, 
 	}
 	return nil
 }
+
 func EncodeReferencesConfigFrom(data *ReferencesConfig, doc *document.Document, container *cst.Node) error {
 	if data.Description != "" || cst.HasValue(container, "description") {
 		if err := cst.SetAny(container, "description", data.Description); err != nil {

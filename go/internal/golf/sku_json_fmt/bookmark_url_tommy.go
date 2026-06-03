@@ -47,9 +47,11 @@ func DecodeTomlBookmark(input []byte) (*TomlBookmarkDocument, error) {
 	}
 	return d, nil
 }
+
 func (d *TomlBookmarkDocument) Data() *TomlBookmark {
 	return &d.data
 }
+
 func (d *TomlBookmarkDocument) Encode() ([]byte, error) {
 	if d.data.Url != "" || cst.HasValue(d.cstDoc.Root(), "url") {
 		if err := cst.SetAny(d.cstDoc.Root(), "url", d.data.Url); err != nil {
@@ -58,21 +60,27 @@ func (d *TomlBookmarkDocument) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlBookmarkDocument) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlBookmarkDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlBookmarkDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlBookmarkDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlBookmarkDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlBookmarkInto(data *TomlBookmark, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -88,6 +96,7 @@ func DecodeTomlBookmarkInto(data *TomlBookmark, doc *document.Document, containe
 	}
 	return nil
 }
+
 func EncodeTomlBookmarkFrom(data *TomlBookmark, doc *document.Document, container *cst.Node) error {
 	if data.Url != "" || cst.HasValue(container, "url") {
 		if err := cst.SetAny(container, "url", data.Url); err != nil {

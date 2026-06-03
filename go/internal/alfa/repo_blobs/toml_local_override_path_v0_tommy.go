@@ -54,9 +54,11 @@ func DecodeTomlLocalOverridePathV0(input []byte) (*TomlLocalOverridePathV0Docume
 	}
 	return d, nil
 }
+
 func (d *TomlLocalOverridePathV0Document) Data() *TomlLocalOverridePathV0 {
 	return &d.data
 }
+
 func (d *TomlLocalOverridePathV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
@@ -74,21 +76,27 @@ func (d *TomlLocalOverridePathV0Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlLocalOverridePathV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlLocalOverridePathV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlLocalOverridePathV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlLocalOverridePathV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlLocalOverridePathV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlLocalOverridePathV0Into(data *TomlLocalOverridePathV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -111,6 +119,7 @@ func DecodeTomlLocalOverridePathV0Into(data *TomlLocalOverridePathV0, doc *docum
 	}
 	return nil
 }
+
 func EncodeTomlLocalOverridePathV0From(data *TomlLocalOverridePathV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()

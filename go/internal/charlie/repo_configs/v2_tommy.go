@@ -119,9 +119,11 @@ func DecodeV2(input []byte) (*V2Document, error) {
 	}
 	return d, nil
 }
+
 func (d *V2Document) Data() *V2 {
 	return &d.data
 }
+
 func (d *V2Document) Encode() ([]byte, error) {
 	{
 		vals := make([]string, len(d.data.BlobStores))
@@ -135,13 +137,6 @@ func (d *V2Document) Encode() ([]byte, error) {
 		if err := cst.SetAny(d.cstDoc.Root(), "blob-stores", vals); err != nil {
 			return nil, fmt.Errorf("%w", err)
 		}
-	}
-	if d.data.StreamIndexFixed != false {
-		if err := cst.SetAny(d.cstDoc.Root(), "stream-index-fixed", d.data.StreamIndexFixed); err != nil {
-			return nil, fmt.Errorf("%w", err)
-		}
-	} else {
-		cst.DeleteValue(d.cstDoc.Root(), "stream-index-fixed")
 	}
 	{
 		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "defaults")
@@ -190,23 +185,36 @@ func (d *V2Document) Encode() ([]byte, error) {
 			return nil, fmt.Errorf("tools: %w", err)
 		}
 	}
+	if d.data.StreamIndexFixed != false {
+		if err := cst.SetAny(d.cstDoc.Root(), "stream-index-fixed", d.data.StreamIndexFixed); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(d.cstDoc.Root(), "stream-index-fixed")
+	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *V2Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *V2Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *V2Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *V2Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *V2Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -289,6 +297,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 	}
 	return nil
 }
+
 func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 	{
 		vals := make([]string, len(data.BlobStores))
@@ -302,13 +311,6 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 		if err := cst.SetAny(container, "blob-stores", vals); err != nil {
 			return fmt.Errorf("%w", err)
 		}
-	}
-	if data.StreamIndexFixed != false {
-		if err := cst.SetAny(container, "stream-index-fixed", data.StreamIndexFixed); err != nil {
-			return fmt.Errorf("%w", err)
-		}
-	} else {
-		cst.DeleteValue(container, "stream-index-fixed")
 	}
 	{
 		tableNode := cst.EnsureChildTable(doc.Root(), container, "defaults")
@@ -356,6 +358,13 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 		if err := options_tools.EncodeOptionsFrom(&data.Tools, doc, tableNode); err != nil {
 			return fmt.Errorf("tools: %w", err)
 		}
+	}
+	if data.StreamIndexFixed != false {
+		if err := cst.SetAny(container, "stream-index-fixed", data.StreamIndexFixed); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(container, "stream-index-fixed")
 	}
 	return nil
 }

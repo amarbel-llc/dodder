@@ -582,9 +582,11 @@ func DecodeV2(input []byte) (*V2Document, error) {
 	}
 	return d, nil
 }
+
 func (d *V2Document) Data() *V2 {
 	return &d.data
 }
+
 func (d *V2Document) Encode() ([]byte, error) {
 	{
 		tableNode := cst.EnsureChildTable(d.cstDoc.Root(), d.cstDoc.Root(), "defaults")
@@ -741,21 +743,27 @@ func (d *V2Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *V2Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *V2Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *V2Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *V2Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *V2Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -1305,6 +1313,7 @@ func DecodeV2Into(data *V2, doc *document.Document, container *cst.Node, consume
 	}
 	return nil
 }
+
 func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 	{
 		tableNode := cst.EnsureChildTable(doc.Root(), container, "defaults")

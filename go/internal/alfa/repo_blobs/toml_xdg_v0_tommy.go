@@ -74,9 +74,11 @@ func DecodeTomlXDGV0(input []byte) (*TomlXDGV0Document, error) {
 	}
 	return d, nil
 }
+
 func (d *TomlXDGV0Document) Data() *TomlXDGV0 {
 	return &d.data
 }
+
 func (d *TomlXDGV0Document) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
@@ -114,21 +116,27 @@ func (d *TomlXDGV0Document) Encode() ([]byte, error) {
 	}
 	return d.cstDoc.Bytes(), nil
 }
+
 func (d *TomlXDGV0Document) Undecoded() []string {
 	return document.UndecodedKeys(d.cstDoc.Root(), d.consumed)
 }
+
 func (d *TomlXDGV0Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
+
 func (d *TomlXDGV0Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
+
 func (d *TomlXDGV0Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
+
 func (d *TomlXDGV0Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
+
 func DecodeTomlXDGV0Into(data *TomlXDGV0, doc *document.Document, container *cst.Node, consumed map[string]bool, keyPrefix string) error {
 	for _, _kv := range container.Children {
 		if _kv.Kind != cst.NodeKeyValue {
@@ -171,6 +179,7 @@ func DecodeTomlXDGV0Into(data *TomlXDGV0, doc *document.Document, container *cst
 	}
 	return nil
 }
+
 func EncodeTomlXDGV0From(data *TomlXDGV0, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()
