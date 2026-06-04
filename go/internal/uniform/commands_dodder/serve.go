@@ -43,6 +43,11 @@ type Serve struct {
 
 	TailscaleTLS bool
 
+	// Public serves read requests without requiring a challenge nonce,
+	// so plain-HTTP read clients (e.g. the dodder-backed website API)
+	// can fetch objects and blobs. See remote_http.Server.Public.
+	Public bool
+
 	// Handshake enables the hashicorp/go-plugin-style handshake. When
 	// set, the server forces tcp + ephemeral port, prints a single
 	// pipe-delimited handshake line on stdout
@@ -85,6 +90,13 @@ func (cmd *Serve) SetFlagDefinitions(
 	)
 
 	flagSet.BoolVar(
+		&cmd.Public,
+		"public",
+		false,
+		"serve read requests without requiring a challenge nonce (for plain-HTTP read clients such as the dodder-backed website API)",
+	)
+
+	flagSet.BoolVar(
 		&cmd.Handshake,
 		"handshake",
 		false,
@@ -109,6 +121,7 @@ func (cmd Serve) Run(req command.Request) {
 	server := remote_http.Server{
 		EnvLocal: envLocal,
 		Repo:     repo,
+		Public:   cmd.Public,
 	}
 
 	if cmd.TailscaleTLS {

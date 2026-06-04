@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
+	"iter"
 	"net"
 	"net/http"
 	"net/url"
@@ -25,6 +27,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
+	"code.linenisgreat.com/dodder/go/internal/golf/sku_json_fmt"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
@@ -54,6 +57,14 @@ type Server struct {
 	// an in-memory keypair so the sign/verify round trip can be
 	// exercised without standing up a real Repo on disk.
 	KeySource KeySource
+
+	// Public relaxes the signing middleware so read clients that
+	// cannot mint a challenge nonce (e.g. the dodder-backed website
+	// API, which talks plain HTTP) are served without server
+	// attestation. Requests that still carry a challenge nonce are
+	// signed exactly as before, so the sync client round trip is
+	// unaffected. Leave false in production sync deployments.
+	Public bool
 
 	blobCache serverBlobCache
 
@@ -346,8 +357,19 @@ func (server *Server) sigMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
+			nonce := request.Header.Get(headerChallengeNonce)
+
+			// Public read mode: a client that omits the challenge
+			// nonce is served without server attestation. A nonce, if
+			// present, is still honored so sync clients keep getting a
+			// signed challenge response.
+			if nonce == "" && server.Public {
+				next.ServeHTTP(responseWriter, request)
+				return
+			}
+
 			if err := server.addSignatureIfNecessary(
-				request.Header.Get(headerChallengeNonce),
+				nonce,
 				responseWriter.Header(),
 			); err != nil {
 				http.Error(responseWriter, err.Error(), http.StatusBadRequest)
@@ -755,6 +777,73 @@ func (server *Server) copyBlob(
 	return copyResult, err
 }
 
+// acceptsJSON reports whether the request's Accept header opts into a
+// JSON representation. Used by the object/query handlers to negotiate
+// between the binary inventory-list wire format (the sync client) and
+// the JSON format consumed by the dodder-backed website API.
+func acceptsJSON(request Request) bool {
+	return strings.Contains(
+		request.Headers.Get("Accept"),
+		"application/json",
+	)
+}
+
+// wantsBlobString reports whether the JSON representation should embed
+// the object's blob content as a string. Controlled by the
+// `blob_string` query parameter; defaults to def when unset. Embedding
+// is opt-out for single-object reads (the detail page needs the body)
+// and opt-in for collections (avoid reading every blob in a listing).
+func wantsBlobString(request Request, def bool) bool {
+	switch request.request.URL.Query().Get("blob_string") {
+	case "":
+		return def
+	case "true", "1":
+		return true
+	default:
+		return false
+	}
+}
+
+// writeObjectsJSON encodes a sequence of objects as a JSON array of
+// sku_json_fmt.Transacted, reusing the same formatter the `show
+// -format json` command emits so the wire shape stays consistent.
+func (server *Server) writeObjectsJSON(
+	seq iter.Seq[*sku.Transacted],
+	includeBlob bool,
+	response *Response,
+) {
+	var blobStore mad_domain_interfaces.BlobStore
+
+	if includeBlob {
+		blobStore = server.Repo.GetBlobStore()
+	}
+
+	items := make([]sku_json_fmt.Transacted, 0)
+
+	for object := range seq {
+		var item sku_json_fmt.Transacted
+
+		if err := item.FromTransacted(object, blobStore); err != nil {
+			response.Error(err)
+			return
+		}
+
+		items = append(items, item)
+	}
+
+	buffer := bytes.NewBuffer(nil)
+
+	encoder := json.NewEncoder(buffer)
+
+	if err := encoder.Encode(items); err != nil {
+		response.Error(err)
+		return
+	}
+
+	response.Headers().Set("Content-Type", "application/json; charset=utf-8")
+	response.Body = ohio.NopCloser(buffer)
+}
+
 func (server *Server) handleGetQuery(request Request) (response Response) {
 	var listTypeString string
 
@@ -806,6 +895,15 @@ func (server *Server) handleGetQuery(request Request) (response Response) {
 			response.Error(err)
 			return response
 		}
+	}
+
+	if acceptsJSON(request) {
+		server.writeObjectsJSON(
+			list.All(),
+			wantsBlobString(request, false),
+			&response,
+		)
+		return response
 	}
 
 	// TODO make this more performant by returning a proper reader
@@ -874,6 +972,19 @@ func (server *Server) handleGetObject(request Request) (response Response) {
 		return response
 	}
 
+	seqOne := func(yield func(*sku.Transacted) bool) {
+		yield(fetched)
+	}
+
+	if acceptsJSON(request) {
+		server.writeObjectsJSON(
+			seqOne,
+			wantsBlobString(request, true),
+			&response,
+		)
+		return response
+	}
+
 	listTypeString := server.Repo.GetImmutableConfigPublic().GetInventoryListTypeId()
 
 	buffer := bytes.NewBuffer(nil)
@@ -882,10 +993,6 @@ func (server *Server) handleGetObject(request Request) (response Response) {
 	defer repoolBufferedWriter()
 
 	inventoryListCoderCloset := server.Repo.GetInventoryListCoderCloset()
-
-	seqOne := func(yield func(*sku.Transacted) bool) {
-		yield(fetched)
-	}
 
 	if _, err := inventoryListCoderCloset.WriteBlobToWriter(
 		server.Repo,
