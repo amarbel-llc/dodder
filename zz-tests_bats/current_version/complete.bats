@@ -131,6 +131,7 @@ function complete_subcmd { # @test
 		^info-repo[[:space:]]+display repository configuration$
 		^info-workspace[[:space:]]+display workspace configuration$
 		^init[[:space:]]+initialize a new repository$
+		^init-default[[:space:]]+initialize a repository with sensible defaults$
 		^init-workspace[[:space:]]+initialize a workspace directory$
 		^install-mcp[[:space:]]+install MCP server configuration$
 		^last[[:space:]]+display the most recently committed objects$

@@ -49,6 +49,20 @@ func (cmd *Genesis) SetFlagDefinitions(
 		"File containing list of zettel id right parts",
 	)
 
+	flagSet.BoolVar(
+		&cmd.BigBang.YinDefault,
+		"yin-default",
+		false,
+		"Use the embedded default zettel id left parts when -yin is unset",
+	)
+
+	flagSet.BoolVar(
+		&cmd.BigBang.YangDefault,
+		"yang-default",
+		false,
+		"Use the embedded default zettel id right parts when -yang is unset",
+	)
+
 	cmd.BigBang.SetDefaults()
 
 	cmd.BigBang.GenesisConfig.Blob.SetFlagDefinitions(flagSet)

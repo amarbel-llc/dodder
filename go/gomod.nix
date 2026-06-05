@@ -28,11 +28,14 @@
   system,
 }:
 {
-  # mkGoPkgs defaults drop non-Go files; the embedded pandoc filters
-  # and defaults under internal/romeo/local_working_copy/embedded/ are
-  # `//go:embed`ed at compile time and would otherwise vanish from
-  # the filtered source tree. Extras patterns are anchored regexps
-  # against the repo-relative path.
+  # mkGoPkgs defaults drop non-Go files; assets `//go:embed`ed at
+  # compile time would otherwise vanish from the filtered source tree:
+  # the pandoc filters/defaults under
+  # internal/romeo/local_working_copy/embedded/ (.lua/.yaml) and the
+  # default zettel-id word lists under
+  # internal/echo/zettel_id_provider/embedded/ (.txt). Extras patterns
+  # are anchored regexps against the repo-relative path; the .txt rule
+  # is scoped to embedded/ dirs so unrelated .txt files stay dropped.
   #
   # TODO[amarbel-llc/nixpkgs#60]: mkGoPkgs could derive these extras
   # automatically from `//go:embed` directives so consumers don't have
@@ -42,6 +45,7 @@
     extras = [
       ".*\\.lua$"
       ".*\\.yaml$"
+      ".*/embedded/.*\\.txt$"
     ];
   };
 

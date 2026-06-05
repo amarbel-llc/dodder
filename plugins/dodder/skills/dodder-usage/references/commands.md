@@ -17,6 +17,8 @@ Initialize a new dodder repository.
 |------|---------|-------------|
 | `-yin` | `""` | File containing list of zettel ID left parts |
 | `-yang` | `""` | File containing list of zettel ID right parts |
+| `-yin-default` | `false` | Use the built-in default zettel ID left parts when `-yin` is unset |
+| `-yang-default` | `false` | Use the built-in default zettel ID right parts when `-yang` is unset |
 | `-repo_id` | `""` | Repo location: `.` for CWD, empty for XDG user |
 | `-inventory_list-type` | (current version) | Type for inventory lists |
 | `-blob_store-id` | `""` | Name of an existing madder blob store to use |
@@ -33,6 +35,24 @@ Genesis configuration flags (set at creation time):
 dodder init my-repo
 dodder init -repo_id . my-repo
 dodder init -yin left-words.txt -yang right-words.txt my-repo
+```
+
+### init-default
+
+Initialize a repository with sensible defaults, for an unattended or
+per-session bootstrap. Creates the repository in the current directory; the
+`repo-id` defaults to the current directory name; the signing key is
+auto-detected from the SSH agent (a fresh per-repo key is generated when none
+is available); an existing CWD-local `.default` madder blob store is reused;
+and the zettel-ID vocabulary is seeded from a built-in default word list.
+Re-running in an already-initialized directory is a no-op.
+
+**Positional arguments:** `repo-id` (optional; defaults to the current
+directory name)
+
+```bash
+dodder init-default
+dodder init-default my-repo
 ```
 
 ### clone

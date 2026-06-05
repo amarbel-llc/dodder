@@ -27,8 +27,14 @@ type BigBang struct {
 
 	PrivateKey markl.Id
 
-	Yin                           string
-	Yang                          string
+	Yin  string
+	Yang string
+	// YinDefault / YangDefault opt into the embedded default zettel-id
+	// word lists (zettel_id_provider.Default{Yin,Yang}Reader) for a side
+	// whose explicit Yin/Yang path is empty. Set by `dodder init`'s
+	// -yin-default / -yang-default flags and by `dodder init-default`.
+	YinDefault                    bool
+	YangDefault                   bool
 	ExcludeDefaultType            bool
 	ExcludeDefaultConfig          bool
 	IncludeDefaultPandocTools     bool

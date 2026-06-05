@@ -287,12 +287,26 @@ func (env *Env) writeFile(path string, contents string) {
 }
 
 func (env *Env) genesisObjectIds(bigBang BigBang) {
-	if bigBang.Yin == "" && bigBang.Yang == "" {
+	yinHasSource := bigBang.Yin != "" || bigBang.YinDefault
+	yangHasSource := bigBang.Yang != "" || bigBang.YangDefault
+
+	if !yinHasSource && !yangHasSource {
 		return
 	}
 
-	yinSlice := readAndCleanFileLines(env, bigBang.Yin)
-	yangSlice := enforceCrossSideUniqueness(yinSlice, readAndCleanFileLines(env, bigBang.Yang))
+	yinSlice := env.genesisLoadSideWords(
+		bigBang.Yin,
+		bigBang.YinDefault,
+		zettel_id_provider.DefaultYinReader(),
+	)
+	yangSlice := enforceCrossSideUniqueness(
+		yinSlice,
+		env.genesisLoadSideWords(
+			bigBang.Yang,
+			bigBang.YangDefault,
+			zettel_id_provider.DefaultYangReader(),
+		),
+	)
 
 	yinBlobId := genesisWriteWordsAsBlob(env, yinSlice)
 	yangBlobId := genesisWriteWordsAsBlob(env, yangSlice)
@@ -328,6 +342,25 @@ func (env *Env) genesisObjectIds(bigBang BigBang) {
 	genesisWriteFlatFile(env, filepath.Join(env.DirObjectId(), zettel_id_provider.FilePathZettelIdYang), yangSlice)
 }
 
+// genesisLoadSideWords loads one side's zettel-id words: from filePath
+// when set, else from the embedded default (defaultReader) when
+// useDefault, else nil (the side has no source).
+func (env *Env) genesisLoadSideWords(
+	filePath string,
+	useDefault bool,
+	defaultReader io.Reader,
+) []string {
+	if filePath != "" {
+		return readAndCleanFileLines(env, filePath)
+	}
+
+	if useDefault {
+		return readAndCleanReader(env, defaultReader)
+	}
+
+	return nil
+}
+
 func readAndCleanFileLines(env *Env, filePath string) []string {
 	file, err := files.Open(filePath)
 	if err != nil {
@@ -337,13 +370,17 @@ func readAndCleanFileLines(env *Env, filePath string) []string {
 
 	defer errors.ContextMustClose(env, file)
 
-	reader, repool := pool.GetBufferedReader(file)
+	return readAndCleanReader(env, file)
+}
+
+func readAndCleanReader(env *Env, reader io.Reader) []string {
+	bufferedReader, repool := pool.GetBufferedReader(reader)
 	defer repool()
 
 	seen := make(map[string]struct{})
 	var words []string
 
-	for line, errIter := range ohio.MakeLineSeqFromReader(reader) {
+	for line, errIter := range ohio.MakeLineSeqFromReader(bufferedReader) {
 		if errIter != nil {
 			env.Cancel(errIter)
 			return nil
