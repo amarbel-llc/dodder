@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/0/doddish"
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
@@ -441,36 +442,55 @@ func (dirInfo *dirInfo) processFDsOnItem(
 	return blobCount, objectCount, err
 }
 
+// recognizeGenre returns the genre of an already-stored object named by
+// the workspace-relative key, or genres.Unknown when the key names no
+// stored object. genres.Unknown is also returned (without error) when
+// the key is not a representable object id -- e.g. a blob nested two or
+// more directories deep, like docs/plans/foo.md, whose path tokenizes
+// to more segments than the zettel-id grammar accepts. Such a file
+// cannot name a checked-out object, so it is left to fall through to
+// blob handling rather than aborting the whole workspace scan (which
+// crashed status / new / the MCP read paths). Mirrors the
+// IsErrUnsupportedSeq -> SetBlob fallback in ids (main.go).
+func (dirInfo *dirInfo) recognizeGenre(
+	objectIdString string,
+) (recognizedGenre genres.Genre, err error) {
+	var objectId ids.ObjectId
+
+	if err = objectId.Set(objectIdString); err != nil {
+		if doddish.IsErrUnsupportedSeq(err) {
+			return genres.Unknown, nil
+		}
+
+		return genres.Unknown, errors.Wrap(err)
+	}
+
+	recognized, recognizedRepool := sku.GetTransactedPool().GetWithRepool()
+	defer recognizedRepool()
+
+	if err = dirInfo.storeSupplies.ReadOneInto(
+		&objectId,
+		recognized,
+	); err != nil {
+		if errors.IsErrNotFound(err) {
+			return genres.Unknown, nil
+		}
+
+		return genres.Unknown, errors.Wrapf(err, "ObjectId: %q", objectIdString)
+	}
+
+	return genres.Must(recognized.GetGenre()), nil
+}
+
 func (dirInfo *dirInfo) processFDSet(
 	objectIdString string,
 	item *sku.FSItem,
 ) (results []*sku.FSItem, err error) {
 	var recognizedGenre genres.Genre
 
-	{
-		recognized, recognizedRepool := sku.GetTransactedPool().GetWithRepool()
-		defer recognizedRepool()
-
-		var objectId ids.ObjectId
-
-		if err = objectId.Set(objectIdString); err != nil {
-			err = errors.Wrap(err)
-			return results, err
-		}
-
-		if err = dirInfo.storeSupplies.ReadOneInto(
-			&objectId,
-			recognized,
-		); err != nil {
-			if errors.IsErrNotFound(err) {
-				err = nil
-			} else {
-				err = errors.Wrapf(err, "ObjectId: %q", objectIdString)
-				return results, err
-			}
-		} else {
-			recognizedGenre = genres.Must(recognized.GetGenre())
-		}
+	if recognizedGenre, err = dirInfo.recognizeGenre(objectIdString); err != nil {
+		err = errors.Wrap(err)
+		return results, err
 	}
 
 	var blobCount, objectCount int
