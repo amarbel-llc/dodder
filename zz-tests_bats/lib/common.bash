@@ -342,6 +342,10 @@ EOM
 
 function start_server {
   dir="$1"
+  shift || true
+  # Any remaining args are extra `serve` flags (e.g. -public). Callers
+  # that pass only a dir, or nothing, leave this empty.
+  local serve_args=("$@")
 
   coproc server {
     if [[ -n $dir ]]; then
@@ -349,7 +353,7 @@ function start_server {
     fi
 
     # shellcheck disable=SC2068
-    "$DODDER_BIN" serve ${cmd_dodder_def[@]} -handshake
+    "$DODDER_BIN" serve ${cmd_dodder_def[@]} -handshake ${serve_args[@]}
   }
 
   # Wait up to 5s for the handshake line. dodder serve -handshake binds

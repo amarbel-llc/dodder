@@ -345,6 +345,14 @@ func (server *Server) handleHealthz(request Request) (response Response) {
 	return response
 }
 
+// isReadOnlyMethod reports whether method is a safe, read-only HTTP
+// method. The public-mode nonce bypass is limited to these so it can
+// never serve a mutating request (a POST to /blobs, /mcp, or
+// /inventory_lists) without attestation.
+func isReadOnlyMethod(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead
+}
+
 func (server *Server) sigMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(responseWriter http.ResponseWriter, request *http.Request) {
@@ -360,10 +368,14 @@ func (server *Server) sigMiddleware(next http.Handler) http.Handler {
 			nonce := request.Header.Get(headerChallengeNonce)
 
 			// Public read mode: a client that omits the challenge
-			// nonce is served without server attestation. A nonce, if
-			// present, is still honored so sync clients keep getting a
+			// nonce is served without server attestation, but only for
+			// safe (read-only) methods. The bypass must never reach the
+			// mutating POST handlers (/blobs, /mcp, /inventory_lists), so
+			// a nonce-less write falls through to the 400 below exactly
+			// as it would on a non-public server. A nonce, if present, is
+			// honored regardless of method so sync clients keep getting a
 			// signed challenge response.
-			if nonce == "" && server.Public {
+			if nonce == "" && server.Public && isReadOnlyMethod(request.Method) {
 				next.ServeHTTP(responseWriter, request)
 				return
 			}
