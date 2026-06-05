@@ -133,6 +133,7 @@ function complete_subcmd { # @test
 		^init[[:space:]]+initialize a new repository$
 		^init-default[[:space:]]+initialize a repository with sensible defaults$
 		^init-workspace[[:space:]]+initialize a workspace directory$
+		^init-workspace-default[[:space:]]+initialize a workspace with default ignore patterns$
 		^install-mcp[[:space:]]+install MCP server configuration$
 		^last[[:space:]]+display the most recently committed objects$
 		^mcp[[:space:]]+start the MCP server$

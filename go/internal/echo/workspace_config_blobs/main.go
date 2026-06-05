@@ -47,6 +47,11 @@ type (
 		Config
 		GetHaustoriaConfig() HaustoriaConfig
 	}
+
+	ConfigWithIgnore interface {
+		Config
+		GetIgnorePatterns() []string
+	}
 )
 
 var (

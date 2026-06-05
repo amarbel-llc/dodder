@@ -24,6 +24,10 @@ type (
 		ids.TypeSet
 		ids.Clock
 		BlobStore typed_blob_store.Stores // TODO reduce this dependency
+		// IgnorePatterns are gitignore-style patterns from the workspace
+		// config (workspace_config_blobs.ConfigWithIgnore); store_fs skips
+		// matching paths in its external-item scan (#232).
+		IgnorePatterns []string
 	}
 
 	CheckoutOne interface {

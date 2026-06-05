@@ -4,13 +4,15 @@
 pre-merge = "just"
 
 # Bootstrap a per-session dodder repository (repo-id = worktree name)
-# over the per-worktree madder .default store when a session is created.
-# init-default auto-detects a signing key from the SSH agent (or
-# generates a fresh per-repo key), reuses the .default madder store, and
-# seeds the embedded default zettel-id vocabulary. Best-effort: a dodder
-# without `init-default` on PATH (or any transient error) logs but does
-# not block session creation, and init-default is idempotent on re-run.
-create = "DODDER_CEILING_DIRECTORIES=\"$WORKTREE\" MADDER_CEILING_DIRECTORIES=\"$WORKTREE\" dodder init-default || echo 'sweatfile create: dodder init-default failed (need a dodder with init-default on PATH)' >&2"
+# over the per-worktree madder .default store when a session is created,
+# then a workspace with default ignore patterns. init-default
+# auto-detects a signing key from the SSH agent (or generates a fresh
+# per-repo key), reuses the .default madder store, and seeds the embedded
+# default zettel-id vocabulary; init-workspace-default adds a workspace
+# whose scan skips common build/dependency dirs. Best-effort: a dodder
+# lacking these subcommands (or any transient error) logs but does not
+# block session creation, and both are idempotent on re-run.
+create = "export DODDER_CEILING_DIRECTORIES=\"$WORKTREE\" MADDER_CEILING_DIRECTORIES=\"$WORKTREE\"; dodder init-default && dodder init-workspace-default || echo 'sweatfile create: dodder bootstrap failed (need a dodder with init-default/init-workspace-default on PATH)' >&2"
 
 # Keep the per-session dodder repo out of git status regardless of the
 # user's global ignore, and let the agent drive dodder without prompts.

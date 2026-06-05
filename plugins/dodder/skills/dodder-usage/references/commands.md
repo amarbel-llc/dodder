@@ -143,6 +143,20 @@ dodder init-workspace -tags work -type md
 dodder init-workspace -query "project:z"
 ```
 
+### init-workspace-default
+
+Initialize a workspace in the current directory with a sensible default set of
+ignore patterns, for an unattended or per-session bootstrap. The workspace's
+file scan (used by `status`) skips common non-dot build/dependency directories
+(`node_modules`, `target`, `dist`, `build`, `vendor`); dot-prefixed paths like
+`.git` are already skipped. No-op if a workspace already exists.
+
+**Positional arguments:** none
+
+```bash
+dodder init-workspace-default
+```
+
 ### info-workspace
 
 Display workspace configuration.

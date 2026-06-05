@@ -28,7 +28,9 @@ type itemWithError struct {
 	*sku.FSItem
 }
 
-// TODO support globs and ignores
+// Ignore patterns from the workspace config are applied in walkDir via
+// isIgnored (simple filepath.Match globs, #232); full gitignore
+// semantics are tracked in #234.
 type dirInfo struct {
 	root          string
 	rootProcessed bool
@@ -114,6 +116,14 @@ func (dirInfo *dirInfo) walkDir(
 				return err
 			}
 
+			if dirInfo.isIgnored(path) {
+				if dirEntry.IsDir() {
+					err = filepath.SkipDir
+				}
+
+				return err
+			}
+
 			if pattern != "" {
 				var matched bool
 
@@ -150,6 +160,37 @@ func (dirInfo *dirInfo) walkDir(
 	}
 
 	return err
+}
+
+// isIgnored reports whether path matches any of the workspace config's
+// gitignore-style ignore patterns (#232). Each pattern is matched with
+// filepath.Match against both the path's base name (so `node_modules`
+// prunes any dir of that name) and the workspace-relative path (so
+// `go/build` works). A matching directory is pruned by the caller via
+// filepath.SkipDir. Full gitignore semantics are tracked in #234.
+func (dirInfo *dirInfo) isIgnored(path string) bool {
+	patterns := dirInfo.storeSupplies.IgnorePatterns
+
+	if len(patterns) == 0 {
+		return false
+	}
+
+	base := filepath.Base(path)
+	rel, relErr := filepath.Rel(dirInfo.root, path)
+
+	for _, pattern := range patterns {
+		if matched, _ := filepath.Match(pattern, base); matched {
+			return true
+		}
+
+		if relErr == nil {
+			if matched, _ := filepath.Match(pattern, rel); matched {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func (dirInfo *dirInfo) addPathAndDirEntry(

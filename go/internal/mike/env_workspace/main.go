@@ -447,8 +447,14 @@ func (env *env) CreateWorkspace(
 ) (err error) {
 	env.blob = blob
 
+	// Checked most-derived first: each version embeds the previous, so a
+	// V3 also satisfies ConfigWithHaustoria/ParentPath. Picking the wrong
+	// (lower) version would re-encode with that version's coder and drop
+	// the newer fields (e.g. V3's Ignore).
 	typeString := ids.TypeTomlWorkspaceConfigV0
-	if _, ok := blob.(workspace_config_blobs.ConfigWithHaustoria); ok {
+	if _, ok := blob.(workspace_config_blobs.ConfigWithIgnore); ok {
+		typeString = ids.TypeTomlWorkspaceConfigV3
+	} else if _, ok := blob.(workspace_config_blobs.ConfigWithHaustoria); ok {
 		typeString = ids.TypeTomlWorkspaceConfigV2
 	} else if _, ok := blob.(workspace_config_blobs.ConfigWithParentPath); ok {
 		typeString = ids.TypeTomlWorkspaceConfigV1
@@ -479,6 +485,13 @@ func (env *env) CreateWorkspace(
 }
 
 func (env *env) SetSupplies(supplies store_workspace.Supplies) (err error) {
+	// Surface the workspace config's ignore patterns (#232) to store_fs's
+	// scan. Versions that don't implement ConfigWithIgnore (V0/V1/V2) or
+	// a nil/temporary config leave the patterns empty.
+	if configWithIgnore, ok := env.blob.(workspace_config_blobs.ConfigWithIgnore); ok {
+		supplies.IgnorePatterns = configWithIgnore.GetIgnorePatterns()
+	}
+
 	env.store.Supplies = supplies
 
 	if err = env.store.Initialize(); err != nil {
