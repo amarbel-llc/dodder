@@ -519,27 +519,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 			}`),
 			Annotations: writeAnnotations,
 		},
-		makeBridgeHandler(bridge, "new", func(args json.RawMessage) ([]string, error) {
-			var p struct {
-				Description string   `json:"description"`
-				Tags        []string `json:"tags"`
-				Type        string   `json:"type"`
-			}
-			if err := json.Unmarshal(args, &p); err != nil {
-				return nil, err
-			}
-			var cliArgs []string
-			if p.Description != "" {
-				cliArgs = append(cliArgs, "-description", p.Description)
-			}
-			if len(p.Tags) > 0 {
-				cliArgs = append(cliArgs, "-tags", strings.Join(p.Tags, ","))
-			}
-			if p.Type != "" {
-				cliArgs = append(cliArgs, "-type", p.Type)
-			}
-			return cliArgs, nil
-		}),
+		makeBridgeHandler(bridge, "new", newToolCLIArgs),
 	)
 
 	tools.Register(
@@ -703,6 +683,36 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 			return []string{"-format", "text", ".", p.ObjectId}, nil
 		}),
 	)
+}
+
+// newToolCLIArgs translates dodder_new tool arguments into `dodder new`
+// CLI flags. -edit=false is always passed first so the command never
+// launches an editor: the MCP server has no controlling TTY, and an
+// editor launch blocks the tool call indefinitely (the object is
+// committed first, then the call hangs). See #233.
+func newToolCLIArgs(args json.RawMessage) ([]string, error) {
+	var p struct {
+		Description string   `json:"description"`
+		Tags        []string `json:"tags"`
+		Type        string   `json:"type"`
+	}
+	if err := json.Unmarshal(args, &p); err != nil {
+		return nil, err
+	}
+
+	cliArgs := []string{"-edit=false"}
+
+	if p.Description != "" {
+		cliArgs = append(cliArgs, "-description", p.Description)
+	}
+	if len(p.Tags) > 0 {
+		cliArgs = append(cliArgs, "-tags", strings.Join(p.Tags, ","))
+	}
+	if p.Type != "" {
+		cliArgs = append(cliArgs, "-type", p.Type)
+	}
+
+	return cliArgs, nil
 }
 
 func makeEditHandler(
