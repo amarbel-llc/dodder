@@ -10,7 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/fields"
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
@@ -29,10 +28,11 @@ func (builder *Builder) AddBlobDigestIfNecessary(
 			panic(err)
 		}
 
+		// An empty result means the abbreviation index has no entries to
+		// abbreviate against (e.g. during clone/genesis, before the index
+		// is populated). Fall back to the full digest.
 		if abbreviatedDigestString != "" {
 			value = abbreviatedDigestString
-		} else {
-			ui.Todo("abbreviation func produced empty string")
 		}
 	}
 
@@ -120,10 +120,10 @@ func (builder *Builder) addMarklIdAbbreviated(
 			panic(err)
 		}
 
+		// Empty means the abbreviation index has no entries; use the
+		// full id (see AddBlobDigestIfNecessary).
 		if abbreviated != "" {
 			value = abbreviated
-		} else {
-			ui.Todo("abbreviation func produced empty string")
 		}
 	}
 

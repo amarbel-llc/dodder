@@ -10,7 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 )
 
 func AddBlobDigestIfNecessary(
@@ -26,10 +25,11 @@ func AddBlobDigestIfNecessary(
 			panic(err)
 		}
 
+		// An empty result means the abbreviation index has no entries to
+		// abbreviate against (e.g. during clone/genesis, before the index
+		// is populated). Fall back to the full digest.
 		if abbreviatedDigestString != "" {
 			value = abbreviatedDigestString
-		} else {
-			ui.Todo("abbreviation func produced empty string")
 		}
 	}
 
