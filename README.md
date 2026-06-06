@@ -140,8 +140,8 @@ See [`docs/man.7/workspace.md`](docs/man.7/workspace.md).
 Create a repo, write a note, query it, edit in bulk, and sync.
 
 ```sh
-# 1. Initialize a repo
-dodder init
+# 1. Initialize a repo (repo-id names the repository)
+dodder init my-repo
 
 # 2. Create and edit objects
 dodder new -type md        # create a new md-typed zettel in $EDITOR
@@ -162,8 +162,8 @@ dodder checkout '!task'
 dodder status
 dodder diff
 
-# 6. Sync between repos
-dodder clone -direct /path/to/other-repo
+# 6. Sync between repos (clone needs a name for the new local repo)
+dodder clone -direct /path/to/other-repo my-clone
 dodder pull -direct /path/to/other-repo
 dodder push -direct /path/to/other-repo
 ```
