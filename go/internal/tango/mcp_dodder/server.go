@@ -41,7 +41,7 @@ Object genres:
 
 ## Query Syntax
 
-Query terms in dodder_query are AND-combined. Term types:
+Query terms in the query tool are AND-combined. Term types:
 - Genre filters: :z (zettels), :e (tags), :t (types)
 - Tag filter: bare tag name (e.g. todo, priority-0_must)
 - Type filter: !type (e.g. !task, !md)
@@ -51,26 +51,26 @@ tasks with urgency-2_week tag. [":e"] = all tag objects.
 
 ## Tool Selection Guide
 
-1. type_query / tag_query — START HERE for discovery. Returns summaries with
-   tags and resource URIs. Use tag_query to find tags by word (e.g. ["project"]
+1. query-type / query-tag — START HERE for discovery. Returns summaries with
+   tags and resource URIs. Use query-tag to find tags by word (e.g. ["project"]
    finds all project-* tags), then inspect the tags field to filter
    (e.g. check for "active" in tags).
 
 2. Resources (dodder://...) — DRILL DOWN for detail. Follow resource URIs from
    query results. Use /objects for listings, /objects/facets for analytics.
 
-3. dodder_query — RAW QUERIES when you need AND-combined filters or specific
+3. query — RAW QUERIES when you need AND-combined filters or specific
    format output. Returns full object data.
 
-4. dodder_show — VIEW A SINGLE OBJECT by exact ID.
+4. show — VIEW A SINGLE OBJECT by exact ID.
 
 ## Common Workflows
 
 Find active projects:
-  → tag_query(["project"]) → filter results where tags contains "active"
+  → query-tag(["project"]) → filter results where tags contains "active"
 
 Find tasks by priority:
-  → dodder_query(["!task", "priority-0_must"]) with format "box"
+  → query(["!task", "priority-0_must"]) with format "box"
 
 Summarize a type's tag distribution:
   → read dodder://types/<id>/objects/facets
@@ -145,23 +145,23 @@ const mcpInstructionsWorkspace = `
 When dodder runs inside a workspace (directory with .dodder-workspace config),
 these tools operate on checked-out objects:
 
-- dodder_status — list checked-out objects with state (Recognized = modified,
+- status — list checked-out objects with state (Recognized = modified,
   Untracked = new, Conflicted = merge conflict)
-- dodder_diff — show internal vs external differences
-- dodder_read_checked_out — read working copy file content
-- dodder_checkin — commit working copy changes to the store
+- diff — show internal vs external differences
+- read-checked_out — read working copy file content
+- checkin — commit working copy changes to the store
 
 ### Workspace Workflow
 
 Inspect what changed:
-  → dodder_status() → see all checked-out objects and their state
-  → dodder_diff() → see what changed in modified objects
+  → status() → see all checked-out objects and their state
+  → diff() → see what changed in modified objects
 
 Read working copy content:
-  → dodder_read_checked_out(object_id) → get current file content
+  → read-checked_out(object_id) → get current file content
 
 Commit changes:
-  → dodder_checkin(query) → commit matching objects to the store
+  → checkin(query) → commit matching objects to the store
 `
 
 var readOnlyAnnotations = &protocol.ToolAnnotations{
@@ -224,7 +224,7 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_working_copy.Repo, index *typeIndex, tagIdx *tagIndex, hasWorkspace bool) {
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_show",
+			Name:        "show",
 			Description: "View a specific dodder object by ID. Returns metadata and content for zettels, tags, or types.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -263,8 +263,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_query",
-			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer type_query/tag_query for discovery; use this for AND-filtered object listings.",
+			Name:        "query",
+			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer query-type/query-tag for discovery; use this for AND-filtered object listings.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -355,7 +355,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_format_blob",
+			Name:        "format-blob",
 			Description: "Format and display the blob content of a dodder zettel. Renders the zettel's associated file content using the type's configured formatter.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -392,7 +392,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_type_query",
+			Name:        "query-type",
 			Description: "Search for dodder types by word (OR-union). Returns type summaries including tags and resource URIs for drill-down. Words are expanded by hyphen segments: 'task' matches !task, !taskpaper, etc. Use dodder://types/<id>/objects to list objects of a matched type, or /objects/facets for tag analytics.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -444,8 +444,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_tag_query",
-			Description: "Search for dodder tags by word (OR-union). Returns tag summaries including each tag's own tags (meta-tags like 'active', 'priority-0_must'). Use this to discover and filter tags — e.g. tag_query(['project']) returns all project tags, then check each result's tags field for 'active' to find active projects. Words are expanded by hyphen segments: 'project' matches project-2021-zit, project-24q2-personal_sites, etc.",
+			Name:        "query-tag",
+			Description: "Search for dodder tags by word (OR-union). Returns tag summaries including each tag's own tags (meta-tags like 'active', 'priority-0_must'). Use this to discover and filter tags — e.g. query-tag(['project']) returns all project tags, then check each result's tags field for 'active' to find active projects. Words are expanded by hyphen segments: 'project' matches project-2021-zit, project-24q2-personal_sites, etc.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -496,7 +496,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_new",
+			Name:        "new",
 			Description: "Create a new zettel. Returns the created object in box format. Optionally set a description, type, and tags.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -524,7 +524,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_edit",
+			Name:        "edit",
 			Description: "Edit an existing dodder object. Updates metadata (description, tags, type) and/or blob content. Fields not provided are left unchanged. When tags is provided, it replaces all existing tags.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -572,7 +572,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_status",
+			Name:        "status",
 			Description: "List checked-out objects in the workspace with their state (CheckedOut, Recognized, Untracked, Conflicted). Requires an active workspace. Returns box format with state headers.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -600,7 +600,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_checkin",
+			Name:        "checkin",
 			Description: "Commit working copy changes to the store. Checks in objects matching the query from the workspace. Requires an active workspace.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -629,7 +629,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_diff",
+			Name:        "diff",
 			Description: "Show differences between internal (store) and external (working copy) versions of checked-out objects. Requires an active workspace.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -657,7 +657,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 	tools.Register(
 		protocol.ToolV1{
-			Name:        "dodder_read_checked_out",
+			Name:        "read-checked_out",
 			Description: "Read the working copy file content of a checked-out object. Returns the external (filesystem) version, not the store version. Requires an active workspace.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
@@ -685,7 +685,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 	)
 }
 
-// newToolCLIArgs translates dodder_new tool arguments into `dodder new`
+// newToolCLIArgs translates the `new` tool's arguments into `dodder new`
 // CLI flags. -edit=false is always passed first so the command never
 // launches an editor: the MCP server has no controlling TTY, and an
 // editor launch blocks the tool call indefinitely (the object is

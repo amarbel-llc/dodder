@@ -107,12 +107,12 @@ func renderDiscover(
 					Content: protocol.TextContent(fmt.Sprintf(`## Goal: Discover what's in this dodder repo related to "%s"
 
 ### Step 1: Search for matching types
-Call dodder_type_query with words: ["%s"]
+Call query-type with words: ["%s"]
 This returns type summaries matching the word. Each result includes
 object-id, description, tags (meta-tags), and a resource-uri.
 
 ### Step 2: Search for matching tags
-Call dodder_tag_query with words: ["%s"]
+Call query-tag with words: ["%s"]
 This returns tag summaries matching the word. Each result includes
 object-id, description, its own tags (meta-tags), and a resource-uri.
 
@@ -155,8 +155,8 @@ These give you the vocabulary of this repo without loading all objects.
 
 ### Step 2: Search by word
 Pick interesting words from the indexes and search:
-  Call dodder_type_query with words: ["<word>"] — finds matching types
-  Call dodder_tag_query with words: ["<word>"] — finds matching tags
+  Call query-type with words: ["<word>"] — finds matching types
+  Call query-tag with words: ["<word>"] — finds matching tags
 
 Results include meta-tags in the "tags" field that describe each type/tag.
 
@@ -210,7 +210,7 @@ func renderQueryObjects(
 				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Query for dodder objects
 
 ### Step 1: Run the query
-Call dodder_query with:
+Call query with:
   query: %s
   format: "box"
   limit: 50
@@ -310,7 +310,7 @@ func renderExploreType(
 				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Explore the %s type
 
 ### Step 1: Find the type
-Call dodder_type_query with words: ["%s"]
+Call query-type with words: ["%s"]
 This returns type summaries matching the word. Each result includes
 object-id, description, tags, and a resource-uri for drill-down.
 
@@ -363,7 +363,7 @@ func renderExploreTag(
 				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Explore the %s tag
 
 ### Step 1: Find the tag
-Call dodder_tag_query with words: ["%s"]
+Call query-tag with words: ["%s"]
 This returns tag summaries matching the word. Each result includes
 object-id, description, its own tags (meta-tags), and a resource-uri.
 

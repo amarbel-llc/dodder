@@ -154,7 +154,7 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 
 ## MCP: content block validation error on single-object queries
 
-- [ ] `dodder_query` MCP tool returns MCP protocol validation errors when the query matches a single object (e.g. `["!md-snippet"]`). The error is `invalid_union` on `content[0]` — the content block doesn't match any of the expected MCP types (text, image, audio, resource_link, resource). Reproduce: call `dodder_type_query` or `dodder_query` with a query that returns exactly one result, or call `dodder_query` with `["!md-snippet"]`. The `makeBridgeHandler` in `server.go` wraps output in `protocol.TextContentV1()` which should be correct — investigate whether the JSON output for single objects is malformed or whether the issue is in the go-mcp library's content block serialization.
+- [ ] `dodder.query` MCP tool returns MCP protocol validation errors when the query matches a single object (e.g. `["!md-snippet"]`). The error is `invalid_union` on `content[0]` — the content block doesn't match any of the expected MCP types (text, image, audio, resource_link, resource). Reproduce: call `dodder.query-type` or `dodder.query` with a query that returns exactly one result, or call `dodder.query` with `["!md-snippet"]`. The `makeBridgeHandler` in `server.go` wraps output in `protocol.TextContentV1()` which should be correct — investigate whether the JSON output for single objects is malformed or whether the issue is in the go-mcp library's content block serialization.
 
 ## BATS: `migration_status_empty` fails when TMPDIR is inside worktree
 
@@ -162,19 +162,19 @@ Error reporting for all 4 bugs landed in `420a114d0` (rich error types,
 
 ## MCP: streaming JSON array output from tools
 
-- [ ] FDR: MCP tools (`dodder_query`, `dodder_show`) return newline-delimited JSON. Agents can't parse this natively — they split lines and parse each one, or resort to python. Switch to streaming JSON arrays using a `json.Encoder` pattern (like `tango/remote_http`) that emits `[`, per-object JSON, `,`, `]` without buffering the full result set into memory. This would make tool output directly usable as structured data.
+- [ ] FDR: MCP tools (`dodder.query`, `dodder.show`) return newline-delimited JSON. Agents can't parse this natively — they split lines and parse each one, or resort to python. Switch to streaming JSON arrays using a `json.Encoder` pattern (like `tango/remote_http`) that emits `[`, per-object JSON, `,`, `]` without buffering the full result set into memory. This would make tool output directly usable as structured data.
 
-## MCP: `dodder_show` returns unbounded results for type queries
+## MCP: `dodder.show` returns unbounded results for type queries
 
-- [ ] `dodder_show` with a type ID like `!md` returns ALL objects of that type (potentially 100K+ chars), same problem that `dodder_query` had before the `limit` parameter was added. Options: (1) add `limit` to `dodder_show`, (2) make `dodder_show` only return the single object matching the exact ID (using `:t`/`:e`/`:z` genre sigils internally), or (3) split into separate "show one object" vs "list matching objects" tools with clearer semantics.
+- [ ] `dodder.show` with a type ID like `!md` returns ALL objects of that type (potentially 100K+ chars), same problem that `dodder.query` had before the `limit` parameter was added. Options: (1) add `limit` to `dodder.show`, (2) make `dodder.show` only return the single object matching the exact ID (using `:t`/`:e`/`:z` genre sigils internally), or (3) split into separate "show one object" vs "list matching objects" tools with clearer semantics.
 
 ## MCP: type blob format listing for types
 
 - [ ] Add `dodder://types/<id>/blob/formats` endpoint mirroring the object blob format discovery. Types have their own type (e.g. `!toml-type-v1`) which defines formatters. Currently only `dodder://objects/<id>/blob/formats` is implemented (in `tango/mcp_dodder/resources.go`). The `readTypeBlobFormatted` handler already calls `format-blob` for rendering but has no corresponding format listing endpoint.
 
-## MCP: expand `dodder_show` format enum
+## MCP: expand `dodder.show` format enum
 
-- [ ] The `dodder_show` tool only exposes 4 formats in its enum: `["log", "text", "json", "organize"]`. The CLI supports 60+ formats (see `sierra/local_working_copy/format.go` `formatters` map). Consider making the enum dynamic or expanding it to include commonly useful formats like `box`, `json-with-blob_string`, `tags`, `description`, `object-id`. The `dodder_query` tool already includes `box` and `json-with-blob_string`.
+- [ ] The `dodder.show` tool only exposes 4 formats in its enum: `["log", "text", "json", "organize"]`. The CLI supports 60+ formats (see `sierra/local_working_copy/format.go` `formatters` map). Consider making the enum dynamic or expanding it to include commonly useful formats like `box`, `json-with-blob_string`, `tags`, `description`, `object-id`. The `dodder.query` tool already includes `box` and `json-with-blob_string`.
 
 ## MCP: debug code cleanup in server.go
 

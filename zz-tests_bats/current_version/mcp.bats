@@ -46,7 +46,9 @@ function mcp_initialize_no_workspace { # @test
 
 function mcp_tools_list_no_workspace { # @test
   # Outside a workspace, workspace-scoped tools (status, checkin, diff,
-  # read_checked_out) must not appear in tools/list.
+  # read-checked_out) must not appear in tools/list. The grep is scoped
+  # to the id:2 (tools/list) response so serverInfo's "name":"dodder"
+  # from the initialize response doesn't pollute the list.
   # https://github.com/amarbel-llc/dodder/issues/116
   copy_from_version "$DIR"
 
@@ -54,17 +56,17 @@ function mcp_tools_list_no_workspace { # @test
   write_mcp_tools_list_input "$input"
 
   run bash -o pipefail -c \
-    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep -oE "\"name\":\"dodder_[a-z_]+\"" | sort -u'
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2" | grep -oE "\"name\":\"[a-z_-]+\"" | sort -u'
 
   assert_success
   assert_output - <<-EOM
-		"name":"dodder_edit"
-		"name":"dodder_format_blob"
-		"name":"dodder_new"
-		"name":"dodder_query"
-		"name":"dodder_show"
-		"name":"dodder_tag_query"
-		"name":"dodder_type_query"
+		"name":"edit"
+		"name":"format-blob"
+		"name":"new"
+		"name":"query"
+		"name":"query-tag"
+		"name":"query-type"
+		"name":"show"
 	EOM
 }
 
@@ -78,21 +80,21 @@ function mcp_tools_list_with_workspace { # @test
   write_mcp_tools_list_input "$input"
 
   run bash -o pipefail -c \
-    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep -oE "\"name\":\"dodder_[a-z_]+\"" | sort -u'
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2" | grep -oE "\"name\":\"[a-z_-]+\"" | sort -u'
 
   assert_success
   assert_output - <<-EOM
-		"name":"dodder_checkin"
-		"name":"dodder_diff"
-		"name":"dodder_edit"
-		"name":"dodder_format_blob"
-		"name":"dodder_new"
-		"name":"dodder_query"
-		"name":"dodder_read_checked_out"
-		"name":"dodder_show"
-		"name":"dodder_status"
-		"name":"dodder_tag_query"
-		"name":"dodder_type_query"
+		"name":"checkin"
+		"name":"diff"
+		"name":"edit"
+		"name":"format-blob"
+		"name":"new"
+		"name":"query"
+		"name":"query-tag"
+		"name":"query-type"
+		"name":"read-checked_out"
+		"name":"show"
+		"name":"status"
 	EOM
 }
 
@@ -120,7 +122,7 @@ function mcp_show_type_object_has_non_empty_text { # @test
   run_dodder_init_disable_age
 
   local input="$BATS_TEST_TMPDIR/mcp-show.jsonrpc"
-  write_mcp_tool_call_input "$input" dodder_show '{"object_id":"!md"}'
+  write_mcp_tool_call_input "$input" show '{"object_id":"!md"}'
 
   run bash -o pipefail -c \
     'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2" | grep -oE "\"text\":\"[^\"]*\""'
@@ -136,7 +138,7 @@ function mcp_query_empty_result_has_non_empty_text { # @test
   run_dodder_init_disable_age
 
   local input="$BATS_TEST_TMPDIR/mcp-query-empty.jsonrpc"
-  write_mcp_tool_call_input "$input" dodder_query '{"query":[":z"]}'
+  write_mcp_tool_call_input "$input" query '{"query":[":z"]}'
 
   run bash -o pipefail -c \
     'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2" | grep -oE "\"text\":\"[^\"]*\""'

@@ -9,7 +9,7 @@ import (
 )
 
 // TestNewToolCLIArgsForcesNonInteractive pins the #233 fix: every
-// dodder_new invocation must pass -edit=false so the bridge never
+// `new` tool invocation must pass -edit=false so the bridge never
 // launches an editor in the no-TTY MCP context (which would hang the
 // tool call). The flag is required regardless of which optional fields
 // the caller supplies.
