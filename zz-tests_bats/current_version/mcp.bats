@@ -131,6 +131,31 @@ function mcp_show_type_object_has_non_empty_text { # @test
   refute_output '"text":""'
 }
 
+function mcp_new_twice_does_not_leak_description { # @test
+  # Two sequential `new` tool calls in one MCP session must not leak
+  # flag state: Description.Set appends when a value is already
+  # present, and the bridge reuses the registered command singletons,
+  # so the second object's description came out concatenated with the
+  # first's ("first description second description").
+  # https://github.com/amarbel-llc/dodder/issues/247
+  run_dodder_init_disable_age
+
+  local input="$BATS_TEST_TMPDIR/mcp-new-twice.jsonrpc"
+  {
+    echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1.0"}}}'
+    echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+    echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"new","arguments":{"description":"first description"}}}'
+    echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"new","arguments":{"description":"second description"}}}'
+  } >"$input"
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":3"'
+
+  assert_success
+  assert_output --regexp '"second description"|second description'
+  refute_output --regexp 'first description'
+}
+
 function mcp_query_empty_result_has_non_empty_text { # @test
   # Same root cause as the show-type test: an empty result set yields
   # empty stdout and an empty content block; assert the placeholder.

@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
@@ -50,7 +51,21 @@ type New struct {
 	sku.Proto
 }
 
-var _ interfaces.CommandComponentWriter = (*New)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*New)(nil)
+	_ command.CommandWithResetCLIState  = (*New)(nil)
+)
+
+// ResetCLIState clears the flag-bound state that accumulates across
+// invocations when this registered command value is reused in a
+// long-lived process (the MCP bridge): descriptions.Description.Set
+// appends and the tag set unions, so without this two MCP `new` calls
+// concatenate descriptions (#247). Scalar flags self-heal via the
+// defaults written at flag registration; only the Var-bound Proto
+// metadata needs explicit clearing.
+func (cmd *New) ResetCLIState() {
+	objects.Resetter.Reset(&cmd.Proto.Metadata)
+}
 
 func (cmd *New) GetArgs() []command.ArgGroup {
 	return []command.ArgGroup{{
