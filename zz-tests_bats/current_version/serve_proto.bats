@@ -132,6 +132,38 @@ function pull_over_websocket { # @test
 	EOM
 }
 
+# clone_over_websocket exercises a genesis clone over the drtp websocket
+# transport: a fresh repo is created and populated from `them` in one shot.
+function clone_over_websocket { # @test
+  bootstrap_them
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder clone \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id . \
+    -remote-connection-type url-websocket \
+    test-repo-id-us \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+	EOM
+}
+
 # push_over_websocket exercises the inverse direction with mandatory client
 # attestation (the server is NOT -public): a zettel created in `us` is
 # pushed to `them` over ws://.

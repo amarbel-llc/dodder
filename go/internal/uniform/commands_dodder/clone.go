@@ -5,6 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
@@ -64,9 +65,17 @@ func (cmd Clone) Run(req command.Request) {
 	local := cmd.OnTheFirstDay(req, req.PopArg("new repo id"))
 
 	var remote repo.Repo
+	var remoteObject *sku.Transacted
+	useProto := false
 
 	if cmd.IsDirectTransfer() {
 		remote = cmd.MakeDirectRemoteFromPath(req, local)
+	} else if cmd.IsWebSocketProtocol() {
+		// MakeRemoteAndObject builds the remote object (carrying the url)
+		// without connecting for a websocket remote, so we get the object
+		// to dial and skip the remote_http client entirely.
+		_, remoteObject = cmd.MakeRemoteAndObject(req, local)
+		useProto = true
 	} else {
 		// TODO offer option to persist remote object, if supported
 		remote, _ = cmd.MakeRemoteAndObject(req, local)
@@ -85,7 +94,17 @@ func (cmd Clone) Run(req command.Request) {
 		req.PopArgs(),
 	)
 
-	if err := local.PullQueryGroupFromRemote(
+	if useProto {
+		conn, client := cmd.MakeProtoConnectionFromObject(req, local, remoteObject)
+
+		if err := client.Fetch(
+			conn,
+			queryGroup.String(),
+			cmd.WithPrintCopies(true),
+		); err != nil {
+			req.Cancel(err)
+		}
+	} else if err := local.PullQueryGroupFromRemote(
 		remote,
 		queryGroup,
 		cmd.WithPrintCopies(true),
