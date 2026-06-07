@@ -68,6 +68,18 @@ const (
 	StatusComplete = "complete"
 )
 
+// Blob compression algorithms negotiated in capabilities and named in a
+// blob_header. CompressionNone (the empty string) is always supported;
+// CompressionZstd matches dodder's at-rest blob compression convention.
+const (
+	CompressionNone = ""
+	CompressionZstd = "zstd"
+)
+
+// supportedCompression is the algorithm this implementation advertises and
+// will use when the peer also supports it.
+const supportedCompression = CompressionZstd
+
 // frameKind identifies how a frame's payload is interpreted. It is the
 // single leading byte of every frame (see frame.go).
 type frameKind byte

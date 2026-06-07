@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 
+	"github.com/DataDog/zstd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
@@ -64,35 +65,43 @@ func (s *session) writeObjects(payload []byte) (err error) {
 // constant memory rather than being buffered whole.
 const blobChunkSize = 64 * 1024
 
-// writeBlob writes a blob_header control frame, then streams the blob's bytes
-// as a sequence of blob frames, terminated by a zero-length blob frame, then
-// flushes. The blob is never held in memory in full.
-func (s *session) writeBlob(blobIdString string, reader io.Reader) (err error) {
+// writeBlob writes a blob_header control frame (naming the blob and, when
+// compressed, the algorithm), streams the blob's bytes — optionally through a
+// zstd encoder — as a sequence of blob frames terminated by a zero-length
+// frame, then flushes. The blob is never held in memory in full.
+func (s *session) writeBlob(
+	blobIdString string,
+	reader io.Reader,
+	compression string,
+) (err error) {
 	if err = writeControlFrame(s.writer, TypeBlobHeader, control{
-		BlobId: blobIdString,
+		BlobId:      blobIdString,
+		Compression: compression,
 	}); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	buffer := make([]byte, blobChunkSize)
+	frameWriter := &blobFrameWriter{session: s}
 
-	for {
-		n, readErr := reader.Read(buffer)
+	switch compression {
+	case CompressionZstd:
+		encoder := zstd.NewWriter(frameWriter)
 
-		if n > 0 {
-			if err = writeFrame(s.writer, frameKindBlob, buffer[:n]); err != nil {
-				err = errors.Wrap(err)
-				return err
-			}
+		if _, err = io.Copy(encoder, reader); err != nil {
+			_ = encoder.Close()
+			err = errors.Wrapf(err, "compressing blob %s", blobIdString)
+			return err
 		}
 
-		if readErr != nil {
-			if errors.IsEOF(readErr) {
-				break
-			}
+		if err = encoder.Close(); err != nil {
+			err = errors.Wrapf(err, "finishing blob %s compression", blobIdString)
+			return err
+		}
 
-			err = errors.Wrapf(readErr, "reading blob %s", blobIdString)
+	default:
+		if _, err = io.Copy(frameWriter, reader); err != nil {
+			err = errors.Wrapf(err, "reading blob %s", blobIdString)
 			return err
 		}
 	}
@@ -109,6 +118,84 @@ func (s *session) writeBlob(blobIdString string, reader io.Reader) (err error) {
 	}
 
 	return err
+}
+
+// blobFrameWriter chops every Write into blob frames no larger than
+// blobChunkSize. It is the sink for the raw or zstd-compressed blob byte
+// stream.
+type blobFrameWriter struct {
+	session *session
+}
+
+func (w *blobFrameWriter) Write(p []byte) (n int, err error) {
+	for len(p) > 0 {
+		chunk := p
+		if len(chunk) > blobChunkSize {
+			chunk = chunk[:blobChunkSize]
+		}
+
+		if err = writeFrame(w.session.writer, frameKindBlob, chunk); err != nil {
+			err = errors.Wrap(err)
+			return n, err
+		}
+
+		n += len(chunk)
+		p = p[len(chunk):]
+	}
+
+	return n, err
+}
+
+// blobFrameReader presents the blob frames between a blob_header and the
+// zero-length terminator as a single io.Reader, so the receiver can stream
+// them straight into the blob writer (or through a zstd decoder).
+type blobFrameReader struct {
+	session   *session
+	remaining int
+	done      bool
+}
+
+func (r *blobFrameReader) Read(p []byte) (n int, err error) {
+	if r.done {
+		return 0, io.EOF
+	}
+
+	if r.remaining == 0 {
+		kind, length, frameErr := readFrameHeader(r.session.reader)
+		if frameErr != nil {
+			if errors.IsEOF(frameErr) {
+				return 0, io.EOF
+			}
+
+			return 0, errors.Wrap(frameErr)
+		}
+
+		if kind != frameKindBlob {
+			return 0, errors.Errorf(
+				"expected blob frame, got kind %d",
+				kind,
+			)
+		}
+
+		if length == 0 {
+			r.done = true
+			return 0, io.EOF
+		}
+
+		r.remaining = int(length)
+	}
+
+	toRead := len(p)
+	if toRead > r.remaining {
+		toRead = r.remaining
+	}
+
+	n, err = r.session.reader.Read(p[:toRead])
+	r.remaining -= n
+
+	// Read errors other than a clean intra-frame boundary are real; a
+	// truncated frame surfaces here.
+	return n, err
 }
 
 // readControl reads the next frame, which MUST be a control frame, and

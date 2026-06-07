@@ -5,6 +5,7 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.2.0
 	filippo.io/age v1.3.1
+	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/madder/go v0.3.31-0.20260531165016-00613b378127
 	github.com/amarbel-llc/purse-first/libs/dewey v0.2.6-0.20260530121752-67a6f4d5e72d
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.2.6-0.20260530121752-67a6f4d5e72d
@@ -32,7 +33,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
-	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.41.7 // indirect

@@ -45,6 +45,7 @@ func clientHandshake(
 		Role:              RoleClient,
 		InventoryListType: listType,
 		ExpandEdges:       true,
+		Compression:       supportedCompression,
 		PublicKey:         self.publicString(),
 		Nonce:             clientNonce,
 	}); err != nil {
@@ -157,6 +158,7 @@ func serverHandshake(
 		Role:              RoleServer,
 		InventoryListType: listType,
 		ExpandEdges:       true,
+		Compression:       supportedCompression,
 		Public:            public,
 		PublicKey:         self.publicString(),
 		Nonce:             serverNonce,
@@ -188,6 +190,16 @@ func serverHandshake(
 	}
 
 	return clientCaps, want, err
+}
+
+// negotiateCompression picks the blob compression a sender uses: the
+// advertised algorithm when the peer also supports it, otherwise none.
+func negotiateCompression(peerCompression string) string {
+	if peerCompression == supportedCompression {
+		return supportedCompression
+	}
+
+	return CompressionNone
 }
 
 func assertPublicKeyMatches(
