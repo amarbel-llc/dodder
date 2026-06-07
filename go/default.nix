@@ -204,6 +204,12 @@ let
   # drift against the binary (mirrors amarbel-llc/madder#204). Consumers
   # wire the plugin into clown by pointing `--plugin-dir` at
   # `${dodder-clown-plugin}/share/purse-first/dodder/`.
+  #
+  # hooks/ ships a PreToolUse hook that auto-approves the read-only MCP
+  # tools (#244); clown auto-discovers `$CLAUDE_PLUGIN_ROOT/hooks/hooks.json`
+  # the same way it does for the spinclass plugin. The decision table
+  # lives in `dodder hook` (internal/bravo/claude_hooks, unit-tested);
+  # the handler script gets the binary path baked in like clown.json.
   dodder-clown-plugin = pkgs.runCommand "dodder-clown-plugin" { } ''
     pluginRoot=$out/share/purse-first/dodder
     mkdir -p $pluginRoot/.claude-plugin
@@ -216,6 +222,14 @@ let
       ${../plugins/dodder/clown.json.in} \
       $pluginRoot/clown.json \
       --replace-fail '@dodder@' '${dodder}/bin/dodder'
+    mkdir -p $pluginRoot/hooks
+    ${pkgs.jq}/bin/jq -e . ${../plugins/dodder/hooks/hooks.json} > /dev/null
+    install -m 0644 ${../plugins/dodder/hooks/hooks.json} $pluginRoot/hooks/hooks.json
+    substitute \
+      ${../plugins/dodder/hooks/handler} \
+      $pluginRoot/hooks/handler \
+      --replace-fail '@dodder@' '${dodder}/bin/dodder'
+    chmod 0755 $pluginRoot/hooks/handler
   '';
 
   # treelint (treefmt successor) wrapped with the formatter binaries its

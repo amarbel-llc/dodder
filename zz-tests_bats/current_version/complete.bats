@@ -124,6 +124,7 @@ function complete_subcmd { # @test
 		^fsck[[:space:]]+verify object integrity across stores$
 		^gen[[:space:]]+generate cryptographic keys$
 		^generate-zettel-id-components[[:space:]]+extract unique zettel id components from stdin$
+		^hook[[:space:]]+respond to a Claude Code hook event from the clown plugin$
 		^import[[:space:]]+import objects from inventory list files$
 		^info[[:space:]]+display repository information$
 		^info-pivy_agent[[:space:]]+list ECDSA keys in pivy-agent$
