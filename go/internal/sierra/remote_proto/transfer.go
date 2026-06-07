@@ -3,7 +3,6 @@ package remote_proto
 import (
 	"bytes"
 	"io"
-	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -13,7 +12,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
-	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
@@ -222,14 +220,9 @@ func sendOneBlob(
 
 	defer errors.DeferredCloser(&err, reader)
 
-	var data []byte
-
-	if data, err = io.ReadAll(reader); err != nil {
-		err = errors.Wrapf(err, "reading blob %s", key)
-		return err
-	}
-
-	if err = s.writeBlob(key, data); err != nil {
+	// Stream the blob straight from the store to the wire; writeBlob chunks
+	// it so nothing is buffered whole.
+	if err = s.writeBlob(key, reader); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -420,29 +413,15 @@ func negotiateHave(
 	return err
 }
 
-// recvBlob reads the blob frame announced by a blob_header and writes it to
-// the local store, verifying the content digest against the header.
+// recvBlob streams the blob announced by a blob_header into the local store —
+// a sequence of blob frames terminated by a zero-length frame — and verifies
+// the computed content digest against the header. Nothing is buffered whole.
 func recvBlob(
 	env env_ui.Env,
 	s *session,
 	blobStore blob_stores.BlobStoreInitialized,
 	header control,
 ) (err error) {
-	kind, length, frameErr := readFrameHeader(s.reader)
-	if frameErr != nil {
-		err = errors.Wrapf(frameErr, "reading blob frame for %s", header.BlobId)
-		return err
-	}
-
-	if kind != frameKindBlob {
-		err = errors.Errorf(
-			"expected blob frame after header for %s, got kind %d",
-			header.BlobId,
-			kind,
-		)
-		return err
-	}
-
 	var writer mad_domain_interfaces.BlobWriter
 
 	if writer, err = blobStore.MakeBlobWriter(nil); err != nil {
@@ -450,37 +429,72 @@ func recvBlob(
 		return err
 	}
 
-	var expected mad_domain_interfaces.MarklId
+	if streamErr := streamBlobChunks(env, s, writer, header.BlobId); streamErr != nil {
+		// Close to release the writer's resources; the partial blob is not
+		// committed because its digest will not match anything referenced.
+		_ = writer.Close()
+		err = errors.Wrap(streamErr)
+		return err
+	}
+
+	if err = writer.Close(); err != nil {
+		err = errors.Wrapf(err, "closing blob %s", header.BlobId)
+		return err
+	}
 
 	if header.BlobId != "" {
-		var expectedId markl.Id
+		var expected markl.Id
 
-		if err = expectedId.Set(header.BlobId); err != nil {
+		if err = expected.Set(header.BlobId); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 
-		expected = &expectedId
-	}
-
-	copyResult := blob_stores.CopyReaderToWriter(
-		env,
-		writer,
-		io.LimitReader(s.reader, int64(length)),
-		expected,
-		nil,
-		func(time.Time) {
-			ui.Err().Printf("receiving blob %s...", header.BlobId)
-		},
-		3*time.Second,
-	)
-
-	if err = copyResult.GetError(); err != nil {
-		err = errors.Wrapf(err, "writing blob %s", header.BlobId)
-		return err
+		if err = markl.AssertEqual(&expected, writer.GetMarklId()); err != nil {
+			err = errors.Wrapf(err, "blob %s digest mismatch", header.BlobId)
+			return err
+		}
 	}
 
 	return err
+}
+
+// streamBlobChunks copies blob frames into writer until the zero-length
+// terminator frame.
+func streamBlobChunks(
+	env env_ui.Env,
+	s *session,
+	writer mad_domain_interfaces.BlobWriter,
+	blobIdString string,
+) (err error) {
+	for {
+		errors.ContextContinueOrPanic(env)
+
+		kind, length, frameErr := readFrameHeader(s.reader)
+		if frameErr != nil {
+			err = errors.Wrapf(frameErr, "reading blob frame for %s", blobIdString)
+			return err
+		}
+
+		if kind != frameKindBlob {
+			err = errors.Errorf(
+				"expected blob frame for %s, got kind %d",
+				blobIdString,
+				kind,
+			)
+			return err
+		}
+
+		if length == 0 {
+			// Terminator: the blob is complete.
+			return err
+		}
+
+		if _, err = io.CopyN(writer, s.reader, int64(length)); err != nil {
+			err = errors.Wrapf(err, "writing blob %s", blobIdString)
+			return err
+		}
+	}
 }
 
 // importObjects decodes the inventory_list payload and imports it through

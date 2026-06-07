@@ -60,18 +60,45 @@ func (s *session) writeObjects(payload []byte) (err error) {
 	return err
 }
 
-// writeBlob writes a blob_header control frame followed by the blob's bytes
-// as one blob frame, then flushes.
-func (s *session) writeBlob(blobIdString string, payload []byte) (err error) {
+// blobChunkSize bounds each blob frame so a blob of any size streams with
+// constant memory rather than being buffered whole.
+const blobChunkSize = 64 * 1024
+
+// writeBlob writes a blob_header control frame, then streams the blob's bytes
+// as a sequence of blob frames, terminated by a zero-length blob frame, then
+// flushes. The blob is never held in memory in full.
+func (s *session) writeBlob(blobIdString string, reader io.Reader) (err error) {
 	if err = writeControlFrame(s.writer, TypeBlobHeader, control{
-		BlobId:     blobIdString,
-		BlobLength: int64(len(payload)),
+		BlobId: blobIdString,
 	}); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	if err = writeFrame(s.writer, frameKindBlob, payload); err != nil {
+	buffer := make([]byte, blobChunkSize)
+
+	for {
+		n, readErr := reader.Read(buffer)
+
+		if n > 0 {
+			if err = writeFrame(s.writer, frameKindBlob, buffer[:n]); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
+		if readErr != nil {
+			if errors.IsEOF(readErr) {
+				break
+			}
+
+			err = errors.Wrapf(readErr, "reading blob %s", blobIdString)
+			return err
+		}
+	}
+
+	// Zero-length terminator frame marks the end of the blob.
+	if err = writeFrame(s.writer, frameKindBlob, nil); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
