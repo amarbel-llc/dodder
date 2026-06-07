@@ -152,9 +152,11 @@ Two frame kinds are defined:
 
 - `kind = 0x01` **CONTROL**: the payload is a single typed hyphence document
   (RFC 0001) whose type string is one of the control types below.
-- `kind = 0x02` **BLOB**: the payload is the raw bytes of one content-addressed
-  blob. A BLOB frame MUST be immediately preceded by a CONTROL frame of type
-  `drtp-blob_header-v1` naming the blob's markl ID and byte length.
+- `kind = 0x02` **BLOB**: the payload is a chunk of the raw bytes of one
+  content-addressed blob. A blob is sent as a CONTROL frame of type
+  `drtp-blob_header-v1` naming the blob's markl ID, followed by one or more
+  BLOB frames carrying its bytes, terminated by a zero-length BLOB frame. A
+  blob is never required to be buffered whole on either side.
 
 A receiver MUST reject a frame whose `length` exceeds a configured maximum
 (RECOMMENDED default 64 MiB for CONTROL frames; BLOB frames are bounded by the
@@ -306,14 +308,15 @@ local and remote swapped); the protocol makes the direction explicit via the
 
 ### Blob Streaming
 
-A blob MAY be larger than the CONTROL frame maximum. The `drtp-blob_header-v1`
-frame carries the blob's total `length` and markl `id`. The blob bytes then
-follow as one BLOB frame whose `length` matches, OR --- when chunking is
-negotiated --- as a sequence of BLOB frames whose lengths sum to the header
-length, terminated by a zero-length BLOB frame. A receiver computes the blob
-digest incrementally and verifies it against the header `id` once the announced
-length is reached. Compression, if advertised in capabilities, is applied to the
-blob payload and MUST be reflected in a `compression` field on the header.
+Blobs are always streamed, never buffered whole. The `drtp-blob_header-v1`
+frame carries the blob's markl `id`; its bytes then follow as a sequence of
+BLOB frames terminated by a zero-length BLOB frame. The header carries no
+length --- the terminator delimits the blob --- so a blob of any size moves with
+constant memory on both sides. A receiver writes each chunk to the blob store
+as it arrives, computes the content digest incrementally, and verifies it
+against the header `id` after the terminator; a mismatch aborts the transfer.
+Compression, if advertised in capabilities, is applied to the chunk payloads
+and MUST be reflected in a `compression` field on the header.
 
 ### Versioning and Evolution
 

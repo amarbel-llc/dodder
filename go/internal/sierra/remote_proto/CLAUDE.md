@@ -51,6 +51,15 @@ transport so it can ride a websocket.
   — a flushed objects/blob frame can exceed the 32 KiB default message size.
 - **Blobs stream before objects** so the importer finds every blob already on
   disk; no `RemoteBlobStore` is wired into the receiver's importer.
+- **Blobs are streamed in chunks, never buffered whole.** `session.writeBlob`
+  emits a `blob_header` then `blobChunkSize` BLOB frames ended by a zero-length
+  terminator; `recvBlob` copies chunks straight into the blob writer and
+  verifies the digest after the terminator. The header carries no length.
+- **Have-negotiation precedes the stream.** The sender sends `drtp-manifest-v1`
+  (every closure blob it holds); the receiver replies `drtp-have-v1` (the
+  subset it already has); the sender streams only the rest. Both
+  `sendClosure`/`receiveClosure` perform this exchange before the blob/object
+  frames, so the reads stay in lockstep regardless of direction.
 
 ## CLI surface
 
