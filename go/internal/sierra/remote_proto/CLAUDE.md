@@ -60,6 +60,14 @@ transport so it can ride a websocket.
   subset it already has); the sender streams only the rest. Both
   `sendClosure`/`receiveClosure` perform this exchange before the blob/object
   frames, so the reads stay in lockstep regardless of direction.
+- **Blob compression (zstd) is negotiated in capabilities.** Each peer
+  advertises `supportedCompression`; the *sender* calls `negotiateCompression`
+  on the peer's advertised value and, when both agree, compresses each blob's
+  chunk stream through `DataDog/zstd` (the dodder/madder zstd lib, already in
+  the build closure — cgo). The digest is verified over the **decompressed**
+  bytes, so content addressing is unaffected. `blobFrameWriter` /
+  `blobFrameReader` (session.go) adapt the frame stream to the
+  encoder/decoder.
 
 ## CLI surface
 

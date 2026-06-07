@@ -12,6 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
+	"github.com/DataDog/zstd"
 	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
@@ -32,6 +33,7 @@ func sendClosure(
 	src repo.Repo,
 	envAdder interfaces.EnvVarsAdder,
 	want control,
+	compression string,
 ) (err error) {
 	var queryGroup *queries.Query
 
@@ -101,6 +103,7 @@ func sendClosure(
 		src.GetBlobStore(),
 		manifest,
 		have.HaveBlobs,
+		compression,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
@@ -170,6 +173,7 @@ func sendBlobs(
 	blobStore blob_stores.BlobStoreInitialized,
 	manifest []string,
 	haveBlobs []string,
+	compression string,
 ) (err error) {
 	have := make(map[string]struct{}, len(haveBlobs))
 
@@ -184,7 +188,7 @@ func sendBlobs(
 			continue
 		}
 
-		if err = sendOneBlob(s, blobStore, key); err != nil {
+		if err = sendOneBlob(s, blobStore, key, compression); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -197,6 +201,7 @@ func sendOneBlob(
 	s *session,
 	blobStore blob_stores.BlobStoreInitialized,
 	key string,
+	compression string,
 ) (err error) {
 	var digest markl.Id
 
@@ -221,8 +226,8 @@ func sendOneBlob(
 	defer errors.DeferredCloser(&err, reader)
 
 	// Stream the blob straight from the store to the wire; writeBlob chunks
-	// it so nothing is buffered whole.
-	if err = s.writeBlob(key, reader); err != nil {
+	// (and optionally compresses) it so nothing is buffered whole.
+	if err = s.writeBlob(key, reader, compression); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -335,7 +340,7 @@ func receiveClosure(
 
 			switch typeString {
 			case "!" + TypeBlobHeader:
-				if err = recvBlob(env, s, blobStore, msg); err != nil {
+				if err = recvBlob(s, blobStore, msg); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -414,10 +419,11 @@ func negotiateHave(
 }
 
 // recvBlob streams the blob announced by a blob_header into the local store —
-// a sequence of blob frames terminated by a zero-length frame — and verifies
-// the computed content digest against the header. Nothing is buffered whole.
+// a sequence of blob frames terminated by a zero-length frame, optionally
+// zstd-compressed — and verifies the computed content digest against the
+// header. The digest is computed over the decompressed bytes, so compression
+// is transparent to content addressing. Nothing is buffered whole.
 func recvBlob(
-	env env_ui.Env,
 	s *session,
 	blobStore blob_stores.BlobStoreInitialized,
 	header control,
@@ -429,7 +435,7 @@ func recvBlob(
 		return err
 	}
 
-	if streamErr := streamBlobChunks(env, s, writer, header.BlobId); streamErr != nil {
+	if streamErr := streamBlobInto(s, writer, header); streamErr != nil {
 		// Close to release the writer's resources; the partial blob is not
 		// committed because its digest will not match anything referenced.
 		_ = writer.Close()
@@ -459,42 +465,38 @@ func recvBlob(
 	return err
 }
 
-// streamBlobChunks copies blob frames into writer until the zero-length
-// terminator frame.
-func streamBlobChunks(
-	env env_ui.Env,
+// streamBlobInto copies the framed (and optionally zstd-compressed) blob body
+// into writer, then drains any trailing frames through the terminator so the
+// session stays aligned for the next frame.
+func streamBlobInto(
 	s *session,
 	writer mad_domain_interfaces.BlobWriter,
-	blobIdString string,
+	header control,
 ) (err error) {
-	for {
-		errors.ContextContinueOrPanic(env)
+	frameReader := &blobFrameReader{session: s}
 
-		kind, length, frameErr := readFrameHeader(s.reader)
-		if frameErr != nil {
-			err = errors.Wrapf(frameErr, "reading blob frame for %s", blobIdString)
-			return err
-		}
+	var source io.Reader = frameReader
 
-		if kind != frameKindBlob {
-			err = errors.Errorf(
-				"expected blob frame for %s, got kind %d",
-				blobIdString,
-				kind,
-			)
-			return err
-		}
-
-		if length == 0 {
-			// Terminator: the blob is complete.
-			return err
-		}
-
-		if _, err = io.CopyN(writer, s.reader, int64(length)); err != nil {
-			err = errors.Wrapf(err, "writing blob %s", blobIdString)
-			return err
-		}
+	if header.Compression == CompressionZstd {
+		decoder := zstd.NewReader(frameReader)
+		defer errors.DeferredCloser(&err, decoder)
+		source = decoder
 	}
+
+	if _, err = io.Copy(writer, source); err != nil {
+		err = errors.Wrapf(err, "writing blob %s", header.BlobId)
+		return err
+	}
+
+	// A zstd decoder can stop once its stream ends, before consuming the
+	// terminator frame; drain the remaining frames so the next read starts
+	// at the next message.
+	if _, err = io.Copy(io.Discard, frameReader); err != nil {
+		err = errors.Wrapf(err, "draining blob %s", header.BlobId)
+		return err
+	}
+
+	return err
 }
 
 // importObjects decodes the inventory_list payload and imports it through

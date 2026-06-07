@@ -67,9 +67,10 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) (err error) {
 func (server *Server) serveSession(s *session) (err error) {
 	env := server.Repo.GetEnv()
 
+	var clientCaps control
 	var want control
 
-	if _, want, err = serverHandshake(
+	if clientCaps, want, err = serverHandshake(
 		s,
 		server.keys(),
 		server.listType(),
@@ -82,13 +83,15 @@ func (server *Server) serveSession(s *session) (err error) {
 	switch want.Direction {
 	case DirectionFetch, "":
 		// The client fetches: the server is the sender. It computes the
-		// closure from its own store and streams it.
+		// closure from its own store and streams it, compressing blobs when
+		// the client advertised support.
 		if err = sendClosure(
 			env,
 			s,
 			server.Repo,
 			server.Repo.GetEnvRepo(),
 			want,
+			negotiateCompression(clientCaps.Compression),
 		); err != nil {
 			s.writeError(err.Error(), 500)
 			err = errors.Wrap(err)

@@ -138,6 +138,7 @@ func (client *Client) Push(
 		client.local,
 		client.local.GetEnvRepo(),
 		want,
+		negotiateCompression(serverCaps.Compression),
 	); err != nil {
 		err = errors.Wrap(err)
 		return err

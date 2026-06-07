@@ -206,6 +206,7 @@ Sent by each peer as its first frame. Body (TOML):
     websocket          = true                # transport actually in use is ws
     inventory-list-type = "inventory_list-v2"
     hash-format        = "blake2b256"
+    compression        = "zstd"              # blob compression supported ("" = none)
     expand-edges       = true                # sender computes closure
     public-key         = "..."               # markl id, for attestation
     nonce              = "..."               # challenge nonce (see Authentication)
@@ -315,8 +316,16 @@ length --- the terminator delimits the blob --- so a blob of any size moves with
 constant memory on both sides. A receiver writes each chunk to the blob store
 as it arrives, computes the content digest incrementally, and verifies it
 against the header `id` after the terminator; a mismatch aborts the transfer.
-Compression, if advertised in capabilities, is applied to the chunk payloads
-and MUST be reflected in a `compression` field on the header.
+
+Compression is negotiated, not assumed: each peer advertises a `compression`
+algorithm in its capabilities (`zstd`, or empty for none). The sender uses an
+algorithm only when the receiving peer also advertised it, and names it in the
+blob header's `compression` field; the receiver decompresses each blob's chunk
+stream before writing it. Because the digest is computed over the
+*decompressed* bytes, compression is transparent to content addressing --- the
+same blob produces the same markl ID whether or not it travelled compressed. A
+peer that does not understand the named algorithm MUST abort rather than store
+corrupt bytes.
 
 ### Versioning and Evolution
 
