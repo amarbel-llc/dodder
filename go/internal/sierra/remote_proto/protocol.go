@@ -43,6 +43,7 @@ const PathHealthz = "/healthz"
 const (
 	TypeCapabilities = "drtp-capabilities-v1"
 	TypeWant         = "drtp-want-v1"
+	TypeManifest     = "drtp-manifest-v1"
 	TypeHave         = "drtp-have-v1"
 	TypeBlobHeader   = "drtp-blob_header-v1"
 	TypeAck          = "drtp-ack-v1"

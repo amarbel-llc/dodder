@@ -75,11 +75,37 @@ func sendClosure(
 		return err
 	}
 
+	// Have-negotiation: announce every blob in the closure the sender holds,
+	// learn which the receiver already has, and stream only the rest. The
+	// manifest/have exchange always happens (with an empty manifest when
+	// blobs are excluded) so the receiver's read stays in lockstep.
+	var manifest []string
+
 	if !want.ExcludeBlobs {
-		if err = sendBlobs(env, s, src.GetBlobStore(), list, edges); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
+		manifest = gatherBlobDigests(src.GetBlobStore(), list, edges)
+	}
+
+	if err = s.writeControl(TypeManifest, control{Blobs: manifest}); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	var have control
+
+	if have, err = s.readControlExpecting(TypeHave); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if err = sendBlobs(
+		env,
+		s,
+		src.GetBlobStore(),
+		manifest,
+		have.HaveBlobs,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	if err = sendObjects(env, s, src, list); err != nil {
@@ -95,79 +121,117 @@ func sendClosure(
 	return err
 }
 
-// sendBlobs streams every blob in the closure: each object's own blob plus
-// every blob reference discovered by expand-edges, deduplicated. v1 sends
-// the whole closure rather than negotiating haves; the receiver's
-// content-addressed store deduplicates blobs it already holds.
-func sendBlobs(
-	env env_ui.Env,
-	s *session,
+// gatherBlobDigests collects, deduplicated, every blob digest in the
+// closure that the sender actually holds: each object's own blob plus every
+// blob reference discovered by expand-edges. Only locally-present blobs are
+// advertised, so the receiver never expects a blob the sender cannot send.
+func gatherBlobDigests(
 	blobStore blob_stores.BlobStoreInitialized,
 	list *sku.HeapTransacted,
 	edges sku.Edges,
-) (err error) {
+) (digests []string) {
 	seen := make(map[string]struct{})
 
-	send := func(digest mad_domain_interfaces.MarklId) (err error) {
+	add := func(digest mad_domain_interfaces.MarklId) {
 		if digest == nil || digest.IsNull() {
-			return err
+			return
 		}
 
 		key := digest.String()
 
 		if _, ok := seen[key]; ok {
-			return err
+			return
 		}
 
 		seen[key] = struct{}{}
 
-		var reader mad_domain_interfaces.BlobReader
-
-		if reader, err = blobStore.MakeBlobReader(digest); err != nil {
-			// A blob that is referenced but absent locally is skipped
-			// rather than failing the whole transfer, matching
-			// CopyBlobIfNecessary's tolerance on the local pull path.
-			if mad_blob_io.IsErrBlobMissing(err) {
-				return nil
-			}
-
-			err = errors.Wrapf(err, "opening blob %s", key)
-			return err
+		if !blobStore.HasBlob(digest) {
+			return
 		}
 
-		defer errors.DeferredCloser(&err, reader)
-
-		var data []byte
-
-		if data, err = io.ReadAll(reader); err != nil {
-			err = errors.Wrapf(err, "reading blob %s", key)
-			return err
-		}
-
-		if err = s.writeBlob(key, data); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
-
-		return err
+		digests = append(digests, key)
 	}
 
 	for object := range list.All() {
+		add(object.GetBlobDigest())
+	}
+
+	for i := range edges.Blobs {
+		add(&edges.Blobs[i])
+	}
+
+	return digests
+}
+
+// sendBlobs streams each manifested blob the receiver does not already hold
+// (per the have list). The receiver's content-addressed store still
+// deduplicates, but skipping known blobs here avoids the bandwidth.
+func sendBlobs(
+	env env_ui.Env,
+	s *session,
+	blobStore blob_stores.BlobStoreInitialized,
+	manifest []string,
+	haveBlobs []string,
+) (err error) {
+	have := make(map[string]struct{}, len(haveBlobs))
+
+	for _, key := range haveBlobs {
+		have[key] = struct{}{}
+	}
+
+	for _, key := range manifest {
 		errors.ContextContinueOrPanic(env)
 
-		if err = send(object.GetBlobDigest()); err != nil {
+		if _, ok := have[key]; ok {
+			continue
+		}
+
+		if err = sendOneBlob(s, blobStore, key); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
 	}
 
-	for i := range edges.Blobs {
-		errors.ContextContinueOrPanic(env)
+	return err
+}
 
-		if err = send(&edges.Blobs[i]); err != nil {
-			err = errors.Wrap(err)
-			return err
+func sendOneBlob(
+	s *session,
+	blobStore blob_stores.BlobStoreInitialized,
+	key string,
+) (err error) {
+	var digest markl.Id
+
+	if err = digest.Set(key); err != nil {
+		err = errors.Wrapf(err, "blob digest %q", key)
+		return err
+	}
+
+	var reader mad_domain_interfaces.BlobReader
+
+	if reader, err = blobStore.MakeBlobReader(&digest); err != nil {
+		// A blob that vanished between manifest and stream is skipped
+		// rather than failing the whole transfer.
+		if mad_blob_io.IsErrBlobMissing(err) {
+			return nil
 		}
+
+		err = errors.Wrapf(err, "opening blob %s", key)
+		return err
+	}
+
+	defer errors.DeferredCloser(&err, reader)
+
+	var data []byte
+
+	if data, err = io.ReadAll(reader); err != nil {
+		err = errors.Wrapf(err, "reading blob %s", key)
+		return err
+	}
+
+	if err = s.writeBlob(key, data); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	return err
@@ -217,9 +281,11 @@ func sendObjects(
 }
 
 // receiveClosure is the receiver half of a transfer (the client for fetch,
-// the server for push). It reads frames until a completion ack: blob frames
-// are written to the local store (and digest-verified), the objects frame is
-// imported through the ordinary importer.
+// the server for push). It first answers the sender's blob manifest with the
+// subset it already holds (have-negotiation), then reads frames until a
+// completion ack: blob frames are written to the local store (and
+// digest-verified), the objects frame is imported through the ordinary
+// importer.
 func receiveClosure(
 	env env_ui.Env,
 	s *session,
@@ -228,6 +294,11 @@ func receiveClosure(
 	storeOptions sku.StoreOptions,
 ) (err error) {
 	blobStore := dst.GetBlobStore()
+
+	if err = negotiateHave(s, blobStore); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
 
 	importerOptions := repo.ImporterOptions{
 		CheckedOutPrinter:   dst.PrinterCheckedOutConflictsForRemoteTransfers(),
@@ -308,6 +379,45 @@ func receiveClosure(
 			return err
 		}
 	}
+}
+
+// negotiateHave reads the sender's blob manifest and replies with the subset
+// of those digests the local store already holds, so the sender can skip
+// streaming them.
+func negotiateHave(
+	s *session,
+	blobStore blob_stores.BlobStoreInitialized,
+) (err error) {
+	var manifest control
+
+	if manifest, err = s.readControlExpecting(TypeManifest); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	var have []string
+
+	for _, key := range manifest.Blobs {
+		var digest markl.Id
+
+		if setErr := digest.Set(key); setErr != nil {
+			// An unparseable digest is simply not claimed as held; the
+			// sender will stream it and the receive-side verify catches a
+			// genuine problem.
+			continue
+		}
+
+		if blobStore.HasBlob(&digest) {
+			have = append(have, key)
+		}
+	}
+
+	if err = s.writeControl(TypeHave, control{HaveBlobs: have}); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
 }
 
 // recvBlob reads the blob frame announced by a blob_header and writes it to

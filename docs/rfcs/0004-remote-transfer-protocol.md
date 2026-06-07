@@ -178,8 +178,11 @@ horizontal versioning prescribes. The defined types are:
 - `drtp-capabilities-v1` --- capability advertisement (both directions).
 - `drtp-want-v1` --- the requested query plus transfer options (client to
   server for fetch; server to client for push).
-- `drtp-have-v1` --- object identities (with version digests) the receiver
-  already holds.
+- `drtp-manifest-v1` --- the sender's list of every blob digest in the closure
+  it holds, sent before the blob stream so the receiver can declare what it
+  already has.
+- `drtp-have-v1` --- the receiver's reply to the manifest: the subset of those
+  blob digests it already holds (and so the sender SHOULD NOT stream).
 - `drtp-blob_header-v1` --- announces the BLOB frame that follows.
 - `drtp-ack-v1` --- a phase acknowledgement (e.g. "objects received, here are
   the blobs I still need" or "transfer complete").
@@ -258,11 +261,13 @@ exchange is:
     computes a self-consistent graph so the receiver never imports an object
     whose type, tags, or referenced blobs are absent.
 
-4.  **Have (optional).** If the client advertised `have`, it sends one or more
-    `drtp-have-v1` frames enumerating the object identities and version digests
-    it already holds. The server omits those objects from the object stream and
-    omits blobs the client already has. Absent any `have`, the server sends the
-    whole closure (the clone case).
+4.  **Have-negotiation.** The server sends `drtp-manifest-v1` listing every
+    blob digest in the closure it holds. The client replies `drtp-have-v1` with
+    the subset it already has. The server then streams only the blobs the
+    client lacks. For a clone the client has nothing, so the whole closure
+    streams; for a re-pull into a populated repo only the new blobs move. (v1
+    negotiates blobs, the bandwidth cost; objects are small and always streamed,
+    relying on the importer's idempotent commit.)
 
 5.  **Objects.** The server sends the closure's objects as one or more CONTROL
     frames of the `inventory_list` type. The client imports them through the
