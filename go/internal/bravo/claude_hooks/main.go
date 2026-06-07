@@ -1,11 +1,13 @@
 // Package claude_hooks implements the Claude Code hook protocol for the
 // dodder clown plugin (#244). The plugin's hooks/hooks.json registers a
-// PreToolUse hook on every tool ("matcher": ".*"); the handler script
-// execs `dodder hook`, which routes stdin/stdout through Run. Keeping
-// the decision table in Go (instead of a hooks.json matcher regex)
-// follows spinclass's internal/hooks: the decision is unit-testable and
-// has room to grow (deny rules, workspace-aware decisions) without
-// touching the shipped plugin payload shape.
+// PreToolUse hook scoped to dodder's own MCP tools (matcher
+// "mcp__plugin_dodder_dodder__.*" — the hook handler spawns a process
+// per event, so non-dodder tools are filtered out client-side); the
+// handler script execs `dodder hook`, which routes stdin/stdout through
+// Run. Keeping the decision table in Go (instead of a hooks.json
+// matcher regex) follows spinclass's internal/hooks: the decision is
+// unit-testable and has room to grow (deny rules, workspace-aware
+// decisions) without touching the shipped plugin payload shape.
 package claude_hooks
 
 import (
@@ -14,12 +16,12 @@ import (
 	"io"
 )
 
+// hookInput carries the subset of Claude Code's hook-event payload the
+// decision table consumes; unused protocol fields (session_id,
+// tool_input, cwd) are deliberately not decoded.
 type hookInput struct {
-	HookEventName string         `json:"hook_event_name"`
-	SessionID     string         `json:"session_id"`
-	ToolName      string         `json:"tool_name"`
-	ToolInput     map[string]any `json:"tool_input"`
-	CWD           string         `json:"cwd"`
+	HookEventName string `json:"hook_event_name"`
+	ToolName      string `json:"tool_name"`
 }
 
 // Dodder ships as a Claude Code plugin named "dodder" whose clown.json
