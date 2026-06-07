@@ -17,6 +17,10 @@ const (
 	TypeUrl
 	TypeStdioLocal
 	TypeStdioSSH
+	// TypeUrlWebsocket selects the drtp websocket transport
+	// (sierra/remote_proto), upgrading an HTTP url remote to a websocket
+	// session. See docs/rfcs/0004-remote-transfer-protocol.md.
+	TypeUrlWebsocket
 	_TypeMax
 )
 
@@ -53,6 +57,7 @@ func (tipe *Type) GetCLICompletion() map[string]string {
 		"stdio-ssh":         "",
 		"unspecified":       "",
 		"url":               "",
+		"url-websocket":     "",
 	}
 }
 
@@ -73,6 +78,9 @@ func (tipe *Type) Set(value string) (err error) {
 
 	case "url":
 		*tipe = TypeUrl
+
+	case "url-websocket":
+		*tipe = TypeUrlWebsocket
 
 	case "stdio-local":
 		*tipe = TypeStdioLocal

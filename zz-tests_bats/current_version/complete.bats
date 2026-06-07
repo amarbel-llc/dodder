@@ -153,6 +153,7 @@ function complete_subcmd { # @test
 		^revert[[:space:]]+revert objects to their stored state$
 		^save[[:space:]]+commit workspace changes to the store$
 		^serve[[:space:]]+start the HTTP server$
+		^serve-proto[[:space:]]+serve the drtp remote transfer protocol \(websocket-capable\)$
 		^show[[:space:]]+display objects from the store$
 		^status[[:space:]]+show workspace object state$
 		^update[[:space:]]+update type lock signatures$
