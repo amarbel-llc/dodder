@@ -54,14 +54,14 @@ func (cmd Pull) Run(req command.Request) {
 	cmd.ResolveImplicitDirectPath(localWorkingCopy)
 
 	var remote repo.Repo
+	var object *sku.Transacted
+	useProto := false
 
 	if cmd.IsHomeRepoParent() {
 		remote = cmd.MakeHomeRepoRemote(req)
 	} else if cmd.IsDirectTransfer() {
 		remote = cmd.MakeDirectRemoteFromPath(req, localWorkingCopy)
 	} else {
-		var object *sku.Transacted
-
 		{
 			var err error
 
@@ -72,7 +72,11 @@ func (cmd Pull) Run(req command.Request) {
 			}
 		}
 
-		remote = cmd.MakeRemote(req, localWorkingCopy, object)
+		if cmd.IsWebSocketProtocol() {
+			useProto = true
+		} else {
+			remote = cmd.MakeRemote(req, localWorkingCopy, object)
+		}
 	}
 
 	qg := cmd.MakeQueryIncludingWorkspace(
@@ -88,7 +92,21 @@ func (cmd Pull) Run(req command.Request) {
 		req.PopArgs(),
 	)
 
-	if err := localWorkingCopy.PullQueryGroupFromRemote(
+	if useProto {
+		conn, client := cmd.MakeProtoConnectionFromObject(
+			req,
+			localWorkingCopy,
+			object,
+		)
+
+		if err := client.Fetch(
+			conn,
+			qg.String(),
+			cmd.WithPrintCopies(true),
+		); err != nil {
+			localWorkingCopy.Cancel(err)
+		}
+	} else if err := localWorkingCopy.PullQueryGroupFromRemote(
 		remote,
 		qg,
 		cmd.WithPrintCopies(true),

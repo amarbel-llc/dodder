@@ -15,12 +15,13 @@ func _() {
 	_ = x[TypeUrl-4]
 	_ = x[TypeStdioLocal-5]
 	_ = x[TypeStdioSSH-6]
-	_ = x[_TypeMax-7]
+	_ = x[TypeUrlWebsocket-7]
+	_ = x[_TypeMax-8]
 }
 
-const _Type_name = "TypeUnspecifiedTypeNativeTypeNativeLocalOverridePathTypeSocketUnixTypeUrlTypeStdioLocalTypeStdioSSH_TypeMax"
+const _Type_name = "TypeUnspecifiedTypeNativeTypeNativeLocalOverridePathTypeSocketUnixTypeUrlTypeStdioLocalTypeStdioSSHTypeUrlWebsocket_TypeMax"
 
-var _Type_index = [...]uint8{0, 15, 25, 52, 66, 73, 87, 99, 107}
+var _Type_index = [...]uint8{0, 15, 25, 52, 66, 73, 87, 99, 115, 123}
 
 func (i Type) String() string {
 	idx := int(i) - 0

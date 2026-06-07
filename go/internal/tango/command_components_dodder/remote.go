@@ -1,6 +1,7 @@
 package command_components_dodder
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 
@@ -19,6 +20,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/remote_http"
+	"code.linenisgreat.com/dodder/go/internal/sierra/remote_proto"
 	"code.linenisgreat.com/dodder/go/lib/bravo/cli"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
@@ -55,6 +57,61 @@ func (cmd *Remote) SetFlagDefinitions(
 
 func (cmd Remote) IsDirectTransfer() bool {
 	return cmd.DirectPath != ""
+}
+
+// IsWebSocketProtocol reports whether the remote should be reached over the
+// drtp websocket transport (sierra/remote_proto, RFC 0004) rather than the
+// legacy remote_http backend.
+func (cmd Remote) IsWebSocketProtocol() bool {
+	return cmd.RemoteConnectionType == remote_connection_types.TypeUrlWebsocket
+}
+
+// MakeProtoConnectionFromObject resolves a stored url remote object to a
+// drtp websocket connection and a client bound to local. Used by pull/push
+// when -remote-connection-type=url-websocket is set.
+func (cmd Remote) MakeProtoConnectionFromObject(
+	req command.Request,
+	local *local_working_copy.Repo,
+	object *sku.Transacted,
+) (conn io.ReadWriteCloser, client *remote_proto.Client) {
+	envRepo := cmd.MakeEnvRepo(req, false)
+	typedRepoBlobStore := typed_blob_store.MakeRepoStore(envRepo)
+
+	var blob repo_blobs.Blob
+
+	{
+		var err error
+
+		if blob, _, err = typedRepoBlobStore.ReadTypedBlob(
+			object.GetMetadata().GetType(),
+			object.GetBlobDigest(),
+		); err != nil {
+			req.Cancel(err)
+		}
+	}
+
+	uriBlob, ok := blob.(repo_blobs.BlobUri)
+	if !ok {
+		errors.ContextCancelWithErrorf(
+			req,
+			"the websocket protocol requires a url remote, got %T",
+			blob,
+		)
+	}
+
+	uri := uriBlob.GetUri()
+	url := uri.GetUrl()
+
+	var err error
+
+	if conn, err = remote_proto.DialWebSocket(
+		req,
+		remote_proto.WebSocketURL(url.String()),
+	); err != nil {
+		req.Cancel(err)
+	}
+
+	return conn, remote_proto.MakeClient(local)
 }
 
 func (cmd *Remote) ResolveImplicitDirectPath(
@@ -164,7 +221,14 @@ func (cmd Remote) MakeRemoteAndObject(
 		remoteObject.GetMetadata().GetType(),
 	)
 
-	remote = cmd.MakeRemoteFromBlobAndSetPublicKey(req, local, blob)
+	// A websocket remote is registered Trust-On-First-Use: serve-proto
+	// speaks drtp over /drtp, not the remote_http REST surface, so there is
+	// no /config-immutable to fetch the public key from at add time. The
+	// server attests per-session during the transfer instead. remote-add
+	// ignores the returned remote, so leaving it nil here is safe.
+	if !cmd.IsWebSocketProtocol() {
+		remote = cmd.MakeRemoteFromBlobAndSetPublicKey(req, local, blob)
+	}
 
 	var blobId mad_domain_interfaces.MarklId
 
