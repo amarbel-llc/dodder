@@ -40,7 +40,11 @@ type control struct {
 	AllowMergeConflicts bool   `json:"allow_merge_conflicts,omitempty"`
 	ExcludeBlobs        bool   `json:"exclude_blobs,omitempty"`
 
-	// have
+	// manifest: every blob digest the sender holds for this transfer
+	Blobs []string `json:"blobs,omitempty"`
+
+	// have: the subset of the manifest the receiver already holds (and so
+	// the sender SHOULD NOT stream)
 	Objects   []string `json:"objects,omitempty"`
 	HaveBlobs []string `json:"have_blobs,omitempty"`
 
@@ -97,6 +101,7 @@ func makeControlBlobCoders() map[string]interfaces.CoderBufferedReadWriter[*cont
 	for _, typeString := range []string{
 		TypeCapabilities,
 		TypeWant,
+		TypeManifest,
 		TypeHave,
 		TypeBlobHeader,
 		TypeAck,
