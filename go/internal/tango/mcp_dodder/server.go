@@ -50,6 +50,16 @@ Query terms in the query tool are AND-combined. Term types:
 Examples: [":z", "todo"] = zettels tagged todo. ["!task", "urgency-2_week"] =
 tasks with urgency-2_week tag. [":e"] = all tag objects.
 
+Tag matching is TRANSITIVE through meta-tags. A tag filter matches an object
+tagged with that tag directly OR tagged with any tag whose own meta-tags
+include it. Example: if the tag "project-recurse" is meta-tagged "area-career",
+then a zettel tagged "project-recurse" matches ["area-career", ":z"] even
+though "area-career" is not in that zettel's own tag list. So an object can
+correctly appear in a tag query without carrying the queried tag directly —
+check the meta-tags of its tags (the tag's own tags field) before concluding a
+result is wrong. The matching surface is the expanded tag closure, not the
+direct tag set.
+
 ## Tool Selection Guide
 
 1. query-type / query-tag — START HERE for discovery. Returns summaries with
@@ -304,7 +314,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		tools,
 		protocol.ToolV1{
 			Name:        "query",
-			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer query-type/query-tag for discovery; use this for AND-filtered object listings.",
+			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer query-type/query-tag for discovery; use this for AND-filtered object listings. Tag matching is transitive through meta-tags: an object matches a tag filter if it is tagged with that tag directly OR with any tag whose own meta-tags include it, so a result can lack the queried tag in its own tag list (that is correct, not a leak).",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
