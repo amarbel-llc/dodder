@@ -85,30 +85,59 @@ the exchange be symmetric (both peers) or directional?
 - c. Directional — server always; client only when it is the data sender
   (push).
 
+## Correction: the wire is self-describing (the seed is not load-bearing for decode)
+
+A closer read of the receive path (`remote_proto/transfer.go`
+`receiveClosure` → `importObjects`) overturned the premise an earlier draft
+of this ADR rested on. The receiver decodes and imports with **the local
+repo's machinery against fully self-describing wire data**, consuming
+*nothing* from a remote seed:
+
+- the OBJECTS frame is a *typed* `inventory_list` stream (carries its own
+  `! inventory_list-vN` line), so `AllDecodedObjectsFromStream` picks the
+  decoder from the embedded type, not a remote `inventory_list-type`;
+- blobs are digest-verified against self-describing markl ids (the hash
+  algorithm rides every digest);
+- objects carry their own signature type, and horizontal versioning keeps
+  prior store versions decodable.
+
+So the HTTP seed's load-bearing job (let the client build
+`/query/{listType}/…` and pick decoders) **does not exist in drtp** — the
+server computes the closure and sends a typed stream — and the identity
+half is **already** done by the bidirectional capabilities frame (mutual
+`public_key` + nonce/signature attestation). The "cross-version clone bug"
+an earlier draft posited is not real.
+
+What a seed genuinely adds is therefore narrower than decode-config:
+`repo_id` **provenance** (capabilities carries `public_key` but not the
+repo id), an explicit **fail-fast store-version compatibility check**, and
+the **identity handshake moment** (which capabilities' attestation already
+substantially provides).
+
 ## Decision Outcome
 
-**Carry the seed as option 3** (dedicated `drtp-seed-v1` frame, reusing
-`genesis_configs.CoderPublic`) **with directional symmetry, option c.**
+**Option B (light): carry `repo_id` and `store_version` in the existing
+`drtp-capabilities-v1` frame.** No separate frame, no `CoderPublic`
+machinery whose decode-justification does not hold up. Because both peers
+already send capabilities, the receiver always has the sender's `repo_id`
+and `store_version` regardless of direction — so the directional-symmetry
+question (server-always vs client-on-push vs fully-symmetric) **dissolves**:
+the fields ride a frame that is already mutual. A receiver MAY reject a peer
+whose `store_version` it cannot decode (fail-fast on a future version)
+rather than failing deep in import.
 
-- **The server always sends `drtp-seed-v1`** with its capabilities
-  response. It is load-bearing for fetch (the client, as receiver, decodes
-  the server's objects with it) and lets the client validate and TOFU-pin
-  the server's identity before committing the `want` — preserving the
-  "followee proves itself first" ordering drtp already has (server signs
-  the client's nonce in its capabilities response; client signs the
-  server's nonce in the `want`).
-- **The client sends `drtp-seed-v1` only on push**, after the `want` and
-  before streaming. It is load-bearing only when the client is the sender
-  (the server, as receiver, decodes pushed objects with it). On a read-only
-  fetch the client's identity is already attested by the `want`'s
-  signature, and a client seed would do nothing on the common path.
-
-The governing principle: the seed's job is *"the receiver decodes the
-sender's objects,"* so the **sender's seed must reach the receiver**, and
-that direction flips with the transfer. Server-always additionally serves
-trust-pinning, which only the followee must satisfy. This keeps git's
-leader/follower asymmetry where it earns its keep while adding the mutual
-identity git never had.
+**Option C (dedicated `drtp-seed-v1` frame carrying the full
+`TypedConfigPublic` via `genesis_configs.CoderPublic`) is retained as a
+documented future option**, not chosen now. If a later need arises to
+exchange the *whole* public genesis config (richer than `repo_id` +
+`store_version` — e.g. forward-compatible transport of new `ConfigPublic`
+fields, or a stricter genesis-identity cross-check), C is the path: it
+reuses the exact HTTP serialization (public-keys-only guarantee for free)
+and would be **directional** (server always; client only on push), because
+*that* payload's value follows the data flow even though the light fields
+do not. The git contrast above (asymmetric, identity-free wire) is why we
+do not overbuild C now: drtp's capabilities already out-do git's identity
+story, and B closes the real gap.
 
 ### Concrete RFC-0004 revision (apply during #253 integration)
 
@@ -119,58 +148,55 @@ PR branch, not master):
    implementation uses — `0x01` control, `0x02` objects (dedicated, so the
    receiver dispatches on the frame byte instead of parsing the typed doc),
    `0x03` blob.
-2. **Add `drtp-seed-v1`** to the control-type list: payload is
-   `TypedConfigPublic` encoded by `genesis_configs.CoderPublic`; fields are
-   the `ConfigPublic` set (`public_key`, `repo_id`, `store_version`,
-   `inventory_list_type`, `object_sig_type`). Specify the directional rule
-   above. The receiver MUST configure its importer/verifier from the
-   sender's seed and MAY cross-check that the sender's attestation
-   `public_key` (capabilities) equals the seed's `public_key`.
-3. **Fetch sequence**: insert the server seed right after capabilities;
-   correct the object/blob ordering to **blobs-before-objects** (the
-   importer needs every referenced blob on disk before object import — the
-   `remote_proto` design doc states this; no `RemoteBlobStore` is wired into
-   the receiver's importer). The RFC currently has objects-before-blobs and
-   is the side that is wrong.
-4. **Push sequence**: make the manifest→have exchange explicitly symmetric
-   (client sends manifest, server replies have — as implemented), and
-   insert the client seed after the `want`.
-5. **Backfill** the concrete field lists for `want` / `manifest` / `have` /
+2. **Capabilities (option B)**: add `repo_id` and `store_version` to the
+   `drtp-capabilities-v1` body. Document them as provenance + a fail-fast
+   compatibility check (a receiver MAY reject a peer whose `store_version`
+   it cannot decode), NOT as decode-config. Note explicitly that the wire
+   is self-describing, so the receiver imports with its own machinery; and
+   record option C (the dedicated `drtp-seed-v1` frame via
+   `genesis_configs.CoderPublic`, directional server-always/client-on-push)
+   as a future option if whole-`ConfigPublic` exchange is later needed.
+3. **Fetch/push sequences**: correct the object/blob ordering to
+   **blobs-before-objects** (the importer needs every referenced blob on
+   disk before object import — the `remote_proto` design doc states this; no
+   `RemoteBlobStore` is wired into the receiver's importer; the RFC had it
+   backwards), and make the push manifest→have exchange explicitly symmetric
+   (client sends manifest, server replies have — as implemented). No
+   separate seed frame is inserted under option B.
+4. **Backfill** the concrete field lists for `want` / `manifest` / `have` /
    `blob_header` / `ack` / `error` from the `control` struct; drop the
    unused `blob_length`; document the one-session-per-connection,
    no-multiplexing concurrency contract.
-6. **hash-format**: note that markl ids are self-describing
+5. **hash-format**: note that markl ids are self-describing
    (`blake2b256-…`), so the algorithm travels with every digest; the
    `hash-format` capability field is advisory and a mismatch surfaces
-   naturally as a digest parse/verify failure. (No separate enforcement
-   needed; the seed's identity fields are the load-bearing negotiation.)
+   naturally as a digest parse/verify failure.
 
 ### Consequences
 
-- Good: closes the latent cross-version / cross-sig-type clone bug; a drtp
-  clone now decodes and verifies against the remote's actual genesis
-  parameters as the HTTP backend does.
-- Good: reuses the HTTP serialization wholesale — no new wire format, and
-  the public-no-private-keys property comes from `GetImmutableConfigPublic`.
-- Good: the capabilities-vs-seed `public_key` cross-check binds "who signed
-  this session" to "who this repo claims to be."
-- Good: the read-only fetch path gains exactly one frame (the server seed);
-  the client over-shares nothing.
-- Bad: a small redundancy (`public_key`, `inventory_list_type` appear in
-  both capabilities and seed) — accepted for the early-attestation /
-  cross-check value.
-- Bad: requires the RFC-0004 text edits above plus the `drtp-seed-v1`
-  implementation in `remote_proto`; both are part of #253 integration, not
-  this ADR.
+- Good: adds `repo_id` provenance and a fail-fast `store_version` check
+  with no new frame — the fields ride the capabilities frame both peers
+  already send, so directionality is moot and nothing over-shares.
+- Good: no `CoderPublic` machinery on the wire, no redundancy, and the
+  honest decode story is preserved (self-describing streams + local
+  importer); the ADR no longer claims a decode-necessity the code refutes.
+- Good: option C stays available and fully reasoned if whole-`ConfigPublic`
+  exchange is later justified, without committing to it speculatively now.
+- Bad: `store_version` provenance/compat is advisory in v1 (the check is a
+  guard, not a negotiation); a genuinely incompatible peer is rejected, but
+  drtp does not *adapt* to a peer's version.
+- Bad: requires the RFC-0004 reframe above (undoing the earlier
+  decode-necessity wording) plus the small capabilities-field addition in
+  `remote_proto`; both are part of #253 integration, not this ADR.
 
 ### Confirmation
 
-When #253 integrates: RFC-0004's frame table and both sequences are revised
-per the change-list above; `remote_proto` gains the `drtp-seed-v1` frame
-(server-always, client-on-push); and a bats test exercises the seed
-exchange — ideally a clone across a store-version or object-sig-type
-boundary, or at minimum asserting the seed frame is sent and consumed in
-both fetch and push.
+When #253 integrates: RFC-0004's capabilities body, frame table, and both
+sequences are revised per the change-list above; `remote_proto`'s
+capabilities frame carries `repo_id` + `store_version` with a fail-fast
+version guard; and `serve_proto.bats` continues to pass (the existing
+fetch/push e2e already exercises the capabilities exchange these fields
+ride).
 
 ## More Information
 
