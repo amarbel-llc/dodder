@@ -148,11 +148,17 @@ The session byte stream carries a sequence of **frames**. A frame is:
 - `length` is a big-endian unsigned 32-bit byte count of the payload.
 - `payload` is exactly `length` bytes.
 
-Two frame kinds are defined:
+Three frame kinds are defined:
 
 - `kind = 0x01` **CONTROL**: the payload is a single typed hyphence document
   (RFC 0001) whose type string is one of the control types below.
-- `kind = 0x02` **BLOB**: the payload is a chunk of the raw bytes of one
+- `kind = 0x02` **OBJECTS**: the payload is an `inventory_list` hyphence stream
+  (one or more objects) carrying its own `! inventory_list-vN` type line, as
+  written by `inventory_list_coders.Closet.WriteTypedBlobToWriter`. Kept a
+  distinct kind (rather than a CONTROL frame the receiver must peek the type
+  string to recognise) so the receiver routes the object batch on the frame
+  byte alone.
+- `kind = 0x03` **BLOB**: the payload is a chunk of the raw bytes of one
   content-addressed blob. A blob is sent as a CONTROL frame of type
   `drtp-blob_header-v1` naming the blob's markl ID, followed by one or more
   BLOB frames carrying its bytes, terminated by a zero-length BLOB frame. A
@@ -178,6 +184,10 @@ type string (e.g. `-v2`), and both versions remain decodable, exactly as
 horizontal versioning prescribes. The defined types are:
 
 - `drtp-capabilities-v1` --- capability advertisement (both directions).
+- `drtp-seed-v1` --- the sender's public genesis config ("seed"): the
+  `TypedConfigPublic` view (no private keys), carrying the data the receiver
+  needs to decode and verify the objects that follow. Exchanged directionally
+  (see Seed Exchange).
 - `drtp-want-v1` --- the requested query plus transfer options (client to
   server for fetch; server to client for push).
 - `drtp-manifest-v1` --- the sender's list of every blob digest in the closure
@@ -191,11 +201,12 @@ horizontal versioning prescribes. The defined types are:
 - `drtp-error-v1` --- a terminal error; carries a human-readable message and an
   optional status code.
 
-Object batches are not a distinct control type: they are CONTROL frames of the
-repository's configured `inventory_list` type (e.g. `inventory_list-v2`),
-encoded by `inventory_list_coders.Closet` exactly as in on-disk and HTTP
-transfer. A receiver dispatches a CONTROL frame by its hyphence type string,
-so inventory-list frames and `drtp-*` frames coexist on the same channel.
+Object batches are not a control type: they ride the dedicated OBJECTS frame
+kind (`0x02`), carrying the repository's configured `inventory_list` type
+(e.g. `inventory_list-v2`) encoded by `inventory_list_coders.Closet` exactly
+as in on-disk and HTTP transfer. The receiver feeds an OBJECTS frame straight
+to `AllDecodedObjectsFromStream` (which reads the embedded type line to pick
+the decoder) without inspecting any `drtp-*` type string.
 
 #### `drtp-capabilities-v1`
 
@@ -218,13 +229,90 @@ are advertisements; a peer MUST ignore fields it does not understand (forward
 compatibility) and MUST NOT assume a feature is available unless the peer
 advertised it.
 
-The server's capabilities frame also carries its immutable public config as the
-bootstrap document, removing the separate `GET /config-immutable` round trip
-the HTTP backend requires: the field `immutable-config` holds the genesis config
-as a nested typed hyphence document (or the client MAY request it explicitly,
-see Fetch). [Implementation note: the reference implementation transmits the
-immutable config as its own CONTROL frame immediately after capabilities, which
-is simpler than nesting and keeps each frame a single typed blob.]
+`hash-format` is advisory: markl ids are self-describing (`blake2b256-...`), so
+the algorithm travels with every digest and a true mismatch surfaces as a
+digest parse/verify failure regardless. The load-bearing repo parameters are
+carried by `drtp-seed-v1`, below.
+
+#### `drtp-seed-v1`
+
+The sender's public genesis config (the "seed"), replacing the HTTP backend's
+`GET /config-immutable` round trip. The body is the repo's `TypedConfigPublic`
+encoded by `genesis_configs.CoderPublic` --- the same serialization the HTTP
+endpoint serves, so the public-keys-only / no-private-keys guarantee comes from
+`GetImmutableConfigPublic()` unchanged. It carries the `ConfigPublic` fields:
+
+    public-key          = "..."               # repo identity / attestation key
+    id                  = "..."               # repo id
+    store-version       = N                    # schema version of the sender's objects
+    inventory_list-type = "inventory_list-v2"  # object-batch decoder
+    object-sig-type     = "..."                # markl type for object-signature verification
+
+A receiver MUST configure its importer and signature verifier from the sender's
+seed before importing the OBJECTS frame, and MAY cross-check that the sender's
+attestation `public-key` (capabilities) equals the seed's `public-key`, binding
+"who signed this session" to "who this repo claims to be". Clone is unaffected:
+the local repo still genesises its own identity (`OnTheFirstDay`); the seed is a
+decode/validation input, not a bootstrap of the local config.
+
+### Seed Exchange
+
+The seed exchange is **directional**, not symmetric --- it follows the data
+flow, because its job is "the receiver decodes the sender's objects":
+
+- The **server always sends `drtp-seed-v1`** with its capabilities response. It
+  is load-bearing on fetch (the client decodes the server's objects with it)
+  and lets the client validate / Trust-On-First-Use-pin the server before
+  committing the `want`.
+- The **client sends `drtp-seed-v1` only on push**, after its `want` and before
+  streaming. It is load-bearing only when the client is the sender; on a
+  read-only fetch the client's identity is already attested by the `want`'s
+  signature, so no client seed is sent.
+
+(See [ADR-0005](../decisions/0005-drtp-seed-exchange-and-directional-symmetry.md)
+for the reasoning, including the contrast with git's asymmetric,
+identity-free wire protocol.)
+
+#### Other control bodies
+
+The remaining control types carry these fields (JSON bodies in the reference
+implementation's single `control` envelope; absent fields default):
+
+    # drtp-want-v1
+    direction              = "fetch"           # "fetch" | "push"
+    query                  = ":z"
+    allow-merge-conflicts  = false
+    exclude-blobs          = false
+    public-key, signature                      # client attestation over server nonce
+
+    # drtp-manifest-v1   (sender → receiver, before the blob stream)
+    blobs = ["blake2b256-...", ...]            # every closure blob the sender holds
+
+    # drtp-have-v1       (receiver → sender, reply to manifest)
+    have-blobs = ["blake2b256-...", ...]       # subset already held; sender skips these
+
+    # drtp-blob_header-v1   (precedes each blob's BLOB frames)
+    blob-id     = "blake2b256-..."
+    compression = "zstd"                       # "" = none; negotiated in capabilities
+
+    # drtp-ack-v1
+    status = "complete"
+
+    # drtp-error-v1
+    message     = "human readable description"
+    status-code = 409                          # optional, HTTP-status-like
+
+The blob has no length field --- the zero-length terminator delimits it, so a
+blob of any size streams with constant memory.
+
+### Concurrency
+
+A session owns its connection: one transfer per connection, no multiplexing.
+`Server.ServeConn` runs exactly one session to completion (handshake, one
+fetch or push, terminal ack/error) and the caller closes the connection. The
+WebSocket listener accepts connections concurrently, but each upgraded
+connection is an independent session against the same repo; drtp does not
+interleave frames from multiple transfers on one connection.
 
 ### Authentication
 
@@ -250,7 +338,9 @@ Fetch corresponds to git `upload-pack`: the *server* is the sender. The
 exchange is:
 
 1.  **Handshake.** Client and server exchange `drtp-capabilities-v1` and verify
-    authentication. The server sends its immutable config.
+    authentication. The server sends `drtp-seed-v1` (its public genesis config)
+    with its capabilities response, so the client can validate / TOFU-pin the
+    server and configure its importer before committing the `want`.
 
 2.  **Want.** The client sends `drtp-want-v1` carrying the query string (the
     same doddish query the HTTP backend puts in `GET /query/...`) and the
@@ -272,14 +362,19 @@ exchange is:
     negotiates blobs, the bandwidth cost; objects are small and always streamed,
     relying on the importer's idempotent commit.)
 
-5.  **Objects.** The server sends the closure's objects as one or more CONTROL
-    frames of the `inventory_list` type. The client imports them through the
-    ordinary importer (`ImportSeq` + `MakeImporter`), with the same merge /
-    conflict handling as a local pull.
-
-6.  **Blobs.** For each blob digest in the closure that the client lacks, the
+5.  **Blobs.** For each blob digest in the closure that the client lacks, the
     server sends a `drtp-blob_header-v1` CONTROL frame followed by the BLOB
-    frame. The client validates the digest and writes the blob to its store.
+    frames (terminated by a zero-length BLOB frame). The client validates the
+    digest and writes the blob to its store. **Blobs precede objects** so that
+    every blob an object references is already on disk when the object imports
+    --- the receiver wires no `RemoteBlobStore` into its importer, so a
+    referenced-but-absent blob would fail the import.
+
+6.  **Objects.** The server sends the closure's objects as an OBJECTS frame (the
+    `inventory_list` stream). The client imports them through the ordinary
+    importer (`ImportSeq` + `MakeImporter`), with the same merge / conflict
+    handling as a local pull, decoding against the seed's `inventory_list-type`
+    and verifying signatures against its `object-sig-type`.
 
 7.  **Done.** The server sends `drtp-ack-v1` with `status = "complete"`. Either
     peer closes.
@@ -293,13 +388,20 @@ objects and blobs move --- the reactive `201`/`417` retry loop disappears.
 Push corresponds to git `receive-pack`: the *client* is the sender. It is the
 mirror of fetch:
 
-1.  Handshake (as above).
+1.  Handshake (as above). The server sends its `drtp-seed-v1` with capabilities,
+    as in fetch.
 2.  The client sends `drtp-want-v1` describing what it intends to push (its
-    query), so the server can apply receive-side policy.
+    query), so the server can apply receive-side policy, followed by its own
+    `drtp-seed-v1` --- the client is the sender here, so the server (the
+    receiver) needs the client's seed to decode the objects that follow.
 3.  The client computes the closure with expand-edges over its own store.
-4.  The server MAY send `drtp-have-v1` to tell the client which objects/blobs it
-    already has, so the client can skip them.
-5.  The client streams objects, then the blobs the server lacks.
+4.  **Have-negotiation (symmetric with fetch).** The client sends
+    `drtp-manifest-v1` listing every blob digest in its closure; the server
+    replies `drtp-have-v1` with the subset it already holds. The sender (here
+    the client) streams only the rest --- the manifest is always sent by the
+    sender and the have always by the receiver, regardless of direction.
+5.  The client streams the blobs the server lacks, then the OBJECTS frame
+    (blobs before objects, as in fetch).
 6.  The server imports and replies `drtp-ack-v1` (`status = "complete"`) or
     `drtp-error-v1` (e.g. a rejected merge conflict).
 
