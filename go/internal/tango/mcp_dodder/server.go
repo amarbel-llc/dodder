@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/mcp_tool_perms"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
@@ -182,6 +183,36 @@ var destructiveAnnotations = &protocol.ToolAnnotations{
 	DestructiveHint: new(true),
 }
 
+// annotationsFor maps a tool's shared permission classification
+// (mcp_tool_perms, the single source of truth shared with the clown
+// plugin hook, #251) to the go-mcp annotations registered with it. An
+// unclassified name fails safe as a write tool (no read-only/idempotent
+// hint); the consistency test asserts every registered tool is
+// classified, so that branch is unreachable in practice.
+func annotationsFor(name string) *protocol.ToolAnnotations {
+	switch mcp_tool_perms.Of(name) {
+	case mcp_tool_perms.PermissionReadOnly:
+		return readOnlyAnnotations
+	case mcp_tool_perms.PermissionDestructive:
+		return destructiveAnnotations
+	default:
+		return writeAnnotations
+	}
+}
+
+// registerTool registers a tool with the annotations its shared
+// permission classification dictates (mcp_tool_perms), so the
+// annotation is never set by hand at the call site and cannot drift
+// from the classification the clown plugin hook reads (#251).
+func registerTool(
+	reg *server.ToolRegistryV1,
+	tool protocol.ToolV1,
+	handler server.ToolHandlerV1,
+) {
+	tool.Annotations = annotationsFor(tool.Name)
+	reg.Register(tool, handler)
+}
+
 func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	bridge := MakeBridge(utility)
 	tools := server.NewToolRegistryV1()
@@ -230,7 +261,8 @@ func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 }
 
 func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_working_copy.Repo, index *typeIndex, tagIdx *tagIndex, hasWorkspace bool) {
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "show",
 			Description: "View a specific dodder object by ID. Returns metadata and content for zettels, tags, or types.",
@@ -250,7 +282,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["object_id"],
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		makeBridgeHandler(bridge, "show", func(args json.RawMessage) ([]string, error) {
 			var p struct {
@@ -269,7 +300,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		}),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "query",
 			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer query-type/query-tag for discovery; use this for AND-filtered object listings.",
@@ -294,7 +326,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["query"],
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		func(
 			ctx context.Context,
@@ -361,7 +392,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		},
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "format-blob",
 			Description: "Format and display the blob content of a dodder zettel. Renders the zettel's associated file content using the type's configured formatter.",
@@ -380,7 +412,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["object_id"],
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		makeBridgeHandler(bridge, "format-blob", func(args json.RawMessage) ([]string, error) {
 			var p struct {
@@ -398,7 +429,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		}),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "query-type",
 			Description: "Search for dodder types by word (OR-union). Returns type summaries including tags and resource URIs for drill-down. Words are expanded by hyphen segments: 'task' matches !task, !taskpaper, etc. Use dodder://types/<id>/objects to list objects of a matched type, or /objects/facets for tag analytics.",
@@ -414,7 +446,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["words"],
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		func(
 			ctx context.Context,
@@ -450,7 +481,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		},
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "query-tag",
 			Description: "Search for dodder tags by word (OR-union). Returns tag summaries including each tag's own tags (meta-tags like 'active', 'priority-0_must'). Use this to discover and filter tags — e.g. query-tag(['project']) returns all project tags, then check each result's tags field for 'active' to find active projects. Words are expanded by hyphen segments: 'project' matches project-2021-zit, project-24q2-personal_sites, etc.",
@@ -466,7 +498,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["words"],
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		func(
 			ctx context.Context,
@@ -502,7 +533,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		},
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "new",
 			Description: "Create a new zettel. Returns the created object in box format. Optionally set a description, type, and tags.",
@@ -525,12 +557,12 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				},
 				"additionalProperties": false
 			}`),
-			Annotations: writeAnnotations,
 		},
 		makeBridgeHandler(bridge, "new", newToolCLIArgs),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "edit",
 			Description: "Edit an existing dodder object. Updates metadata (description, tags, type) and/or blob content. Fields not provided are left unchanged. When tags is provided, it replaces all existing tags.",
@@ -562,12 +594,12 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["object_id"],
 				"additionalProperties": false
 			}`),
-			Annotations: writeAnnotations,
 		},
 		makeEditHandler(repo, bridge),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "reset-lock",
 			Description: "Forcibly reset the repo's environment lock (the filesystem mutex guarding mutations, NOT content locks). A failed mutating operation intentionally leaves this lock held for recovery; use this tool to clear it after verifying no other dodder process is using the repo. The response states the resulting lock state unambiguously. Requires user approval on every call.",
@@ -576,7 +608,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"properties": {},
 				"additionalProperties": false
 			}`),
-			Annotations: destructiveAnnotations,
 		},
 		makeResetLockHandler(repo),
 	)
@@ -592,7 +623,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		return
 	}
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "status",
 			Description: "List checked-out objects in the workspace with their state (CheckedOut, Recognized, Untracked, Conflicted). Requires an active workspace. Returns box format with state headers.",
@@ -607,7 +639,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				},
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		makeWorkspaceBridgeHandler(bridge, "status", func(args json.RawMessage) ([]string, error) {
 			var p struct {
@@ -620,7 +651,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		}),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "checkin",
 			Description: "Commit working copy changes to the store. Checks in objects matching the query from the workspace. Requires an active workspace.",
@@ -636,7 +668,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["query"],
 				"additionalProperties": false
 			}`),
-			Annotations: writeAnnotations,
 		},
 		makeWorkspaceBridgeHandler(bridge, "checkin", func(args json.RawMessage) ([]string, error) {
 			var p struct {
@@ -649,7 +680,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		}),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "diff",
 			Description: "Show differences between internal (store) and external (working copy) versions of checked-out objects. Requires an active workspace.",
@@ -664,7 +696,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				},
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		makeWorkspaceBridgeHandlerEmptyMessage(bridge, "diff", "no differences", func(args json.RawMessage) ([]string, error) {
 			var p struct {
@@ -677,7 +708,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		}),
 	)
 
-	tools.Register(
+	registerTool(
+		tools,
 		protocol.ToolV1{
 			Name:        "read-checked_out",
 			Description: "Read the working copy file content of a checked-out object. Returns the external (filesystem) version, not the store version. Requires an active workspace.",
@@ -692,7 +724,6 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				"required": ["object_id"],
 				"additionalProperties": false
 			}`),
-			Annotations: readOnlyAnnotations,
 		},
 		makeWorkspaceBridgeHandler(bridge, "show", func(args json.RawMessage) ([]string, error) {
 			var p struct {
