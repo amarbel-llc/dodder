@@ -95,6 +95,7 @@ func (server *Server) serveSession(s *session) (err error) {
 			env,
 			s,
 			server.Repo,
+			server.Repo.GetEnvRepo().GetReadBlobStore(),
 			server.Repo.GetEnvRepo(),
 			want,
 			negotiateCompression(clientCaps.Compression),

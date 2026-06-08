@@ -31,6 +31,7 @@ func sendClosure(
 	env env_ui.Env,
 	s *session,
 	src repo.Repo,
+	readBlobStore mad_domain_interfaces.BlobStore,
 	envAdder interfaces.EnvVarsAdder,
 	want control,
 	compression string,
@@ -75,6 +76,13 @@ func sendClosure(
 		return err
 	}
 
+	// readBlobStore is the multi-store read view (FDR-0015), not just the
+	// default write store, so blobs living in an ancestor/XDG read store are
+	// advertised and sendable — otherwise a repo backed by such stores
+	// advertises an incomplete manifest and fails the blob reads. The caller
+	// supplies it because repo.Repo (the interface) does not expose
+	// GetEnvRepo; the concrete repos at the call sites do.
+
 	// Have-negotiation: announce every blob in the closure the sender holds,
 	// learn which the receiver already has, and stream only the rest. The
 	// manifest/have exchange always happens (with an empty manifest when
@@ -82,7 +90,7 @@ func sendClosure(
 	var manifest []string
 
 	if !want.ExcludeBlobs {
-		manifest = gatherBlobDigests(src.GetBlobStore(), list, edges)
+		manifest = gatherBlobDigests(readBlobStore, list, edges)
 	}
 
 	if err = s.writeControl(TypeManifest, control{Blobs: manifest}); err != nil {
@@ -100,7 +108,7 @@ func sendClosure(
 	if err = sendBlobs(
 		env,
 		s,
-		src.GetBlobStore(),
+		readBlobStore,
 		manifest,
 		have.HaveBlobs,
 		compression,
@@ -127,7 +135,7 @@ func sendClosure(
 // blob reference discovered by expand-edges. Only locally-present blobs are
 // advertised, so the receiver never expects a blob the sender cannot send.
 func gatherBlobDigests(
-	blobStore blob_stores.BlobStoreInitialized,
+	blobStore mad_domain_interfaces.BlobStore,
 	list *sku.HeapTransacted,
 	edges sku.Edges,
 ) (digests []string) {
@@ -170,7 +178,7 @@ func gatherBlobDigests(
 func sendBlobs(
 	env env_ui.Env,
 	s *session,
-	blobStore blob_stores.BlobStoreInitialized,
+	blobStore mad_domain_interfaces.BlobStore,
 	manifest []string,
 	haveBlobs []string,
 	compression string,
@@ -199,7 +207,7 @@ func sendBlobs(
 
 func sendOneBlob(
 	s *session,
-	blobStore blob_stores.BlobStoreInitialized,
+	blobStore mad_domain_interfaces.BlobStore,
 	key string,
 	compression string,
 ) (err error) {
@@ -291,9 +299,12 @@ func receiveClosure(
 	want control,
 	storeOptions sku.StoreOptions,
 ) (err error) {
-	blobStore := dst.GetBlobStore()
+	// Read have-checks span every read store (FDR-0015) so blobs already
+	// held in an ancestor/XDG store are not re-requested; writes still land
+	// in the default write store.
+	writeBlobStore := dst.GetBlobStore()
 
-	if err = negotiateHave(s, blobStore); err != nil {
+	if err = negotiateHave(s, dst.GetEnvRepo().GetReadBlobStore()); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -340,7 +351,7 @@ func receiveClosure(
 
 			switch typeString {
 			case "!" + TypeBlobHeader:
-				if err = recvBlob(s, blobStore, msg); err != nil {
+				if err = recvBlob(s, writeBlobStore, msg); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -384,7 +395,7 @@ func receiveClosure(
 // streaming them.
 func negotiateHave(
 	s *session,
-	blobStore blob_stores.BlobStoreInitialized,
+	blobStore mad_domain_interfaces.BlobStore,
 ) (err error) {
 	var manifest control
 

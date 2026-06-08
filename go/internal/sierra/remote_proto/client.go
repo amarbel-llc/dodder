@@ -142,6 +142,7 @@ func (client *Client) Push(
 		client.env,
 		s,
 		client.local,
+		client.local.GetEnvRepo().GetReadBlobStore(),
 		client.local.GetEnvRepo(),
 		want,
 		negotiateCompression(serverCaps.Compression),
