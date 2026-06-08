@@ -3,6 +3,7 @@ package remote_proto
 import (
 	"bytes"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -14,6 +15,37 @@ import (
 type keys struct {
 	private mad_domain_interfaces.MarklId
 	public  mad_domain_interfaces.MarklId
+}
+
+// selfCaps carries the local repo's config-derived capability fields a peer
+// advertises (beyond protocol-version / nonce / signature): the object
+// inventory-list type and the public seed (RepoId provenance, StoreVersion
+// guard). Bundled so the handshake stays decoupled from *Repo (tests pass
+// literals) and a future seed field is a one-field change.
+type selfCaps struct {
+	listType     string
+	repoId       string
+	storeVersion string
+}
+
+// assertStoreVersionCompatible rejects a peer advertising a store version
+// this build cannot decode. store_version.Version.Set returns
+// ErrFutureStoreVersion when the parsed version exceeds VCurrent, so a
+// future peer fails fast here rather than deep in import. An empty value
+// (an older peer that does not advertise the seed) is accepted.
+func assertStoreVersionCompatible(peerStoreVersion string) (err error) {
+	if peerStoreVersion == "" {
+		return err
+	}
+
+	var version store_version.Version
+
+	if err = version.Set(peerStoreVersion); err != nil {
+		err = errors.Wrapf(err, "remote store version %q is not supported", peerStoreVersion)
+		return err
+	}
+
+	return err
 }
 
 func (k keys) publicString() string {
@@ -32,7 +64,7 @@ func (k keys) publicString() string {
 func clientHandshake(
 	s *session,
 	self keys,
-	listType string,
+	caps selfCaps,
 	pinnedPublicKey mad_domain_interfaces.MarklId,
 ) (serverCaps control, clientNonce string, err error) {
 	if clientNonce, err = generateNonce(); err != nil {
@@ -43,10 +75,12 @@ func clientHandshake(
 	if err = s.writeControl(TypeCapabilities, control{
 		ProtocolVersion:   ProtocolVersion,
 		Role:              RoleClient,
-		InventoryListType: listType,
+		InventoryListType: caps.listType,
 		ExpandEdges:       true,
 		Compression:       supportedCompression,
 		PublicKey:         self.publicString(),
+		RepoId:            caps.repoId,
+		StoreVersion:      caps.storeVersion,
 		Nonce:             clientNonce,
 	}); err != nil {
 		err = errors.Wrap(err)
@@ -64,6 +98,13 @@ func clientHandshake(
 			serverCaps.ProtocolVersion,
 			ProtocolVersion,
 		)
+		return serverCaps, clientNonce, err
+	}
+
+	// Fail fast if the server's store version is newer than this build can
+	// decode (the client is the receiver on a fetch).
+	if err = assertStoreVersionCompatible(serverCaps.StoreVersion); err != nil {
+		err = errors.Wrap(err)
 		return serverCaps, clientNonce, err
 	}
 
@@ -119,7 +160,7 @@ func signWant(
 func serverHandshake(
 	s *session,
 	self keys,
-	listType string,
+	caps selfCaps,
 	public bool,
 ) (clientCaps, want control, err error) {
 	if clientCaps, err = s.readControlExpecting(TypeCapabilities); err != nil {
@@ -133,6 +174,14 @@ func serverHandshake(
 			clientCaps.ProtocolVersion,
 			ProtocolVersion,
 		)
+		s.writeError(err.Error(), 400)
+		return clientCaps, want, err
+	}
+
+	// Fail fast if the client's store version is newer than this build can
+	// decode (the server is the receiver on a push).
+	if err = assertStoreVersionCompatible(clientCaps.StoreVersion); err != nil {
+		err = errors.Wrap(err)
 		s.writeError(err.Error(), 400)
 		return clientCaps, want, err
 	}
@@ -156,11 +205,13 @@ func serverHandshake(
 	if err = s.writeControl(TypeCapabilities, control{
 		ProtocolVersion:   ProtocolVersion,
 		Role:              RoleServer,
-		InventoryListType: listType,
+		InventoryListType: caps.listType,
 		ExpandEdges:       true,
 		Compression:       supportedCompression,
 		Public:            public,
 		PublicKey:         self.publicString(),
+		RepoId:            caps.repoId,
+		StoreVersion:      caps.storeVersion,
 		Nonce:             serverNonce,
 		Signature:         serverSignature,
 	}); err != nil {

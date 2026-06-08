@@ -48,8 +48,14 @@ func (server *Server) keys() keys {
 	}
 }
 
-func (server *Server) listType() string {
-	return server.Repo.GetImmutableConfigPublic().GetInventoryListTypeId()
+func (server *Server) selfCaps() selfCaps {
+	config := server.Repo.GetImmutableConfigPublic()
+
+	return selfCaps{
+		listType:     config.GetInventoryListTypeId(),
+		repoId:       config.GetRepoId().String(),
+		storeVersion: config.GetStoreVersion().String(),
+	}
 }
 
 // ServeConn runs a single drtp session over conn. The caller owns conn's
@@ -73,7 +79,7 @@ func (server *Server) serveSession(s *session) (err error) {
 	if clientCaps, want, err = serverHandshake(
 		s,
 		server.keys(),
-		server.listType(),
+		server.selfCaps(),
 		server.Public,
 	); err != nil {
 		err = errors.Wrap(err)

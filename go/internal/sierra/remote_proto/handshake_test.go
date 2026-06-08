@@ -65,13 +65,13 @@ func TestHandshakeMutualAttestation(t1 *testing.T) {
 
 	go func() {
 		s := makeSession(serverConn)
-		_, want, err := serverHandshake(s, serverKeys, testListType, false)
+		_, want, err := serverHandshake(s, serverKeys, selfCaps{listType: testListType}, false)
 		results <- serverResult{want: want, err: err}
 	}()
 
 	s := makeSession(clientConn)
 
-	serverCaps, _, err := clientHandshake(s, clientKeys, testListType, serverKeys.public)
+	serverCaps, _, err := clientHandshake(s, clientKeys, selfCaps{listType: testListType}, serverKeys.public)
 	t.AssertNoError(err)
 	t.AssertEqual(testListType, serverCaps.InventoryListType)
 	t.AssertEqual(RoleServer, serverCaps.Role)
@@ -102,14 +102,14 @@ func TestHandshakePinnedKeyMismatch(t1 *testing.T) {
 
 	go func() {
 		s := makeSession(serverConn)
-		_, _, _ = serverHandshake(s, serverKeys, testListType, false)
+		_, _, _ = serverHandshake(s, serverKeys, selfCaps{listType: testListType}, false)
 		_ = serverConn.Close()
 	}()
 
 	s := makeSession(clientConn)
 	defer func() { _ = clientConn.Close() }()
 
-	_, _, err := clientHandshake(s, clientKeys, testListType, otherKeys.public)
+	_, _, err := clientHandshake(s, clientKeys, selfCaps{listType: testListType}, otherKeys.public)
 	t.AssertError(err)
 	if !strings.Contains(err.Error(), "public key mismatch") {
 		t.Fatalf("expected public key mismatch, got: %v", err)
@@ -142,7 +142,7 @@ func TestHandshakeOverWebSocket(t1 *testing.T) {
 		netConn := websocket.NetConn(r.Context(), conn, websocket.MessageBinary)
 		s := makeSession(netConn)
 
-		_, want, hErr := serverHandshake(s, serverKeys, testListType, true)
+		_, want, hErr := serverHandshake(s, serverKeys, selfCaps{listType: testListType}, true)
 		if hErr != nil {
 			serverErr <- hErr
 			return
@@ -167,7 +167,7 @@ func TestHandshakeOverWebSocket(t1 *testing.T) {
 
 	s := makeSession(conn)
 
-	serverCaps, _, err := clientHandshake(s, clientKeys, testListType, serverKeys.public)
+	serverCaps, _, err := clientHandshake(s, clientKeys, selfCaps{listType: testListType}, serverKeys.public)
 	t.AssertNoError(err)
 	t.AssertEqual(testListType, serverCaps.InventoryListType)
 

@@ -34,6 +34,14 @@ type control struct {
 	Nonce             string `json:"nonce,omitempty"`
 	Signature         string `json:"signature,omitempty"`
 
+	// public seed (RFC-0004 "The public seed"): the genesis-config fields
+	// drtp actually needs. RepoId is provenance for the attested PublicKey;
+	// StoreVersion is a fail-fast compatibility guard (a receiver rejects a
+	// peer whose store version it cannot decode). Not decode-config — the
+	// object/blob streams are self-describing (see ADR-0005).
+	RepoId       string `json:"repo_id,omitempty"`
+	StoreVersion string `json:"store_version,omitempty"`
+
 	// want
 	Direction           string `json:"direction,omitempty"`
 	Query               string `json:"query,omitempty"`

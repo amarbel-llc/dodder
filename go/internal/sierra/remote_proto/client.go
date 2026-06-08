@@ -37,8 +37,14 @@ func (client *Client) keys() keys {
 	}
 }
 
-func (client *Client) listType() string {
-	return client.local.GetImmutableConfigPublic().GetInventoryListTypeId()
+func (client *Client) selfCaps() selfCaps {
+	config := client.local.GetImmutableConfigPublic()
+
+	return selfCaps{
+		listType:     config.GetInventoryListTypeId(),
+		repoId:       config.GetRepoId().String(),
+		storeVersion: config.GetStoreVersion().String(),
+	}
 }
 
 // Fetch pulls every object matching query (and its expand-edges closure)
@@ -56,7 +62,7 @@ func (client *Client) Fetch(
 	if serverCaps, _, err = clientHandshake(
 		s,
 		client.keys(),
-		client.listType(),
+		client.selfCaps(),
 		client.PinnedPublicKey,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -109,7 +115,7 @@ func (client *Client) Push(
 	if serverCaps, _, err = clientHandshake(
 		s,
 		client.keys(),
-		client.listType(),
+		client.selfCaps(),
 		client.PinnedPublicKey,
 	); err != nil {
 		err = errors.Wrap(err)
