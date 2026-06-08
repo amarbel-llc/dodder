@@ -309,13 +309,37 @@ func receiveClosure(
 		return err
 	}
 
+	// drtp streams the whole closure up front, blobs before objects, so a
+	// blob still missing when an object imports means the closure was
+	// incomplete — a hard error, not remote_http's reactive retry (there is
+	// nothing to re-request; the single pass already delivered everything).
+	// Wrap the standard delegate (keeping its progress output) and fail loud
+	// on a missing/errored blob instead of logging it to stderr and
+	// continuing, which would import an object with a dangling blob ref.
+	logBlobCopy := sku.MakeBlobCopierDelegate(dst.GetEnv().GetUI(), false)
+
 	importerOptions := repo.ImporterOptions{
 		CheckedOutPrinter:   dst.PrinterCheckedOutConflictsForRemoteTransfers(),
 		AllowMergeConflicts: want.AllowMergeConflicts,
-		BlobCopierDelegate: sku.MakeBlobCopierDelegate(
-			dst.GetEnv().GetUI(),
-			false,
-		),
+		BlobCopierDelegate: func(result sku.BlobCopyResult) (err error) {
+			if err = logBlobCopy(result); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			switch _, state := result.GetBytesWrittenAndState(); state {
+			case blob_stores.CopyResultStateError,
+				blob_stores.CopyResultStateNilRemoteBlobStore:
+				err = errors.Errorf(
+					"blob %s unavailable at import — drtp closure incomplete: %s",
+					result.BlobId,
+					result.GetError(),
+				)
+				return err
+			}
+
+			return err
+		},
 	}
 
 	for {
