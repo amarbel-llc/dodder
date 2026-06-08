@@ -160,6 +160,19 @@ func testCLITreeForwards(t *dewey_ui.TestContext) {
 			},
 			expected: "only\n",
 		},
+		{
+			// dewey HTTPStatusError post-#107 returns its underlying
+			// message verbatim from Error(), so an HTTP-tagged leaf like
+			// ErrNeedsMerge (Err409Conflict.Errorf("...")) is a
+			// transparent single-child wrapper. The encoder must collapse
+			// it instead of rendering the same message twice (once as the
+			// node, once as its sole child) — the #351 regression.
+			TestCaseInfo: dewey_ui.MakeTestCaseInfo(
+				"transparent http wrapper collapses to one line",
+			),
+			input:    errors.Err409Conflict.Errorf("import failed with conflicts, merging required"),
+			expected: "import failed with conflicts, merging required\n",
+		},
 		// TODO figure out how to include stack info stabley
 		// {
 		// 	TestCaseInfo: MakeTestCaseInfo(

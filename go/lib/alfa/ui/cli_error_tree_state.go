@@ -217,7 +217,23 @@ func (state *cliTreeState) encodeStack() {
 		state.stack.pop()
 
 	case errors.UnwrapOne:
-		state.printErrorOneUnwrapper(inputTyped)
+		child := inputTyped.Unwrap()
+
+		// Collapse a transparent wrapper: a single-child unwrapper whose
+		// message is identical to its child adds no information and would
+		// otherwise render the same line twice (the node and its sole
+		// child). dewey's HTTPStatusError does this post-#107 — Error()
+		// returns the underlying message verbatim, so an HTTP-tagged leaf
+		// like ErrNeedsMerge (Err409Conflict.Errorf("...")) wraps a
+		// fmt.Errorf carrying the same text. The HTTP status stays
+		// meaningful at the wire boundary; it is just noise in the tree.
+		if child != nil && input.Error() == child.Error() {
+			stackItem.child = child
+			state.encodeStack()
+			return
+		}
+
+		state.printErrorOneUnwrapperWithChild(inputTyped, child)
 
 	case errors.UnwrapMany:
 		children := inputTyped.Unwrap()
