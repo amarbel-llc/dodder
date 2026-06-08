@@ -54,7 +54,4 @@ type (
 	}
 )
 
-var (
-	_ ConfigWithDefaultQueryString = V0{}
-	_ ConfigTemporary              = Temporary{}
-)
+var _ ConfigTemporary = Temporary{}

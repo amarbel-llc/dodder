@@ -24,15 +24,19 @@ function blob_store_sync_twice { # @test
   assert_line --regexp '^ok 1 - init .*/\.xdg/data/madder/blob_stores/test/blob_store-config$'
   assert_line "1..1"
 
-  run_madder sync
+  # madder sync now defaults to the crap NDJSON event stream when piped
+  # (as under bats); force -format ndjson for the stable summary line +
+  # per-blob records. sync has no -format tap, only crap/ndjson/json
+  # (madder-sync(1)).
+  run_madder sync -format ndjson
   assert_success
   assert_line "Successes: 16, Failures: 0, Ignored: 0, Total: 16"
-  # 1 header + 16 JSON lines, one per blob in the v15 fixture's
+  # 1 summary line + 16 JSON lines, one per blob in the v15 fixture's
   # default store.
   [[ ${#lines[@]} -eq 17 ]] ||
     fail "sync 1: expected 17 output lines, got ${#lines[@]}: ${output}"
 
-  run_madder sync
+  run_madder sync -format ndjson
   assert_success
   assert_line "Successes: 0, Failures: 0, Ignored: 16, Total: 16"
   [[ ${#lines[@]} -eq 17 ]] ||

@@ -10,6 +10,14 @@ Bidirectional JSON conversion for SKU objects with optional blob content inclusi
 
 - `Transacted`: JSON representation with all SKU metadata fields
 - `Lock`: Type lock information for version control
+- `JsonWithUrl`: `Transacted` + embedded bookmark `TomlBookmark`
+
+## Re-exported from `foxtrot/sku_bookmark_blobs`
+
+The bookmark blob struct lives in `internal/foxtrot/sku_bookmark_blobs` (tommy
+v0.4.3 codegen-isolation split). `TomlBookmark`, `TomlBookmarkDocument`, and
+`DecodeTomlBookmark` are re-exported here so external callers keep using
+`sku_json_fmt.*`.
 
 ## Features
 

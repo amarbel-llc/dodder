@@ -1,4 +1,4 @@
-package workspace_config_blobs
+package workspace_config_value_blobs
 
 //go:generate tommy generate
 type V3 struct {
@@ -13,12 +13,3 @@ type V3 struct {
 func (blob V3) GetIgnorePatterns() []string {
 	return blob.Ignore
 }
-
-var (
-	_ ConfigWithIgnore             = V3{}
-	_ ConfigWithHaustoria          = V3{}
-	_ ConfigWithParentPath         = V3{}
-	_ ConfigWithSyncBaseline       = V3{}
-	_ ConfigWithDefaultQueryString = V3{}
-	_ ConfigWithDryRun             = V3{}
-)

@@ -1,4 +1,4 @@
-package genesis_configs
+package genesis_config_blobs
 
 import (
 	"crypto/ed25519"

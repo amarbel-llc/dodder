@@ -2,6 +2,7 @@ package workspace_config_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	workspace_config_value_blobs "code.linenisgreat.com/dodder/go/internal/delta/workspace_config_value_blobs"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
@@ -15,14 +16,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeV0(b)
+					doc, err := workspace_config_value_blobs.DecodeV0(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeV0(nil)
+					doc, err := workspace_config_value_blobs.DecodeV0(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -40,14 +41,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeV1(b)
+					doc, err := workspace_config_value_blobs.DecodeV1(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeV1(nil)
+					doc, err := workspace_config_value_blobs.DecodeV1(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -65,14 +66,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeV2(b)
+					doc, err := workspace_config_value_blobs.DecodeV2(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeV2(nil)
+					doc, err := workspace_config_value_blobs.DecodeV2(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -90,14 +91,14 @@ var Coder = hyphence.CoderToTypedBlob[Config]{
 				*Config,
 			]{
 				Decode: func(b []byte) (Config, error) {
-					doc, err := DecodeV3(b)
+					doc, err := workspace_config_value_blobs.DecodeV3(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg Config) ([]byte, error) {
-					doc, err := DecodeV3(nil)
+					doc, err := workspace_config_value_blobs.DecodeV3(nil)
 					if err != nil {
 						return nil, err
 					}

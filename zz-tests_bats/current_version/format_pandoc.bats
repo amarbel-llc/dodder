@@ -41,7 +41,7 @@ function init_with_pandoc_tools_creates_type_objects { # @test
 	run_dodder show '!md:t'
 	assert_success
 	assert_output --regexp - <<-'EOM'
-		\[!md @blake2b256-ctgjs28kvdp4kjyl7af92h8qzfphk3u43zwht2xzpynxpnykedeqelgjfh !toml-type-v2 "defaults/dodder-edit\.yaml<@blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-[a-z0-9]+" "filters/dodder-edit\.lua<@blake2b256-cr6qfsyckzh38h648zpvu7at8vtnp6tgl8wmf5tm6e3tdrmzmpmswvjk72 !pandoc-lua_filter@ed25519_sig-[a-z0-9]+" "filters/dodder-common\.lua<@blake2b256-zux3d4kspkhk7xk23q9hjes907uf5r0daquvr2ua3nt2tvc2h7ps3hfnul !pandoc-lua_filter@ed25519_sig-[a-z0-9]+"\]
+		\[!md @blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j !toml-type-v2 "defaults/dodder-edit\.yaml<@blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-[a-z0-9]+" "filters/dodder-edit\.lua<@blake2b256-cr6qfsyckzh38h648zpvu7at8vtnp6tgl8wmf5tm6e3tdrmzmpmswvjk72 !pandoc-lua_filter@ed25519_sig-[a-z0-9]+" "filters/dodder-common\.lua<@blake2b256-zux3d4kspkhk7xk23q9hjes907uf5r0daquvr2ua3nt2tvc2h7ps3hfnul !pandoc-lua_filter@ed25519_sig-[a-z0-9]+"\]
 	EOM
 }
 

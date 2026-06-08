@@ -1,4 +1,4 @@
-package workspace_config_blobs
+package workspace_config_value_blobs
 
 import (
 	"fmt"
@@ -179,11 +179,3 @@ type ResolvedCalDAVConfig struct {
 func (blob V2) GetHaustoriaConfig() HaustoriaConfig {
 	return blob.Haustoria
 }
-
-var (
-	_ ConfigWithHaustoria          = V2{}
-	_ ConfigWithParentPath         = V2{}
-	_ ConfigWithSyncBaseline       = V2{}
-	_ ConfigWithDefaultQueryString = V2{}
-	_ ConfigWithDryRun             = V2{}
-)

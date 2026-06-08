@@ -1347,7 +1347,11 @@ function organize_untracked_fs_blob_with_spaces() { # @test
 function organize_default_tags_workspace { # @test
   # shellcheck disable=SC2317
   function editor() (
-    sed -i '/^\[defaults\]$/a tags = ["zz-inbox"]' "$0"
+    # Replace the existing defaults.tags value in place. Appending a
+    # second `tags =` line under [defaults] produced a duplicate key
+    # that older tommy silently tolerated (last-wins) but tommy v0.4.3
+    # correctly rejects (tommy#90).
+    sed -i 's/^tags = .*/tags = ["zz-inbox"]/' "$0"
   )
 
   export -f editor
@@ -1356,7 +1360,7 @@ function organize_default_tags_workspace { # @test
   run_dodder edit-config
   assert_success
   assert_output - <<-EOM
-		[konfig @blake2b256-su60095s55lrrgxtxzvlgxplf9xayk7e5epug6j6wvl3k07mgx8sgdvc4h !toml-config-v2]
+		[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]
 	EOM
 
   cat >.dodder-workspace <<-EOM

@@ -1,4 +1,4 @@
-package workspace_config_blobs
+package workspace_config_value_blobs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"

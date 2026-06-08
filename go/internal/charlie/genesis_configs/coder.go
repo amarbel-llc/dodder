@@ -1,6 +1,7 @@
 package genesis_configs
 
 import (
+	genesis_config_blobs "code.linenisgreat.com/dodder/go/internal/bravo/genesis_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
@@ -15,14 +16,14 @@ var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
 				*ConfigPrivate,
 			]{
 				Decode: func(b []byte) (ConfigPrivate, error) {
-					doc, err := DecodeTomlV2Private(b)
+					doc, err := genesis_config_blobs.DecodeTomlV2Private(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigPrivate) ([]byte, error) {
-					doc, err := DecodeTomlV2Private(nil)
+					doc, err := genesis_config_blobs.DecodeTomlV2Private(nil)
 					if err != nil {
 						return nil, err
 					}
@@ -45,14 +46,14 @@ var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
 				*ConfigPublic,
 			]{
 				Decode: func(b []byte) (ConfigPublic, error) {
-					doc, err := DecodeTomlV2Public(b)
+					doc, err := genesis_config_blobs.DecodeTomlV2Public(b)
 					if err != nil {
 						return nil, err
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(cfg ConfigPublic) ([]byte, error) {
-					doc, err := DecodeTomlV2Public(nil)
+					doc, err := genesis_config_blobs.DecodeTomlV2Public(nil)
 					if err != nil {
 						return nil, err
 					}

@@ -1,4 +1,4 @@
-package workspace_config_blobs
+package workspace_config_value_blobs
 
 //go:generate tommy generate
 type V1 struct {
@@ -19,10 +19,3 @@ func (blob V1) GetSyncTai() string {
 func (blob V1) GetSyncDigest() string {
 	return blob.SyncDigest
 }
-
-var (
-	_ ConfigWithParentPath         = V1{}
-	_ ConfigWithSyncBaseline       = V1{}
-	_ ConfigWithDefaultQueryString = V1{}
-	_ ConfigWithDryRun             = V1{}
-)

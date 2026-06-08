@@ -11,11 +11,6 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
-//go:generate tommy generate
-type TomlBookmark struct {
-	Url string `toml:"url"`
-}
-
 func TomlBookmarkUrl(
 	object *sku.Transacted,
 	envRepo env_repo.Env,

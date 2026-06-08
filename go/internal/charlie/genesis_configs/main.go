@@ -2,6 +2,7 @@ package genesis_configs
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
+	genesis_config_blobs "code.linenisgreat.com/dodder/go/internal/bravo/genesis_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
@@ -10,25 +11,9 @@ import (
 )
 
 type (
-	Config interface {
-		GetStoreVersion() store_version.Version
-		GetPublicKey() mad_domain_interfaces.MarklId
-		GetRepoId() ids.RepoId
-		GetInventoryListTypeId() string
-		GetObjectSigMarklTypeId() string
-	}
-
-	ConfigPublic interface {
-		Config
-		GetGenesisConfig() ConfigPublic
-	}
-
-	ConfigPrivate interface {
-		Config
-		GetGenesisConfigPublic() ConfigPublic
-		GetGenesisConfig() ConfigPrivate
-		GetPrivateKey() mad_domain_interfaces.MarklId
-	}
+	Config        = genesis_config_blobs.Config
+	ConfigPublic  = genesis_config_blobs.ConfigPublic
+	ConfigPrivate = genesis_config_blobs.ConfigPrivate
 
 	ConfigPrivateMutable interface {
 		interfaces.CommandComponentWriter
