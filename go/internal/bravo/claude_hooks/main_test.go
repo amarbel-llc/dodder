@@ -54,6 +54,39 @@ func parseDecision(t *ui.T, output []byte) (decision, reason string) {
 	return decision, reason
 }
 
+// TestResetLockAlwaysAsks pins #249's permission posture: reset-lock
+// forcibly breaks the repo's env lock, so the hook must force a user
+// prompt on EVERY call — even when the user has otherwise allowlisted
+// dodder tools — rather than falling through to the default flow.
+func TestResetLockAlwaysAsks(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	var stdout bytes.Buffer
+
+	if err := Run(
+		bytes.NewReader(
+			makeInput(&t, "PreToolUse", "mcp__plugin_dodder_dodder__reset-lock"),
+		),
+		&stdout,
+	); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	if stdout.Len() == 0 {
+		t.Fatalf("expected ask output for reset-lock, got none")
+	}
+
+	decision, reason := parseDecision(&t, stdout.Bytes())
+
+	if decision != "ask" {
+		t.Errorf("expected permissionDecision ask, got %q", decision)
+	}
+
+	if reason == "" {
+		t.Errorf("expected a permissionDecisionReason")
+	}
+}
+
 func TestReadOnlyToolsAutoApproved(t1 *testing.T) {
 	t := ui.MakeT(t1)
 

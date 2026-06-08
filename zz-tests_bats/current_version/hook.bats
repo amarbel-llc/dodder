@@ -36,3 +36,13 @@ function hook_falls_through_for_unrelated_tool { # @test
   assert_success
   assert_output ''
 }
+
+function hook_asks_for_reset_lock { # @test
+  # reset-lock forcibly breaks the repo's env lock; the hook must force
+  # a user prompt on every call (#249).
+  run_dodder hook <<-EOM
+		{"hook_event_name": "PreToolUse", "tool_name": "mcp__plugin_dodder_dodder__reset-lock", "tool_input": {}}
+	EOM
+  assert_success
+  assert_output '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"reset-lock forcibly breaks the repo'"'"'s environment lock; every invocation requires explicit user approval"}}'
+}

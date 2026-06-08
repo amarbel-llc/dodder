@@ -66,6 +66,7 @@ function mcp_tools_list_no_workspace { # @test
 		"name":"query"
 		"name":"query-tag"
 		"name":"query-type"
+		"name":"reset-lock"
 		"name":"show"
 	EOM
 }
@@ -93,6 +94,7 @@ function mcp_tools_list_with_workspace { # @test
 		"name":"query-tag"
 		"name":"query-type"
 		"name":"read-checked_out"
+		"name":"reset-lock"
 		"name":"show"
 		"name":"status"
 	EOM
@@ -154,6 +156,55 @@ function mcp_new_twice_does_not_leak_description { # @test
   assert_success
   assert_output --regexp '"second description"|second description'
   refute_output --regexp 'first description'
+}
+
+function mcp_locked_mutate_fails_unambiguously_and_reset_lock_recovers { # @test
+  # A failed mutating operation intentionally leaves the env lock held
+  # (see local_working_copy.Unlock); in the long-lived MCP server that
+  # poisons every later mutate. The failure response must state the
+  # lock state unambiguously and point at reset-lock, and reset-lock
+  # must actually recover.
+  # https://github.com/amarbel-llc/dodder/issues/249
+  run_dodder_init_disable_age
+
+  # Discover the env lock path from the repo's XDG state dir.
+  run_dodder info xdg
+  assert_success
+  local state_home
+  state_home="$(echo "$output" | grep -E 'STATE' | head -n1 | cut -d= -f2 | tr -d '"')"
+  assert [ -n "$state_home" ]
+
+  # Stage a stale lock file, as left behind by a dead process's failed
+  # mutation.
+  mkdir -p "$state_home"
+  touch "$state_home/lock"
+
+  local input="$BATS_TEST_TMPDIR/mcp-locked-new.jsonrpc"
+  write_mcp_tool_call_input "$input" new '{"description":"blocked by lock"}'
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'REPO LOCKED'
+  assert_output --regexp 'reset-lock'
+
+  local reset_input="$BATS_TEST_TMPDIR/mcp-reset-lock.jsonrpc"
+  write_mcp_tool_call_input "$reset_input" reset-lock '{}'
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$reset_input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'no longer locked'
+  assert [ ! -e "$state_home/lock" ]
+
+  local after_input="$BATS_TEST_TMPDIR/mcp-new-after-reset.jsonrpc"
+  write_mcp_tool_call_input "$after_input" new '{"description":"after reset"}'
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$after_input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'after reset'
+  refute_output --regexp 'REPO LOCKED'
 }
 
 function mcp_query_empty_result_has_non_empty_text { # @test

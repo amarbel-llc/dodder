@@ -323,17 +323,16 @@
         "nixpkgs-master": [
           "nixpkgs-master"
         ],
-        "treelint": "treelint",
         "utils": [
           "utils"
         ]
       },
       "locked": {
-        "lastModified": 1780315023,
-        "narHash": "sha256-IQZr5AQ0e0gMNqBrjZ4VhLx+kggpGmmn1/aGf4ZyZzs=",
+        "lastModified": 1780874565,
+        "narHash": "sha256-bKBQK5hsRURD7IkyXJM9jsT/9NZZi2Ymf9/KgrX1mZ4=",
         "owner": "amarbel-llc",
         "repo": "purse-first",
-        "rev": "db1b7096f7a6837c9c1075dde2516f1ffddf4099",
+        "rev": "8c4b12e3b8e01ea023af73961a4ca822c5c4624f",
         "type": "github"
       },
       "original": {
@@ -356,7 +355,7 @@
           "tap",
           "nixpkgs-master"
         ],
-        "treelint": "treelint_2",
+        "treelint": "treelint",
         "utils": [
           "tap",
           "utils"
@@ -385,7 +384,7 @@
         "purse-first": "purse-first",
         "tap": "tap_2",
         "tommy": "tommy",
-        "treelint": "treelint_3",
+        "treelint": "treelint_2",
         "utils": "utils"
       }
     },
@@ -540,7 +539,7 @@
         ],
         "purse-first": "purse-first_2",
         "rust-overlay": "rust-overlay_2",
-        "treefmt-nix": "treefmt-nix_6",
+        "treefmt-nix": "treefmt-nix_5",
         "utils": [
           "utils"
         ]
@@ -657,6 +656,7 @@
     "treefmt-nix_4": {
       "inputs": {
         "nixpkgs": [
+          "tap",
           "purse-first",
           "treelint",
           "igloo"
@@ -680,29 +680,6 @@
       "inputs": {
         "nixpkgs": [
           "tap",
-          "purse-first",
-          "treelint",
-          "igloo"
-        ]
-      },
-      "locked": {
-        "lastModified": 1775636079,
-        "narHash": "sha256-pc20NRoMdiar8oPQceQT47UUZMBTiMdUuWrYu2obUP0=",
-        "owner": "numtide",
-        "repo": "treefmt-nix",
-        "rev": "790751ff7fd3801feeaf96d7dc416a8d581265ba",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "treefmt-nix",
-        "type": "github"
-      }
-    },
-    "treefmt-nix_6": {
-      "inputs": {
-        "nixpkgs": [
-          "tap",
           "igloo"
         ]
       },
@@ -720,7 +697,7 @@
         "type": "github"
       }
     },
-    "treefmt-nix_7": {
+    "treefmt-nix_6": {
       "inputs": {
         "nixpkgs": [
           "treelint",
@@ -744,15 +721,18 @@
     "treelint": {
       "inputs": {
         "igloo": [
+          "tap",
           "purse-first",
           "igloo"
         ],
         "nixpkgs-master": [
+          "tap",
           "purse-first",
           "nixpkgs-master"
         ],
         "treefmt-nix": "treefmt-nix_4",
         "utils": [
+          "tap",
           "purse-first",
           "utils"
         ]
@@ -774,45 +754,12 @@
     "treelint_2": {
       "inputs": {
         "igloo": [
-          "tap",
-          "purse-first",
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "tap",
-          "purse-first",
-          "nixpkgs-master"
-        ],
-        "treefmt-nix": "treefmt-nix_5",
-        "utils": [
-          "tap",
-          "purse-first",
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1780312656,
-        "narHash": "sha256-j0BwE6uFLYEezDMbQAZkIYdtqSjR6ZF4m2niW3u76lc=",
-        "owner": "amarbel-llc",
-        "repo": "treelint",
-        "rev": "e58928e1845fa4b1be68cdcf4ee5cf208e168212",
-        "type": "github"
-      },
-      "original": {
-        "owner": "amarbel-llc",
-        "repo": "treelint",
-        "type": "github"
-      }
-    },
-    "treelint_3": {
-      "inputs": {
-        "igloo": [
           "igloo"
         ],
         "nixpkgs-master": [
           "nixpkgs-master"
         ],
-        "treefmt-nix": "treefmt-nix_7",
+        "treefmt-nix": "treefmt-nix_6",
         "utils": [
           "utils"
         ]

@@ -174,6 +174,14 @@ var writeAnnotations = &protocol.ToolAnnotations{
 	DestructiveHint: new(false),
 }
 
+// destructiveAnnotations marks tools that discard state (reset-lock).
+// The clown plugin's PreToolUse hook additionally forces a user prompt
+// on every call to such tools (#249).
+var destructiveAnnotations = &protocol.ToolAnnotations{
+	ReadOnlyHint:    new(false),
+	DestructiveHint: new(true),
+}
+
 func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
 	bridge := MakeBridge(utility)
 	tools := server.NewToolRegistryV1()
@@ -313,7 +321,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 
 			result, err := bridge.RunCommand(ctx, "show", cliArgs, defaultMaxBytes)
 			if err != nil {
-				errMsg := formatErrorDetail(err)
+				errMsg := formatToolError(err)
 				if result.Stderr != "" {
 					errMsg += "\n\nstderr:\n" + result.Stderr
 				}
@@ -559,6 +567,20 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 		makeEditHandler(repo, bridge),
 	)
 
+	tools.Register(
+		protocol.ToolV1{
+			Name:        "reset-lock",
+			Description: "Forcibly reset the repo's environment lock (the filesystem mutex guarding mutations, NOT content locks). A failed mutating operation intentionally leaves this lock held for recovery; use this tool to clear it after verifying no other dodder process is using the repo. The response states the resulting lock state unambiguously. Requires user approval on every call.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {},
+				"additionalProperties": false
+			}`),
+			Annotations: destructiveAnnotations,
+		},
+		makeResetLockHandler(repo),
+	)
+
 	if !hasWorkspace {
 		// Workspace-scoped tools (status, checkin, diff, read_checked_out)
 		// operate on checked-out objects in a dodder workspace. Without a
@@ -756,13 +778,13 @@ func makeEditHandler(
 		}
 
 		if _, err := op.Run(objectId, changes); err != nil {
-			return protocol.ErrorResultV1(formatErrorDetail(err)), nil
+			return protocol.ErrorResultV1(formatToolError(err)), nil
 		}
 
 		// Show the updated object via bridge
 		result, err := bridge.RunCommand(ctx, "show", []string{p.ObjectId}, defaultMaxBytes)
 		if err != nil {
-			return protocol.ErrorResultV1(formatErrorDetail(err)), nil
+			return protocol.ErrorResultV1(formatToolError(err)), nil
 		}
 
 		return &protocol.ToolCallResultV1{
@@ -864,7 +886,7 @@ func makeBridgeHandler(
 
 		result, err := bridge.RunCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
 		if err != nil {
-			errMsg := formatErrorDetail(err)
+			errMsg := formatToolError(err)
 			if result.Stderr != "" {
 				errMsg += "\n\nstderr:\n" + result.Stderr
 			}
@@ -942,7 +964,7 @@ func makeWorkspaceBridgeHandler(
 
 		result, err := bridge.RunCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
 		if err != nil {
-			errMsg := formatErrorDetail(err)
+			errMsg := formatToolError(err)
 			if result.Stderr != "" {
 				errMsg += "\n\nstderr:\n" + result.Stderr
 			}

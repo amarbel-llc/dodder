@@ -44,6 +44,14 @@ var readOnlyTools = map[string]bool{
 	toolNamePrefix + "read-checked_out": true,
 }
 
+// alwaysAskTools force a user prompt on every call, even when the user
+// has otherwise allowlisted dodder's MCP tools. reset-lock forcibly
+// breaks the repo's env lock — a destructive recovery action that must
+// never run on standing approval (#249).
+var alwaysAskTools = map[string]string{
+	toolNamePrefix + "reset-lock": "reset-lock forcibly breaks the repo's environment lock; every invocation requires explicit user approval",
+}
+
 // Run decodes one Claude Code hook event from reader and writes a
 // permission decision to writer when one applies. No output means no
 // opinion: Claude Code falls through to its normal permission flow.
@@ -58,21 +66,26 @@ func Run(reader io.Reader, writer io.Writer) error {
 		return nil
 	}
 
+	if reason, ok := alwaysAskTools[input.ToolName]; ok {
+		return writeDecision(writer, "ask", reason)
+	}
+
 	if !readOnlyTools[input.ToolName] {
 		return nil
 	}
 
-	return writeAllow(
+	return writeDecision(
 		writer,
+		"allow",
 		"read-only dodder MCP tool, cannot mutate the store",
 	)
 }
 
-func writeAllow(writer io.Writer, reason string) error {
+func writeDecision(writer io.Writer, decision, reason string) error {
 	output := map[string]any{
 		"hookSpecificOutput": map[string]any{
 			"hookEventName":            "PreToolUse",
-			"permissionDecision":       "allow",
+			"permissionDecision":       decision,
 			"permissionDecisionReason": reason,
 		},
 	}
