@@ -34,6 +34,12 @@ tier ordering).
   inputs --- never run `nix flake update` or `go get` directly. The recipe
   updates the flake lock, stages it for nix (which reads staged content in dirty
   git trees), and updates `go.mod` if the input is also a Go module dependency.
+  For the five `flake-input-go_mod`-bridged amarbel deps (madder, tap, tommy,
+  purse-first/dewey, purse-first/go-mcp), **flake.lock is the source of truth**:
+  every nix build (release, debug, `dodder-go-test`, race, cover, bats lanes)
+  compiles them from the flake-input source via `goFlakeInputs`, so the `go.mod`
+  rev is a vestigial shadow the recipe keeps aligned only for the bare-`go test`
+  (`test-go-pkg`) and devshell-`go build` escape hatches. See `go/gomod.nix`.
   The project has a single flake at the repo root; there is no `go/flake.nix`.
 
 ### Unit Test Conventions

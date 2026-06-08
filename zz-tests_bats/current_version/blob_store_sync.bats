@@ -17,7 +17,11 @@ function blob_store_sync_twice { # @test
   setup_repo
   run_madder init test
   assert_success
-  assert_line --regexp '^ok 1 - init .*/\.madder/local/share/blob_stores/test/blob_store-config$'
+  # madder#227: an unprefixed store-id (test) now resolves to the
+  # XDG-user scope ($XDG_DATA_HOME/madder/blob_stores/...) on init,
+  # matching write resolution — previously it landed in the CWD-scoped
+  # .madder/local/share/. Bumped in with madder v0.3.35.
+  assert_line --regexp '^ok 1 - init .*/\.xdg/data/madder/blob_stores/test/blob_store-config$'
   assert_line "1..1"
 
   run_madder sync

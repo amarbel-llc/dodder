@@ -278,7 +278,11 @@ update-flake-input input:
   # github.com/amarbel-llc/madder/go) — read go.mod to find the exact
   # module path that contains amarbel-llc/{{input}} and pass that to
   # `go get`. Falls back to the bare path when no longer-form match is
-  # found.
+  # found. For goFlakeInputs-bridged inputs (madder, tap, tommy,
+  # purse-first) the nix build ignores this go.mod rev and builds from
+  # the flake input just refreshed above; the `go get` here only keeps
+  # the vestigial shadow rev aligned for the bare-`go test` /
+  # devshell-`go build` escape hatches (see resync-flake-go).
   rev=$(jq -r '.nodes["{{input}}"].locked.rev // empty' ../flake.lock)
   if [[ -n "${rev}" ]]; then
     mod_path=$(awk '/^[[:space:]]*github\.com\/amarbel-llc\/{{input}}([\/].*)?[[:space:]]/ { print $1; exit }' go.mod)
@@ -301,9 +305,21 @@ update-flake-input input:
 # flake input is currently locked at, then regenerate go.sum +
 # gomod2nix.toml. Fixes the drift where a bulk `nix flake update` /
 # flake.lock refresh bumps a bridged input's flake rev without
-# re-pinning go.mod: the nix binary builds the bridged dep from the
-# flake input (via gomod.nix goFlakeInputs) while the dev-shell
-# `go build` / unit tests compile against go.mod, so the two must agree.
+# re-pinning go.mod.
+#
+# For the bridged deps the go.mod rev is VESTIGIAL: every nix-routed
+# build — the release binary, dodder-debug, the canonical unit tests
+# (dodder-go-test, i.e. `just test-go-unit`), race, cover, and every
+# bats lane — compiles those deps from the flake-input source via
+# gomod.nix goFlakeInputs, NOT from the go.mod rev or the
+# gomod2nix.toml hash. flake.lock is the source of truth for anything
+# that ships or gates CI. The go.mod require LINE must still exist (Go
+# module validity), and a few escape hatches do read its rev — the
+# `test-go-pkg` bare `go test`, the coverage recipe's `go test ./...`,
+# and a developer's manual `go build` / gopls — so this recipe keeps
+# the shadow rev aligned with flake.lock so those degrade-to-go.mod
+# paths match what nix ships.
+#
 # Run this after any bulk flake.lock refresh. The bridged set is derived
 # from go.mod — each github.com/amarbel-llc/<name>/... require whose
 # <name> matches a flake input in flake.lock; amarbel-llc deps with no

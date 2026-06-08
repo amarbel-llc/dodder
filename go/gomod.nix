@@ -9,7 +9,14 @@
 #   - consumer: goFlakeInputs routes the 5 cross-amarbel `require`
 #     lines onto flake inputs, bypassing the organic gomod2nix.toml
 #     hash and eliminating the flake.lock / go.mod / gomod2nix.toml
-#     drift surface (#218).
+#     drift surface (#218). Consequence: for these 5 deps the go.mod
+#     rev (and the gomod2nix.toml hash) is VESTIGIAL — every
+#     buildGoApplication here (release, dodder-debug, dodder-go-test,
+#     race, cover, bats lanes) inherits goFlakeInputs and so compiles
+#     them from the flake-input source, never from go.mod. flake.lock
+#     is the source of truth. The go.mod require line stays for Go
+#     module validity and the bare-`go test` / devshell escape hatches;
+#     update-flake-input / resync-flake-go keep its shadow rev aligned.
 #
 # Mixed-flake shape per RFC 0001 § The `gomod.nix` convention. Single
 # place to add/remove either side; flake.nix imports once and passes
