@@ -232,6 +232,23 @@ let
     chmod 0755 $pluginRoot/hooks/handler
   '';
 
+  # dodder-vim packages the editor support tree at ../zz-vim (ftdetect,
+  # ftplugin, syntax, autoload for dodder object/workspace filetypes) as
+  # a standard Vim/Neovim plugin, so consumers stop pointing their editor
+  # config at a source checkout (#245). It is a plain copy — no build
+  # step — but buildVimPlugin gives it the conventional pack layout,
+  # helptags, and a store path other flakes / home-manager modules can
+  # depend on. The path is referenced directly (like the clown plugin),
+  # so the non-flake `import ./go/default.nix` path builds it too.
+  dodder-vim = pkgs.vimUtils.buildVimPlugin {
+    pname = "dodder-vim";
+    version = version;
+    src = ../zz-vim;
+    meta = {
+      description = "Vim/Neovim filetype detection, syntax, and ftplugin support for dodder objects, types, tags, configs, and workspaces";
+    };
+  };
+
   # treelint (treefmt successor) wrapped with the formatter binaries its
   # ./treelint.toml drives on PATH, so `treelint`/`treelint check` resolve
   # goimports (gotools) / gofumpt / nixfmt / shfmt without depending on the
@@ -267,6 +284,7 @@ in
       dodder-debug-cover
       dodder-debug-dwarf
       dodder-clown-plugin
+      dodder-vim
       dodder-go-test
       ;
     default = dodder;
