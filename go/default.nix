@@ -249,15 +249,19 @@ let
     };
   };
 
-  # treelint (treefmt successor) wrapped with the formatter binaries its
-  # ./treelint.toml drives on PATH, so `treelint`/`treelint check` resolve
-  # goimports (gotools) / gofumpt / nixfmt / shfmt without depending on the
-  # caller's shell. Mirrors amarbel-llc/purse-first's treelintFmt wrapper.
-  # The codemod-go-fmt (repair) and check-treelint (gate) justfile recipes
-  # resolve this via `nix build '..#treelint-fmt'`, and it is the flake's
-  # `nix fmt` formatter. gofumpt/gotools are the same igloo `pkgs` builds the
-  # dev-shell carries, so treelint's Go output matches the dev-loop formatter.
-  # null on the non-flake `import ./go/default.nix` path (treelint absent).
+  # conformist (the renamed treelint; treefmt successor) wrapped with the
+  # formatter binaries it drives on PATH, so `conformist` / `conformist
+  # check` resolve goimports (gotools) / gofumpt / nixfmt / shfmt without
+  # depending on the caller's shell. Mirrors amarbel-llc/purse-first's
+  # treelintFmt wrapper. The treelint flake input's `packages.default` now
+  # ships a `conformist` binary (the tool was renamed), so the wrapper execs
+  # `conformist`, not `treelint`; the wrapper name and `..#treelint-fmt`
+  # flake output are kept so the codemod-go-fmt (repair) and check-treelint
+  # (gate) justfile recipes that resolve it via `nix build '..#treelint-fmt'`
+  # are unaffected, and it stays the flake's `nix fmt` formatter.
+  # gofumpt/gotools are the same igloo `pkgs` builds the dev-shell carries,
+  # so the Go output matches the dev-loop formatter. null on the non-flake
+  # `import ./go/default.nix` path (treelint absent).
   treelint-fmt =
     if treelint == null then
       null
@@ -272,7 +276,7 @@ let
           pkgs.shfmt
           pkgs.shellcheck
         ];
-        text = ''exec treelint "$@"'';
+        text = ''exec conformist "$@"'';
       };
 in
 {
