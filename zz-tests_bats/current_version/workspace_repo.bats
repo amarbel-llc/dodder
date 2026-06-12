@@ -689,3 +689,127 @@ function workspace_repo_init_bare_query_excludes_unrelated { # @test
 	assert_success
 	assert_output --partial '!md'
 }
+
+# Bootstrap a HOME repo (XDG-scoped at $XDG_DATA_HOME/dodder, NOT
+# CWD-scoped) so init-workspace's implicit-parent path resolves to it.
+# Omitting -repo_id . is what makes init target the XDG home location.
+function bootstrap_home_repo {
+	run_dodder init \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-encryption none \
+		home-repo-id
+	assert_success
+
+	run_dodder new -edit=false - <<-EOM
+		---
+		# home zettel
+		- project-alpha
+		! md
+		---
+
+		home zettel body
+	EOM
+	assert_success
+}
+
+# Exercises the implicit-home-parent write path: `init-workspace` with
+# NO -parent resolves the home repo as parent and writes a TomlPointerV1
+# blob store pointing at the home repo's default store. The existing
+# pointer-store coverage (workspace_repo_init_pointer_to_parent, #200)
+# only verifies READS through the pointer; this verifies that
+# workspace-ORIGINATED writes (new/edit) land in the resolved parent
+# store and survive a reindex + checkout round-trip. Mirrors the
+# real-world `der init-workspace today` invocation (bare repo id, no
+# -parent, no explicit -yin/-yang — those are linked from the parent).
+function workspace_repo_implicit_parent_write_roundtrip { # @test
+	# The workspace discovers the home repo by walking up to
+	# $XDG_DATA_HOME; raise the ceiling above $PWD so the walk-up
+	# isn't blocked (see run_dodder ceiling rationale).
+	export DODDER_TEST_CEILING="$BATS_TEST_TMPDIR"
+	export MADDER_TEST_CEILING="$BATS_TEST_TMPDIR"
+
+	bootstrap_home_repo
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	# Implicit parent: no -parent flag → home repo is the parent.
+	# Signature is `init-workspace [flags] <workspace-repo-id> [query]`.
+	run_dodder init-workspace \
+		-encryption none \
+		workspace-repo-id \
+		project-alpha:z
+	assert_success
+
+	# The pointer config is written at the bare workspace-repo-id dir
+	# and resolves to the home repo's default store under $XDG_DATA_HOME
+	# (bare madder layout, no local/share — the home-repo branch of
+	# setupParentPointerBlobStore).
+	assert [ -f ".madder/local/share/blob_stores/workspace-repo-id/blob_store-config" ]
+	run cat .madder/local/share/blob_stores/workspace-repo-id/blob_store-config
+	assert_success
+	assert_output --partial "$XDG_DATA_HOME/madder/blob_stores/default"
+
+	# The pulled home zettel is visible.
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'home zettel'
+
+	# --- Create a NEW object in the workspace. Its blob must land in
+	# the resolved parent store, not a workspace-local store.
+	run_dodder new -edit=false - <<-EOM
+		---
+		# workspace zettel
+		- project-alpha
+		! md
+		---
+
+		workspace zettel body
+	EOM
+	assert_success
+
+	# The workspace-authored blob resolves through the pointer: madder
+	# can read it from the parent's default store by digest. Extract the
+	# new zettel's blob digest from `show`, then cat it from the parent
+	# store directly.
+	run_dodder show -format object-id-blob-digest one/dos
+	assert_success
+	# Output is "<object-id> <blob-digest>"; take the digest field.
+	blob_sha="${output##* }"
+	run_madder cat default "$blob_sha"
+	assert_success
+	# madder cat prints a "switched to blob-store-id" status line first.
+	assert_output - <<-EOM
+		switched to blob-store-id: default
+		workspace zettel body
+	EOM
+
+	# No workspace-local default store was created — the bare
+	# workspace .madder only holds the pointer dir, never a `default`.
+	assert [ ! -d ".madder/local/share/blob_stores/default" ]
+
+	# --- edit a WORKSPACE-authored object (not the parent's, which
+	# would create a push conflict). The edited blob must round-trip.
+	export EDITOR="bash -c 'echo \"edited workspace body\" > \"\$0\"'"
+	run_dodder edit one/dos
+	assert_success
+
+	run_dodder show -format blob one/dos
+	assert_success
+	assert_output 'edited workspace body'
+
+	# --- reindex rebuilds the index FROM blobs; if any workspace-authored
+	# blob failed to land in the resolved store it would surface here as
+	# "does not exist locally".
+	run_dodder reindex
+	assert_success
+
+	# --- checkout the workspace-authored object after reindex.
+	run_dodder checkout one/dos
+	assert_success
+
+	run cat one/dos.zettel
+	assert_success
+	assert_output --partial 'edited workspace body'
+}
