@@ -16,10 +16,11 @@ const (
 
 	// TODO remove deprecated
 	// keep sorted
-	TypeInventoryListJsonV0 = "!inventory_list-json-v0"
-	TypeInventoryListV0     = "!inventory_list-v0" // Deprevated
-	TypeInventoryListV1     = "!inventory_list-v1"
-	TypeInventoryListV2     = "!inventory_list-v2"
+	TypeInventoryListConfigV0 = "!inventory_list-config-v0"
+	TypeInventoryListJsonV0   = "!inventory_list-json-v0"
+	TypeInventoryListV0       = "!inventory_list-v0" // Deprevated
+	TypeInventoryListV1       = "!inventory_list-v1"
+	TypeInventoryListV2       = "!inventory_list-v2"
 
 	TypeLuaTagV1                                    = "!lua-tag-v1" // Deprecated
 	TypeLuaTagV2                                    = "!lua-tag-v2"
@@ -74,6 +75,11 @@ func init() {
 	defaults = make(map[genres.Genre]BuiltinType)
 
 	// keep sorted
+	registerBuiltinTypeString(
+		TypeInventoryListConfigV0,
+		genres.InventoryList,
+		false,
+	)
 	registerBuiltinTypeString(TypeInventoryListV0, genres.InventoryList, false)
 	registerBuiltinTypeString(TypeInventoryListV1, genres.InventoryList, false)
 	registerBuiltinTypeString(TypeInventoryListV2, genres.InventoryList, true)

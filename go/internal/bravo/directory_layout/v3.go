@@ -125,6 +125,10 @@ func (layout v3) FileInventoryListLog() string {
 	return layout.MakeDirData("inventory_lists_log").String()
 }
 
+func (layout v3) FileConfigLog() string {
+	return layout.MakeDirData("config_log").String()
+}
+
 func (layout v3) FileZettelIdLog() string {
 	return layout.MakeDirData("zettel_id_log").String()
 }

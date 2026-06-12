@@ -30,6 +30,7 @@ type (
 		FileLock() string
 		FileTags() string
 		FileInventoryListLog() string
+		FileConfigLog() string
 		FileZettelIdLog() string
 
 		DirsGenesis() []string
