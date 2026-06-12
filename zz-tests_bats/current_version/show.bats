@@ -23,9 +23,10 @@ function show_simple_one_zettel { # @test
 		# wow the first
 		- tag-3
 		- tag-4
-		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
 		! md@$(get_fixture_type_sig)
 		---
+
+		last time
 	EOM
 }
 
@@ -51,9 +52,10 @@ function show_simple_one_zettel_with_description_with_quotes { # @test
   assert_output - <<-EOM
 		---
 		# see these "quotes"
-		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
 		! md@$(get_fixture_type_sig)
 		---
+
+		last time
 	EOM
 }
 
@@ -65,9 +67,10 @@ function show_simple_one_zettel_with_sigil { # @test
 		# wow the first
 		- tag-3
 		- tag-4
-		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
 		! md@$(get_fixture_type_sig)
 		---
+
+		last time
 	EOM
 }
 
@@ -79,9 +82,10 @@ function show_simple_one_zettel_with_sigil_and_genre { # @test
 		# wow the first
 		- tag-3
 		- tag-4
-		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
 		! md@$(get_fixture_type_sig)
 		---
+
+		last time
 	EOM
 }
 
@@ -200,20 +204,22 @@ function show_history_one_zettel { # @test
   run_dodder show -format text one/uno+z
   assert_success
   assert_output_unsorted - <<-EOM
-		---
+
+
+		! md@$(get_fixture_type_sig)
+		! md@$(get_fixture_type_sig)
 		# wow ok
+		# wow the first
 		- tag-1
 		- tag-2
-		@ blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0
-		! md@$(get_fixture_type_sig)
-		---
-		---
-		# wow the first
 		- tag-3
 		- tag-4
-		@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		! md@$(get_fixture_type_sig)
 		---
+		---
+		---
+		---
+		last time
+		this is the body aiiiiight
 	EOM
 }
 
@@ -659,7 +665,6 @@ function show_zettel_with_referenced_object_lock { # @test
   assert_output --regexp - <<-'EOM'
 		---
 		# referencing zettel
-		@ blake2b256-.+
 		! md@.+
 		- one/dos@ed25519_sig-.+
 		---
@@ -705,7 +710,6 @@ function show_zettel_with_discovered_references { # @test
   assert_output --regexp - <<-'EOM'
 		---
 		# zettel with wiki link
-		@ blake2b256-.+
 		! ref-md@.+
 		- one/dos@ed25519_sig-.+
 		---
@@ -751,7 +755,6 @@ function show_zettel_with_pandoc_discovered_references { # @test
   assert_output --regexp - <<-'EOM'
 		---
 		# zettel with pandoc wiki link
-		@ blake2b256-.+
 		! ref-pandoc-md@.+
 		- one/dos@ed25519_sig-.+
 		---
@@ -804,7 +807,6 @@ function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
   assert_output --regexp - <<-'EOM'
 		---
 		# zettel with code block type ref
-		@ blake2b256-.+
 		! ref-pandoc-cb@.+
 		- !md@ed25519_sig-.+
 		---
@@ -989,7 +991,6 @@ function show_zettel_with_discovered_blob_references { # @test
   assert_output --regexp - <<-'EOM'
 		---
 		# zettel with blob ref
-		@ blake2b256-.+
 		! ref-blob@.+
 		- one/dos@ed25519_sig-.+
 		- @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md@ed25519_sig-.+

@@ -18,7 +18,6 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_value"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/values"
 )
 
 type (
@@ -44,6 +43,12 @@ type (
 			kcli repo_config_cli.Config,
 		) (err error)
 
+		// SetInlineTypeChecker injects the index-backed resolver used by
+		// Config.IsInlineType. Injected post-Initialize by the owning store
+		// (oscar), which holds the signature index. Dependency-inverted via
+		// ids.InlineTypeChecker so this tier never imports oscar.
+		SetInlineTypeChecker(inlineTypeChecker ids.InlineTypeChecker)
+
 		Reset() error
 
 		Flush(
@@ -68,6 +73,12 @@ func (store *store) GetConfig() Config {
 	return store.config
 }
 
+func (store *store) SetInlineTypeChecker(
+	inlineTypeChecker ids.InlineTypeChecker,
+) {
+	store.config.inlineTypeChecker = inlineTypeChecker
+}
+
 func (store *store) GetConfigPtr() *Config {
 	return &store.config
 }
@@ -82,9 +93,6 @@ func (store *store) Reset() error {
 	store.config.TypesToExtensions = make(map[string]string)
 
 	store.config.Tags = collections_value.MakeMutableValueSet[*tag](nil)
-	store.config.InlineTypes = collections_value.MakeMutableValueSet[values.String](
-		nil,
-	)
 	store.config.ImplicitTags = make(implicitTagMap)
 	store.config.Repos = sku.MakeTransactedMutableSet()
 	store.config.Types = sku.MakeTransactedMutableSet()

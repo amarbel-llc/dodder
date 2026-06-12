@@ -123,6 +123,12 @@ func (store *Store) Initialize(
 		store.envWorkspace.GetDefaults(),
 	)
 
+	// Inject the index-backed inline-type resolver into the store config now
+	// that the stream index exists. store_config.Config.IsInlineType delegates
+	// here (dependency-inverted via ids.InlineTypeChecker) instead of consulting
+	// the former never-populated InlineTypes set.
+	store.storeConfig.SetInlineTypeChecker(store)
+
 	return err
 }
 

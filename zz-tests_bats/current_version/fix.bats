@@ -40,7 +40,6 @@ function can_update_blob { # @test
 # bez
 - et1
 - et2
-@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
 ! md@.*
 ---
 EOM
@@ -74,7 +73,6 @@ EOM
 ---
 # bez
 - et3
-@ blake2b256-2qwngrkkpcptsnphu6jcyrwmtpyxux0hmsg4pjfpsn0tr7yt732sgk5lza
 ! md@.*
 ---
 EOM

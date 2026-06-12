@@ -33,7 +33,6 @@ function add { # @test
 ---
 # to_add
 - zz-inbox-2022-11-14
-@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
 ! md@.*
 ---
 EOM
@@ -70,7 +69,6 @@ function add_with_dupe_added { # @test
 ---
 # to_add to_add2
 - zz-inbox-2022-11-14
-@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
 ! md@.*
 ---
 EOM
@@ -232,7 +230,6 @@ function add_several_with_spaces_in_filename { # @test
 ---
 # to add
 - zz-inbox-2022-11-14
-@ blake2b256-kzc0sp5p2ftddtjqgtusdwrsc33fs8h6xwdhp8shhgp0r92uln9q5mkl08
 ! md@.*
 ---
 EOM

@@ -12,11 +12,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
-	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/values"
 )
 
 type (
@@ -51,7 +49,11 @@ type (
 		ExtensionsToTypes map[string]string
 		TypesToExtensions map[string]string
 		Types             sku.TransactedMutableSet
-		InlineTypes       interfaces.Set[values.String]
+
+		// inlineTypeChecker is the index-backed resolver injected post-Initialize
+		// by the owning store (see StoreMutable.SetInlineTypeChecker). IsInlineType
+		// delegates to it; nil before injection.
+		inlineTypeChecker ids.InlineTypeChecker
 
 		// Kasten
 		Repos sku.TransactedMutableSet
@@ -142,14 +144,21 @@ func (config Config) GetTypeExtension(v string) string {
 	return config.TypesToExtensions[v]
 }
 
-func (config Config) IsInlineType(tipe ids.Type) (isInline bool) {
-	comments.Change("fix this horrible hack")
+// IsInlineType delegates to the index-backed checker injected by the owning
+// store (SetInlineTypeChecker). Resolution is deterministic against the
+// signature-backed stream index — see (*store.Store).IsInlineType. The empty
+// type renders inline (the descriptionless / typeless case). If the checker has
+// not been injected yet (e.g. config-only contexts before store wiring), fall
+// back to treating the type as inline so metadata-only is never forced by a
+// missing dependency.
+func (config Config) IsInlineType(tipe ids.Type) bool {
 	if tipe.IsEmpty() {
 		return true
 	}
 
-	isInline = config.InlineTypes.ContainsKey(tipe.String()) ||
-		ids.IsBuiltin(tipe)
+	if config.inlineTypeChecker == nil {
+		return true
+	}
 
-	return isInline
+	return config.inlineTypeChecker.IsInlineType(tipe)
 }

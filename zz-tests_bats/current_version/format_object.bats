@@ -43,7 +43,6 @@ function format_simple { # @test
 # wow the first
 - tag-3
 - tag-4
-@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
 ! md@.*
 ---
 EOM
@@ -68,7 +67,6 @@ EOM
 # wow the second
 - tag-3
 - tag-4
-@ .*
 ! md@.*
 ---
 EOM

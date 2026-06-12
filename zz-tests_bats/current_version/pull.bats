@@ -253,7 +253,6 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_second { # @test
 # zettel with multiple etiketten
 - this_is_the_first
 - this_is_the_second
-@ blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86
 ! md@.*
 ---
 EOM
@@ -327,7 +326,6 @@ function pull_history_zettel_type_tag_yes_conflicts_allowed_remote_first { # @te
 # zettel with multiple etiketten
 - this_is_the_first
 - this_is_the_second
-@ blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86
 ! md@.*
 ---
 EOM
@@ -414,7 +412,6 @@ function pull_history_zettel_type_tag_yes_conflicts_remote_first { # @test
 # zettel with multiple etiketten
 - this_is_the_first
 - this_is_the_second
-@ blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86
 ! md@.*
 ---
 EOM

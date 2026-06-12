@@ -69,9 +69,10 @@ function can_duplicate_zettel_content { # @test
 		# bez
 		- et1
 		- et2
-		@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
 		! md@$(get_fixture_type_sig)
 		---
+
+		the body
 	EOM
 
   run_dodder show -format text one/tres
@@ -81,9 +82,10 @@ function can_duplicate_zettel_content { # @test
 		# bez
 		- et1
 		- et2
-		@ blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy
 		! md@$(get_fixture_type_sig)
 		---
+
+		the body
 	EOM
 }
 

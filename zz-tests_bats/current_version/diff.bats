@@ -35,13 +35,10 @@ function diff_all_diff { # @test
 	assert_output --regexp - <<-EOM
 		--- one/uno:zettel
 		\+\+\+ one/uno\.zettel
-		@@ -2,6 \+2,6 @@
-		 # wow the first
-		 - tag-3
-		 - tag-4
-		-@ blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd
-		\+@ blake2b256-3608lk68nnstfff38qpht4zqdcvahygkksqcnmq5qsm2vjzlsufqt4wr0k
-		 ! md@ed25519_sig-.+
+		@@ -6,3 \+6,4 @@
 		 ---
+		.
+		 last time
+		\+wowowow
 	EOM
 }

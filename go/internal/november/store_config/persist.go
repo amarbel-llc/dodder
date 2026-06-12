@@ -13,12 +13,10 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_value"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/values"
 )
 
 func (store *store) recompile(
@@ -66,15 +64,6 @@ func (store *store) recompileTags() (err error) {
 func (store *store) recompileTypes(
 	blobStore typed_blob_store.Stores,
 ) (err error) {
-	inlineTypes := collections_value.MakeMutableValueSet[values.String](nil)
-
-	defer func() {
-		store.config.InlineTypes = collections_value.MakeValueSet(
-			nil,
-			inlineTypes.All(),
-		)
-	}()
-
 	for tagObject := range store.config.Types.All() {
 		tipe := tagObject.GetSku().GetType()
 		var commonBlob type_blobs.Blob
@@ -112,11 +101,6 @@ func (store *store) recompileTypes(
 		// TODO-P2 enforce uniqueness
 		store.config.ExtensionsToTypes[fileExtension] = tagObject.GetObjectId().String()
 		store.config.TypesToExtensions[tagObject.GetObjectId().String()] = fileExtension
-
-		isBinary := commonBlob.GetBinary()
-		if !isBinary {
-			inlineTypes.Add(values.MakeString(tagObject.GetObjectId().String()))
-		}
 
 		repool()
 	}

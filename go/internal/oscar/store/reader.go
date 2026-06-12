@@ -88,6 +88,60 @@ func (store *Store) ReadTypeObject(
 	return typeObject, err
 }
 
+// IsInlineType resolves whether objects of the given type render their blob
+// inline (i.e. the type's blob has binary = false). Resolution is deterministic:
+// the type id is looked up to its latest type object via the signature-backed
+// stream index, then the type blob is parsed and its binary flag read. This
+// replaces the former approximate scheme (a never-populated InlineTypes set plus
+// an ids.IsBuiltin name guess) which silently returned false for user types like
+// !md on read-only commands.
+func (store *Store) IsInlineType(tipe ids.Type) bool {
+	if tipe.IsEmpty() {
+		return true
+	}
+
+	// Builtin types carry no stored type object, so the index cannot resolve
+	// them. Treat builtins as inline. NOTE: this is a deliberate seam — if binary
+	// builtin types are ever introduced, their binary-ness must be resolved here
+	// from the builtin type-blob definition rather than blanket-inlined.
+	if ids.IsBuiltin(tipe) {
+		return true
+	}
+
+	typeObject, err := store.ReadOneObjectId(tipe)
+	if err != nil {
+		// A non-builtin type that cannot be resolved is a genuinely broken or
+		// missing type object, not expected runtime variance (the sig-backed
+		// index is deterministic and immutable). Render conservatively as
+		// metadata-only rather than dumping an unresolvable blob inline.
+		return false
+	}
+
+	if typeObject == nil || typeObject.GetBlobDigest().IsNull() {
+		return false
+	}
+
+	commonBlob, repool, _, err := store.typedBlobStore.Type.ParseTypedBlob(
+		typeObject.GetType(),
+		typeObject.GetBlobDigest(),
+	)
+	if err != nil {
+		if repool != nil {
+			repool()
+		}
+
+		return false
+	}
+
+	defer repool()
+
+	if commonBlob == nil {
+		return false
+	}
+
+	return !commonBlob.GetBinary()
+}
+
 // TODO https://github.com/amarbel-llc/dodder/issues/27
 // Transition to context-based panic/cancel semantics
 func (store *Store) ReadOneObjectId(
