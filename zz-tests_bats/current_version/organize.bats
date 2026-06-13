@@ -1242,9 +1242,10 @@ function organize_new_objects_default_tags { # @test
   export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
-  assert_output - <<-EOM
-		[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]
-	EOM
+  # Config mutation is log-only (FDR 0020): edit-config is silent on
+  # success today (see follow-up issue to restore commit output). The
+  # default-tags change taking effect is verified by the organize below.
+  assert_output ''
 
   run_dodder organize -mode output-only
   assert_success
@@ -1354,9 +1355,10 @@ function organize_default_tags_workspace { # @test
   export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
-  assert_output - <<-EOM
-		[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]
-	EOM
+  # Config mutation is log-only (FDR 0020): edit-config is silent on
+  # success today (see follow-up issue to restore commit output). The
+  # default-tags change taking effect is verified further below.
+  assert_output ''
 
   cat >.dodder-workspace <<-EOM
 		---
