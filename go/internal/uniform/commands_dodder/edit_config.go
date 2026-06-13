@@ -2,8 +2,10 @@ package commands_dodder
 
 import (
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -36,6 +38,21 @@ func (cmd EditConfig) Run(req command.Request) {
 		ui.Err().Print("Command edit-config ignores passed in arguments.")
 	}
 
+	// Capture the current config blob digest before the edit so a no-op
+	// edit (digest unchanged) can be skipped when appending to the config
+	// log below, keeping the log free of redundant entries. The digest is
+	// cloned into a stable local value: GetBlobDigest returns a pointer
+	// into the long-lived config sku's metadata, which Reset overwrites in
+	// place with the new digest, so an un-cloned alias would always appear
+	// equal to the post-edit digest.
+	var previousDigest markl.Id
+	previousDigest.ResetWithMarklId(
+		localWorkingCopy.GetConfigStore().
+			GetConfig().
+			GetSku().
+			GetBlobDigest(),
+	)
+
 	var digest mad_domain_interfaces.MarklId
 
 	{
@@ -64,5 +81,25 @@ func (cmd EditConfig) Run(req command.Request) {
 	if _, err := localWorkingCopy.GetStore().UpdateKonfig(digest); err != nil {
 		localWorkingCopy.Cancel(err)
 		return
+	}
+
+	// Additively append the new config state to the repo-local config log
+	// (UpdateKonfig still writes the konfig object above; a later task
+	// removes it). Skip no-op edits so the log only records real changes.
+	if !markl.Equals(&previousDigest, digest) {
+		log := config_log.Make(
+			localWorkingCopy.GetEnvRepo(),
+			command_components_dodder.InventoryLists{}.MakeInventoryListCoderCloset(
+				localWorkingCopy.GetEnvRepo(),
+			),
+		)
+
+		if _, err := log.Append(
+			digest,
+			localWorkingCopy.GetStore().GetTai(),
+		); err != nil {
+			localWorkingCopy.Cancel(err)
+			return
+		}
 	}
 }

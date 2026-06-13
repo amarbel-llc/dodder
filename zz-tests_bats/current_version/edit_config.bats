@@ -64,6 +64,65 @@ function edit_config_value_roundtrips { # @test
 	assert_line 'print-time = false'
 }
 
+# After a real edit, the new config state is appended to the config log
+# (FDR 0020), so `show-config` (no args) streams the new TOML blob and
+# `show-config -history` lists the single new entry as a box line. The
+# konfig object is still updated too (verified above), so this is purely
+# additive coverage of the new read surface.
+function edit_config_show_config_roundtrips { # @test
+	export EDITOR="bash -c 'echo \"# this is the body 2\" >> \"\$0\"'"
+	run_dodder edit-config
+	assert_success
+
+	run_dodder show-config
+	assert_success
+	assert_output - <<-EOM
+		blob-stores = [".default"]
+
+		[defaults]
+		type = "!md"
+		tags = []
+
+		[file-extensions]
+		config = "konfig"
+		conflict = "conflict"
+		lockfile = "object-lockfile"
+		organize = "md"
+		repo = "repo"
+		tag = "tag"
+		type = "type"
+		zettel = "zettel"
+
+		[cli-output]
+		print-blob_digests = true
+		print-colors = true
+		print-empty-blob_digests = false
+		print-flush = true
+		print-include-description = true
+		print-include-types = true
+		print-inventory_lists = true
+		print-matched-dormant = false
+		print-tags-always = true
+		print-time = true
+		print-unchanged = true
+
+		[cli-output.abbreviations]
+		zettel_ids = true
+		merkle_ids = true
+
+		[tools]
+		merge = ["vimdiff"]
+		# this is the body 2
+	EOM
+
+	# A single entry (fresh repo's config log has no init-seeded root yet,
+	# so the first real edit is the only entry). The blob digest is
+	# deterministic; the tai timestamp and ed25519 signatures are not.
+	run_dodder show-config -history
+	assert_success
+	assert_output --regexp '^\[konfig @blake2b256-wlqn0d2a583mpwq2h948eglrc26znyjuupzmsraqna6xszw99lfqeng70u [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !inventory_list-v2\]$'
+}
+
 # A freshly initialized repo writes the konfig blob as bare TOML — no
 # hyphence wrapper inside the blob, no type directive — so the bytes
 # `madder cat`s out match the bytes a user sees in `edit-config`.

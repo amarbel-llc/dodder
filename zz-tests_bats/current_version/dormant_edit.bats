@@ -34,6 +34,14 @@ function dormant_edit_and_change { # @test
 	run_dodder show +konfig
 	assert_success
 	assert_output --regexp '\[konfig @blake2b256-[a-z0-9]+ !toml-config-v2\]'
+
+	# dormant-edit also appends the new config state to the config log
+	# (FDR 0020), so show-config -history lists the single new entry.
+	# Signatures and tai are non-deterministic; the blob digest matches
+	# the digest dormant-edit announced above.
+	run_dodder show-config -history
+	assert_success
+	assert_output --regexp "^\[konfig @${new_digest} [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !inventory_list-v2\]\$"
 }
 
 function dormant_edit_and_dont_change { # @test
