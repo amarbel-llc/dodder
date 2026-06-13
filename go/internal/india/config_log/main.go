@@ -80,22 +80,24 @@ func Make(envRepo env_repo.Env, closet inventory_list_coders.Closet) Log {
 // configType is the config blob's own type (e.g. !toml-config-v2); the
 // entry keeps it rather than the stream framing type, so store_config
 // bootstrap can decode the blob via repo_configs.Coder. The caller must
-// hold the repo lock.
+// hold the repo lock. The constructed entry is repooled internally —
+// callers inspect the persisted state via Head/All, not a return value.
 func (log Log) Append(
 	blobDigest mad_domain_interfaces.MarklId,
 	configType ids.Type,
 	tai ids.Tai,
-) (object *sku.Transacted, err error) {
-	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+) (err error) {
+	object, repoolObject := sku.GetTransactedPool().GetWithRepool()
+	defer repoolObject()
 
 	if err = object.GetObjectIdMutable().SetWithId(ids.Config); err != nil {
 		err = errors.Wrap(err)
-		return object, err
+		return err
 	}
 
 	if err = object.SetBlobDigest(blobDigest); err != nil {
 		err = errors.Wrap(err)
-		return object, err
+		return err
 	}
 
 	// Stamp the entry with the config blob's own type. The stream is
@@ -118,24 +120,24 @@ func (log Log) Append(
 				err = nil
 			} else {
 				err = errors.Wrap(err)
-				return object, err
+				return err
 			}
 		} else {
 			defer repoolHead()
 
 			if err = object.SetMother(head); err != nil {
 				err = errors.Wrap(err)
-				return object, err
+				return err
 			}
 		}
 	}
 
 	if err = log.writeObject(object); err != nil {
 		err = errors.Wrap(err)
-		return object, err
+		return err
 	}
 
-	return object, err
+	return err
 }
 
 // writeObject mirrors

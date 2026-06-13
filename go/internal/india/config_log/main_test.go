@@ -76,10 +76,7 @@ func testAppendThenHead(t *ui.TestContext) {
 	configType := ids.MustType(ids.TypeTomlConfigV2)
 	tai := ids.NowTai()
 
-	{
-		_, err := log.Append(blobDigest, configType, tai)
-		t.AssertNoError(err)
-	}
+	t.AssertNoError(log.Append(blobDigest, configType, tai))
 
 	head, repoolHead, err := log.Head()
 	t.AssertNoError(err)
@@ -120,19 +117,20 @@ func testAppendChains(t *ui.TestContext) {
 	var firstObjectSig []byte
 
 	{
-		first, err := log.Append(firstDigest, configType, ids.NowTai())
+		t.AssertNoError(log.Append(firstDigest, configType, ids.NowTai()))
+
+		first, repoolFirst, err := log.Head()
 		t.AssertNoError(err)
 
 		firstObjectSig = append(
 			firstObjectSig,
 			first.GetMetadata().GetObjectSig().GetBytes()...,
 		)
+
+		repoolFirst()
 	}
 
-	{
-		_, err := log.Append(secondDigest, configType, ids.NowTai())
-		t.AssertNoError(err)
-	}
+	t.AssertNoError(log.Append(secondDigest, configType, ids.NowTai()))
 
 	head, repoolHead, err := log.Head()
 	t.AssertNoError(err)

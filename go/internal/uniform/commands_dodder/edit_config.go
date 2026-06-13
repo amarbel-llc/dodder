@@ -103,7 +103,7 @@ func (cmd EditConfig) Run(req command.Request) {
 			),
 		)
 
-		if _, err := log.Append(
+		if err := log.Append(
 			digest,
 			configType,
 			localWorkingCopy.GetStore().GetTai(),

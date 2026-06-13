@@ -163,7 +163,7 @@ func (local *Repo) seedConfigLog(
 
 	defer errors.Deferred(&err, lockSmith.Unlock)
 
-	if _, err = cfgLog.Append(
+	if err = cfgLog.Append(
 		blobId,
 		configType,
 		local.GetStore().GetTai(),
