@@ -21,7 +21,6 @@ Specify an exact object by its two-part ID:
 
 ```bash
 dodder show one/uno                # zettel with left-part "one", right-part "uno"
-dodder show konfig                 # system configuration object
 ```
 
 Object IDs can be used alongside genre-based queries:
@@ -43,8 +42,10 @@ abbreviations after a sigil.
 | `r` | Repo | Remote repository objects |
 | `b` | InventoryList | Inventory list objects |
 
-The special identifier `konfig` selects the system configuration object
-(genre: Config). It does not use a genre abbreviation.
+Configuration is not a genre and is not queryable. A query naming `konfig` or
+`config` errors with `config is no longer an object; use show-config /
+edit-config`. Read configuration with `dodder show-config` (and
+`show-config -history`); edit it with `dodder edit-config`.
 
 ### Multiple genres
 
@@ -188,7 +189,7 @@ dodder show :t                     # explicit argument overrides workspace defau
 | Show all tags | `dodder show :t` |
 | Show all types | `dodder show :e` |
 | Show all remote repos | `dodder show :r` |
-| Show system configuration | `dodder show konfig` |
+| Show repository configuration | `dodder show-config` |
 | Show a specific zettel in detail | `dodder show -format text one/uno` |
 
 ### Bulk operations
@@ -209,7 +210,7 @@ dodder show :t                     # explicit argument overrides workspace defau
 | Push everything to a remote | `dodder push remote-id` |
 | Pull everything from a remote | `dodder pull remote-id` |
 | Clone only markdown zettels | `dodder clone local-id remote:///path !md:z` |
-| Export types and config | `dodder export :t,konfig` |
+| Export all types | `dodder export :t` |
 
 ### History and dormant
 
@@ -235,7 +236,8 @@ genre_char  = "z" | "t" | "e" | "r" | "b"
 
 Special cases:
 
-- `konfig` -- matches the Config genre directly
 - Bare sigil + genres (`:z`) -- no filter, select by genre and scope
 - Bare object ID (`one/uno`) -- exact match by identifier
 - Comma-separated compound (`one/uno,tag-3,!md`) -- union of terms
+- `konfig`/`config` -- not a query term; errors. Use `show-config` /
+  `edit-config` instead

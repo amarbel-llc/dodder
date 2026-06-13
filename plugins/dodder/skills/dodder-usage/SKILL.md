@@ -74,7 +74,6 @@ dodder show :t                     # all tags
 dodder show :e                     # all types
 dodder show :z,t                   # zettels and tags
 dodder show :r                     # all repos
-dodder show konfig                 # system configuration object
 dodder show -before 2024-01-01 :z  # zettels before a date
 dodder show -after 2024-01-01 :z   # zettels after a date
 dodder show -repo remote-id :z     # query a remote repository
@@ -85,6 +84,25 @@ multi-line), and `json` (machine-readable).
 
 Use `dodder cat` for raw blob output, and `dodder last` to display the most
 recently changed objects from the latest inventory list.
+
+## Configuration
+
+Repository configuration is not a queryable object. It cannot be selected with
+`show` or any genre filter; a query naming `konfig` or `config` errors with
+`config is no longer an object; use show-config / edit-config`. Use the
+dedicated commands instead.
+
+```bash
+dodder show-config                 # print the latest config (bare TOML)
+dodder show-config <digest>        # print a historical config state's blob
+dodder show-config -history        # list config history (oldest to newest)
+dodder edit-config                 # open the config TOML in the editor
+```
+
+`edit-config` opens the bare config TOML in `$EDITOR`; on save it records the
+new state in a repo-local config log. Configuration is repo-local and is not
+transferred by `push` or `pull`. A `clone` seeds the new repository's config
+from the source.
 
 ## Editing
 
@@ -241,7 +259,6 @@ selectors, sigils, tag filters, and type filters.
 | `tag-name:z` | Zettels with a specific tag |
 | `!md:z` | Zettels of a specific type |
 | `:?z` | Including dormant/hidden |
-| `konfig` | System configuration object |
 
 Sigil characters modify selection scope:
 

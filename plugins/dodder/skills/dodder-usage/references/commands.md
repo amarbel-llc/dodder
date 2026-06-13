@@ -307,6 +307,26 @@ dodder last -edit
 dodder last -organize
 ```
 
+### show-config
+
+Print the repository configuration. Configuration is not a queryable object;
+this command is the only way to read it (`show` and genre filters do not select
+it). With no argument it prints the latest config as bare TOML.
+
+**Positional arguments:** Optional config blob digest
+
+**Key flags:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-history` | `false` | List the config history as box lines (oldest to newest) |
+
+```bash
+dodder show-config                 # latest config (bare TOML)
+dodder show-config <digest>        # a historical config state's blob
+dodder show-config -history        # config history, oldest to newest
+```
+
 ## Editing
 
 ### edit
@@ -434,7 +454,7 @@ Export objects as an inventory list to stdout.
 
 ```bash
 dodder export :b
-dodder export :t,konfig
+dodder export :t
 dodder export -age-identity identity.txt :b
 ```
 
@@ -561,7 +581,9 @@ dodder revert -last
 
 ### edit-config
 
-Edit the repository configuration in the editor.
+Open the repository configuration TOML in the editor. On save, the new state is
+recorded in a repo-local config log (configuration is not a store object, and is
+not transferred by `push`/`pull`). Read configuration back with `show-config`.
 
 ```bash
 dodder edit-config

@@ -1,8 +1,8 @@
 ---
-status: proposed
+status: experimental
 date: 2026-06-12
-promotion-criteria: implementation merged with V16 migration passing the
-  previous_versions conformance suite; no log-compaction lever
+promotion-criteria: backward-compatible migration (reindex backfill)
+  passing the previous_versions conformance suite; no log-compaction lever
   adjustments needed for 2 weeks of daily use
 ---
 
@@ -44,7 +44,9 @@ Commands:
 - `show-config -history` — list entries oldest→newest as box lines.
 - `edit-config` — unchanged editor UX; on save, writes the blob and
   appends a signed entry to the config log under the repo lock. No
-  object commit into the store, no stream-index participation.
+  object commit into the store, no stream-index participation. Silent
+  on success today; restoring the old commit-line output is tracked as
+  follow-up [#266](https://github.com/amarbel-llc/dodder/issues/266).
 
 Genre removal: `config`/`konfig` no longer parse as a genre or object
 id anywhere in the query surface. The tokens produce a targeted error
@@ -60,10 +62,12 @@ lacks — a dangling, shallow-style pointer reported as "history
 continues in the source repo". Later local edits sign with the local
 key, chaining from the copied entry.
 
-Migration: store version bump (V15 → V16) re-emits the old konfig
-object history oldest→newest as signed config-log entries pointing at
-the already-existing blobs. No blobs are written or rewritten; old
-inventory lists are preserved untouched.
+Migration: no store version bump is required — the change is
+backward-compatible. An old repo with no config log reads its config
+through a `FileConfig` fallback; running `reindex` backfills the log by
+re-emitting the old konfig object history oldest→newest as signed
+config-log entries pointing at the already-existing blobs. No blobs are
+written or rewritten; old inventory lists are preserved untouched.
 
 ## Examples
 
@@ -93,9 +97,9 @@ Old query surface redirects:
   path, but normal reads trust the file.
 - A cloned repo holds only the seeded head state; older states resolve
   only if their entries/blobs are obtained from the source.
-- No back-migration tool: migration is additive (old konfig objects
-  survive in old inventory lists), so down-migration is possible in
-  principle but not built.
+- No back-migration tool: migration is additive — it needs no version
+  bump and old konfig objects survive untouched in old inventory lists,
+  so down-migration is possible in principle but not built.
 - **Two inventory-list logs now exist**, both `!inventory_list-v2`:
   `FileInventoryListLog` (object inventory lists) and `FileConfigLog`
   (config states). They now share the exact same type and coder,

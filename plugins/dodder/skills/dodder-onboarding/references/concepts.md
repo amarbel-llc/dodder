@@ -105,8 +105,9 @@ dodder show :e
 Raw content identified by its SHA hash. Blob identifiers use the `@` prefix
 followed by the hash algorithm and digest, for example
 `@blake2b256-abc123...`. Blobs are the lowest-level storage unit -- every
-zettel, tag definition, type definition, and configuration object has an
-associated blob.
+zettel, tag definition, and type definition has an associated blob, as does the
+repository configuration (a bare TOML blob, even though config is not an
+object).
 
 ### Repo (`r`)
 
@@ -114,12 +115,17 @@ Remote repository identifiers. Repos represent connection configurations for
 push/pull synchronization. Repo IDs use a `/` prefix in some contexts (e.g.,
 `/my-remote`).
 
-### Config
+### Configuration (not an object genre)
 
-The reserved system configuration object. Each repository has a single config
-object (identified as `konfig`) that stores repository-wide settings. The config
-object is versioned like any other object, with its own type
-(`!toml-config-v2`).
+Repository configuration is repo-local state, not a store object and not a
+queryable genre. It stores repository-wide settings as a bare TOML blob (type
+`!toml-config-v2`), and its history is kept in a repo-local config log rather
+than in the object store. Because it is not an object, it cannot be selected
+with `show` or any genre filter; a query naming `konfig` or `config` errors with
+`config is no longer an object; use show-config / edit-config`. Read it with
+`dodder show-config` (and `show-config -history`) and edit it with
+`dodder edit-config`. Configuration is repo-local and is not transferred by
+`push`/`pull`; a `clone` seeds the new repository's config from the source.
 
 ### Inventory List
 
@@ -137,8 +143,11 @@ truth for all object state.
 | Type | `!` prefix | `!md` | Content format definitions |
 | Blob | `@` prefix | `@blake2b256-abc...` | Content-addressed raw data |
 | Repo | `/` prefix | `/my-remote` | Remote repository configs |
-| Config | `konfig` | `konfig` | Repository configuration |
 | Inventory List | TAI timestamp | `1234567890.001` | Version history records |
+
+Repository configuration is intentionally absent from this table: it is
+repo-local state, not an object genre, and is read/edited via `show-config` /
+`edit-config` (see "Configuration (not an object genre)" above).
 
 ## Type System
 
@@ -203,11 +212,13 @@ specifying a type, dodder uses the genre's default:
 
 | Genre | Default Type |
 |-------|-------------|
-| Config | `!toml-config-v2` |
 | Tag | `!toml-tag-v1` |
 | Type | `!toml-type-v1` |
 | Repo | `!toml-repo-uri-v0` |
 | Inventory List | `!inventory_list-v2` |
+
+Repository configuration is not a genre, but its TOML blob still carries the
+`!toml-config-v2` type.
 
 ### Custom Types
 

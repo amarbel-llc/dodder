@@ -201,6 +201,12 @@ Sigils can be combined (e.g. `:.` for latest + external).
 - **To query a specific type object:** `show '!img:t'` --- the `:t` genre suffix
   goes on the predicate. NOT `show :t '!img'` (that's two separate terms).
 - **To list all type objects:** `show :t`.
+- **Config is not a queryable object.** There is no `config`/`konfig` genre;
+  a query naming `konfig`/`config` errors
+  (`config is no longer an object; use show-config / edit-config`). Read config
+  with `show-config` (latest TOML), `show-config <digest>` (a historical state),
+  or `show-config -history` (the config history); edit it with `edit-config`.
+  Config is repo-local and not synced by push/pull.
 
 ## Formatting
 
