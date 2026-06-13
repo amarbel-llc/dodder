@@ -262,46 +262,13 @@ let
   # gofumpt/gotools are the same igloo `pkgs` builds the dev-shell carries,
   # so the Go output matches the dev-loop formatter. null on the non-flake
   # `import ./go/default.nix` path (treelint absent).
-  # tommy codegen as a conformist linter driver. Walks the tree for
-  # `//go:generate tommy generate` directives and runs `tommy generate` per file
-  # (REPAIR mode; the treelint.toml CHECK command is a no-op `true`). Resolves
-  # tommy + go from the AMBIENT PATH and skips (exit 0) when either is missing,
-  # so it is a safe no-op where the toolchain is absent. Regenerates the
-  # *_tommy.go companions so they land in the `conformist --commit` chore;
-  # `just build-go-generate` remains the NATO-ordered regen path.
-  tommyCodegen = pkgs.writeShellApplication {
-    name = "conformist-tommy-codegen";
-    runtimeInputs = [
-      pkgs.coreutils
-      pkgs.findutils
-      pkgs.gnugrep
-    ];
-    text = ''
-      mode="repair"
-      if [ "''${1:-}" = "--check" ]; then
-        mode="check"
-      fi
-      if ! command -v tommy >/dev/null 2>&1; then
-        echo "tommy-codegen: tommy not on PATH; skipping" >&2
-        exit 0
-      fi
-      if ! command -v go >/dev/null 2>&1; then
-        echo "tommy-codegen: go not on PATH; skipping" >&2
-        exit 0
-      fi
-      status=0
-      while IFS= read -r f; do
-        dir=$(dirname "$f")
-        base=$(basename "$f")
-        if [ "$mode" = "check" ]; then
-          ( cd "$dir" || exit 1; GOFILE="$base" tommy generate --check; ) || status=1
-        else
-          ( cd "$dir" || exit 1; GOFILE="$base" tommy generate; ) || status=1
-        fi
-      done < <(grep -rIl --include='*.go' 'go:generate tommy generate' . 2>/dev/null | grep -v '/result' || true)
-      exit "$status"
-    '';
-  };
+  # tommy's conformist codegen linter driver ([linter.tommy-codegen]), owned by
+  # the tommy flake so the pinned tommy input resolves which tommy backs it (no
+  # per-repo driver duplication). It bakes that tommy in and skips when go is
+  # absent. Regenerates the *_tommy.go companions so they land in the
+  # `conformist --commit` chore; `just build-go-generate` remains the
+  # NATO-ordered regen path.
+  tommyCodegen = tommy.packages.${system}.conformist-tommy-codegen;
 
   treelint-fmt =
     if treelint == null then
