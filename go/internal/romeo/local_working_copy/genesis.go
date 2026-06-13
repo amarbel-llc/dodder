@@ -6,8 +6,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
+	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
+	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -78,7 +81,11 @@ func (local *Repo) initDefaultTypeAndConfig(
 
 	blobStores := []blob_store_id.Id{blobStoreId}
 
-	if err = local.prepareDefaultConfig(
+	var configBlobId mad_domain_interfaces.MarklId
+	var configType ids.Type
+	var seededConfig bool
+
+	if configBlobId, configType, seededConfig, err = local.prepareDefaultConfig(
 		bigBang,
 		blobStores,
 		defaultTypeObjectId,
@@ -108,6 +115,59 @@ func (local *Repo) initDefaultTypeAndConfig(
 	}
 
 	if _, err = local.ExecutePlan(plan); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	// Seed the repo-local config log with a root entry so fresh repos
+	// read their config from the log at bootstrap (FDR 0020). The konfig
+	// object committed above still exists (a later task removes it); this
+	// additively records the same default config state in the log. Runs
+	// after ExecutePlan so the lock it acquired is released, and uses the
+	// filesystem mutex directly (config_log.Append's "caller holds the
+	// repo lock" contract is about that mutex, not the heavyweight repo
+	// Unlock flush).
+	if seededConfig {
+		if err = local.seedConfigLog(configBlobId, configType); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	return err
+}
+
+// seedConfigLog appends the genesis root entry to the repo-local config
+// log under the repo filesystem lock. blobId is the default config TOML
+// blob digest; configType is the config blob's own type
+// (e.g. !toml-config-v2), which the entry keeps so store_config bootstrap
+// can decode it via repo_configs.Coder.
+func (local *Repo) seedConfigLog(
+	blobId mad_domain_interfaces.MarklId,
+	configType ids.Type,
+) (err error) {
+	box := box_format.MakeBoxTransactedArchive(
+		local.GetEnv(),
+		local.GetConfig().GetPrintOptions().WithPrintTai(true),
+	)
+	closet := inventory_list_coders.MakeCloset(local.GetEnvRepo(), box)
+
+	cfgLog := config_log.Make(local.GetEnvRepo(), closet)
+
+	lockSmith := local.GetEnvRepo().GetLockSmith()
+
+	if err = lockSmith.Lock(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	defer errors.Deferred(&err, lockSmith.Unlock)
+
+	if _, err = cfgLog.Append(
+		blobId,
+		configType,
+		local.GetStore().GetTai(),
+	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -244,17 +304,21 @@ func (local *Repo) prepareBuiltinActionableTypes(
 	return err
 }
 
+// prepareDefaultConfig writes the default config blob, adds the konfig
+// object to the import plan, and returns the blob digest and config type
+// so the caller can seed the config log root entry after the plan
+// commits. seeded is false when ExcludeDefaultConfig skips config
+// genesis entirely (no log entry to seed).
 func (local *Repo) prepareDefaultConfig(
 	bigBang env_repo.BigBang,
 	blobStores []blob_store_id.Id,
 	defaultTypeObjectId ids.TypeStruct,
 	builder *import_plan.Builder,
-) (err error) {
+) (blobId mad_domain_interfaces.MarklId, configType ids.Type, seeded bool, err error) {
 	if bigBang.ExcludeDefaultConfig {
-		return err
+		return blobId, configType, seeded, err
 	}
 
-	var blobId mad_domain_interfaces.MarklId
 	var typedBlob repo_configs.TypedBlob
 
 	if blobId, typedBlob, err = writeDefaultMutableConfig(
@@ -263,8 +327,10 @@ func (local *Repo) prepareDefaultConfig(
 		defaultTypeObjectId,
 	); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return blobId, configType, seeded, err
 	}
+
+	configType = ids.TypeStruct(typedBlob.Type).ToType()
 
 	newConfig, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
@@ -272,22 +338,24 @@ func (local *Repo) prepareDefaultConfig(
 		ids.Config,
 	); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return blobId, configType, seeded, err
 	}
 
 	if err = newConfig.SetBlobDigest(blobId); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return blobId, configType, seeded, err
 	}
 
 	newConfig.GetMetadataMutable().GetTypeMutable().ResetWithType(ids.TypeStruct(typedBlob.Type))
 
 	if err = builder.AddObject(newConfig, 0); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return blobId, configType, seeded, err
 	}
 
-	return err
+	seeded = true
+
+	return blobId, configType, seeded, err
 }
 
 func writeDefaultMutableConfig(

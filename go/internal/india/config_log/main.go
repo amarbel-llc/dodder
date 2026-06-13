@@ -43,7 +43,6 @@ type Log struct {
 	pathLog   string
 	blobType  ids.TypeStruct
 	closet    inventory_list_coders.Closet
-	blobStore mad_domain_interfaces.BlobStore
 	finalizer object_finalizer.Finalizer
 }
 
@@ -51,6 +50,15 @@ type Log struct {
 // repo's inventory-list coder closet. blobType resolves to the repo's
 // configured inventory list type (!inventory_list-v2), which is
 // available from genesis config pre-bootstrap.
+//
+// The inventory-list blob store is fetched lazily (inside Append, the
+// only method that needs it) rather than here: store_config bootstrap
+// calls Make + Head before any blob store is guaranteed to be
+// initialized (e.g. PermitNoDodderDirectory repos and the
+// legacy-config migration command run under MakeBlobStoreEnvWithoutStores,
+// where GetDefaultBlobStore panics). Head and All read only the log
+// file and never touch the blob store, so deferring the lookup keeps
+// bootstrap-time Make + Head safe.
 func Make(envRepo env_repo.Env, closet inventory_list_coders.Closet) Log {
 	blobType := ids.MustTypeStruct(
 		envRepo.GetConfigPublic().Blob.GetInventoryListTypeId(),
@@ -61,7 +69,6 @@ func Make(envRepo env_repo.Env, closet inventory_list_coders.Closet) Log {
 		pathLog:   envRepo.FileConfigLog(),
 		blobType:  blobType,
 		closet:    closet,
-		blobStore: envRepo.GetInventoryListBlobStore(),
 		finalizer: object_finalizer.Make(),
 	}
 }
@@ -140,7 +147,10 @@ func (log Log) Append(
 func (log Log) writeObject(object *sku.Transacted) (err error) {
 	var blobStoreWriteCloser mad_domain_interfaces.BlobWriter
 
-	if blobStoreWriteCloser, err = log.blobStore.MakeBlobWriter(
+	// Fetch the inventory-list blob store lazily, only here on the
+	// append path (see Make's doc comment): bootstrap-time callers that
+	// only Head/All must never trigger blob store discovery.
+	if blobStoreWriteCloser, err = log.envRepo.GetInventoryListBlobStore().MakeBlobWriter(
 		nil,
 	); err != nil {
 		err = errors.Wrap(err)

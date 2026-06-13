@@ -5,12 +5,16 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
+	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
+	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
+	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -160,14 +164,7 @@ func (store *store) loadMutableConfigStreamIndex(
 ) (err error) {
 	var coder stream_index.ListCoder
 
-	if err = store.loadStreamIndexFile(
-		envRepo.FileConfig(),
-		&coder,
-		func(object *sku.Transacted) error {
-			sku.Resetter.ResetWith(&store.config.Sku, object)
-			return nil
-		},
-	); err != nil {
+	if err = store.loadConfigSkuFromLog(envRepo); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -225,6 +222,60 @@ func (store *store) loadMutableConfigStreamIndex(
 		err = errors.Wrap(err)
 		return err
 	}
+
+	return err
+}
+
+// loadConfigSkuFromLog populates store.config.Sku from the repo-local
+// config log head (the new source of truth, FDR 0020). When the log is
+// empty (un-migrated repos and existing fixtures that predate the log),
+// it falls back to the legacy FileConfig() stream-index cache so the
+// bootstrap stays green until migration lands. The fallback keeps the
+// old behavior verbatim.
+func (store *store) loadConfigSkuFromLog(
+	envRepo env_repo.Env,
+) (err error) {
+	box := box_format.MakeBoxTransactedArchive(
+		envRepo,
+		options_print.Options{}.WithPrintTai(true),
+	)
+	closet := inventory_list_coders.MakeCloset(envRepo, box)
+
+	cfgLog := config_log.Make(envRepo, closet)
+
+	var head *sku.Transacted
+	var repoolHead interfaces.FuncRepool
+
+	if head, repoolHead, err = cfgLog.Head(); err != nil {
+		if errors.Is(err, config_log.ErrEmpty) {
+			err = nil
+
+			// Fallback: legacy stream-index cache for repos without a
+			// config log yet. Mirrors the pre-FDR-0020 behavior.
+			var coder stream_index.ListCoder
+
+			if err = store.loadStreamIndexFile(
+				envRepo.FileConfig(),
+				&coder,
+				func(object *sku.Transacted) error {
+					sku.Resetter.ResetWith(&store.config.Sku, object)
+					return nil
+				},
+			); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			return err
+		}
+
+		err = errors.Wrap(err)
+		return err
+	}
+
+	defer repoolHead()
+
+	sku.Resetter.ResetWith(&store.config.Sku, head)
 
 	return err
 }
