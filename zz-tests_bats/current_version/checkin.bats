@@ -418,10 +418,10 @@ function checkin_explicit_workspace_delete_files { # @test
   export EDITOR="bash -c 'editor \$0'"
   run_dodder edit-config
   assert_success
-  # Config mutation is log-only (FDR 0020): edit-config is silent on
-  # success today (see follow-up issue to restore commit output). The
+  # Config mutation is log-only (FDR 0020): edit-config emits the
+  # appended config-log entry as commit confirmation (#266). The
   # default-tags change is verified to take effect below.
-  assert_output ''
+  assert_output '[konfig @blake2b256-9wwnphmcfln8y7yr2f7vw3lu62vgjz6mf6l7djfs4de4k83drt4s8a47vr !toml-config-v2]'
 
   cat >.dodder-workspace <<-EOM
 		---

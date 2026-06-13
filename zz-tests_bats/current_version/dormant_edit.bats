@@ -24,7 +24,7 @@ function dormant_edit_and_change { # @test
 	export EDITOR="bash -c 'echo \"# dormant-edit smoke comment\" >> \"\$0\"'"
 	run_dodder dormant-edit
 	assert_success
-	assert_output ''
+	assert_output '[konfig @blake2b256-7yf9a4qdhfc7a4alp0ywdd82e2wuarw23muggjffcpuxp6uyqr0se5a3hj !toml-config-v2]'
 
 	# The change is observed through show-config (the config read
 	# surface); the legacy `show :konfig` query is removed in a later task.

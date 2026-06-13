@@ -22,7 +22,7 @@ function edit_config_and_change { # @test
 	export EDITOR="bash -c 'echo \"# this is the body 2\" >> \"\$0\"'"
 	run_dodder edit-config
 	assert_success
-	assert_output ''
+	assert_output '[konfig @blake2b256-wlqn0d2a583mpwq2h948eglrc26znyjuupzmsraqna6xszw99lfqeng70u !toml-config-v2]'
 
 	run_dodder show-config
 	assert_success
@@ -62,7 +62,7 @@ function edit_config_value_roundtrips { # @test
 	export EDITOR="bash -c 'sed -i \"s/print-time = true/print-time = false/\" \"\$0\"'"
 	run_dodder edit-config
 	assert_success
-	assert_output ''
+	assert_output '[konfig @blake2b256-p3k55gv50mz3kj63razy7tgdj3yc4m2hg32dqlqsv9f4fvz7ng6qlp5a3z !toml-config-v2]'
 
 	# Verified through show-config (the config read surface). The legacy
 	# `show :konfig` query is removed in a later task.

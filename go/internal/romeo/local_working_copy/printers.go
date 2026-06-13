@@ -96,6 +96,40 @@ func (local *Repo) PrinterCheckedOutConflictsForRemoteTransfers() interfaces.Fun
 	}
 }
 
+// PrinterConfigCommit prints a *sku.Transacted as a clean box line with
+// blob digest on but tai and signatures off, producing the
+// `[konfig @<digest> !toml-config-v2]` form. Used by edit-config and
+// dormant-edit to confirm a committed config-log entry without the
+// verbose tai/pubkey/sig fields that the archive printer (show-config
+// -history) emits.
+func (local *Repo) PrinterConfigCommit() interfaces.FuncIter[*sku.Transacted] {
+	printOptions := local.GetConfig().GetPrintOptions().
+		WithPrintBlobDigests(true).
+		WithExcludeFields(true).
+		WithPrintTai(false).
+		WithPrintTime(false).
+		WithPrintSigs(false)
+
+	stringEncoder := local.StringFormatWriterSkuBoxTransacted(
+		printOptions,
+		env_ui.FormatColorOptionsOut(local, printOptions),
+		string_format_writer.CliFormatTruncation66CharEllipsis,
+	)
+
+	return string_format_writer.MakeDelim(
+		"\n",
+		local.GetUIFile(),
+		string_format_writer.MakeFunc(
+			func(
+				writer interfaces.WriterAndStringWriter,
+				object *sku.Transacted,
+			) (n int64, err error) {
+				return stringEncoder.EncodeStringTo(object, writer)
+			},
+		),
+	)
+}
+
 func (local *Repo) MakePrinterBoxArchive(
 	out interfaces.WriterAndStringWriter,
 	includeTai bool,

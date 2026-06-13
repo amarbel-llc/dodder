@@ -104,5 +104,20 @@ func (cmd DormantEdit) Run(req command.Request) {
 			localWorkingCopy.Cancel(err)
 			return
 		}
+
+		// Print the just-appended entry as commit confirmation. Head only
+		// reads the log file, so it is safe under the still-held lock.
+		head, repoolHead, err := log.Head()
+		if err != nil {
+			localWorkingCopy.Cancel(err)
+			return
+		}
+
+		defer repoolHead()
+
+		if err := localWorkingCopy.PrinterConfigCommit()(head); err != nil {
+			localWorkingCopy.Cancel(err)
+			return
+		}
 	}
 }
