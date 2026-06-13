@@ -40,102 +40,37 @@ old binary. After Task 12, rollback = revert the branch before merge.
 
 ---
 
+> **DESIGN PIVOT (2026-06-13):** Config log entries are **signed**, reusing
+> the existing `!inventory_list-v2` type and coder verbatim — the config log
+> is literally an inventory list in its own file (`FileConfigLog`). This
+> replaces the earlier "unsigned, digest-chained mother" approach, which the
+> box format can't carry (it gates mother emission behind a non-null object
+> signature, `box_format/transacted.go:264`). Consequences: **Task 1** keeps
+> only the layout path (the type string and mother-digest purpose were
+> reverted); **Task 2 is eliminated** (no new coder needed); **Task 3+**
+> sign entries with the repo key and use the v2 coder. See the design doc /
+> FDR 0020.
+
 ## Phase A — config log foundation
 
-### Task 1: Layout + type string + mother-digest purpose
+### Task 1: Layout path (DONE — pivoted)
 
 **Files:**
-- Modify: `go/internal/bravo/directory_layout/v3.go` (next to
-  `FileInventoryListLog`, line ~124)
-- Modify: `go/internal/bravo/directory_layout/main.go` (interface)
-- Modify: `go/internal/bravo/ids/types_builtin.go` (constants ~line 19-22,
-  init registration ~line 72-84)
-- Investigate/modify: markl purpose registry (rg `PurposeObjectDigest` to
-  locate; add a mother-digest purpose only if no usable purpose exists)
+- Modify: `go/internal/bravo/directory_layout/v3.go` — `FileConfigLog()`
+  returning `layout.MakeDirData("config_log").String()`.
+- Modify: `go/internal/bravo/directory_layout/main.go` — interface method.
 
-**Step 1:** Add layout accessor:
+The type string `!inventory_list-config-v0` and the
+`PurposeObjectMotherDigestV1` markl purpose that an earlier draft added here
+were **reverted**: the config log reuses `!inventory_list-v2` and its signed
+coder, so neither is needed. Only the layout path remains.
 
-    func (layout v3) FileConfigLog() string {
-        return layout.MakeDirData("config_log").String()
-    }
+### Task 2: (ELIMINATED by the design pivot)
 
-plus the matching method on the layout interface in
-`directory_layout/main.go` (mirror `FileInventoryListLog`).
-
-**Step 2:** Add the log's list type string in `types_builtin.go`:
-
-    TypeInventoryListConfigV0 = "!inventory_list-config-v0"
-
-registered via `registerBuiltinTypeString(TypeInventoryListConfigV0,
-genres.InventoryList, false)`.
-
-**Step 3:** Locate the markl purpose constants
-(`rg "PurposeObjectDigest" go/`). The mother slot of a config entry holds the
-previous entry's digSelf (a digest, e.g. blake2b256). Confirm whether setting
-`SetMarklId(<digest format>, bytes)` + `SetPurposeId(<existing mother or
-digest purpose>)` round-trips through box encode/decode. If no suitable
-purpose exists, add `PurposeConfigMotherDigestV1` next to the existing mother
-purposes. Do NOT use `Transacted.SetMother()` — it hardcodes
-`markl.FormatIdEd25519Sig` (`sku/transacted_merkle.go:10-36`).
-
-**Step 4:** Compile check: `cd go && go build ./internal/bravo/... ` is
-acceptable as a cheap per-package build; do not run full `just`.
-
-**Step 5:** Commit: `feat(config-log): layout path, list type string, mother-digest purpose`
-
-### Task 2: Sig-less coder registration
-
-**Files:**
-- Modify: `go/internal/hotel/inventory_list_coders/main.go`
-  (`coderConstructors` map, line 21)
-- Test: `go/internal/hotel/inventory_list_coders/config_coder_test.go`
-
-**Step 1: Write the failing test.** Round-trip a `sku.Transacted` with:
-object id `konfig` (via `ids.Config`), blob digest set, tai set, type
-`!toml-config-v2`, mother slot holding a digest, digSelf finalized, EMPTY
-signature fields — through the new coder. Assert decode reproduces fields and
-that `afterDecoding` recomputes/validates digSelf without demanding a
-signature.
-
-    func TestConfigCoderRoundTripWithoutSigs(t1 *testing.T) {
-        t := ui.MakeT(t1)
-        // build entry sku, encode via closet coder for
-        // ids.TypeInventoryListConfigV0, decode, compare fields
-        ...
-    }
-
-**Step 2:** `just test-go-pkg ./internal/hotel/inventory_list_coders/ -run TestConfigCoder`
-Expected: FAIL (no coder registered → panic/missing type).
-
-**Step 3:** Register in `coderConstructors`, mirroring V2 but sig-less:
-
-    ids.TypeInventoryListConfigV0: func(
-        envRepo env_repo.Env,
-        box *box_format.BoxTransacted,
-    ) coder {
-        doddishCoder := doddish{box: box}
-        finalizer := object_finalizer.Make()
-        return coder{
-            listCoder: doddishCoder,
-            beforeEncoding: func(object *sku.Transacted) (err error) {
-                // digest-only assert: object digest non-null; sigs may be empty
-                return markl.AssertIdIsNotNull(object.GetMetadata().GetObjectDigest())
-            },
-            afterDecoding: func(object *sku.Transacted) error {
-                // finalize WITHOUT signature verification
-                return finalizer.FinalizeUsingObject(
-                    object, envRepo.GetObjectDigestType(),
-                )
-            },
-        }
-    },
-
-(Exact assert helper: reuse whatever `AssertObjectDigestAndObjectSigNotNull`
-uses internally for the digest half.)
-
-**Step 4:** Re-run test. Expected: PASS.
-
-**Step 5:** Commit: `feat(config-log): sig-less inventory list coder for config entries`
+No new coder. Config entries are bona fide signed `!inventory_list-v2`
+entries; the existing coder and box format carry them unchanged. The config
+log is distinguished from the object inventory-list log purely by file
+(`FileConfigLog` vs `FileInventoryListLog`).
 
 ### Task 3: config_log package (append / head / all)
 
@@ -163,20 +98,30 @@ uses internally for the digest half.)
     // AllInventoryLists, blob_store_v1.go:133-165).
     func (log Log) All() sku.Seq
 
+Entries are SIGNED `!inventory_list-v2` entries. `Append` mirrors
+`inventory_list_store/blob_store_v1.go:74-131`: set the entry's mother to the
+current head (via `Transacted.SetMother`, which is correct now that entries
+are signed), `FinalizeAndSign` with `envRepo.GetConfigPrivate().Blob`, then
+MultiWriter the encoded entry to the default blob store and the
+`FileConfigLog()` file. Reuse the closet coder for `ids.TypeInventoryListV2`.
+Consider whether `config_log` can simply wrap/parameterize the existing
+`inventory_list_store.blobStoreV1` with a different `pathLog` rather than
+reimplementing append/read — note this in the consolidation follow-up.
+
 **Steps (TDD, one commit per green):**
 
 1. Failing test: `Head()` on missing file → typed sentinel `ErrEmpty`
    (use `errors.MakeTypedSentinel` per design_patterns-typed_error_sentinels).
 2. Failing test: `Append` root entry (no mother) then `Head()` returns it,
-   mother slot null, digSelf non-null; file exists at
+   mother slot null, object sig non-null (signed); file exists at
    `envRepo.FileConfigLog()`.
 3. Failing test: second `Append` chains — `Head().GetMotherObjectSig()`
-   equals first entry's digSelf; `All()` yields 2 entries in order.
-4. Failing test: blob bytes written to blob store are byte-identical to the
-   log segment (read blob by entry digest… NOTE: the blob written by the
-   MultiWriter is the encoded ENTRY; assert it exists and decodes).
+   equals the first entry's object signature; `All()` yields 2 entries in
+   order.
+4. Failing test: the entry decodes back and verifies (the v2 coder's
+   `afterDecoding` runs `FinalizeAndVerify`).
 5. Implement minimally after each failing test;
-   run `just test-go-pkg ./internal/india/config_log/` between steps.
+   run `just go/test-go-pkg ./internal/india/config_log/` between steps.
 
 Test env setup: follow existing india-tier tests that construct a temp
 `env_repo` (rg for `env_repo` usage in `_test.go` under internal/india for
@@ -443,27 +388,28 @@ Follow the Version Bump Workflow from CLAUDE.md exactly, in this order:
 
 - Inventory list log append mechanism: MultiWriter to blob store + log file,
   `inventory_list_store/blob_store_v1.go:74-131`; streaming read at 133-165.
+  Append calls `FinalizeAndSign` with `envRepo.GetConfigPrivate().Blob` — the
+  config log signs entries the same way.
 - Coder hooks per type string: `inventory_list_coders/main.go:21-101`;
-  V2 demands non-null sigs — hence the new sig-less registration.
-- digSelf covers Blob, Description, ObjectId, Tag, Tai, Type(Lock),
-  RepoPub, SigMother (`object_fmt_digest` purpose formats) — signatures are
-  NOT inputs to digSelf, so unsigned entries finalize cleanly.
-- `SetMother()` is signature-specific — config chain sets the mother slot
-  directly (Task 1 Step 3).
+  config reuses the V2 entry verbatim (signed encode assert +
+  `FinalizeAndVerify` decode). No new coder.
+- `box_format/transacted.go:264` gates repo-pubkey/mother/object-sig
+  emission behind a non-null object signature — which is WHY config entries
+  are signed (an unsigned entry would lose its mother on encode).
+- `SetMother()` sets the mother slot to the mother's object SIGNATURE
+  (ed25519) — correct for signed config entries.
 - Config bootstrap today: `store_config/persist.go:158-230` reads
   `FileConfig()` Sku cache + tags/types/repos caches; only the Sku source
-  changes.
+  changes (now the config log head).
 - `remote_transfer/main.go:212` already errors on Config genre.
 - Reindex reads all inventory list objects (`reindex.go:51`) and preserves
   the lists on disk — migration is additive.
 
 ## Open risks (watch during implementation)
 
-- Mother-slot purpose handling in box encode/decode for digest-valued
-  mothers (Task 1 Step 3 de-risks first).
 - `genesis.go:125` `FileConfig()` placeholder removal — verify no other
   consumer expects the file to exist.
 - Log file framing: confirm whether closet writes hyphence-framed docs or
-  bare box lines per append (Task 3's byte-identity test pins it).
+  bare box lines per append (Task 3's round-trip test pins it).
 - `dormant_edit` semantics beyond the shared editor helper — if the dormant
   index couples to konfig commits anywhere else, surface it before Task 7.
