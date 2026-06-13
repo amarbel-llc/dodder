@@ -165,7 +165,9 @@ function clone_direct_seeds_config_from_source { # @test
 		export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
 		run_dodder edit-config
 		assert_success
-		assert_output ''
+		# edit-config prints the appended config entry as commit
+		# confirmation (#266); the blob digest is content-addressed.
+		assert_output '[konfig @blake2b256-0rc375uej7v4jjqv6xv3ywtc5nfc7cs5vmyh77wghcy3day0676q2ngalx !toml-config-v2]'
 
 		run_dodder show-config
 		assert_success
