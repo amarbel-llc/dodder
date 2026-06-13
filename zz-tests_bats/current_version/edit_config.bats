@@ -141,9 +141,11 @@ function konfig_blob_fresh_init_is_bare_toml { # @test
 	cd "$BATS_TEST_TMPDIR/fresh"
 	run_dodder_init_disable_age test-bare-konfig
 
-	run_dodder show -format object-id-blob-digest :konfig
+	# Config left the query surface (FDR 0020); the blob digest is recovered
+	# from the config log via show-config -history rather than `:konfig`.
+	run_dodder show-config -history
 	assert_success
-	digest="${output##* }"
+	digest="$(printf '%s\n' "$output" | head -n1 | grep -oE 'blake2b256-[a-z0-9]+' | head -n1)"
 	[[ -n $digest ]] || fail "could not parse digest from: $output"
 
 	blob_path="$BATS_TEST_TMPDIR/konfig-blob.bin"

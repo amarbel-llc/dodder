@@ -46,9 +46,12 @@ function dormant_edit_and_dont_change { # @test
 	assert_success
 	assert_output ''
 
-	run_dodder show -format object-id-blob-digest :konfig
+	# No edit was made, so no config state is appended to the log (FDR 0020):
+	# config mutation is log-only and `show :konfig` no longer queries. This
+	# fixture predates the config log, so with no mutation the log stays empty
+	# and show-config -history prints nothing (contrast the change case, which
+	# appends one entry).
+	run_dodder show-config -history
 	assert_success
-	digest="${output##* }"
-	[[ $digest == "$(get_konfig_sha)" ]] \
-		|| fail "expected fixture digest $(get_konfig_sha), got $digest"
+	assert_output ''
 }

@@ -14,14 +14,13 @@ teardown() {
 }
 
 function basic { # @test
-	run_dodder export +e,konfig,t,z
+	run_dodder export +e,t,z
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
 		---
 		! inventory_list-v2
 		---
 
-		\[konfig @blake2b256-.+ .* !toml-config-v2]
 		\[!md @blake2b256-.+ .* !toml-type-v2]
 	EOM
 

@@ -50,28 +50,25 @@ function init_and_reindex { # @test
 	run test -f .dodder/local/share/config-seed
 	assert_success
 
-	run_dodder show -format log :konfig
+	# Config is read through show-config (FDR 0020); :konfig no longer queries.
+	run_dodder show-config
 	assert_success
-	assert_output - <<-EOM
-		[konfig @$(get_konfig_sha) !toml-config-v2]
+	assert_output
+
+	run_dodder reindex
+	assert_success
+	run_dodder show :t
+	assert_success
+	assert_output_unsorted - <<-EOM
+		[!md @$(get_type_blob_sha) !toml-type-v2]
 	EOM
 
 	run_dodder reindex
 	assert_success
-	run_dodder show :t,konfig
+	run_dodder show :t
 	assert_success
 	assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
-	EOM
-
-	run_dodder reindex
-	assert_success
-	run_dodder show :t,konfig
-	assert_success
-	assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 }
 
@@ -81,13 +78,10 @@ function init_and_deinit { # @test
 	run test -f .dodder/local/share/config-seed
 	assert_success
 
-	# run cat .dodder/Objekten/Akten/c1/a8ed3cf288dd5d7ccdfd6b9c8052a925bc56be2ec97ed0bb345ab1d961c685
-	# assert_output wow
-	run_dodder show -format log :konfig
+	# Config is read through show-config (FDR 0020); :konfig no longer queries.
+	run_dodder show-config
 	assert_success
-	assert_output - <<-EOM
-		[konfig @$(get_konfig_sha) !toml-config-v2]
-	EOM
+	assert_output
 
 	# run_dodder deinit
 	# assert_success
@@ -119,17 +113,16 @@ function init_with_non_xdg { # @test
 	run tree .dodder
 	assert_output
 
-	run_dodder show +konfig,t
+	run_dodder show +t
 	assert_success
 	assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 }
 
 function non_repo_failure { # @test
 	set_xdg "$BATS_TEST_TMPDIR"
-	run_dodder show +konfig,t
+	run_dodder show +t
 	assert_failure
 	assert_output --partial 'not in a dodder directory'
 }

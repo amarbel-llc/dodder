@@ -52,8 +52,10 @@ function init_with_ecdsa_p256_ssh_key { # @test
 
 	assert_success
 
-	# Verify objects can be read back (signature verification passes)
-	run_dodder show -format log :konfig
+	# Verify objects can be read back (signature verification passes). Config
+	# is read via the config log (FDR 0020); show-config -history decodes the
+	# signed config entry.
+	run_dodder show-config -history
 	assert_success
 	assert_output --regexp '\[konfig @.+ !toml-config-v2\]'
 

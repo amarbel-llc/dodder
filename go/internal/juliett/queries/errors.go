@@ -12,6 +12,16 @@ type (
 	pkgError     = errors.Typed[pkgErrDisamb]
 )
 
+// ErrConfigNotQueryable is returned when a query explicitly names the config
+// object (token "konfig" or "config"). Config is no longer a queryable object;
+// it lives in a repo-local log read via show-config and written via
+// edit-config. This error fires only on an explicit konfig/config token during
+// query building; broad genre queries (e.g. ":") are unaffected, and
+// config-log entry decode (which parses the "konfig" object id) is untouched.
+var ErrConfigNotQueryable = errors.BadRequestf(
+	"config is no longer an object; use show-config / edit-config",
+)
+
 type ErrBlobMissing struct {
 	ObjectId
 	mad_blob_io.ErrBlobMissing

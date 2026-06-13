@@ -304,6 +304,10 @@ LOOP:
 			}
 
 			switch objectId.GetGenre() {
+			case genres.Config:
+				err = ErrConfigNotQueryable
+				return err
+
 			case genres.InventoryList, genres.Zettel, genres.Repo:
 				buildState.pinnedObjectIds = append(
 					buildState.pinnedObjectIds,
@@ -444,6 +448,16 @@ func (buildState *buildState) parseSigilsAndGenres(
 
 	if err = q.ReadFromBoxScanner(&buildState.scanner); err != nil {
 		err = errors.Wrap(err)
+		return err
+	}
+
+	// An explicit konfig/config genre token (e.g. ":konfig") resolves to
+	// genres.Config here. Config is no longer a queryable object. Broad genre
+	// queries (e.g. ":") never set Config via ReadFromBoxScanner --- the "all"
+	// bitfield is applied later via addDefaultsIfNecessary --- so this fires
+	// only on an explicit token.
+	if q.Genre.ContainsOneOf(genres.Config) {
+		err = ErrConfigNotQueryable
 		return err
 	}
 

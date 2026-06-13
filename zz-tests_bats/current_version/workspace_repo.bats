@@ -310,8 +310,9 @@ function workspace_repo_init_pointer_to_parent { # @test
 
 	# Reads through the pointer resolve — the parent's konfig blob
 	# was the original bug case from #200 (was failing with
-	# "Blob with id ... does not exist locally").
-	run_dodder show -format text :konfig
+	# "Blob with id ... does not exist locally"). Config is read via
+	# show-config (FDR 0020), which fetches the blob through the pointer.
+	run_dodder show-config
 	assert_success
 }
 

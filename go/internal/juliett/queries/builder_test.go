@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
@@ -129,6 +130,7 @@ func TestQuery(t1 *testing.T) {
 		description, expected, expectedOptimized string
 		defaultGenre                             ids.Genre
 		inputs                                   []string
+		expectErr                                error
 	}
 
 	t := ui.MakeT(t1)
@@ -227,10 +229,17 @@ func TestQuery(t1 *testing.T) {
 			inputs:            []string{"one/uno:z"},
 		},
 		{
-			TestCaseInfo:      ui.MakeTestCaseInfo(""),
-			expectedOptimized: ":Config",
-			expected:          ":Config",
-			inputs:            []string{":konfig"},
+			// config left the query surface (FDR 0020): an explicit konfig
+			// genre token now errors rather than building a :Config query.
+			TestCaseInfo: ui.MakeTestCaseInfo(""),
+			inputs:       []string{":konfig"},
+			expectErr:    ErrConfigNotQueryable,
+		},
+		{
+			// bare konfig object id likewise errors.
+			TestCaseInfo: ui.MakeTestCaseInfo(""),
+			inputs:       []string{"konfig"},
+			expectErr:    ErrConfigNotQueryable,
 		},
 		{
 			TestCaseInfo:      ui.MakeTestCaseInfo(""),
@@ -322,6 +331,18 @@ func TestQuery(t1 *testing.T) {
 				)
 
 				m, err := sut.BuildQueryGroup(testCase.inputs...)
+
+				if testCase.expectErr != nil {
+					if !errors.Is(err, testCase.expectErr) {
+						t.Errorf(
+							"expected error %q but got %q",
+							testCase.expectErr,
+							err,
+						)
+					}
+
+					return
+				}
 
 				t.AssertNoError(err)
 				actual := m.String()

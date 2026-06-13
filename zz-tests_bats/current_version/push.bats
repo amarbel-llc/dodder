@@ -119,9 +119,8 @@ function push_history_zettel_type_tag_no_conflicts { # @test
 
 	(
 		pushd them || exit 1
-		run_dodder show +zettel,typ,konfig,etikett,repo
+		run_dodder show +zettel,typ,etikett,repo
 		assert_output_unsorted - <<-EOM
-			[konfig @$(get_konfig_sha) !toml-config-v2]
 			[!md @$(get_type_blob_sha) !toml-type-v2]
 			[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 			[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
@@ -163,10 +162,9 @@ function push_history_zettel_type_tag_yes_conflicts { # @test
 		EOM
 	)
 
-	run_dodder show +zettel,typ,konfig,etikett
+	run_dodder show +zettel,typ,etikett
 	assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
@@ -199,9 +197,8 @@ function push_history_default { # @test
 	EOM
 
 	pushd them || exit 1
-	run_dodder show +zettel,typ,konfig,etikett #,repo
+	run_dodder show +zettel,typ,etikett #,repo
 	assert_output_unsorted - <<-EOM
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
@@ -244,9 +241,8 @@ function push_history_default_only_blobs { # @test
 	EOM
 
 	pushd them || exit 1
-	run_dodder show +zettel,typ,konfig,etikett,repo
+	run_dodder show +zettel,typ,etikett,repo
 	assert_output_unsorted - <<-EOM
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 		[!md @$(get_type_blob_sha) !toml-type-v2]
 	EOM
 }
@@ -410,9 +406,8 @@ function push_direct_local_path_no_conflicts { # @test
 
 	(
 		pushd them || exit 1
-		run_dodder show +zettel,typ,konfig,etikett
+		run_dodder show +zettel,typ,etikett
 		assert_output_unsorted - <<-EOM
-			[konfig @$(get_konfig_sha) !toml-config-v2]
 			[!md @$(get_type_blob_sha) !toml-type-v2]
 			[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 			[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]

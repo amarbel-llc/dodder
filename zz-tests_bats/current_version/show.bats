@@ -383,56 +383,31 @@ function show_simple_tag_history { # @test
 	EOM
 }
 
-function show_konfig { # @test
+# Config left the query surface (FDR 0020): an explicit konfig/config genre
+# token now errors. Config is read via show-config instead.
+function show_konfig_query_errors { # @test
   run_dodder show +konfig
-  assert_output_unsorted - <<-EOM
-		[konfig @$(get_konfig_sha) !toml-config-v2]
-	EOM
+  assert_failure
+  assert_output --regexp 'config is no longer an object'
 
   run_dodder show -format text :konfig
-  assert_output - <<-EOM
-		blob-stores = [".default"]
+  assert_failure
+  assert_output --regexp 'config is no longer an object'
+}
 
-		[defaults]
-		type = "!md"
-		tags = []
-
-		[file-extensions]
-		config = "konfig"
-		conflict = "conflict"
-		lockfile = "object-lockfile"
-		organize = "md"
-		repo = "repo"
-		tag = "tag"
-		type = "type"
-		zettel = "zettel"
-
-		[cli-output]
-		print-blob_digests = true
-		print-colors = true
-		print-empty-blob_digests = false
-		print-flush = true
-		print-include-description = true
-		print-include-types = true
-		print-inventory_lists = true
-		print-matched-dormant = false
-		print-tags-always = true
-		print-time = true
-		print-unchanged = true
-
-		[cli-output.abbreviations]
-		zettel_ids = true
-		merkle_ids = true
-
-		[tools]
-		merge = ["vimdiff"]
-	EOM
+# Config is now read through show-config (the config read surface). This
+# fixture predates the config log (FDR 0020) and has no log entries, so
+# show-config reports an empty log rather than the konfig object. Reindex
+# (later task) is what backfills the log from old konfig history.
+function show_config_empty_log { # @test
+  run_dodder show-config
+  assert_failure
+  assert_line --index 0 'empty config log'
 }
 
 function show_history_all { # @test
-  run_dodder show +konfig,kasten,typ,etikett,zettel
+  run_dodder show +kasten,typ,etikett,zettel
   assert_output_unsorted - <<-EOM
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 		[!md @$(get_type_blob_sha) !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
