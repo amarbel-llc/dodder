@@ -44,9 +44,10 @@ Commands:
 - `show-config -history` — list entries oldest→newest as box lines.
 - `edit-config` — unchanged editor UX; on save, writes the blob and
   appends a signed entry to the config log under the repo lock. No
-  object commit into the store, no stream-index participation. Silent
-  on success today; restoring the old commit-line output is tracked as
-  follow-up [#266](https://github.com/amarbel-llc/dodder/issues/266).
+  object commit into the store, no stream-index participation. On a real
+  change it prints the appended entry as a commit confirmation
+  (`[konfig @<digest> !toml-config-v2]`); no-op edits are silent
+  ([#266](https://github.com/amarbel-llc/dodder/issues/266)).
 
 Genre removal: `config`/`konfig` no longer parse as a genre or object
 id anywhere in the query surface. The tokens produce a targeted error
