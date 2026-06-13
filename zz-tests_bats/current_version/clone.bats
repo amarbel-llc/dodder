@@ -150,6 +150,40 @@ function clone_direct_local_path { # @test
 	try_add_new_after_clone
 }
 
+# A direct clone seeds the clone's config log from the source repo's
+# current config (FDR 0020): config is repo-local and never pulled, so the
+# clone adopts the source's config as a new log entry signed by the clone's
+# own key. Edits the source config to a distinctive marker before cloning,
+# then show-config in the clone streams that marker rather than the
+# genesis default.
+function clone_direct_seeds_config_from_source { # @test
+	them="them"
+	bootstrap "$them"
+
+	(
+		pushd "$them" || exit 1
+		export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
+		run_dodder edit-config
+		assert_success
+		assert_output ''
+
+		run_dodder show-config
+		assert_success
+		assert_line '# clone-seed-marker'
+	)
+
+	run_clone_default_with \
+		-direct "$(realpath ./them)" \
+		test-repo-id-us \
+		+zettel,typ,etikett
+
+	assert_success
+
+	run_dodder show-config
+	assert_success
+	assert_line '# clone-seed-marker'
+}
+
 function clone_direct_no_repo_at_path { # @test
 	mkdir -p empty_dir
 
