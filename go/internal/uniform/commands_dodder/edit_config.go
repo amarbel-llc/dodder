@@ -53,6 +53,15 @@ func (cmd EditConfig) Run(req command.Request) {
 			GetBlobDigest(),
 	)
 
+	// Capture the config's current type before the edit. Editing config
+	// does not change its type, so the pre-edit type is the right type to
+	// stamp on the new config-log entry.
+	configType := localWorkingCopy.GetConfigStore().
+		GetConfig().
+		GetSku().
+		GetType().
+		ToType()
+
 	var digest mad_domain_interfaces.MarklId
 
 	{
@@ -96,6 +105,7 @@ func (cmd EditConfig) Run(req command.Request) {
 
 		if _, err := log.Append(
 			digest,
+			configType,
 			localWorkingCopy.GetStore().GetTai(),
 		); err != nil {
 			localWorkingCopy.Cancel(err)

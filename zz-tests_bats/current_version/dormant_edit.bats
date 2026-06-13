@@ -41,7 +41,7 @@ function dormant_edit_and_change { # @test
 	# the digest dormant-edit announced above.
 	run_dodder show-config -history
 	assert_success
-	assert_output --regexp "^\[konfig @${new_digest} [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !inventory_list-v2\]\$"
+	assert_output --regexp "^\[konfig @${new_digest} [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]\$"
 }
 
 function dormant_edit_and_dont_change { # @test

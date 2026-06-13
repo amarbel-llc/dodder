@@ -2,10 +2,13 @@ package config_log
 
 // This package is an append-only, repo-local log of signed config
 // states stored in env_repo.FileConfigLog(). Each entry is a single
-// signed sku.Transacted "list header" (object id konfig, type
-// !inventory_list-v2) whose blob digest points at the config TOML blob
-// in the default blob store. Entries chain by mother signature; append
-// order is the history and the last entry is the head.
+// signed sku.Transacted (object id konfig, with the config blob's own
+// type, e.g. !toml-config-v2) whose blob digest points at the config
+// TOML blob in the default blob store. The stream itself is framed
+// !inventory_list-v2 for coder selection, but each entry keeps its own
+// config type, exactly as konfig appears as a contained object inside a
+// real inventory list. Entries chain by mother signature; append order
+// is the history and the last entry is the head.
 //
 // The blobStore field below thinly duplicates
 // inventory_list_store/blob_store_v1.go (which is unexported and so
@@ -64,12 +67,16 @@ func Make(envRepo env_repo.Env, closet inventory_list_coders.Closet) Log {
 }
 
 // Append writes a new signed config entry pointing at blobDigest, with
-// the given tai, chained (mother = current head's object sig) onto the
-// existing head. blobDigest is the digest of the config TOML blob,
-// which must already live in the default blob store. The caller must
+// the given configType and tai, chained (mother = current head's object
+// sig) onto the existing head. blobDigest is the digest of the config
+// TOML blob, which must already live in the default blob store.
+// configType is the config blob's own type (e.g. !toml-config-v2); the
+// entry keeps it rather than the stream framing type, so store_config
+// bootstrap can decode the blob via repo_configs.Coder. The caller must
 // hold the repo lock.
 func (log Log) Append(
 	blobDigest mad_domain_interfaces.MarklId,
+	configType ids.Type,
 	tai ids.Tai,
 ) (object *sku.Transacted, err error) {
 	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
@@ -83,6 +90,14 @@ func (log Log) Append(
 		err = errors.Wrap(err)
 		return object, err
 	}
+
+	// Stamp the entry with the config blob's own type. The stream is
+	// framed !inventory_list-v2 for coder selection, but each entry keeps
+	// its own config type, mirroring how konfig appears as a contained
+	// object (type !toml-config-v2) inside a real inventory list.
+	object.GetMetadataMutable().GetTypeMutable().ResetWithType(
+		configType.ToType(),
+	)
 
 	object.SetTai(tai)
 
@@ -117,9 +132,10 @@ func (log Log) Append(
 }
 
 // writeObject mirrors
-// inventory_list_store.blobStoreV1.WriteInventoryListObject: it sets
-// the object type, opens the log file for append, builds a MultiWriter
-// over the inventory-list blob store writer and the log file, signs the
+// inventory_list_store.blobStoreV1.WriteInventoryListObject (minus the
+// object-type overwrite, which is wrong for a config entry — see
+// below): it opens the log file for append, builds a MultiWriter over
+// the inventory-list blob store writer and the log file, signs the
 // object, and encodes it via the coder closet.
 func (log Log) writeObject(object *sku.Transacted) (err error) {
 	var blobStoreWriteCloser mad_domain_interfaces.BlobWriter
@@ -133,8 +149,12 @@ func (log Log) writeObject(object *sku.Transacted) (err error) {
 
 	defer errors.DeferredCloser(&err, blobStoreWriteCloser)
 
-	object.GetMetadataMutable().GetTypeMutable().ResetWithType(log.blobType)
-
+	// Do NOT overwrite the object's type with log.blobType here. The
+	// object already carries its own config type (set in Append);
+	// log.blobType (!inventory_list-v2) is used only for stream framing
+	// (the type header doc and the coder selection in WriteObjectToWriter
+	// below), exactly as konfig keeps its own type as a contained object
+	// inside a real inventory list.
 	var file *os.File
 
 	// Unlike inventory_list_store (whose log file is pre-created at

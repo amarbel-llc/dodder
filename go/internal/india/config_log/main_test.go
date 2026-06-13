@@ -73,10 +73,11 @@ func testAppendThenHead(t *ui.TestContext) {
 	envRepo, log := makeLog(t)
 
 	blobDigest := writeConfigBlob(t, envRepo, "[blob-store]\n")
+	configType := ids.MustType(ids.TypeTomlConfigV2)
 	tai := ids.NowTai()
 
 	{
-		_, err := log.Append(blobDigest, tai)
+		_, err := log.Append(blobDigest, configType, tai)
 		t.AssertNoError(err)
 	}
 
@@ -85,6 +86,10 @@ func testAppendThenHead(t *ui.TestContext) {
 	defer repoolHead()
 
 	t.AssertEqual("konfig", head.GetObjectId().String())
+
+	// Regression guard: the entry must keep the config blob's own type
+	// (!toml-config-v2), not the stream framing type (!inventory_list-v2).
+	t.AssertEqual(ids.TypeTomlConfigV2, head.GetType().String())
 
 	t.AssertNoError(markl.AssertEqual(blobDigest, head.GetBlobDigest()))
 
@@ -110,11 +115,12 @@ func testAppendChains(t *ui.TestContext) {
 
 	firstDigest := writeConfigBlob(t, envRepo, "[blob-store]\nv = 1\n")
 	secondDigest := writeConfigBlob(t, envRepo, "[blob-store]\nv = 2\n")
+	configType := ids.MustType(ids.TypeTomlConfigV2)
 
 	var firstObjectSig []byte
 
 	{
-		first, err := log.Append(firstDigest, ids.NowTai())
+		first, err := log.Append(firstDigest, configType, ids.NowTai())
 		t.AssertNoError(err)
 
 		firstObjectSig = append(
@@ -124,7 +130,7 @@ func testAppendChains(t *ui.TestContext) {
 	}
 
 	{
-		_, err := log.Append(secondDigest, ids.NowTai())
+		_, err := log.Append(secondDigest, configType, ids.NowTai())
 		t.AssertNoError(err)
 	}
 
