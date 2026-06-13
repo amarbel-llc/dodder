@@ -1,0 +1,301 @@
+package config_log
+
+// This package is an append-only, repo-local log of signed config
+// states stored in env_repo.FileConfigLog(). Each entry is a single
+// signed sku.Transacted "list header" (object id konfig, type
+// !inventory_list-v2) whose blob digest points at the config TOML blob
+// in the default blob store. Entries chain by mother signature; append
+// order is the history and the last entry is the head.
+//
+// The blobStore field below thinly duplicates
+// inventory_list_store/blob_store_v1.go (which is unexported and so
+// cannot be reused directly). Consolidating the two is the
+// explicitly-flagged follow-up in FDR 0020.
+
+import (
+	"io"
+	"os"
+
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
+	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+)
+
+var ErrEmpty = newPkgError("empty config log")
+
+// Log is an append-only repo-local log of signed config states. The
+// caller must hold the repo lock before calling Append; the command
+// layer (Task 5) is responsible for that.
+type Log struct {
+	envRepo   env_repo.Env
+	pathLog   string
+	blobType  ids.TypeStruct
+	closet    inventory_list_coders.Closet
+	blobStore mad_domain_interfaces.BlobStore
+	finalizer object_finalizer.Finalizer
+}
+
+// Make builds a config log over envRepo.FileConfigLog(), reusing the
+// repo's inventory-list coder closet. blobType resolves to the repo's
+// configured inventory list type (!inventory_list-v2), which is
+// available from genesis config pre-bootstrap.
+func Make(envRepo env_repo.Env, closet inventory_list_coders.Closet) Log {
+	blobType := ids.MustTypeStruct(
+		envRepo.GetConfigPublic().Blob.GetInventoryListTypeId(),
+	)
+
+	return Log{
+		envRepo:   envRepo,
+		pathLog:   envRepo.FileConfigLog(),
+		blobType:  blobType,
+		closet:    closet,
+		blobStore: envRepo.GetInventoryListBlobStore(),
+		finalizer: object_finalizer.Make(),
+	}
+}
+
+// Append writes a new signed config entry pointing at blobDigest, with
+// the given tai, chained (mother = current head's object sig) onto the
+// existing head. blobDigest is the digest of the config TOML blob,
+// which must already live in the default blob store. The caller must
+// hold the repo lock.
+func (log Log) Append(
+	blobDigest mad_domain_interfaces.MarklId,
+	tai ids.Tai,
+) (object *sku.Transacted, err error) {
+	object, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+
+	if err = object.GetObjectIdMutable().SetWithId(ids.Config); err != nil {
+		err = errors.Wrap(err)
+		return object, err
+	}
+
+	if err = object.SetBlobDigest(blobDigest); err != nil {
+		err = errors.Wrap(err)
+		return object, err
+	}
+
+	object.SetTai(tai)
+
+	{
+		var head *sku.Transacted
+
+		if head, err = log.Head(); err != nil {
+			if errors.Is(err, ErrEmpty) {
+				// root entry; leave mother null
+				err = nil
+			} else {
+				err = errors.Wrap(err)
+				return object, err
+			}
+		} else {
+			if err = object.SetMother(head); err != nil {
+				err = errors.Wrap(err)
+				return object, err
+			}
+		}
+	}
+
+	if err = log.writeObject(object); err != nil {
+		err = errors.Wrap(err)
+		return object, err
+	}
+
+	return object, err
+}
+
+// writeObject mirrors
+// inventory_list_store.blobStoreV1.WriteInventoryListObject: it sets
+// the object type, opens the log file for append, builds a MultiWriter
+// over the inventory-list blob store writer and the log file, signs the
+// object, and encodes it via the coder closet.
+func (log Log) writeObject(object *sku.Transacted) (err error) {
+	var blobStoreWriteCloser mad_domain_interfaces.BlobWriter
+
+	if blobStoreWriteCloser, err = log.blobStore.MakeBlobWriter(
+		nil,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	defer errors.DeferredCloser(&err, blobStoreWriteCloser)
+
+	object.GetMetadataMutable().GetTypeMutable().ResetWithType(log.blobType)
+
+	var file *os.File
+
+	// Unlike inventory_list_store (whose log file is pre-created at
+	// genesis), the config log file does not exist until the first
+	// Append, so create-on-append here. Mirrors zettel_id_log.AppendEntry.
+	if file, err = files.OpenFile(
+		log.pathLog,
+		os.O_WRONLY|os.O_CREATE|os.O_APPEND,
+		0o666,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	defer errors.DeferredCloser(&err, file)
+	defer errors.Deferred(&err, file.Sync)
+
+	// The stream-level type header doc (written verbatim to the log
+	// file, not the blob store) establishes the type for every
+	// subsequent type-less object blob, exactly as
+	// env_repo.writeInventoryListLog does for the inventory list log.
+	// Write it once, when the file is newly created.
+	if err = log.writeTypeHeaderIfEmpty(file); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(
+		io.MultiWriter(blobStoreWriteCloser, file),
+	)
+	defer repoolBufferedWriter()
+
+	if err = log.finalizer.FinalizeAndSignOverwrite(
+		object,
+		log.envRepo.GetConfigPrivate().Blob,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if _, err = log.closet.WriteObjectToWriter(
+		log.blobType,
+		object,
+		bufferedWriter,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if err = bufferedWriter.Flush(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
+}
+
+// writeTypeHeaderIfEmpty writes the stream-level type header doc when
+// file is empty (i.e. freshly created on the first append). Mirrors
+// env_repo.writeInventoryListLog.
+func (log Log) writeTypeHeaderIfEmpty(file *os.File) (err error) {
+	var stat os.FileInfo
+
+	if stat, err = file.Stat(); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if stat.Size() > 0 {
+		return err
+	}
+
+	coder := hyphence.Coder[*hyphence.TypedBlobEmpty]{
+		Metadata: hyphence.TypedMetadataCoder[struct{}]{},
+	}
+
+	header := hyphence.TypedBlobEmpty{
+		Type: log.blobType.ToMadder(),
+	}
+
+	if _, err = coder.EncodeTo(&header, file); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
+}
+
+// Head returns the last (newest) entry in append order, or ErrEmpty
+// when the log file does not exist yet.
+func (log Log) Head() (head *sku.Transacted, err error) {
+	var file *os.File
+
+	if file, err = files.OpenReadOnly(log.pathLog); err != nil {
+		if errors.IsNotExist(err) {
+			err = errors.Wrap(ErrEmpty)
+			return head, err
+		}
+
+		err = errors.Wrap(err)
+		return head, err
+	}
+
+	defer errors.ContextMustClose(log.envRepo, file)
+
+	for object, iterErr := range log.closet.AllDecodedObjectsFromStream(
+		file,
+		nil,
+	) {
+		if iterErr != nil {
+			err = errors.Wrap(iterErr)
+			return head, err
+		}
+
+		if head == nil {
+			head, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+		}
+
+		sku.TransactedResetter.ResetWith(head, object)
+	}
+
+	if head == nil {
+		err = errors.Wrap(ErrEmpty)
+		return head, err
+	}
+
+	return head, err
+}
+
+// All yields entries oldest->newest (file/append order). When the log
+// file does not exist, the sequence is empty (no error).
+func (log Log) All() sku.Seq {
+	return func(yield func(*sku.Transacted, error) bool) {
+		var file *os.File
+
+		{
+			var err error
+
+			if file, err = files.OpenReadOnly(log.pathLog); err != nil {
+				if errors.IsNotExist(err) {
+					return
+				}
+
+				yield(nil, errors.Wrap(err))
+				return
+			}
+		}
+
+		defer errors.ContextMustClose(log.envRepo, file)
+
+		for object, err := range log.closet.AllDecodedObjectsFromStream(
+			file,
+			nil,
+		) {
+			if err != nil {
+				if !yield(nil, errors.Wrap(err)) {
+					return
+				}
+
+				continue
+			}
+
+			if !yield(object, nil) {
+				return
+			}
+		}
+	}
+}
