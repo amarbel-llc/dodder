@@ -26,6 +26,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 )
 
@@ -87,8 +88,9 @@ func (log Log) Append(
 
 	{
 		var head *sku.Transacted
+		var repoolHead interfaces.FuncRepool
 
-		if head, err = log.Head(); err != nil {
+		if head, repoolHead, err = log.Head(); err != nil {
 			if errors.Is(err, ErrEmpty) {
 				// root entry; leave mother null
 				err = nil
@@ -97,6 +99,8 @@ func (log Log) Append(
 				return object, err
 			}
 		} else {
+			defer repoolHead()
+
 			if err = object.SetMother(head); err != nil {
 				err = errors.Wrap(err)
 				return object, err
@@ -220,18 +224,25 @@ func (log Log) writeTypeHeaderIfEmpty(file *os.File) (err error) {
 }
 
 // Head returns the last (newest) entry in append order, or ErrEmpty
-// when the log file does not exist yet.
-func (log Log) Head() (head *sku.Transacted, err error) {
+// when the log file does not exist yet. On success it returns a
+// pool-owned head together with the repool function the caller must
+// call exactly once when done with head; on any error path repoolHead
+// is nil and no pooled object is outstanding.
+func (log Log) Head() (
+	head *sku.Transacted,
+	repoolHead interfaces.FuncRepool,
+	err error,
+) {
 	var file *os.File
 
 	if file, err = files.OpenReadOnly(log.pathLog); err != nil {
 		if errors.IsNotExist(err) {
 			err = errors.Wrap(ErrEmpty)
-			return head, err
+			return head, repoolHead, err
 		}
 
 		err = errors.Wrap(err)
-		return head, err
+		return head, repoolHead, err
 	}
 
 	defer errors.ContextMustClose(log.envRepo, file)
@@ -241,12 +252,18 @@ func (log Log) Head() (head *sku.Transacted, err error) {
 		nil,
 	) {
 		if iterErr != nil {
+			if repoolHead != nil {
+				repoolHead()
+				repoolHead = nil
+				head = nil
+			}
+
 			err = errors.Wrap(iterErr)
-			return head, err
+			return head, repoolHead, err
 		}
 
 		if head == nil {
-			head, _ = sku.GetTransactedPool().GetWithRepool() //repool:owned
+			head, repoolHead = sku.GetTransactedPool().GetWithRepool() //repool:suppress ownership transfer via return
 		}
 
 		sku.TransactedResetter.ResetWith(head, object)
@@ -254,10 +271,10 @@ func (log Log) Head() (head *sku.Transacted, err error) {
 
 	if head == nil {
 		err = errors.Wrap(ErrEmpty)
-		return head, err
+		return head, repoolHead, err
 	}
 
-	return head, err
+	return head, repoolHead, err
 }
 
 // All yields entries oldest->newest (file/append order). When the log

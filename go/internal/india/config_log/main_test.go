@@ -57,7 +57,7 @@ func TestHeadEmpty(t1 *testing.T) {
 func testHeadEmpty(t *ui.TestContext) {
 	_, log := makeLog(t)
 
-	_, err := log.Head()
+	_, _, err := log.Head()
 
 	t.AssertTrue(
 		errors.Is(err, ErrEmpty),
@@ -80,8 +80,9 @@ func testAppendThenHead(t *ui.TestContext) {
 		t.AssertNoError(err)
 	}
 
-	head, err := log.Head()
+	head, repoolHead, err := log.Head()
 	t.AssertNoError(err)
+	defer repoolHead()
 
 	t.AssertEqual("konfig", head.GetObjectId().String())
 
@@ -127,8 +128,9 @@ func testAppendChains(t *ui.TestContext) {
 		t.AssertNoError(err)
 	}
 
-	head, err := log.Head()
+	head, repoolHead, err := log.Head()
 	t.AssertNoError(err)
+	defer repoolHead()
 
 	t.AssertNoError(markl.AssertEqual(secondDigest, head.GetBlobDigest()))
 
