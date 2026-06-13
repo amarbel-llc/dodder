@@ -1,12 +1,31 @@
 package store
 
 import (
+	"sort"
+
+	"code.linenisgreat.com/dodder/go/internal/0/options_print"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
+	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
+	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
+
+// konfigState captures the three scalar values needed to backfill a
+// single historical config state into the config log. Pooled
+// *sku.Transacted objects are never retained past their loop iteration
+// (they are reused); only these detached values are.
+type konfigState struct {
+	blobDigest markl.Id
+	configType string
+	tai        ids.Tai
+}
 
 // TODO-P2 add support for quiet reindexing
 func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
@@ -39,6 +58,41 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 		Store: store,
 		index: reindexer,
 	}
+
+	// Build the config log to decide whether to backfill it from the old
+	// konfig object history. Backfill only when the log is absent
+	// (un-migrated repo): an existing log already holds the config (and
+	// possibly post-migration edits), so leave it untouched. This guard
+	// makes reindex idempotent for config.
+	cfgLog := config_log.Make(
+		store.GetEnvRepo(),
+		inventory_list_coders.MakeCloset(
+			store.GetEnvRepo(),
+			box_format.MakeBoxTransactedArchive(
+				store.GetEnvRepo(),
+				options_print.Options{}.WithPrintTai(true),
+			),
+		),
+	)
+
+	var backfillConfig bool
+
+	{
+		_, repoolHead, headErr := cfgLog.Head()
+
+		if headErr != nil {
+			if errors.Is(headErr, config_log.ErrEmpty) {
+				backfillConfig = true
+			} else {
+				err = errors.Wrap(headErr)
+				return err
+			}
+		} else {
+			repoolHead()
+		}
+	}
+
+	var konfigStates []konfigState
 
 	type objectWithError struct {
 		error
@@ -73,6 +127,25 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 			panic("empty object")
 		}
 
+		// Divert konfig objects from the stream-index rebuild: config is
+		// no longer an indexed object (FDR 0020). When backfilling,
+		// capture the scalar values needed to re-emit the state into the
+		// config log, then skip reindexOne entirely.
+		if objectWithList.Object.GetObjectId().GetGenre() == genres.Config {
+			if backfillConfig {
+				var state konfigState
+				state.blobDigest.ResetWithMarklId(
+					objectWithList.Object.GetBlobDigest(),
+				)
+				state.configType = objectWithList.Object.GetType().String()
+				state.tai = objectWithList.Object.GetTai()
+
+				konfigStates = append(konfigStates, state)
+			}
+
+			continue
+		}
+
 		if err = store.reindexOne(commitFacilitator, objectWithList); err != nil {
 			keyBytes := objectWithList.List.GetObjectDigest().GetBytes()
 
@@ -85,6 +158,13 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 			}
 
 			continue
+		}
+	}
+
+	if backfillConfig && len(konfigStates) > 0 {
+		if err = store.backfillConfigLog(cfgLog, konfigStates); err != nil {
+			err = errors.Wrap(err)
+			return err
 		}
 	}
 
@@ -112,6 +192,52 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 				sku.String(objectWithError.List),
 				sku.String(objectWithError.Object),
 			)
+		}
+	}
+
+	return err
+}
+
+// backfillConfigLog re-emits the historical konfig states into the
+// config log oldest->newest. States are deduped by (tai, blobDigest)
+// because AllInventoryListObjectsAndContents may yield the same konfig
+// version across multiple inventory lists. Each Append re-signs and
+// re-chains into a fresh mother-sig chain, preserving the original blob
+// digests and tais.
+func (store *Store) backfillConfigLog(
+	cfgLog config_log.Log,
+	states []konfigState,
+) (err error) {
+	seen := make(map[string]struct{}, len(states))
+	deduped := make([]konfigState, 0, len(states))
+
+	for _, state := range states {
+		key := state.tai.String() + "\x00" + string(state.blobDigest.GetBytes())
+
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+		deduped = append(deduped, state)
+	}
+
+	// tai is sec.asec; sort oldest->newest so the log's append order
+	// reproduces the original config history.
+	sort.Slice(deduped, func(i, j int) bool {
+		return deduped[i].tai.Before(deduped[j].tai)
+	})
+
+	for i := range deduped {
+		state := &deduped[i]
+
+		if err = cfgLog.Append(
+			&state.blobDigest,
+			ids.MustTypeStruct(state.configType),
+			state.tai,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
 		}
 	}
 
