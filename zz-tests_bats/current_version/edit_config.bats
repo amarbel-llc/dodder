@@ -128,6 +128,7 @@ function edit_config_show_config_roundtrips { # @test
 	# the tai timestamp and ed25519 signatures are not.
 	run_dodder show-config -history
 	assert_success
+	assert_equal "${#lines[@]}" 1
 	assert_output --regexp '^\[konfig @blake2b256-wlqn0d2a583mpwq2h948eglrc26znyjuupzmsraqna6xszw99lfqeng70u [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
 }
 
