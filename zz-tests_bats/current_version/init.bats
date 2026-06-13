@@ -186,7 +186,6 @@ function init_with_age { # @test
 	assert_success
 	assert_output - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
 	run test -f .xdg/data/dodder/config-permanent
@@ -247,7 +246,6 @@ function init_with_existing_madder_store { # @test
 	assert_success
 	assert_output --regexp - <<-'EOM'
 		\[!md @blake2b256-[[:alnum:]]+ !toml-type-v2]
-		\[konfig @blake2b256-[[:alnum:]]+ !toml-config-v2]
 	EOM
 
 	run_dodder init-workspace -experimental-repo=false
@@ -257,7 +255,6 @@ function init_with_existing_madder_store { # @test
 	assert_success
 	assert_output_unsorted --regexp - <<-'EOM'
 		\[!md @blake2b256-[[:alnum:]]+ .* !toml-type-v2]
-		\[konfig @blake2b256-[[:alnum:]]+ .* !toml-config-v2]
 	EOM
 }
 
@@ -273,7 +270,6 @@ function init_with_json_inventory_list_type { # @test
 	assert_success
 	assert_output - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-		[konfig @$(get_konfig_sha) !toml-config-v2]
 	EOM
 
 	run_dodder show :b

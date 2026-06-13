@@ -18,7 +18,6 @@ function last_after_init { # @test
 	assert_success
 	assert_output_unsorted --regexp - <<-EOM
 		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
-		\\[konfig @$(get_konfig_sha) .* !toml-config-v2]
 	EOM
 }
 

@@ -24,7 +24,6 @@ function init_default_creates_repo { # @test
   run_dodder init-default test-default-repo
   assert_success
   assert_line --regexp '^\[!md @blake2b256-.+ !toml-type-v2\]$'
-  assert_line --regexp '^\[konfig @blake2b256-.+ !toml-config-v2\]$'
 
   run test -f .dodder/local/share/config-seed
   assert_success

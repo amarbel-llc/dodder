@@ -89,7 +89,6 @@ func (local *Repo) initDefaultTypeAndConfig(
 		bigBang,
 		blobStores,
 		defaultTypeObjectId,
-		&builder,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
@@ -120,10 +119,9 @@ func (local *Repo) initDefaultTypeAndConfig(
 	}
 
 	// Seed the repo-local config log with a root entry so fresh repos
-	// read their config from the log at bootstrap (FDR 0020). The konfig
-	// object committed above still exists (a later task removes it); this
-	// additively records the same default config state in the log. Runs
-	// after ExecutePlan so the lock it acquired is released, and uses the
+	// read their config from the log at bootstrap (FDR 0020). No konfig
+	// object is committed; config lives solely in the log. Runs after
+	// ExecutePlan so the lock it acquired is released, and uses the
 	// filesystem mutex directly (config_log.Append's "caller holds the
 	// repo lock" contract is about that mutex, not the heavyweight repo
 	// Unlock flush).
@@ -304,16 +302,16 @@ func (local *Repo) prepareBuiltinActionableTypes(
 	return err
 }
 
-// prepareDefaultConfig writes the default config blob, adds the konfig
-// object to the import plan, and returns the blob digest and config type
-// so the caller can seed the config log root entry after the plan
-// commits. seeded is false when ExcludeDefaultConfig skips config
-// genesis entirely (no log entry to seed).
+// prepareDefaultConfig writes the default config blob and returns the
+// blob digest and config type so the caller can seed the config log root
+// entry after the plan commits. It creates NO konfig object: config lives
+// solely in the config log (FDR 0020), and nothing reads a konfig object
+// anymore. seeded is false when ExcludeDefaultConfig skips config genesis
+// entirely (no log entry to seed).
 func (local *Repo) prepareDefaultConfig(
 	bigBang env_repo.BigBang,
 	blobStores []blob_store_id.Id,
 	defaultTypeObjectId ids.TypeStruct,
-	builder *import_plan.Builder,
 ) (blobId mad_domain_interfaces.MarklId, configType ids.Type, seeded bool, err error) {
 	if bigBang.ExcludeDefaultConfig {
 		return blobId, configType, seeded, err
@@ -331,27 +329,6 @@ func (local *Repo) prepareDefaultConfig(
 	}
 
 	configType = ids.TypeStruct(typedBlob.Type).ToType()
-
-	newConfig, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
-
-	if err = newConfig.GetObjectIdMutable().SetWithId(
-		ids.Config,
-	); err != nil {
-		err = errors.Wrap(err)
-		return blobId, configType, seeded, err
-	}
-
-	if err = newConfig.SetBlobDigest(blobId); err != nil {
-		err = errors.Wrap(err)
-		return blobId, configType, seeded, err
-	}
-
-	newConfig.GetMetadataMutable().GetTypeMutable().ResetWithType(ids.TypeStruct(typedBlob.Type))
-
-	if err = builder.AddObject(newConfig, 0); err != nil {
-		err = errors.Wrap(err)
-		return blobId, configType, seeded, err
-	}
 
 	seeded = true
 

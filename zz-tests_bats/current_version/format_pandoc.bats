@@ -28,7 +28,7 @@ function init_with_pandoc_tools_creates_type_objects { # @test
 
 	assert_success
 
-	# Genesis should create the pandoc tool types alongside !md and konfig
+	# Genesis should create the pandoc tool types alongside !md
 	assert_line --regexp '\[!pandoc-defaults @blake2b256-.+ !toml-type-v2]'
 	assert_line --regexp '\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v2]'
 

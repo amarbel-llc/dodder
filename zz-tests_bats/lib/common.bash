@@ -185,7 +185,6 @@ function run_dodder_init {
   assert_success
   assert_output - <<-EOM
 [!md @$(get_type_blob_sha) !toml-type-v2]
-[konfig @$(get_konfig_sha) !toml-config-v2]
 EOM
 
   run_dodder_init_workspace
@@ -208,7 +207,6 @@ function run_dodder_init_sha256 {
   assert_success
   assert_output --regexp - <<-EOM
 		\[!md @sha256-.+ !toml-type-v2]
-		\[konfig @sha256-.+ !toml-config-v2]
 	EOM
 }
 
@@ -248,21 +246,23 @@ function run_dodder_init_disable_age_xdg {
   assert_success
   # assert_output - <<-EOM
   # [!md @$(get_type_blob_sha) !toml-type-v2]
-  # [konfig @$(get_konfig_sha) !toml-config-v2]
   # EOM
 
-  # Sanity check: the freshly-written konfig blob is reachable
+  # Sanity check: the freshly-written config blob is reachable
   # via madder. Confirms #151 bucket B's two-env composition
   # actually routes dodder XDG-init blob storage through madder's
   # XDG namespace (the gate that #144 phase 1 had to remove this
   # check for, via #159).
   #
-  # Extract the konfig sha from init's output — the fixture's
-  # FIXTURE_KONFIG_SHA can drift from what fresh init produces if
-  # dodder's default toml changes between fixture regenerations.
+  # Genesis no longer creates a konfig object (FDR 0020), so the blob
+  # digest is read from the config log via `show-config -history`
+  # rather than init's object output. The config blob is the same one
+  # the log root entry points at.
   local konfig_sha
+  run_dodder show-config -history
+  assert_success
   konfig_sha="$(echo "$output" | grep -oE 'konfig @blake2b256-[[:alnum:]]+' | grep -oE 'blake2b256-[[:alnum:]]+' | head -1)"
-  [[ -n $konfig_sha ]] || fail "could not extract konfig sha from init output: $output"
+  [[ -n $konfig_sha ]] || fail "could not extract konfig sha from show-config -history output: $output"
 
   run_madder cat default "$konfig_sha"
   assert_success
@@ -288,7 +288,6 @@ function run_dodder_init_disable_age {
   assert_success
   assert_output --regexp - <<-EOM
 \[!md @blake2b256-.+ !toml-type-v2]
-\[konfig @blake2b256-.+ !toml-config-v2]
 EOM
 
   run_dodder init-workspace -experimental-repo=false
