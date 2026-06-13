@@ -17,7 +17,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/kilo/store_workspace"
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
@@ -167,13 +166,4 @@ func (store *Store) ResetIndexes() (err error) {
 func (store *Store) SetUIDelegate(ud sku.UIStorePrinters) {
 	store.ui = ud
 	store.inventoryListStore.SetUIDelegate(ud)
-}
-
-func (store *Store) UpdateKonfig(
-	blobId mad_domain_interfaces.MarklId,
-) (kt *sku.Transacted, err error) {
-	return store.createOrUpdateBlobDigest(
-		ids.Config,
-		blobId,
-	)
 }

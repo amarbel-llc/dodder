@@ -21,7 +21,7 @@ import (
 
 // editKonfigInVim opens the konfig blob in $EDITOR and returns the
 // new blob digest after the user's edit. The caller is responsible for
-// the surrounding Lock / UpdateKonfig / Unlock dance. Shared by
+// the surrounding Lock / config-log append / Unlock dance. Shared by
 // `edit-config` and `dormant-edit`.
 //
 // The blob is presented bare (no hyphence typed-blob wrapper); the

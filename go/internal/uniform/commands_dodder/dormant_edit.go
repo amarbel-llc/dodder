@@ -39,10 +39,10 @@ func (cmd DormantEdit) Run(req command.Request) {
 	}
 
 	// dormant-edit edits dormant tags, which live inside the config blob;
-	// like edit-config it commits the result via UpdateKonfig, so mirror
-	// the additive config-log append here too. Capture the pre-edit digest
-	// as a stable clone (GetBlobDigest aliases the config sku metadata that
-	// Reset overwrites in place) so no-op edits can be skipped.
+	// like edit-config it records the result by appending to the config
+	// log. Capture the pre-edit digest as a stable clone (GetBlobDigest
+	// aliases the config sku metadata that Reset overwrites in place) so
+	// no-op edits can be skipped.
 	var previousDigest markl.Id
 	previousDigest.ResetWithMarklId(
 		localWorkingCopy.GetConfigStore().
@@ -85,13 +85,9 @@ func (cmd DormantEdit) Run(req command.Request) {
 		errors.MakeFuncContextFromFuncErr(localWorkingCopy.Unlock),
 	)
 
-	if _, err := localWorkingCopy.GetStore().UpdateKonfig(digest); err != nil {
-		localWorkingCopy.Cancel(err)
-		return
-	}
-
-	// Additive config-log append (UpdateKonfig still writes the konfig
-	// object above; a later task removes it). Skip no-op edits.
+	// Append the new config state to the repo-local config log. Config
+	// mutation is log-only: the konfig object is no longer written. Skip
+	// no-op edits.
 	if !markl.Equals(&previousDigest, digest) {
 		log := config_log.Make(
 			localWorkingCopy.GetEnvRepo(),

@@ -87,14 +87,9 @@ func (cmd EditConfig) Run(req command.Request) {
 		errors.MakeFuncContextFromFuncErr(localWorkingCopy.Unlock),
 	)
 
-	if _, err := localWorkingCopy.GetStore().UpdateKonfig(digest); err != nil {
-		localWorkingCopy.Cancel(err)
-		return
-	}
-
-	// Additively append the new config state to the repo-local config log
-	// (UpdateKonfig still writes the konfig object above; a later task
-	// removes it). Skip no-op edits so the log only records real changes.
+	// Append the new config state to the repo-local config log. Config
+	// mutation is log-only: the konfig object is no longer written. Skip
+	// no-op edits so the log only records real changes.
 	if !markl.Equals(&previousDigest, digest) {
 		log := config_log.Make(
 			localWorkingCopy.GetEnvRepo(),

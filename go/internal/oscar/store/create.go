@@ -5,13 +5,11 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
-	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func (store *Store) CreateOrUpdate(
@@ -32,62 +30,6 @@ func (store *Store) CreateOrUpdate(
 	}
 
 	return err
-}
-
-func (store *Store) createOrUpdateBlobDigest(
-	objectId domain_interfaces.ObjectId,
-	blobDigest mad_domain_interfaces.MarklId,
-) (object *sku.Transacted, err error) {
-	if !store.GetEnvRepo().GetLockSmith().IsAcquired() {
-		err = file_lock.ErrLockRequired{
-			Operation: fmt.Sprintf(
-				"create or update %s",
-				objectId.GetGenre(),
-			),
-		}
-
-		return object, err
-	}
-
-	var objectRepool interfaces.FuncRepool
-	object, objectRepool = sku.GetTransactedPool().GetWithRepool()
-
-	if err = object.GetObjectIdMutable().Set(objectId.String()); err != nil {
-		objectRepool()
-		object = nil
-
-		err = errors.Wrap(err)
-		return object, err
-	}
-
-	if err = store.ReadOneInto(objectId, object); err != nil {
-		objectRepool()
-		object = nil
-
-		if errors.IsErrNotFound(err) {
-			err = nil
-		} else {
-			err = errors.Wrap(err)
-			return object, err
-		}
-	}
-
-	object.SetBlobDigest(blobDigest)
-
-	if err = store.Commit(
-		object,
-		sku.CommitOptions{StoreOptions: sku.GetStoreOptionsUpdate()},
-	); err != nil {
-		objectRepool()
-		object = nil
-
-		err = errors.WrapExceptSentinel(err, errors.ErrExists)
-		return object, err
-	}
-
-	_ = objectRepool //repool:owned — ownership transfers to caller via returned object
-
-	return object, err
 }
 
 type RevertId struct {

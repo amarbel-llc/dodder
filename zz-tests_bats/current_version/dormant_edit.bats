@@ -15,33 +15,29 @@ teardown() {
 
 # bats file_tags=user_story:config
 
+# Config mutation is log-only (FDR 0020): dormant-edit no longer writes a
+# konfig object and is silent on success. Dormant tags live inside the
+# config blob, so the change is observed through the config surface.
 function dormant_edit_and_change { # @test
 	# EDITOR appends a TOML comment — semantically a no-op but the
-	# blob bytes change, so a new digest is announced.
+	# blob bytes change, so a new config state is appended to the log.
 	export EDITOR="bash -c 'echo \"# dormant-edit smoke comment\" >> \"\$0\"'"
 	run_dodder dormant-edit
 	assert_success
-	assert_output --regexp '^\[konfig @blake2b256-[a-z0-9]+ !toml-config-v2\]$'
+	assert_output ''
 
-	new_digest="${output##*@}"
-	new_digest="${new_digest%% *}"
-	[[ $new_digest != "$(get_konfig_sha)" ]] \
-		|| fail "konfig digest unchanged after dormant-edit (got $new_digest)"
-
-	# Round-trip: the next MakeLocalWorkingCopy call invokes
-	# loadMutableConfigBlob on the new blob. If the editor flow wrote
-	# bytes the load path can't decode, this `show` fails.
-	run_dodder show +konfig
+	# The change is observed through show-config (the config read
+	# surface); the legacy `show :konfig` query is removed in a later task.
+	run_dodder show-config
 	assert_success
-	assert_output --regexp '\[konfig @blake2b256-[a-z0-9]+ !toml-config-v2\]'
+	assert_line '# dormant-edit smoke comment'
 
-	# dormant-edit also appends the new config state to the config log
-	# (FDR 0020), so show-config -history lists the single new entry.
-	# Signatures and tai are non-deterministic; the blob digest matches
-	# the digest dormant-edit announced above.
+	# dormant-edit appends the new config state to the config log
+	# (FDR 0020), so show-config -history lists the new entry. The blob
+	# digest is content-addressed; tai and ed25519 signatures are not.
 	run_dodder show-config -history
 	assert_success
-	assert_output --regexp "^\[konfig @${new_digest} [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]\$"
+	assert_output --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
 }
 
 function dormant_edit_and_dont_change { # @test
