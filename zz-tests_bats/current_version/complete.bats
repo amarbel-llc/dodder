@@ -155,6 +155,7 @@ function complete_subcmd { # @test
 		^serve[[:space:]]+start the HTTP server$
 		^serve-proto[[:space:]]+serve the drtp remote transfer protocol \(websocket-capable\)$
 		^show[[:space:]]+display objects from the store$
+		^show-config[[:space:]]+read the repository configuration log$
 		^status[[:space:]]+show workspace object state$
 		^update[[:space:]]+update type lock signatures$
 		^version[[:space:]]+print dodder build version and commit$
