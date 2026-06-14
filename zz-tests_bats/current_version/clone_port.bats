@@ -147,4 +147,12 @@ function clone_over_http_unmodified_source { # @test
   run_dodder show-config
   assert_success
   refute_line '# clone-seed-marker'
+
+  # Seeding nonetheless occurred: the config log holds exactly two entries,
+  # the clone's genesis root plus the seeded source-config entry. The source
+  # and clone init with distinct keys, so their genesis config blobs differ
+  # and the equal-config skip never fires — seeding always appends one entry.
+  run_dodder show-config -history
+  assert_success
+  assert_equal "${#lines[@]}" 2
 }

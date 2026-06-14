@@ -470,8 +470,17 @@ func receiveClosure(
 				return err
 
 			default:
-				err = errors.Errorf("unexpected control frame %q", typeString)
-				return err
+				// RFC 0004 additive/horizontal versioning: new control
+				// types are additive and optional, so a receiver MUST skip
+				// any control frame it does not recognize rather than abort.
+				// This keeps an un-upgraded client compatible with an
+				// upgraded server (e.g. RFC 0005's drtp-config-v1). Log a
+				// diagnostic to stderr and continue the loop; the terminal
+				// ack/error frames above still drive normal termination.
+				env.GetUI().Printf(
+					"skipping unrecognized control frame %q",
+					typeString,
+				)
 			}
 
 		case frameKindObjects:

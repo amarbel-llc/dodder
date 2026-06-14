@@ -131,6 +131,11 @@ A client:
    content digest equals the descriptor's `blob-id` before seeding (content
    addressing; see RFC 0004 §Authentication). A mismatch MUST abort seeding
    with a diagnostic and MUST NOT append a config-log entry.
+4. that does not recognize the `drtp-config-v1` control type (an un-upgraded
+   client) MUST skip it and continue the session, per RFC 0004's additive
+   versioning of control message types. Thus an un-upgraded client tolerates
+   an upgraded server's unconditional send of `drtp-config-v1`; the frame is
+   ignored and the clone keeps its genesis-default config without aborting.
 
 ### HTTP Backend Transport
 

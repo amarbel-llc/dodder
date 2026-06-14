@@ -260,6 +260,17 @@ function clone_over_websocket_unmodified_source { # @test
   run_dodder show-config
   assert_success
   refute_line '# clone-seed-marker'
+
+  # Seeding nonetheless occurred: the config log holds exactly two entries,
+  # the clone's genesis root plus the seeded source-config entry. The source
+  # and clone init with distinct keys, so their genesis config blobs differ
+  # and the equal-config skip never fires over the wire — seeding always
+  # appends one entry. (The skip-when-equal path of Client Seeding mirrors
+  # the shipped direct-transfer seeding but is not bats-reachable here for
+  # that reason.)
+  run_dodder show-config -history
+  assert_success
+  assert_equal "${#lines[@]}" 2
 }
 
 # push_over_websocket exercises the inverse direction with mandatory client

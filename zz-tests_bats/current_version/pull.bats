@@ -546,6 +546,55 @@ function pull_history_zettels_no_conflict_no_blobs { # @test
   try_add_new_after_pull
 }
 
+# pull_does_not_seed_config_from_source is the RFC 0005 conformance test for
+# "Client Seeding, MUST NOT seed on pull": config is repo-local and a pull
+# must never adopt the remote's config. The source edits its config to a
+# distinctive marker; the puller then pulls objects from it and asserts its
+# own show-config does NOT contain the marker. The config log is repo-local
+# (.dodder/config_log), so the source and puller have independent config logs
+# even sharing one XDG home. Transport-independent (local override path here):
+# the client discards any config descriptor and never fetches config on pull.
+function pull_does_not_seed_config_from_source { # @test
+  them="them"
+  bootstrap_repo "$them"
+
+  # Edit the SOURCE's config to a distinctive marker so a wrongful seed
+  # would be detectable in the puller's config.
+  (
+    pushd "$them" >/dev/null || exit 1
+    export EDITOR="bash -c 'echo \"# pull-should-not-seed\" >> \"\$0\"'"
+    run_dodder edit-config
+    assert_success
+
+    run_dodder show-config
+    assert_success
+    assert_line '# pull-should-not-seed'
+  )
+
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+
+  run_dodder_init_disable_age
+
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
+
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
+		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
+	EOM
+
+  run_dodder pull /them +zettel,typ,etikett
+  assert_success
+
+  # The pull moved objects but MUST NOT have adopted the source's config:
+  # the marker the source appended is absent from the puller's config.
+  run_dodder show-config
+  assert_success
+  refute_line '# pull-should-not-seed'
+}
+
 function pull_direct_local_path_no_conflicts { # @test
   them="them"
   bootstrap_repo "$them"
