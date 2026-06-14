@@ -196,6 +196,14 @@ func (server *Server) makeRouter(
 			"GET",
 		)
 
+	router.HandleFunc(
+		"/config",
+		makeHandler(server.handleGetConfig),
+	).
+		Methods(
+			"GET",
+		)
+
 	{
 		router.HandleFunc(
 			"/blobs/{blob_id}",
@@ -1079,6 +1087,44 @@ func (server *Server) handlePostInventoryList(
 		server.Repo,
 		request,
 	)
+}
+
+// handleGetConfig serves the RFC-0005 config descriptor naming the
+// serving repo's current config-log head, so an HTTP-backend clone can
+// seed its config log. The config blob itself is fetched separately via
+// the existing blob route (GET /blobs/{id}); this descriptor only names
+// it. Returns 404 when the config log has no head blob (an empty or
+// genesis-default-only log offers nothing to seed), mirroring the drtp
+// server's silent no-offer (remote_proto.configDescriptor).
+func (server *Server) handleGetConfig(
+	request Request,
+) (response Response) {
+	configSku := server.Repo.GetConfigStore().GetConfig().GetSku()
+
+	blobDigest := configSku.GetBlobDigest()
+
+	if blobDigest == nil || blobDigest.IsNull() {
+		response.StatusCode = http.StatusNotFound
+		return response
+	}
+
+	descriptor := configDescriptorJSON{
+		BlobId:     blobDigest.String(),
+		ConfigType: configSku.GetType().String(),
+		Tai:        configSku.GetTai().String(),
+	}
+
+	var buffer bytes.Buffer
+
+	if err := json.NewEncoder(&buffer).Encode(descriptor); err != nil {
+		response.Error(err)
+		return response
+	}
+
+	response.Headers().Set("Content-Type", "application/json; charset=utf-8")
+	response.Body = ohio.NopCloser(&buffer)
+
+	return response
 }
 
 func (server *Server) handleGetConfigImmutable(

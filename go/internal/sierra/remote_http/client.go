@@ -3,6 +3,7 @@ package remote_http
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -332,4 +333,86 @@ func (client *client) ReadObjectHistory(
 	oid *ids.ObjectId,
 ) (skus []*sku.Transacted, err error) {
 	panic(errors.Err501NotImplemented)
+}
+
+// configDescriptorJSON is the wire shape of the RFC-0005 GET /config
+// response: the serving repo's current config-log head, naming a config
+// TOML blob (fetched separately via the blob route) and its type. Shared
+// by the server handler and the client fetch so the two stay in lockstep.
+type configDescriptorJSON struct {
+	BlobId     string `json:"blob-id"`
+	ConfigType string `json:"config-type"`
+	Tai        string `json:"tai,omitempty"`
+}
+
+// ConfigDescriptor is the parsed RFC-0005 config descriptor a clone over
+// the HTTP backend fetches from the source to seed its config log. It is
+// the empty zero value (BlobId == "") when the server offered none.
+type ConfigDescriptor struct {
+	BlobId     string
+	ConfigType string
+	Tai        string
+}
+
+// FetchConfigDescriptor issues GET /config against an HTTP remote and
+// returns the source's config descriptor (RFC 0005 §HTTP Backend
+// Transport). A 404 — or a server that does not route /config — means "no
+// config offered" and yields the zero descriptor with offered == false and
+// no error, so the clone keeps its genesis default. The remote MUST be the
+// concrete HTTP client this package returns (a clone over the http backend
+// always is); any other repo type yields offered == false.
+func FetchConfigDescriptor(
+	remote repo.Repo,
+) (descriptor ConfigDescriptor, offered bool, err error) {
+	httpClient, ok := remote.(*client)
+	if !ok {
+		return descriptor, false, err
+	}
+
+	var request *http.Request
+
+	if request, err = httpClient.newRequest(
+		"GET",
+		"/config",
+		nil,
+	); err != nil {
+		err = errors.Wrap(err)
+		return descriptor, false, err
+	}
+
+	var response *http.Response
+
+	if response, err = httpClient.http.Do(request); err != nil {
+		err = errors.ErrorWithStackf("failed to read response: %w", err)
+		return descriptor, false, err
+	}
+
+	defer errors.DeferredCloser(&err, response.Body)
+
+	// A server predating RFC 0005 has no /config route (mux 404s the
+	// unknown path) and a server with an empty config log returns 404
+	// explicitly; both mean "no config offered".
+	if response.StatusCode == http.StatusNotFound {
+		return descriptor, false, err
+	}
+
+	if err = ReadErrorFromBodyOnNot(response, http.StatusOK); err != nil {
+		err = errors.Wrap(err)
+		return descriptor, false, err
+	}
+
+	var wire configDescriptorJSON
+
+	if err = json.NewDecoder(response.Body).Decode(&wire); err != nil {
+		err = errors.Wrapf(err, "decoding config descriptor")
+		return descriptor, false, err
+	}
+
+	descriptor = ConfigDescriptor{
+		BlobId:     wire.BlobId,
+		ConfigType: wire.ConfigType,
+		Tai:        wire.Tai,
+	}
+
+	return descriptor, true, err
 }

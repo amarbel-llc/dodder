@@ -50,3 +50,101 @@ function clone_history_zettel_type_tag_port { # @test
 
   try_add_new_after_clone
 }
+
+# clone_over_http_seeds_config_from_source exercises RFC 0005 §HTTP Backend
+# Transport: the source edits its config to a distinctive marker and serves
+# it over HTTP; a clone over http:// fetches the source's config descriptor
+# (GET /config) and the named config blob (GET /blobs/{id}), then adopts that
+# config as a new config-log entry signed by the clone's own key. Config is
+# repo-local and never carried by the object transfer, so without seeding the
+# clone would keep its genesis default. Source and clone use separate XDG
+# homes so the clone genuinely has its own config log.
+function clone_over_http_seeds_config_from_source { # @test
+  local them_home="$BATS_TEST_TMPDIR/them-home"
+  local us_home="$BATS_TEST_TMPDIR/us-home"
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  mkdir -p them
+  (
+    pushd them || exit 1
+    run_dodder_init -repo_id . "test-repo-id-them"
+
+    export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
+    run_dodder edit-config
+    assert_success
+    # edit-config prints the appended config entry as commit
+    # confirmation; the blob digest is content-addressed.
+    assert_output '[konfig @blake2b256-0rc375uej7v4jjqv6xv3ywtc5nfc7cs5vmyh77wghcy3day0676q2ngalx !toml-config-v2]'
+
+    run_dodder show-config
+    assert_success
+    assert_line '# clone-seed-marker'
+  )
+
+  # start_server's coproc inherits them_home from the env at fork time, so
+  # the server keeps serving them even after the parent switches to us_home.
+  start_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_clone_default_with \
+    test-repo-id-us \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  run_dodder show-config
+  assert_success
+  assert_line '# clone-seed-marker'
+}
+
+# clone_over_http_unmodified_source confirms a clone from a source that never
+# edited its config still succeeds and lands a working, marker-free config
+# (RFC 0005 "MUST tolerate" the ordinary case). The source serves its genesis
+# config; the clone fetches and seeds it, but it carries no edit marker.
+function clone_over_http_unmodified_source { # @test
+  local them_home="$BATS_TEST_TMPDIR/them-home"
+  local us_home="$BATS_TEST_TMPDIR/us-home"
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  bootstrap them
+
+  start_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_clone_default_with \
+    test-repo-id-us \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  # The transferred zettel is present, so the clone is a usable repo.
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+	EOM
+
+  # The config carries no edit marker: the source never edited its config,
+  # so nothing spurious was seeded.
+  run_dodder show-config
+  assert_success
+  refute_line '# clone-seed-marker'
+}

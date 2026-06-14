@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
+	"code.linenisgreat.com/dodder/go/internal/sierra/remote_http"
 	"code.linenisgreat.com/dodder/go/internal/sierra/remote_proto"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
@@ -133,7 +134,89 @@ func (cmd Clone) Run(req command.Request) {
 		cmd.seedConfigFromDirectSource(req, local, remote)
 	} else if useProto {
 		cmd.seedConfigFromNetworkTransfer(req, local, networkConfigDescriptor)
+	} else {
+		// Legacy HTTP backend: the transfer does not carry config (config is
+		// not an object), so the clone fetches the source's config descriptor
+		// over GET /config and the named config blob over the blob route, then
+		// seeds from it (RFC 0005 §HTTP Backend Transport).
+		cmd.seedConfigFromHTTPSource(req, local, remote)
 	}
+}
+
+// seedConfigFromHTTPSource seeds the clone's config log from an HTTP-backend
+// source (RFC 0005 §HTTP Backend Transport). Unlike drtp, the HTTP transfer
+// never carries the config blob (config is not an object), so this first
+// fetches the source's config descriptor (GET /config; a 404 or unrouted
+// /config means "no config offered" and is a silent no-op), then copies the
+// named config blob into the clone's default blob store via the existing blob
+// route. It then delegates to the shared seedConfigFromNetworkTransfer, which
+// confirms the blob landed, verifies its digest, and appends the clone-signed
+// entry. Failure to fetch the descriptor or blob is surfaced as a diagnostic
+// and never fails the object clone (RFC 0005 §Errors).
+func (cmd Clone) seedConfigFromHTTPSource(
+	req command.Request,
+	local *local_working_copy.Repo,
+	remote repo.Repo,
+) {
+	descriptor, offered, err := remote_http.FetchConfigDescriptor(remote)
+	if err != nil {
+		local.GetUI().Printf("skipping config seed: %s", err)
+		return
+	}
+
+	// No config offered (server predates RFC 0005, routes no /config, or has
+	// an empty config log). Keep the genesis default silently.
+	if !offered {
+		return
+	}
+
+	var sourceDigest markl.Id
+
+	if err := sourceDigest.Set(descriptor.BlobId); err != nil {
+		local.GetUI().Printf(
+			"skipping config seed: unparseable config blob-id %q: %s",
+			descriptor.BlobId,
+			err,
+		)
+		return
+	}
+
+	// The HTTP transfer does not fold the config blob into the closure, so
+	// copy it from the source's blob store (GET /blobs/{id}) into the clone's
+	// default blob store. The store is content-addressed, so the written blob
+	// keeps sourceDigest; CopyBlobIfNecessary verifies the digest on copy.
+	localBlobStore := local.GetEnvRepo().GetDefaultBlobStore()
+
+	copyResult := blob_stores.CopyBlobIfNecessary(
+		local.GetEnv(),
+		localBlobStore,
+		remote.GetBlobStore(),
+		&sourceDigest,
+		nil,
+		localBlobStore.GetDefaultHashType(),
+	)
+
+	if err := copyResult.GetError(); err != nil {
+		local.GetUI().Printf(
+			"skipping config seed: copying source config blob %s: %s",
+			&sourceDigest,
+			err,
+		)
+		return
+	}
+
+	// Delegate to the shared seeder: the config blob is now present locally,
+	// so it confirms presence, skips when equal to the clone's head, and
+	// appends the clone-signed entry.
+	cmd.seedConfigFromNetworkTransfer(
+		req,
+		local,
+		remote_proto.ConfigDescriptor{
+			BlobId:     descriptor.BlobId,
+			ConfigType: descriptor.ConfigType,
+			Tai:        descriptor.Tai,
+		},
+	)
 }
 
 // seedConfigFromNetworkTransfer appends the source repo's current config as
