@@ -40,6 +40,10 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyWithOptions(
 ) *local_working_copy.Repo {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
+	if err := config.RepoId.CheckPrototypeSupported(); err != nil {
+		req.Cancel(err)
+	}
+
 	ownDir := env_dir.MakeDefault(
 		req,
 		dodder_env.XDGUtilityName,
@@ -51,6 +55,14 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyWithOptions(
 		XDGUtilityNameMadder,
 		config.Debug,
 	)
+
+	// FDR-0019: nest the dodder metadata tree under repos/<name>/ so
+	// reads resolve the same named repo that genesis wrote. The cwd /
+	// user scope itself is still selected by env_dir's walk-up as
+	// before; only the repos/<name>/ suffix is layered on here.
+	if name := config.RepoId.GetName(); name != "" {
+		ownDir = env_dir.NestUnderRepoName(req, ownDir, name, config.Debug)
+	}
 
 	if envOptions.CustomOut == nil && config.CustomOut != nil {
 		envOptions.CustomOut = config.CustomOut
