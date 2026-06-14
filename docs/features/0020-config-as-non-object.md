@@ -56,12 +56,16 @@ Genre byte 5 remains reserved and decodable for old store versions
 only.
 
 Sync: config is repo-local; push/pull do not transfer it. Clone seeds
-guidance: the source's latest config blob and head entry are copied
-into the new repo's config log. The copied entry verifies against the
-source's embedded pubkey; its mother references an entry the clone
-lacks — a dangling, shallow-style pointer reported as "history
-continues in the source repo". Later local edits sign with the local
-key, chaining from the copied entry.
+guidance: the new repo copies the source's current config blob into its
+store and appends a config-log entry referencing it — typed with the
+source's config type, timestamped with the clone's own clock, and signed
+with the **clone's** key, chained onto the clone's genesis-default root
+(the clone adopts the source's config *content* but owns the entry). A
+no-op is skipped when the source config equals the clone's head. This
+works for a direct (local-path) clone and, via RFC 0005, for network
+clones over both the drtp/WebSocket protocol and the legacy HTTP backend;
+`pull` never seeds. Clone over a transport whose peer does not offer
+config seeding keeps the genesis default.
 
 Migration: no store version bump is required — the change is
 backward-compatible. An old repo with no config log reads its config
