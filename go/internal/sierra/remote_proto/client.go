@@ -47,13 +47,25 @@ func (client *Client) selfCaps() selfCaps {
 	}
 }
 
+// ConfigDescriptor is the RFC-0005 config-log head a fetch server may
+// offer (its blob-id, the config blob's own type, and an informative
+// source timestamp). Fetch surfaces it so a clone can seed its config log;
+// it is the empty zero value (BlobId == "") when the server offered none.
+type ConfigDescriptor struct {
+	BlobId     string
+	ConfigType string
+	Tai        string
+}
+
 // Fetch pulls every object matching query (and its expand-edges closure)
-// from the peer on conn into the local repo. Closes conn when done.
+// from the peer on conn into the local repo. Closes conn when done. It
+// returns the source's config descriptor when the server offered one (RFC
+// 0005); a clone uses it to seed config, a pull ignores it.
 func (client *Client) Fetch(
 	conn io.ReadWriteCloser,
 	query string,
 	options repo.ImporterOptions,
-) (err error) {
+) (descriptor ConfigDescriptor, err error) {
 	s := makeSession(conn)
 	defer errors.DeferredCloser(&err, s)
 
@@ -66,7 +78,7 @@ func (client *Client) Fetch(
 		client.PinnedPublicKey,
 	); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return descriptor, err
 	}
 
 	var want control
@@ -78,13 +90,15 @@ func (client *Client) Fetch(
 		ExcludeBlobs:        options.ExcludeBlobs,
 	}); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return descriptor, err
 	}
 
 	if err = s.writeControl(TypeWant, want); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return descriptor, err
 	}
+
+	var configFrame control
 
 	if err = receiveClosure(
 		client.env,
@@ -92,12 +106,19 @@ func (client *Client) Fetch(
 		client.local,
 		want,
 		sku.GetStoreOptionsImport(),
+		&configFrame,
 	); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return descriptor, err
 	}
 
-	return err
+	descriptor = ConfigDescriptor{
+		BlobId:     configFrame.BlobId,
+		ConfigType: configFrame.ConfigType,
+		Tai:        configFrame.ConfigTai,
+	}
+
+	return descriptor, err
 }
 
 // Push sends every local object matching query (and its closure) to the
@@ -146,6 +167,7 @@ func (client *Client) Push(
 		client.local.GetEnvRepo(),
 		want,
 		negotiateCompression(serverCaps.Compression),
+		nil, // config is never pushed (RFC 0005)
 	); err != nil {
 		err = errors.Wrap(err)
 		return err

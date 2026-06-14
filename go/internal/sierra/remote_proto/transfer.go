@@ -27,6 +27,11 @@ import (
 // transitive closure with the type system's edge explorer, then streams the
 // closure to the peer: blobs first (so the receiver imports against blobs
 // already on disk), then the object batch, then a completion ack.
+// configDescriptor, when non-nil, is sent by a fetch server after
+// have-negotiation as the RFC-0005 drtp-config-v1 control frame, and its
+// named config blob is folded into the transfer's blob set even though no
+// transferred object references it. It is nil on push (config is never
+// pushed) and nil on a fetch whose config log is empty.
 func sendClosure(
 	env env_ui.Env,
 	s *session,
@@ -35,6 +40,7 @@ func sendClosure(
 	envAdder interfaces.EnvVarsAdder,
 	want control,
 	compression string,
+	configDescriptor *control,
 ) (err error) {
 	var queryGroup *queries.Query
 
@@ -91,6 +97,20 @@ func sendClosure(
 
 	if !want.ExcludeBlobs {
 		manifest = gatherBlobDigests(readBlobStore, list, edges)
+
+		// RFC 0005: fold the config-log head blob into the transfer's
+		// blob set so it streams via the ordinary manifest/have/blob
+		// mechanism, even though no transferred object references it. The
+		// clone seeds its config log from it after the closure arrives.
+		// Skip silently if the blob is not locally present (an incomplete
+		// closure must not fail the object transfer).
+		if configDescriptor != nil {
+			manifest = appendConfigBlob(
+				readBlobStore,
+				manifest,
+				configDescriptor.BlobId,
+			)
+		}
 	}
 
 	if err = s.writeControl(TypeManifest, control{Blobs: manifest}); err != nil {
@@ -122,12 +142,57 @@ func sendClosure(
 		return err
 	}
 
+	// RFC 0005: name the config-log head after the blob carrying it has
+	// streamed and before the terminal ack, so a clone client can capture
+	// the descriptor and seed. Only sent on a fetch with a non-empty
+	// config log (configDescriptor non-nil).
+	if configDescriptor != nil {
+		if err = s.writeControl(TypeConfig, *configDescriptor); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	if err = s.writeControl(TypeAck, control{Status: StatusComplete}); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
 	return err
+}
+
+// appendConfigBlob folds the config-log head blob digest into the blob
+// manifest if it is present locally and not already advertised. A digest
+// the sender does not hold is skipped (the closure stays self-consistent;
+// the clone simply does not seed). A malformed digest is treated the same.
+func appendConfigBlob(
+	blobStore mad_domain_interfaces.BlobStore,
+	manifest []string,
+	blobId string,
+) []string {
+	if blobId == "" {
+		return manifest
+	}
+
+	var digest markl.Id
+
+	if err := digest.Set(blobId); err != nil {
+		return manifest
+	}
+
+	if !blobStore.HasBlob(&digest) {
+		return manifest
+	}
+
+	key := digest.String()
+
+	for _, existing := range manifest {
+		if existing == key {
+			return manifest
+		}
+	}
+
+	return append(manifest, key)
 }
 
 // gatherBlobDigests collects, deduplicated, every blob digest in the
@@ -292,12 +357,17 @@ func sendObjects(
 // completion ack: blob frames are written to the local store (and
 // digest-verified), the objects frame is imported through the ordinary
 // importer.
+// configDescriptorOut, when non-nil, receives the RFC-0005 config
+// descriptor if the sender sends a drtp-config-v1 frame. A clone passes a
+// non-nil pointer to capture the source's config-log head for seeding;
+// every other receiver (pull, push) passes nil and the frame is discarded.
 func receiveClosure(
 	env env_ui.Env,
 	s *session,
 	dst *local_working_copy.Repo,
 	want control,
 	storeOptions sku.StoreOptions,
+	configDescriptorOut *control,
 ) (err error) {
 	// Read have-checks span every read store (FDR-0015) so blobs already
 	// held in an ancestor/XDG store are not re-requested; writes still land
@@ -378,6 +448,16 @@ func receiveClosure(
 				if err = recvBlob(s, writeBlobStore, msg); err != nil {
 					err = errors.Wrap(err)
 					return err
+				}
+
+			case "!" + TypeConfig:
+				// RFC 0005: capture the source's config-log head for a
+				// clone to seed from. A receiver that does not want it
+				// (pull, push) passes a nil out-param and discards the
+				// frame. The blob itself arrives via the normal blob
+				// stream (digest-verified on receipt).
+				if configDescriptorOut != nil {
+					*configDescriptorOut = msg
 				}
 
 			case "!" + TypeAck:

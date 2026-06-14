@@ -164,6 +164,104 @@ function clone_over_websocket { # @test
 	EOM
 }
 
+# clone_over_websocket_seeds_config_from_source exercises RFC 0005 over the
+# drtp websocket transport: the source edits its config to a distinctive
+# marker, serves it, and a clone over ws:// adopts that config as a new
+# config-log entry signed by the clone's own key (config is repo-local and
+# never pulled, so without seeding the clone would keep its genesis
+# default). The source names its config-log head in a drtp-config-v1 control
+# frame and streams the config blob in the closure; the clone seeds from it.
+function clone_over_websocket_seeds_config_from_source { # @test
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  mkdir -p them
+  (
+    pushd them || exit 1
+    run_dodder_init -repo_id . "test-repo-id-them"
+
+    export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
+    run_dodder edit-config
+    assert_success
+    # edit-config prints the appended config entry as commit
+    # confirmation; the blob digest is content-addressed.
+    assert_output '[konfig @blake2b256-0rc375uej7v4jjqv6xv3ywtc5nfc7cs5vmyh77wghcy3day0676q2ngalx !toml-config-v2]'
+
+    run_dodder show-config
+    assert_success
+    assert_line '# clone-seed-marker'
+  )
+
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder clone \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id . \
+    -remote-connection-type url-websocket \
+    test-repo-id-us \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  run_dodder show-config
+  assert_success
+  assert_line '# clone-seed-marker'
+}
+
+# clone_over_websocket_unmodified_source confirms a clone from a source that
+# never edited its config still succeeds and lands a working, marker-free
+# config (RFC 0005 "MUST tolerate" the ordinary case). The transferred
+# config holds no edit marker because the source never appended one; the
+# clone adopts the source's genesis config content (the source and clone
+# init with different keys, so their genesis config blobs differ and the
+# equal-config skip does not apply, but the seeded config carries no marker).
+function clone_over_websocket_unmodified_source { # @test
+  bootstrap_them
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder clone \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id . \
+    -remote-connection-type url-websocket \
+    test-repo-id-us \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  # The transferred zettel is present, so the clone is a usable repo.
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+	EOM
+
+  # The config carries no edit marker: the source never edited its config,
+  # so nothing spurious was seeded.
+  run_dodder show-config
+  assert_success
+  refute_line '# clone-seed-marker'
+}
+
 # push_over_websocket exercises the inverse direction with mandatory client
 # attestation (the server is NOT -public): a zettel created in `us` is
 # pushed to `them` over ws://.

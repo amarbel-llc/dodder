@@ -56,10 +56,18 @@ type control struct {
 	Objects   []string `json:"objects,omitempty"`
 	HaveBlobs []string `json:"have_blobs,omitempty"`
 
-	// blob_header
+	// blob_header (also reused by the config descriptor's blob-id)
 	BlobId      string `json:"blob_id,omitempty"`
 	BlobLength  int64  `json:"blob_length,omitempty"`
 	Compression string `json:"compression,omitempty"`
+
+	// config (RFC 0005 config descriptor): BlobId above names the source
+	// config-log head blob; ConfigType is that blob's own type so the
+	// clone's store_config bootstrap can decode it; ConfigTai is the
+	// source head's timestamp, informative provenance only (the clone
+	// stamps its seeded entry with its own clock).
+	ConfigType string `json:"config_type,omitempty"`
+	ConfigTai  string `json:"tai,omitempty"`
 
 	// ack
 	Status string `json:"status,omitempty"`
@@ -114,6 +122,7 @@ func makeControlBlobCoders() map[string]interfaces.CoderBufferedReadWriter[*cont
 		TypeBlobHeader,
 		TypeAck,
 		TypeError,
+		TypeConfig,
 	} {
 		// Key on exactly what TypedBlob.Type.String() will produce so the
 		// lookup in CoderTypeMapWithoutType matches regardless of the

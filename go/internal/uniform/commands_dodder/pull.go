@@ -99,7 +99,9 @@ func (cmd Pull) Run(req command.Request) {
 			object,
 		)
 
-		if err := client.Fetch(
+		// A pull discards any RFC-0005 config descriptor the server
+		// offers: config is seeded only at clone time, never on pull.
+		if _, err := client.Fetch(
 			conn,
 			qg.String(),
 			cmd.WithPrintCopies(true),

@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
+	"code.linenisgreat.com/dodder/go/internal/sierra/remote_proto"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
@@ -99,15 +100,19 @@ func (cmd Clone) Run(req command.Request) {
 		req.PopArgs(),
 	)
 
+	var networkConfigDescriptor remote_proto.ConfigDescriptor
+
 	if useProto {
 		conn, client := cmd.MakeProtoConnectionFromObject(req, local, remoteObject)
 
-		if err := client.Fetch(
+		var fetchErr error
+
+		if networkConfigDescriptor, fetchErr = client.Fetch(
 			conn,
 			queryGroup.String(),
 			cmd.WithPrintCopies(true),
-		); err != nil {
-			req.Cancel(err)
+		); fetchErr != nil {
+			req.Cancel(fetchErr)
 		}
 	} else if err := local.PullQueryGroupFromRemote(
 		remote,
@@ -120,10 +125,106 @@ func (cmd Clone) Run(req command.Request) {
 	// Config is repo-local (FDR 0020): pull never transfers it, so a fresh
 	// clone would otherwise carry only its own genesis-default config. For a
 	// direct (local-path) transfer the source is opened locally, so seed the
-	// clone's config log from the source's current config here. Websocket /
-	// http transfer is a deliberate follow-up.
+	// clone's config log from the source's current config here. Over the drtp
+	// (websocket) protocol the source instead names its config-log head in a
+	// drtp-config-v1 control frame and streams the config blob in the closure
+	// (RFC 0005); seed from that descriptor.
 	if cmd.IsDirectTransfer() {
 		cmd.seedConfigFromDirectSource(req, local, remote)
+	} else if useProto {
+		cmd.seedConfigFromNetworkTransfer(req, local, networkConfigDescriptor)
+	}
+}
+
+// seedConfigFromNetworkTransfer appends the source repo's current config as
+// a new entry on the clone's config log, signed by the clone's own key,
+// from the RFC-0005 descriptor a drtp fetch server offered. The config TOML
+// blob itself already arrived over the normal blob stream (digest-verified
+// on receipt), so this only confirms it landed locally and records the
+// entry. Failure to seed is surfaced as a diagnostic and never fails the
+// object clone — a clone with default config is a valid repository (RFC
+// 0005 §Errors). An absent descriptor (old server, empty config log) is a
+// no-op.
+func (cmd Clone) seedConfigFromNetworkTransfer(
+	req command.Request,
+	local *local_working_copy.Repo,
+	descriptor remote_proto.ConfigDescriptor,
+) {
+	// Absent descriptor: the server offered no config (predates RFC 0005 or
+	// has an empty config log). Keep the genesis default silently.
+	if descriptor.BlobId == "" {
+		return
+	}
+
+	var sourceDigest markl.Id
+
+	if err := sourceDigest.Set(descriptor.BlobId); err != nil {
+		local.GetUI().Printf(
+			"skipping config seed: unparseable config blob-id %q: %s",
+			descriptor.BlobId,
+			err,
+		)
+		return
+	}
+
+	var configType ids.Type
+
+	if parsedType, err := ids.MakeType(descriptor.ConfigType); err != nil {
+		local.GetUI().Printf(
+			"skipping config seed: unparseable config-type %q: %s",
+			descriptor.ConfigType,
+			err,
+		)
+		return
+	} else {
+		configType = parsedType.ToType()
+	}
+
+	// The config blob arrives in the transferred closure's blob set. If it
+	// is not present locally the closure was incomplete; seeding cannot
+	// reference a blob the clone does not hold.
+	if !local.GetEnvRepo().GetReadBlobStore().HasBlob(&sourceDigest) {
+		local.GetUI().Printf(
+			"skipping config seed: config blob %s not present after transfer",
+			&sourceDigest,
+		)
+		return
+	}
+
+	// Skip when the source config matches the clone's current head: the
+	// genesis root already records the identical config blob.
+	var cloneDigest markl.Id
+	cloneDigest.ResetWithMarklId(
+		local.GetConfigStore().GetConfig().GetSku().GetBlobDigest(),
+	)
+
+	if markl.Equals(&cloneDigest, &sourceDigest) {
+		return
+	}
+
+	log := config_log.Make(
+		local.GetEnvRepo(),
+		command_components_dodder.InventoryLists{}.MakeInventoryListCoderCloset(
+			local.GetEnvRepo(),
+		),
+	)
+
+	lockSmith := local.GetEnvRepo().GetLockSmith()
+
+	if err := lockSmith.Lock(); err != nil {
+		local.GetUI().Printf("skipping config seed: %s", err)
+		return
+	}
+
+	defer local.Must(errors.MakeFuncContextFromFuncErr(lockSmith.Unlock))
+
+	if err := log.Append(
+		&sourceDigest,
+		configType,
+		local.GetStore().GetTai(),
+	); err != nil {
+		local.GetUI().Printf("skipping config seed: %s", err)
+		return
 	}
 }
 

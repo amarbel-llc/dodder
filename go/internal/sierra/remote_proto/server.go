@@ -58,6 +58,27 @@ func (server *Server) selfCaps() selfCaps {
 	}
 }
 
+// configDescriptor builds the RFC-0005 drtp-config-v1 descriptor naming
+// the serving repo's current config-log head, for a fetch to offer config
+// seeding. It returns nil when the config log has no head blob (an empty
+// or genesis-default-only log offers nothing to seed), so the fetch
+// behaves exactly as before — no frame, no folded blob.
+func (server *Server) configDescriptor() *control {
+	configSku := server.Repo.GetConfigStore().GetConfig().GetSku()
+
+	blobDigest := configSku.GetBlobDigest()
+
+	if blobDigest == nil || blobDigest.IsNull() {
+		return nil
+	}
+
+	return &control{
+		BlobId:     blobDigest.String(),
+		ConfigType: configSku.GetType().String(),
+		ConfigTai:  configSku.GetTai().String(),
+	}
+}
+
 // ServeConn runs a single drtp session over conn. The caller owns conn's
 // lifetime; ServeConn does not close it (the transport layer that produced
 // conn does).
@@ -99,6 +120,7 @@ func (server *Server) serveSession(s *session) (err error) {
 			server.Repo.GetEnvRepo(),
 			want,
 			negotiateCompression(clientCaps.Compression),
+			server.configDescriptor(),
 		); err != nil {
 			s.writeError(err.Error(), 500)
 			err = errors.Wrap(err)
@@ -106,13 +128,15 @@ func (server *Server) serveSession(s *session) (err error) {
 		}
 
 	case DirectionPush:
-		// The client pushes: the server is the receiver.
+		// The client pushes: the server is the receiver. Config is never
+		// pushed (RFC 0005), so no descriptor is captured.
 		if err = receiveClosure(
 			env,
 			s,
 			server.Repo,
 			want,
 			sku.GetStoreOptionsRemoteTransfer(),
+			nil,
 		); err != nil {
 			s.writeError(err.Error(), 500)
 			err = errors.Wrap(err)

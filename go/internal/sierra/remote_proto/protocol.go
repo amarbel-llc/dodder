@@ -48,6 +48,12 @@ const (
 	TypeBlobHeader   = "drtp-blob_header-v1"
 	TypeAck          = "drtp-ack-v1"
 	TypeError        = "drtp-error-v1"
+	// TypeConfig carries a config descriptor (RFC 0005): the serving
+	// repo's config-log head, sent during a fetch so a clone can seed its
+	// own config log from the source. Optional and negotiated — a server
+	// with an empty config log, or one that predates this affordance,
+	// sends none and the clone keeps its genesis default.
+	TypeConfig = "drtp-config-v1"
 )
 
 // Transfer directions carried in a want frame. Fetch makes the server the
