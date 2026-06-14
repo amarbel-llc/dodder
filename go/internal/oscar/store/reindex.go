@@ -177,7 +177,7 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 	store.envRepo.GetUI().Print("objects with errors:")
 
 	for _, objectWithError := range objectsWithErrors {
-		ui.CLIErrorTreeEncoder.EncodeTo(err, store.envRepo.GetUI())
+		ui.CLIErrorTreeEncoder.EncodeTo(objectWithError.error, store.envRepo.GetUI())
 
 		if objectWithError.Object == nil {
 			store.envRepo.GetUI().Printf(
