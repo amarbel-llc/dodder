@@ -188,6 +188,15 @@ func (env *Env) writeBlobStoreConfigIfNecessary(
 		directoryLayout,
 	).GetConfig()
 
+	// FDR-0019: named repos share the default (madder) blob store, so
+	// the config may already exist when a second named repo is
+	// initialized in the same scope. Reuse it rather than failing the
+	// exclusive write below. Legacy single-repo inits never hit this
+	// path — their blob store tree is unique per repo.
+	if files.Exists(blobStoreConfigPath) {
+		return
+	}
+
 	blobStoreConfigDir := filepath.Dir(blobStoreConfigPath)
 
 	if err := env.MakeDirs(blobStoreConfigDir); err != nil {

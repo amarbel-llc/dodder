@@ -25,19 +25,24 @@ func (cmd EnvRepo) MakeEnvRepo(
 ) env_repo.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
+	if err := config.RepoId.CheckPrototypeSupported(); err != nil {
+		req.Cancel(err)
+	}
+
 	var ownDir, madderDir mad_env_dir.Env
 	if config.RepoId.IsCwd() || config.RepoId.IsSystem() {
+		madRepoId := config.RepoId.GetMad()
 		ownDir = env_dir.MakeDefaultAndInitialize(
 			req,
 			dodder_env.XDGUtilityName,
 			config.Debug,
-			config.RepoId,
+			madRepoId,
 		)
 		madderDir = env_dir.MakeDefaultAndInitialize(
 			req,
 			XDGUtilityNameMadder,
 			config.Debug,
-			config.RepoId,
+			madRepoId,
 		)
 	} else {
 		ownDir = env_dir.MakeDefault(
@@ -50,6 +55,13 @@ func (cmd EnvRepo) MakeEnvRepo(
 			XDGUtilityNameMadder,
 			config.Debug,
 		)
+	}
+
+	// FDR-0019: nest the dodder metadata tree under repos/<name>/ so
+	// named repos coexist per scope. The blob store stays shared (see
+	// env_dir.NestUnderRepoName).
+	if name := config.RepoId.GetName(); name != "" {
+		ownDir = env_dir.NestUnderRepoName(req, ownDir, name, config.Debug)
 	}
 
 	envUI := env_ui.Make(

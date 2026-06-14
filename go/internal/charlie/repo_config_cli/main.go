@@ -6,15 +6,15 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Config struct {
 	config_cli.Config
 	BasePath string
-	RepoId   mad_env_dir.RepoId
+	RepoId   repo_id.Id
 
 	IgnoreHookErrors bool
 	Hooks            string
@@ -85,7 +85,12 @@ func (config *Config) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) 
 
 	flagSet.Var(&config.Description, "comment", "Comment for inventory list")
 
-	flagSet.Var(&config.RepoId, "repo_id", "repo location: . (cwd) or / (system)")
+	flagSet.Var(
+		&config.RepoId,
+		"repo_id",
+		"repo location: name (user), .name (cwd), //name (system), "+
+			"or bare . / for the legacy nameless scopes",
+	)
 }
 
 func Default() (config *Config) {
@@ -126,7 +131,7 @@ func (config Config) GetIgnoreWorkspace() bool {
 	return config.IgnoreWorkspace
 }
 
-func (config Config) GetRepoId() mad_env_dir.RepoId {
+func (config Config) GetRepoId() repo_id.Id {
 	return config.RepoId
 }
 

@@ -116,19 +116,30 @@ func (cmd Genesis) OnTheFirstDay(
 
 	cmd.GenesisConfig.Blob.SetRepoId(repoId)
 
+	if err := config.RepoId.CheckPrototypeSupported(); err != nil {
+		envUI.Cancel(err)
+	}
+
+	madRepoId := config.RepoId.GetMad()
+
 	ownDir := env_dir.MakeDefaultAndInitialize(
 		req,
 		dodder_env.XDGUtilityName,
 		config.Debug,
-		config.RepoId,
+		madRepoId,
 	)
 
 	madderDir := env_dir.MakeDefaultAndInitialize(
 		req,
 		XDGUtilityNameMadder,
 		config.Debug,
-		config.RepoId,
+		madRepoId,
 	)
+
+	// FDR-0019: nest the dodder metadata tree under repos/<name>/.
+	if name := config.RepoId.GetName(); name != "" {
+		ownDir = env_dir.NestUnderRepoName(req, ownDir, name, config.Debug)
+	}
 
 	var envRepo env_repo.Env
 
