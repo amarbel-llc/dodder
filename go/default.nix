@@ -262,6 +262,14 @@ let
   # gofumpt/gotools are the same igloo `pkgs` builds the dev-shell carries,
   # so the Go output matches the dev-loop formatter. null on the non-flake
   # `import ./go/default.nix` path (treelint absent).
+  # tommy's conformist codegen linter driver ([linter.tommy-codegen]), owned by
+  # the tommy flake so the pinned tommy input resolves which tommy backs it (no
+  # per-repo driver duplication). It bakes that tommy in and skips when go is
+  # absent. Regenerates the *_tommy.go companions so they land in the
+  # `conformist --commit` chore; `just build-go-generate` remains the
+  # NATO-ordered regen path.
+  tommyCodegen = tommy.packages.${system}.conformist-tommy-codegen;
+
   treelint-fmt =
     if treelint == null then
       null
@@ -275,6 +283,13 @@ let
           pkgs.nixfmt
           pkgs.shfmt
           pkgs.shellcheck
+          # tommy (TOML formatter, [formatter.tommy]) + go + the codegen driver
+          # ([linter.tommy-codegen]), so the wrapper resolves the formatter and
+          # the codegen repair regen. go is needed by `tommy generate`'s
+          # go/packages analysis in repair mode.
+          tommy.packages.${system}.default
+          pkgs.go_1_26
+          tommyCodegen
         ];
         text = ''exec conformist "$@"'';
       };
