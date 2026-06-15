@@ -79,8 +79,12 @@ excludes = ["go/vimdiff.bash"]
 # committed file once it is re-run through gofumpt (see `just build-go-generate`
 # / `codemod-go-fmt`); true staleness stays gated by that recipe.
 # passes-files=false: the driver walks the tree for the directive itself.
+# `*.go` alone covers every depth: conformist compiles globs via
+# gobwas/glob.Compile with no separator arg, so `*` matches across `/` (same
+# single-pattern convention as the goimports/gofumpt formatters above and
+# tommy's own conformistModule).
 [linter.tommy-codegen]
 command = "true"
 repair-command = "conformist-tommy-codegen"
-includes = ["*.go", "**/*.go"]
+includes = ["*.go"]
 passes-files = false
