@@ -1,6 +1,8 @@
 package env_dir
 
 import (
+	"path/filepath"
+
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
@@ -84,6 +86,36 @@ func MakeDefaultAndInitialize(
 		utilityName,
 		repoId,
 	)
+}
+
+// NestUnderRepoName returns a copy of env whose own XDG category dirs
+// (data / config / state / cache / runtime) are nested under
+// repos/<name>/, so several named repos coexist per scope under the
+// FDR-0019 layout. The repo's whole metadata tree — config-seed,
+// object index, inventory-list log, lock — follows automatically
+// because every dodder path is built from these XDG bases.
+//
+// The blob-store XDG is deliberately NOT nested: madder re-derives it
+// via xdg.CloneWithUtilityName, which would discard any suffix applied
+// here. In this prototype named repos therefore share the
+// content-addressed blob pool while keeping fully independent
+// metadata, index, and identity. Full blob isolation waits on the
+// madder env_dir.RepoId change.
+func NestUnderRepoName(
+	context errors.Context,
+	env mad_env_dir.Env,
+	name string,
+	do debug.Options,
+) mad_env_dir.Env {
+	x := env.GetXDG()
+
+	x.Data.ActualValue = filepath.Join(x.Data.ActualValue, "repos", name)
+	x.Config.ActualValue = filepath.Join(x.Config.ActualValue, "repos", name)
+	x.State.ActualValue = filepath.Join(x.State.ActualValue, "repos", name)
+	x.Cache.ActualValue = filepath.Join(x.Cache.ActualValue, "repos", name)
+	x.Runtime.ActualValue = filepath.Join(x.Runtime.ActualValue, "repos", name)
+
+	return MakeWithXDG(context, do, x)
 }
 
 func MakeWithDefaultHome(
