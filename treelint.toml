@@ -8,8 +8,12 @@
 # Generated / locked / prose / frozen test data — not formatted.
 excludes = [
   "flake.lock",
-  "go.sum",
-  "gomod2nix.toml",
+  # go.sum / gomod2nix.toml live under go/, and treelint compiles excludes via
+  # gobwas/glob: a bare literal (no `*`) only matches that exact root-relative
+  # path, so the basename alone would silently miss the nested file. Spell the
+  # path. (gomod2nix.toml matters now that [formatter.tommy] formats *.toml.)
+  "go/go.sum",
+  "go/gomod2nix.toml",
   "LICENSE",
   "*.md",
   "result",
