@@ -115,3 +115,12 @@ function info_repo_dynamic_config_key { # @test
 	assert_success
 	assert_output --regexp '.+'
 }
+
+# bats test_tags=user_story:repos
+function info_repo_repos_lists_repos { # @test
+	run_dodder_init test-repo-id
+
+	run_dodder info-repo repos
+	assert_success
+	assert_output 'default'
+}

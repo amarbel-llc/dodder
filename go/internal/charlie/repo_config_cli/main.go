@@ -88,8 +88,8 @@ func (config *Config) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) 
 	flagSet.Var(
 		&config.RepoId,
 		"repo_id",
-		"repo location: name (user), .name (cwd), //name (system), "+
-			"or bare . / for the legacy nameless scopes",
+		"repo location: name (user), .name (cwd); "+
+			"//name (system) parses but is not yet resolvable",
 	)
 }
 

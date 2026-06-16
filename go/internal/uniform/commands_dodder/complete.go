@@ -253,6 +253,15 @@ func (cmd Complete) completeSubcommandFlagOnParseError(
 		return
 	}
 
+	// -repo_id's value is madder's scoped_id.Id (no methods we can add) and
+	// the flag is registered in charlie-tier repo_config_cli (can't import
+	// delta/command to wrap it as a FlagValueCompleter), so complete it by
+	// flag name here: offer the repos present in the active scope (FDR-0019).
+	if after == "repo_id" {
+		cmd.completeRepoId(req, envLocal)
+		return
+	}
+
 	flagValue := flag.Value
 
 	switch flagValue := flagValue.(type) {
@@ -280,5 +289,31 @@ func (cmd Complete) completeSubcommandFlagOnParseError(
 			flagValue,
 			flag,
 		)
+	}
+}
+
+// completeRepoId offers the repos present in the active scope as -repo_id
+// candidates, spelled `.name` for a cwd-scope repo and `name` for an XDG-user
+// repo so the candidate is directly usable. The deferred grammar (//system,
+// ..multi-dot) is intentionally not offered — repo_id.CheckSupported rejects
+// it (FDR-0019).
+func (cmd Complete) completeRepoId(
+	req command.Request,
+	envLocal env_local.Env,
+) {
+	names, isCwd, err := listRepoNames(req)
+	if err != nil {
+		envLocal.Cancel(err)
+		return
+	}
+
+	prefix, description := "", "user repo"
+
+	if isCwd {
+		prefix, description = ".", "cwd repo"
+	}
+
+	for _, name := range names {
+		envLocal.GetUI().Printf("%s%s\t%s", prefix, name, description)
 	}
 }

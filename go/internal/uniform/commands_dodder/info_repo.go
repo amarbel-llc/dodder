@@ -4,7 +4,9 @@ import (
 	"sort"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
@@ -32,6 +34,7 @@ var repoSpecialKeys = []string{
 	"config-immutable",
 	"id",
 	"pubkey",
+	"repos",
 	"seckey",
 	"store-version",
 	"xdg",
@@ -52,6 +55,29 @@ func (cmd *InfoRepo) GetArgs() []command.ArgGroup {
 
 func (cmd InfoRepo) Run(req command.Request) {
 	args := req.PopArgs()
+
+	if len(args) == 0 {
+		args = []string{"store-version"}
+	}
+
+	// `repos` is a discovery listing across the active scope, not an
+	// inspection of one repo, so it must work without an opened repo (e.g.
+	// from a dir with no initialized repo). Peel it off and handle it before
+	// MakeEnvRepo; the remaining keys still read the opened repo's config.
+	var rest []string
+
+	for _, arg := range args {
+		if strings.ToLower(arg) == "repos" {
+			cmd.printRepos(req)
+		} else {
+			rest = append(rest, arg)
+		}
+	}
+
+	if len(rest) == 0 {
+		return
+	}
+
 	env := cmd.MakeEnvRepo(req, false)
 
 	configPublicTypedBlob := env.GetConfigPublic()
@@ -62,15 +88,11 @@ func (cmd InfoRepo) Run(req command.Request) {
 
 	defaultBlobStore := env.GetDefaultBlobStore()
 
-	if len(args) == 0 {
-		args = []string{"store-version"}
-	}
-
 	configKVs := blob_store_configs.ConfigKeyValues(
 		defaultBlobStore.Config.Blob,
 	)
 
-	for _, arg := range args {
+	for _, arg := range rest {
 		switch strings.ToLower(arg) {
 		case "config-immutable":
 			if _, err := genesis_configs.CoderPublic.EncodeTo(
@@ -128,6 +150,24 @@ func (cmd InfoRepo) Run(req command.Request) {
 
 			env.GetUI().Print(value)
 		}
+	}
+}
+
+// printRepos lists the repos in the active scope, one name per line. It uses
+// a repo-less UI (like info) so it works even when the current directory has
+// no initialized repo.
+func (cmd InfoRepo) printRepos(req command.Request) {
+	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+	ui := env_ui.Make(req, config, config.Debug, env_ui.Options{})
+
+	names, _, err := listRepoNames(req)
+	if err != nil {
+		ui.Cancel(err)
+		return
+	}
+
+	for _, name := range names {
+		ui.GetUI().Print(name)
 	}
 }
 

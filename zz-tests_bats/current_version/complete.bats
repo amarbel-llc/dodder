@@ -240,6 +240,12 @@ function complete_repo_fsck { # @test
   assert_output --regexp '\.default'
 }
 
+function complete_repo_id { # @test
+  run_dodder complete show -repo_id
+  assert_success
+  assert_output --regexp '\.default'
+}
+
 function complete_checkin { # @test
   touch wow.md
   run_dodder complete checkin -organize -delete
