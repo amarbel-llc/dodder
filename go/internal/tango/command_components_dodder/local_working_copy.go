@@ -152,6 +152,15 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyFromEnvLocal(
 ) (local *local_working_copy.Repo) {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
+	// Gate unwired scopes (multi-dot cwd depth, system) here too, so
+	// serve / serve-proto / the remote server reject them with the same
+	// clear error as the two-env builders instead of silently
+	// mis-resolving to a user/cwd repo (#273). Keeps CheckSupported the
+	// uniform FDR-0019 gate so the P2 pickup is a single-place relaxation.
+	if err := repo_id.CheckSupported(config.RepoId); err != nil {
+		req.Cancel(err)
+	}
+
 	madderDir := env_dir.MakeDefault(
 		req,
 		XDGUtilityNameMadder,

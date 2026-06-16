@@ -13,7 +13,7 @@
 //   - CheckSupported gates the grammar this dodder prototype parses but
 //     cannot yet resolve, so callers fail with a clear error instead of
 //     madder's 501 panic for an unwired scope. Relaxed as madder wires
-//     them (system scope: madder#230; multi-dot walk-up: madder#240).
+//     them (system scope: madder#230; multi-dot open path: madder#153).
 //   - IsAuto distinguishes "no selector given" from scoped_id.IsEmpty()
 //     (which is name-empty), so the init flow can default the bare
 //     invocation to the cwd repo without clobbering an explicit scope.
@@ -74,11 +74,20 @@ func EffectiveId(id scoped_id.Id) scoped_id.Id {
 // but cannot yet resolve, so a user gets a clear error rather than the
 // madder 501 panic for an unwired scope:
 //
-//   - multi-dot cwd depth (`..name`): needs the ancestor walk-up
-//     (madder#240); only single-dot (nearest) resolves today.
+//   - multi-dot cwd depth (`..name`): madder parses the depth and tags
+//     discovered stores with it, but the open path ignores depth
+//     (MakeDefaultAndInitialize's cwd branch roots at os.Getwd(), never
+//     walks up cwdDepth parents) — tracked as madder#153. Single-dot
+//     (depth 0, nearest) resolves today.
 //   - system scope (`/name`, `//name`): never wired in madder
 //     (madder#230) — no XDGSystem layout exists to resolve into, so
 //     MakeDefaultAndInitialize would panic 501.
+//
+// FDR-0019 P2 pickup: when madder#153 lands, drop the cwd-depth>0 reject;
+// when madder#230 lands, drop the XDGSystem reject. This is the single
+// place that gates both, and every repo-opening path funnels through it
+// (see CheckSupported callers), so each relaxation enables the scope
+// uniformly.
 func CheckSupported(id scoped_id.Id) (err error) {
 	if id.GetCwdDepth() > 0 {
 		err = errors.Errorf(

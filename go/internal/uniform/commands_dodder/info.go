@@ -110,6 +110,9 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "env":
+			if err := repo_id.CheckSupported(config.RepoId); err != nil {
+				ui.Cancel(err)
+			}
 			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug, repo_id.EffectiveName(config.RepoId))
 			envVars := env_vars.Make(dir)
 			var coder env_vars.BufferedCoderDotenv
@@ -124,6 +127,9 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "xdg":
+			if err := repo_id.CheckSupported(config.RepoId); err != nil {
+				ui.Cancel(err)
+			}
 			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug, repo_id.EffectiveName(config.RepoId))
 			ecksDeeGee := dir.GetXDG()
 			envVars := env_vars.Make(ecksDeeGee)
