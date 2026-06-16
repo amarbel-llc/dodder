@@ -152,10 +152,15 @@ func (cmd BlobStore) makeEnvBlobStore(
 		panic(fmt.Sprintf("unsupported config type: %T", configAny))
 	}
 
+	// FDR-0019: madder blob stores never nest under repos/<name>/ — they
+	// are separate content-addressed pools addressed by store id. So the
+	// blob-store env carries no repo name (empty), staying flat where
+	// madder's store addressing resolves it.
 	dir := env_dir.MakeDefault(
 		req,
 		req.Utility.GetName(),
 		debugOptions,
+		"",
 	)
 
 	envUI := env_ui.Make(

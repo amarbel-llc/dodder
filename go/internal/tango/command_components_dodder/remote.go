@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/remote_connection_types"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_blobs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
@@ -154,6 +155,7 @@ func (cmd Remote) MakeHomeRepoRemote(
 		dodder_env.XDGUtilityName,
 		home,
 		config.Debug,
+		repo_id.DefaultName,
 	)
 
 	madderDir := env_dir.MakeWithHomeAndInitialize(
@@ -161,6 +163,7 @@ func (cmd Remote) MakeHomeRepoRemote(
 		XDGUtilityNameMadder,
 		home,
 		config.Debug,
+		repo_id.DefaultName,
 	)
 
 	envUI := env_ui.Make(
@@ -306,12 +309,14 @@ func (cmd Remote) MakeRemoteFromBlob(
 			req,
 			config.Debug,
 			ownXDG,
+			repo_id.DefaultName,
 		)
 
 		madderDir := env_dir.MakeWithXDG(
 			req,
 			config.Debug,
 			ownXDG.CloneWithUtilityName(XDGUtilityNameMadder),
+			repo_id.DefaultName,
 		)
 
 		envUI := env_ui.Make(
@@ -333,6 +338,7 @@ func (cmd Remote) MakeRemoteFromBlob(
 			blob.GetOverridePath(),
 			req.Utility.GetName(),
 			config.Debug,
+			repo_id.DefaultName,
 		)
 
 		madderDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
@@ -340,6 +346,7 @@ func (cmd Remote) MakeRemoteFromBlob(
 			blob.GetOverridePath(),
 			XDGUtilityNameMadder,
 			config.Debug,
+			repo_id.DefaultName,
 		)
 
 		envUIOptions := env.GetOptions()
@@ -409,7 +416,7 @@ func (cmd *Remote) MakeRemoteHTTPFromXDGDotenvPath(
 		options,
 	)
 
-	remote := cmd.MakeLocalWorkingCopyFromEnvLocal(envLocal)
+	remote := cmd.MakeLocalWorkingCopyFromEnvLocal(req, envLocal)
 
 	server := &remote_http.Server{
 		EnvLocal: envLocal,

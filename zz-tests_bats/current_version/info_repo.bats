@@ -59,7 +59,7 @@ function info_age_some { # @test
 	assert_output --regexp 'madder-private_key-v1@age_x25519_sec-'
 	key="$output"
 	echo "$key" >age-key
-	run_dodder_init -repo_id . -encryption age-key test-repo-id
+	run_dodder_init -repo_id .default -encryption age-key test-repo-id
 	run_dodder info-repo encryption
 	assert_output "$key"
 }
@@ -79,23 +79,23 @@ function info_xdg { # @test
 	local resolved
 	resolved="$(realpath "$BATS_TEST_TMPDIR")"
 	assert_output - <<-EOM
-		XDG_DATA_HOME=$resolved/.xdg/data/dodder
-		XDG_CONFIG_HOME=$resolved/.xdg/config/dodder
-		XDG_STATE_HOME=$resolved/.xdg/state/dodder
-		XDG_CACHE_HOME=$resolved/.xdg/cache/dodder
-		XDG_RUNTIME_HOME=$resolved/.xdg/runtime/dodder
+		XDG_DATA_HOME=$resolved/.xdg/data/dodder/repos/default
+		XDG_CONFIG_HOME=$resolved/.xdg/config/dodder/repos/default
+		XDG_STATE_HOME=$resolved/.xdg/state/dodder/repos/default
+		XDG_CACHE_HOME=$resolved/.xdg/cache/dodder/repos/default
+		XDG_RUNTIME_HOME=$resolved/.xdg/runtime/dodder/repos/default
 	EOM
 }
 
 function info_non_xdg { # @test
-	run_dodder_init -repo_id . test-repo-id
+	run_dodder_init -repo_id .default test-repo-id
 	run_dodder info-repo xdg
 	assert_output - <<-EOM
-		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share
-		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config
-		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state
-		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache
-		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime
+		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share/repos/default
+		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config/repos/default
+		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state/repos/default
+		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache/repos/default
+		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime/repos/default
 	EOM
 }
 

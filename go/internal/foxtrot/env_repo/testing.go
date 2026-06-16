@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
@@ -44,6 +45,7 @@ func makeTestingWithBigBang(
 		dirTemp,
 		dodder_env.XDGUtilityName,
 		debug.Options{},
+		repo_id.DefaultName,
 	)
 
 	madderDir := env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
@@ -51,6 +53,7 @@ func makeTestingWithBigBang(
 		dirTemp,
 		"madder",
 		debug.Options{},
+		repo_id.DefaultName,
 	)
 
 	envUI := env_ui.MakeDefault(t.Context)

@@ -4,11 +4,13 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 )
 
 // XDGUtilityNameMadder is the literal scope segment for madder's XDG
@@ -25,43 +27,45 @@ func (cmd EnvRepo) MakeEnvRepo(
 ) env_repo.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
-	if err := config.RepoId.CheckPrototypeSupported(); err != nil {
+	if err := repo_id.CheckSupported(config.RepoId); err != nil {
 		req.Cancel(err)
 	}
 
+	// Cwd and system ids force their scope via MakeDefaultAndInitialize;
+	// everything else (the auto/no-selector id and named user repos) goes
+	// through MakeDefault so the existing cwd-walk-up override still
+	// applies. System never actually reaches here (CheckSupported gates
+	// it above), but routing it to MakeDefaultAndInitialize keeps the
+	// explicit 501 rather than silently resolving to the user tree if the
+	// gate is ever relaxed.
 	var ownDir, madderDir mad_env_dir.Env
-	if config.RepoId.IsCwd() || config.RepoId.IsSystem() {
-		madRepoId := config.RepoId.GetMad()
+	if loc := config.RepoId.GetLocationType(); loc == scoped_id.LocationTypeCwd ||
+		loc == scoped_id.LocationTypeXDGSystem {
 		ownDir = env_dir.MakeDefaultAndInitialize(
 			req,
 			dodder_env.XDGUtilityName,
 			config.Debug,
-			madRepoId,
+			repo_id.EffectiveId(config.RepoId),
 		)
 		madderDir = env_dir.MakeDefaultAndInitialize(
 			req,
 			XDGUtilityNameMadder,
 			config.Debug,
-			madRepoId,
+			repo_id.EffectiveId(config.RepoId),
 		)
 	} else {
 		ownDir = env_dir.MakeDefault(
 			req,
 			dodder_env.XDGUtilityName,
 			config.Debug,
+			repo_id.EffectiveName(config.RepoId),
 		)
 		madderDir = env_dir.MakeDefault(
 			req,
 			XDGUtilityNameMadder,
 			config.Debug,
+			repo_id.EffectiveName(config.RepoId),
 		)
-	}
-
-	// FDR-0019: nest the dodder metadata tree under repos/<name>/ so
-	// named repos coexist per scope. The blob store stays shared (see
-	// env_dir.NestUnderRepoName).
-	if name := config.RepoId.GetName(); name != "" {
-		ownDir = env_dir.NestUnderRepoName(req, ownDir, name, config.Debug)
 	}
 
 	envUI := env_ui.Make(

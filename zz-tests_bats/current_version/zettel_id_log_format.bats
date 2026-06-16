@@ -36,11 +36,11 @@ teardown() {
 # notice if it ever drifts to the broken shape.
 
 function zettel_id_log_path {
-	echo "$PWD/.dodder/local/share/zettel_id_log"
+	echo "$PWD/.dodder/local/share/repos/default/zettel_id_log"
 }
 
 function inventory_lists_log_path {
-	echo "$PWD/.dodder/local/share/inventory_lists_log"
+	echo "$PWD/.dodder/local/share/repos/default/inventory_lists_log"
 }
 
 function zettel_id_log_has_single_header_after_init { # @test

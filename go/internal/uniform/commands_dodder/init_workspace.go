@@ -10,6 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
@@ -224,7 +225,7 @@ func (cmd InitWorkspace) runLightweight(req command.Request) {
 func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 	config := req.Utility.GetConfigAny().(*repo_config_cli.Config)
 
-	if !config.RepoId.IsEmpty() {
+	if !repo_id.IsAuto(config.RepoId) {
 		req.Cancel(
 			errors.BadRequestf(
 				"-repo_id cannot be used with -experimental-repo (workspace repos are always CWD-rooted)",
@@ -233,10 +234,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		return
 	}
 
-	if err := config.RepoId.Set("."); err != nil {
-		req.Cancel(err)
-		return
-	}
+	config.RepoId = repo_id.CwdDefault()
 
 	absParentPath, parentIsHomeRepo := cmd.resolveParentPath(req)
 	cmd.validateParentRepo(req, absParentPath, parentIsHomeRepo)
@@ -357,22 +355,35 @@ func (cmd InitWorkspace) resolveParentPath(
 	return absPath, true
 }
 
+// parentRepoMetadataDir returns the parent repo's dodder-metadata
+// directory. FDR-0019: dodder metadata nests under repos/<name>/, and a
+// path-addressed or implicit (home) parent carries no -repo_id so it
+// resolves to the default repo (matching makeParentRemote). For a home
+// parent, absParentPath is already the dodder data dir
+// (<dataHome>/dodder); for a -parent path it is the repo root containing
+// .dodder/local/share.
+func parentRepoMetadataDir(absParentPath string, isHomeRepo bool) string {
+	dataRoot := absParentPath
+	if !isHomeRepo {
+		dataRoot = filepath.Join(
+			absParentPath,
+			"."+dodder_env.XDGUtilityName,
+			"local", "share",
+		)
+	}
+
+	return filepath.Join(dataRoot, "repos", repo_id.DefaultName)
+}
+
 func (cmd InitWorkspace) validateParentRepo(
 	req command.Request,
 	absPath string,
 	isHomeRepo bool,
 ) {
-	var inventoryListLog string
-	if isHomeRepo {
-		inventoryListLog = filepath.Join(absPath, "inventory_lists_log")
-	} else {
-		inventoryListLog = filepath.Join(
-			absPath,
-			"."+dodder_env.XDGUtilityName,
-			"local", "share",
-			"inventory_lists_log",
-		)
-	}
+	inventoryListLog := filepath.Join(
+		parentRepoMetadataDir(absPath, isHomeRepo),
+		"inventory_lists_log",
+	)
 
 	if !files.Exists(inventoryListLog) {
 		if isHomeRepo {
@@ -412,6 +423,7 @@ func (cmd InitWorkspace) makeParentRemote(
 			dodder_env.XDGUtilityName,
 			home,
 			config.Debug,
+			repo_id.DefaultName,
 		)
 
 		madderDir := env_dir.MakeWithHomeAndInitialize(
@@ -419,6 +431,7 @@ func (cmd InitWorkspace) makeParentRemote(
 			command_components_dodder.XDGUtilityNameMadder,
 			home,
 			config.Debug,
+			repo_id.DefaultName,
 		)
 
 		envUI := env_ui.Make(
@@ -621,17 +634,10 @@ func (cmd *InitWorkspace) linkParentZettelIdProviders(
 		return
 	}
 
-	var parentObjectIdDir string
-	if isHomeRepo {
-		parentObjectIdDir = filepath.Join(absParentPath, "object_ids")
-	} else {
-		parentObjectIdDir = filepath.Join(
-			absParentPath,
-			"."+dodder_env.XDGUtilityName,
-			"local", "share",
-			"object_ids",
-		)
-	}
+	parentObjectIdDir := filepath.Join(
+		parentRepoMetadataDir(absParentPath, isHomeRepo),
+		"object_ids",
+	)
 
 	parentYin := filepath.Join(
 		parentObjectIdDir,

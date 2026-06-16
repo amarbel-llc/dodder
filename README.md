@@ -178,7 +178,8 @@ each bullet links to the record with the full rationale and status.
 
 - **Repo disambiguation** — operate on the current-directory repo or the XDG
   user repo within one session via `-repo_id` / `DODDER_REPO_ID`, using
-  single-character prefixes (`.`, `/`, `default`).
+  repo-id prefixes (`.default` for the current directory, `default` for the
+  XDG user repo).
   [FDR-0003](docs/features/0003-repo-disambiguation.md)
 - **Bindingless local transfer** — `push`, `pull`, and `clone` between local
   repos with `-direct <path>`, no pre-registered remote object required.

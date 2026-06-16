@@ -36,6 +36,10 @@ export XDG_DATA_HOME="$BATS_TEST_TMPDIR/.xdg/data"
 export XDG_CONFIG_HOME="$BATS_TEST_TMPDIR/.xdg/config"
 export XDG_STATE_HOME="$BATS_TEST_TMPDIR/.xdg/state"
 export XDG_CACHE_HOME="$BATS_TEST_TMPDIR/.xdg/cache"
+# Sandbox the runtime dir too. FDR-0019 nesting (repos/<name>/) makes init
+# eagerly mkdir the runtime tree; without this it resolves to the real
+# ~/.local/runtime and fails with permission denied (home-scoped inits).
+export XDG_RUNTIME_HOME="$BATS_TEST_TMPDIR/.xdg/runtime"
 
 bats_load_library "bats-support"
 bats_load_library "bats-assert"
@@ -179,7 +183,7 @@ function run_dodder_init {
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id . \
+    -repo_id .default \
     "${args[@]}"
 
   assert_success
@@ -200,7 +204,7 @@ function run_dodder_init_sha256 {
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id . \
+    -repo_id .default \
     -hash_type-id sha256 \
     "${args[@]}"
 
@@ -282,7 +286,7 @@ function run_dodder_init_disable_age {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -repo_id . \
+    -repo_id .default \
     "${args[@]}"
 
   assert_success

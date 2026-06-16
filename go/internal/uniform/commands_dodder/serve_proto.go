@@ -102,7 +102,7 @@ func (cmd ServeProto) Run(req command.Request) {
 		},
 	)
 
-	repo := cmd.MakeLocalWorkingCopyFromEnvLocal(envLocal)
+	repo := cmd.MakeLocalWorkingCopyFromEnvLocal(req, envLocal)
 
 	server := remote_proto.Server{
 		EnvLocal: envLocal,

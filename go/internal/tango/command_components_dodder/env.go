@@ -3,6 +3,7 @@ package command_components_dodder
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
@@ -22,10 +23,14 @@ func (cmd *Env) MakeEnvWithOptions(
 	options env_ui.Options,
 ) env_local.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+	// This env opens a repo (e.g. serve-proto via
+	// MakeLocalWorkingCopyFromEnvLocal), so its dodder metadata XDG must
+	// nest under repos/<name>/ to find the repo init wrote (FDR-0019).
 	layout := env_dir.MakeDefault(
 		req,
 		req.Utility.GetName(),
 		config.Debug,
+		repo_id.EffectiveName(config.RepoId),
 	)
 
 	return env_local.Make(
@@ -49,6 +54,7 @@ func (cmd *Env) MakeEnvWithXDGLayoutAndOptions(
 		req,
 		config.Debug,
 		xdgDotenvPath,
+		repo_id.EffectiveName(config.RepoId),
 	)
 
 	ui := env_ui.Make(

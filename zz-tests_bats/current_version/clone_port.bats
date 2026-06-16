@@ -69,7 +69,7 @@ function clone_over_http_seeds_config_from_source { # @test
   mkdir -p them
   (
     pushd them || exit 1
-    run_dodder_init -repo_id . "test-repo-id-them"
+    run_dodder_init -repo_id .default "test-repo-id-them"
 
     export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
     run_dodder edit-config

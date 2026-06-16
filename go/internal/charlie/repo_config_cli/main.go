@@ -6,15 +6,15 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
-	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Config struct {
 	config_cli.Config
 	BasePath string
-	RepoId   repo_id.Id
+	RepoId   scoped_id.Id
 
 	IgnoreHookErrors bool
 	Hooks            string
@@ -131,7 +131,7 @@ func (config Config) GetIgnoreWorkspace() bool {
 	return config.IgnoreWorkspace
 }
 
-func (config Config) GetRepoId() repo_id.Id {
+func (config Config) GetRepoId() scoped_id.Id {
 	return config.RepoId
 }
 

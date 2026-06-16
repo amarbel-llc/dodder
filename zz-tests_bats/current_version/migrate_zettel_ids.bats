@@ -20,7 +20,7 @@ function migrate_zettel_ids { # @test
 	run_dodder_init_disable_age
 
 	# genesis now writes log entries, so truncate the log to simulate a pre-log repo
-	: > .dodder/local/share/zettel_id_log
+	: > .dodder/local/share/repos/default/zettel_id_log
 
 	run_dodder migrate-zettel-ids
 	assert_success

@@ -22,7 +22,7 @@ function init_with_pandoc_tools_creates_type_objects { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-encryption none \
-		-repo_id . \
+		-repo_id .default \
 		-include-default-pandoc-tools \
 		test-repo-id
 
@@ -54,7 +54,7 @@ function format_blob_stdin_pandoc_normalizes_markdown { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-encryption none \
-		-repo_id . \
+		-repo_id .default \
 		-include-default-pandoc-tools \
 		test-repo-id
 
@@ -99,7 +99,7 @@ function init_without_pandoc_flag_produces_minimal_md_type { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-encryption none \
-		-repo_id . \
+		-repo_id .default \
 		test-repo-id
 
 	assert_success
@@ -135,7 +135,7 @@ function format_object_stdin_pandoc_normalizes_markdown { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-encryption none \
-		-repo_id . \
+		-repo_id .default \
 		-include-default-pandoc-tools \
 		test-repo-id
 
@@ -179,7 +179,7 @@ function format_blob_with_trivial_formatter_no_blob_refs { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-encryption none \
-		-repo_id . \
+		-repo_id .default \
 		test-repo-id
 
 	assert_success

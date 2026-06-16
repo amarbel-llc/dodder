@@ -30,17 +30,17 @@ function blob_store_sync_twice { # @test
   # (madder-sync(1)).
   run_madder sync -format ndjson
   assert_success
-  assert_line "Successes: 16, Failures: 0, Ignored: 0, Total: 16"
-  # 1 summary line + 16 JSON lines, one per blob in the v15 fixture's
+  assert_line "Successes: 17, Failures: 0, Ignored: 0, Total: 17"
+  # 1 summary line + 17 JSON lines, one per blob in the v15 fixture's
   # default store.
-  [[ ${#lines[@]} -eq 17 ]] ||
-    fail "sync 1: expected 17 output lines, got ${#lines[@]}: ${output}"
+  [[ ${#lines[@]} -eq 18 ]] ||
+    fail "sync 1: expected 18 output lines, got ${#lines[@]}: ${output}"
 
   run_madder sync -format ndjson
   assert_success
-  assert_line "Successes: 0, Failures: 0, Ignored: 16, Total: 16"
-  [[ ${#lines[@]} -eq 17 ]] ||
-    fail "sync 2: expected 17 output lines, got ${#lines[@]}: ${output}"
+  assert_line "Successes: 0, Failures: 0, Ignored: 17, Total: 17"
+  [[ ${#lines[@]} -eq 18 ]] ||
+    fail "sync 2: expected 18 output lines, got ${#lines[@]}: ${output}"
 }
 
 function blob_store_sync_cross_hash_multi_hash_destination { # @test

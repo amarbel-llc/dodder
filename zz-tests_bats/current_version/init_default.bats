@@ -25,7 +25,7 @@ function init_default_creates_repo { # @test
   assert_success
   assert_line --regexp '^\[!md @blake2b256-.+ !toml-type-v2\]$'
 
-  run test -f .dodder/local/share/config-seed
+  run test -f .dodder/local/share/repos/default/config-seed
   assert_success
 }
 

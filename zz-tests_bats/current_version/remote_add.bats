@@ -55,7 +55,7 @@ function remote_add_local_path { # @test
 	{
 		mkdir -p them
 		pushd them || exit 1
-		run_dodder_init -repo_id . test-repo-remote
+		run_dodder_init -repo_id .default test-repo-remote
 		popd || exit 1
 	}
 

@@ -1,10 +1,9 @@
 package env_dir
 
 import (
-	"path/filepath"
-
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
@@ -25,8 +24,27 @@ import (
 // Per-utility env-var bundles can be revisited as a separate
 // change; for #151 bucket B Stage B the priority is preserving
 // the bridge behavior bit-for-bit.
-func configFor(_ string, do debug.Options) mad_env_dir.Config {
-	return dodder_env.OwnConfig(do)
+//
+// FDR-0019: madder blob stores are separate, content-addressed pools
+// addressed by store id — they are NEVER nested under a repo's
+// repos/<name>/. Only the dodder metadata tree (config-seed, object
+// index, inventory-list log, lock) nests. So the madder-scoped env
+// (utility dodder_env.XDGUtilityNameMadder) never carries a repo name,
+// regardless of what the caller passes; nesting it would hide the blobs
+// from madder's flat store addressing.
+
+func configFor(
+	utilityName string,
+	repoName string,
+	do debug.Options,
+) mad_env_dir.Config {
+	cfg := dodder_env.OwnConfig(do)
+
+	if utilityName != dodder_env.XDGUtilityNameMadder {
+		cfg.RepoName = repoName
+	}
+
+	return cfg
 }
 
 // MakeDefault forwards to mad_env_dir.MakeDefault. The dodder
@@ -37,10 +55,11 @@ func MakeDefault(
 	context errors.Context,
 	utilityName string,
 	debugOptions debug.Options,
+	repoName string,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeDefault(
 		context,
-		configFor(utilityName, debugOptions),
+		configFor(utilityName, repoName, debugOptions),
 		utilityName,
 	)
 }
@@ -49,10 +68,11 @@ func MakeDefaultNoInit(
 	context errors.Context,
 	utilityName string,
 	debugOptions debug.Options,
+	repoName string,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeDefaultNoInit(
 		context,
-		configFor(utilityName, debugOptions),
+		configFor(utilityName, repoName, debugOptions),
 		utilityName,
 	)
 }
@@ -66,10 +86,13 @@ func MakeFromXDGDotenvPath(
 	context errors.Context,
 	debugOptions debug.Options,
 	xdgDotenvPath string,
+	repoName string,
 ) mad_env_dir.Env {
+	cfg := dodder_env.OwnConfig(debugOptions)
+	cfg.RepoName = repoName
 	return mad_env_dir.MakeFromXDGDotenvPath(
 		context,
-		dodder_env.OwnConfig(debugOptions),
+		cfg,
 		xdgDotenvPath,
 	)
 }
@@ -78,44 +101,22 @@ func MakeDefaultAndInitialize(
 	context errors.Context,
 	utilityName string,
 	do debug.Options,
-	repoId mad_env_dir.RepoId,
+	repoId scoped_id.Id,
 ) mad_env_dir.Env {
+	// madder derives Config.RepoName from the id's name, so strip the name
+	// for the madder-scoped (blob-store) env — its blobs are separate and
+	// never nest (see configFor). Location is kept so cwd-vs-home routing
+	// still applies.
+	if utilityName == dodder_env.XDGUtilityNameMadder {
+		repoId = scoped_id.MakeWithLocation("", repoId.GetLocationType())
+	}
+
 	return mad_env_dir.MakeDefaultAndInitialize(
 		context,
-		configFor(utilityName, do),
+		configFor(utilityName, "", do),
 		utilityName,
 		repoId,
 	)
-}
-
-// NestUnderRepoName returns a copy of env whose own XDG category dirs
-// (data / config / state / cache / runtime) are nested under
-// repos/<name>/, so several named repos coexist per scope under the
-// FDR-0019 layout. The repo's whole metadata tree — config-seed,
-// object index, inventory-list log, lock — follows automatically
-// because every dodder path is built from these XDG bases.
-//
-// The blob-store XDG is deliberately NOT nested: madder re-derives it
-// via xdg.CloneWithUtilityName, which would discard any suffix applied
-// here. In this prototype named repos therefore share the
-// content-addressed blob pool while keeping fully independent
-// metadata, index, and identity. Full blob isolation waits on the
-// madder env_dir.RepoId change.
-func NestUnderRepoName(
-	context errors.Context,
-	env mad_env_dir.Env,
-	name string,
-	do debug.Options,
-) mad_env_dir.Env {
-	x := env.GetXDG()
-
-	x.Data.ActualValue = filepath.Join(x.Data.ActualValue, "repos", name)
-	x.Config.ActualValue = filepath.Join(x.Config.ActualValue, "repos", name)
-	x.State.ActualValue = filepath.Join(x.State.ActualValue, "repos", name)
-	x.Cache.ActualValue = filepath.Join(x.Cache.ActualValue, "repos", name)
-	x.Runtime.ActualValue = filepath.Join(x.Runtime.ActualValue, "repos", name)
-
-	return MakeWithXDG(context, do, x)
 }
 
 func MakeWithDefaultHome(
@@ -124,10 +125,11 @@ func MakeWithDefaultHome(
 	debugOptions debug.Options,
 	permitCwdXDGOverride bool,
 	initialize bool,
+	repoName string,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeWithDefaultHome(
 		context,
-		configFor(utilityName, debugOptions),
+		configFor(utilityName, repoName, debugOptions),
 		utilityName,
 		permitCwdXDGOverride,
 		initialize,
@@ -143,10 +145,11 @@ func MakeWithXDGRootOverrideHomeAndInitialize(
 	xdgRootOverride string,
 	utilityName string,
 	debugOptions debug.Options,
+	repoName string,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
 		context,
-		configFor(utilityName, debugOptions),
+		configFor(utilityName, repoName, debugOptions),
 		utilityName,
 		xdgRootOverride,
 	)
@@ -160,10 +163,11 @@ func MakeWithHomeAndInitialize(
 	utilityName string,
 	home string,
 	debugOptions debug.Options,
+	repoName string,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeWithHomeAndInitialize(
 		context,
-		configFor(utilityName, debugOptions),
+		configFor(utilityName, repoName, debugOptions),
 		utilityName,
 		home,
 	)
@@ -175,10 +179,11 @@ func MakeWithXDG(
 	context errors.Context,
 	debugOptions debug.Options,
 	x xdg.XDG,
+	repoName string,
 ) mad_env_dir.Env {
 	return mad_env_dir.MakeWithXDG(
 		context,
-		configFor(x.UtilityName, debugOptions),
+		configFor(x.UtilityName, repoName, debugOptions),
 		x,
 	)
 }

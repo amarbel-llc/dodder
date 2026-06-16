@@ -395,14 +395,47 @@ function show_konfig_query_errors { # @test
   assert_output --regexp 'config is no longer an object'
 }
 
-# Config is now read through show-config (the config read surface). This
-# fixture predates the config log (FDR 0020) and has no log entries, so
-# show-config reports an empty log rather than the konfig object. Reindex
-# (later task) is what backfills the log from old konfig history.
+# Config is now read through show-config (the config read surface). The
+# regenerated fixture seeds the config log root entry at init (FDR 0020),
+# so show-config streams the default config TOML straight from the log head.
 function show_config_empty_log { # @test
   run_dodder show-config
-  assert_failure
-  assert_line --index 0 'empty config log'
+  assert_success
+  assert_output 'blob-stores = [".default"]
+
+[defaults]
+type = "!md"
+tags = []
+
+[file-extensions]
+config = "konfig"
+conflict = "conflict"
+lockfile = "object-lockfile"
+organize = "md"
+repo = "repo"
+tag = "tag"
+type = "type"
+zettel = "zettel"
+
+[cli-output]
+print-blob_digests = true
+print-colors = true
+print-empty-blob_digests = false
+print-flush = true
+print-include-description = true
+print-include-types = true
+print-inventory_lists = true
+print-matched-dormant = false
+print-tags-always = true
+print-time = true
+print-unchanged = true
+
+[cli-output.abbreviations]
+zettel_ids = true
+merkle_ids = true
+
+[tools]
+merge = ["vimdiff"]'
 }
 
 function show_history_all { # @test

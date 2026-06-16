@@ -40,12 +40,15 @@ function generate { # @test
   assert_success
   assert_output "$storeVersionCurrent"
 
-  run_dodder show !md:t :konfig
+  # FDR-0020: config is no longer a queryable object, so the type is
+  # checked via the genre query here and the config via show-config below
+  # (the bare `:konfig` query now errors with "config is no longer an
+  # object; use show-config / edit-config").
+  run_dodder show !md:t
   assert_success
   assert_line --regexp '\[!md @blake2b256-.+ !toml-type-v2]'
-  assert_line --regexp '\[konfig @blake2b256-.+ !toml-config-v2]'
 
-  run_dodder show -format text :konfig
+  run_dodder show-config
   assert_success
   assert_output - <<-EOM
 		blob-stores = [".default"]

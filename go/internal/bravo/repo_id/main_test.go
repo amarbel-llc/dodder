@@ -3,96 +3,98 @@ package repo_id
 import (
 	"testing"
 
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
-func TestParse(t1 *testing.T) {
+func TestIsAuto(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	type expectation struct {
-		input     string
-		empty     bool
-		cwd       bool
-		system    bool
-		name      string
-		cwdDepth  uint
-		canonical string
+	// The zero value (neither -repo_id nor DODDER_REPO_ID given) is auto.
+	var zero scoped_id.Id
+	if !IsAuto(zero) {
+		t.Errorf("IsAuto(zero) = false, want true")
 	}
 
-	expectations := []expectation{
-		{input: "", empty: true, canonical: ""},
-		{input: ".", cwd: true, name: "", canonical: "."},
-		{input: "/", system: true, name: "", canonical: "/"},
-		{input: "work", name: "work", canonical: "work"},
-		{input: "~work", name: "work", canonical: "work"},
-		{input: ".notes", cwd: true, name: "notes", canonical: ".notes"},
-		{input: "..notes", cwd: true, name: "notes", cwdDepth: 1, canonical: ".notes"},
-		{input: "//backup", system: true, name: "backup", canonical: "//backup"},
-		{input: "/backup", system: true, name: "backup", canonical: "//backup"},
+	// The cwd default and every explicit selection are NOT auto.
+	if IsAuto(CwdDefault()) {
+		t.Errorf("IsAuto(CwdDefault()) = true, want false")
 	}
 
-	for _, e := range expectations {
-		var id Id
+	for _, value := range []string{"work", ".notes", "//backup"} {
+		var id scoped_id.Id
 
-		if err := id.Set(e.input); err != nil {
-			t.Errorf("Set(%q) returned error: %s", e.input, err)
-			continue
+		if err := id.Set(value); err != nil {
+			t.Fatalf("Set(%q): %s", value, err)
 		}
 
-		if id.IsEmpty() != e.empty {
-			t.Errorf("Set(%q): IsEmpty = %v, want %v", e.input, id.IsEmpty(), e.empty)
-		}
-
-		if id.IsCwd() != e.cwd {
-			t.Errorf("Set(%q): IsCwd = %v, want %v", e.input, id.IsCwd(), e.cwd)
-		}
-
-		if id.IsSystem() != e.system {
-			t.Errorf("Set(%q): IsSystem = %v, want %v", e.input, id.IsSystem(), e.system)
-		}
-
-		if id.GetName() != e.name {
-			t.Errorf("Set(%q): GetName = %q, want %q", e.input, id.GetName(), e.name)
-		}
-
-		if id.GetCwdDepth() != e.cwdDepth {
-			t.Errorf("Set(%q): GetCwdDepth = %d, want %d", e.input, id.GetCwdDepth(), e.cwdDepth)
-		}
-
-		if id.String() != e.canonical {
-			t.Errorf("Set(%q): String = %q, want %q", e.input, id.String(), e.canonical)
+		if IsAuto(id) {
+			t.Errorf("IsAuto(Set(%q)) = true, want false", value)
 		}
 	}
 }
 
-func TestParseErrors(t1 *testing.T) {
+func TestEffectiveName(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	for _, input := range []string{"..", "work/sub", "wo rk", "wo@rk"} {
-		var id Id
+	// Auto and the cwd default both resolve to the fixed default name.
+	var zero scoped_id.Id
+	if got := EffectiveName(zero); got != DefaultName {
+		t.Errorf("EffectiveName(zero) = %q, want %q", got, DefaultName)
+	}
 
-		if err := id.Set(input); err == nil {
-			t.Errorf("Set(%q): expected error, got none", input)
+	if got := EffectiveName(CwdDefault()); got != DefaultName {
+		t.Errorf("EffectiveName(CwdDefault()) = %q, want %q", got, DefaultName)
+	}
+
+	for value, want := range map[string]string{
+		"work":     "work",
+		".notes":   "notes",
+		"//backup": "backup",
+	} {
+		var id scoped_id.Id
+
+		if err := id.Set(value); err != nil {
+			t.Fatalf("Set(%q): %s", value, err)
+		}
+
+		if got := EffectiveName(id); got != want {
+			t.Errorf("EffectiveName(Set(%q)) = %q, want %q", value, got, want)
 		}
 	}
 }
 
-func TestCheckPrototypeSupported(t1 *testing.T) {
+func TestCheckSupported(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	var nearest Id
-	if err := nearest.Set(".notes"); err != nil {
-		t.Fatalf("Set(.notes): %s", err)
-	}
-	if err := nearest.CheckPrototypeSupported(); err != nil {
-		t.Errorf(".notes should be supported, got: %s", err)
+	// The cwd default and single-dot / user names resolve.
+	if err := CheckSupported(CwdDefault()); err != nil {
+		t.Errorf("CheckSupported(CwdDefault()) = %s, want nil", err)
 	}
 
-	var deeper Id
-	if err := deeper.Set("..notes"); err != nil {
-		t.Fatalf("Set(..notes): %s", err)
+	for _, value := range []string{"work", ".notes"} {
+		var id scoped_id.Id
+
+		if err := id.Set(value); err != nil {
+			t.Fatalf("Set(%q): %s", value, err)
+		}
+
+		if err := CheckSupported(id); err != nil {
+			t.Errorf("CheckSupported(Set(%q)) = %s, want nil", value, err)
+		}
 	}
-	if err := deeper.CheckPrototypeSupported(); err == nil {
-		t.Errorf("..notes should be rejected by the prototype")
+
+	// Multi-dot cwd depth and system scope are parsed but not yet
+	// resolvable, so the prototype gate rejects them.
+	for _, value := range []string{"..notes", "/", "//backup"} {
+		var id scoped_id.Id
+
+		if err := id.Set(value); err != nil {
+			t.Fatalf("Set(%q): %s", value, err)
+		}
+
+		if err := CheckSupported(id); err == nil {
+			t.Errorf("CheckSupported(Set(%q)) = nil, want error", value)
+		}
 	}
 }

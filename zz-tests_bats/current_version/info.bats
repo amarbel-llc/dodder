@@ -37,22 +37,22 @@ function info_xdg { # @test
 	run_dodder_init_disable_age_xdg
 	run_dodder info xdg
 	assert_output - <<-EOM
-		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.xdg/cache/dodder
-		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.xdg/config/dodder
-		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.xdg/data/dodder
-		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.xdg/runtime/dodder
-		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.xdg/state/dodder
+		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.xdg/cache/dodder/repos/default
+		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.xdg/config/dodder/repos/default
+		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.xdg/data/dodder/repos/default
+		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.xdg/runtime/dodder/repos/default
+		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.xdg/state/dodder/repos/default
 	EOM
 }
 
 function info_non_xdg { # @test
-	run_dodder_init -repo_id . test-repo-id
+	run_dodder_init -repo_id .default test-repo-id
 	run_dodder info xdg
 	assert_output - <<-EOM
-		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache
-		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config
-		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share
-		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime
-		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state
+		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache/repos/default
+		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config/repos/default
+		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share/repos/default
+		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime/repos/default
+		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state/repos/default
 	EOM
 }

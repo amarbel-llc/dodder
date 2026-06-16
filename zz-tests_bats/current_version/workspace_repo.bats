@@ -18,7 +18,7 @@ function bootstrap_parent {
 	(
 		mkdir -p "$1"
 		pushd "$1" || exit 1
-		run_dodder_init -repo_id . "parent-repo-id"
+		run_dodder_init -repo_id .default "parent-repo-id"
 
 		run_dodder new -edit=false - <<-EOM
 			---
@@ -69,7 +69,7 @@ function workspace_repo_clone_pull_push { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
+		-repo_id .default \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
@@ -149,7 +149,7 @@ function workspace_repo_clone_filtered_by_tag { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
+		-repo_id .default \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -189,7 +189,7 @@ function workspace_repo_pull_filtered_by_tag { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
+		-repo_id .default \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -537,7 +537,7 @@ function workspace_repo_repo_id_rejected_with_experimental_repo { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
+		-repo_id .default \
 		-parent "$parent_path" \
 		workspace-repo-id \
 		project-alpha:z
@@ -587,7 +587,7 @@ function workspace_repo_push_unfiltered { # @test
 		-encryption none \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
+		-repo_id .default \
 		-direct "$parent_path" \
 		workspace-repo-id \
 		+zettel,typ,etikett
@@ -693,7 +693,7 @@ function workspace_repo_init_bare_query_excludes_unrelated { # @test
 
 # Bootstrap a HOME repo (XDG-scoped at $XDG_DATA_HOME/dodder, NOT
 # CWD-scoped) so init-workspace's implicit-parent path resolves to it.
-# Omitting -repo_id . is what makes init target the XDG home location.
+# Omitting -repo_id .default is what makes init target the XDG home location.
 function bootstrap_home_repo {
 	run_dodder init \
 		-yin <(cat_yin) \

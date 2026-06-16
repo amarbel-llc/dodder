@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -85,26 +86,32 @@ func (cmd *InitDefault) Run(req command.Request) {
 		return
 	}
 
+	// Default to a CWD-local repository (`.dodder` in the current
+	// directory) — the per-session use case — unless the caller chose a
+	// location via -repo_id / DODDER_REPO_ID. GetConfigAny returns the
+	// shared *Config pointer (OnTheFirstDay reads the same one), so this
+	// sticks. Same cast pattern as init-workspace. Resolve this before the
+	// idempotency probe so the probe targets the repo this run will write.
+	repoName := repo_id.DefaultName
+	if config, ok := req.Utility.GetConfigAny().(*repo_config_cli.Config); ok {
+		if repo_id.IsAuto(config.RepoId) {
+			config.RepoId = repo_id.CwdDefault()
+		}
+		repoName = repo_id.EffectiveName(config.RepoId)
+	}
+
 	// Idempotency: `init` is not re-runnable (it collides on the
 	// inventory-lists log), so an already-initialized directory is a
-	// no-op. Mirrors spinclass FDR 0008's RepoReady guard.
-	if pathExists(filepath.Join(cwd, ".dodder", "local", "share", "config-seed")) {
+	// no-op. The repo's metadata nests under repos/<name>/ (FDR-0019), so
+	// probe that name. Mirrors spinclass FDR 0008's RepoReady guard.
+	if pathExists(filepath.Join(
+		cwd, ".dodder", "local", "share", "repos", repoName, "config-seed",
+	)) {
 		return
 	}
 
 	if repoId == "" {
 		repoId = deriveRepoIdFromDir(cwd)
-	}
-
-	// Default to a CWD-local repository (`.dodder` in the current
-	// directory) — the per-session use case — unless the caller chose a
-	// location via -repo_id / DODDER_REPO_ID. GetConfigAny returns the
-	// shared *Config pointer (OnTheFirstDay reads the same one), so this
-	// sticks. Same cast pattern as init-workspace.
-	if config, ok := req.Utility.GetConfigAny().(*repo_config_cli.Config); ok {
-		if config.RepoId.IsEmpty() {
-			_ = config.RepoId.Set(".")
-		}
 	}
 
 	cmd.applyDefaults(cwd)

@@ -7,6 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -116,30 +117,23 @@ func (cmd Genesis) OnTheFirstDay(
 
 	cmd.GenesisConfig.Blob.SetRepoId(repoId)
 
-	if err := config.RepoId.CheckPrototypeSupported(); err != nil {
+	if err := repo_id.CheckSupported(config.RepoId); err != nil {
 		envUI.Cancel(err)
 	}
-
-	madRepoId := config.RepoId.GetMad()
 
 	ownDir := env_dir.MakeDefaultAndInitialize(
 		req,
 		dodder_env.XDGUtilityName,
 		config.Debug,
-		madRepoId,
+		repo_id.EffectiveId(config.RepoId),
 	)
 
 	madderDir := env_dir.MakeDefaultAndInitialize(
 		req,
 		XDGUtilityNameMadder,
 		config.Debug,
-		madRepoId,
+		repo_id.EffectiveId(config.RepoId),
 	)
-
-	// FDR-0019: nest the dodder metadata tree under repos/<name>/.
-	if name := config.RepoId.GetName(); name != "" {
-		ownDir = env_dir.NestUnderRepoName(req, ownDir, name, config.Debug)
-	}
 
 	var envRepo env_repo.Env
 

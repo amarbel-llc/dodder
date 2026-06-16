@@ -46,7 +46,7 @@ function init_with_ecdsa_p256_ssh_key { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id . \
+		-repo_id .default \
 		-private_key "$ecdsa_key" \
 		test-ecdsa
 

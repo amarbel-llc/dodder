@@ -300,10 +300,15 @@ let
             type_sig=$(${dodder}/bin/dodder show -format type-sig one/uno)
             [[ -n "$type_sig" ]] || { echo "ERROR: type_sig extraction failed" >&2; exit 1; }
 
-            konfig_sha=$(${dodder}/bin/dodder show \
+            # FDR-0020: config left the query surface, so the konfig blob
+            # digest now comes from the config-log head via show-config
+            # -history. Its box line is
+            # `[konfig @<digest> <tai> <pubkey>@... <sig>@... !toml-config-v2]`,
+            # so anchor on the leading `[konfig @` --- a greedy `.*@` would
+            # grab the trailing signature digest instead.
+            konfig_sha=$(${dodder}/bin/dodder show-config -history \
               -abbreviate-shas=false \
-              -print-empty-shas=true \
-              -format log :konfig | sed 's/.*@\([^ ]*\) .*/\1/')
+              -print-empty-shas=true | sed -n 's/^\[konfig @\([^ ]*\) .*/\1/p')
             [[ -n "$konfig_sha" ]] || { echo "ERROR: konfig_sha extraction failed" >&2; exit 1; }
 
             # Anchor on the literal `[!md @` boundary: !md's box may now contain
@@ -328,7 +333,7 @@ let
             # zettel + konfig the suite expects.
             ${dodder}/bin/dodder show one/uno >/dev/null \
               || { echo "ERROR: fixture store missing zettel one/uno" >&2; exit 1; }
-            ${dodder}/bin/dodder show :konfig >/dev/null \
+            ${dodder}/bin/dodder show-config >/dev/null \
               || { echo "ERROR: fixture store missing konfig" >&2; exit 1; }
 
             popd >/dev/null

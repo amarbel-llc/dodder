@@ -198,11 +198,11 @@ function workspace_parent_directory { # @test
 	run_dodder info-repo xdg
 	assert_success
 	assert_output - <<-EOM
-		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share
-		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config
-		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state
-		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache
-		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime
+		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share/repos/default
+		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config/repos/default
+		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state/repos/default
+		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache/repos/default
+		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime/repos/default
 	EOM
 
 	run_dodder info-workspace
@@ -234,11 +234,11 @@ function workspace_parent_directory { # @test
 	run_dodder info-repo xdg
 	assert_success
 	assert_output - <<-EOM
-		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share
-		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config
-		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state
-		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache
-		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime
+		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share/repos/default
+		XDG_CONFIG_HOME=$BATS_TEST_TMPDIR/.dodder/config/repos/default
+		XDG_STATE_HOME=$BATS_TEST_TMPDIR/.dodder/local/state/repos/default
+		XDG_CACHE_HOME=$BATS_TEST_TMPDIR/.dodder/cache/repos/default
+		XDG_RUNTIME_HOME=$BATS_TEST_TMPDIR/.dodder/local/runtime/repos/default
 	EOM
 
 	run_dodder info-workspace

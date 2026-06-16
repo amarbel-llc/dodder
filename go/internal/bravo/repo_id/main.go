@@ -1,196 +1,86 @@
-// Package repo_id implements dodder's repo *location* selector
-// (FDR-0019, "Scoped Repo Resolution").
+// Package repo_id holds dodder-side helpers for the FDR-0019 repo
+// location selector. The selector type itself is madder's scoped_id.Id
+// (it parses the full FDR grammar — name, cwd dot-depth, system /
+// remote-first spellings), so dodder no longer defines its own grammar.
+// What remains here is dodder-specific policy that scoped_id, as a
+// madder-agnostic type, does not encode:
 //
-// It extends the legacy location-only selector (`.`, `/`, empty —
-// FDR-0003) with an optional name and a cwd dot-depth, mirroring
-// madder's blob_store_id grammar so several named repos can coexist
-// per scope under a repos/<name>/ layout.
-//
-// This is the dodder-side prototype that lands ahead of the eventual
-// madder env_dir.RepoId grammar change the FDR calls for. Two
-// deliberate prototype limitations:
-//
-//   - Only single-dot cwd depth resolves. `..name` (depth > 0) parses
-//     but callers reject it at resolution time.
-//   - `/name` resolves to the system scope; the FDR's remote-first
-//     lookup (try a defined remote, then fall back to system) is not
-//     implemented, so `/name` and `//name` behave identically here.
-//
-// This selector is distinct from ids.RepoId (the repo *object* genre),
-// which the FDR leaves untouched.
+//   - Nameless repos are dropped: scoped_id is name-required (per
+//     Sasha's grammar ruling), so every repo — including the implicit
+//     default — lives under repos/<name>/. EffectiveName / DefaultName /
+//     CwdDefault give the auto invocation a fixed "default" name instead
+//     of the retired nameless `.` cwd pin.
+//   - CheckSupported gates the grammar this dodder prototype parses but
+//     cannot yet resolve, so callers fail with a clear error instead of
+//     madder's 501 panic for an unwired scope. Relaxed as madder wires
+//     them (system scope: madder#230; multi-dot walk-up: madder#240).
+//   - IsAuto distinguishes "no selector given" from scoped_id.IsEmpty()
+//     (which is name-empty), so the init flow can default the bare
+//     invocation to the cwd repo without clobbering an explicit scope.
 package repo_id
 
 import (
-	"strings"
-
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
-// Scope is the location scope a repo id resolves against.
-type Scope int
+// DefaultName is the name of the implicit repo selected when no -repo_id
+// is given. Since the nameless `.`/`/` pins are dropped (scoped_id is
+// name-required), every repo — including the default — lives under
+// repos/<name>/; the default just uses this fixed name so its on-disk
+// layout is deterministic.
+const DefaultName = "default"
 
-const (
-	// ScopeUser is the XDG user data tree (unprefixed name, or empty).
-	ScopeUser Scope = iota
-	// ScopeCwd is the nearest ancestor `.dodder/` tree (`.name`).
-	ScopeCwd
-	// ScopeSystem is the XDG system data tree (`//name`, or `/name`).
-	ScopeSystem
-)
-
-// Id is dodder's repo location selector. The zero value is the empty
-// (auto) id.
-type Id struct {
-	isSet    bool
-	scope    Scope
-	name     string
-	cwdDepth uint
+// IsAuto reports that no repo was explicitly selected: the zero-value id
+// (Unknown location, empty name) left in place when neither -repo_id nor
+// DODDER_REPO_ID is set. This is deliberately narrower than
+// scoped_id.IsEmpty(), which is also true for a nameless scope pin — an
+// explicit scope is NOT auto.
+func IsAuto(id scoped_id.Id) bool {
+	return id.GetLocationType() == scoped_id.LocationTypeUnknown &&
+		id.GetName() == ""
 }
 
-// Set parses the repo-id grammar. It satisfies flag.Value via a
-// pointer receiver.
-func (id *Id) Set(value string) (err error) {
-	*id = Id{}
-
-	switch value {
-	case "":
-		// Auto: nearest cwd repo on the walk-up, else user `default`.
-		// The prototype treats empty as the legacy user scope so all
-		// existing single-repo trees keep resolving unchanged.
-		return nil
-
-	case ".":
-		id.isSet = true
-		id.scope = ScopeCwd
-		return nil
-
-	case "/":
-		id.isSet = true
-		id.scope = ScopeSystem
-		return nil
+// EffectiveName returns the repos/<name>/ path segment a resolved id
+// nests under: the explicit name, or DefaultName for the auto id. It is
+// never empty, because nameless repos no longer exist.
+func EffectiveName(id scoped_id.Id) string {
+	if name := id.GetName(); name != "" {
+		return name
 	}
 
-	id.isSet = true
-
-	switch {
-	case strings.HasPrefix(value, "//"):
-		id.scope = ScopeSystem
-		id.name = value[2:]
-
-	case value[0] == '/':
-		// FDR-0019 reserves `/name` for remote-first selection. The
-		// remote transport is out of scope, so the prototype resolves
-		// it straight to the system scope.
-		id.scope = ScopeSystem
-		id.name = value[1:]
-
-	case value[0] == '.':
-		dots := 0
-		for dots < len(value) && value[dots] == '.' {
-			dots++
-		}
-
-		if dots == len(value) {
-			err = errors.Errorf("repo_id is all dots, no name: %q", value)
-			return err
-		}
-
-		id.scope = ScopeCwd
-		id.cwdDepth = uint(dots - 1)
-		id.name = value[dots:]
-
-	case value[0] == '~':
-		// `~name` is the parse-only user-scope alias; never emitted.
-		id.scope = ScopeUser
-		id.name = value[1:]
-
-	default:
-		id.scope = ScopeUser
-		id.name = value
-	}
-
-	if err = validateName(id.name); err != nil {
-		err = errors.Wrapf(err, "repo_id: %q", value)
-		return err
-	}
-
-	return err
+	return DefaultName
 }
 
-// String renders the canonical form: cwd ids collapse to a single dot
-// (depth dropped, #145 precedent), system named ids emit `//name`, and
-// user ids emit the bare name with no prefix.
-func (id Id) String() string {
-	if !id.isSet {
-		return ""
-	}
-
-	switch id.scope {
-	case ScopeCwd:
-		if id.name == "" {
-			return "."
-		}
-		return "." + id.name
-
-	case ScopeSystem:
-		if id.name == "" {
-			return "/"
-		}
-		return "//" + id.name
-
-	default:
-		return id.name
-	}
+// CwdDefault is the cwd-rooted default repo id (`.default`), used by the
+// init flow to create or address the per-directory repo when no -repo_id
+// is given. It replaces the dropped nameless `.` cwd pin.
+func CwdDefault() scoped_id.Id {
+	return scoped_id.MakeWithLocation(DefaultName, scoped_id.LocationTypeCwd)
 }
 
-// IsEmpty reports whether nothing was selected (the auto id). Legacy
-// nameless `.` / `/` are NOT empty — they pin a scope.
-func (id Id) IsEmpty() bool {
-	return !id.isSet
+// EffectiveId returns id with its name forced to EffectiveName (so the
+// auto/zero id becomes the named "default") while preserving its
+// location, for sites that hand a scoped_id to madder's
+// MakeDefaultAndInitialize — which derives Config.RepoName from the id's
+// name. Without this, the auto id (name "") would set RepoName="" and
+// skip the repos/<name>/ nesting. cwdDepth/digest are dropped, which is
+// safe because CheckSupported rejects multi-dot/system before resolution.
+func EffectiveId(id scoped_id.Id) scoped_id.Id {
+	return scoped_id.MakeWithLocation(EffectiveName(id), id.GetLocationType())
 }
 
-func (id Id) IsCwd() bool {
-	return id.isSet && id.scope == ScopeCwd
-}
-
-func (id Id) IsSystem() bool {
-	return id.isSet && id.scope == ScopeSystem
-}
-
-// GetName returns the name portion ("" for the legacy nameless and
-// auto forms). A non-empty name triggers the repos/<name>/ nesting.
-func (id Id) GetName() string {
-	return id.name
-}
-
-// GetCwdDepth returns the 0-indexed ancestor depth for cwd-scoped ids
-// (0 = single dot = nearest).
-func (id Id) GetCwdDepth() uint {
-	return id.cwdDepth
-}
-
-// GetMad projects this id onto the legacy madder env_dir.RepoId so the
-// existing scope routing (MakeDefaultAndInitialize) keeps working. The
-// name is carried separately and applied as repos/<name>/ nesting.
-func (id Id) GetMad() mad_env_dir.RepoId {
-	var mad mad_env_dir.RepoId
-
-	switch {
-	case id.IsCwd():
-		_ = mad.Set(".")
-	case id.IsSystem():
-		_ = mad.Set("/")
-	}
-
-	return mad
-}
-
-// CheckPrototypeSupported rejects the grammar this dodder-side
-// prototype does not yet resolve (multi-dot cwd depth). It is removed
-// once the madder env_dir.RepoId change lands the full walk-up.
-func (id Id) CheckPrototypeSupported() (err error) {
-	if id.cwdDepth > 0 {
+// CheckSupported rejects the FDR grammar this dodder prototype parses
+// but cannot yet resolve, so a user gets a clear error rather than the
+// madder 501 panic for an unwired scope:
+//
+//   - multi-dot cwd depth (`..name`): needs the ancestor walk-up
+//     (madder#240); only single-dot (nearest) resolves today.
+//   - system scope (`/name`, `//name`): never wired in madder
+//     (madder#230) — no XDGSystem layout exists to resolve into, so
+//     MakeDefaultAndInitialize would panic 501.
+func CheckSupported(id scoped_id.Id) (err error) {
+	if id.GetCwdDepth() > 0 {
 		err = errors.Errorf(
 			"repo_id %q: cwd dot-depth > 1 is not yet implemented",
 			id.String(),
@@ -198,24 +88,12 @@ func (id Id) CheckPrototypeSupported() (err error) {
 		return err
 	}
 
-	return err
-}
-
-func validateName(name string) (err error) {
-	for _, r := range name {
-		switch {
-		case r >= 'a' && r <= 'z',
-			r >= 'A' && r <= 'Z',
-			r >= '0' && r <= '9',
-			r == '_',
-			r == '-':
-		default:
-			err = errors.Errorf(
-				"name may contain only [a-zA-Z0-9_-]; got %q",
-				string(r),
-			)
-			return err
-		}
+	if id.GetLocationType() == scoped_id.LocationTypeXDGSystem {
+		err = errors.Errorf(
+			"repo_id %q: system scope is not yet resolvable",
+			id.String(),
+		)
+		return err
 	}
 
 	return err

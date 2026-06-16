@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/echo/command_components"
@@ -40,7 +41,7 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyWithOptions(
 ) *local_working_copy.Repo {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
-	if err := config.RepoId.CheckPrototypeSupported(); err != nil {
+	if err := repo_id.CheckSupported(config.RepoId); err != nil {
 		req.Cancel(err)
 	}
 
@@ -48,21 +49,15 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyWithOptions(
 		req,
 		dodder_env.XDGUtilityName,
 		config.Debug,
+		repo_id.EffectiveName(config.RepoId),
 	)
 
 	madderDir := env_dir.MakeDefault(
 		req,
 		XDGUtilityNameMadder,
 		config.Debug,
+		repo_id.EffectiveName(config.RepoId),
 	)
-
-	// FDR-0019: nest the dodder metadata tree under repos/<name>/ so
-	// reads resolve the same named repo that genesis wrote. The cwd /
-	// user scope itself is still selected by env_dir's walk-up as
-	// before; only the repos/<name>/ suffix is layered on here.
-	if name := config.RepoId.GetName(); name != "" {
-		ownDir = env_dir.NestUnderRepoName(req, ownDir, name, config.Debug)
-	}
 
 	if envOptions.CustomOut == nil && config.CustomOut != nil {
 		envOptions.CustomOut = config.CustomOut
@@ -98,12 +93,22 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyFromConfigAndXDGDotenvPath(
 		req,
 		config.Debug,
 		xdgDotenvPath,
+		repo_id.EffectiveName(config.RepoId),
 	)
 
+	// FDR-0019: the blob-store slot must be a flat madder-scoped env --
+	// madder blob pools are separate and never nest. Re-key the dotenv's
+	// own XDG to the madder utility (CloneWithUtilityName re-derives the
+	// category dirs from the dotenv base, dropping the repos/<name>/
+	// nesting); configFor blanks RepoName for the madder utility. Do NOT
+	// use ownDir.GetXDGForBlobStores() here: it keeps the dodder utility
+	// name and the repos/<name>/ nesting, which would hide blobs from the
+	// flat pool.
 	madderDir := env_dir.MakeWithXDG(
 		req,
 		config.Debug,
-		ownDir.GetXDGForBlobStores(),
+		ownDir.GetXDG().CloneWithUtilityName(XDGUtilityNameMadder),
+		"",
 	)
 
 	if options.CustomOut == nil && config.CustomOut != nil {
@@ -130,21 +135,33 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyFromConfigAndXDGDotenvPath(
 	return local
 }
 
-// MakeLocalWorkingCopyFromEnvLocal preserves the legacy single-env
-// shape for callers that already hold an env_local.Env they want to
-// reuse. The same env is passed to both Make slots; for own scope
-// it's correct, and for madder scope it relies on the existing
-// dodder env_dir.GetXDGForBlobStores bridge mapping blob-store XDG
-// to "madder". Once the dodder env_dir fork is dropped, this helper
-// must be deleted (#151 bucket B Stage B follow-up): there will no
-// longer be a bridge, and the second env must be a properly madder-
-// scoped env_local.
+// MakeLocalWorkingCopyFromEnvLocal serves callers that already hold an
+// env_local.Env for the own (dodder) scope — serve, serve-proto, and the
+// HTTP/websocket remote server. envLocal's metadata XDG nests under
+// repos/<name>/ (FDR-0019), so it is correct for the own slot but wrong
+// for the blob-store slot: madder blob pools are separate, content-
+// addressed, and never nest (see XDGUtilityNameMadder / configFor). The
+// second slot is therefore built the same way the two-env builders do
+// (env_dir.MakeDefault blanks RepoName for the madder utility and
+// resolves the blob-store base via the madder XDG override / cwd walk),
+// so opening a repo here lands on the same flat blob pool that init wrote
+// and that ordinary commands read.
 func (cmd LocalWorkingCopy) MakeLocalWorkingCopyFromEnvLocal(
+	req command.Request,
 	envLocal env_local.Env,
 ) (local *local_working_copy.Repo) {
+	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+
+	madderDir := env_dir.MakeDefault(
+		req,
+		XDGUtilityNameMadder,
+		config.Debug,
+		repo_id.EffectiveName(config.RepoId),
+	)
+
 	local = local_working_copy.Make(
 		envLocal,
-		envLocal,
+		env_local.Make(envLocal, madderDir),
 		local_working_copy.OptionsEmpty,
 	)
 

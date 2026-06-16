@@ -116,7 +116,7 @@ func (cmd Serve) Run(req command.Request) {
 		},
 	)
 
-	repo := cmd.MakeLocalWorkingCopyFromEnvLocal(envLocal)
+	repo := cmd.MakeLocalWorkingCopyFromEnvLocal(req, envLocal)
 
 	server := remote_http.Server{
 		EnvLocal: envLocal,

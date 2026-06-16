@@ -47,7 +47,7 @@ function init_compression { # @test
 function init_and_reindex { # @test
 	run_dodder_init_disable_age
 
-	run test -f .dodder/local/share/config-seed
+	run test -f .dodder/local/share/repos/default/config-seed
 	assert_success
 
 	# Config is read through show-config (FDR 0020); :konfig no longer queries.
@@ -75,7 +75,7 @@ function init_and_reindex { # @test
 function init_and_deinit { # @test
 	run_dodder_init_disable_age
 
-	run test -f .dodder/local/share/config-seed
+	run test -f .dodder/local/share/repos/default/config-seed
 	assert_success
 
 	# Config is read through show-config (FDR 0020); :konfig no longer queries.
@@ -109,7 +109,7 @@ function init_and_with_another_age { # @test
 }
 
 function init_with_non_xdg { # @test
-	run_dodder_init -repo_id . test-repo-id
+	run_dodder_init -repo_id .default test-repo-id
 	run tree .dodder
 	assert_output
 
@@ -153,7 +153,7 @@ function init_and_init { # @test
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder init -repo_id . test-repo-id
+	run_dodder init -repo_id .default test-repo-id
 	assert_failure
 	assert_output --partial ': file exists'
 
@@ -179,7 +179,7 @@ function init_with_age { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-    -repo_id . \
+    -repo_id .default \
 		-encryption generate \
 		test-repo-id
 
@@ -262,7 +262,7 @@ function init_with_json_inventory_list_type { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-    -repo_id . \
+    -repo_id .default \
 		-encryption generate \
 		-inventory_list-type inventory_list-json-v0 \
 		test-repo-id

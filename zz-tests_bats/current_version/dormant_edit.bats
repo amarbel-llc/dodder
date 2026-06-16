@@ -33,11 +33,16 @@ function dormant_edit_and_change { # @test
 	assert_line '# dormant-edit smoke comment'
 
 	# dormant-edit appends the new config state to the config log
-	# (FDR 0020), so show-config -history lists the new entry. The blob
-	# digest is content-addressed; tai and ed25519 signatures are not.
+	# (FDR 0020). The regenerated fixture seeds the config log root entry
+	# at init, so show-config -history lists two entries oldest->newest:
+	# the seeded root (object-sig, no mother) and the dormant-edit entry
+	# (chained via mother-sig). The blob digest is content-addressed; tai
+	# and ed25519 signatures are not.
 	run_dodder show-config -history
 	assert_success
-	assert_output --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+	assert_equal "${#lines[@]}" 2
+	assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+	assert_line --index 1 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-mother-sig-v2@ed25519_sig-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
 }
 
 function dormant_edit_and_dont_change { # @test
@@ -47,11 +52,12 @@ function dormant_edit_and_dont_change { # @test
 	assert_output ''
 
 	# No edit was made, so no config state is appended to the log (FDR 0020):
-	# config mutation is log-only and `show :konfig` no longer queries. This
-	# fixture predates the config log, so with no mutation the log stays empty
-	# and show-config -history prints nothing (contrast the change case, which
-	# appends one entry).
+	# config mutation is log-only and `show :konfig` no longer queries. The
+	# regenerated fixture seeds the config log root entry at init, so with no
+	# mutation the log holds exactly that one seeded root entry (object-sig,
+	# no mother); contrast the change case, which appends a second entry.
 	run_dodder show-config -history
 	assert_success
-	assert_output ''
+	assert_equal "${#lines[@]}" 1
+	assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
 }

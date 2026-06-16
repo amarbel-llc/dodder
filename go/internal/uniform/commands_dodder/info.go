@@ -11,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
@@ -109,7 +110,7 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "env":
-			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug)
+			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug, repo_id.EffectiveName(config.RepoId))
 			envVars := env_vars.Make(dir)
 			var coder env_vars.BufferedCoderDotenv
 			bufferedWriter := bufio.NewWriter(ui.GetOutFile())
@@ -123,7 +124,7 @@ func (cmd Info) Run(req command.Request) {
 			}
 
 		case "xdg":
-			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug)
+			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug, repo_id.EffectiveName(config.RepoId))
 			ecksDeeGee := dir.GetXDG()
 			envVars := env_vars.Make(ecksDeeGee)
 			var coder env_vars.BufferedCoderDotenv
