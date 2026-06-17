@@ -43,7 +43,7 @@ update the corresponding tree only. If a single fact applies to both
 
 ## Testing
 
-- **All tests:** `just test` (unit + integration). Exit code 0 means all tests
+- **All tests:** `just test` (unit + integration + fixture-generator smoke). Exit code 0 means all tests
   passed --- do not grep output for "not ok" or "fail" to find failures, as
   those substrings appear in passing test names
   (e.g. `clean_fails_outside_workspace`).
@@ -52,6 +52,11 @@ update the corresponding tree only. If a single fact applies to both
   in the nix sandbox via `pkgs.testers.batsLane` from amarbel-llc/bats.
   No fixture-generation step; fixtures are committed and consumed
   read-only by the lane.
+- **Fixture-generator smoke:** `just test-bats-generate` --- builds the
+  `fixtures-current` derivation (runs `previous_versions/generate_fixture.bats`
+  in the sandbox, without materializing) so a store/CLI change that breaks
+  generation fails CI instead of bitrotting until the next manual regen.
+  Included in `just test` (#272).
 - **Filter by tag:** `just test-bats-tags <tag>` (e.g.
   `just test-bats-tags haustoria`) --- runs the per-tag nix lane
   generated from `# bats file_tags=` directives.

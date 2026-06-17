@@ -55,10 +55,10 @@ check:
 #    |_|\___||___/\__|
 #
 
-# Run all tests: unit + bats integration. The bats lane builds dodder
-# internally inside the nix sandbox, so no `build` dep is needed for
-# this path.
-test: test-go test-bats
+# Run all tests: unit + bats integration + fixture-generator smoke. The
+# bats lane builds dodder internally inside the nix sandbox, so no `build`
+# dep is needed for this path.
+test: test-go test-bats test-bats-generate
 
 # Run unit tests only.
 test-go *flags:
@@ -72,6 +72,16 @@ test-go *flags:
 # directly. To regenerate, run `just test-bats-update-fixtures`.
 test-bats:
   nix build .#bats-default --no-link --print-build-logs
+
+# Smoke-test the fixture generator: build the `fixtures-current`
+# derivation (which runs previous_versions/generate_fixture.bats in the
+# sandbox) without materializing it. The generator is excluded from the
+# normal bats lanes, so this is the only thing that runs it in CI — a
+# store/CLI change that breaks generation (e.g. FDR-0020 making config
+# non-queryable) fails here instead of silently bitrotting until the next
+# manual `test-bats-update-fixtures`. See #272.
+test-bats-generate:
+  nix build .#fixtures-current --no-link --print-build-logs
 
 # Run a per-tag bats lane (e.g. `just test-bats-tags haustoria`).
 # The tag is the file_tags value from `# bats file_tags=foo`
