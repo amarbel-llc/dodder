@@ -9,10 +9,12 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/mcp_tool_perms"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
@@ -223,8 +225,16 @@ func registerTool(
 	reg.Register(tool, handler)
 }
 
-func RunServer(utility command.Utility, repo *local_working_copy.Repo) error {
-	bridge := MakeBridge(utility)
+func RunServer(
+	utility command.Utility,
+	repo *local_working_copy.Repo,
+	startupRepoId scoped_id.Id,
+) error {
+	// An explicit startup -repo_id pins the server to that repo (per-call
+	// repo_id is then restricted to it); an auto/default startup lets each
+	// tool call select a repo freely (FDR-0019).
+	pinned := !repo_id.IsAuto(startupRepoId)
+	bridge := MakeBridge(utility, startupRepoId, pinned)
 	tools := server.NewToolRegistryV1()
 	resources := server.NewResourceRegistry()
 	index := makeTypeIndex(bridge)
@@ -287,6 +297,10 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 						"type": "string",
 						"description": "Output format (log, text, json, organize). Defaults to log.",
 						"enum": ["log", "text", "json", "organize"]
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
 					}
 				},
 				"required": ["object_id"],
@@ -331,6 +345,10 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 					"limit": {
 						"type": "integer",
 						"description": "Maximum number of results to return. Defaults to 0 (unlimited). Use this to avoid large result sets when you only need a few objects."
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
 					}
 				},
 				"required": ["query"],
@@ -345,6 +363,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 				Query  []string `json:"query"`
 				Format string   `json:"format"`
 				Limit  int      `json:"limit"`
+				RepoId string   `json:"repo_id"`
 			}
 			if err := json.Unmarshal(args, &p); err != nil {
 				return protocol.ErrorResultV1(
@@ -360,7 +379,13 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 			cliArgs := []string{"-format", format}
 			cliArgs = append(cliArgs, p.Query...)
 
-			result, err := bridge.RunCommand(ctx, "show", cliArgs, defaultMaxBytes)
+			result, err := bridge.RunCommandWithRepoId(
+				ctx,
+				"show",
+				cliArgs,
+				defaultMaxBytes,
+				p.RepoId,
+			)
 			if err != nil {
 				errMsg := formatToolError(err)
 				if result.Stderr != "" {
@@ -417,6 +442,10 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 					"format_id": {
 						"type": "string",
 						"description": "Formatter ID to use (optional, uses type default if omitted)"
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
 					}
 				},
 				"required": ["object_id"],
@@ -563,6 +592,10 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 					"type": {
 						"type": "string",
 						"description": "Object type (e.g. '!md', '!task')"
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to create in: name (XDG user) or .name (current dir). Defaults to the server's repo."
 					}
 				},
 				"additionalProperties": false
@@ -925,7 +958,22 @@ func makeBridgeHandler(
 			}
 		}
 
-		result, err := bridge.RunCommand(ctx, cmdName, cliArgs, defaultMaxBytes)
+		// repo_id is an optional param common to the bridge-routed tools;
+		// extract it here and run the command against that repo (FDR-0019).
+		// The tool-specific translate funcs ignore it — json.Unmarshal drops
+		// unknown fields — so each tool need only add it to its schema.
+		var rp struct {
+			RepoId string `json:"repo_id"`
+		}
+		_ = json.Unmarshal(args, &rp)
+
+		result, err := bridge.RunCommandWithRepoId(
+			ctx,
+			cmdName,
+			cliArgs,
+			defaultMaxBytes,
+			rp.RepoId,
+		)
 		if err != nil {
 			errMsg := formatToolError(err)
 			if result.Stderr != "" {

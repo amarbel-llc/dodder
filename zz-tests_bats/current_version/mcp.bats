@@ -207,6 +207,54 @@ function mcp_locked_mutate_fails_unambiguously_and_reset_lock_recovers { # @test
   refute_output --regexp 'REPO LOCKED'
 }
 
+# bats test_tags=repo_id
+function mcp_repo_id_routes_tool_to_repo { # @test
+  # FDR-0019 Phase A: a bridge-routed tool's optional repo_id param selects
+  # which repo the call opens. Targeting the server's own cwd repo (.default)
+  # returns its zettel; targeting a different, nonexistent repo errors
+  # (proving the param changes the open target, not just decoration); an
+  # unwired scope (//system) is rejected by repo_id.CheckSupported.
+  run_dodder_init_disable_age
+
+  to_add="$(mktemp)"
+  {
+    echo "---"
+    echo "# repo_id routing probe"
+    echo "- task"
+    echo "! md"
+    echo "---"
+  } >"$to_add"
+  run_dodder new -edit=false "$to_add"
+  assert_success
+
+  # .default -> the server's repo -> query returns the zettel
+  local in_default="$BATS_TEST_TMPDIR/mcp-q-default.jsonrpc"
+  write_mcp_tool_call_input "$in_default" query '{"query":[":z"],"repo_id":".default"}'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_default"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'repo_id routing probe'
+
+  # nonexistent user-scope repo -> errors (different open target)
+  local in_missing="$BATS_TEST_TMPDIR/mcp-q-missing.jsonrpc"
+  write_mcp_tool_call_input "$in_missing" query '{"query":[":z"],"repo_id":"nonexistent"}'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_missing"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'not in a dodder directory'
+  # the error names repos/nonexistent/ — proof the param routed the open
+  assert_output --regexp 'repos/nonexistent'
+  refute_output --regexp 'repo_id routing probe'
+
+  # //system is parsed but not yet resolvable -> CheckSupported reject
+  local in_system="$BATS_TEST_TMPDIR/mcp-q-system.jsonrpc"
+  write_mcp_tool_call_input "$in_system" query '{"query":[":z"],"repo_id":"//backup"}'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_system"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'system scope is not yet resolvable'
+}
+
 function mcp_query_empty_result_has_non_empty_text { # @test
   # Same root cause as the show-type test: an empty result set yields
   # empty stdout and an empty content block; assert the placeholder.

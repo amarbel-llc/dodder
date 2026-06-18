@@ -10,6 +10,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
@@ -77,7 +78,7 @@ func TestBridgeResetsCLIStateBetweenInvocations(t1 *testing.T) {
 	cmd := &leakyCmd{}
 	utility.AddCmd("leaky", cmd)
 
-	bridge := MakeBridge(utility)
+	bridge := MakeBridge(utility, scoped_id.Id{}, false)
 
 	for _, description := range []string{"first", "second"} {
 		if _, err := bridge.RunCommand(
@@ -115,7 +116,7 @@ func TestBridgeSerializesConcurrentInvocations(t1 *testing.T) {
 	cmd := &leakyCmd{}
 	utility.AddCmd("leaky", cmd)
 
-	bridge := MakeBridge(utility)
+	bridge := MakeBridge(utility, scoped_id.Id{}, false)
 
 	descriptions := []string{"one", "two", "three", "four", "five", "six"}
 
