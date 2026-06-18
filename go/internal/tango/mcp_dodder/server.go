@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/mcp_tool_perms"
@@ -124,6 +125,15 @@ Examples:
 
 ## Resource Drill-Down
 
+The un-segmented dodder://<kind>/... URIs below address the server's
+own repo (CWD-auto sugar). To address a specific repo without
+restarting the server, prefix any path with repos/<repo>: e.g.
+dodder:///repos/<repo>/types/<id>, dodder:///repos/<repo>/objects/<id>.
+Read dodder:///repos to list the repos in scope, and
+dodder:///repos/<repo> for a per-repo overview. <repo> is the repo's
+CLI spelling (e.g. work, .work). Traversal links in repo-scoped reads
+stay within the addressed repo.
+
 ### Types
 - dodder://types_index → word list for search
 - dodder://types → all type summaries
@@ -237,18 +247,34 @@ func RunServer(
 	bridge := MakeBridge(utility, startupRepoId, pinned)
 	tools := server.NewToolRegistryV1()
 	resources := server.NewResourceRegistry()
-	index := makeTypeIndex(bridge)
-	tagIdx := makeTagIndex(bridge)
+
+	// The startup repo's indexes back the query-type / query-tag tools and
+	// the auto/default resource reads. Seed the provider's per-repo maps
+	// with them (keyed by the startup repo's segment) so a tool build and a
+	// resource read of the same repo share one lazily-built index.
+	index := makeTypeIndex(bridge, startupRepoId)
+	tagIdx := makeTagIndex(bridge, startupRepoId)
 
 	typeBlobCoder := type_blobs.MakeTypeStore(repo.GetEnvRepo())
 
+	// reposDir is the un-nested <data>/repos/ directory. A named repo nests
+	// its metadata data dir under repos/<name>/ (madder#241), so the parent
+	// of the startup repo's data dir is the repos/ collection that
+	// readReposList scans. Every repo (including the default) is named, so
+	// this parent is always the repos/ dir.
+	reposDir := filepath.Dir(repo.GetEnvRepo().GetXDG().Data.ActualValue)
+
+	startupSeg := repoSeg(startupRepoId)
+
 	provider := &typeResourceProvider{
 		registry:      resources,
-		index:         index,
-		tagIndex:      tagIdx,
 		bridge:        bridge,
+		startupRepoId: startupRepoId,
+		reposDir:      reposDir,
 		store:         repo.GetStore(),
 		typeBlobCoder: typeBlobCoder,
+		typeIndexes:   map[string]*typeIndex{startupSeg: index},
+		tagIndexes:    map[string]*tagIndex{startupSeg: tagIdx},
 	}
 
 	hasWorkspace := !repo.GetEnvWorkspace().IsTemporary()
@@ -259,7 +285,7 @@ func RunServer(
 	}
 
 	registerTools(tools, bridge, repo, index, tagIdx, hasWorkspace)
-	registerResources(resources, index, tagIdx, bridge)
+	registerResources(resources, provider)
 
 	prompts := server.NewPromptRegistry()
 	registerPrompts(prompts)

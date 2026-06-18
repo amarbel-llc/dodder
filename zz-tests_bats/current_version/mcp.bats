@@ -114,6 +114,19 @@ function write_mcp_tool_call_input {
   } >"$path"
 }
 
+# write_mcp_resource_read_input writes a JSON-RPC stream that reads a
+# resource by URI. The third frame is the resources/read request; frames
+# 1-2 are initialize + initialized.
+function write_mcp_resource_read_input {
+  local path="$1"
+  local uri="$2"
+  {
+    echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1.0"}}}'
+    echo '{"jsonrpc":"2.0","method":"notifications/initialized"}'
+    echo '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"'"$uri"'"}}'
+  } >"$path"
+}
+
 function mcp_show_type_object_has_non_empty_text { # @test
   # Strict MCP clients (e.g. Claude Code's zod validator) reject content
   # blocks whose `text` field is the empty string. `dodder show -format
@@ -253,6 +266,62 @@ function mcp_repo_id_routes_tool_to_repo { # @test
     'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_system"'" | grep "\"id\":2"'
   assert_success
   assert_output --regexp 'system scope is not yet resolvable'
+}
+
+# bats test_tags=repo_id
+function mcp_repo_scoped_resources_route_to_repo { # @test
+  # FDR-0019 Phase B: the resource surface is repo-scoped. Reading
+  # dodder:///repos lists the repos in scope; a repo-scoped
+  # dodder:///repos/.default/objects routes the read to that repo and
+  # returns its objects; the legacy un-segmented dodder://objects still
+  # resolves to the auto/default repo (CWD-auto sugar); a repo-scoped
+  # read of a nonexistent repo surfaces the open failure as resource
+  # content. https://github.com/amarbel-llc/dodder/issues/275
+  run_dodder_init_disable_age
+
+  to_add="$(mktemp)"
+  {
+    echo "---"
+    echo "# repo scoped resource probe"
+    echo "- task"
+    echo "! md"
+    echo "---"
+  } >"$to_add"
+  run_dodder new -edit=false "$to_add"
+  assert_success
+
+  # dodder:///repos -> lists at least one repo
+  local in_repos="$BATS_TEST_TMPDIR/mcp-res-repos.jsonrpc"
+  write_mcp_resource_read_input "$in_repos" 'dodder:///repos'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_repos"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'total_repos[^0-9]+[1-9]'
+
+  # repo-scoped objects listing routes to the cwd repo -> returns the zettel
+  local in_scoped="$BATS_TEST_TMPDIR/mcp-res-scoped.jsonrpc"
+  write_mcp_resource_read_input "$in_scoped" 'dodder:///repos/.default/objects'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_scoped"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'repo scoped resource probe'
+
+  # legacy un-segmented form still resolves (CWD-auto sugar)
+  local in_legacy="$BATS_TEST_TMPDIR/mcp-res-legacy.jsonrpc"
+  write_mcp_resource_read_input "$in_legacy" 'dodder://objects'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_legacy"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'repo scoped resource probe'
+
+  # repo-scoped read of a nonexistent repo -> open failure as content
+  local in_missing="$BATS_TEST_TMPDIR/mcp-res-missing.jsonrpc"
+  write_mcp_resource_read_input "$in_missing" 'dodder:///repos/nonexistent/objects'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_missing"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'not in a dodder directory|repos/nonexistent'
+  refute_output --regexp 'repo scoped resource probe'
 }
 
 function mcp_query_empty_result_has_non_empty_text { # @test

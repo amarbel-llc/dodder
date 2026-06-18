@@ -9,10 +9,12 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_json_fmt"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
@@ -187,16 +189,37 @@ func (server *Server) handleMCP(request Request) (response Response) {
 	return response
 }
 
+// mcpRepoSeg is the `<repo>` path segment for this HTTP server's served
+// repo, used to emit the FDR-0019 repo-scoped resource URIs
+// (dodder:///repos/<repo>/...). It is the name of the repos/<name>/ nest
+// the served repo's data dir sits in (madder#241); the default/unnamed
+// repo resolves to "default" via repo_id.DefaultName. The HTTP server
+// serves exactly one repo, so this is constant per server.
+func (server *Server) mcpRepoSeg() string {
+	if server.Repo == nil {
+		return repo_id.DefaultName
+	}
+
+	seg := filepath.Base(server.Repo.GetEnvRepo().GetXDG().Data.ActualValue)
+	if seg == "" || seg == "." || seg == string(filepath.Separator) {
+		return repo_id.DefaultName
+	}
+
+	return seg
+}
+
 func (server *Server) getMCPResources() []protocol.Resource {
+	seg := server.mcpRepoSeg()
+
 	resources := []protocol.Resource{
 		{
-			URI:         "dodder:///types",
+			URI:         fmt.Sprintf("dodder:///repos/%s/types", seg),
 			Name:        "Types",
 			Description: "list of all available object types",
 			MimeType:    "application/json",
 		},
 		{
-			URI:         "dodder:///objects",
+			URI:         fmt.Sprintf("dodder:///repos/%s/objects", seg),
 			Name:        "Objects",
 			Description: "list of all stored objects (zettels, types, tags)",
 			MimeType:    "application/json",
@@ -214,7 +237,7 @@ func (server *Server) getMCPResources() []protocol.Resource {
 func (server *Server) getMCPResourceTemplates() []protocol.ResourceTemplate {
 	return []protocol.ResourceTemplate{
 		{
-			URITemplate: "dodder:///objects/{objectId}",
+			URITemplate: "dodder:///repos/{repoId}/objects/{objectId}",
 			Name:        "Object by id",
 			Description: "fetch a single object (zettel, type, or tag) by its object id",
 			MimeType:    "application/json",
@@ -257,11 +280,29 @@ func (server *Server) readMCPResource(
 		return nil, err
 	}
 
-	if strings.HasPrefix(uri.Path, "/objects") {
+	path := uri.Path
+
+	// FDR-0019 repo-scoped form: /repos/<repo>/<kind>/... The HTTP server
+	// serves exactly one repo, so the <repo> segment is stripped and the
+	// remaining path dispatched to the same kind handlers. The legacy
+	// un-segmented /objects, /types, /blobs paths still work (CWD-auto
+	// sugar). Blobs stay repo-agnostic (content-addressed) under /blobs.
+	if rest, ok := strings.CutPrefix(path, "/repos/"); ok {
+		_, kindPath, found := strings.Cut(rest, "/")
+		if !found {
+			// /repos/<repo> overview is not served by the HTTP MCP; only
+			// per-kind reads are wired here.
+			return nil, errors.BadRequestf("resource not found: %q", uriString)
+		}
+		path = "/" + kindPath
+		uri.Path = path
+	}
+
+	if strings.HasPrefix(path, "/objects") {
 		return server.readMCPResourceObjects(uri)
-	} else if strings.HasPrefix(uri.Path, "/types") {
+	} else if strings.HasPrefix(path, "/types") {
 		return server.readMCPResourceTypes(uri)
-	} else if strings.HasPrefix(uri.Path, "/blobs") {
+	} else if strings.HasPrefix(path, "/blobs") {
 		return server.readMCPResourceBlobs(uri)
 	} else {
 		return nil, errors.BadRequestf("resource not found: %q", uriString)

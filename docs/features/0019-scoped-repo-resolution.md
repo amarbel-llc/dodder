@@ -122,10 +122,14 @@ startup and neither tools nor resource URIs carry a repo dimension.
 
 - **Tool parameter.** Every repo-touching tool gains an optional
   `repo_id` accepting the grammar above.
-- **Resource URI segment.** Resources gain a repo-scoped form:
-  `dodder://repos/<repo-id>/objects/...`,
-  `dodder://repos/<repo-id>/query/...`, etc. The repo-id segment is
-  URI-encoded where needed (leading dots are URI-safe).
+- **Resource URI segment.** Resources gain a repo-scoped form (the
+  emitted canonical shape uses the triple-slash empty-authority form):
+  `dodder:///repos/<repo-id>/objects/...`,
+  `dodder:///repos/<repo-id>/query/...`, etc. The repo-id segment is
+  the CLI spelling (leading dots are URI-safe). The collection root
+  `dodder:///repos` lists the repos in scope (the MCP analog of
+  `info-repo repos`), and `dodder:///repos/<repo-id>` is a per-repo
+  overview linking its objects/types/tags/indexes.
 - **CWD-auto sugar.** Omitting `repo_id` (or using the existing
   un-segmented `dodder://...` URIs) resolves exactly like the empty
   CLI id: nearest CWD-scoped repo from the server's working
@@ -164,7 +168,7 @@ Remote-first `/name`, explicit system with `//name`:
 
 MCP, addressing a sibling repo without restarting the server:
 
-    read dodder://repos/work/objects/some/zettel
+    read dodder:///repos/work/objects/some/zettel
     query(["!task", "todo"], repo_id: "..notes")
 
     # CWD-auto sugar: same as today's single-repo behavior
@@ -194,6 +198,46 @@ MCP, addressing a sibling repo without restarting the server:
   needs a deterministic target; `default` is it. Renaming the
   default repo means updating `DODDER_REPO_ID` or passing ids
   explicitly.
+
+## Implementation Status
+
+Landed (master):
+
+- **P1 layout + grammar.** `scoped_id`-based `-repo_id`, default-named
+  repos, the `repos/<name>/` metadata nest under each scope (madder
+  blob env stays flat), and `repo_id.CheckSupported` as the uniform
+  scope gate on the working-copy/serve/info paths.
+- **P3 user surface.** `info-repo repos` listing and `-repo_id`
+  completion of the in-scope repo names.
+- **MCP repo_id, Phase A (tools).** Every repo-touching tool takes an
+  optional `repo_id`; the bridge resolves it per call (startup pin
+  restricts, unpinned routes per-call), `CheckSupported`-gated.
+- **MCP repo_id, Phase B core (resources).** The resource surface is
+  repo-scoped: `dodder:///repos/<repo>/...` reads route to the
+  addressed repo (bridge- and per-repo-index-routed), `dodder:///repos`
+  lists the in-scope repos, `dodder:///repos/<repo>` is a per-repo
+  overview, and the legacy un-segmented `dodder://...` URIs stay as
+  CWD-auto sugar. The HTTP MCP surface emits the same scheme.
+
+Deferred (tracked follow-ups):
+
+- **RepoManager (#278).** Three MCP surfaces still hold only the
+  server's startup repo — the `edit` and `reset-lock` tools and the
+  blob-format *listing* (`getBlobFormatIds`, the one handler reading
+  `store`/`typeBlobCoder` directly). A repo-scoped read/call of a
+  non-default repo for these returns a clear "per-repo not yet
+  supported (RepoManager follow-up)" error. Making them per-repo needs
+  a stateful repo-open-by-id with the lazy per-call env cache described
+  under Tuning Levers.
+- **Both-scope repo listing (#276).** `dodder:///repos` (and
+  `info-repo repos`) currently enumerate the bare directory names under
+  the startup repo's scope `repos/` dir, so a CWD-scope repo is listed
+  as `default` rather than its routable `.default` spelling — the
+  emitted child URI does not round-trip back to the CWD repo. Listing
+  both scopes with scope-correct spellings is #276.
+- **P2 madder walk-up / multi-dot** and **#274** (delegate
+  `EffectiveName` to a madder shared resolver, then drop the XDGSystem
+  `CheckSupported` reject) remain.
 
 ## Tuning Levers
 

@@ -29,9 +29,12 @@ func TestGetMCPResourcesShape(t1 *testing.T) {
 		uris[r.URI]++
 	}
 
+	// With a nil Repo, mcpRepoSeg() falls back to repo_id.DefaultName
+	// ("default"), so the served resources are repo-scoped under it
+	// (FDR-0019 Phase B).
 	for _, expected := range []string{
-		"dodder:///types",
-		"dodder:///objects",
+		"dodder:///repos/default/types",
+		"dodder:///repos/default/objects",
 	} {
 		if uris[expected] != 1 {
 			t.Fatalf("expected resource URI %q present exactly once, got count: %d (full list: %v)", expected, uris[expected], uris)
@@ -67,7 +70,7 @@ func TestGetMCPResourceTemplatesShape(t1 *testing.T) {
 	}
 
 	for _, expected := range []string{
-		"dodder:///objects/{objectId}",
+		"dodder:///repos/{repoId}/objects/{objectId}",
 		"dodder:///blobs/{blobDigest}",
 		"dodder:///blobs/{blobDigest}/{mimeType}",
 	} {

@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 )
 
 type typeSummary struct {
@@ -20,13 +21,14 @@ type typeSummary struct {
 
 type typeIndex struct {
 	bridge Bridge
+	repoId scoped_id.Id
 	once   sync.Once
 	words  map[string][]typeSummary
 	err    error
 }
 
-func makeTypeIndex(bridge Bridge) *typeIndex {
-	return &typeIndex{bridge: bridge}
+func makeTypeIndex(bridge Bridge, repoId scoped_id.Id) *typeIndex {
+	return &typeIndex{bridge: bridge, repoId: repoId}
 }
 
 func (idx *typeIndex) ensureBuilt() error {
@@ -35,11 +37,12 @@ func (idx *typeIndex) ensureBuilt() error {
 }
 
 func (idx *typeIndex) build() error {
-	result, err := idx.bridge.RunCommand(
+	result, err := idx.bridge.RunCommandWithRepoId(
 		context.Background(),
 		"show",
 		[]string{"-format", "json", ":t"},
 		500_000,
+		idx.repoId.String(),
 	)
 	if err != nil {
 		return err
@@ -69,7 +72,10 @@ func (idx *typeIndex) build() error {
 			Date:        obj.Date,
 			Description: obj.Description,
 			Tags:        obj.Tags,
-			ResourceURI: "dodder://types/" + strings.TrimPrefix(obj.ObjectId, "!"),
+			ResourceURI: repoResourceURI(
+				idx.repoId,
+				"types/"+strings.TrimPrefix(obj.ObjectId, "!"),
+			),
 		}
 
 		seen := make(map[string]bool)

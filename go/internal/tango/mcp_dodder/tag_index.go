@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 )
 
 type tagSummary struct {
@@ -20,13 +21,14 @@ type tagSummary struct {
 
 type tagIndex struct {
 	bridge Bridge
+	repoId scoped_id.Id
 	once   sync.Once
 	words  map[string][]tagSummary
 	err    error
 }
 
-func makeTagIndex(bridge Bridge) *tagIndex {
-	return &tagIndex{bridge: bridge}
+func makeTagIndex(bridge Bridge, repoId scoped_id.Id) *tagIndex {
+	return &tagIndex{bridge: bridge, repoId: repoId}
 }
 
 func (idx *tagIndex) ensureBuilt() error {
@@ -35,11 +37,12 @@ func (idx *tagIndex) ensureBuilt() error {
 }
 
 func (idx *tagIndex) build() error {
-	result, err := idx.bridge.RunCommand(
+	result, err := idx.bridge.RunCommandWithRepoId(
 		context.Background(),
 		"show",
 		[]string{"-format", "json", ":e"},
 		500_000,
+		idx.repoId.String(),
 	)
 	if err != nil {
 		return err
@@ -74,7 +77,7 @@ func (idx *tagIndex) build() error {
 			Date:        obj.Date,
 			Description: obj.Description,
 			Tags:        obj.Tags,
-			ResourceURI: "dodder://tags/" + obj.ObjectId,
+			ResourceURI: repoResourceURI(idx.repoId, "tags/"+obj.ObjectId),
 		}
 
 		seen := make(map[string]bool)
