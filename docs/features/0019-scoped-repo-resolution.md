@@ -225,22 +225,27 @@ Landed (master):
   lists the in-scope repos, `dodder:///repos/<repo>` is a per-repo
   overview, and the legacy un-segmented `dodder://...` URIs stay as
   CWD-auto sugar. The HTTP MCP surface emits the same scheme.
+- **MCP per-repo edit / reset-lock / blob-format listing (#278).** The
+  three remaining store-backed stragglers now open the addressed repo
+  per call via `bridge.OpenRepo` — a fresh `*local_working_copy.Repo`
+  built from the repo_id (same pin/`CheckSupported` resolution as the
+  tool path). `edit` and `reset-lock` gain an optional `repo_id`;
+  blob-format listing routes by the resource URI's repo. No persistent
+  cache: mirrors how the bridge already builds a fresh repo per tool
+  call, so no lock-holding or index staleness. The open-repo build
+  duration is emitted as a stats-me timer (`dodder.mcp.open_repo`) so
+  the build-per-call cost is observable; if it ever dominates MCP
+  latency, switch to the lazy per-repo cache (the MCP repo cache lever
+  below).
 
 Deferred (tracked follow-ups):
 
-- **RepoManager (#278).** Three MCP surfaces still hold only the
-  server's startup repo — the `edit` and `reset-lock` tools and the
-  blob-format *listing* (`getBlobFormatIds`, the one handler reading
-  `store`/`typeBlobCoder` directly). A repo-scoped read/call of a
-  non-default repo for these returns a clear "per-repo not yet
-  supported (RepoManager follow-up)" error. Making them per-repo needs
-  a stateful repo-open-by-id with the lazy per-call env cache described
-  under Tuning Levers.
 - **Both-scope MCP listing.** The CLI lists both scopes (#276, above),
   but the MCP server is bound to one startup scope, so `dodder:///repos`
   lists only that scope (with the correct spelling). Listing the other
-  scope's repos over MCP needs a second startup env_dir — folded into the
-  RepoManager work (#278), where MCP multi-repo state lives.
+  scope's repos over MCP needs a second startup env_dir built with
+  `env_dir.MakeStandardXDGUser` (as the CLI does) — a small standalone
+  follow-up.
 - **P2 madder walk-up / multi-dot** and **#274** (delegate
   `EffectiveName` to a madder shared resolver, then drop the XDGSystem
   `CheckSupported` reject) remain.
@@ -251,7 +256,7 @@ Deferred (tracked follow-ups):
 |---|---|---|---|
 | Auto-resolution order | CWD walk-up, then user `default` | Matches today's empty-id behavior; least surprise | Users routinely shadowed by unexpected ancestor repos |
 | Legacy tree handling | Read-in-place as `default`, explicit migration command | No surprise rewrites of user data | Compat shim cost dominates env construction, or all known repos migrated |
-| MCP repo cache | One env per repo-id, built lazily per call | Startup stays cheap; matches GetReadBlobStore's build-per-call precedent | Per-call env construction shows up in MCP latency |
+| MCP repo cache | Fresh repo built per call (no cache); `dodder.mcp.open_repo` stats-me timer tracks build duration | No lock-holding or index staleness; matches the bridge's per-call repo build | The timer shows open-repo build dominating MCP latency — then memoize one env per repo-id |
 | Dot-depth in completions | Offer up to the ceiling | Walk-up is already bounded | Completion noise in deep worktree hierarchies |
 
 ## More Information

@@ -12,7 +12,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
 	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
@@ -255,8 +254,6 @@ func RunServer(
 	index := makeTypeIndex(bridge, startupRepoId)
 	tagIdx := makeTagIndex(bridge, startupRepoId)
 
-	typeBlobCoder := type_blobs.MakeTypeStore(repo.GetEnvRepo())
-
 	// reposDir is the un-nested <data>/repos/ directory. A named repo nests
 	// its metadata data dir under repos/<name>/ (madder#241), so the parent
 	// of the startup repo's data dir is the repos/ collection that
@@ -272,15 +269,12 @@ func RunServer(
 	startupSeg := repoSeg(startupRepoId)
 
 	provider := &typeResourceProvider{
-		registry:      resources,
-		bridge:        bridge,
-		startupRepoId: startupRepoId,
-		reposDir:      reposDir,
-		startupIsCwd:  startupIsCwd,
-		store:         repo.GetStore(),
-		typeBlobCoder: typeBlobCoder,
-		typeIndexes:   map[string]*typeIndex{startupSeg: index},
-		tagIndexes:    map[string]*tagIndex{startupSeg: tagIdx},
+		registry:     resources,
+		bridge:       bridge,
+		reposDir:     reposDir,
+		startupIsCwd: startupIsCwd,
+		typeIndexes:  map[string]*typeIndex{startupSeg: index},
+		tagIndexes:   map[string]*tagIndex{startupSeg: tagIdx},
 	}
 
 	hasWorkspace := !repo.GetEnvWorkspace().IsTemporary()
@@ -290,7 +284,7 @@ func RunServer(
 		instructions += mcpInstructionsWorkspace
 	}
 
-	registerTools(tools, bridge, repo, index, tagIdx, hasWorkspace)
+	registerTools(tools, bridge, index, tagIdx, hasWorkspace)
 	registerResources(resources, provider)
 
 	prompts := server.NewPromptRegistry()
@@ -312,7 +306,7 @@ func RunServer(
 	return srv.Run(context.Background())
 }
 
-func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_working_copy.Repo, index *typeIndex, tagIdx *tagIndex, hasWorkspace bool) {
+func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex, tagIdx *tagIndex, hasWorkspace bool) {
 	registerTool(
 		tools,
 		protocol.ToolV1{
@@ -664,13 +658,17 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 					"blob": {
 						"type": "string",
 						"description": "New blob content (replaces existing blob)"
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
 					}
 				},
 				"required": ["object_id"],
 				"additionalProperties": false
 			}`),
 		},
-		makeEditHandler(repo, bridge),
+		makeEditHandler(bridge),
 	)
 
 	registerTool(
@@ -680,11 +678,16 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, repo *local_work
 			Description: "Forcibly reset the repo's environment lock (the filesystem mutex guarding mutations, NOT content locks). A failed mutating operation intentionally leaves this lock held for recovery; use this tool to clear it after verifying no other dodder process is using the repo. The response states the resulting lock state unambiguously. Requires user approval on every call.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
-				"properties": {},
+				"properties": {
+					"repo_id": {
+						"type": "string",
+						"description": "Repo whose lock to reset: name (XDG user) or .name (current dir). Defaults to the server's repo."
+					}
+				},
 				"additionalProperties": false
 			}`),
 		},
-		makeResetLockHandler(repo),
+		makeResetLockHandler(bridge),
 	)
 
 	if !hasWorkspace {
@@ -844,7 +847,6 @@ func newToolCLIArgs(args json.RawMessage) ([]string, error) {
 }
 
 func makeEditHandler(
-	repo *local_working_copy.Repo,
 	bridge Bridge,
 ) server.ToolHandlerV1 {
 	return func(
@@ -857,6 +859,7 @@ func makeEditHandler(
 			Tags        []string `json:"tags"`
 			Type        *string  `json:"type"`
 			Blob        *string  `json:"blob"`
+			RepoId      string   `json:"repo_id"`
 		}
 
 		if err := json.Unmarshal(args, &p); err != nil {
@@ -874,21 +877,31 @@ func makeEditHandler(
 
 		defer objectIdRepool()
 
-		op := repo_actions.MakeUpdateObject(repo)
+		// Open the addressed repo per call (FDR-0019 #278) and mutate within
+		// its context lifecycle; empty repo_id resolves to the server's
+		// default.
+		if err := bridge.WithRepo(
+			ctx,
+			p.RepoId,
+			func(repo *local_working_copy.Repo) error {
+				op := repo_actions.MakeUpdateObject(repo)
 
-		changes := repo_actions.ObjectChanges{
-			Description: p.Description,
-			Tags:        p.Tags,
-			Type:        p.Type,
-			Blob:        p.Blob,
-		}
+				changes := repo_actions.ObjectChanges{
+					Description: p.Description,
+					Tags:        p.Tags,
+					Type:        p.Type,
+					Blob:        p.Blob,
+				}
 
-		if _, err := op.Run(objectId, changes); err != nil {
+				_, err := op.Run(objectId, changes)
+				return err
+			},
+		); err != nil {
 			return protocol.ErrorResultV1(formatToolError(err)), nil
 		}
 
-		// Show the updated object via bridge
-		result, err := bridge.RunCommand(ctx, "show", []string{p.ObjectId}, defaultMaxBytes)
+		// Show the updated object from the same repo (after the edit flush).
+		result, err := bridge.RunCommandWithRepoId(ctx, "show", []string{p.ObjectId}, defaultMaxBytes, p.RepoId)
 		if err != nil {
 			return protocol.ErrorResultV1(formatToolError(err)), nil
 		}

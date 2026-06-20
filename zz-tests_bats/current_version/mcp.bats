@@ -327,6 +327,91 @@ function mcp_repo_scoped_resources_route_to_repo { # @test
   refute_output --regexp 'repo scoped resource probe'
 }
 
+# bats test_tags=repo_id
+function mcp_reset_lock_routes_by_repo_id { # @test
+  # FDR-0019 #278: reset-lock gains an optional repo_id and opens that repo
+  # per call. Targeting the server's own cwd repo (.default) clears its
+  # staged lock; a nonexistent repo errors at open (proving the param
+  # selects the repo, not just decorates the call).
+  run_dodder_init_disable_age
+
+  run_dodder info xdg
+  assert_success
+  local state_home
+  state_home="$(echo "$output" | grep -E 'STATE' | head -n1 | cut -d= -f2 | tr -d '"')"
+  assert [ -n "$state_home" ]
+  mkdir -p "$state_home"
+  touch "$state_home/lock"
+
+  local in_default="$BATS_TEST_TMPDIR/mcp-rl-default.jsonrpc"
+  write_mcp_tool_call_input "$in_default" reset-lock '{"repo_id":".default"}'
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$in_default"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'no longer locked'
+  assert [ ! -e "$state_home/lock" ]
+
+  local in_missing="$BATS_TEST_TMPDIR/mcp-rl-missing.jsonrpc"
+  write_mcp_tool_call_input "$in_missing" reset-lock '{"repo_id":"nonexistent"}'
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$in_missing"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'not in a dodder directory|repos/nonexistent'
+}
+
+# bats test_tags=repo_id
+function mcp_edit_and_blob_formats_route_by_repo_id { # @test
+  # FDR-0019 #278: edit and blob-format listing open the addressed repo per
+  # call. edit with repo_id=.default mutates the server's repo; a
+  # nonexistent repo errors at open. Reading a scoped repo's blob formats no
+  # longer returns the old "per-repo not yet supported" deferral.
+  run_dodder_init_disable_age
+
+  to_add="$(mktemp)"
+  {
+    echo "---"
+    echo "# repo 278 probe"
+    echo "- task"
+    echo "! md"
+    echo "---"
+  } >"$to_add"
+  run_dodder new -edit=false "$to_add"
+  assert_success
+
+  run_dodder show -format json :z
+  assert_success
+  local object_id
+  object_id="$(echo "$output" | grep -oE '"object-id":"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//')"
+  assert [ -n "$object_id" ]
+
+  # edit via repo_id=.default updates the description
+  local in_edit="$BATS_TEST_TMPDIR/mcp-edit.jsonrpc"
+  write_mcp_tool_call_input "$in_edit" edit \
+    '{"object_id":"'"$object_id"'","description":"edited via 278","repo_id":".default"}'
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$in_edit"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'edited via 278'
+
+  # edit targeting a nonexistent repo errors at open
+  local in_edit_missing="$BATS_TEST_TMPDIR/mcp-edit-missing.jsonrpc"
+  write_mcp_tool_call_input "$in_edit_missing" edit \
+    '{"object_id":"'"$object_id"'","description":"x","repo_id":"nonexistent"}'
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$in_edit_missing"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'not in a dodder directory|repos/nonexistent'
+
+  # blob-format listing for the scoped repo no longer returns the deferral
+  local in_fmt="$BATS_TEST_TMPDIR/mcp-fmt.jsonrpc"
+  write_mcp_resource_read_input "$in_fmt" \
+    "dodder:///repos/.default/objects/$object_id/blob/formats"
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_fmt"'" | grep "\"id\":2"'
+  assert_success
+  refute_output --regexp 'per-repo not yet supported'
+}
+
 function mcp_query_empty_result_has_non_empty_text { # @test
   # Same root cause as the show-type test: an empty result set yields
   # empty stdout and an empty content block; assert the placeholder.

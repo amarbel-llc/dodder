@@ -19,32 +19,61 @@ import (
 // the deliberate, user-approved recovery path — the clown plugin's
 // PreToolUse hook forces an `ask` decision on every invocation.
 func makeResetLockHandler(
-	repo *local_working_copy.Repo,
+	bridge Bridge,
 ) server.ToolHandlerV1 {
 	return func(
 		ctx context.Context,
 		args json.RawMessage,
 	) (*protocol.ToolCallResultV1, error) {
-		lockSmith := repo.GetEnvRepo().GetLockSmith()
-
-		breaker, ok := lockSmith.(file_lock.Breaker)
-		if !ok {
-			return protocol.ErrorResultV1(fmt.Sprintf(
-				"this repo's lock (%T) does not support forced resets",
-				lockSmith,
-			)), nil
+		var p struct {
+			RepoId string `json:"repo_id"`
 		}
 
-		result, err := breaker.Break()
-		if err != nil {
+		if err := json.Unmarshal(args, &p); err != nil {
+			return protocol.ErrorResultV1(
+				fmt.Sprintf("Invalid arguments: %v", err),
+			), nil
+		}
+
+		var responseText, unsupported string
+
+		// Open the addressed repo per call (FDR-0019 #278) and break its lock
+		// within the repo's context lifecycle; empty repo_id resolves to the
+		// server's default.
+		if err := bridge.WithRepo(
+			ctx,
+			p.RepoId,
+			func(repo *local_working_copy.Repo) error {
+				lockSmith := repo.GetEnvRepo().GetLockSmith()
+
+				breaker, ok := lockSmith.(file_lock.Breaker)
+				if !ok {
+					unsupported = fmt.Sprintf(
+						"this repo's lock (%T) does not support forced resets",
+						lockSmith,
+					)
+					return nil
+				}
+
+				result, err := breaker.Break()
+				if err != nil {
+					return err
+				}
+
+				responseText = resetLockResponseText(result, breaker.Path())
+				return nil
+			},
+		); err != nil {
 			return protocol.ErrorResultV1(formatToolError(err)), nil
+		}
+
+		if unsupported != "" {
+			return protocol.ErrorResultV1(unsupported), nil
 		}
 
 		return &protocol.ToolCallResultV1{
 			Content: []protocol.ContentBlockV1{
-				protocol.TextContentV1(
-					resetLockResponseText(result, breaker.Path()),
-				),
+				protocol.TextContentV1(responseText),
 			},
 		}, nil
 	}

@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
-	"code.linenisgreat.com/dodder/go/internal/oscar/store"
+	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
@@ -22,13 +22,6 @@ import (
 type typeResourceProvider struct {
 	registry *server.ResourceRegistry
 	bridge   Bridge
-
-	// startupRepoId is the server's startup repo. The 3 store-backed
-	// stragglers (readObjectBlobFormats / getBlobFormatIds, plus the edit
-	// and reset-lock tools) hold this repo only; a repo-scoped read of a
-	// different repo for them errors until the RepoManager follow-up
-	// (FDR-0019, #278).
-	startupRepoId scoped_id.Id
 
 	// reposDir is the un-nested `<data>/repos/` directory whose
 	// subdirectories name the repos in the active scope. Captured at
@@ -44,9 +37,6 @@ type typeResourceProvider struct {
 	// `name`). The MCP server is bound to one startup scope, so this lists
 	// that scope only; full both-scope MCP listing is a follow-up.
 	startupIsCwd bool
-
-	store         *store.Store
-	typeBlobCoder type_blobs.Coder
 
 	// indexMu guards the lazily-populated per-repo index maps. The go-mcp
 	// server dispatches each message on its own goroutine, so concurrent
@@ -752,63 +742,66 @@ func (p *typeResourceProvider) readObjectBlobFormats(
 }
 
 // getBlobFormatIds resolves the available blob formatter IDs for an object
-// by reading its type object directly from the store, bypassing workspace
-// query filters that would otherwise exclude type objects.
-//
-// This is one of the 3 stragglers (FDR-0019 RepoManager follow-up, #278):
-// it touches the startup repo's p.store/p.typeBlobCoder directly, so it
-// cannot be routed per-repo without a stateful repo-open-by-id
-// (RepoManager). A read of a non-default repo therefore errors with a
-// clear deferral message rather than silently returning the startup
-// repo's formats.
+// by reading its type object directly from the addressed repo's store,
+// bypassing workspace query filters that would otherwise exclude type
+// objects. The repo is opened per call (FDR-0019 #278), so blob-format
+// listing works for any in-scope repo, not just the server's startup repo.
 func (p *typeResourceProvider) getBlobFormatIds(
 	ctx context.Context,
 	repoId scoped_id.Id,
 	objectId string,
 ) ([]string, error) {
-	if repoId.String() != p.startupRepoId.String() {
-		return nil, fmt.Errorf(
-			"per-repo not yet supported for blob-format listing on repo %q (RepoManager follow-up, see #278)",
-			repoSeg(repoId),
-		)
-	}
+	var resultIds []string
 
-	oid, oidRepool, err := ids.MakeObjectId(objectId)
-	if err != nil {
-		return nil, fmt.Errorf("parse object id %s: %w", objectId, err)
-	}
-	defer oidRepool()
+	if err := p.bridge.WithRepo(
+		ctx,
+		repoId.String(),
+		func(repo *local_working_copy.Repo) error {
+			repoStore := repo.GetStore()
+			typeBlobCoder := type_blobs.MakeTypeStore(repo.GetEnvRepo())
 
-	object, err := p.store.ReadTransactedFromObjectId(oid)
-	if err != nil {
-		return nil, fmt.Errorf("read object %s: %w", objectId, err)
-	}
+			oid, oidRepool, err := ids.MakeObjectId(objectId)
+			if err != nil {
+				return fmt.Errorf("parse object id %s: %w", objectId, err)
+			}
+			defer oidRepool()
 
-	typeObject, err := p.store.ReadObjectTypeAndLockIfNecessary(object)
-	if err != nil {
-		if errors.IsErrNotFound(err) {
-			return nil, fmt.Errorf("type %s has no blob", object.GetType())
-		}
-		return nil, fmt.Errorf("read type for %s: %w", objectId, err)
-	}
+			object, err := repoStore.ReadTransactedFromObjectId(oid)
+			if err != nil {
+				return fmt.Errorf("read object %s: %w", objectId, err)
+			}
 
-	blobDigest := typeObject.GetMetadata().GetBlobDigest()
-	if blobDigest.IsNull() {
-		return nil, fmt.Errorf("type %s has no blob", object.GetType())
-	}
+			typeObject, err := repoStore.ReadObjectTypeAndLockIfNecessary(object)
+			if err != nil {
+				if errors.IsErrNotFound(err) {
+					return fmt.Errorf("type %s has no blob", object.GetType())
+				}
+				return fmt.Errorf("read type for %s: %w", objectId, err)
+			}
 
-	typeBlob, repool, _, err := p.typeBlobCoder.ParseTypedBlob(typeObject.GetType(), blobDigest)
-	if err != nil {
-		return nil, fmt.Errorf("parse type blob for %s: %w", object.GetType(), err)
-	}
-	defer repool()
+			blobDigest := typeObject.GetMetadata().GetBlobDigest()
+			if blobDigest.IsNull() {
+				return fmt.Errorf("type %s has no blob", object.GetType())
+			}
 
-	formatters := typeBlob.GetFormatters()
-	resultIds := make([]string, 0, len(formatters))
-	for id := range formatters {
-		resultIds = append(resultIds, id)
+			typeBlob, repool, _, err := typeBlobCoder.ParseTypedBlob(typeObject.GetType(), blobDigest)
+			if err != nil {
+				return fmt.Errorf("parse type blob for %s: %w", object.GetType(), err)
+			}
+			defer repool()
+
+			formatters := typeBlob.GetFormatters()
+			resultIds = make([]string, 0, len(formatters))
+			for id := range formatters {
+				resultIds = append(resultIds, id)
+			}
+			sort.Strings(resultIds)
+
+			return nil
+		},
+	); err != nil {
+		return nil, err
 	}
-	sort.Strings(resultIds)
 
 	return resultIds, nil
 }

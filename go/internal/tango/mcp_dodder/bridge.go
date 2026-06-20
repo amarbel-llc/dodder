@@ -3,10 +3,14 @@ package mcp_dodder
 import (
 	"context"
 	"sync"
+	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
+	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/flags"
 	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
@@ -170,4 +174,62 @@ func (b Bridge) RunCommandWithRepoId(
 	}
 
 	return result, nil
+}
+
+// WithRepo builds a fresh local working copy for the repo addressed by
+// repoIdParam (empty = the server's default repo), gated by the same
+// pin/CheckSupported resolution as the tool path (resolveRepoId), and runs
+// fn against it. It is the store-backed counterpart to RunCommandWithRepoId:
+// the handlers that need a real *Repo rather than a CLI run — edit,
+// reset-lock, and blob-format listing (FDR-0019 #278) — call this.
+//
+// fn runs INSIDE the build's error context, exactly as RunCommandWithRepoId
+// runs cmd.Run inside it. This is load-bearing: MakeLocalWorkingCopy
+// registers the env's temp-dir cleanup (and the repo Flush) as After hooks
+// on that context, so they must fire AFTER fn finishes — returning the repo
+// for use after the context completed would tear its temp dirs down first,
+// and a subsequent blob write would chmod into a removed directory.
+//
+// A fresh repo is built per call, mirroring how RunCommandWithRepoId builds
+// one per command run: no held-open cache, so no lock-holding or index
+// staleness. The build duration is emitted as a statsd timer so the
+// build-per-call cost is observable; if it ever dominates MCP latency, switch
+// to a lazy per-repo cache (the FDR "MCP repo cache" lever).
+func (b Bridge) WithRepo(
+	ctx context.Context,
+	repoIdParam string,
+	fn func(*local_working_copy.Repo) error,
+) error {
+	repoId, err := b.resolveRepoId(repoIdParam)
+	if err != nil {
+		return err
+	}
+
+	config := repo_config_cli.Default()
+	config.RepoId = repoId
+
+	utility := command.MakeUtility("dodder", config)
+
+	errCtx := errors.MakeContext(ctx)
+
+	return errCtx.Run(func(ctx errors.Context) {
+		// MakeRequest reads the repo only from req.Utility's config
+		// (config.RepoId); the flagSet is just a required, unparsed
+		// placeholder and the cmd argument is unused.
+		flagSet := flags.NewFlagSet("open-repo", flags.ContinueOnError)
+
+		req, ok := utility.MakeRequest(ctx, nil, flagSet)
+		if !ok {
+			return
+		}
+
+		start := time.Now()
+		repo := command_components_dodder.LocalWorkingCopy{}.
+			MakeLocalWorkingCopy(req)
+		emitTiming("dodder.mcp.open_repo", time.Since(start))
+
+		if err := fn(repo); err != nil {
+			ctx.Cancel(err)
+		}
+	})
 }
