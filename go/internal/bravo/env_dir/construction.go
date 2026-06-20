@@ -1,8 +1,11 @@
 package env_dir
 
 import (
+	"os"
+
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	"github.com/amarbel-llc/madder/go/pkgs/madder_env"
 	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -44,7 +47,30 @@ func configFor(
 		cfg.RepoName = repoName
 	}
 
+	cfg.SystemRoot = systemRootFor(utilityName)
+
 	return cfg
+}
+
+// systemRootFor is the filesystem root a system-scoped (`//name`) id
+// resolves under for the given utility (FDR-0019 #280). madder's env_dir
+// only re-roots when SystemRoot is non-empty, so without this injection a
+// `//name` id would silently no-op back to the user tree. The
+// DODDER_SYSTEM_ROOT env var, when set, overrides BOTH slots so a
+// relocation or test sandbox can colocate them; otherwise the dodder
+// metadata slot defaults to dodder_env.DefaultSystemRoot and the
+// madder blob slot to madder_env.DefaultSystemRoot. It is harmless for
+// non-system ids (rootAtSystem only fires for the XDGSystem location).
+func systemRootFor(utilityName string) string {
+	if root := os.Getenv(dodder_env.EnvSystemRoot); root != "" {
+		return root
+	}
+
+	if utilityName == dodder_env.XDGUtilityNameMadder {
+		return madder_env.DefaultSystemRoot
+	}
+
+	return dodder_env.DefaultSystemRoot
 }
 
 // MakeDefault forwards to mad_env_dir.MakeDefault. The dodder

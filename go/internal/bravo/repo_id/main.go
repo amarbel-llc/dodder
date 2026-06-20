@@ -72,9 +72,9 @@ func EffectiveId(id scoped_id.Id) scoped_id.Id {
 	return scoped_id.EffectiveId(id)
 }
 
-// CheckSupported rejects the FDR grammar this dodder prototype parses but
-// cannot yet resolve everywhere, so a user gets a clear error rather than
-// a silent mis-resolution or a madder 501:
+// CheckSupported rejects the pieces of the FDR grammar this dodder
+// prototype parses but cannot yet resolve, so a user gets a clear error
+// rather than a silent mis-resolution:
 //
 //   - multi-dot cwd depth (`..name`): madder#153 wired the literal cwdDepth
 //     walk-up into MakeDefaultAndInitialize (the init / info-repo / serve
@@ -83,13 +83,18 @@ func EffectiveId(id scoped_id.Id) scoped_id.Id {
 //     id would silently resolve to the nearest same-named ancestor there.
 //     Kept until the operate path resolves depth — tracked as #281.
 //     Single-dot (depth 0, nearest) resolves today.
-//   - system scope (`/name`, `//name`): XDGSystem is not wired into
-//     MakeDefaultAndInitialize (it panics 501), and the operate path drops
-//     the location too — tracked as #280.
+//   - remote-first system spelling (`/name`): scoped_id parses both `/name`
+//     and `//name` as XDGSystem, distinguished by IsRemoteFirst. `/name`
+//     means "consult the repo's remotes first, fall back to the
+//     system-scoped name" — but dodder has no remote transport yet, and we
+//     can't know whether `name` is a defined remote before opening the
+//     repo, so we reject it rather than silently treat it as system (the
+//     FDR-0019 remote-transport limitation). Use `//name` for the system repo.
 //
-// This is the single place that gates both, and every repo-opening path
-// funnels through it (see CheckSupported callers), so each relaxation
-// enables the scope uniformly once its resolution lands.
+// Forced system scope (`//name`) is now resolved everywhere (#280): the
+// operate path routes it through MakeDefaultAndInitialize, which roots at
+// the system root. Every repo-opening path funnels through CheckSupported,
+// so each relaxation enables its scope uniformly once resolution lands.
 func CheckSupported(id scoped_id.Id) (err error) {
 	if id.GetCwdDepth() > 0 {
 		err = errors.Errorf(
@@ -99,9 +104,11 @@ func CheckSupported(id scoped_id.Id) (err error) {
 		return err
 	}
 
-	if id.GetLocationType() == scoped_id.LocationTypeXDGSystem {
+	if id.GetLocationType() == scoped_id.LocationTypeXDGSystem &&
+		id.IsRemoteFirst() {
 		err = errors.Errorf(
-			"repo_id %q: system scope is not yet resolvable",
+			"repo_id %q: remote-first `/name` is not yet resolvable "+
+				"(no remote transport); use `//name` for the system-scoped repo",
 			id.String(),
 		)
 		return err

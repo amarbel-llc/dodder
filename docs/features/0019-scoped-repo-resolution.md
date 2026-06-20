@@ -242,21 +242,37 @@ Landed (master):
 - **EffectiveName delegation (#274).** `repo_id.EffectiveName`,
   `EffectiveId`, and `DefaultName` delegate to madder's
   `scoped_id.EffectiveName` / `EffectiveId` / `DefaultName` (shipped in
-  madder v0.3.41, pinned at go/v0.3.43) — one source of truth, so the
-  empty-id→default resolution cannot diverge between the two repos.
+  madder v0.3.41) — one source of truth, so the empty-id→default
+  resolution cannot diverge between the two repos.
+- **System scope `//name` (#280).** A forced-system id roots under a
+  configured system root instead of no-op'ing to the user tree (madder's
+  `rootAtSystem` only fires when `Config.SystemRoot` is set, which dodder
+  never did). dodder now injects `SystemRoot` in `env_dir.configFor` — the
+  madder blob slot at `madder_env.DefaultSystemRoot` (`/var/lib/madder`),
+  the dodder metadata slot at `dodder_env.DefaultSystemRoot`
+  (`/var/lib/dodder`); the `DODDER_SYSTEM_ROOT` env var overrides both (for
+  relocation or a test sandbox). The operate path (`MakeLocalWorkingCopy`)
+  routes `//name` through `MakeDefaultAndInitialize`, as `env_repo`/genesis
+  already did, and the XDGSystem `CheckSupported` reject is dropped.
+  Requires the madder pin with #280 (currently master `d3de583`, pending
+  the go/v0.3.43+ tag). The remote-first `/name` spelling stays gated (see
+  below).
 
 Deferred (tracked follow-ups):
 
 - **Multi-dot operate path (#281).** madder#153 wired the literal
-  `cwdDepth` walk-up into `MakeDefaultAndInitialize`, so `..name` resolves
-  on the init / info-repo / serve paths. But the operate path
-  (show/query/edit via `MakeLocalWorkingCopy` → `env_dir.MakeDefault`) is
-  name-only and ignores depth, so the `cwd-depth>0` `CheckSupported` reject
-  is kept to avoid a silent mis-resolution there. Dropping it needs a
-  store-aware-with-depth cwd walk-up exposed for the operate path.
-- **System scope (#280)** — see the RepoManager note; `//name` stays
-  rejected until madder wires XDGSystem into `MakeDefaultAndInitialize` and
-  the operate path honors the location.
+  `cwdDepth` walk-up into `MakeDefaultAndInitialize` (init / info-repo /
+  serve), and madder#281 shipped
+  `directory_layout.ResolveNthAncestorMatch` for the store-aware operate
+  walk-up. The dodder side — route cwd-depth>0 ids through that resolver in
+  `MakeLocalWorkingCopy`, make `EffectiveId` preserve `cwdDepth`, drop the
+  `cwd-depth>0` `CheckSupported` reject — is the next change. Until then
+  the operate path is name-only and the reject stays.
+- **Remote-first `/name`** stays `CheckSupported`-rejected: it means
+  "consult the repo's remotes first, fall back to the system-scoped name,"
+  but dodder has no remote transport and can't tell whether `name` is a
+  defined remote before opening — so it errors rather than silently
+  treating it as the system repo (FDR remote-transport limitation).
 
 ## Tuning Levers
 

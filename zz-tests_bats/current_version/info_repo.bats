@@ -99,6 +99,32 @@ function info_non_xdg { # @test
 	EOM
 }
 
+# bats test_tags=repo_id
+function info_repo_system_scope_roots_at_system_root { # @test
+	# FDR-0019 #280: a system-scoped //name repo roots under the configured
+	# system root (DODDER_SYSTEM_ROOT, sandboxed here) on BOTH the init and
+	# operate paths, rather than silently falling back to the user tree.
+	export DODDER_SYSTEM_ROOT="$BATS_TEST_TMPDIR/system"
+
+	run_dodder init \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-encryption none \
+		-repo_id //backup \
+		test-repo-id
+	assert_success
+
+	# init rooted the repo's xdg under the system root, not $HOME
+	run_dodder info-repo -repo_id //backup xdg
+	assert_success
+	assert_output --regexp "XDG_DATA_HOME=${DODDER_SYSTEM_ROOT}/"
+	refute_output --regexp "XDG_DATA_HOME=$BATS_TEST_TMPDIR/.xdg/"
+
+	# the operate path resolves the system repo too
+	run_dodder show-config -repo_id //backup
+	assert_success
+}
+
 function info_repo_unknown_key_fails { # @test
 	run_dodder_init_disable_age
 	assert_success

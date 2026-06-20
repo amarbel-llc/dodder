@@ -16,6 +16,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/env_vars"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
@@ -59,6 +61,33 @@ func (cmd *Info) GetArgs() []command.ArgGroup {
 func (cmd Info) SetFlagDefinitions(
 	flagSet interfaces.CLIFlagDefinitions,
 ) {
+}
+
+// infoEnvDir builds the dodder env_dir for the `env`/`xdg` info keys,
+// honoring a system-scoped id by rooting at the system root via
+// MakeDefaultAndInitialize (#280) — the same routing the operate path uses
+// — so `info -repo_id //name xdg` reports the system paths rather than
+// silently falling back to the user tree. Other scopes use the cwd-walk-up
+// MakeDefault. CheckSupported still gates multi-dot before this runs.
+func infoEnvDir(
+	req command.Request,
+	config repo_config_cli.Config,
+) mad_env_dir.Env {
+	if config.RepoId.GetLocationType() == scoped_id.LocationTypeXDGSystem {
+		return env_dir.MakeDefaultAndInitialize(
+			req,
+			dodder_env.XDGUtilityName,
+			config.Debug,
+			repo_id.EffectiveId(config.RepoId),
+		)
+	}
+
+	return env_dir.MakeDefault(
+		req,
+		dodder_env.XDGUtilityName,
+		config.Debug,
+		repo_id.EffectiveName(config.RepoId),
+	)
 }
 
 func (cmd Info) Run(req command.Request) {
@@ -113,7 +142,7 @@ func (cmd Info) Run(req command.Request) {
 			if err := repo_id.CheckSupported(config.RepoId); err != nil {
 				ui.Cancel(err)
 			}
-			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug, repo_id.EffectiveName(config.RepoId))
+			dir := infoEnvDir(req, config)
 			envVars := env_vars.Make(dir)
 			var coder env_vars.BufferedCoderDotenv
 			bufferedWriter := bufio.NewWriter(ui.GetOutFile())
@@ -130,7 +159,7 @@ func (cmd Info) Run(req command.Request) {
 			if err := repo_id.CheckSupported(config.RepoId); err != nil {
 				ui.Cancel(err)
 			}
-			dir := env_dir.MakeDefault(req, dodder_env.XDGUtilityName, config.Debug, repo_id.EffectiveName(config.RepoId))
+			dir := infoEnvDir(req, config)
 			ecksDeeGee := dir.GetXDG()
 			envVars := env_vars.Make(ecksDeeGee)
 			var coder env_vars.BufferedCoderDotenv

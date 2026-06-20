@@ -226,7 +226,7 @@ function mcp_repo_id_routes_tool_to_repo { # @test
   # which repo the call opens. Targeting the server's own cwd repo (.default)
   # returns its zettel; targeting a different, nonexistent repo errors
   # (proving the param changes the open target, not just decoration); an
-  # unwired scope (//system) is rejected by repo_id.CheckSupported.
+  # unwired scope (remote-first /name) is rejected by repo_id.CheckSupported.
   run_dodder_init_disable_age
 
   to_add="$(mktemp)"
@@ -259,13 +259,15 @@ function mcp_repo_id_routes_tool_to_repo { # @test
   assert_output --regexp 'repos/nonexistent'
   refute_output --regexp 'repo_id routing probe'
 
-  # //system is parsed but not yet resolvable -> CheckSupported reject
-  local in_system="$BATS_TEST_TMPDIR/mcp-q-system.jsonrpc"
-  write_mcp_tool_call_input "$in_system" query '{"query":[":z"],"repo_id":"//backup"}'
+  # remote-first /name is parsed but not yet resolvable (no remote
+  # transport) -> CheckSupported reject. (Forced-system //name now
+  # resolves, #280, so it's no longer the rejection probe here.)
+  local in_remote="$BATS_TEST_TMPDIR/mcp-q-remote.jsonrpc"
+  write_mcp_tool_call_input "$in_remote" query '{"query":[":z"],"repo_id":"/backup"}'
   run bash -o pipefail -c \
-    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_system"'" | grep "\"id\":2"'
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_remote"'" | grep "\"id\":2"'
   assert_success
-  assert_output --regexp 'system scope is not yet resolvable'
+  assert_output --regexp 'remote-first.*not yet resolvable'
 }
 
 # bats test_tags=repo_id

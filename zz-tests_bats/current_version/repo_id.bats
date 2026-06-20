@@ -26,15 +26,21 @@ function repo_id_cwd_errors_when_no_repo_exists { # @test
 }
 
 # bats test_tags=repo_id
-function repo_id_system_rejected_not_yet_resolvable { # @test
+function repo_id_remote_first_rejected_no_transport { # @test
+	# `/name` is the remote-first system spelling (consult the repo's
+	# remotes, fall back to the system-scoped name). dodder has no remote
+	# transport and can't tell whether `name` is a defined remote before
+	# opening, so it rejects rather than silently treating it as the system
+	# repo. The forced-system `//name` spelling resolves (#280) — see
+	# info_repo's system-scope test.
 	run_dodder_stderr_unified init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id / \
+		-repo_id /backup \
 		test-repo-id
 
 	assert_failure
-	assert_output --regexp 'system scope is not yet resolvable'
+	assert_output --regexp 'remote-first.*not yet resolvable'
 }
 
 # bats test_tags=repo_id

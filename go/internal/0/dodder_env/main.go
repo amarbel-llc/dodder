@@ -23,6 +23,22 @@ const (
 	// EnvDir is the env-var name dodder reads to override the
 	// repository base path. Honored by env_repo.Make when set.
 	EnvDir = "DIR_DODDER"
+
+	// EnvSystemRoot is the env-var name dodder reads to override the
+	// filesystem root that system-scoped (`//name`) repos resolve under.
+	// When set it overrides BOTH the dodder-metadata and madder-blob
+	// system roots, so a relocation (or a test sandbox) can point both
+	// under one directory; when unset the per-utility defaults apply
+	// (DefaultSystemRoot for dodder, madder_env.DefaultSystemRoot for the
+	// blob slot). FDR-0019 #280.
+	EnvSystemRoot = "DODDER_SYSTEM_ROOT"
+
+	// DefaultSystemRoot is the filesystem root dodder's system-scoped
+	// (`//name`) metadata resolves under when EnvSystemRoot is unset — a
+	// fixed FHS path for writable system state, parallel to madder's
+	// /var/lib/madder. A system repo's metadata lands at
+	// <DefaultSystemRoot>/<xdg>/repos/<name>. FDR-0019 #280.
+	DefaultSystemRoot = "/var/lib/dodder"
 )
 
 // EnvVarNames is the env-var-names bundle dodder injects into its
