@@ -237,6 +237,11 @@ Landed (master):
   the build-per-call cost is observable; if it ever dominates MCP
   latency, switch to the lazy per-repo cache (the MCP repo cache lever
   below).
+- **EffectiveName delegation (#274).** `repo_id.EffectiveName`,
+  `EffectiveId`, and `DefaultName` delegate to madder's
+  `scoped_id.EffectiveName` / `EffectiveId` / `DefaultName` (shipped in
+  madder v0.3.41, pinned at go/v0.3.43) — one source of truth, so the
+  empty-id→default resolution cannot diverge between the two repos.
 
 Deferred (tracked follow-ups):
 
@@ -246,9 +251,16 @@ Deferred (tracked follow-ups):
   scope's repos over MCP needs a second startup env_dir built with
   `env_dir.MakeStandardXDGUser` (as the CLI does) — a small standalone
   follow-up.
-- **P2 madder walk-up / multi-dot** and **#274** (delegate
-  `EffectiveName` to a madder shared resolver, then drop the XDGSystem
-  `CheckSupported` reject) remain.
+- **Multi-dot operate path (#281).** madder#153 wired the literal
+  `cwdDepth` walk-up into `MakeDefaultAndInitialize`, so `..name` resolves
+  on the init / info-repo / serve paths. But the operate path
+  (show/query/edit via `MakeLocalWorkingCopy` → `env_dir.MakeDefault`) is
+  name-only and ignores depth, so the `cwd-depth>0` `CheckSupported` reject
+  is kept to avoid a silent mis-resolution there. Dropping it needs a
+  store-aware-with-depth cwd walk-up exposed for the operate path.
+- **System scope (#280)** — see the RepoManager note; `//name` stays
+  rejected until madder wires XDGSystem into `MakeDefaultAndInitialize` and
+  the operate path honors the location.
 
 ## Tuning Levers
 

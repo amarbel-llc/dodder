@@ -6,8 +6,8 @@ require (
 	code.linenisgreat.com/chrest/go v0.2.0
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
-	github.com/amarbel-llc/madder/go v0.3.41-0.20260615202735-4e3aeceaa8a9
-	github.com/amarbel-llc/purse-first/libs/dewey v0.3.1-0.20260607232245-8c4b12e3b8e0
+	github.com/amarbel-llc/madder/go v0.3.43-0.20260620123831-22b6c7aa7672
+	github.com/amarbel-llc/purse-first/libs/dewey v0.3.2
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.2.6-0.20260530121752-67a6f4d5e72d
 	github.com/amarbel-llc/tap/go v0.1.11-0.20260530160701-c3a844ec91f6
 	github.com/amarbel-llc/tommy v0.4.4-0.20260608202535-1ae69d31ec4f

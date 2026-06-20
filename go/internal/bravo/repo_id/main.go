@@ -11,9 +11,9 @@
 //     CwdDefault give the auto invocation a fixed "default" name instead
 //     of the retired nameless `.` cwd pin.
 //   - CheckSupported gates the grammar this dodder prototype parses but
-//     cannot yet resolve, so callers fail with a clear error instead of
-//     madder's 501 panic for an unwired scope. Relaxed as madder wires
-//     them (system scope: madder#230; multi-dot open path: madder#153).
+//     cannot yet resolve everywhere, so callers fail with a clear error
+//     instead of a silent mis-resolution. Relaxed as the operate path
+//     learns each scope (multi-dot: #281; system scope: #280).
 //   - IsAuto distinguishes "no selector given" from scoped_id.IsEmpty()
 //     (which is name-empty), so the init flow can default the bare
 //     invocation to the cwd repo without clobbering an explicit scope.
@@ -25,11 +25,12 @@ import (
 )
 
 // DefaultName is the name of the implicit repo selected when no -repo_id
-// is given. Since the nameless `.`/`/` pins are dropped (scoped_id is
-// name-required), every repo — including the default — lives under
-// repos/<name>/; the default just uses this fixed name so its on-disk
-// layout is deterministic.
-const DefaultName = "default"
+// is given. It delegates to madder's scoped_id.DefaultName so the two
+// repos share one source of truth (dodder#274). Since the nameless
+// `.`/`/` pins are dropped (scoped_id is name-required), every repo —
+// including the default — lives under repos/<name>/; the default just uses
+// this fixed name so its on-disk layout is deterministic.
+const DefaultName = scoped_id.DefaultName
 
 // IsAuto reports that no repo was explicitly selected: the zero-value id
 // (Unknown location, empty name) left in place when neither -repo_id nor
@@ -43,13 +44,11 @@ func IsAuto(id scoped_id.Id) bool {
 
 // EffectiveName returns the repos/<name>/ path segment a resolved id
 // nests under: the explicit name, or DefaultName for the auto id. It is
-// never empty, because nameless repos no longer exist.
+// never empty, because nameless repos no longer exist. Delegates to
+// madder's scoped_id.EffectiveName — the single source of truth both repos
+// share so the resolution cannot diverge (dodder#274).
 func EffectiveName(id scoped_id.Id) string {
-	if name := id.GetName(); name != "" {
-		return name
-	}
-
-	return DefaultName
+	return scoped_id.EffectiveName(id)
 }
 
 // CwdDefault is the cwd-rooted default repo id (`.default`), used by the
@@ -64,30 +63,33 @@ func CwdDefault() scoped_id.Id {
 // location, for sites that hand a scoped_id to madder's
 // MakeDefaultAndInitialize — which derives Config.RepoName from the id's
 // name. Without this, the auto id (name "") would set RepoName="" and
-// skip the repos/<name>/ nesting. cwdDepth/digest are dropped, which is
-// safe because CheckSupported rejects multi-dot/system before resolution.
+// skip the repos/<name>/ nesting. Delegates to madder's
+// scoped_id.EffectiveId (dodder#274). cwdDepth/digest are dropped, which
+// is safe because CheckSupported rejects multi-dot/system before
+// resolution; the depth-preserving variant lands here when the multi-dot
+// operate path does (#281).
 func EffectiveId(id scoped_id.Id) scoped_id.Id {
-	return scoped_id.MakeWithLocation(EffectiveName(id), id.GetLocationType())
+	return scoped_id.EffectiveId(id)
 }
 
-// CheckSupported rejects the FDR grammar this dodder prototype parses
-// but cannot yet resolve, so a user gets a clear error rather than the
-// madder 501 panic for an unwired scope:
+// CheckSupported rejects the FDR grammar this dodder prototype parses but
+// cannot yet resolve everywhere, so a user gets a clear error rather than
+// a silent mis-resolution or a madder 501:
 //
-//   - multi-dot cwd depth (`..name`): madder parses the depth and tags
-//     discovered stores with it, but the open path ignores depth
-//     (MakeDefaultAndInitialize's cwd branch roots at os.Getwd(), never
-//     walks up cwdDepth parents) — tracked as madder#153. Single-dot
-//     (depth 0, nearest) resolves today.
-//   - system scope (`/name`, `//name`): never wired in madder
-//     (madder#230) — no XDGSystem layout exists to resolve into, so
-//     MakeDefaultAndInitialize would panic 501.
+//   - multi-dot cwd depth (`..name`): madder#153 wired the literal cwdDepth
+//     walk-up into MakeDefaultAndInitialize (the init / info-repo / serve
+//     paths), but the operate path (MakeLocalWorkingCopy ->
+//     env_dir.MakeDefault) is name-only and ignores depth, so a multi-dot
+//     id would silently resolve to the nearest same-named ancestor there.
+//     Kept until the operate path resolves depth — tracked as #281.
+//     Single-dot (depth 0, nearest) resolves today.
+//   - system scope (`/name`, `//name`): XDGSystem is not wired into
+//     MakeDefaultAndInitialize (it panics 501), and the operate path drops
+//     the location too — tracked as #280.
 //
-// FDR-0019 P2 pickup: when madder#153 lands, drop the cwd-depth>0 reject;
-// when madder#230 lands, drop the XDGSystem reject. This is the single
-// place that gates both, and every repo-opening path funnels through it
-// (see CheckSupported callers), so each relaxation enables the scope
-// uniformly.
+// This is the single place that gates both, and every repo-opening path
+// funnels through it (see CheckSupported callers), so each relaxation
+// enables the scope uniformly once its resolution lands.
 func CheckSupported(id scoped_id.Id) (err error) {
 	if id.GetCwdDepth() > 0 {
 		err = errors.Errorf(
