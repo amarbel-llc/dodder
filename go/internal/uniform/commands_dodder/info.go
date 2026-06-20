@@ -8,16 +8,15 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/env_vars"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
@@ -63,30 +62,19 @@ func (cmd Info) SetFlagDefinitions(
 ) {
 }
 
-// infoEnvDir builds the dodder env_dir for the `env`/`xdg` info keys,
-// honoring a system-scoped id by rooting at the system root via
-// MakeDefaultAndInitialize (#280) — the same routing the operate path uses
-// — so `info -repo_id //name xdg` reports the system paths rather than
-// silently falling back to the user tree. Other scopes use the cwd-walk-up
-// MakeDefault. CheckSupported still gates multi-dot before this runs.
+// infoEnvDir builds the dodder env_dir for the `env`/`xdg` info keys via the
+// shared operate-path resolver, so `info -repo_id <id> xdg` reports exactly
+// the paths the operate commands act on: a system `//name` roots at the system
+// root (#280), a multi-dot `..name` resolves the Nth same-named ancestor
+// store-aware (#281), and other scopes use the nearest-ancestor walk.
 func infoEnvDir(
 	req command.Request,
 	config repo_config_cli.Config,
 ) mad_env_dir.Env {
-	if config.RepoId.GetLocationType() == scoped_id.LocationTypeXDGSystem {
-		return env_dir.MakeDefaultAndInitialize(
-			req,
-			dodder_env.XDGUtilityName,
-			config.Debug,
-			repo_id.EffectiveId(config.RepoId),
-		)
-	}
-
-	return env_dir.MakeDefault(
+	return command_components_dodder.MakeOperateEnvDir(
 		req,
+		config,
 		dodder_env.XDGUtilityName,
-		config.Debug,
-		repo_id.EffectiveName(config.RepoId),
 	)
 }
 

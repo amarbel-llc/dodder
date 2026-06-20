@@ -152,10 +152,13 @@ func MakeDefaultAndInitialize(
 ) mad_env_dir.Env {
 	// madder derives Config.RepoName from the id's name, so strip the name
 	// for the madder-scoped (blob-store) env — its blobs are separate and
-	// never nest (see configFor). Location is kept so cwd-vs-home routing
-	// still applies.
+	// never nest (see configFor). Location AND cwd dot-depth are kept so
+	// cwd-vs-home routing and the multi-dot literal Nth-parent walk still
+	// apply: without the depth restore, a `..name` repo would root its
+	// metadata at the depth-N parent but its blobs at the literal cwd (#281).
 	if utilityName == dodder_env.XDGUtilityNameMadder {
-		repoId = scoped_id.MakeWithLocation("", repoId.GetLocationType())
+		repoId = scoped_id.MakeWithLocation("", repoId.GetLocationType()).
+			WithCwdDepth(repoId.GetCwdDepth())
 	}
 
 	return mad_env_dir.MakeDefaultAndInitialize(

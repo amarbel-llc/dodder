@@ -11,9 +11,10 @@
 //     CwdDefault give the auto invocation a fixed "default" name instead
 //     of the retired nameless `.` cwd pin.
 //   - CheckSupported gates the grammar this dodder prototype parses but
-//     cannot yet resolve everywhere, so callers fail with a clear error
-//     instead of a silent mis-resolution. Relaxed as the operate path
-//     learns each scope (multi-dot: #281; system scope: #280).
+//     cannot yet resolve, so callers fail with a clear error instead of a
+//     silent mis-resolution. Relaxed as each scope's resolution lands; only
+//     remote-first `/name` remains gated (no remote transport). System
+//     `//name` (#280) and multi-dot cwd `..name` (#281) now resolve.
 //   - IsAuto distinguishes "no selector given" from scoped_id.IsEmpty()
 //     (which is name-empty), so the init flow can default the bare
 //     invocation to the cwd repo without clobbering an explicit scope.
@@ -59,30 +60,23 @@ func CwdDefault() scoped_id.Id {
 }
 
 // EffectiveId returns id with its name forced to EffectiveName (so the
-// auto/zero id becomes the named "default") while preserving its
-// location, for sites that hand a scoped_id to madder's
+// auto/zero id becomes the named "default") while preserving its location
+// AND cwd dot-depth, for sites that hand a scoped_id to madder's
 // MakeDefaultAndInitialize — which derives Config.RepoName from the id's
-// name. Without this, the auto id (name "") would set RepoName="" and
-// skip the repos/<name>/ nesting. Delegates to madder's
-// scoped_id.EffectiveId (dodder#274). cwdDepth/digest are dropped, which
-// is safe because CheckSupported rejects multi-dot/system before
-// resolution; the depth-preserving variant lands here when the multi-dot
-// operate path does (#281).
+// name and roots a cwd id at its literal Nth parent (echo/env_dir's
+// resolveCwdAncestorOrError). Without the name force, the auto id (name "")
+// would set RepoName="" and skip the repos/<name>/ nesting; without the
+// depth restore, scoped_id.EffectiveId's flattening of cwdDepth to 0 would
+// collapse `..name` back to the literal cwd, so the literal-init paths
+// (genesis, MakeEnvRepo) would mis-root a multi-dot repo at depth 0 (#281).
 func EffectiveId(id scoped_id.Id) scoped_id.Id {
-	return scoped_id.EffectiveId(id)
+	return scoped_id.EffectiveId(id).WithCwdDepth(id.GetCwdDepth())
 }
 
 // CheckSupported rejects the pieces of the FDR grammar this dodder
 // prototype parses but cannot yet resolve, so a user gets a clear error
-// rather than a silent mis-resolution:
+// rather than a silent mis-resolution. Only one spelling remains gated:
 //
-//   - multi-dot cwd depth (`..name`): madder#153 wired the literal cwdDepth
-//     walk-up into MakeDefaultAndInitialize (the init / info-repo / serve
-//     paths), but the operate path (MakeLocalWorkingCopy ->
-//     env_dir.MakeDefault) is name-only and ignores depth, so a multi-dot
-//     id would silently resolve to the nearest same-named ancestor there.
-//     Kept until the operate path resolves depth — tracked as #281.
-//     Single-dot (depth 0, nearest) resolves today.
 //   - remote-first system spelling (`/name`): scoped_id parses both `/name`
 //     and `//name` as XDGSystem, distinguished by IsRemoteFirst. `/name`
 //     means "consult the repo's remotes first, fall back to the
@@ -91,19 +85,16 @@ func EffectiveId(id scoped_id.Id) scoped_id.Id {
 //     repo, so we reject it rather than silently treat it as system (the
 //     FDR-0019 remote-transport limitation). Use `//name` for the system repo.
 //
-// Forced system scope (`//name`) is now resolved everywhere (#280): the
-// operate path routes it through MakeDefaultAndInitialize, which roots at
-// the system root. Every repo-opening path funnels through CheckSupported,
-// so each relaxation enables its scope uniformly once resolution lands.
+// Both cwd scopes now resolve everywhere. Single-dot `.name` is the
+// nearest-ancestor walk; multi-dot `..name` (cwdDepth > 0) is the Nth
+// same-named ancestor — the literal-init paths (genesis, MakeEnvRepo) root
+// it at the literal Nth parent via EffectiveId's preserved depth, and the
+// nearest-operate paths (MakeLocalWorkingCopy, serve, info) resolve it
+// store-aware via directory_layout.ResolveNthAncestorMatch (#281). Forced
+// system scope `//name` roots at the system root (#280). Every repo-opening
+// path funnels through CheckSupported, so a relaxation here enables its
+// scope uniformly once resolution lands behind it.
 func CheckSupported(id scoped_id.Id) (err error) {
-	if id.GetCwdDepth() > 0 {
-		err = errors.Errorf(
-			"repo_id %q: cwd dot-depth > 1 is not yet implemented",
-			id.String(),
-		)
-		return err
-	}
-
 	if id.GetLocationType() == scoped_id.LocationTypeXDGSystem &&
 		id.IsRemoteFirst() {
 		err = errors.Errorf(

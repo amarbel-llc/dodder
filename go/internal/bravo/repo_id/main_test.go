@@ -67,14 +67,14 @@ func TestEffectiveName(t1 *testing.T) {
 func TestCheckSupported(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	// The cwd default, single-dot / user names, and the forced-system
-	// `//name` spelling all resolve. Bare `/` is the nameless forced-system
-	// selector (not remote-first), so it resolves too.
+	// The cwd default, single-dot / user names, multi-dot cwd depth (#281),
+	// and the forced-system `//name` spelling all resolve. Bare `/` is the
+	// nameless forced-system selector (not remote-first), so it resolves too.
 	if err := CheckSupported(CwdDefault()); err != nil {
 		t.Errorf("CheckSupported(CwdDefault()) = %s, want nil", err)
 	}
 
-	for _, value := range []string{"work", ".notes", "//backup", "/"} {
+	for _, value := range []string{"work", ".notes", "..notes", "...notes", "//backup", "/"} {
 		var id scoped_id.Id
 
 		if err := id.Set(value); err != nil {
@@ -86,9 +86,8 @@ func TestCheckSupported(t1 *testing.T) {
 		}
 	}
 
-	// Still gated: multi-dot cwd depth (operate path can't resolve it yet,
-	// #281) and the remote-first `/name` spelling (no remote transport).
-	for _, value := range []string{"..notes", "/backup"} {
+	// Still gated: only the remote-first `/name` spelling (no remote transport).
+	for _, value := range []string{"/backup"} {
 		var id scoped_id.Id
 
 		if err := id.Set(value); err != nil {

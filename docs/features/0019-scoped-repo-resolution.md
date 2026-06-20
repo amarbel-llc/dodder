@@ -257,17 +257,27 @@ Landed (master):
   Requires the madder pin with #280 (currently master `d3de583`, pending
   the go/v0.3.43+ tag). The remote-first `/name` spelling stays gated (see
   below).
+- **Multi-dot cwd `..name` (#281).** A multi-dot id resolves the Nth
+  same-named ancestor. dodder honors the two cwd-resolution models it
+  already has, one per existing depth-0 behavior (madder's deliberate
+  literal-init vs store-aware-operate split, `echo/env_dir/AGENTS.md`):
+  the **literal-init** paths (`genesis`, `MakeEnvRepo`) root at the literal
+  Nth parent — they get multi-dot for free once `repo_id.EffectiveId` (and
+  the madder blob-slot strip in `env_dir.MakeDefaultAndInitialize`) stop
+  flattening `cwdDepth` to 0; the **nearest-operate** paths
+  (`MakeLocalWorkingCopy`, serve's `MakeEnv`/`FromEnvLocal`, `info`'s
+  env/xdg display) resolve the Nth *matching* ancestor store-aware via the
+  shared `command_components_dodder.MakeOperateEnvDir` helper, which walks
+  `directory_layout.ResolveNthAncestorMatch` (deepest-first, ceiling-bounded,
+  skipping ancestors that don't host a `notes` repo, erroring on overflow)
+  and roots both env slots at the result. The `cwd-depth>0`
+  `CheckSupported` reject is dropped. For nested same-named repos at every
+  level the two models coincide; they diverge only when a non-matching
+  `.dodder/` sits between matches (literal counts it, store-aware skips it).
+  `..name` completion is a tracked follow-up (#282).
 
 Deferred (tracked follow-ups):
 
-- **Multi-dot operate path (#281).** madder#153 wired the literal
-  `cwdDepth` walk-up into `MakeDefaultAndInitialize` (init / info-repo /
-  serve), and madder#281 shipped
-  `directory_layout.ResolveNthAncestorMatch` for the store-aware operate
-  walk-up. The dodder side — route cwd-depth>0 ids through that resolver in
-  `MakeLocalWorkingCopy`, make `EffectiveId` preserve `cwdDepth`, drop the
-  `cwd-depth>0` `CheckSupported` reject — is the next change. Until then
-  the operate path is name-only and the reject stays.
 - **Remote-first `/name`** stays `CheckSupported`-rejected: it means
   "consult the repo's remotes first, fall back to the system-scoped name,"
   but dodder has no remote transport and can't tell whether `name` is a
@@ -281,7 +291,7 @@ Deferred (tracked follow-ups):
 | Auto-resolution order | CWD walk-up, then user `default` | Matches today's empty-id behavior; least surprise | Users routinely shadowed by unexpected ancestor repos |
 | Legacy tree handling | Read-in-place as `default`, explicit migration command | No surprise rewrites of user data | Compat shim cost dominates env construction, or all known repos migrated |
 | MCP repo cache | Fresh repo built per call (no cache); `dodder.mcp.open_repo` stats-me timer tracks build duration | No lock-holding or index staleness; matches the bridge's per-call repo build | The timer shows open-repo build dominating MCP latency — then memoize one env per repo-id |
-| Dot-depth in completions | Offer up to the ceiling | Walk-up is already bounded | Completion noise in deep worktree hierarchies |
+| Dot-depth in completions | Nearest cwd (`.name`) + user (`name`) only; multi-dot `..name` resolves but isn't yet offered (#282) | Resolution shipped first; completion ergonomics split out to stay focused | #282 lands — then offer `..name` up to the ceiling |
 
 ## More Information
 

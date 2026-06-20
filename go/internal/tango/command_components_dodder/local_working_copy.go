@@ -9,9 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/echo/command_components"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
@@ -47,42 +45,14 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyWithOptions(
 		req.Cancel(err)
 	}
 
-	// Like env_repo.go's MakeEnvRepo, a system-scoped id forces its scope
-	// via MakeDefaultAndInitialize (which #280 wired to root //name at the
-	// system root); EffectiveId preserves the location (system carries no
-	// cwdDepth to drop). Everything else — the auto id, named user repos,
-	// and single-dot cwd repos — keeps the MakeDefault cwd-walk-up path.
-	var ownDir, madderDir mad_env_dir.Env
-
-	if config.RepoId.GetLocationType() == scoped_id.LocationTypeXDGSystem {
-		ownDir = env_dir.MakeDefaultAndInitialize(
-			req,
-			dodder_env.XDGUtilityName,
-			config.Debug,
-			repo_id.EffectiveId(config.RepoId),
-		)
-
-		madderDir = env_dir.MakeDefaultAndInitialize(
-			req,
-			XDGUtilityNameMadder,
-			config.Debug,
-			repo_id.EffectiveId(config.RepoId),
-		)
-	} else {
-		ownDir = env_dir.MakeDefault(
-			req,
-			dodder_env.XDGUtilityName,
-			config.Debug,
-			repo_id.EffectiveName(config.RepoId),
-		)
-
-		madderDir = env_dir.MakeDefault(
-			req,
-			XDGUtilityNameMadder,
-			config.Debug,
-			repo_id.EffectiveName(config.RepoId),
-		)
-	}
+	// All cwd/system scope routing lives in makeOperateEnvDir: a system id
+	// roots at the system root (#280), a multi-dot `..name` id resolves the
+	// Nth same-named ancestor store-aware (#281), and everything else keeps
+	// the nearest-ancestor MakeDefault walk. Called once per slot — the
+	// dodder metadata slot nests under repos/<name>/, the madder blob pool
+	// stays flat.
+	ownDir := MakeOperateEnvDir(req, config, dodder_env.XDGUtilityName)
+	madderDir := MakeOperateEnvDir(req, config, XDGUtilityNameMadder)
 
 	if envOptions.CustomOut == nil && config.CustomOut != nil {
 		envOptions.CustomOut = config.CustomOut
@@ -177,21 +147,19 @@ func (cmd LocalWorkingCopy) MakeLocalWorkingCopyFromEnvLocal(
 ) (local *local_working_copy.Repo) {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
-	// Gate unwired scopes (multi-dot cwd depth, system) here too, so
-	// serve / serve-proto / the remote server reject them with the same
-	// clear error as the two-env builders instead of silently
-	// mis-resolving to a user/cwd repo (#273). Keeps CheckSupported the
-	// uniform FDR-0019 gate so the P2 pickup is a single-place relaxation.
+	// Gate the still-unwired remote-first `/name` scope here too, so serve /
+	// serve-proto / the remote server reject it with the same clear error as
+	// the two-env builders instead of silently mis-resolving (#273).
+	// CheckSupported stays the uniform FDR-0019 gate.
 	if err := repo_id.CheckSupported(config.RepoId); err != nil {
 		req.Cancel(err)
 	}
 
-	madderDir := env_dir.MakeDefault(
-		req,
-		XDGUtilityNameMadder,
-		config.Debug,
-		repo_id.EffectiveName(config.RepoId),
-	)
+	// The dodder metadata slot arrives as envLocal (built by MakeEnv, already
+	// scope-routed); build the matching madder blob slot through the same
+	// MakeOperateEnvDir so a system / multi-dot id roots the blobs at the same
+	// ancestor the metadata did (#280/#281).
+	madderDir := MakeOperateEnvDir(req, config, XDGUtilityNameMadder)
 
 	local = local_working_copy.Make(
 		envLocal,

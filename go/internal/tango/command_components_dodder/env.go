@@ -23,15 +23,14 @@ func (cmd *Env) MakeEnvWithOptions(
 	options env_ui.Options,
 ) env_local.Env {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
-	// This env opens a repo (e.g. serve-proto via
-	// MakeLocalWorkingCopyFromEnvLocal), so its dodder metadata XDG must
-	// nest under repos/<name>/ to find the repo init wrote (FDR-0019).
-	layout := env_dir.MakeDefault(
-		req,
-		req.Utility.GetName(),
-		config.Debug,
-		repo_id.EffectiveName(config.RepoId),
-	)
+	// This env opens a repo (e.g. serve / serve-proto via
+	// MakeLocalWorkingCopyFromEnvLocal), so its dodder metadata XDG must nest
+	// under repos/<name>/ to find the repo init wrote (FDR-0019).
+	// makeOperateEnvDir routes the cwd/system scopes: a system id roots at the
+	// system root (#280), a multi-dot `..name` id resolves the Nth same-named
+	// ancestor store-aware (#281), everything else keeps the nearest-ancestor
+	// walk.
+	layout := MakeOperateEnvDir(req, config, req.Utility.GetName())
 
 	return env_local.Make(
 		env_ui.Make(
