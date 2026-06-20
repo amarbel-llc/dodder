@@ -214,8 +214,10 @@ Landed (master):
   user repos spelled `name` — so every candidate is a directly-usable
   `-repo_id`. The active scope is the cwd walk-up; when it resolves to a
   cwd repo, the user scope is enumerated too via a no-walk-up env_dir
-  (`env_dir.MakeStandardXDGUser`). The MCP `dodder:///repos` listing
-  emits the startup scope's repos with their scope-correct spelling.
+  (`env_dir.MakeStandardXDGUser`). The MCP `dodder:///repos` listing does
+  the same — the server captures the user-scope `repos/` dir at startup
+  (also via `MakeStandardXDGUser`) and lists both scopes with their
+  scope-correct spellings.
 - **MCP repo_id, Phase A (tools).** Every repo-touching tool takes an
   optional `repo_id`; the bridge resolves it per call (startup pin
   restricts, unpinned routes per-call), `CheckSupported`-gated.
@@ -245,12 +247,6 @@ Landed (master):
 
 Deferred (tracked follow-ups):
 
-- **Both-scope MCP listing.** The CLI lists both scopes (#276, above),
-  but the MCP server is bound to one startup scope, so `dodder:///repos`
-  lists only that scope (with the correct spelling). Listing the other
-  scope's repos over MCP needs a second startup env_dir built with
-  `env_dir.MakeStandardXDGUser` (as the CLI does) — a small standalone
-  follow-up.
 - **Multi-dot operate path (#281).** madder#153 wired the literal
   `cwdDepth` walk-up into `MakeDefaultAndInitialize`, so `..name` resolves
   on the init / info-repo / serve paths. But the operate path

@@ -328,6 +328,33 @@ function mcp_repo_scoped_resources_route_to_repo { # @test
 }
 
 # bats test_tags=repo_id
+function mcp_repos_lists_both_scopes { # @test
+  # FDR-0019 #276: dodder:///repos lists both scopes — cwd repos spelled
+  # .name, XDG-user repos spelled name — like `info-repo repos`. With a
+  # user-scope repo and the server's own cwd repo both present, both appear
+  # (the server is bound to the cwd scope but enumerates the user scope via
+  # a no-walk-up env_dir).
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    -repo_id userrepo \
+    test-repo-id
+  assert_success
+
+  run_dodder_init_disable_age
+
+  local in_repos="$BATS_TEST_TMPDIR/mcp-both-repos.jsonrpc"
+  write_mcp_resource_read_input "$in_repos" 'dodder:///repos'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_repos"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'total_repos[^0-9]*[2-9]'
+  assert_output --regexp 'repos/\.default'
+  assert_output --regexp 'repos/userrepo'
+}
+
+# bats test_tags=repo_id
 function mcp_reset_lock_routes_by_repo_id { # @test
   # FDR-0019 #278: reset-lock gains an optional repo_id and opens that repo
   # per call. Targeting the server's own cwd repo (.default) clears its

@@ -34,9 +34,15 @@ type typeResourceProvider struct {
 	// startupIsCwd reports whether the startup scope resolved to a cwd
 	// ancestor .dodder/ (true) versus the XDG user home (false), so
 	// readReposList emits the scope-correct -repo_id spelling (`.name` vs
-	// `name`). The MCP server is bound to one startup scope, so this lists
-	// that scope only; full both-scope MCP listing is a follow-up.
+	// `name`) for the active scope.
 	startupIsCwd bool
+
+	// userReposDir is the XDG-user-home `<data>/repos/` directory (resolved
+	// with the cwd walk-up disabled). When startupIsCwd, it is a distinct
+	// second scope readReposList enumerates as `name` alongside the cwd
+	// scope, so dodder:///repos lists both scopes like `info-repo repos`
+	// (FDR-0019 #276). Empty when not captured.
+	userReposDir string
 
 	// indexMu guards the lazily-populated per-repo index maps. The go-mcp
 	// server dispatches each message on its own goroutine, so concurrent
@@ -1188,11 +1194,14 @@ func (p *typeResourceProvider) readTagsListing(
 	}, nil
 }
 
-// readReposList enumerates the repos in the active scope by scanning the
-// captured un-nested <data>/repos/ directory, returning one entry per
-// subdirectory with its repo-scoped overview URI. mcp_dodder is tango
-// tier and cannot import uniform's listScopedRepos, so this reimplements
-// the directory scan from the captured base path.
+// readReposList enumerates the repos addressable from here across both
+// scopes by scanning the captured un-nested <data>/repos/ directories,
+// returning one entry per subdirectory with its repo-scoped overview URI.
+// When the startup scope is cwd, the XDG-user scope is a distinct second
+// set (spelled `name`) listed alongside the cwd repos (spelled `.name`),
+// mirroring `info-repo repos`. mcp_dodder is tango tier and cannot import
+// uniform's listScopedRepos, so this reimplements the directory scan from
+// the captured base paths.
 func (p *typeResourceProvider) readReposList(
 	ctx context.Context,
 ) (*protocol.ResourceReadResult, error) {
@@ -1205,37 +1214,59 @@ func (p *typeResourceProvider) readReposList(
 		ResourceURI string `json:"resource_uri"`
 	}
 
-	var names []string
+	var repos []repoEntry
 
-	if p.reposDir != "" {
-		entries, err := os.ReadDir(p.reposDir)
-		if err != nil && !errors.IsNotExist(err) {
-			return nil, fmt.Errorf("read repos dir %s: %w", p.reposDir, err)
+	addScope := func(dir, prefix string) error {
+		if dir == "" {
+			return nil
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			if errors.IsNotExist(err) {
+				return nil
+			}
+
+			return fmt.Errorf("read repos dir %s: %w", dir, err)
 		}
 
 		for _, entry := range entries {
-			if entry.IsDir() {
-				names = append(names, entry.Name())
+			if !entry.IsDir() {
+				continue
 			}
+
+			repoId := prefix + entry.Name()
+			repos = append(repos, repoEntry{
+				RepoId:      repoId,
+				Name:        entry.Name(),
+				ResourceURI: fmt.Sprintf("dodder:///repos/%s", repoId),
+			})
 		}
+
+		return nil
 	}
 
-	sort.Strings(names)
-
-	repoIdPrefix := ""
+	activePrefix := ""
 	if p.startupIsCwd {
-		repoIdPrefix = "."
+		activePrefix = "."
 	}
 
-	repos := make([]repoEntry, len(names))
-	for i, name := range names {
-		repoId := repoIdPrefix + name
-		repos[i] = repoEntry{
-			RepoId:      repoId,
-			Name:        name,
-			ResourceURI: fmt.Sprintf("dodder:///repos/%s", repoId),
+	if err := addScope(p.reposDir, activePrefix); err != nil {
+		return nil, err
+	}
+
+	// When the active scope is cwd, the XDG-user scope is a distinct second
+	// set of addressable repos (spelled `name`). When the active scope IS
+	// the user home, reposDir already covers it.
+	if p.startupIsCwd && p.userReposDir != p.reposDir {
+		if err := addScope(p.userReposDir, ""); err != nil {
+			return nil, err
 		}
 	}
+
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].RepoId < repos[j].RepoId
+	})
 
 	doc := struct {
 		TotalRepos int         `json:"total_repos"`

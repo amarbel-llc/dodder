@@ -238,6 +238,7 @@ func RunServer(
 	utility command.Utility,
 	repo *local_working_copy.Repo,
 	startupRepoId scoped_id.Id,
+	userReposDir string,
 ) error {
 	// An explicit startup -repo_id pins the server to that repo (per-call
 	// repo_id is then restricted to it); an auto/default startup lets each
@@ -273,6 +274,7 @@ func RunServer(
 		bridge:       bridge,
 		reposDir:     reposDir,
 		startupIsCwd: startupIsCwd,
+		userReposDir: userReposDir,
 		typeIndexes:  map[string]*typeIndex{startupSeg: index},
 		tagIndexes:   map[string]*tagIndex{startupSeg: tagIdx},
 	}
