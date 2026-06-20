@@ -118,9 +118,34 @@ function info_repo_dynamic_config_key { # @test
 
 # bats test_tags=user_story:repos
 function info_repo_repos_lists_repos { # @test
+	# run_dodder_init creates a cwd repo (-repo_id .default), so the listing
+	# shows its routable `.default` spelling, not the ambiguous bare
+	# `default` (which would name a user-scope repo). FDR-0019 #276.
 	run_dodder_init test-repo-id
 
 	run_dodder info-repo repos
 	assert_success
-	assert_output 'default'
+	assert_output '.default'
+}
+
+# bats test_tags=user_story:repos
+function info_repo_repos_lists_both_scopes { # @test
+	# A -repo_id can address both a user-scope repo (`name`) and a cwd-scope
+	# repo (`.name`) regardless of cwd, so `info-repo repos` lists both
+	# scopes together with their directly-usable spellings. FDR-0019 #276.
+	run_dodder init \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-repo_id userrepo \
+		test-repo-id
+	assert_success
+
+	run_dodder_init test-repo-id
+
+	run_dodder info-repo repos
+	assert_success
+	assert_output - <<-EOM
+		.default
+		userrepo
+	EOM
 }

@@ -264,6 +264,11 @@ func RunServer(
 	// this parent is always the repos/ dir.
 	reposDir := filepath.Dir(repo.GetEnvRepo().GetXDG().Data.ActualValue)
 
+	// IsOverridden reports a cwd ancestor .dodder/ scope (spelled `.name`)
+	// versus the XDG user home (spelled `name`) — drives the repo listing's
+	// -repo_id spelling (FDR-0019 #276).
+	startupIsCwd := repo.GetEnvRepo().GetXDG().IsOverridden()
+
 	startupSeg := repoSeg(startupRepoId)
 
 	provider := &typeResourceProvider{
@@ -271,6 +276,7 @@ func RunServer(
 		bridge:        bridge,
 		startupRepoId: startupRepoId,
 		reposDir:      reposDir,
+		startupIsCwd:  startupIsCwd,
 		store:         repo.GetStore(),
 		typeBlobCoder: typeBlobCoder,
 		typeIndexes:   map[string]*typeIndex{startupSeg: index},

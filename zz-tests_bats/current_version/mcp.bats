@@ -297,6 +297,9 @@ function mcp_repo_scoped_resources_route_to_repo { # @test
     'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_repos"'" | grep "\"id\":2"'
   assert_success
   assert_output --regexp 'total_repos[^0-9]+[1-9]'
+  # the server's cwd repo is listed with its routable `.default` spelling
+  # (FDR-0019 #276), so the listing's URI round-trips back to the repo
+  assert_output --regexp 'repos/\.default'
 
   # repo-scoped objects listing routes to the cwd repo -> returns the zettel
   local in_scoped="$BATS_TEST_TMPDIR/mcp-res-scoped.jsonrpc"

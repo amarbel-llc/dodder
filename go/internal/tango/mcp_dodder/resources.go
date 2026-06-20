@@ -35,8 +35,15 @@ type typeResourceProvider struct {
 	// construction from the startup repo's nested data dir
 	// (filepath.Dir(<data>/repos/<name>) == <data>/repos). Drives
 	// readReposList without a command.Request (tango cannot import
-	// uniform's listRepoNames).
+	// uniform's listScopedRepos).
 	reposDir string
+
+	// startupIsCwd reports whether the startup scope resolved to a cwd
+	// ancestor .dodder/ (true) versus the XDG user home (false), so
+	// readReposList emits the scope-correct -repo_id spelling (`.name` vs
+	// `name`). The MCP server is bound to one startup scope, so this lists
+	// that scope only; full both-scope MCP listing is a follow-up.
+	startupIsCwd bool
 
 	store         *store.Store
 	typeBlobCoder type_blobs.Coder
@@ -1191,12 +1198,16 @@ func (p *typeResourceProvider) readTagsListing(
 // readReposList enumerates the repos in the active scope by scanning the
 // captured un-nested <data>/repos/ directory, returning one entry per
 // subdirectory with its repo-scoped overview URI. mcp_dodder is tango
-// tier and cannot import uniform's listRepoNames, so this reimplements
+// tier and cannot import uniform's listScopedRepos, so this reimplements
 // the directory scan from the captured base path.
 func (p *typeResourceProvider) readReposList(
 	ctx context.Context,
 ) (*protocol.ResourceReadResult, error) {
 	type repoEntry struct {
+		// RepoId is the -repo_id spelling that addresses the repo: `.name`
+		// for a cwd-scope repo, `name` for an XDG-user repo. ResourceURI
+		// embeds it so the listing's links round-trip back to the repo.
+		RepoId      string `json:"repo_id"`
 		Name        string `json:"name"`
 		ResourceURI string `json:"resource_uri"`
 	}
@@ -1218,11 +1229,18 @@ func (p *typeResourceProvider) readReposList(
 
 	sort.Strings(names)
 
+	repoIdPrefix := ""
+	if p.startupIsCwd {
+		repoIdPrefix = "."
+	}
+
 	repos := make([]repoEntry, len(names))
 	for i, name := range names {
+		repoId := repoIdPrefix + name
 		repos[i] = repoEntry{
+			RepoId:      repoId,
 			Name:        name,
-			ResourceURI: fmt.Sprintf("dodder:///repos/%s", name),
+			ResourceURI: fmt.Sprintf("dodder:///repos/%s", repoId),
 		}
 	}
 

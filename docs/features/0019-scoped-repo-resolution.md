@@ -208,7 +208,14 @@ Landed (master):
   blob env stays flat), and `repo_id.CheckSupported` as the uniform
   scope gate on the working-copy/serve/info paths.
 - **P3 user surface.** `info-repo repos` listing and `-repo_id`
-  completion of the in-scope repo names.
+  completion of the repo names.
+- **Both-scope listing (#276).** `info-repo repos` and `-repo_id`
+  completion list both scopes together — cwd repos spelled `.name`, XDG-
+  user repos spelled `name` — so every candidate is a directly-usable
+  `-repo_id`. The active scope is the cwd walk-up; when it resolves to a
+  cwd repo, the user scope is enumerated too via a no-walk-up env_dir
+  (`env_dir.MakeStandardXDGUser`). The MCP `dodder:///repos` listing
+  emits the startup scope's repos with their scope-correct spelling.
 - **MCP repo_id, Phase A (tools).** Every repo-touching tool takes an
   optional `repo_id`; the bridge resolves it per call (startup pin
   restricts, unpinned routes per-call), `CheckSupported`-gated.
@@ -229,12 +236,11 @@ Deferred (tracked follow-ups):
   supported (RepoManager follow-up)" error. Making them per-repo needs
   a stateful repo-open-by-id with the lazy per-call env cache described
   under Tuning Levers.
-- **Both-scope repo listing (#276).** `dodder:///repos` (and
-  `info-repo repos`) currently enumerate the bare directory names under
-  the startup repo's scope `repos/` dir, so a CWD-scope repo is listed
-  as `default` rather than its routable `.default` spelling — the
-  emitted child URI does not round-trip back to the CWD repo. Listing
-  both scopes with scope-correct spellings is #276.
+- **Both-scope MCP listing.** The CLI lists both scopes (#276, above),
+  but the MCP server is bound to one startup scope, so `dodder:///repos`
+  lists only that scope (with the correct spelling). Listing the other
+  scope's repos over MCP needs a second startup env_dir — folded into the
+  RepoManager work (#278), where MCP multi-repo state lives.
 - **P2 madder walk-up / multi-dot** and **#274** (delegate
   `EffectiveName` to a madder shared resolver, then drop the XDGSystem
   `CheckSupported` reject) remain.

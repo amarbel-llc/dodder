@@ -153,21 +153,22 @@ func (cmd InfoRepo) Run(req command.Request) {
 	}
 }
 
-// printRepos lists the repos in the active scope, one name per line. It uses
-// a repo-less UI (like info) so it works even when the current directory has
-// no initialized repo.
+// printRepos lists the repos addressable from here, one -repo_id spelling
+// per line (`.name` for cwd repos, `name` for user repos), across both
+// scopes. It uses a repo-less UI (like info) so it works even when the
+// current directory has no initialized repo.
 func (cmd InfoRepo) printRepos(req command.Request) {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 	ui := env_ui.Make(req, config, config.Debug, env_ui.Options{})
 
-	names, _, err := listRepoNames(req)
+	repos, err := listScopedRepos(req)
 	if err != nil {
 		ui.Cancel(err)
 		return
 	}
 
-	for _, name := range names {
-		ui.GetUI().Print(name)
+	for _, repo := range repos {
+		ui.GetUI().Print(repo.Spelling())
 	}
 }
 

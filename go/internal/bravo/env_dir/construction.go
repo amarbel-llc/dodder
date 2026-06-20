@@ -77,6 +77,27 @@ func MakeDefaultNoInit(
 	)
 }
 
+// MakeStandardXDGUser builds a fully-initialized env_dir pinned to the
+// XDG user home with the cwd walk-up DISABLED (permitCwdXDGOverride
+// false), so it addresses the user-scope paths regardless of any ancestor
+// .dodder/ override. Unlike MakeDefaultNoInit it runs the standard XDG
+// initialization, so Data.ActualValue is populated and safe to read. Use
+// it to enumerate the user scope alongside the cwd scope (FDR-0019 #276).
+func MakeStandardXDGUser(
+	context errors.Context,
+	utilityName string,
+	debugOptions debug.Options,
+	repoName string,
+) mad_env_dir.Env {
+	return mad_env_dir.MakeWithDefaultHome(
+		context,
+		configFor(utilityName, repoName, debugOptions),
+		utilityName,
+		false, // permitCwdXDGOverride: pin to user home, no cwd walk-up
+		true,  // initialize: populate XDG paths for reading
+	)
+}
+
 // MakeFromXDGDotenvPath: scope is determined by the dotenv's XDG;
 // configFor is therefore called with the dodder default since the
 // scope isn't known until the dotenv is read. dodder's env-var

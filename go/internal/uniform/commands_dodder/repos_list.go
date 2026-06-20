@@ -12,47 +12,107 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
-// listRepoNames returns the names of the repos present in the active dodder
-// scope: the subdirectories of <data>/repos/ in the un-nested dodder data
-// dir. isCwd reports whether that scope resolved to a cwd/ancestor .dodder
-// (true) versus the XDG user home (false), so callers can choose the
-// `.name` vs `name` repo-id spelling. Shared by `info-repo repos` and
-// -repo_id completion (FDR-0019).
-func listRepoNames(
-	req command.Request,
-) (names []string, isCwd bool, err error) {
+// scopedRepo is a repo discovered in a specific scope, carrying the CLI
+// spelling that addresses it: `.name` for a cwd-scope repo, `name` for an
+// XDG-user repo. So callers emit a directly-usable -repo_id.
+type scopedRepo struct {
+	Name  string
+	IsCwd bool
+}
+
+// Spelling is the -repo_id token that addresses this repo from anywhere.
+func (r scopedRepo) Spelling() string {
+	if r.IsCwd {
+		return "." + r.Name
+	}
+
+	return r.Name
+}
+
+// ScopeLabel is a short human description of the repo's scope.
+func (r scopedRepo) ScopeLabel() string {
+	if r.IsCwd {
+		return "cwd repo"
+	}
+
+	return "user repo"
+}
+
+// listScopedRepos enumerates the repos addressable from here across both
+// scopes. A -repo_id can name a cwd repo (`.name`) and an XDG-user repo
+// (`name`) regardless of cwd, so the listing shows both. The active scope
+// is the cwd walk-up (MakeDefault, IsOverridden when an ancestor .dodder/
+// is in play); when it resolves to a cwd repo, the XDG-user scope is a
+// distinct second set, enumerated via MakeStandardXDGUser (cwd walk-up
+// disabled). When the active scope already IS the user home there is no
+// separate cwd scope to add. Shared by `info-repo repos` and -repo_id
+// completion (FDR-0019 #276).
+func listScopedRepos(req command.Request) ([]scopedRepo, error) {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
 	// An empty repoName keeps the data dir un-nested (the base, not a
-	// repos/<name>/ nest), so its repos/ subdir holds every repo. Use
-	// MakeDefault (not NoInit) so the cwd walk-up resolves the same
-	// ancestor .dodder/ that repo-opening commands use — NoInit returns
-	// before the override resolution and would resolve against $HOME
-	// instead. This resolves XDG paths only; dir creation is env_repo's job.
-	dir := env_dir.MakeDefault(
+	// repos/<name>/ nest), so its repos/ subdir holds every repo. These
+	// resolve XDG paths only; dir creation is env_repo's job.
+	active := env_dir.MakeDefault(
 		req,
 		dodder_env.XDGUtilityName,
 		config.Debug,
 		"",
 	)
 
-	xdg := dir.GetXDG()
-	isCwd = xdg.IsOverridden()
+	activeIsCwd := active.GetXDG().IsOverridden()
 
-	reposDir := filepath.Join(xdg.Data.ActualValue, "repos")
+	var repos []scopedRepo
 
-	var entries []os.DirEntry
+	activeNames, err := readRepoNames(active.GetXDG().Data.ActualValue)
+	if err != nil {
+		return nil, err
+	}
 
-	if entries, err = os.ReadDir(reposDir); err != nil {
-		if errors.IsNotExist(err) {
-			// No repos created yet — not an error, just an empty list.
-			err = nil
-			return names, isCwd, err
+	for _, name := range activeNames {
+		repos = append(repos, scopedRepo{Name: name, IsCwd: activeIsCwd})
+	}
+
+	if activeIsCwd {
+		user := env_dir.MakeStandardXDGUser(
+			req,
+			dodder_env.XDGUtilityName,
+			config.Debug,
+			"",
+		)
+
+		userNames, err := readRepoNames(user.GetXDG().Data.ActualValue)
+		if err != nil {
+			return nil, err
 		}
 
-		err = errors.Wrap(err)
-		return names, isCwd, err
+		for _, name := range userNames {
+			repos = append(repos, scopedRepo{Name: name, IsCwd: false})
+		}
 	}
+
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].Spelling() < repos[j].Spelling()
+	})
+
+	return repos, nil
+}
+
+// readRepoNames returns the subdirectory names of <data>/repos, or an
+// empty slice when that directory does not exist yet (no repos created).
+func readRepoNames(dataDir string) ([]string, error) {
+	reposDir := filepath.Join(dataDir, "repos")
+
+	entries, err := os.ReadDir(reposDir)
+	if err != nil {
+		if errors.IsNotExist(err) {
+			return nil, nil
+		}
+
+		return nil, errors.Wrap(err)
+	}
+
+	var names []string
 
 	for _, entry := range entries {
 		if entry.IsDir() {
@@ -60,7 +120,5 @@ func listRepoNames(
 		}
 	}
 
-	sort.Strings(names)
-
-	return names, isCwd, err
+	return names, nil
 }

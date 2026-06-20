@@ -292,28 +292,22 @@ func (cmd Complete) completeSubcommandFlagOnParseError(
 	}
 }
 
-// completeRepoId offers the repos present in the active scope as -repo_id
-// candidates, spelled `.name` for a cwd-scope repo and `name` for an XDG-user
-// repo so the candidate is directly usable. The deferred grammar (//system,
-// ..multi-dot) is intentionally not offered — repo_id.CheckSupported rejects
-// it (FDR-0019).
+// completeRepoId offers the repos addressable from here as -repo_id
+// candidates across both scopes, spelled `.name` for a cwd-scope repo and
+// `name` for an XDG-user repo so the candidate is directly usable. The
+// deferred grammar (//system, ..multi-dot) is intentionally not offered —
+// repo_id.CheckSupported rejects it (FDR-0019).
 func (cmd Complete) completeRepoId(
 	req command.Request,
 	envLocal env_local.Env,
 ) {
-	names, isCwd, err := listRepoNames(req)
+	repos, err := listScopedRepos(req)
 	if err != nil {
 		envLocal.Cancel(err)
 		return
 	}
 
-	prefix, description := "", "user repo"
-
-	if isCwd {
-		prefix, description = ".", "cwd repo"
-	}
-
-	for _, name := range names {
-		envLocal.GetUI().Printf("%s%s\t%s", prefix, name, description)
+	for _, repo := range repos {
+		envLocal.GetUI().Printf("%s\t%s", repo.Spelling(), repo.ScopeLabel())
 	}
 }
