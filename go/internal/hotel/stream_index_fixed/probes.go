@@ -188,7 +188,7 @@ func (index *Index) readOneLoc(
 }
 
 func (index *Index) PrintAllProbes() (err error) {
-	if index.probeIndex.index.PrintAll(index.envRepo); err != nil {
+	if err = index.probeIndex.index.PrintAll(index.envRepo); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
