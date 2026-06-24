@@ -1,4 +1,5 @@
-#! /bin/bash -xe
+#! /usr/bin/env bash
+set -xe
 
 # TODO move this to justfile and simplify the semantics
 old="$1"

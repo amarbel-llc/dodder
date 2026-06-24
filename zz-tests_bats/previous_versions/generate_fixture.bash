@@ -1,4 +1,5 @@
-#! /bin/bash -e
+#! /usr/bin/env bash
+set -e
 
 v="$DODDER_VERSION"
 

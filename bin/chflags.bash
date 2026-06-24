@@ -1,4 +1,5 @@
-#! /bin/bash -e
+#! /usr/bin/env bash
+set -e
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   exit 0

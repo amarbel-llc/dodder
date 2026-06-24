@@ -1,4 +1,5 @@
-#! /bin/bash -e
+#! /usr/bin/env bash
+set -e
 
 while IFS= read -r -d '' file; do
   name="$(basename "$file")"
