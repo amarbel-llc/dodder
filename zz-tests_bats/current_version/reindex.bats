@@ -36,6 +36,15 @@ function reindex_simple { # @test
 	EOM
 }
 
+function reindex_clean_omits_error_headers { # @test
+	# A clean reindex (no unidentified errors, no objects with errors)
+	# must not print the section headers (#261).
+	run_dodder reindex
+	assert_success
+	refute_output --partial "unidentified errors:"
+	refute_output --partial "objects with errors:"
+}
+
 function reindex_simple_twice { # @test
 	expected="$(mktemp)"
 	cat - >"$expected" <<-EOM

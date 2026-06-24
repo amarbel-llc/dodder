@@ -168,30 +168,34 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 		}
 	}
 
-	store.envRepo.GetUI().Print("unidentified errors:")
+	if len(unidentifiedErrors) > 0 {
+		store.envRepo.GetUI().Print("unidentified errors:")
 
-	for _, err := range unidentifiedErrors {
-		ui.CLIErrorTreeEncoder.EncodeTo(err, store.envRepo.GetUI())
+		for _, err := range unidentifiedErrors {
+			ui.CLIErrorTreeEncoder.EncodeTo(err, store.envRepo.GetUI())
+		}
 	}
 
-	store.envRepo.GetUI().Print("objects with errors:")
+	if len(objectsWithErrors) > 0 {
+		store.envRepo.GetUI().Print("objects with errors:")
 
-	for _, objectWithError := range objectsWithErrors {
-		ui.CLIErrorTreeEncoder.EncodeTo(objectWithError.error, store.envRepo.GetUI())
+		for _, objectWithError := range objectsWithErrors {
+			ui.CLIErrorTreeEncoder.EncodeTo(objectWithError.error, store.envRepo.GetUI())
 
-		if objectWithError.Object == nil {
-			store.envRepo.GetUI().Printf(
-				"Error: %s, List: %q",
-				objectWithError.error,
-				sku.String(objectWithError.List),
-			)
-		} else {
-			store.envRepo.GetUI().Printf(
-				"Error: %s, List: %q, Object: %q",
-				objectWithError.error,
-				sku.String(objectWithError.List),
-				sku.String(objectWithError.Object),
-			)
+			if objectWithError.Object == nil {
+				store.envRepo.GetUI().Printf(
+					"Error: %s, List: %q",
+					objectWithError.error,
+					sku.String(objectWithError.List),
+				)
+			} else {
+				store.envRepo.GetUI().Printf(
+					"Error: %s, List: %q, Object: %q",
+					objectWithError.error,
+					sku.String(objectWithError.List),
+					sku.String(objectWithError.Object),
+				)
+			}
 		}
 	}
 
