@@ -70,8 +70,14 @@ func (cmd AddZettelIds) Run(req command.Request) {
 
 	prov, err := zettel_id_provider.New(envRepo)
 	if err != nil {
-		errors.ContextCancelWithErrorf(req, "loading zettel id provider: %s", err)
-		return
+		// init-from-nothing: a repo created without a zettel-id seed has no
+		// Yin/Yang flat files yet. New returns a non-nil provider with the
+		// missing side(s) empty; treat absence as an empty pool, matching the
+		// tolerance in zettel_id_index v0/v1.
+		if !errors.IsNotExist(err) {
+			errors.ContextCancelWithErrorf(req, "loading zettel id provider: %s", err)
+			return
+		}
 	}
 
 	existingWords := collectExistingWords(prov)
@@ -202,7 +208,7 @@ func writeWordsAsBlob(
 func appendWordsToFlatFile(req command.Request, flatFilePath string, words []string) {
 	file, err := files.OpenFile(
 		flatFilePath,
-		os.O_WRONLY|os.O_APPEND,
+		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
 		0o666,
 	)
 	if err != nil {

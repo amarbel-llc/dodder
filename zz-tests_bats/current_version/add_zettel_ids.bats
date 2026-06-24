@@ -77,6 +77,30 @@ function add_zettel_ids_cross_side_rejection { # @test
 	assert_output --partial "no new words"
 }
 
+function add_zettel_ids_bootstrap_from_nothing { # @test
+	wd="$(mktemp -d)"
+	cd "$wd" || exit 1
+
+	# init WITHOUT -yin/-yang: no zettel-id pool is seeded, so the
+	# object_ids/Yin and object_ids/Yang flat files do not exist.
+	run_dodder init -encryption none -repo_id .default test-repo-id
+	assert_success
+
+	run_dodder init-workspace -experimental-repo=false
+	assert_success
+
+	# yin side: must bootstrap the pool from nothing (no flat files yet).
+	# yang count is still 0, so pool size is 0.
+	run bash -c 'echo -e "alpha\nbravo\ncharlie" | '"$DODDER_BIN"' add-zettel-ids-yin'
+	assert_success
+	assert_output "added 3 words to Yin (pool size: 0)"
+
+	# yang side completes the pool: 3 yin * 3 yang = 9.
+	run bash -c 'echo -e "golf\nhotel\nindia" | '"$DODDER_BIN"' add-zettel-ids-yang'
+	assert_success
+	assert_output "added 3 words to Yang (pool size: 9)"
+}
+
 function add_zettel_ids_no_new_words { # @test
 	wd="$(mktemp -d)"
 	cd "$wd" || exit 1
