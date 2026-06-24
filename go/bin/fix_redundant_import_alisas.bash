@@ -1,4 +1,5 @@
-#! /bin/bash -e
+#! /usr/bin/env bash
+set -e
 
 tmp="$(mktemp)"
 # shellcheck disable=SC2064
