@@ -20,13 +20,45 @@ it as a content object is the root footgun.
 
 ## Dependency
 
-This design builds on the **repo-id resolution / pinning** layer (in-flight on
-another branch/host; not present in this worktree at design time). It assumes a
-scope-enumeration API that, given the current invocation, returns the set of
-in-scope repos tagged by `LocationType` (cwd / user / system, per
-`internal/_/blob_store_id/location.go`), with cwd repos carrying their `../`
-directory distance. The inference rule (below) is specified against that assumed
-API. **This feature cannot land until that layer exists.**
+This design builds on **FDR-0019 (Scoped Repo Resolution)**, which is **landed
+on master** (`docs/features/0019-scoped-repo-resolution.md`). The repo-id
+selector is madder's `scoped_id.Id`, parsing the full grammar:
+
+| Form | Scope |
+|---|---|
+| `name` | XDG user |
+| `.name` | nearest-ancestor cwd repo |
+| `..name` | Nth-ancestor cwd repo (dot-depth = N, **not** `../`) |
+| `//name` | XDG system |
+| `/name` | remote-first (system fallback) -- **`CheckSupported`-gated, see below** |
+
+Concrete seams this feature reuses:
+
+- **Scope enumeration:** `commands_dodder.listScopedRepos`
+  (`go/internal/uniform/commands_dodder/repos_list.go`) returns
+  `[]scopedRepo{Name, IsCwd}` with `Spelling()` (`.name` / `name`), across the
+  cwd walk-up and the XDG-user scope. This is the picker's data source and the
+  backing of `info-repo repos`.
+- **Operate-path resolution:** `command_components_dodder.MakeOperateEnvDir`
+  + `resolveCwdRepoAncestor` ->
+  `directory_layout.ResolveNthAncestorMatch` (deepest-first, ceiling-bounded,
+  skips non-matching ancestors). This is how a resolved id (including `..name`)
+  becomes a rooted repo env -- the same machinery `%` resolution will reuse.
+- **Scope gate:** `repo_id.CheckSupported` (`go/internal/bravo/repo_id/main.go`).
+
+**The crucial overlap:** FDR-0019 explicitly **defers remote transport** --
+`CheckSupported` rejects remote-first `/name` with "no remote transport yet."
+Actually *operating against* another repo over a link is the gap this feature
+fills. The workspace-parent push/pull **is** that deferred remote-transport
+work, scoped to the single pinned parent. The two should cross-reference.
+
+**Gaps in the landed enumeration this feature must extend:** `listScopedRepos`
+today surfaces only `Name` + `IsCwd` (cwd vs user). The picker (below) needs
+three things it does **not** yet provide -- each repo's **pubkey**, its
+**directory path**, and the **system scope** -- plus **dot-depth** for the
+multi-dot ordering. Surfacing those (a richer `scopedRepo`, or a sibling
+enumerator) is in-scope implementation work for this feature, building on
+`listScopedRepos` rather than replacing it.
 
 ## Design
 
@@ -59,11 +91,14 @@ original-id   = "default"   # scope-prefixed id as resolved at pin time
 - **`locator`** -- concrete path/URI used to reach the parent.
 - **`location-type`** -- which scope bucket the parent was resolved in.
   Advisory (for re-resolution / diagnostics); `pubkey` is authoritative.
-- **`original-id`** -- the human-meaningful, **scope-prefixed** id exactly as
-  the resolution layer reported it at pin time (carrying the `.` / `..` / `/` /
-  none prefix from the `blob_store_id` location model). Pure guidance/debugging:
-  it lets error messages and `der info-workspace` say `parent: default (user)`
-  rather than only a raw path or pubkey. Not used for resolution.
+- **`original-id`** -- the human-meaningful `scoped_id` spelling exactly as
+  enumeration reported it at pin time (`name` user, `.name` cwd, `//name`
+  system; dot-depth per FDR-0019). Pure guidance/debugging: it lets error
+  messages and `der info-workspace` say `parent: default (user)` rather than
+  only a raw path or pubkey. Not used for resolution -- `pubkey` + `locator`
+  are. **Canonical form note:** FDR-0019 collapses persisted dot-depth to a
+  single dot (stored references stay stable across cwd changes), so a multi-dot
+  `..name` pin is stored as `.name`; depth is a runtime input/rendering concern.
 
 This is **not a content object**: it lives in workspace metadata, so no query
 can catch it and no push can ship it back. The footgun is closed by
@@ -81,7 +116,7 @@ checkpoint field is deferred (YAGNI until the sync engine needs it).
 ### `%` Resolution and Verification
 
 `%` is an **existing** doddish sentinel: in query-position it marks an object-id
-virtual (`objectId.Virtual`, `internal/kilo/queries/object_id.go`). This design
+virtual (`objectId.Virtual`, `internal/juliett/queries/object_id.go`). This design
 adds a **second, position-scoped meaning**: a bare `%` in **remote-position**
 (the `repo-id` argument of `push`/`pull`) resolves to the workspace's pinned
 parent. The virtual-marker meaning in query-position is **unchanged** -- no
@@ -134,9 +169,11 @@ selects / `esc`/`q`/`ctrl+c` aborts.
   `<pubkey-tridex>  <location>  <directory>`.
 - **Grouping by scope** (deliberate divergence from clown's flat list):
   section headers via a custom delegate. Groups ordered
-  **internal/private -> cwd -> user -> system**. Within cwd, sort by directory
-  distance (`.` < `..` < `...` ...), then by name. Other scopes sort by name.
-  Names compared **prefix-stripped**.
+  **internal/private -> cwd -> user -> system** (matching the `scoped_id`
+  scopes; note `listScopedRepos` does not yet surface system -- adding it is
+  part of this feature's enumeration extension). Within cwd, sort by dot-depth
+  (`.name` before `..name` before `...name`), then by name. Other scopes sort
+  by name. Names compared **without the scope prefix**.
 - **Tridex scope = dialog-local:** abbreviate pubkeys to the shortest unique
   prefix *across the repos shown* (most-significant parts only).
 - **Filtering** matches identifier + directory.
@@ -189,11 +226,29 @@ BATS integration tests (the canonical sync surface, per `push.bats` /
 
 ## Rollback / Dual-Architecture
 
-The feature is **purely additive**. `remote-add` + explicit `der push /name`
-are unchanged; workspaces without a `[parent]` behave exactly as today. There is
-no migration of existing repos. Rollback = "don't use `%` / `der sync` /
-inference"; the dual architecture (explicit remotes vs. pinned parent) coexists
-indefinitely.
+The feature is **purely additive**. `remote-add` and the existing explicit
+remote objects are unchanged; workspaces without a `[parent]` behave exactly as
+today. There is no migration of existing repos. Rollback = "don't use `%` /
+`der sync` / inference"; the dual architecture (explicit `remote-add` remotes
+vs. pinned parent) coexists indefinitely. (Note: FDR-0019's remote-first
+`/name` spelling is a *selection* syntax that is still `CheckSupported`-gated
+pending remote transport -- it is not an alternative path this feature relies
+on.)
+
+## More Information
+
+- **FDR-0019 (Scoped Repo Resolution)**, landed on master
+  (`docs/features/0019-scoped-repo-resolution.md`) -- the grammar, scope
+  enumeration, and `CheckSupported` gate this feature builds on. Its deferred
+  remote-transport limitation is the gap this feature fills for the pinned
+  parent.
+- **Issue #287** -- this feature.
+- **Issue #286** -- the sync-boundary durability bug that motivated the
+  investigation leading here.
+- The `%` virtual-object/virtual-tag marker
+  (`internal/juliett/queries/object_id.go`, `objectId.Virtual`) -- the existing
+  query-position meaning of `%` this feature must not disturb (remote-position
+  only).
 
 ## Tuning Levers
 
