@@ -247,6 +247,40 @@ func (cmd New) ValidateFlagsAndArgs(
 		}
 	}
 
+	// #290: in a repo with no default type (ExcludeDefaultType — every
+	// workspace repo and clone), the from-scratch creation path with no -type
+	// would commit a typeless object whose bare `!` later breaks push/import
+	// with `unsupported seq: "!"`. Reject up front. This only applies to the
+	// no-positional-args path (path/sha inputs carry their type in the blob
+	// header); a non-zettel -object-id gets its meta-type from the genre, so
+	// only zettel-genre results need a type.
+	if len(args) == 0 && ids.IsEmpty(cmd.Proto.Metadata.GetType()) {
+		if _, ok := repo.GetEnvWorkspace().GetStore().StoreLike.(haustoria.Haustoria); !ok {
+			resultGenre := genres.Zettel
+
+			if cmd.ObjectId != "" {
+				objectId, repool, parseErr := ids.MakeObjectId(cmd.ObjectId)
+				if parseErr != nil {
+					err = errors.BadRequestf(
+						"invalid -object-id %q: %s", cmd.ObjectId, parseErr,
+					)
+					return err
+				}
+
+				resultGenre = genres.Make(objectId.GetGenre())
+				repool()
+			}
+
+			if resultGenre == genres.Zettel &&
+				repo.GetEnvWorkspace().GetDefaults().GetDefaultType().IsEmpty() {
+				err = errors.BadRequestf(
+					"no type given and repo has no default type; pass -type",
+				)
+				return err
+			}
+		}
+	}
+
 	return err
 }
 

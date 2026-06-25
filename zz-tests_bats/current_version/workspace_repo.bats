@@ -13,6 +13,39 @@ teardown() {
 
 # bats file_tags=user_story:workspace,user_story:repo,user_story:direct
 
+# #290: in an ExcludeDefaultType workspace repo, `new` with no -type must NOT
+# produce a typeless object (bare `!`). Such an object later breaks push/import
+# with `unsupported seq: "!"`. The fix rejects the creation up front, telling
+# the user to pass -type.
+function workspace_repo_new_without_type_rejected { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		project-alpha:z
+	assert_success
+
+	# No -type, and the workspace repo has no default type -> must fail
+	# rather than silently commit a typeless object.
+	run_dodder new -edit=false -description x
+	assert_failure
+	assert_line --index 0 \
+		'no type given and repo has no default type; pass -type'
+
+	# Passing an explicit type still works.
+	run_dodder new -edit=false -description x -type md
+	assert_success
+}
+
 # Bootstrap a parent repo with content at the given directory
 function bootstrap_parent {
 	(
