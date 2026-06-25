@@ -70,9 +70,9 @@ dodder show -format json one/uno   # JSON output for scripting
 dodder show tag-name:z             # zettels carrying a specific tag
 dodder show !md:z                  # zettels of type md
 dodder show :?z                    # include dormant/hidden zettels
-dodder show :t                     # all tags
-dodder show :e                     # all types
-dodder show :z,t                   # zettels and tags
+dodder show :t                     # all types
+dodder show :e                     # all tags
+dodder show :z,t                   # zettels and types
 dodder show :r                     # all repos
 dodder show -before 2024-01-01 :z  # zettels before a date
 dodder show -after 2024-01-01 :z   # zettels after a date
@@ -250,11 +250,11 @@ selectors, sigils, tag filters, and type filters.
 | Syntax | Meaning |
 |--------|---------|
 | `:z` | All zettels (latest) |
-| `:t` | All tags |
-| `:e` | All types |
+| `:t` | All types |
+| `:e` | All tags |
 | `:r` | All repos |
 | `:b` | All inventory lists |
-| `:z,t` | Zettels and tags |
+| `:z,t` | Zettels and types |
 | `one/uno` | Specific object by ID |
 | `tag-name:z` | Zettels with a specific tag |
 | `!md:z` | Zettels of a specific type |
@@ -305,11 +305,20 @@ Tag prefixes carry special meaning:
 | `%` | Virtual tag (computed, not stored directly) |
 
 **Types** define the format of a zettel's blob content, similar to file
-extensions. Each zettel has exactly one type. Types are referenced in queries
+extensions. A zettel has at most one type. Types are referenced in queries
 with the `!` prefix (e.g., `!md:z` matches all markdown zettels).
 
-Both tags and types can be viewed with `dodder show :t` (tags) and
-`dodder show :e` (types).
+A zettel's type is supplied by the repo's **default type** when you omit one
+on `new` (or `checkin`). A standard `init` repo sets a default type (commonly
+`!md`). **Workspace repos and clones have no default type**, so `new` and
+`checkin` there require an explicit `-type`; omitting it errors with
+`no type given and repo has no default type; pass -type`. (Older data may also
+be typeless — it displays as a bare `!` — and typeless objects break
+`push`/`import`, so always give a new zettel a type.) Set or change a
+workspace's default with `init-workspace -type <type>`.
+
+Both tags and types can be viewed with `dodder show :t` (types) and
+`dodder show :e` (tags).
 
 ## Dormant Objects
 

@@ -217,6 +217,13 @@ specifying a type, dodder uses the genre's default:
 | Repo | `!toml-repo-uri-v0` |
 | Inventory List | `!inventory_list-v2` |
 
+The Zettel genre has no built-in genre default. A zettel's type instead comes
+from the **repo's configured default type** (set at `init`, commonly `!md`).
+Workspace repos and clones are created with no default type, so creating a
+zettel there without an explicit type is rejected (`no type given and repo has
+no default type; pass -type`) — historically it produced a typeless object
+(bare `!`) that breaks `push`/`import`.
+
 Repository configuration is not a genre, but its TOML blob still carries the
 `!toml-config-v2` type.
 

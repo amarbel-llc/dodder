@@ -33,7 +33,7 @@ const mcpInstructionsCommon = `Dodder is a distributed zettelkasten and content-
 ## Data Model
 
 Every object in dodder has: an object-id, a date, an optional description,
-an optional type, and zero or more tags. Tags are themselves objects that
+a type, and zero or more tags. Tags are themselves objects that
 can have their own tags (meta-tags). Common meta-tag patterns:
 
 - active — marks a project/tag as currently active
@@ -46,6 +46,14 @@ Object genres:
 - Types: ID prefixed with ! (e.g. !task, !md)
 - Tags: bare identifier, no ! prefix, no / separator (e.g. priority-0_must)
 
+Types and the default type: a zettel's type is supplied by the repo's
+DEFAULT TYPE when you omit one on the new tool. Workspace repos and clones
+have NO default type, so creating a zettel there REQUIRES an explicit type —
+omitting it errors with "no type given and repo has no default type; pass
+-type" (set the new tool's "type" argument). Existing or imported data may
+also be typeless (it reads as a bare !); typeless objects break push/import,
+so always give a new zettel a type.
+
 ## Query Syntax
 
 Query terms in the query tool are AND-combined. Term types:
@@ -55,6 +63,15 @@ Query terms in the query tool are AND-combined. Term types:
 
 Examples: [":z", "todo"] = zettels tagged todo. ["!task", "urgency-2_week"] =
 tasks with urgency-2_week tag. [":e"] = all tag objects.
+
+Sigils modify selection scope. A sigil attaches to the query TERM (not as a
+prefix), immediately before the genre letter:
+- : latest version only (default)
+- + include historical versions (e.g. !task+:t — NOT +!task:t)
+- . include external / checked-out objects
+- ? include dormant / hidden objects
+Sigils combine: ":." = latest + external. Putting a sigil at the front of a
+term (e.g. +!task:t) is a syntax error.
 
 Tag matching is TRANSITIVE through meta-tags. A tag filter matches an object
 tagged with that tag directly OR tagged with any tag whose own meta-tags
@@ -323,7 +340,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 				"properties": {
 					"object_id": {
 						"type": "string",
-						"description": "Object identifier (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', or type like '!type')"
+						"description": "Object identifier or query term (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', type like '!type', or a genre query like ':z'). Sigils attach to the TERM before the genre letter: ':' latest (default), '+' history (e.g. '!task+:t', NOT '+!task:t'), '.' external/checked-out, '?' dormant/hidden."
 					},
 					"format": {
 						"type": "string",
@@ -360,7 +377,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 		tools,
 		protocol.ToolV1{
 			Name:        "query",
-			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Prefer query-type/query-tag for discovery; use this for AND-filtered object listings. Tag matching is transitive through meta-tags: an object matches a tag filter if it is tagged with that tag directly OR with any tag whose own meta-tags include it, so a result can lack the queried tag in its own tag list (that is correct, not a leak).",
+			Description: "Search for dodder objects matching a query expression. Query terms are AND-combined. Term types: genre filters (:z zettels, :e tags, :t types), tag filters (bare name like 'todo'), type filters (!task). Examples: [':z', 'todo'] = zettels tagged todo, ['!task', 'priority-0_must'] = must-do tasks. Sigils attach to the TERM before the genre letter: ':' latest (default), '+' history (e.g. '!task+:t', NOT '+!task:t'), '.' external/checked-out, '?' dormant/hidden; they combine (':.' = latest + external). Prefer query-type/query-tag for discovery; use this for AND-filtered object listings. Tag matching is transitive through meta-tags: an object matches a tag filter if it is tagged with that tag directly OR with any tag whose own meta-tags include it, so a result can lack the queried tag in its own tag list (that is correct, not a leak).",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -608,7 +625,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 		tools,
 		protocol.ToolV1{
 			Name:        "new",
-			Description: "Create a new object. Returns the created object in box format. With no object_id, creates a zettel with an auto-assigned id. Set object_id to author a tag or a type (e.g. '!task'). Optionally set a description, type, tags, and an inline blob body.",
+			Description: "Create a new object. Returns the created object in box format. With no object_id, creates a zettel with an auto-assigned id. Set object_id to author a tag or a type (e.g. '!task'). Optionally set a description, type, tags, and an inline blob body. NOTE: a zettel needs a type — the repo's default type fills in when you omit one, but workspace repos and clones have NO default type, so creating a zettel there requires an explicit 'type' (omitting it errors 'no type given and repo has no default type; pass -type').",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -627,7 +644,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 					},
 					"type": {
 						"type": "string",
-						"description": "Object type (e.g. '!md'). For a zettel only; omit when object_id names a tag or type."
+						"description": "Object type (e.g. '!md'). For a zettel only; omit when object_id names a tag or type. Required for a zettel in a repo with no default type (workspace repos and clones)."
 					},
 					"blob": {
 						"type": "string",

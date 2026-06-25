@@ -37,8 +37,8 @@ abbreviations after a sigil.
 | Abbreviation | Genre | Description |
 |--------------|-------|-------------|
 | `z` | Zettel | Notes and content objects |
-| `t` | Tag | Tag objects |
-| `e` | Type | Type definition objects |
+| `t` | Type | Type definition objects |
+| `e` | Tag | Tag objects |
 | `r` | Repo | Remote repository objects |
 | `b` | InventoryList | Inventory list objects |
 
@@ -52,9 +52,9 @@ edit-config`. Read configuration with `dodder show-config` (and
 Combine genres with commas:
 
 ```bash
-dodder show :z,t                   # zettels and tags
-dodder show :z,t,e                 # zettels, tags, and types
-dodder show :z,t,e,r               # zettels, tags, types, and repos
+dodder show :z,t                   # zettels and types
+dodder show :z,t,e                 # zettels, types, and tags
+dodder show :z,t,e,r               # zettels, types, tags, and repos
 ```
 
 ### Default genres
@@ -186,8 +186,8 @@ dodder show :t                     # explicit argument overrides workspace defau
 | Show all markdown zettels | `dodder show !md:z` |
 | Show zettels tagged "project" | `dodder show project:z` |
 | Show all hidden/dormant zettels | `dodder show :?z` |
-| Show all tags | `dodder show :t` |
-| Show all types | `dodder show :e` |
+| Show all types | `dodder show :t` |
+| Show all tags | `dodder show :e` |
 | Show all remote repos | `dodder show :r` |
 | Show repository configuration | `dodder show-config` |
 | Show a specific zettel in detail | `dodder show -format text one/uno` |

@@ -96,12 +96,12 @@ Users specify genres in queries via sigil characters:
 | Sigil | Genre | Aliases |
 |-------|-------|---------|
 | `:z` | Zettel | `zettel` |
-| `:t` | Tag | `tag`, `etikett` |
-| `:e` | Type | `type`, `typ` |
+| `:t` | Type | `type`, `typ` |
+| `:e` | Tag | `tag`, `etikett` |
 | `:r` | Repo | `repo`, `kasten` |
 | `:b` | Blob | `blob`, `akte` |
 
-Combined: `:z,t` = Zettel + Tag bitfield.
+Combined: `:z,t` = Zettel + Type bitfield.
 
 ## Genre in ObjectId Parsing
 
