@@ -18,6 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_caldav"
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_orgmode"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
@@ -419,10 +420,51 @@ func (env *env) UpdateSyncBaseline(
 		return errors.Wrap(err)
 	}
 
+	// #286: never advance the baseline past an inventory list whose blob is
+	// not present in the store push/pull reads through. Otherwise the
+	// workspace gets pinned to a sync point it cannot read, and the missing
+	// manifest blob is invisible until a later operation needs it. The read
+	// store (GetReadBlobStore) is the multi-store view that includes pointer
+	// / walk-up parents, matching how the transfer paths resolve blobs.
+	if err = assertSyncBaselineBlobPresent(
+		last,
+		env.envRepo.GetReadBlobStore().HasBlob,
+	); err != nil {
+		return errors.Wrap(err)
+	}
+
 	v1.SyncTai = last.GetTai().String()
 	v1.SyncDigest = last.GetMetadata().GetObjectDigest().String()
 
 	return env.rewriteConfig()
+}
+
+// assertSyncBaselineBlobPresent enforces the #286 invariant: the inventory
+// list a sync baseline points at must have its blob present in the read
+// blob store. hasBlob is injected (env.envRepo.GetReadBlobStore().HasBlob in
+// production) so the guard is unit-testable without a wired env_repo. A null
+// blob digest is treated as present (an empty/blobless list has nothing to
+// fetch and cannot brick a later read).
+func assertSyncBaselineBlobPresent(
+	last *sku.Transacted,
+	hasBlob func(mad_domain_interfaces.MarklId) bool,
+) (err error) {
+	blobDigest := last.GetBlobDigest()
+
+	if blobDigest.IsNull() {
+		return nil
+	}
+
+	if !hasBlob(blobDigest) {
+		return errors.Errorf(
+			"refusing to advance sync baseline to inventory list %s: "+
+				"its blob %s is not present in the read blob store",
+			last.GetTai(),
+			blobDigest,
+		)
+	}
+
+	return nil
 }
 
 func (env *env) rewriteConfig() (err error) {
