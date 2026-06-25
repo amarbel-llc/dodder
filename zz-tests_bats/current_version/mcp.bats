@@ -547,3 +547,25 @@ function mcp_query_empty_result_has_non_empty_text { # @test
   assert_success
   refute_output '"text":""'
 }
+
+# The new tool's object_id + blob args author a type object (e.g. !task)
+# directly: the chosen id is honored, the meta-type is set from the genre
+# (!toml-type-v2), and the blob body is written. Mirrors the CLI
+# new_object_id_type_with_blob test through the MCP surface.
+function mcp_new_object_id_authors_type_with_blob { # @test
+  run_dodder_init_disable_age
+
+  local input="$BATS_TEST_TMPDIR/mcp-new-task-type.jsonrpc"
+  write_mcp_tool_call_input "$input" new \
+    '{"object_id":"!task","blob":"file-extension = \"toml\"\n"}'
+
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp '\[!task @blake2b256-[a-z0-9]+ !toml-type-v2\]'
+
+  # the type is queryable afterward, proving it committed
+  run_dodder show '!task:t'
+  assert_success
+  assert_output --regexp '^\[!task @blake2b256-.+ !toml-type-v2\]$'
+}

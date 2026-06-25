@@ -241,3 +241,85 @@ function new_zettel { # @test
 ---
 EOM
 }
+
+# -object-id with a type id authors the type object directly, with the
+# meta-type (!toml-type-v2) set automatically from the id's genre, and the
+# -blob written as the type's TOML body.
+function new_object_id_type_with_blob { # @test
+  run_dodder new -edit=false -object-id '!task' -blob 'file-extension = "toml"
+'
+  assert_success
+  assert_output - <<-EOM
+		[!task @blake2b256-agj380zh3wwj6n65chear8e4ednrwdxesrh6ccszc7xtu4707ujqucnjth !toml-type-v2]
+	EOM
+
+  run_dodder show -format blob '!task:t'
+  assert_success
+  assert_output - <<-EOM
+		file-extension = "toml"
+	EOM
+}
+
+# -object-id with a bare tag id authors a tag object; its meta-type is the
+# tag genre default (!toml-tag-v1).
+function new_object_id_tag { # @test
+  run_dodder new -edit=false -object-id some-tag
+  assert_success
+  assert_output - <<-EOM
+		[some-tag !toml-tag-v1]
+	EOM
+}
+
+# -object-id with an explicit zettel id honors that id instead of
+# auto-assigning one.
+function new_object_id_explicit_zettel { # @test
+  run_dodder new -edit=false -object-id left/right -description wow
+  assert_success
+  assert_output - <<-EOM
+		[left/right !md "wow"]
+	EOM
+}
+
+# -blob without -object-id writes the body onto an auto-assigned zettel.
+function new_blob_only_auto_zettel { # @test
+  run_dodder new -edit=false -blob 'the body
+'
+  assert_success
+  assert_output - <<-EOM
+		[two/uno @blake2b256-vl6ghtv2jsxppshflt86ardlx55ctn8jswx8j59tnv8r99uhs63syxsruy !md]
+	EOM
+}
+
+# -object-id names exactly one object, so combining it with -count > 1 is a
+# bad request.
+function new_object_id_rejects_count { # @test
+  run_dodder new -edit=false -object-id '!task' -count 2
+  assert_failure
+  assert_line --index 0 \
+    '-object-id / -blob cannot be combined with -count > 1'
+}
+
+# -object-id / -blob only apply on the no-positional-args path.
+function new_object_id_rejects_positional { # @test
+  to_add="$(mktemp)"
+  {
+    echo "---"
+    echo "# wow"
+    echo "! md"
+    echo "---"
+  } >"$to_add"
+
+  run_dodder new -edit=false -object-id left/right "$to_add"
+  assert_failure
+  assert_line --index 0 \
+    '-object-id / -blob cannot be combined with positional arguments'
+}
+
+# A non-zettel -object-id sets the meta-type from the genre, so an explicit
+# -type would be silently overridden — reject the combination.
+function new_object_id_type_rejects_explicit_type { # @test
+  run_dodder new -edit=false -object-id '!task' -type '!toml-type-v2'
+  assert_failure
+  assert_line --index 0 \
+    '-type cannot be combined with a non-zettel -object-id (!task); the meta-type is set automatically from the id'"'"'s genre'
+}

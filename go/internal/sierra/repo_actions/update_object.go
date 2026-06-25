@@ -81,7 +81,7 @@ func (op UpdateObject) runAlreadyLocked(
 	}
 
 	if changes.Blob != nil {
-		if err = op.writeBlob(result, *changes.Blob); err != nil {
+		if err = writeBlobContent(op.repo, result, *changes.Blob); err != nil {
 			err = errors.Wrap(err)
 			return result, err
 		}
@@ -98,11 +98,17 @@ func (op UpdateObject) runAlreadyLocked(
 	return result, err
 }
 
-func (op UpdateObject) writeBlob(
+// writeBlobContent writes content to the default blob store and stamps the
+// resulting digest onto object. Shared by UpdateObject (edit) and
+// WriteNewZettels (new -blob). It's a free function rather than a method
+// because repo is a type alias for local_working_copy.Repo (a non-local type),
+// so methods can't be defined on it here.
+func writeBlobContent(
+	r *repo,
 	object *sku.Transacted,
 	content string,
 ) (err error) {
-	blobWriter, err := op.GetEnvRepo().GetDefaultBlobStore().MakeBlobWriter(nil)
+	blobWriter, err := r.GetEnvRepo().GetDefaultBlobStore().MakeBlobWriter(nil)
 	if err != nil {
 		err = errors.Wrap(err)
 		return err

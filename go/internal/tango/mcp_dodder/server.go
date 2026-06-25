@@ -608,13 +608,17 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 		tools,
 		protocol.ToolV1{
 			Name:        "new",
-			Description: "Create a new zettel. Returns the created object in box format. Optionally set a description, type, and tags.",
+			Description: "Create a new object. Returns the created object in box format. With no object_id, creates a zettel with an auto-assigned id. Set object_id to author a tag or a type (e.g. '!task'). Optionally set a description, type, tags, and an inline blob body.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
+					"object_id": {
+						"type": "string",
+						"description": "Object id to assign. Empty (default) auto-assigns a zettel id. A zettel id like 'a/b', a tag like 'foo', or a type like '!task'. A non-zettel id sets the meta-type automatically from the id's genre, so do NOT also pass 'type' in that case."
+					},
 					"description": {
 						"type": "string",
-						"description": "Description for the new zettel"
+						"description": "Description for the new object"
 					},
 					"tags": {
 						"type": "array",
@@ -623,7 +627,11 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 					},
 					"type": {
 						"type": "string",
-						"description": "Object type (e.g. '!md', '!task')"
+						"description": "Object type (e.g. '!md'). For a zettel only; omit when object_id names a tag or type."
+					},
+					"blob": {
+						"type": "string",
+						"description": "Inline blob body for the new object (e.g. the TOML body of a '!task' type). Empty (default) writes no blob."
 					},
 					"repo_id": {
 						"type": "string",
@@ -883,9 +891,11 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 // committed first, then the call hangs). See #233.
 func newToolCLIArgs(args json.RawMessage) ([]string, error) {
 	var p struct {
+		ObjectId    string   `json:"object_id"`
 		Description string   `json:"description"`
 		Tags        []string `json:"tags"`
 		Type        string   `json:"type"`
+		Blob        string   `json:"blob"`
 	}
 	if err := json.Unmarshal(args, &p); err != nil {
 		return nil, err
@@ -893,6 +903,9 @@ func newToolCLIArgs(args json.RawMessage) ([]string, error) {
 
 	cliArgs := []string{"-edit=false"}
 
+	if p.ObjectId != "" {
+		cliArgs = append(cliArgs, "-object-id", p.ObjectId)
+	}
 	if p.Description != "" {
 		cliArgs = append(cliArgs, "-description", p.Description)
 	}
@@ -901,6 +914,9 @@ func newToolCLIArgs(args json.RawMessage) ([]string, error) {
 	}
 	if p.Type != "" {
 		cliArgs = append(cliArgs, "-type", p.Type)
+	}
+	if p.Blob != "" {
+		cliArgs = append(cliArgs, "-blob", p.Blob)
 	}
 
 	return cliArgs, nil

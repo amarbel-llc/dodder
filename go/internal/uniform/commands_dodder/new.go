@@ -4,6 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/0/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
@@ -31,7 +32,13 @@ func (cmd New) GetDescription() command.Description {
 			"for editing. File path arguments import existing files " +
 			"as zettel blobs. Use -count to create multiple empty " +
 			"zettels, -description, -tags, and -type to set metadata, " +
-			"and -shas to attach blobs already in the store.",
+			"and -shas to attach blobs already in the store. Use " +
+			"-object-id to assign a chosen id to a single new object " +
+			"(a zettel like 'a/b', a tag like 'foo', or a type like " +
+			"'!task'); an empty -object-id auto-assigns a zettel id. A " +
+			"non-zettel -object-id sets the meta-type automatically from " +
+			"the id's genre. Use -blob to write an inline blob body for " +
+			"that single object.",
 	}
 }
 
@@ -47,6 +54,14 @@ type New struct {
 	PrintOnly bool
 	Filter    script_value.ScriptValue
 	Shas      bool
+
+	// ObjectId, when non-empty, assigns a caller-chosen object-id to a single
+	// new object (a zettel `a/b`, a tag `foo`, or a type `!task`). Empty keeps
+	// the default behavior of an auto-assigned zettel id.
+	ObjectId string
+	// Blob, when non-empty, is written verbatim as the new object's blob body.
+	// Only valid on the no-positional-args path. Empty writes no blob.
+	Blob string
 
 	sku.Proto
 }
@@ -98,6 +113,23 @@ func (cmd *New) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 		&cmd.Filter,
 		"filter",
 		"a script to run for each file to transform it the standard zettel format",
+	)
+
+	flagSet.StringVar(
+		&cmd.ObjectId,
+		"object-id",
+		"",
+		"object id to assign to a single new object: a zettel like 'a/b', a tag "+
+			"like 'foo', or a type like '!task'. Empty (default) auto-assigns a "+
+			"zettel id. Mutually exclusive with -count>1 and positional args.",
+	)
+
+	flagSet.StringVar(
+		&cmd.Blob,
+		"blob",
+		"",
+		"inline blob body for a single new object (no-arg path only). Empty "+
+			"(default) writes no blob.",
 	)
 
 	cmd.complete.SetFlagsProto(
@@ -165,6 +197,56 @@ func (cmd New) ValidateFlagsAndArgs(
 		return err
 	}
 
+	// -object-id / -blob name exactly one new object with an inline body, so
+	// they only make sense on the single, no-positional-args path.
+	if cmd.ObjectId != "" || cmd.Blob != "" {
+		if len(args) > 0 {
+			err = errors.BadRequestf(
+				"-object-id / -blob cannot be combined with positional arguments",
+			)
+			return err
+		}
+
+		if cmd.Count > 1 {
+			err = errors.BadRequestf(
+				"-object-id / -blob cannot be combined with -count > 1",
+			)
+			return err
+		}
+
+		if _, ok := repo.GetEnvWorkspace().GetStore().StoreLike.(haustoria.Haustoria); ok {
+			err = errors.BadRequestf(
+				"-object-id / -blob are not supported against a haustoria workspace store",
+			)
+			return err
+		}
+	}
+
+	// A chosen non-Zettel object-id (a type or tag) forces its meta-type to the
+	// genre default (e.g. !toml-type-v2); an explicit -type would be silently
+	// overridden, so reject the combination rather than mislead.
+	if cmd.ObjectId != "" && !ids.IsEmpty(cmd.Proto.Metadata.GetType()) {
+		objectId, repool, parseErr := ids.MakeObjectId(cmd.ObjectId)
+		if parseErr != nil {
+			err = errors.BadRequestf(
+				"invalid -object-id %q: %s", cmd.ObjectId, parseErr,
+			)
+			return err
+		}
+
+		genre := genres.Make(objectId.GetGenre())
+		repool()
+
+		if genre != genres.Zettel {
+			err = errors.BadRequestf(
+				"-type cannot be combined with a non-zettel -object-id (%s); "+
+					"the meta-type is set automatically from the id's genre",
+				cmd.ObjectId,
+			)
+			return err
+		}
+	}
+
 	return err
 }
 
@@ -190,7 +272,30 @@ func (cmd *New) Run(req command.Request) {
 	} else if len(args) == 0 {
 		emptyOp := repo_actions.MakeWriteNewZettels(repo)
 
-		{
+		if cmd.ObjectId != "" || cmd.Blob != "" {
+			objectId, repool, err := ids.MakeObjectId(cmd.ObjectId)
+			if err != nil {
+				repo.Cancel(errors.BadRequestf(
+					"invalid -object-id %q: %s", cmd.ObjectId, err,
+				))
+			}
+
+			defer repool()
+
+			object, err := emptyOp.RunOneWithObjectId(
+				cmd.Proto,
+				objectId,
+				cmd.Blob,
+			)
+			if err != nil {
+				repo.Cancel(err)
+			}
+
+			objects = sku.MakeTransactedMutableSet()
+			if err := objects.Add(object); err != nil {
+				repo.Cancel(err)
+			}
+		} else {
 			var err error
 
 			if objects, err = emptyOp.RunMany(cmd.Proto, cmd.Count); err != nil {
