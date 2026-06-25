@@ -26,9 +26,11 @@ func TestClassification(t1 *testing.T) {
 		"status":           PermissionReadOnly,
 		"diff":             PermissionReadOnly,
 		"read-checked_out": PermissionReadOnly,
+		"organize_plan":    PermissionReadOnly,
 		"new":              PermissionWrite,
 		"edit":             PermissionWrite,
 		"checkin":          PermissionWrite,
+		"organize_commit":  PermissionWrite,
 		"reset-lock":       PermissionDestructive,
 	}
 

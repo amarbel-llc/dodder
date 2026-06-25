@@ -1,3 +1,17 @@
+// Package orgie implements the organize-text format: a hierarchical,
+// tag-headed text view of tagged/typed objects that round-trips through an
+// editor (or, since #7, the MCP organize_plan/organize_commit tools) to apply
+// bulk tag/description/move changes.
+//
+// orgie-extract: this package is a candidate for extraction into a standalone
+// amarbel-llc/orgie module — a general tool for applying structured,
+// hierarchical mutations to tagged/typed objects. Two follow-ups shape that
+// boundary: (#3) a structured (JSON / box-format) alternative to the text
+// round-trip below, and object-signature drift detection between plan and
+// commit (signatures embedded in the text/JSON let a commit detect that the
+// underlying objects changed since the plan, and fail or merge). The SKU
+// coupling lives only at the leaf (obj wrapper) and the GetSkus/addToSet
+// mutation; the Assignment tree itself is object-agnostic.
 package orgie
 
 import (
@@ -60,6 +74,10 @@ func (mr *metadataReader) ReadFrom(r io.Reader) (n int64, err error) {
 	return n, err
 }
 
+// orgie-extract: ReadFrom/WriteTo are the text-format seam. #3 adds a
+// structured (JSON / box-format) alternative alongside this hyphence text
+// round-trip; object signatures (for plan↔commit drift detection) ride in the
+// same metadata header these read/write.
 func (t *Text) ReadFrom(r io.Reader) (n int64, err error) {
 	if !t.Options.wasMade {
 		panic("options not initialized")

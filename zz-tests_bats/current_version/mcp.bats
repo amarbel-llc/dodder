@@ -63,6 +63,8 @@ function mcp_tools_list_no_workspace { # @test
 		"name":"edit"
 		"name":"format-blob"
 		"name":"new"
+		"name":"organize_commit"
+		"name":"organize_plan"
 		"name":"query"
 		"name":"query-tag"
 		"name":"query-type"
@@ -90,6 +92,8 @@ function mcp_tools_list_with_workspace { # @test
 		"name":"edit"
 		"name":"format-blob"
 		"name":"new"
+		"name":"organize_commit"
+		"name":"organize_plan"
 		"name":"query"
 		"name":"query-tag"
 		"name":"query-type"
@@ -169,6 +173,93 @@ function mcp_new_twice_does_not_leak_description { # @test
   assert_success
   assert_output --regexp '"second description"|second description'
   refute_output --regexp 'first description'
+}
+
+# #7: organize_plan renders matching objects as an organize buffer. This
+# covers the MCP wiring (tool reachable, returns non-empty text content); the
+# organize round-trip behavior itself is exercised exhaustively by the CLI
+# `organize -mode commit-directly` tests in organize.bats, which share the
+# repo_actions.OrganizePlan / OrganizeCommitFromReader path this tool uses.
+function mcp_organize_plan_returns_buffer { # @test
+  run_dodder_init_disable_age
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# organize me
+		- todo
+		! md
+		---
+
+		body
+	EOM
+  assert_success
+
+  local input="$BATS_TEST_TMPDIR/mcp-organize-plan.jsonrpc"
+  write_mcp_tool_call_input "$input" organize_plan '{"query":[":z"]}'
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2" | grep -oE "\"text\":\"[^\"]*\""'
+
+  assert_success
+  # The buffer is non-empty and mentions the zettel's description.
+  refute_output '"text":""'
+  assert_output --regexp 'organize me'
+}
+
+# #7: organize_commit applies an edited organize buffer that adds a tag
+# heading across the matched objects. The buffer is a single-line heading
+# followed by the object lines, kept simple enough to embed inline in the
+# JSON-RPC argument. Asserts the commit reports success and the tag lands —
+# proving the `organize` argument flows through the MCP layer into the parser
+# and commit. (The full breadth of organize edits — moves, descriptions,
+# merges — is covered by the CLI organize.bats over the shared commit path.)
+function mcp_organize_commit_applies_tag { # @test
+  run_dodder_init_disable_age
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# commit me
+		- todo
+		! md
+		---
+
+		body
+	EOM
+  assert_success
+
+  # Render the canonical organize buffer (same content organize_plan returns)
+  # and write the edited form — a new heading tag over the existing lines — to
+  # a file, then JSON-encode it for the tool argument using the dodder binary's
+  # own JSON checkin encoder is overkill; use printf + sed for the minimal
+  # escaping the buffer needs (no embedded quotes/backslashes in fixture text).
+  run_dodder organize -mode output-only :z
+  assert_success
+
+  local edited="$BATS_TEST_TMPDIR/edited-organize"
+  {
+    echo "# mcp-applied"
+    printf '%s\n' "$output"
+  } >"$edited"
+
+  # Minimal JSON string encoding: escape backslashes, quotes, then turn
+  # newlines into \n. The fixture buffer contains none of the former, so this
+  # is exact for this test's content.
+  local buffer_json
+  buffer_json="\"$(sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' "$edited" | awk 'BEGIN{ORS="\\n"} {print}')\""
+
+  local commit_input="$BATS_TEST_TMPDIR/mcp-organize-commit.jsonrpc"
+  write_mcp_tool_call_input "$commit_input" organize_commit \
+    '{"query":[":z"],"organize":'"$buffer_json"'}'
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$commit_input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'organize committed'
+
+  # The tag landed on the zettel.
+  run_dodder show -format text :z
+  assert_success
+  assert_output --partial 'mcp-applied'
 }
 
 function mcp_locked_mutate_fails_unambiguously_and_reset_lock_recovers { # @test

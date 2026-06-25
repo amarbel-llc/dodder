@@ -2,21 +2,18 @@ package commands_dodder
 
 import (
 	"os"
-	"sync"
 
 	"code.linenisgreat.com/dodder/go/internal/0/orgie_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
-	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_value"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
@@ -130,119 +127,39 @@ func (cmd *Organize) Run(req command.Request) {
 
 	repo_actions.ApplyToOrganizeOptions(repo, &cmd.Flags.Options)
 
-	objects := sku.MakeSkuTypeSetMutable()
-	var lock sync.Mutex
-
-	if err := repo.GetStore().QueryTransactedAsSkuType(
+	// orgie-extract: the query -> objects -> organize "before" tree setup is
+	// shared with the MCP organize_plan/organize_commit tools via
+	// repo_actions.OrganizePlan (#7). All three CLI modes render the same tree;
+	// only the edit/commit transport differs. OrganizePlan also applies the
+	// workspace default-query substitution (after object collection) and
+	// returns the effective query group to diff a commit against.
+	createOrganizeFileResults, objects, queryGroup, err := repo_actions.OrganizePlan(
+		repo,
 		queryGroup,
-		func(checkedOut sku.SkuType) (err error) {
-			lock.Lock()
-			defer lock.Unlock()
-
-			cloned, _ := checkedOut.Clone() //repool:owned
-			return objects.Add(cloned)
-		},
-	); err != nil {
+		cmd.Flags,
+	)
+	if err != nil {
 		repo.Cancel(err)
 	}
-
-	defaultQuery := queryGroup.GetDefaultQuery()
-
-	if queryGroup.IsEmpty() && defaultQuery != nil {
-		queryGroup = defaultQuery
-	}
-
-	createOrganizeFileOp := repo_actions.MakeCreateOrganizeFile(
-		repo,
-		repo_actions.MakeOrganizeOptionsWithQueryGroup(
-			repo,
-			cmd.Flags,
-			queryGroup,
-		),
-	)
-
-	createOrganizeFileOp.Skus = objects
-
-	types := queries.GetTypes(queryGroup)
-
-	if types.Len() == 1 {
-		createOrganizeFileOp.Type = quiter_set.Any(types)
-	}
-
-	tags := queries.GetTags(queryGroup)
-
-	if objects.Len() == 0 {
-		workspace := repo.GetEnvWorkspace()
-		workspaceTags := workspace.GetDefaults().GetDefaultTags()
-
-		for tag := range workspaceTags.All() {
-			ids.TagSetMutableAdd(tags, tag)
-		}
-	}
-
-	createOrganizeFileOp.TagSet = tags
 
 	switch cmd.Mode {
 	case orgie_mode.ModeCommitDirectly:
 		ui.Log().Print("neither stdin or stdout is a tty")
 		ui.Log().Print("generate organize, read from stdin, commit")
 
-		var createOrganizeFileResults *orgie.Text
-
-		var file *os.File
-
-		{
-			var err error
-
-			if file, err = repo.GetEnvRepo().GetTempLocal().FileTempWithTemplate(
-				"*." + repo.GetConfig().GetFileExtensions().Organize,
-			); err != nil {
-				repo.Cancel(err)
-			}
-		}
-
-		defer errors.ContextMustClose(repo, file)
-
-		{
-			var err error
-
-			if createOrganizeFileResults, err = createOrganizeFileOp.RunAndWrite(
-				file,
-			); err != nil {
-				repo.Cancel(err)
-			}
-		}
-
-		var organizeText *orgie.Text
-
-		readOrganizeTextOp := repo_actions.MakeReadOrganizeFile(repo)
-
-		{
-			var err error
-
-			if organizeText, err = readOrganizeTextOp.Run(
-				os.Stdin,
-				orgie.NewMetadata(queryGroup.RepoId),
-			); err != nil {
-				repo.Cancel(err)
-			}
-		}
-
-		if _, err := repo_actions.LockAndCommitOrganizeResults(
+		if _, err := repo_actions.OrganizeCommitFromReader(
 			repo,
-			orgie.OrganizeResults{
-				Before:     createOrganizeFileResults,
-				After:      organizeText,
-				Original:   objects,
-				QueryGroup: queryGroup,
-			},
+			queryGroup,
+			createOrganizeFileResults,
+			objects,
+			os.Stdin,
 		); err != nil {
 			repo.Cancel(err)
 		}
 
 	case orgie_mode.ModeOutputOnly:
 		ui.Log().Print("generate organize file and write to stdout")
-		if _, err := createOrganizeFileOp.RunAndWrite(os.Stdout); err != nil {
+		if _, err := createOrganizeFileResults.WriteTo(os.Stdout); err != nil {
 			repo.Cancel(err)
 		}
 
@@ -250,7 +167,6 @@ func (cmd *Organize) Run(req command.Request) {
 		ui.Log().Print(
 			"generate temp file, write organize, open vim to edit, commit results",
 		)
-		var createOrganizeFileResults *orgie.Text
 
 		var f *os.File
 
@@ -269,9 +185,7 @@ func (cmd *Organize) Run(req command.Request) {
 		{
 			var err error
 
-			if createOrganizeFileResults, err = createOrganizeFileOp.RunAndWrite(
-				f,
-			); err != nil {
+			if _, err = createOrganizeFileResults.WriteTo(f); err != nil {
 				errors.ContextCancelWithErrorAndFormat(
 					repo,
 					err,

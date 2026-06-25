@@ -8,10 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/alfa/mcp_tool_perms"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
+	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
 	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
@@ -323,8 +327,8 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 					},
 					"format": {
 						"type": "string",
-						"description": "Output format (log, text, json, organize). Defaults to log.",
-						"enum": ["log", "text", "json", "organize"]
+						"description": "Output format (log, text, json). Defaults to log.",
+						"enum": ["log", "text", "json"]
 					},
 					"repo_id": {
 						"type": "string",
@@ -368,7 +372,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 					"format": {
 						"type": "string",
 						"description": "Output format. Defaults to json (without blob content). Use json-with-blob_string to include blob content.",
-						"enum": ["log", "text", "json", "json-with-blob_string", "organize", "box"]
+						"enum": ["log", "text", "json", "json-with-blob_string", "box"]
 					},
 					"limit": {
 						"type": "integer",
@@ -692,6 +696,60 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 		makeResetLockHandler(bridge),
 	)
 
+	registerTool(
+		tools,
+		protocol.ToolV1{
+			Name:        "organize_plan",
+			Description: "Render objects matching a query as an organize buffer for batch editing — the read half of the organize plan/commit flow. The buffer groups objects under tag headings; you edit it (add a heading to apply a tag across the objects beneath it, move an object line under a different heading to change its tags, edit an object's description, delete a line to remove a tag) and pass the WHOLE edited buffer to organize_commit with the SAME query. This is the ergonomic way to apply tag/description changes across many objects in one round-trip instead of N edit calls. Read-only: produces the buffer, changes nothing.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Query terms selecting the objects to organize (e.g. ['!task'], [':z', 'project-alpha']). Same syntax as the query tool; default genre is zettels."
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
+					}
+				},
+				"required": ["query"],
+				"additionalProperties": false
+			}`),
+		},
+		makeOrganizePlanHandler(bridge),
+	)
+
+	registerTool(
+		tools,
+		protocol.ToolV1{
+			Name:        "organize_commit",
+			Description: "Apply an edited organize buffer — the write half of the organize plan/commit flow. Pass the SAME query you gave organize_plan plus the edited buffer; the changes (tag adds/removes from moving objects between headings, description edits) are applied to all affected objects in one batch. The query re-derives the baseline the edited buffer is diffed against, so it must match the organize_plan call. Returns a summary of what changed.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "The SAME query terms passed to organize_plan. Re-runs to establish the before-edit baseline; a different query will diff against the wrong baseline."
+					},
+					"organize": {
+						"type": "string",
+						"description": "The full edited organize buffer (the organize_plan output with your edits)."
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
+					}
+				},
+				"required": ["query", "organize"],
+				"additionalProperties": false
+			}`),
+		},
+		makeOrganizeCommitHandler(bridge),
+	)
+
 	if !hasWorkspace {
 		// Workspace-scoped tools (status, checkin, diff, read_checked_out)
 		// operate on checked-out objects in a dodder workspace. Without a
@@ -911,6 +969,151 @@ func makeEditHandler(
 		return &protocol.ToolCallResultV1{
 			Content: []protocol.ContentBlockV1{
 				protocol.TextContentV1(result.Stdout),
+			},
+		}, nil
+	}
+}
+
+// organizeQueryGroup builds the query group both organize tools use, matching
+// the CLI organize command's options (default genre zettels, latest sigil,
+// non-empty query required). orgie-extract: the organize_plan/organize_commit
+// MCP handlers and the CLI share repo_actions.OrganizePlan; this is the MCP
+// query-building counterpart of organize.go's MakeQueryResolvingFilenames.
+func organizeQueryGroup(
+	repo *local_working_copy.Repo,
+	query []string,
+) (*queries.Query, error) {
+	return repo.MakeExternalQueryGroup(
+		queries.BuilderOptions(
+			queries.BuilderOptionRequireNonEmptyQuery(),
+			queries.BuilderOptionDefaultGenres(genres.Zettel),
+			queries.BuilderOptionDefaultSigil(ids.SigilLatest),
+		),
+		sku.ExternalQueryOptions{},
+		query...,
+	)
+}
+
+func makeOrganizePlanHandler(bridge Bridge) server.ToolHandlerV1 {
+	return func(
+		ctx context.Context,
+		args json.RawMessage,
+	) (*protocol.ToolCallResultV1, error) {
+		var p struct {
+			Query  []string `json:"query"`
+			RepoId string   `json:"repo_id"`
+		}
+
+		if err := json.Unmarshal(args, &p); err != nil {
+			return protocol.ErrorResultV1(
+				fmt.Sprintf("Invalid arguments: %v", err),
+			), nil
+		}
+
+		var buf strings.Builder
+
+		if err := bridge.WithRepo(
+			ctx,
+			p.RepoId,
+			func(repo *local_working_copy.Repo) error {
+				queryGroup, err := organizeQueryGroup(repo, p.Query)
+				if err != nil {
+					return err
+				}
+
+				before, _, _, err := repo_actions.OrganizePlan(
+					repo,
+					queryGroup,
+					orgie.MakeFlags(),
+				)
+				if err != nil {
+					return err
+				}
+
+				_, err = before.WriteTo(&buf)
+				return err
+			},
+		); err != nil {
+			return protocol.ErrorResultV1(formatToolError(err)), nil
+		}
+
+		return &protocol.ToolCallResultV1{
+			Content: []protocol.ContentBlockV1{
+				protocol.TextContentV1(buf.String()),
+			},
+		}, nil
+	}
+}
+
+func makeOrganizeCommitHandler(bridge Bridge) server.ToolHandlerV1 {
+	return func(
+		ctx context.Context,
+		args json.RawMessage,
+	) (*protocol.ToolCallResultV1, error) {
+		var p struct {
+			Query    []string `json:"query"`
+			Organize string   `json:"organize"`
+			RepoId   string   `json:"repo_id"`
+		}
+
+		if err := json.Unmarshal(args, &p); err != nil {
+			return protocol.ErrorResultV1(
+				fmt.Sprintf("Invalid arguments: %v", err),
+			), nil
+		}
+
+		var summary string
+
+		if err := bridge.WithRepo(
+			ctx,
+			p.RepoId,
+			func(repo *local_working_copy.Repo) error {
+				queryGroup, err := organizeQueryGroup(repo, p.Query)
+				if err != nil {
+					return err
+				}
+
+				// Re-derive the before-edit baseline statelessly from the same
+				// query, then diff the submitted (edited) buffer against it.
+				// Use the effective query OrganizePlan returns (after default-
+				// query substitution) so the commit diffs against the same
+				// baseline the plan rendered.
+				before, original, effective, err := repo_actions.OrganizePlan(
+					repo,
+					queryGroup,
+					orgie.MakeFlags(),
+				)
+				if err != nil {
+					return err
+				}
+
+				changes, err := repo_actions.OrganizeCommitFromReader(
+					repo,
+					effective,
+					before,
+					original,
+					strings.NewReader(p.Organize),
+				)
+				if err != nil {
+					return err
+				}
+
+				summary = fmt.Sprintf(
+					"organize committed: %d changed, %d added, %d removed",
+					changes.Changed.Len(),
+					changes.Added.Len(),
+					changes.Removed.Len(),
+				)
+
+				return nil
+			},
+		); err != nil {
+			return protocol.ErrorResultV1(formatToolError(err)), nil
+		}
+
+		return &protocol.ToolCallResultV1{
+			Content: []protocol.ContentBlockV1{
+				protocol.TextContentV1(summary),
 			},
 		}, nil
 	}

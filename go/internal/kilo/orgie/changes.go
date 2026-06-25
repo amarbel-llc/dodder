@@ -136,6 +136,12 @@ func (c Changes) String() string {
 	)
 }
 
+// orgie-extract: OrganizeResults (Before/After/Original) and
+// ChangesFromResults are the diff seam. Today drift between a plan and its
+// commit is invisible — Before is re-derived from the query at commit time. A
+// follow-up keys drift detection here on object signatures carried in the
+// organize text/JSON, so a commit can fail (or merge) when Original changed
+// since the plan.
 // TODO combine with above
 type OrganizeResults struct {
 	Before, After *Text
