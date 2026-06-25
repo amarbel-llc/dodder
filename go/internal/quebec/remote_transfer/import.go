@@ -161,7 +161,10 @@ func (importer importer) importOne(
 		return hasConflicts, err
 	}
 
-	if errors.Is(err, ErrSkipped) {
+	if importer.skipBloblessType(err) {
+		err = nil
+		return hasConflicts, err
+	} else if errors.Is(err, ErrSkipped) {
 		err = nil
 		return hasConflicts, err
 	} else if errors.Is(err, errors.ErrExists) {

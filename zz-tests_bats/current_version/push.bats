@@ -424,3 +424,76 @@ function push_direct_no_repo_at_path { # @test
 	assert_failure
 	assert_output --partial 'not in a dodder directory'
 }
+
+# #291: a blobless type definition (a type object with a null blob digest) is a
+# documented "skip" during transfer, but the skip error was propagated as fatal
+# on the default (continue-on-error=false) path, aborting the whole push. The
+# transfer should succeed, skipping the blobless type and transferring the rest.
+function push_skips_blobless_type_definition { # @test
+	bootstrap_without_content_xdg
+
+	# A normal zettel that must transfer.
+	run_dodder new -edit=false - <<-EOM
+		---
+		# normal zettel
+		- tag
+		! md
+		---
+
+		body
+	EOM
+	assert_success
+
+	# A blobless type definition: `new -object-id '!task'` with no -blob
+	# commits a type object with a null blob digest (shown without @digest).
+	run_dodder new -edit=false -object-id '!task'
+	assert_success
+	assert_output - <<-EOM
+		[!task !toml-type-v2]
+	EOM
+
+	run_dodder remote-add \
+		toml-repo-local_override_path-v0 \
+		"$(realpath them)" \
+		them
+	assert_success
+
+	# Default push (continue-on-error=false) must NOT abort on the blobless
+	# type; it is skipped and a notice is emitted on stderr.
+	run_dodder push /them
+	assert_success
+
+	# The parent received the fixture content + the normal zettel and the !md
+	# type, but NOT the skipped blobless !task type. Content-addressed digests
+	# are deterministic, so assert the exact set.
+	pushd them || exit 1
+	run_dodder show +zettel,typ,etikett
+	assert_success
+	assert_output_unsorted - <<-EOM
+		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+		[two/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "normal zettel" tag]
+	EOM
+	refute_output --partial '!task'
+}
+
+# #291: with -forbid-blobless-types, a blobless type definition is fatal again
+# (opt-in strict mode), so the push aborts.
+function push_forbid_blobless_type_definition_aborts { # @test
+	bootstrap_without_content_xdg
+
+	run_dodder new -edit=false -object-id '!task'
+	assert_success
+
+	run_dodder remote-add \
+		toml-repo-local_override_path-v0 \
+		"$(realpath them)" \
+		them
+	assert_success
+
+	run_dodder push -forbid-blobless-types /them
+	assert_failure
+	assert_output --partial 'blobless type definition skipped'
+}

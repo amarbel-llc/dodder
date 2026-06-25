@@ -44,6 +44,7 @@ func Make(
 		blobGenres:                  options.BlobGenres,
 		excludeObjects:              options.ExcludeObjects,
 		continueOnError:             options.ContinueOnError,
+		forbidBloblessTypes:         options.ForbidBloblessTypes,
 		remoteBlobStore:             options.RemoteBlobStore,
 		blobCopierDelegate:          options.BlobCopierDelegate,
 		allowMergeConflicts:         options.AllowMergeConflicts,
@@ -88,6 +89,7 @@ type importer struct {
 	blobGenres                  ids.Genre
 	excludeObjects              bool
 	continueOnError             bool
+	forbidBloblessTypes         bool
 	remoteBlobStore             blob_stores.BlobStoreInitialized
 	blobCopierDelegate          interfaces.FuncIter[sku.BlobCopyResult]
 	storeOptions                sku.StoreOptions
@@ -164,6 +166,10 @@ func (importer importer) importInventoryList(
 		if _, importErr := importer.Import(
 			object,
 		); importErr != nil {
+			if importer.skipBloblessType(importErr) {
+				continue
+			}
+
 			if importer.continueOnError {
 				subObjectErrors.Add(
 					errors.Wrapf(importErr, "Object: %s", sku.String(object)),
@@ -197,6 +203,22 @@ func (importer importer) importInventoryList(
 	}
 
 	return checkedOut, err
+}
+
+// skipBloblessType reports whether importErr is a benign blobless-type skip
+// that should be tolerated rather than propagated. A blobless type definition
+// (a type object with a null blob digest) is a documented skip (#291); by
+// default it is skipped with a stderr notice so a single such object in history
+// does not abort an entire push/import. The -forbid-blobless-types option opts
+// into treating it as fatal again.
+func (importer importer) skipBloblessType(importErr error) bool {
+	if importer.forbidBloblessTypes || !IsErrBloblessTypeSkipped(importErr) {
+		return false
+	}
+
+	ui.Err().Print(importErr)
+
+	return true
 }
 
 func (importer importer) importLeaf(

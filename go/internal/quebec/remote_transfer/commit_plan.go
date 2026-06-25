@@ -61,6 +61,10 @@ func (imp importer) commitPlan(
 
 		if genres.Make(object.GetGenre()) == genres.InventoryList {
 			if _, importErr := imp.Import(object); importErr != nil {
+				if imp.skipBloblessType(importErr) {
+					continue
+				}
+
 				if errors.Is(importErr, ErrSkipped) ||
 					errors.Is(importErr, errors.ErrExists) ||
 					genres.IsErrUnsupportedGenre(importErr) ||

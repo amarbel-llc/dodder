@@ -40,6 +40,7 @@ type (
 		AllowMergeConflicts bool
 		OverwriteSignatures bool
 		ContinueOnError     bool
+		ForbidBloblessTypes bool
 
 		DedupingFormatId   string
 		RemoteBlobStore    blob_stores.BlobStoreInitialized
@@ -101,6 +102,13 @@ func (options *ImporterOptions) SetFlagDefinitions(
 		"continue-on-error",
 		false,
 		"continue importing remaining objects when an error occurs and write failures to a log file",
+	)
+
+	flagDefinitions.BoolVar(
+		&options.ForbidBloblessTypes,
+		"forbid-blobless-types",
+		false,
+		"treat a blobless type definition (a type object with a null blob digest) as a fatal error instead of skipping it during transfer",
 	)
 }
 
