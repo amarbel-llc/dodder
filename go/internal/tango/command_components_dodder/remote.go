@@ -18,6 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
+	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/remote_http"
@@ -39,6 +40,7 @@ type Remote struct {
 
 	DirectPath           string
 	parentIsHomeRepo     bool
+	resolvedFromParent   bool
 	RemoteConnectionType remote_connection_types.Type
 }
 
@@ -125,6 +127,7 @@ func (cmd *Remote) ResolveImplicitDirectPath(
 	parentPath := local.GetEnvWorkspace().GetParentPath()
 	if parentPath != "" {
 		cmd.DirectPath = parentPath
+		cmd.resolvedFromParent = true
 		return
 	}
 
@@ -133,6 +136,90 @@ func (cmd *Remote) ResolveImplicitDirectPath(
 	wsConfig := local.GetEnvWorkspace().GetWorkspaceConfig()
 	if _, ok := wsConfig.(workspace_config_blobs.ConfigWithParentPath); ok {
 		cmd.parentIsHomeRepo = true
+		cmd.resolvedFromParent = true
+	}
+}
+
+// ResolvedFromParent reports whether the remote was resolved from the
+// workspace's recorded parent (path or home repo), as opposed to an explicit
+// -direct path or a stored remote object. Only a parent-resolved remote is
+// subject to #287b pubkey verification.
+func (cmd Remote) ResolvedFromParent() bool {
+	return cmd.resolvedFromParent
+}
+
+// VerifyOrPinParent enforces the #287b parent-identity invariant before a
+// push/pull whose remote was resolved from the workspace's parent. It is a
+// no-op for any other remote (explicit -direct or a stored remote object).
+//
+//   - Pinned + live pubkey matches -> proceed.
+//   - Pinned + mismatch -> hard error (the resolved parent is a different repo).
+//   - Unpinned (legacy workspace) + TTY -> confirm-pin the resolved parent,
+//     upgrading the workspace config, then proceed.
+//   - Unpinned + non-TTY -> hard error directing the user to `dodder set-parent`.
+func (cmd Remote) VerifyOrPinParent(
+	req command.Request,
+	local *local_working_copy.Repo,
+	remote repo.Repo,
+) {
+	if !cmd.resolvedFromParent {
+		return
+	}
+
+	livePubkey := remote.GetImmutableConfigPublic().GetPublicKey()
+	pinned := local.GetEnvWorkspace().GetParentPubkey()
+
+	err := env_workspace.AssertParentPubkeyMatches(pinned, livePubkey)
+
+	switch {
+	case err == nil:
+		return
+
+	case env_workspace.IsErrParentUnpinned(err):
+		cmd.pinLegacyParentOrCancel(req, local, livePubkey)
+
+	default:
+		req.Cancel(err)
+	}
+}
+
+// pinLegacyParentOrCancel handles a parent-resolved push/pull against a
+// workspace with no pinned parent pubkey (#287b legacy path). With a TTY it
+// confirms pinning the resolved parent's identity and upgrades the config;
+// without a TTY it cancels with guidance, refusing to operate against an
+// unverified parent non-interactively.
+func (cmd Remote) pinLegacyParentOrCancel(
+	req command.Request,
+	local *local_working_copy.Repo,
+	livePubkey mad_domain_interfaces.MarklId,
+) {
+	livePubkeyString := livePubkey.StringWithFormat()
+
+	if !local.GetEnv().GetIn().IsTty() {
+		req.Cancel(errors.BadRequestf(
+			"workspace parent is not pinned; refusing to operate against an "+
+				"unverified parent non-interactively. Run `dodder set-parent` "+
+				"in an interactive terminal to pin %s",
+			livePubkeyString,
+		))
+		return
+	}
+
+	if !local.GetEnv().Confirm(
+		"pin this repository as the workspace parent?",
+		livePubkeyString,
+	) {
+		req.Cancel(errors.BadRequestf(
+			"workspace parent not pinned; aborting. Run `dodder set-parent` " +
+				"to pin it later",
+		))
+		return
+	}
+
+	if err := local.GetEnvWorkspace().PinParentPubkey(
+		livePubkeyString,
+	); err != nil {
+		req.Cancel(err)
 	}
 }
 

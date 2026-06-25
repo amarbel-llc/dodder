@@ -79,6 +79,13 @@ func (cmd Push) Run(req command.Request) {
 		}
 	}
 
+	// #287b: when the remote was resolved from the workspace parent, verify
+	// its pinned identity (or confirm-pin a legacy workspace) before any
+	// transfer. No-op for explicit -direct / stored-remote pushes.
+	if !useProto {
+		cmd.VerifyOrPinParent(req, local, remote)
+	}
+
 	queryGroup := cmd.MakeQueryIncludingWorkspace(
 		req,
 		queries.BuilderOptions(

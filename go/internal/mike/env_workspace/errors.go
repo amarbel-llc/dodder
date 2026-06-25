@@ -13,6 +13,14 @@ type (
 	pkgError     = errors.Typed[pkgErrDisamb]
 )
 
+// ErrParentUnpinned reports that a workspace's parent has no pinned pubkey
+// (#287b): a legacy V1 workspace written before pinning, or one not yet
+// pinned. Callers branch on it to choose the legacy path (TTY confirm-pin vs
+// non-TTY hard fail) rather than treating it as a verification failure.
+var ErrParentUnpinned, IsErrParentUnpinned = errors.MakeTypedSentinel[pkgErrDisamb](
+	"workspace parent is not pinned",
+)
+
 type ErrUnsupportedType struct {
 	Type ids.Type
 }

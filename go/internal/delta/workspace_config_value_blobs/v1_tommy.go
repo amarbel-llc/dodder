@@ -62,6 +62,12 @@ func DecodeV1(input []byte) (*V1Document, error) {
 			_vParentPath.MarkConsumed()
 		}
 	}
+	if _vParentPubkey, _ok := model.Get("parent-pubkey"); _ok && _vParentPubkey.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vParentPubkey.Leaf); _xok {
+			d.data.ParentPubkey = _x
+			_vParentPubkey.MarkConsumed()
+		}
+	}
 	if _vSyncTai, _ok := model.Get("sync-tai"); _ok && _vSyncTai.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractString(_vSyncTai.Leaf); _xok {
 			d.data.SyncTai = _x
@@ -106,6 +112,13 @@ func (d *V1Document) Encode() ([]byte, error) {
 		}
 	} else {
 		cst.DeleteValue(d.cstDoc.Root(), "parent-path")
+	}
+	if d.data.ParentPubkey != "" {
+		if err := cst.SetAny(d.cstDoc.Root(), "parent-pubkey", d.data.ParentPubkey); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(d.cstDoc.Root(), "parent-pubkey")
 	}
 	if d.data.SyncTai != "" {
 		if err := cst.SetAny(d.cstDoc.Root(), "sync-tai", d.data.SyncTai); err != nil {
@@ -172,6 +185,12 @@ func DecodeV1Into(data *V1, sub *cst.Value) error {
 			_vParentPath.MarkConsumed()
 		}
 	}
+	if _vParentPubkey, _ok := sub.Get("parent-pubkey"); _ok && _vParentPubkey.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vParentPubkey.Leaf); _xok {
+			data.ParentPubkey = _x
+			_vParentPubkey.MarkConsumed()
+		}
+	}
 	if _vSyncTai, _ok := sub.Get("sync-tai"); _ok && _vSyncTai.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractString(_vSyncTai.Leaf); _xok {
 			data.SyncTai = _x
@@ -212,6 +231,13 @@ func EncodeV1From(data *V1, doc *document.Document, container *cst.Node) error {
 		}
 	} else {
 		cst.DeleteValue(container, "parent-path")
+	}
+	if data.ParentPubkey != "" {
+		if err := cst.SetAny(container, "parent-pubkey", data.ParentPubkey); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(container, "parent-pubkey")
 	}
 	if data.SyncTai != "" {
 		if err := cst.SetAny(container, "sync-tai", data.SyncTai); err != nil {

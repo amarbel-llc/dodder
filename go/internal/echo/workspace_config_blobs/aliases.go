@@ -23,12 +23,14 @@ var (
 	_ ConfigWithDefaultQueryString = V0{}
 
 	_ ConfigWithParentPath         = V1{}
+	_ ConfigWithParentPubkey       = V1{}
 	_ ConfigWithSyncBaseline       = V1{}
 	_ ConfigWithDefaultQueryString = V1{}
 	_ ConfigWithDryRun             = V1{}
 
 	_ ConfigWithHaustoria          = V2{}
 	_ ConfigWithParentPath         = V2{}
+	_ ConfigWithParentPubkey       = V2{}
 	_ ConfigWithSyncBaseline       = V2{}
 	_ ConfigWithDefaultQueryString = V2{}
 	_ ConfigWithDryRun             = V2{}
@@ -36,6 +38,7 @@ var (
 	_ ConfigWithIgnore             = V3{}
 	_ ConfigWithHaustoria          = V3{}
 	_ ConfigWithParentPath         = V3{}
+	_ ConfigWithParentPubkey       = V3{}
 	_ ConfigWithSyncBaseline       = V3{}
 	_ ConfigWithDefaultQueryString = V3{}
 	_ ConfigWithDryRun             = V3{}

@@ -24,6 +24,7 @@ import (
 	"github.com/amarbel-llc/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
@@ -44,6 +45,8 @@ type Env interface {
 	GetParentPath() string
 	GetSyncBaseline() (tai string, digest string)
 	UpdateSyncBaseline(inventoryListStore sku.InventoryListStore) error
+	GetParentPubkey() string
+	PinParentPubkey(pubkey string) error
 	GetStore() *Store
 
 	// TODO identify users of this and reduce / isolate them
@@ -405,6 +408,65 @@ func (env *env) GetSyncBaseline() (tai string, digest string) {
 	}
 
 	return "", ""
+}
+
+// GetParentPubkey returns the pinned parent repo public key (#287b), or "" for
+// a workspace whose parent has not been pinned (legacy V1 written before
+// pinning, or a config version without the field).
+func (env *env) GetParentPubkey() string {
+	if pp, ok := env.blob.(workspace_config_blobs.ConfigWithParentPubkey); ok {
+		return pp.GetParentPubkey()
+	}
+
+	return ""
+}
+
+// PinParentPubkey records pubkey as the workspace's pinned parent identity and
+// rewrites the config. Only V1-and-later (repo-backed) workspaces carry the
+// field; on a V0 / non-pinnable config it is a no-op so callers need not type
+// switch.
+func (env *env) PinParentPubkey(pubkey string) (err error) {
+	v1, ok := env.blob.(*workspace_config_blobs.V1)
+	if !ok {
+		return nil
+	}
+
+	v1.ParentPubkey = pubkey
+
+	return env.rewriteConfig()
+}
+
+// AssertParentPubkeyMatches enforces the #287b invariant: a workspace's
+// resolved parent must be the repo whose pubkey was pinned. pinned is the
+// stored StringWithFormat() form ("" when unpinned); live is the parent
+// repo's current public key. Returns ErrParentUnpinned when pinned=="" so the
+// caller can decide the legacy path (TTY confirm-pin vs non-TTY hard fail),
+// and a mismatch error otherwise.
+func AssertParentPubkeyMatches(
+	pinned string,
+	live mad_domain_interfaces.MarklId,
+) (err error) {
+	if pinned == "" {
+		return ErrParentUnpinned
+	}
+
+	var pinnedId markl.Id
+
+	if err = pinnedId.Set(pinned); err != nil {
+		return errors.Wrapf(err, "stored parent pubkey is unparseable: %q", pinned)
+	}
+
+	if !markl.Equals(&pinnedId, live) {
+		return errors.BadRequestf(
+			"parent repo identity mismatch: workspace pinned %s but the "+
+				"resolved parent is %s; if the parent moved or was replaced, "+
+				"re-pin with `dodder set-parent`",
+			pinned,
+			live.StringWithFormat(),
+		)
+	}
+
+	return nil
 }
 
 func (env *env) UpdateSyncBaseline(

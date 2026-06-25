@@ -154,6 +154,7 @@ function complete_subcmd { # @test
 		^save[[:space:]]+commit workspace changes to the store$
 		^serve[[:space:]]+start the HTTP server$
 		^serve-proto[[:space:]]+serve the drtp remote transfer protocol \(websocket-capable\)$
+		^set-parent[[:space:]]+pin the workspace's parent repo identity \(pubkey\)$
 		^show[[:space:]]+display objects from the store$
 		^show-config[[:space:]]+read the repository configuration log$
 		^status[[:space:]]+show workspace object state$

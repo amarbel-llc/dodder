@@ -62,6 +62,12 @@ func DecodeV3(input []byte) (*V3Document, error) {
 			_vParentPath.MarkConsumed()
 		}
 	}
+	if _vParentPubkey, _ok := model.Get("parent-pubkey"); _ok && _vParentPubkey.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vParentPubkey.Leaf); _xok {
+			d.data.ParentPubkey = _x
+			_vParentPubkey.MarkConsumed()
+		}
+	}
 	if _vSyncTai, _ok := model.Get("sync-tai"); _ok && _vSyncTai.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractString(_vSyncTai.Leaf); _xok {
 			d.data.SyncTai = _x
@@ -372,6 +378,13 @@ func (d *V3Document) Encode() ([]byte, error) {
 	} else {
 		cst.DeleteValue(d.cstDoc.Root(), "parent-path")
 	}
+	if d.data.ParentPubkey != "" {
+		if err := cst.SetAny(d.cstDoc.Root(), "parent-pubkey", d.data.ParentPubkey); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(d.cstDoc.Root(), "parent-pubkey")
+	}
 	if d.data.SyncTai != "" {
 		if err := cst.SetAny(d.cstDoc.Root(), "sync-tai", d.data.SyncTai); err != nil {
 			return nil, fmt.Errorf("%w", err)
@@ -556,6 +569,12 @@ func DecodeV3Into(data *V3, sub *cst.Value) error {
 		if _x, _xok := cst.ExtractString(_vParentPath.Leaf); _xok {
 			data.ParentPath = _x
 			_vParentPath.MarkConsumed()
+		}
+	}
+	if _vParentPubkey, _ok := sub.Get("parent-pubkey"); _ok && _vParentPubkey.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vParentPubkey.Leaf); _xok {
+			data.ParentPubkey = _x
+			_vParentPubkey.MarkConsumed()
 		}
 	}
 	if _vSyncTai, _ok := sub.Get("sync-tai"); _ok && _vSyncTai.Kind == cst.VLeaf {
@@ -863,6 +882,13 @@ func EncodeV3From(data *V3, doc *document.Document, container *cst.Node) error {
 		}
 	} else {
 		cst.DeleteValue(container, "parent-path")
+	}
+	if data.ParentPubkey != "" {
+		if err := cst.SetAny(container, "parent-pubkey", data.ParentPubkey); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(container, "parent-pubkey")
 	}
 	if data.SyncTai != "" {
 		if err := cst.SetAny(container, "sync-tai", data.SyncTai); err != nil {

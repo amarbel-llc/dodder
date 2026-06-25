@@ -37,6 +37,11 @@ type (
 		GetParentPath() string
 	}
 
+	ConfigWithParentPubkey interface {
+		Config
+		GetParentPubkey() string
+	}
+
 	ConfigWithSyncBaseline interface {
 		Config
 		GetSyncTai() string

@@ -814,3 +814,166 @@ function workspace_repo_implicit_parent_write_roundtrip { # @test
 	assert_success
 	assert_output --partial 'edited workspace body'
 }
+
+# #287b: init-workspace -parent pins the parent repo's pubkey into
+# .dodder-workspace. The stored value must equal the parent's
+# `info-repo pubkey` (both are StringWithFormat()).
+function workspace_repo_init_pins_parent_pubkey { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# Capture the parent's pubkey.
+	pushd "$parent_path" || exit 1
+	run_dodder info-repo pubkey
+	assert_success
+	parent_pubkey="$output"
+	popd || exit 1
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+	assert_success
+
+	# The pin is recorded in the workspace config.
+	assert [ -f .dodder-workspace ]
+	run grep -F "parent-pubkey" .dodder-workspace
+	assert_success
+	assert_output --partial "$parent_pubkey"
+}
+
+# #287b: a push whose resolved parent's pubkey differs from the pinned one
+# must hard-fail rather than silently transfer to the wrong target. The pin is
+# tampered (set to a different, valid pubkey) so the parent's blob store
+# pointer stays intact and the workspace still loads — isolating the identity
+# check from store-init concerns.
+function workspace_repo_push_parent_pubkey_mismatch_fails { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	# A second, independent repo whose pubkey we will pin as a wrong value.
+	other="other"
+	bootstrap_parent "$other"
+	pushd "$other" || exit 1
+	run_dodder info-repo pubkey
+	assert_success
+	other_pubkey="$output"
+	popd || exit 1
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+	assert_success
+
+	# Tamper the pin in place: rewrite the parent-pubkey line's value to the
+	# other repo's pubkey. The parent path (and its blob-store pointer) is
+	# untouched, so the workspace still loads; only the identity check fails.
+	# Done in awk to replace just that top-level line, keeping TOML structure.
+	run awk -v repl="parent-pubkey = \"$other_pubkey\"" \
+		'/^parent-pubkey =/ {print repl; next} {print}' .dodder-workspace
+	assert_success
+	echo "$output" >.dodder-workspace
+
+	# Sanity: the tampered value is present.
+	run grep -F "$other_pubkey" .dodder-workspace
+	assert_success
+
+	run_dodder push
+	assert_failure
+	assert_output --partial "parent repo identity mismatch"
+}
+
+# #287b: a legacy workspace (parent-path but no pinned pubkey) must hard-fail
+# a non-interactive push, directing the user to set-parent. bats has no TTY,
+# so this exercises the non-TTY branch.
+function workspace_repo_push_unpinned_non_tty_fails { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+	assert_success
+
+	# Simulate a legacy (pre-pinning) workspace: strip the pinned pubkey line.
+	run grep -v "parent-pubkey" .dodder-workspace
+	assert_success
+	echo "$output" >.dodder-workspace
+
+	run_dodder push
+	assert_failure
+	assert_output --partial "set-parent"
+}
+
+# #287b: set-parent pins the current parent for a legacy workspace, after
+# which a non-interactive push succeeds (the pin now matches).
+function workspace_repo_set_parent_pins_then_push_succeeds { # @test
+	parent="parent"
+	bootstrap_parent "$parent"
+	parent_path="$(realpath "$parent")"
+
+	mkdir -p workspace
+	pushd workspace || exit 1
+
+	run_dodder init-workspace \
+		-encryption none \
+		-yin <(cat_yin) \
+		-yang <(cat_yang) \
+		-parent "$parent_path" \
+		workspace-repo-id \
+		+zettel,typ,etikett
+	assert_success
+
+	# Strip the pin to simulate a legacy workspace.
+	run grep -v "parent-pubkey" .dodder-workspace
+	assert_success
+	echo "$output" >.dodder-workspace
+
+	# set-parent re-pins the current parent.
+	run_dodder set-parent
+	assert_success
+	assert_output --partial "pinned parent:"
+
+	# A new object + bare push now succeeds against the (re-pinned) parent.
+	run_dodder new -edit=false - <<-EOM
+		---
+		# repinned push zettel
+		- project-alpha
+		! md
+		---
+
+		created after re-pin
+	EOM
+	assert_success
+
+	run_dodder push
+	assert_success
+
+	pushd "$parent_path" || exit 1
+	run_dodder show :z
+	assert_success
+	assert_output --partial 'repinned push zettel'
+}

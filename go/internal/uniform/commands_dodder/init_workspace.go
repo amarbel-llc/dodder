@@ -295,6 +295,11 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		parentPathForConfig = absParentPath
 	}
 
+	// #287b: pin the parent repo's identity so later push/pull can verify the
+	// resolved parent is the same repo, not a different one that later occupied
+	// the path. Stored in StringWithFormat() form (the `ed25519_pub-...` shape).
+	parentPubkey := remote.GetImmutableConfigPublic().GetPublicKey().StringWithFormat()
+
 	v1 := workspace_config_blobs.V1{
 		V0: workspace_config_blobs.V0{
 			Query: cmd.DefaultQueryGroup.String(),
@@ -305,7 +310,8 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 				),
 			},
 		},
-		ParentPath: parentPathForConfig,
+		ParentPath:   parentPathForConfig,
+		ParentPubkey: parentPubkey,
 	}
 
 	var blob workspace_config_blobs.Config

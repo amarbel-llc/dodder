@@ -2,14 +2,16 @@
 
 ## Status
 
-**Partially landed.** When this design was first written, `init-workspace`
+**Path B landed.** When this design was first written, `init-workspace`
 recorded no parent link at all. Since then a **path-based implicit parent**
-shipped (see Landed Baseline). This document has been reconciled against that
-reality: the original premise ("no parent link exists") is obsolete, and the
-remaining design below layers **identity pinning, the `%` sentinel, `der sync`,
-and scope-picker inference** on top of the landed path-based parent. The a/b
-scope decision (full conversion vs. incremental pinning-only) is tracked on
-issue #287 and is **not yet made**.
+shipped (see Landed Baseline), and then **path B of this design — pubkey pinning
++ verification — landed** (#287b): `init-workspace` pins the parent's pubkey
+into the workspace config; `push`/`pull` verify the resolved parent against the
+pin (hard-fail on mismatch); a legacy pin-less workspace confirm-pins on a TTY
+or hard-fails non-interactively; `dodder set-parent` is the explicit
+(re-)pin / migration command. **Path A remains future work** (post-soak): the
+`%` sentinel, `der sync`, and the full scope-picker inference. The sections
+below specify A; B is the pinning+verification subset that shipped.
 
 ## Problem
 
