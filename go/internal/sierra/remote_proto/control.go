@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	"github.com/amarbel-llc/hyphence/go/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
@@ -81,9 +82,9 @@ type control struct {
 // document. Every known control type maps to the same JSON body coder; the
 // type lives in the hyphence metadata line and is the single source of
 // truth for dispatch.
-var controlCoder = hyphence.CoderToTypedBlob[control]{
-	Metadata: hyphence.TypedMetadataCoder[control]{},
-	Blob:     hyphence.CoderTypeMapWithoutType[control](makeControlBlobCoders()),
+var controlCoder = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, control]{
+	Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, control]{},
+	Blob:     hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, control](makeControlBlobCoders()),
 }
 
 func makeControlBlobCoders() map[string]interfaces.CoderBufferedReadWriter[*control] {
@@ -142,7 +143,7 @@ func madType(typeString string) mad_ids.TypeStruct {
 // encodeControl writes a control message of the given type to a byte slice
 // as a typed hyphence document.
 func encodeControl(typeString string, msg control) (b []byte, err error) {
-	typedBlob := &hyphence.TypedBlob[control]{
+	typedBlob := &hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, control]{
 		Type: madType(typeString),
 		Blob: msg,
 	}
@@ -160,7 +161,7 @@ func encodeControl(typeString string, msg control) (b []byte, err error) {
 // decodeControl parses a typed hyphence control document, returning its
 // type string (with the leading "!") and the decoded envelope.
 func decodeControl(b []byte) (typeString string, msg control, err error) {
-	typedBlob := &hyphence.TypedBlob[control]{}
+	typedBlob := &hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, control]{}
 
 	if _, err = controlCoder.DecodeFrom(typedBlob, bytes.NewReader(b)); err != nil {
 		err = errors.Wrap(err)

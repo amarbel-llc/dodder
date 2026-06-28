@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	"github.com/amarbel-llc/hyphence/go/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )

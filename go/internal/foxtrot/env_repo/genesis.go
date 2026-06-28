@@ -11,10 +11,12 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ohio"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"github.com/amarbel-llc/hyphence/go/hyphence"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	mad_blob_store_env "github.com/amarbel-llc/madder/go/pkgs/blob_store_env"
 	mad_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	mad_hyphence "github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
@@ -142,15 +144,15 @@ func (env Env) writeInventoryListLog() {
 		defer errors.ContextMustClose(env, file)
 	}
 
-	coder := hyphence.Coder[*hyphence.TypedBlobEmpty]{
-		Metadata: hyphence.TypedMetadataCoder[struct{}]{},
+	coder := hyphence.Coder[*hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, struct{}]]{
+		Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, struct{}]{},
 	}
 
 	tipe := ids.GetOrPanic(
 		env.config.Blob.GetInventoryListTypeId(),
 	).TypeStruct
 
-	subject := hyphence.TypedBlobEmpty{
+	subject := hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, struct{}]{
 		Type: tipe.ToMadder(),
 	}
 
@@ -206,7 +208,7 @@ func (env *Env) writeBlobStoreConfigIfNecessary(
 
 	blobStoreConfig := bigBang.TypedBlobStoreConfig
 
-	if err := hyphence.EncodeToFile(
+	if err := mad_hyphence.EncodeToFile(
 		blob_store_configs.Coder,
 		&blob_store_configs.TypedConfig{
 			Type: blobStoreConfig.Type,
@@ -257,7 +259,7 @@ func (env *Env) writeBlobStoreConfigInit(
 
 	blobStoreConfig := bigBang.BlobStoreConfigInit
 
-	if err := hyphence.EncodeToFile(
+	if err := mad_hyphence.EncodeToFile(
 		blob_store_configs.Coder,
 		&blob_store_configs.TypedConfig{
 			Type: blobStoreConfig.Type,

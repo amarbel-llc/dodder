@@ -12,7 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	"github.com/amarbel-llc/hyphence/go/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
@@ -32,7 +32,7 @@ type Closet struct {
 
 	coders map[string]coder
 
-	objectCoders hyphence.CoderTypeMapWithoutType[sku.Transacted]
+	objectCoders hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Transacted]
 
 	seqDecoders      map[string]interfaces.DecoderFromBufferedReader[funcIterSeq]
 	seqErrorDecoders map[string]interfaces.DecoderFromBufferedReader[funcIterSeqError]
@@ -64,7 +64,7 @@ func MakeCloset(
 			coders[key] = value
 		}
 
-		store.objectCoders = hyphence.CoderTypeMapWithoutType[sku.Transacted](
+		store.objectCoders = hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Transacted](
 			coders,
 		)
 	}
@@ -140,7 +140,7 @@ func (closet Closet) WriteObjectToWriter(
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
 	// Create TypedBlob and reset its Blob field directly from source
-	typedBlob := &hyphence.TypedBlob[sku.Transacted]{
+	typedBlob := &hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Transacted]{
 		Type: tipe.ToMadder(),
 		// Blob field is zero-value sku.Transacted
 	}
@@ -192,15 +192,15 @@ func (closet Closet) WriteTypedBlobToWriter(
 	seq sku.Seq,
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
-	decoder := hyphence.Encoder[*hyphence.TypedBlob[sku.Seq]]{
-		Metadata: hyphence.TypedMetadataCoder[sku.Seq]{},
-		Blob: hyphence.EncoderTypeMapWithoutType[sku.Seq](
+	decoder := hyphence.Encoder[*hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]]{
+		Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]{},
+		Blob: hyphence.EncoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq](
 			closet.seqEncoders,
 		),
 	}
 
 	if _, err = decoder.EncodeTo(
-		&hyphence.TypedBlob[sku.Seq]{
+		&hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]{
 			Type: tipe.ToMadder(),
 			Blob: seq,
 		},
@@ -220,7 +220,7 @@ func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
 	seq sku.Seq,
 	bufferedWriter *bufio.Writer,
 ) (n int64, err error) {
-	blobEncoder := hyphence.EncoderTypeMapWithoutType[sku.Seq](
+	blobEncoder := hyphence.EncoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq](
 		closet.seqEncoders,
 	)
 
@@ -235,7 +235,7 @@ func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
 	defer repoolDigestBufWriter()
 
 	if _, err = blobEncoder.EncodeTo(
-		&hyphence.TypedBlob[sku.Seq]{
+		&hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]{
 			Type: tipe.ToMadder(),
 			Blob: seq,
 		},
@@ -253,13 +253,13 @@ func (closet Closet) WriteTypedBlobToWriterComputingBlobDigest(
 	var blobDigest markl.Id
 	blobDigest.ResetWithMarklId(digestWriter.GetMarklId())
 
-	encoder := hyphence.Encoder[*hyphence.TypedBlob[sku.Seq]]{
-		Metadata: hyphence.TypedMetadataCoder[sku.Seq]{},
+	encoder := hyphence.Encoder[*hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]]{
+		Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]{},
 		Blob:     blobEncoder,
 	}
 
 	if n, err = encoder.EncodeTo(
-		&hyphence.TypedBlob[sku.Seq]{
+		&hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, sku.Seq]{
 			Type:       tipe.ToMadder(),
 			BlobDigest: blobDigest,
 			Blob:       seq,
@@ -340,9 +340,9 @@ func (closet Closet) AllDecodedObjectsFromStream(
 	}
 
 	return func(yield func(*sku.Transacted, error) bool) {
-		decoder := hyphence.Decoder[*hyphence.TypedBlob[funcIterSeqError]]{
-			Metadata: hyphence.TypedMetadataCoder[funcIterSeqError]{},
-			Blob: hyphence.DecoderTypeMapWithoutType[funcIterSeqError](
+		decoder := hyphence.Decoder[*hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError]]{
+			Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError]{},
+			Blob: hyphence.DecoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError](
 				coders,
 			),
 		}
@@ -351,7 +351,7 @@ func (closet Closet) AllDecodedObjectsFromStream(
 		defer repoolBufferedReader()
 
 		if _, err := decoder.DecodeFrom(
-			&hyphence.TypedBlob[funcIterSeqError]{
+			&hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError]{
 				Type: mad_ids.TypeStruct{},
 				Blob: func(object *sku.Transacted, err error) bool {
 					return yield(object, err)
@@ -391,9 +391,9 @@ func (closet Closet) AllDecodedObjectsFromStreamWithBlobDigestValidation(
 	}
 
 	return func(yield func(*sku.Transacted, error) bool) {
-		decoder := hyphence.Decoder[*hyphence.TypedBlob[funcIterSeqError]]{
-			Metadata: hyphence.TypedMetadataCoder[funcIterSeqError]{},
-			Blob: hyphence.DecoderTypeMapWithoutType[funcIterSeqError](
+		decoder := hyphence.Decoder[*hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError]]{
+			Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError]{},
+			Blob: hyphence.DecoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError](
 				coders,
 			),
 			BlobTeeWriter: blobTeeWriter,
@@ -402,7 +402,7 @@ func (closet Closet) AllDecodedObjectsFromStreamWithBlobDigestValidation(
 		bufferedReader, repoolBufferedReader := pool.GetBufferedReader(reader)
 		defer repoolBufferedReader()
 
-		typedBlob := &hyphence.TypedBlob[funcIterSeqError]{
+		typedBlob := &hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeqError]{
 			Type: mad_ids.TypeStruct{},
 			Blob: func(object *sku.Transacted, err error) bool {
 				return yield(object, err)
@@ -442,7 +442,7 @@ func (closet Closet) IterInventoryListBlobSkusFromBlobStore(
 
 		defer errors.DeferredYieldCloser(yield, readCloser)
 
-		decoder := hyphence.DecoderTypeMapWithoutType[funcIterSeq](
+		decoder := hyphence.DecoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeq](
 			closet.seqDecoders,
 		)
 
@@ -452,7 +452,7 @@ func (closet Closet) IterInventoryListBlobSkusFromBlobStore(
 		defer repoolBufferedReader()
 
 		if _, err := decoder.DecodeFrom(
-			&hyphence.TypedBlob[funcIterSeq]{
+			&hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeq]{
 				Type: tipe.ToMadder(),
 				Blob: func(object *sku.Transacted) bool {
 					return yield(object, nil)
@@ -471,7 +471,7 @@ func (closet Closet) IterInventoryListBlobSkusFromReader(
 	reader io.Reader,
 ) interfaces.SeqError[*sku.Transacted] {
 	return func(yield func(*sku.Transacted, error) bool) {
-		decoder := hyphence.DecoderTypeMapWithoutType[funcIterSeq](
+		decoder := hyphence.DecoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeq](
 			closet.seqDecoders,
 		)
 
@@ -479,7 +479,7 @@ func (closet Closet) IterInventoryListBlobSkusFromReader(
 		defer repoolBufferedReader()
 
 		if _, err := decoder.DecodeFrom(
-			&hyphence.TypedBlob[funcIterSeq]{
+			&hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, funcIterSeq]{
 				Type: tipe.ToMadder(),
 				Blob: func(object *sku.Transacted) bool {
 					return yield(object, nil)

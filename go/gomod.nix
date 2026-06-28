@@ -29,6 +29,7 @@
   pkgs,
   src,
   madder,
+  hyphence,
   tap,
   tommy,
   purse-first,
@@ -73,6 +74,12 @@
   goFlakeInputs = {
     "github.com/amarbel-llc/madder/go" = {
       src = madder.packages.${system}.go-pkgs;
+    };
+    # hyphence scopes its go-pkgs producer at /go (like madder), so the
+    # module root maps directly with no subPath. madder#253 extracted
+    # the hyphence format library here; dodder#295 consumes it.
+    "github.com/amarbel-llc/hyphence/go" = {
+      src = hyphence.packages.${system}.go-pkgs;
     };
     "github.com/amarbel-llc/tap/go" = {
       src = tap.packages.${system}.go-pkgs;

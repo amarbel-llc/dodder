@@ -14,6 +14,8 @@ github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/akutz/memconn v0.1.0 h1:NawI0TORU4hcOMsMr11g7vwlCdkYeLKXBcxWu2W/P8A=
 github.com/akutz/memconn v0.1.0/go.mod h1:Jo8rI7m0NieZyLI5e2CDlRdRqRRB4S7Xp77ukDjH+Fw=
+github.com/amarbel-llc/hyphence/go v0.2.0 h1:ePR9yMwweItA8bV82oTymivBu6hb4xG4z1DunNY8n6M=
+github.com/amarbel-llc/hyphence/go v0.2.0/go.mod h1:b3YPbL1BNkdt4doHdGz3g9I3KPWZUc9VW21LkH74aUI=
 github.com/amarbel-llc/madder/go v0.3.43-0.20260620163348-d3de5838721b h1:jtLIF2gbmT/BdHeUjWU+wMxn/CH8yv+MAs7h4ODkGb4=
 github.com/amarbel-llc/madder/go v0.3.43-0.20260620163348-d3de5838721b/go.mod h1:DzccDzbZ0qiOu97a5sLzEM1/leTqVnaSgaJU1cABjMo=
 github.com/amarbel-llc/purse-first/libs/dewey v0.3.2 h1:DfqmtVDsyt0Is0IWoNS6o4xoYCD/RLavV+jyKSl19Hs=

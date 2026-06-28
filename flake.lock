@@ -63,6 +63,35 @@
     "conformist": {
       "inputs": {
         "igloo": [
+          "hyphence",
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "hyphence",
+          "nixpkgs-master"
+        ],
+        "utils": [
+          "hyphence",
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1782650250,
+        "narHash": "sha256-CaxMT7jsNWjUvAvZ546l50XVGH9j+4nY0bryC0zdCJ0=",
+        "owner": "amarbel-llc",
+        "repo": "conformist",
+        "rev": "9ff9be8c4a4c73033b527fc85a3ecbc08d9e245f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "conformist",
+        "type": "github"
+      }
+    },
+    "conformist_2": {
+      "inputs": {
+        "igloo": [
           "madder",
           "igloo"
         ],
@@ -89,7 +118,7 @@
         "type": "github"
       }
     },
-    "conformist_2": {
+    "conformist_3": {
       "inputs": {
         "igloo": [
           "purse-first",
@@ -119,7 +148,7 @@
         "type": "github"
       }
     },
-    "conformist_3": {
+    "conformist_4": {
       "inputs": {
         "igloo": [
           "tap",
@@ -220,6 +249,40 @@
       }
     },
     "doppelgang": {
+      "inputs": {
+        "igloo": [
+          "hyphence",
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "hyphence",
+          "nixpkgs-master"
+        ],
+        "treefmt-nix": [
+          "hyphence",
+          "bats",
+          "treefmt-nix"
+        ],
+        "utils": [
+          "hyphence",
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1782348212,
+        "narHash": "sha256-Y9cqTiE23+dQ9Kz9Gs8bZLGVtXHJr52+BpAkWfGhQN4=",
+        "owner": "amarbel-llc",
+        "repo": "doppelgang",
+        "rev": "1d4ee979ba0dd5179954acb3db977678621171a4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "doppelgang",
+        "type": "github"
+      }
+    },
+    "doppelgang_2": {
       "inputs": {
         "igloo": [
           "madder",
@@ -336,6 +399,40 @@
         "type": "github"
       }
     },
+    "hyphence": {
+      "inputs": {
+        "bats": [
+          "bats"
+        ],
+        "conformist": "conformist",
+        "doppelgang": "doppelgang",
+        "igloo": [
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "nixpkgs-master"
+        ],
+        "purse-first": [
+          "purse-first"
+        ],
+        "utils": [
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1782651726,
+        "narHash": "sha256-lp2MAt6lBbHbm3ARqEXBwwL+U/sHncPhvcbAkZu2OLk=",
+        "owner": "amarbel-llc",
+        "repo": "hyphence",
+        "rev": "58d066d517180d9aebab826771c1dfcb36bc408d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "hyphence",
+        "type": "github"
+      }
+    },
     "igloo": {
       "inputs": {
         "bun2nix": "bun2nix",
@@ -363,9 +460,9 @@
         "bats": [
           "bats"
         ],
-        "conformist": "conformist",
+        "conformist": "conformist_2",
         "crap": "crap",
-        "doppelgang": "doppelgang",
+        "doppelgang": "doppelgang_2",
         "igloo": [
           "igloo"
         ],
@@ -447,7 +544,7 @@
     },
     "purse-first": {
       "inputs": {
-        "conformist": "conformist_2",
+        "conformist": "conformist_3",
         "gomod2nix": "gomod2nix",
         "igloo": [
           "igloo"
@@ -475,7 +572,7 @@
     },
     "purse-first_2": {
       "inputs": {
-        "conformist": "conformist_3",
+        "conformist": "conformist_4",
         "gomod2nix": [
           "tap",
           "gomod2nix"
@@ -510,6 +607,7 @@
     "root": {
       "inputs": {
         "bats": "bats",
+        "hyphence": "hyphence",
         "igloo": "igloo",
         "madder": "madder",
         "nixpkgs-master": "nixpkgs-master_2",

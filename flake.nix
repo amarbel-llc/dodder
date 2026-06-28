@@ -36,6 +36,15 @@
       inputs.purse-first.follows = "purse-first";
     };
 
+    hyphence = {
+      url = "github:amarbel-llc/hyphence";
+      inputs.igloo.follows = "igloo";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.bats.follows = "bats";
+      inputs.purse-first.follows = "purse-first";
+    };
+
     tommy = {
       url = "github:amarbel-llc/tommy";
       inputs.igloo.follows = "igloo";
@@ -62,6 +71,7 @@
       tap,
       tommy,
       madder,
+      hyphence,
       purse-first,
       treelint,
       ...
@@ -84,6 +94,7 @@
             pkgs
             system
             madder
+            hyphence
             tap
             tommy
             purse-first

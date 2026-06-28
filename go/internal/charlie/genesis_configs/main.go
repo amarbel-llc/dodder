@@ -4,8 +4,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
 	genesis_config_blobs "code.linenisgreat.com/dodder/go/internal/bravo/genesis_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"github.com/amarbel-llc/hyphence/go/hyphence"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
@@ -25,9 +26,9 @@ type (
 		GetPrivateKeyMutable() mad_domain_interfaces.MarklIdMutable
 	}
 
-	TypedConfigPublic         = hyphence.TypedBlob[ConfigPublic]
-	TypedConfigPrivate        = hyphence.TypedBlob[ConfigPrivate]
-	TypedConfigPrivateMutable = hyphence.TypedBlob[ConfigPrivateMutable]
+	TypedConfigPublic         = hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPublic]
+	TypedConfigPrivate        = hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPrivate]
+	TypedConfigPrivateMutable = hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPrivateMutable]
 )
 
 func Default() *TypedConfigPrivateMutable {

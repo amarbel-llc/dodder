@@ -16,7 +16,7 @@ import (
 	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
 	"github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
-	"github.com/amarbel-llc/madder/go/pkgs/hyphence"
+	mad_hyphence "github.com/amarbel-llc/madder/go/pkgs/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
@@ -41,7 +41,7 @@ func (cmd *BlobStore) MakeBlobStoreFromIdOrConfigPath(
 		{
 			var err error
 
-			if typedConfig, err = hyphence.DecodeFromFile(
+			if typedConfig, err = mad_hyphence.DecodeFromFile(
 				blob_store_configs.Coder,
 				configPath,
 			); err != nil {
