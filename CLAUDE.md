@@ -201,8 +201,11 @@ Sigils can be combined (e.g. `:.` for latest + external).
 
 - **Default genre is zettels.** `show :` lists zettels. `show '!md'` finds
   zettels whose type is `!md`, NOT the `!md` type object itself.
-- **Genre suffixes filter by genre:** `:z` (zettels), `:t` (types), `:e` (tags).
-  The genre is part of the query term, not a separate argument.
+- **Genre suffixes filter by genre:** `:z` (zettels), `:t` (types), `:e` (tags),
+  `:k` (repos / kasten), `:b` (inventory lists). The genre is part of the query
+  term, not a separate argument. Genre letters are matched as a prefix of the
+  full genre name, so `:r` also resolves to repos (`repo`), but `:k` is
+  canonical; see `docs/man.7/doddish.md`.
 - **To query a specific type object:** `show '!img:t'` --- the `:t` genre suffix
   goes on the predicate. NOT `show :t '!img'` (that's two separate terms).
 - **To list all type objects:** `show :t`.

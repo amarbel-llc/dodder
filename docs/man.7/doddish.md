@@ -83,10 +83,17 @@ Genre suffixes restrict results to a specific object kind:
 :   Tags (etiketten).
 
 **b**
-:   Inventory lists / blobs.
+:   Inventory lists (bestandsaufnahme).
 
-**r**
-:   Repos.
+**k**
+:   Repos (kasten).
+
+A genre letter is matched as a prefix of the genre's full name, so any
+unambiguous prefix selects the same genre. Repos accept two names, **kasten**
+and **repo**, so **k**, **kasten**, **r**, and **repo** all resolve to the Repo
+genre; **z** and **zettel** both resolve to zettels. The single letters above
+are the canonical forms --- prefer them. The Blob genre has no short letter and
+must be spelled **blob** in full.
 
 Genres can be combined with commas: **:z,t,e** matches zettels, types, and tags.
 

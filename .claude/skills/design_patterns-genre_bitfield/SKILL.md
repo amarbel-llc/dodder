@@ -2,14 +2,14 @@
 name: design_patterns-genre_bitfield
 description: >
   Use when working with object genres, adding genre filters to queries,
-  parsing sigils like :z :t :e :r :b, or modifying genre-based dispatch.
+  parsing sigils like :z :t :e :k :b, or modifying genre-based dispatch.
   Also applies when encountering Genre byte type, genre bitwise operations,
   MakeGenre, or optimizedQueries maps.
 triggers:
   - genre
   - Genre byte
   - sigil
-  - :z :t :e :r :b
+  - :z :t :e :k :b
   - MakeGenre
   - genre bitfield
   - object genre
