@@ -47,7 +47,18 @@
   # can resolve the script via ${BATS_TEST_DIRNAME}/../../zz-pandoc-refs/.
   # Requires the extraStagedFiles mkdir -p fix from amarbel-llc/bats#10.
   pandocRefsSrc,
-  batsTestTimeout ? "30",
+  # Per-test wall-clock ceiling for the full lane (mkDodderBatsLane runs
+  # --jobs $(nproc)). Normal tests finish in seconds; the ceiling exists to
+  # catch genuine hangs. At 30s, the slowest tests (each spawning dodder +
+  # WASM/yq subprocesses) intermittently exceeded it under CPU contention and
+  # were SIGTERM'd ("dodder aborting due to signal: terminated"), flaking
+  # random tests. The bottleneck is the cores, not a fixed per-test budget:
+  # the build host can run concurrent full lanes from other sessions/worktrees
+  # (each --jobs $(nproc)), so the effective parallelism over-subscribes the
+  # CPU and inflates wall-time. 90s gives defensive headroom for a busy host
+  # while still bounding a genuine hang; raising it further does not help once
+  # two lanes are competing for the same cores.
+  batsTestTimeout ? "90",
 }:
 let
   inherit (pkgs) lib;
