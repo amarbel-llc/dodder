@@ -448,6 +448,62 @@ function mcp_repos_lists_both_scopes { # @test
 }
 
 # bats test_tags=repo_id
+function mcp_bare_name_routes_to_user_scope_not_workspace { # @test
+  # Regression: from inside a .dodder/ workspace, the bridge must route a
+  # bare-name repo_id (`default`, XDG-user scope) to the USER repo, while the
+  # cwd spelling (`.default`) stays on the workspace repo. Pre-fix both
+  # collapsed to the workspace repo because MakeDefault's cwd walk-up hijacked
+  # the explicit bare name (FDR-0019: bare name is XDG-user scope
+  # unconditionally).
+
+  # user-scope `default` with a distinctive marker, before any cwd workspace.
+  run_dodder init -yin <(cat_yin) -yang <(cat_yang) -encryption none \
+    -repo_id default user-default-id
+  assert_success
+  user_zettel="$(mktemp)"
+  {
+    echo "---"
+    echo "# user scope marker"
+    echo "- task"
+    echo "! md"
+    echo "---"
+  } >"$user_zettel"
+  run_dodder new -edit=false -repo_id default "$user_zettel"
+  assert_success
+
+  # the server's own cwd repo (.default) with a different marker.
+  run_dodder_init_disable_age
+  cwd_zettel="$(mktemp)"
+  {
+    echo "---"
+    echo "# cwd scope marker"
+    echo "- task"
+    echo "! md"
+    echo "---"
+  } >"$cwd_zettel"
+  run_dodder new -edit=false "$cwd_zettel"
+  assert_success
+
+  # repo_id=default -> the USER repo -> user marker, not cwd marker.
+  local in_user="$BATS_TEST_TMPDIR/mcp-q-user.jsonrpc"
+  write_mcp_tool_call_input "$in_user" query '{"query":[":z"],"repo_id":"default"}'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_user"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'user scope marker'
+  refute_output --regexp 'cwd scope marker'
+
+  # repo_id=.default -> the workspace repo -> cwd marker, not user marker.
+  local in_cwd="$BATS_TEST_TMPDIR/mcp-q-cwd.jsonrpc"
+  write_mcp_tool_call_input "$in_cwd" query '{"query":[":z"],"repo_id":".default"}'
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$in_cwd"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'cwd scope marker'
+  refute_output --regexp 'user scope marker'
+}
+
+# bats test_tags=repo_id
 function mcp_reset_lock_routes_by_repo_id { # @test
   # FDR-0019 #278: reset-lock gains an optional repo_id and opens that repo
   # per call. Targeting the server's own cwd repo (.default) clears its

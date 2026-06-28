@@ -106,3 +106,54 @@ function scoped_repo_multi_dot_resolves_nth_ancestor { # @test
 	run_dodder show -repo_id ...notes :z
 	assert_failure
 }
+
+# bats test_tags=user_story:scoped_repos,repo_id
+function explicit_user_repo_pins_to_user_scope_from_inside_workspace { # @test
+	# FDR-0019: a bare `name` is XDG-user scope UNCONDITIONALLY. From inside a
+	# .dodder/ workspace, `-repo_id default` must reach the user repo, not the
+	# workspace-local default. Regression for the cwd-walk-up leak on the
+	# explicit-XDGUser id (operate seam = MakeOperateEnvDir; init/info seam =
+	# MakeEnvRepo). Pre-fix, the explicit bare name was hijacked to the
+	# workspace repo by MakeDefault's walk-up.
+
+	# user-scope `default`, populated, BEFORE any workspace exists in cwd.
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id default user-default-id
+	assert_success
+	run_dodder new -repo_id default -edit=false
+	assert_success
+	assert_output - <<-EOM
+		[one/uno !md]
+	EOM
+
+	# workspace-local `.default` in cwd, left empty — content distinguishes the
+	# two repos (user has one/uno, workspace empty), avoiding the nested-cwd
+	# commit bug (#283).
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id .default workspace-default-id
+	assert_success
+
+	# (a) explicit bare `default` from inside the workspace -> the USER repo.
+	run_dodder show -repo_id default :z          # operate seam
+	assert_success
+	assert_output - <<-EOM
+		[one/uno !md]
+	EOM
+	run_dodder info-repo -repo_id default id     # MakeEnvRepo seam
+	assert_success
+	assert_output 'user-default-id'
+
+	# (b) the cwd spelling `.default` still reaches the workspace repo.
+	run_dodder show -repo_id .default :z
+	assert_success
+	assert_output ''
+	run_dodder info-repo -repo_id .default id
+	assert_success
+	assert_output 'workspace-default-id'
+
+	# (c) auto/empty still walks up to the workspace repo.
+	run_dodder show :z
+	assert_success
+	assert_output ''
+	run_dodder info-repo id
+	assert_success
+	assert_output 'workspace-default-id'
+}

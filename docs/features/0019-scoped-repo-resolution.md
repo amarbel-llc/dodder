@@ -275,6 +275,17 @@ Landed (master):
   level the two models coincide; they diverge only when a non-matching
   `.dodder/` sits between matches (literal counts it, store-aware skips it).
   `..name` completion is a tracked follow-up (#282).
+- **Explicit XDG-user name is scope-pinned (#294).** The operate and
+  literal-init dispatchers (`MakeOperateEnvDir`, `MakeEnvRepo`) originally
+  routed an explicit `LocationTypeXDGUser` bare name through `MakeDefault`'s
+  cwd walk-up, so inside a `.dodder/` workspace `-repo_id name` was hijacked to
+  the workspace-local repo (or failed outright when the workspace had no repo
+  of that name) instead of resolving to `$XDG_DATA_HOME/dodder/repos/<name>/`.
+  Both dispatchers now route explicit `XDGUser` (alongside `Cwd`/`XDGSystem`)
+  through `MakeDefaultAndInitialize`, which preserves the scoped_id LocationType
+  and pins to the user home; only the auto/empty id (`LocationTypeUnknown`)
+  still walks up. This matches the FDR grammar (bare `name` = XDG-user scope
+  unconditionally) and the discovery enumeration (`MakeStandardXDGUser`).
 
 Deferred (tracked follow-ups):
 

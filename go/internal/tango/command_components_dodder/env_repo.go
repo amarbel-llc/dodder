@@ -31,16 +31,20 @@ func (cmd EnvRepo) MakeEnvRepo(
 		req.Cancel(err)
 	}
 
-	// Cwd and system ids force their scope via MakeDefaultAndInitialize;
-	// everything else (the auto/no-selector id and named user repos) goes
-	// through MakeDefault so the existing cwd-walk-up override still
-	// applies. System never actually reaches here (CheckSupported gates
-	// it above), but routing it to MakeDefaultAndInitialize keeps the
+	// Cwd, system, and explicit user ids force their scope via
+	// MakeDefaultAndInitialize (it preserves the scoped_id LocationType);
+	// only the auto/no-selector id falls through to MakeDefault so the
+	// cwd-walk-up override still applies for it. An explicit XDG-user bare
+	// name must NOT take that walk-up (FDR-0019: bare name is XDG-user scope
+	// unconditionally), or an ancestor .dodder/ would hijack it to a
+	// workspace-local repo. System never actually reaches here (CheckSupported
+	// gates it above), but routing it to MakeDefaultAndInitialize keeps the
 	// explicit 501 rather than silently resolving to the user tree if the
 	// gate is ever relaxed.
 	var ownDir, madderDir mad_env_dir.Env
 	if loc := config.RepoId.GetLocationType(); loc == scoped_id.LocationTypeCwd ||
-		loc == scoped_id.LocationTypeXDGSystem {
+		loc == scoped_id.LocationTypeXDGSystem ||
+		loc == scoped_id.LocationTypeXDGUser {
 		ownDir = env_dir.MakeDefaultAndInitialize(
 			req,
 			dodder_env.XDGUtilityName,

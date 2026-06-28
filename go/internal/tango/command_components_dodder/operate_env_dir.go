@@ -19,10 +19,14 @@ import (
 // paths (show/query/edit, serve, info xdg/env), honoring every FDR-0019 cwd
 // scope that resolves against an *existing* repo:
 //
-//   - system (`//name`): MakeDefaultAndInitialize roots at the system root (#280).
+//   - system (`//name`) and explicit user (`name`): MakeDefaultAndInitialize
+//     preserves the scoped_id's LocationType — system roots at the system root
+//     (#280); an explicit XDG-user bare name pins to the XDG-user home with NO
+//     cwd walk-up (FDR-0019: bare name is XDG-user scope unconditionally, so it
+//     must not be hijacked to a workspace-local repo by an ancestor .dodder/).
 //   - multi-dot cwd (`..name`, cwdDepth > 0): the Nth same-named ancestor,
 //     resolved store-aware via resolveCwdRepoAncestor, then rooted there (#281).
-//   - everything else (auto, user, single-dot `.name`): MakeDefault's
+//   - everything else (auto, single-dot `.name`): MakeDefault's
 //     nearest-ancestor walk, unchanged.
 //
 // utilityName selects the slot: the dodder metadata slot nests under
@@ -41,7 +45,15 @@ func MakeOperateEnvDir(
 	repoId := config.RepoId
 
 	switch {
-	case repoId.GetLocationType() == scoped_id.LocationTypeXDGSystem:
+	case repoId.GetLocationType() == scoped_id.LocationTypeXDGSystem ||
+		repoId.GetLocationType() == scoped_id.LocationTypeXDGUser:
+		// Both are explicit scopes that must NOT take MakeDefault's cwd
+		// walk-up: an explicit XDG-user bare `name` would otherwise be
+		// hijacked to a workspace-local repo when an ancestor .dodder/ is in
+		// play (FDR-0019: bare name is XDG-user scope unconditionally).
+		// MakeDefaultAndInitialize preserves the scoped_id's LocationType, so
+		// madder roots XDGUser at the user home and XDGSystem at the system
+		// root, neither with the override.
 		return env_dir.MakeDefaultAndInitialize(
 			req,
 			utilityName,
