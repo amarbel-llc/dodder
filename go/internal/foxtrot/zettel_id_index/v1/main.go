@@ -156,18 +156,26 @@ func (index *index) readIfNecessary() (err error) {
 }
 
 func (index *index) Reset() (err error) {
-	lMax := index.oldHinweisenStore.Left().Len() - 1
-	rMax := index.oldHinweisenStore.Right().Len() - 1
+	lLen := index.oldHinweisenStore.Left().Len()
+	rLen := index.oldHinweisenStore.Right().Len()
 
-	if lMax == 0 {
-		err = errors.ErrorWithStackf("left zettel id are empty")
+	// A repo bootstrapped from nothing has no zettel-id words until
+	// `add-zettel-ids-*` seeds them, so either side may be empty. An empty
+	// pool has no available coordinates: leave the bitset empty and return.
+	// Falling through would compute Len()-1 == -1 for the empty side, and
+	// because coordinates.Int is uint32, Int(-1) wraps to ~4.3e9 —
+	// maxCoord.Id() then sizes an enormous bitset that hangs/OOMs genesis
+	// (the old `lMax == 0` guards mis-checked Len()==1, never the empty
+	// Len()==0 case). CreateZettelId reports "no available zettel ids" until
+	// words are added.
+	if lLen == 0 || rLen == 0 {
+		index.bitset = collections.MakeBitset(0)
+		index.hasChanges = true
 		return err
 	}
 
-	if rMax == 0 {
-		err = errors.ErrorWithStackf("right zettel id are empty")
-		return err
-	}
+	lMax := lLen - 1
+	rMax := rLen - 1
 
 	// Compute the max coordinate ID to size the bitset. Coordinate IDs use
 	// triangular number mapping, so the max ID is much larger than lMax*rMax.
