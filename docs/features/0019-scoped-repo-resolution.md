@@ -254,9 +254,9 @@ Landed (master):
   relocation or a test sandbox). The operate path (`MakeLocalWorkingCopy`)
   routes `//name` through `MakeDefaultAndInitialize`, as `env_repo`/genesis
   already did, and the XDGSystem `CheckSupported` reject is dropped.
-  Requires the madder pin with #280 (currently master `d3de583`, pending
-  the go/v0.3.43+ tag). The remote-first `/name` spelling stays gated (see
-  below).
+  Consumes the madder `//name` init resolver released in `go/v0.3.43` /
+  `go/v0.3.44` — already present in dodder's pinned madder rev. The
+  remote-first `/name` spelling stays gated (see below).
 - **Multi-dot cwd `..name` (#281).** A multi-dot id resolves the Nth
   same-named ancestor. dodder honors the two cwd-resolution models it
   already has, one per existing depth-0 behavior (madder's deliberate
