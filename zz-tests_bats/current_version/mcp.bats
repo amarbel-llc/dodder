@@ -62,9 +62,12 @@ function mcp_tools_list_no_workspace { # @test
   assert_output - <<-EOM
 		"name":"edit"
 		"name":"format-blob"
+		"name":"import"
 		"name":"new"
 		"name":"organize_commit"
 		"name":"organize_plan"
+		"name":"pull"
+		"name":"push"
 		"name":"query"
 		"name":"query-tag"
 		"name":"query-type"
@@ -91,9 +94,12 @@ function mcp_tools_list_with_workspace { # @test
 		"name":"diff"
 		"name":"edit"
 		"name":"format-blob"
+		"name":"import"
 		"name":"new"
 		"name":"organize_commit"
 		"name":"organize_plan"
+		"name":"pull"
+		"name":"push"
 		"name":"query"
 		"name":"query-tag"
 		"name":"query-type"
@@ -624,4 +630,90 @@ function mcp_new_object_id_authors_type_with_blob { # @test
   run_dodder show '!task:t'
   assert_success
   assert_output --regexp '^\[!task @blake2b256-.+ !toml-type-v2\]$'
+}
+
+# The push tool transfers objects to a local repo via -direct, exercising
+# the remote-transfer MCP wiring and the direct/query arg translation.
+# Mirrors the CLI push_direct_local_path_no_conflicts test through the MCP
+# surface. push works without a workspace, so the fixture repo (no
+# .dodder-workspace) is a valid source.
+function mcp_push_direct_transfers_to_local_repo { # @test
+  copy_from_version "$DIR"
+
+  (
+    mkdir -p them
+    pushd them || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  local input="$BATS_TEST_TMPDIR/mcp-push.jsonrpc"
+  write_mcp_tool_call_input "$input" push \
+    '{"direct":"'"$(realpath them)"'","query":["+zettel,typ,etikett"]}'
+
+  run timeout 10s "$DODDER_BIN" mcp <"$input"
+  assert_success
+
+  pushd them || exit 1
+  run_dodder show +zettel,typ,etikett
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[!md @$(get_type_blob_sha) !toml-type-v2]
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
+	EOM
+  popd || exit 1
+}
+
+# The import tool ingests an inventory list into the local store via the
+# MCP surface, exercising importToolCLIArgs (paths + blob_store_id). The
+# inner repo's MCP server is pinned to inner via the ceiling vars so its
+# walk-up does not discover the outer fixture repo. Mirrors the CLI import
+# test.
+function mcp_import_from_inventory_list { # @test
+  run_madder init shared
+  assert_success
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id .default \
+    -encryption none \
+    -blob_store-id shared \
+    test
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+  create_test_zettels
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+  list="$(realpath list)"
+
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  local input="$BATS_TEST_TMPDIR/mcp-import.jsonrpc"
+  write_mcp_tool_call_input "$input" import \
+    '{"paths":["'"$list"'"],"blob_store_id":"shared"}'
+
+  pushd inner || exit 1
+  run env \
+    DODDER_CEILING_DIRECTORIES="$PWD" \
+    MADDER_CEILING_DIRECTORIES="$PWD" \
+    timeout 10s "$DODDER_BIN" mcp <"$input"
+  assert_success
+
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+  popd || exit 1
 }

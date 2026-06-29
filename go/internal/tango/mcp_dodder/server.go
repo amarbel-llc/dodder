@@ -143,6 +143,14 @@ Examples:
   [ceroplastes/midtown @blake2b256-9ft3... !md project-2024-q3] meeting notes
   [!md @blake2b256-76m5... !toml-type-v1]
 
+## Remote Transfer
+
+These tools move objects between repos (no workspace required):
+- import(paths) — import objects from inventory list files into the local store
+- push(remote?, query?, direct?) — send objects to a remote (stored remote id,
+  a direct local path, or the workspace's pinned parent when both are omitted)
+- pull(remote?, query?, direct?) — fetch objects from a remote into the local store
+
 ## Resource Drill-Down
 
 The un-segmented dodder://<kind>/... URIs below address the server's
@@ -775,6 +783,104 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 		makeOrganizeCommitHandler(bridge),
 	)
 
+	registerTool(
+		tools,
+		protocol.ToolV1{
+			Name:        "import",
+			Description: "Import objects from inventory list files into the local store. Reads one or more inventory list files (e.g. produced by the export command) and commits the objects they describe. Blobs are pulled from the named madder blob store when blob_store_id is set. Does not require a workspace.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"paths": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Paths to inventory list files to import (at least one)."
+					},
+					"blob_store_id": {
+						"type": "string",
+						"description": "Name of an existing madder blob store to read blobs from during import."
+					},
+					"omit_tags": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Regex patterns for tags to strip from imported objects (repeatable)."
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
+					}
+				},
+				"required": ["paths"],
+				"additionalProperties": false
+			}`),
+		},
+		makeBridgeHandler(bridge, "import", importToolCLIArgs),
+	)
+
+	registerTool(
+		tools,
+		protocol.ToolV1{
+			Name:        "push",
+			Description: "Push objects to a remote repository. Sends matching objects (and their blobs) from the local repo to a remote. Identify the remote with 'remote' (a stored remote repository object id), 'direct' (a local repository path), or omit both to use the workspace's pinned parent. Optionally limit the transfer with query terms.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"remote": {
+						"type": "string",
+						"description": "Stored remote repository object id to push to (e.g. '/them'). Omit to use the workspace's pinned parent, or set 'direct' instead."
+					},
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Optional query terms limiting which objects to push. Defaults to all inventory lists (full history)."
+					},
+					"direct": {
+						"type": "string",
+						"description": "Path to a local dodder repository for a direct push without a stored remote."
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
+					}
+				},
+				"additionalProperties": false
+			}`),
+		},
+		makeBridgeHandler(bridge, "push", pushPullToolCLIArgs),
+	)
+
+	registerTool(
+		tools,
+		protocol.ToolV1{
+			Name:        "pull",
+			Description: "Pull objects from a remote repository. Fetches matching objects (and their blobs) from a remote into the local repo. Identify the remote with 'remote' (a stored remote repository object id), 'direct' (a local repository path), or omit both to use the workspace's pinned parent. Optionally limit the transfer with query terms.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"remote": {
+						"type": "string",
+						"description": "Stored remote repository object id to pull from (e.g. '/them'). Omit to use the workspace's pinned parent, or set 'direct' instead."
+					},
+					"query": {
+						"type": "array",
+						"items": {"type": "string"},
+						"description": "Optional query terms limiting which objects to pull. Defaults to all inventory lists (full history)."
+					},
+					"direct": {
+						"type": "string",
+						"description": "Path to a local dodder repository for a direct pull without a stored remote."
+					},
+					"repo_id": {
+						"type": "string",
+						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
+					}
+				},
+				"additionalProperties": false
+			}`),
+		},
+		makeBridgeHandler(bridge, "pull", pushPullToolCLIArgs),
+	)
+
 	if !hasWorkspace {
 		// Workspace-scoped tools (status, checkin, diff, read_checked_out)
 		// operate on checked-out objects in a dodder workspace. Without a
@@ -935,6 +1041,57 @@ func newToolCLIArgs(args json.RawMessage) ([]string, error) {
 	if p.Blob != "" {
 		cliArgs = append(cliArgs, "-blob", p.Blob)
 	}
+
+	return cliArgs, nil
+}
+
+// importToolCLIArgs translates the `import` tool's arguments into `dodder
+// import` CLI args: -omit-tags / -blob_store-id flags first, then the
+// variadic inventory-list paths.
+func importToolCLIArgs(args json.RawMessage) ([]string, error) {
+	var p struct {
+		Paths       []string `json:"paths"`
+		BlobStoreId string   `json:"blob_store_id"`
+		OmitTags    []string `json:"omit_tags"`
+	}
+	if err := json.Unmarshal(args, &p); err != nil {
+		return nil, err
+	}
+
+	var cliArgs []string
+	for _, pattern := range p.OmitTags {
+		cliArgs = append(cliArgs, "-omit-tags", pattern)
+	}
+	if p.BlobStoreId != "" {
+		cliArgs = append(cliArgs, "-blob_store-id", p.BlobStoreId)
+	}
+	cliArgs = append(cliArgs, p.Paths...)
+
+	return cliArgs, nil
+}
+
+// pushPullToolCLIArgs translates the shared push/pull tool arguments into
+// CLI args: the -direct flag first, then the single remote repo-id
+// positional, then query terms. remote/direct are omitted when empty so
+// the command falls back to the workspace's pinned parent (#287b).
+func pushPullToolCLIArgs(args json.RawMessage) ([]string, error) {
+	var p struct {
+		Remote string   `json:"remote"`
+		Query  []string `json:"query"`
+		Direct string   `json:"direct"`
+	}
+	if err := json.Unmarshal(args, &p); err != nil {
+		return nil, err
+	}
+
+	var cliArgs []string
+	if p.Direct != "" {
+		cliArgs = append(cliArgs, "-direct", p.Direct)
+	}
+	if p.Remote != "" {
+		cliArgs = append(cliArgs, p.Remote)
+	}
+	cliArgs = append(cliArgs, p.Query...)
 
 	return cliArgs, nil
 }

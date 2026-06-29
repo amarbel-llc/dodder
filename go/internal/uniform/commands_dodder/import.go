@@ -54,7 +54,10 @@ type Import struct {
 	OmitTags    stringSliceFlag
 }
 
-var _ interfaces.CommandComponentWriter = (*Import)(nil)
+var (
+	_ interfaces.CommandComponentWriter = (*Import)(nil)
+	_ command.CommandWithResetCLIState  = (*Import)(nil)
+)
 
 func (cmd *Import) GetArgs() []command.ArgGroup {
 	return []command.ArgGroup{{
@@ -105,6 +108,18 @@ func (cmd *Import) SetFlagDefinitions(
 		"omit-tags",
 		"regex pattern for tags to strip during import (repeatable)",
 	)
+}
+
+// ResetCLIState clears the Var-bound flag state that accumulates across
+// invocations when this registered command value is reused in a
+// long-lived process (the MCP bridge): OmitTags appends and BlobStoreId
+// retains its last value, so without this two MCP `import` calls would
+// carry the first call's omit patterns / blob store into the second
+// (#247). Scalar flags self-heal via the defaults written at flag
+// registration.
+func (cmd *Import) ResetCLIState() {
+	cmd.OmitTags = nil
+	cmd.BlobStoreId = blob_store_id.Id{}
 }
 
 func (cmd Import) Run(req command.Request) {

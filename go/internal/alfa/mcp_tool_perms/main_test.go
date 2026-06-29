@@ -31,6 +31,9 @@ func TestClassification(t1 *testing.T) {
 		"edit":             PermissionWrite,
 		"checkin":          PermissionWrite,
 		"organize_commit":  PermissionWrite,
+		"import":           PermissionWrite,
+		"push":             PermissionWrite,
+		"pull":             PermissionWrite,
 		"reset-lock":       PermissionDestructive,
 	}
 
