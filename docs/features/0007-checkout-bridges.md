@@ -599,6 +599,12 @@ scripts. The old `status-tags` config was replaced by typed fields (PR #100). Se
 `docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md` for the full
 design.
 
+These built-in types were later extended: an `urgency` enum field, a
+`recurrence` string field on the recurring kinds, a new `!habit` type, and a
+blob-backed pandoc formatter that renders a `body` field. Unset no-default enum
+fields (e.g. `urgency`) are treated as optional (absent rather than rejected).
+See `docs/plans/2026-06-29-merge-actionable-types-design.md`.
+
 ## Limitations
 
 - Only `store_fs` exists today. `store_caldav` is the first non-filesystem
