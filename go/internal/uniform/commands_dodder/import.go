@@ -3,6 +3,7 @@ package commands_dodder
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -33,6 +34,29 @@ func (f *stringSliceFlag) Set(value string) error {
 	return nil
 }
 
+// stringMapFlag is a repeatable key=value flag accumulating into a map,
+// used for -resolve-blobless-type (old=new).
+type stringMapFlag map[string]string
+
+func (f *stringMapFlag) String() string {
+	return fmt.Sprintf("%v", map[string]string(*f))
+}
+
+func (f *stringMapFlag) Set(value string) error {
+	key, replacement, ok := strings.Cut(value, "=")
+	if !ok {
+		return errors.BadRequestf("expected old=new, got %q", value)
+	}
+
+	if *f == nil {
+		*f = make(stringMapFlag)
+	}
+
+	(*f)[key] = replacement
+
+	return nil
+}
+
 func (cmd Import) GetDescription() command.Description {
 	return command.Description{
 		Short: "import objects from inventory list files",
@@ -48,10 +72,11 @@ type Import struct {
 
 	Proto sku.Proto
 
-	BlobStoreId blob_store_id.Id
-	PlanFormat  string
-	Interactive bool
-	OmitTags    stringSliceFlag
+	BlobStoreId       blob_store_id.Id
+	PlanFormat        string
+	Interactive       bool
+	OmitTags          stringSliceFlag
+	BloblessTypeRemap stringMapFlag
 }
 
 var (
@@ -108,17 +133,24 @@ func (cmd *Import) SetFlagDefinitions(
 		"omit-tags",
 		"regex pattern for tags to strip during import (repeatable)",
 	)
+
+	flagDefinitions.Var(
+		&cmd.BloblessTypeRemap,
+		"resolve-blobless-type",
+		"remap a blobless type to a local type during import, as old=new (repeatable)",
+	)
 }
 
 // ResetCLIState clears the Var-bound flag state that accumulates across
 // invocations when this registered command value is reused in a
-// long-lived process (the MCP bridge): OmitTags appends and BlobStoreId
-// retains its last value, so without this two MCP `import` calls would
-// carry the first call's omit patterns / blob store into the second
-// (#247). Scalar flags self-heal via the defaults written at flag
-// registration.
+// long-lived process (the MCP bridge): OmitTags and BloblessTypeRemap
+// accumulate, and BlobStoreId retains its last value, so without this two
+// MCP `import` calls would carry the first call's omit patterns / blobless
+// remapping / blob store into the second (#247). Scalar flags self-heal
+// via the defaults written at flag registration.
 func (cmd *Import) ResetCLIState() {
 	cmd.OmitTags = nil
+	cmd.BloblessTypeRemap = nil
 	cmd.BlobStoreId = blob_store_id.Id{}
 }
 
@@ -189,21 +221,35 @@ func (cmd Import) Run(req command.Request) {
 		return
 	}
 
+	// Blobless-type remapping: explicit -resolve-blobless-type flags first,
+	// then any interactive selections (TTY only). Both feed the same
+	// plan.ResolveBloblessTypes call.
+	remapping := make(map[string]string)
+	for typeString, replacement := range cmd.BloblessTypeRemap {
+		remapping[typeString] = replacement
+	}
+
 	if cmd.Interactive && plan.HasErrors {
-		remapping := promptBloblessTypeResolution(local, plan)
-		if len(remapping) > 0 {
-			plan.ResolveBloblessTypes(remapping)
+		for typeString, replacement := range promptBloblessTypeResolution(
+			local,
+			plan,
+		) {
+			remapping[typeString] = replacement
 		}
+	}
+
+	if len(remapping) > 0 {
+		plan.ResolveBloblessTypes(remapping)
 	}
 
 	if local.GetConfig().IsDryRun() {
 		switch cmd.PlanFormat {
 		case "objects":
-			plan.FormatObjects(os.Stderr)
+			plan.FormatObjects(local.GetEnv().GetUIFile())
 		default:
 			printOptions := local.GetConfig().GetPrintOptions().
 				WithPrintSigs(true)
-			colorOptions := env_ui.FormatColorOptionsErr(local, printOptions)
+			colorOptions := env_ui.FormatColorOptionsOut(local, printOptions)
 
 			boxFormatter := local.StringFormatWriterSkuBoxTransacted(
 				printOptions,
@@ -212,7 +258,7 @@ func (cmd Import) Run(req command.Request) {
 			)
 
 			boxFormatter.SetAbbr(plan.Abbr)
-			plan.FormatSummary(os.Stderr, boxFormatter)
+			plan.FormatSummary(local.GetEnv().GetUIFile(), boxFormatter)
 		}
 
 		if plan.HasErrors {

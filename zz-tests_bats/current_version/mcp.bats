@@ -717,3 +717,121 @@ function mcp_import_from_inventory_list { # @test
 	EOM
   popd || exit 1
 }
+
+# The import tool's dry_run param previews the plan without committing. The
+# plan must come back in the tool result (proving it is routed to the
+# captured UI writer, not os.Stderr), and nothing is committed.
+function mcp_import_dry_run { # @test
+  run_madder init shared
+  assert_success
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id .default \
+    -encryption none \
+    -blob_store-id shared \
+    test
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+  create_test_zettels
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+  list="$(realpath list)"
+
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  local input="$BATS_TEST_TMPDIR/mcp-import-dry-run.jsonrpc"
+  write_mcp_tool_call_input "$input" import \
+    '{"paths":["'"$list"'"],"blob_store_id":"shared","dry_run":true}'
+
+  pushd inner || exit 1
+  run env \
+    DODDER_CEILING_DIRECTORIES="$PWD" \
+    MADDER_CEILING_DIRECTORIES="$PWD" \
+    timeout 10s "$DODDER_BIN" mcp <"$input"
+  assert_success
+  # The plan summary (FormatSummary) is in the result text.
+  assert_output --partial "committable"
+
+  # Nothing committed: inner still has only its init type.
+  run_dodder show :z,e,t
+  assert_success
+  assert_output - <<-EOM
+		[!md @$(get_type_blob_sha) !toml-type-v2]
+	EOM
+  popd || exit 1
+}
+
+# The import tool's blobless_type_remapping param resolves a blobless type by
+# remapping it onto a local type (proving the translator emits
+# -resolve-blobless-type). Mirrors the CLI import_resolve_blobless_type test.
+function mcp_import_resolve_blobless_type { # @test
+  run_madder init shared
+  assert_success
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -repo_id .default \
+    -encryption none \
+    -blob_store-id shared \
+    test
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+  create_test_zettels
+
+  run_dodder new -edit=false -object-id '!custom'
+  assert_success
+
+  {
+    echo "---"
+    echo "# custom typed zettel"
+    echo "! custom"
+    echo "---"
+    echo
+    echo "custom body"
+  } >to_add
+
+  run_dodder new -edit=false to_add
+  assert_success
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+  list="$(realpath list)"
+
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  local input="$BATS_TEST_TMPDIR/mcp-import-blobless.jsonrpc"
+  write_mcp_tool_call_input "$input" import \
+    '{"paths":["'"$list"'"],"blob_store_id":"shared","blobless_type_remapping":{"!custom":"!md"}}'
+
+  pushd inner || exit 1
+  run env \
+    DODDER_CEILING_DIRECTORIES="$PWD" \
+    MADDER_CEILING_DIRECTORIES="$PWD" \
+    timeout 10s "$DODDER_BIN" mcp <"$input"
+  assert_success
+
+  # The blobless !custom type was remapped to !md, so no object remains
+  # typed !custom.
+  run_dodder show :z
+  assert_success
+  refute_output --partial '!custom'
+  popd || exit 1
+}

@@ -149,6 +149,12 @@ New flags:
   blobless types by selecting local replacements. Requires a TTY; in non-TTY
   contexts, prints a warning and falls through. Does not imply `-dry-run`.
 
+- `-resolve-blobless-type <old>=<new>` --- non-interactively remap a blobless
+  type onto a local type (e.g. `-resolve-blobless-type '!custom=!md'`). Applies
+  the same `Plan.ResolveBloblessTypes` step as `-interactive` but without a TTY,
+  so it works over the MCP bridge and in scripts. May be specified multiple
+  times.
+
 - `-omit-tags <regex>` --- strip tags matching the pattern from each object
   before plan classification. Matched against the tag value without the leading
   `#` (e.g., `-omit-tags "^archived$"` strips `#archived`). May be specified
@@ -283,6 +289,11 @@ Flow: `build plan → [interactive resolve] → dry-run OR commit`. The resoluti
 operates on the completed plan, not on intermediate builder state --- this
 matters because `Build()` cascades `skip-blobless-type` entries to
 `error-missing-blob` on all dependents before the plan is finalized.
+
+Non-interactive callers (scripts, the MCP `import` tool) supply the same
+remapping directly via `-resolve-blobless-type <old>=<new>`, bypassing the TTY
+prompt; explicit flags and any interactive selections both feed the one
+`Plan.ResolveBloblessTypes` call.
 
 Implementation is two layers respecting the NATO tier hierarchy:
 

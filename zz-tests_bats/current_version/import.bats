@@ -778,3 +778,77 @@ function import_overwrite_sig_type_lock_consistency { # @test
   # Type lock should NOT reference the source repo's type signature
   refute_output --partial "!md@${source_type_sig}"
 }
+
+# A blobless type (a type object with no blob) makes any object of that type
+# fail import as error-missing-blob. -resolve-blobless-type remaps the type
+# onto a local one, resolving the error. Exercised via -dry-run -plan-format
+# objects, which surfaces the per-object classifications.
+function import_resolve_blobless_type { # @test
+  # Author a blobless custom type, then a zettel of that type, in outer.
+  run_dodder new -edit=false -object-id '!custom'
+  assert_success
+  assert_output - <<-EOM
+		[!custom !toml-type-v2]
+	EOM
+
+  {
+    echo "---"
+    echo "# custom typed zettel"
+    echo "! custom"
+    echo "---"
+    echo
+    echo "custom body"
+  } >to_add
+
+  run_dodder new -edit=false to_add
+  assert_success
+
+  run_dodder export -print-time=true +z,e,t
+  assert_success
+  echo "$output" >list
+  list="$(realpath list)"
+
+  (
+    mkdir inner
+    pushd inner || exit 1
+    run_dodder_init
+    popd || exit 1
+  )
+
+  pushd inner || exit 1
+
+  # Without remapping the dependent zettel is error-missing-blob; a dry-run
+  # over a plan with errors prints the plan then fails.
+  run_dodder import \
+    -dry-run \
+    -plan-format objects \
+    -blob_store-id shared \
+    "$list"
+  assert_failure
+  assert_output --partial "error-missing-blob"
+
+  # With remapping the error is resolved.
+  run_dodder import \
+    -dry-run \
+    -plan-format objects \
+    -resolve-blobless-type '!custom=!md' \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+  refute_output --partial "error-missing-blob"
+
+  # A real import with the remapping commits the zettel as !md.
+  run_dodder import \
+    -resolve-blobless-type '!custom=!md' \
+    -blob_store-id shared \
+    "$list"
+  assert_success
+
+  # Every imported zettel committed under a real type; the blobless !custom
+  # type was skipped and remapped, so no object remains typed !custom.
+  run_dodder show :z
+  assert_success
+  refute_output --partial '!custom'
+
+  popd || exit 1
+}

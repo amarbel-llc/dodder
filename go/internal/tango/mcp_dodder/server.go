@@ -805,6 +805,20 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 						"items": {"type": "string"},
 						"description": "Regex patterns for tags to strip from imported objects (repeatable)."
 					},
+					"dry_run": {
+						"type": "boolean",
+						"description": "Preview the import plan without committing. Returns the plan instead of importing; combine with plan_format."
+					},
+					"plan_format": {
+						"type": "string",
+						"description": "Format for the dry_run plan: 'summary' (default, box listing) or 'objects' (per-object classifications).",
+						"enum": ["summary", "objects"]
+					},
+					"blobless_type_remapping": {
+						"type": "object",
+						"additionalProperties": {"type": "string"},
+						"description": "Resolve blobless types by remapping them to local types, e.g. {\"!oldtype\": \"!md\"}. Each entry replaces the type on objects that reference a type with no blob."
+					},
 					"repo_id": {
 						"type": "string",
 						"description": "Repo to operate on: name (XDG user) or .name (current dir). Defaults to the server's repo."
@@ -1050,17 +1064,29 @@ func newToolCLIArgs(args json.RawMessage) ([]string, error) {
 // variadic inventory-list paths.
 func importToolCLIArgs(args json.RawMessage) ([]string, error) {
 	var p struct {
-		Paths       []string `json:"paths"`
-		BlobStoreId string   `json:"blob_store_id"`
-		OmitTags    []string `json:"omit_tags"`
+		Paths                 []string          `json:"paths"`
+		BlobStoreId           string            `json:"blob_store_id"`
+		OmitTags              []string          `json:"omit_tags"`
+		DryRun                bool              `json:"dry_run"`
+		PlanFormat            string            `json:"plan_format"`
+		BloblessTypeRemapping map[string]string `json:"blobless_type_remapping"`
 	}
 	if err := json.Unmarshal(args, &p); err != nil {
 		return nil, err
 	}
 
 	var cliArgs []string
+	if p.DryRun {
+		cliArgs = append(cliArgs, "-dry-run")
+	}
+	if p.PlanFormat != "" {
+		cliArgs = append(cliArgs, "-plan-format", p.PlanFormat)
+	}
 	for _, pattern := range p.OmitTags {
 		cliArgs = append(cliArgs, "-omit-tags", pattern)
+	}
+	for old, replacement := range p.BloblessTypeRemapping {
+		cliArgs = append(cliArgs, "-resolve-blobless-type", old+"="+replacement)
 	}
 	if p.BlobStoreId != "" {
 		cliArgs = append(cliArgs, "-blob_store-id", p.BlobStoreId)
