@@ -8,9 +8,9 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
-// A real ed25519 public key in StringWithFormat (`ed25519_pub-...`) form,
-// lifted from the zz-tests_bats import fixtures. blech32 carries a checksum,
-// so this must be a genuine value, not an arbitrary string.
+// A real ed25519 public key (bare `ed25519_pub-...` format-data form), lifted
+// from the zz-tests_bats import fixtures. blech32 carries a checksum, so this
+// must be a genuine value, not an arbitrary string.
 const validPubkey = "ed25519_pub-vhhh5p6qfc9q5fpqm2xmjmetgnagmjpxxqlwlac4uvrhrvjvgevsv5z5q6"
 
 func TestRender(t1 *testing.T) {
@@ -21,7 +21,16 @@ func TestRender(t1 *testing.T) {
 		t.Fatalf("Set(%q): %s", validPubkey, err)
 	}
 
-	formattedPubkey := pubkey.StringWithFormat()
+	// Render must use the bare String() (format-data) form, NOT
+	// StringWithFormat(). A real repo pubkey carries the
+	// `dodder-repo-public_key-v1` purpose, so StringWithFormat() would emit
+	// `dodder-repo-public_key-v1@ed25519_pub-...` and Render would produce a
+	// double-`@`. That purposed case can't be reproduced in this isolated
+	// package (it doesn't register dodder markl purposes, so Set of a purposed
+	// id panics "no purpose registered"); it is guarded end-to-end by the
+	// info-repo id BATS test (asserts `^<handle>@ed25519_pub-`). Here we pin
+	// the contract that Render emits the bare String() form.
+	bare := pubkey.String()
 
 	// The empty-pubkey case relies on a freshly-zeroed markl.Id reporting
 	// IsNull(); assert that assumption holds before depending on it.
@@ -37,16 +46,16 @@ func TestRender(t1 *testing.T) {
 		want   string
 	}{
 		{
-			name:   "handle and pubkey joined with @",
+			name:   "handle and bare pubkey joined with @ (pubkey purpose dropped)",
 			handle: "default",
 			pubkey: pubkey,
-			want:   "default@" + formattedPubkey,
+			want:   "default@" + bare,
 		},
 		{
 			name:   "empty handle drops the leading @",
 			handle: "",
 			pubkey: pubkey,
-			want:   formattedPubkey,
+			want:   bare,
 		},
 		{
 			name:   "null pubkey returns handle unchanged",
