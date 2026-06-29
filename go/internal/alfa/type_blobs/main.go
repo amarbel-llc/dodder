@@ -121,6 +121,23 @@ func recurringFieldsWriter() *script_config.ScriptConfig {
 	}
 }
 
+// actionableFormatters renders the dang-typed `body` field via the
+// blob-backed pandoc tooling (materialized to $DODDER_BLOB_TREE). The body is
+// extracted from the TOML blob, the leading `#!dang ...` convention line is
+// stripped (Phase-1 stand-in until the dang mechanism lands, see issue #296),
+// then normalized with the shared dodder-edit defaults.
+func actionableFormatters() map[string]script_config.WithOutputFormat {
+	return map[string]script_config.WithOutputFormat{
+		"text": {
+			ScriptConfig: script_config.ScriptConfig{
+				Description: "Render the dang-typed body with pandoc",
+				Script:      `yq -p toml -r '.body' | sed '1{/^#!dang/d}' | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit`,
+			},
+			FileExtension: "md",
+		},
+	}
+}
+
 // DefaultTaskType returns the built-in !task type blob, used by genesis when
 // BigBang.IncludeBuiltinActionableTypes is set. !task instances are stored as
 // TOML blobs mirroring the field values; the reader script projects them into
@@ -131,6 +148,7 @@ func DefaultTaskType() TomlV2 {
 	return TomlV2{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
+		Formatters:    actionableFormatters(),
 		Fields:        actionableFields(),
 		FieldsReader:  actionableFieldsReader(),
 		FieldsWriter:  actionableFieldsWriter(),
@@ -146,6 +164,7 @@ func DefaultChoreType() TomlV2 {
 	return TomlV2{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
+		Formatters:    actionableFormatters(),
 		Fields:        recurringFields(),
 		FieldsReader:  recurringFieldsReader(),
 		FieldsWriter:  recurringFieldsWriter(),
@@ -161,6 +180,7 @@ func DefaultHabitType() TomlV2 {
 	return TomlV2{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
+		Formatters:    actionableFormatters(),
 		Fields:        recurringFields(),
 		FieldsReader:  recurringFieldsReader(),
 		FieldsWriter:  recurringFieldsWriter(),

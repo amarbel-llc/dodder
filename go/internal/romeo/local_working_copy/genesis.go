@@ -97,6 +97,7 @@ func (local *Repo) initDefaultTypeAndConfig(
 	if err = local.prepareBuiltinActionableTypes(
 		bigBang,
 		&builder,
+		toolBlobs,
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
@@ -213,24 +214,7 @@ func (local *Repo) prepareDefaultType(
 	object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
 
 	if bigBang.IncludeDefaultPandocTools {
-		if err = addToolBlobReference(
-			object, toolBlobs.commonFilter,
-			"pandoc-lua_filter", "filters/dodder-common.lua",
-		); err != nil {
-			return objectIdType, errors.Wrap(err)
-		}
-
-		if err = addToolBlobReference(
-			object, toolBlobs.editFilter,
-			"pandoc-lua_filter", "filters/dodder-edit.lua",
-		); err != nil {
-			return objectIdType, errors.Wrap(err)
-		}
-
-		if err = addToolBlobReference(
-			object, toolBlobs.editDefaults,
-			"pandoc-defaults", "defaults/dodder-edit.yaml",
-		); err != nil {
+		if err = attachPandocToolRefs(object, toolBlobs); err != nil {
 			return objectIdType, errors.Wrap(err)
 		}
 	}
@@ -243,14 +227,17 @@ func (local *Repo) prepareDefaultType(
 	return objectIdType, err
 }
 
-// prepareBuiltinActionableTypes commits the !task and !chore built-in types
-// when bigBang.IncludeBuiltinActionableTypes is set. Both types share the same
-// field set (status, priority, due) declared in type_blobs.DefaultTaskType /
-// DefaultChoreType. Opt-in for now per docs/plans/2026-04-06-task-type-genesis-
-// and-haustoria-fields.md.
+// prepareBuiltinActionableTypes commits the !task, !chore, and !habit built-in
+// types when bigBang.IncludeBuiltinActionableTypes is set. !task carries the
+// one-shot actionable field set (status, urgency, priority, due); !chore and
+// !habit add a recurrence field. All three carry a blob-backed pandoc body
+// formatter, so when bigBang.IncludeDefaultPandocTools is also set they get the
+// same pandoc tool-blob references as !md. Opt-in for now per
+// docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md.
 func (local *Repo) prepareBuiltinActionableTypes(
 	bigBang env_repo.BigBang,
 	builder *import_plan.Builder,
+	toolBlobs toolBlobDigests,
 ) (err error) {
 	if !bigBang.IncludeBuiltinActionableTypes {
 		return err
@@ -267,6 +254,10 @@ func (local *Repo) prepareBuiltinActionableTypes(
 		{
 			objectIdString: "chore",
 			blob:           type_blobs.DefaultChoreType(),
+		},
+		{
+			objectIdString: "habit",
+			blob:           type_blobs.DefaultHabitType(),
 		},
 	} {
 		objectIdType := ids.MustTypeStruct(builtin.objectIdString)
@@ -292,6 +283,13 @@ func (local *Repo) prepareBuiltinActionableTypes(
 
 		object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
 		object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
+
+		if bigBang.IncludeDefaultPandocTools {
+			if err = attachPandocToolRefs(object, toolBlobs); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
 
 		if err = builder.AddObject(object, 0); err != nil {
 			err = errors.Wrap(err)

@@ -95,6 +95,39 @@ func (local *Repo) prepareToolBlobs() (digests toolBlobDigests, err error) {
 	return digests, err
 }
 
+// attachPandocToolRefs attaches the three blob-backed pandoc tool references
+// (common filter, edit filter, edit defaults) to object. Shared by
+// prepareDefaultType (!md) and prepareBuiltinActionableTypes
+// (!task/!chore/!habit); callers gate it on
+// bigBang.IncludeDefaultPandocTools so the referenced tool blobs always exist.
+func attachPandocToolRefs(
+	object *sku.Transacted,
+	toolBlobs toolBlobDigests,
+) (err error) {
+	if err = addToolBlobReference(
+		object, toolBlobs.commonFilter,
+		"pandoc-lua_filter", "filters/dodder-common.lua",
+	); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if err = addToolBlobReference(
+		object, toolBlobs.editFilter,
+		"pandoc-lua_filter", "filters/dodder-edit.lua",
+	); err != nil {
+		return errors.Wrap(err)
+	}
+
+	if err = addToolBlobReference(
+		object, toolBlobs.editDefaults,
+		"pandoc-defaults", "defaults/dodder-edit.yaml",
+	); err != nil {
+		return errors.Wrap(err)
+	}
+
+	return err
+}
+
 func addToolBlobReference(
 	object *sku.Transacted,
 	digest markl.Id,
