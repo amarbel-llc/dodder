@@ -121,6 +121,19 @@ func (store *Store) tryReadFields(
 			value = fd.Default
 		}
 
+		// A no-default enum whose projected value is empty is optional and
+		// genuinely unset: empty arises both when the blob omits the key
+		// (absent) and when the actionable fields-writer materializes it as
+		// `key = ""` (an unset DODDER_FIELD_* env var expands to empty), and
+		// "" is never a valid enum value anyway — so skip both the enum
+		// validation and the index append rather than rejecting "untriaged".
+		// String fields keep empty values: an empty string is a legitimate
+		// value (e.g. the no-default `due` field renders as `due=`). A field
+		// that declares a default still rejects an explicit empty value.
+		if fd.Kind == "enum" && value == "" && fd.Default == "" {
+			continue
+		}
+
 		if fd.Kind == "enum" && len(fd.Values) > 0 {
 			if !slices.Contains(fd.Values, value) {
 				return errors.Wrap(fmt.Errorf(

@@ -109,9 +109,10 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 
 # A freshly-created !task whose TOML blob sets urgency (plus status /
 # priority / due) has all four fields projected by the reader script and
-# visible in `dodder show`. urgency has no default, so an instance MUST
-# supply one — the reader projects it unconditionally and the enum
-# rejects the empty value otherwise.
+# visible in `dodder show`. urgency is optional (no default); when the blob
+# supplies it, it projects through. The urgency-less case (unset =
+# untriaged, commit must still succeed) is covered by
+# actionable_task_omits_urgency_when_unset below.
 function actionable_task_projects_urgency_field { # @test
   init_fixture -include-builtin-actionable-types
   run_dodder init-workspace -experimental-repo=false
@@ -133,6 +134,36 @@ function actionable_task_projects_urgency_field { # @test
   assert_success
   assert_output - <<-EOM
 		[one/uno @blake2b256-mypv50rw9hr79g7c0r4fe06uurrldnre5s3va70wvrwlvc48tf3qpjqgx4 !task "my probe task" status=in_progress urgency=2_week priority=p1 due=20260415T120000Z]
+	EOM
+}
+
+# A !task whose TOML blob omits urgency (only status / priority, as the
+# CalDAV haustoria emits) MUST still commit: urgency is an optional no-default
+# enum, so an empty value is treated as unset and dropped rather than rejected.
+# Here the empty value is writer-manufactured — the fields-writer runs during
+# the new/checkout commit and expands the unset DODDER_FIELD_urgency to "" — so
+# this also exercises the writer-injection path. urgency does not appear in
+# `dodder show`; the no-default STRING field `due` keeps its empty value and
+# still renders as `due=`.
+function actionable_task_omits_urgency_when_unset { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# untriaged task
+		! task
+		---
+
+		status = "todo"
+		priority = "p3"
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output --regexp - <<-EOM
+		\[one/uno @blake2b256-.+ !task "untriaged task" status=todo priority=p3 due=]
 	EOM
 }
 
