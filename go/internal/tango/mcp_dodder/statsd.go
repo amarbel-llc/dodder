@@ -56,7 +56,7 @@ func emitTiming(name string, d time.Duration) {
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	_, _ = fmt.Fprintf(conn, "%s:%d|ms", name, d.Milliseconds())
 }

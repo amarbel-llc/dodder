@@ -137,7 +137,7 @@ func TestHandshakeOverWebSocket(t1 *testing.T) {
 			return
 		}
 		conn.SetReadLimit(-1)
-		defer conn.Close(websocket.StatusNormalClosure, "")
+		defer func() { _ = conn.Close(websocket.StatusNormalClosure, "") }()
 
 		netConn := websocket.NetConn(r.Context(), conn, websocket.MessageBinary)
 		s := makeSession(netConn)
