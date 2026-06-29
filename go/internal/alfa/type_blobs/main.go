@@ -41,11 +41,13 @@ func DefaultPandocLuaFilter() TomlV2 {
 	}
 }
 
-// actionableFields is the field set shared by !task and !chore. Both built-in
-// types use the same status/priority/due triple. Future work
+// actionableFields is the one-shot field set used by !task. Recurring
+// actionable types (!chore, !habit) extend it with a recurrence field via
+// recurringFields. Future work
 // (see docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md §1a)
 // is to extract this into an !actionable abstract type that both compose
-// against.
+// against. The urgency field is left without a default so an untriaged
+// instance reads as urgency-unset rather than silently defaulting.
 func actionableFields() []FieldDefinition {
 	return []FieldDefinition{
 		{
@@ -53,6 +55,11 @@ func actionableFields() []FieldDefinition {
 			Kind:    "enum",
 			Values:  []string{"todo", "in_progress", "done", "cancelled"},
 			Default: "todo",
+		},
+		{
+			Name:   "urgency",
+			Kind:   "enum",
+			Values: []string{"0_hour", "1_day", "2_week", "3_month", "4_quarter", "5_episode", "6_year"},
 		},
 		{
 			Name:    "priority",
@@ -67,22 +74,50 @@ func actionableFields() []FieldDefinition {
 	}
 }
 
+// recurringFields is the field set used by recurring actionable types (!chore,
+// !habit): the actionable triple plus a recurrence cadence. recurrence is an
+// ISO-8601 duration string (e.g. "P1W" for weekly); kept as a plain string
+// rather than a dedicated date kind since there is no date FieldDefinition
+// kind.
+func recurringFields() []FieldDefinition {
+	return append(actionableFields(), FieldDefinition{
+		Name: "recurrence",
+		Kind: "string",
+	})
+}
+
 // actionableFieldsReader returns the yq script that projects fields from a
 // TOML blob into Metadata.Index.Fields during commit. The output JSON keys
 // must match the field names declared by actionableFields.
 func actionableFieldsReader() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o json '{"status": .status, "priority": .priority, "due": .due}'`,
+		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due}'`,
 	}
 }
 
 // actionableFieldsWriter returns the yq script that projects field edits back
 // into the TOML blob during organize mutations. Reads DODDER_FIELD_status,
-// DODDER_FIELD_priority, DODDER_FIELD_due env vars and writes them into the
-// blob at DODDER_BLOB_PATH.
+// DODDER_FIELD_urgency, DODDER_FIELD_priority, DODDER_FIELD_due env vars and
+// writes them into the blob at DODDER_BLOB_PATH.
 func actionableFieldsWriter() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o toml -i ".status = \"$DODDER_FIELD_status\" | .priority = \"$DODDER_FIELD_priority\" | .due = \"$DODDER_FIELD_due\"" "$DODDER_BLOB_PATH"`,
+		Script: `yq -p toml -o toml -i ".status = \"$DODDER_FIELD_status\" | .urgency = \"$DODDER_FIELD_urgency\" | .priority = \"$DODDER_FIELD_priority\" | .due = \"$DODDER_FIELD_due\"" "$DODDER_BLOB_PATH"`,
+	}
+}
+
+// recurringFieldsReader mirrors actionableFieldsReader but also projects the
+// recurrence field declared by recurringFields.
+func recurringFieldsReader() *script_config.ScriptConfig {
+	return &script_config.ScriptConfig{
+		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "recurrence": .recurrence}'`,
+	}
+}
+
+// recurringFieldsWriter mirrors actionableFieldsWriter but also writes the
+// recurrence field from DODDER_FIELD_recurrence into the blob.
+func recurringFieldsWriter() *script_config.ScriptConfig {
+	return &script_config.ScriptConfig{
+		Script: `yq -p toml -o toml -i ".status = \"$DODDER_FIELD_status\" | .urgency = \"$DODDER_FIELD_urgency\" | .priority = \"$DODDER_FIELD_priority\" | .due = \"$DODDER_FIELD_due\" | .recurrence = \"$DODDER_FIELD_recurrence\"" "$DODDER_BLOB_PATH"`,
 	}
 }
 
@@ -102,17 +137,33 @@ func DefaultTaskType() TomlV2 {
 	}
 }
 
-// DefaultChoreType returns the built-in !chore type blob. Same field set as
-// !task; calendar-to-type binding stays a workspace config concern (the
-// CalDAV haustoria's tasks calendar binds to !task and chores binds to
+// DefaultChoreType returns the built-in !chore type blob. !chore is a
+// recurring actionable type, so it carries the recurrence field on top of the
+// actionable triple; calendar-to-type binding stays a workspace config concern
+// (the CalDAV haustoria's tasks calendar binds to !task and chores binds to
 // !chore). Future !actionable abstract type will replace the duplication.
 func DefaultChoreType() TomlV2 {
 	return TomlV2{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
-		Fields:        actionableFields(),
-		FieldsReader:  actionableFieldsReader(),
-		FieldsWriter:  actionableFieldsWriter(),
+		Fields:        recurringFields(),
+		FieldsReader:  recurringFieldsReader(),
+		FieldsWriter:  recurringFieldsWriter(),
+	}
+}
+
+// DefaultHabitType returns the built-in !habit type blob. It is structurally
+// identical to !chore (the recurring field set + recurring reader/writer); the
+// semantic distinction (a consistency practice vs a periodic obligation)
+// surfaces as a tighter default cadence in the hooks (future work) and in the
+// type description, not in the field schema.
+func DefaultHabitType() TomlV2 {
+	return TomlV2{
+		FileExtension: "toml",
+		VimSyntaxType: "toml",
+		Fields:        recurringFields(),
+		FieldsReader:  recurringFieldsReader(),
+		FieldsWriter:  recurringFieldsWriter(),
 	}
 }
 

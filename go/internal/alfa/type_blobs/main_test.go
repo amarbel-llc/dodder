@@ -19,16 +19,31 @@ func TestDefaultTaskType(t1 *testing.T) {
 
 	assertActionableFields(&t, blob.Fields)
 
+	// !task is the one-shot actionable type: it must NOT carry recurrence.
+	for _, f := range blob.Fields {
+		if f.Name == "recurrence" {
+			t.Errorf("DefaultTaskType must not have a recurrence field, got %v", blob.Fields)
+		}
+	}
+
 	t.AssertNotNil(blob.FieldsReader, "FieldsReader")
 
 	if !strings.Contains(blob.FieldsReader.Script, "yq -p toml -o json") {
 		t.Errorf("FieldsReader script missing yq invocation: %q", blob.FieldsReader.Script)
 	}
 
+	if !strings.Contains(blob.FieldsReader.Script, `"urgency": .urgency`) {
+		t.Errorf("FieldsReader script missing urgency projection: %q", blob.FieldsReader.Script)
+	}
+
 	t.AssertNotNil(blob.FieldsWriter, "FieldsWriter")
 
 	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_FIELD_status") {
 		t.Errorf("FieldsWriter script missing DODDER_FIELD_status: %q", blob.FieldsWriter.Script)
+	}
+
+	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_FIELD_urgency") {
+		t.Errorf("FieldsWriter script missing DODDER_FIELD_urgency: %q", blob.FieldsWriter.Script)
 	}
 
 	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_BLOB_PATH") {
@@ -43,31 +58,65 @@ func TestDefaultChoreType(t1 *testing.T) {
 
 	t.AssertEqualStrings("toml", blob.FileExtension)
 
-	assertActionableFields(&t, blob.Fields)
+	assertRecurringFields(&t, blob.Fields)
 
-	// chore and task currently share the exact same field set + scripts;
-	// this is enforced by both calling actionableFields/Reader/Writer.
-	taskBlob := DefaultTaskType()
+	t.AssertNotNil(blob.FieldsReader, "FieldsReader")
 
-	t.AssertEqualStrings(taskBlob.FieldsReader.Script, blob.FieldsReader.Script)
-	t.AssertEqualStrings(taskBlob.FieldsWriter.Script, blob.FieldsWriter.Script)
+	if !strings.Contains(blob.FieldsReader.Script, `"recurrence": .recurrence`) {
+		t.Errorf("FieldsReader script missing recurrence projection: %q", blob.FieldsReader.Script)
+	}
+
+	t.AssertNotNil(blob.FieldsWriter, "FieldsWriter")
+
+	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_FIELD_recurrence") {
+		t.Errorf("FieldsWriter script missing DODDER_FIELD_recurrence: %q", blob.FieldsWriter.Script)
+	}
 }
 
-func assertActionableFields(t *ui.T, fields []FieldDefinition) {
-	t.AssertLen(3, fields, "fields")
+func TestDefaultHabitType(t1 *testing.T) {
+	t := ui.MakeT(t1)
 
-	expected := []struct {
-		name      string
-		kind      string
-		values    []string
-		dflt      string
-		hasValues bool
-	}{
+	blob := DefaultHabitType()
+
+	t.AssertEqualStrings("toml", blob.FileExtension)
+	t.AssertEqualStrings("toml", blob.VimSyntaxType)
+
+	assertRecurringFields(&t, blob.Fields)
+
+	// !habit is structurally identical to !chore (recurring field set +
+	// recurring reader/writer); the distinction lives in the hooks, not the
+	// schema.
+	choreBlob := DefaultChoreType()
+
+	t.AssertNotNil(blob.FieldsReader, "FieldsReader")
+	t.AssertNotNil(blob.FieldsWriter, "FieldsWriter")
+
+	t.AssertEqualStrings(choreBlob.FieldsReader.Script, blob.FieldsReader.Script)
+	t.AssertEqualStrings(choreBlob.FieldsWriter.Script, blob.FieldsWriter.Script)
+}
+
+type expectedField struct {
+	name      string
+	kind      string
+	values    []string
+	dflt      string
+	hasValues bool
+}
+
+func actionableExpectedFields() []expectedField {
+	return []expectedField{
 		{
 			name:      "status",
 			kind:      "enum",
 			values:    []string{"todo", "in_progress", "done", "cancelled"},
 			dflt:      "todo",
+			hasValues: true,
+		},
+		{
+			name:      "urgency",
+			kind:      "enum",
+			values:    []string{"0_hour", "1_day", "2_week", "3_month", "4_quarter", "5_episode", "6_year"},
+			dflt:      "",
 			hasValues: true,
 		},
 		{
@@ -83,7 +132,29 @@ func assertActionableFields(t *ui.T, fields []FieldDefinition) {
 			hasValues: false,
 		},
 	}
+}
 
+func assertActionableFields(t *ui.T, fields []FieldDefinition) {
+	expected := actionableExpectedFields()
+
+	t.AssertLen(len(expected), fields, "fields")
+
+	assertFields(t, expected, fields)
+}
+
+func assertRecurringFields(t *ui.T, fields []FieldDefinition) {
+	expected := append(actionableExpectedFields(), expectedField{
+		name:      "recurrence",
+		kind:      "string",
+		hasValues: false,
+	})
+
+	t.AssertLen(len(expected), fields, "fields")
+
+	assertFields(t, expected, fields)
+}
+
+func assertFields(t *ui.T, expected []expectedField, fields []FieldDefinition) {
 	for i, want := range expected {
 		got := fields[i]
 

@@ -26,6 +26,7 @@ var (
 	DefaultPandocLuaFilter     = golf_tb.DefaultPandocLuaFilter
 	DefaultTaskType            = golf_tb.DefaultTaskType
 	DefaultChoreType           = golf_tb.DefaultChoreType
+	DefaultHabitType           = golf_tb.DefaultHabitType
 )
 
 var (
