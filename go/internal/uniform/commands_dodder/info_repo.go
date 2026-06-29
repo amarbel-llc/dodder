@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/echo/repo_identity"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
@@ -106,7 +107,14 @@ func (cmd InfoRepo) Run(req command.Request) {
 			env.GetUI().Print(configPublicBlob.GetStoreVersion())
 
 		case "id":
-			env.GetUI().Print(configPublicBlob.GetRepoId())
+			config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+
+			env.GetUI().Print(
+				repo_identity.Render(
+					config.GetRepoId().String(),
+					configPublicBlob.GetPublicKey(),
+				),
+			)
 
 		case "pubkey":
 			env.GetUI().Print(

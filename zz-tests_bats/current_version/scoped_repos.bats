@@ -45,14 +45,16 @@ function scoped_user_repos_are_isolated { # @test
 	assert_success
 	assert_output ''
 
-	# each repo reports its own genesis id
+	# each repo reports its own <handle>@<pubkey> identity (#294): the
+	# location handle differs per repo and the pubkey is freshly generated,
+	# so match the handle exactly and the pubkey by format.
 	run_dodder info-repo -repo_id work id
 	assert_success
-	assert_output 'work-id'
+	assert_output --regexp '^work@ed25519_pub-'
 
 	run_dodder info-repo -repo_id personal id
 	assert_success
-	assert_output 'personal-id'
+	assert_output --regexp '^personal@ed25519_pub-'
 }
 
 # bats test_tags=user_story:scoped_repos,env_var
@@ -62,7 +64,7 @@ function scoped_repo_addressed_via_env_var { # @test
 
 	DODDER_REPO_ID=work run_dodder info-repo id
 	assert_success
-	assert_output 'work-id'
+	assert_output --regexp '^work@ed25519_pub-'
 }
 
 # bats test_tags=user_story:scoped_repos,repo_id
@@ -139,7 +141,7 @@ function explicit_user_repo_pins_to_user_scope_from_inside_workspace { # @test
 	EOM
 	run_dodder info-repo -repo_id default id     # MakeEnvRepo seam
 	assert_success
-	assert_output 'user-default-id'
+	assert_output --regexp '^default@ed25519_pub-'
 
 	# (b) the cwd spelling `.default` still reaches the workspace repo.
 	run_dodder show -repo_id .default :z
@@ -147,13 +149,16 @@ function explicit_user_repo_pins_to_user_scope_from_inside_workspace { # @test
 	assert_output ''
 	run_dodder info-repo -repo_id .default id
 	assert_success
-	assert_output 'workspace-default-id'
+	assert_output --regexp '^\.default@ed25519_pub-'
 
-	# (c) auto/empty still walks up to the workspace repo.
+	# (c) auto/empty still walks up to the workspace repo. The empty `show
+	# :z` above proves it resolved to the (empty) workspace repo; with no
+	# selector the identity carries no handle, so `info-repo id` renders the
+	# bare pubkey (#294: empty handle -> bare pubkey fallback).
 	run_dodder show :z
 	assert_success
 	assert_output ''
 	run_dodder info-repo id
 	assert_success
-	assert_output 'workspace-default-id'
+	assert_output --regexp '^ed25519_pub-'
 }

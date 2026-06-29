@@ -46,6 +46,21 @@ function info_store_version { # @test
 	assert_output
 }
 
+# bats test_tags=user_story:repo_identity
+function info_repo_id_shows_handle_at_pubkey { # @test
+	# #294 / FDR-0021: `info-repo id` emits the repo's human-facing identity
+	# <handle>@<pubkey> --- the addressable location handle joined to the
+	# repo's public key --- not the deprecated config-seed id. The handle is
+	# the FDR-0019 scoped repo id (`work` here); the pubkey is freshly
+	# generated per repo, so only its format is matched with --regexp.
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id work work-id
+	assert_success
+
+	run_dodder info-repo -repo_id work id
+	assert_success
+	assert_output --regexp '^work@ed25519_pub-'
+}
+
 # bats test_tags=user_story:age_encryption
 function info_age_none { # @test
 	run_dodder_init_disable_age
