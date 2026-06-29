@@ -116,6 +116,56 @@ func TestHandshakePinnedKeyMismatch(t1 *testing.T) {
 	}
 }
 
+// TestHandshakeIdentityIsPubkeyNotRepoId asserts peer identity is the public
+// key, not the legacy repo id: two peers advertising the SAME repoId
+// ("default") but distinct keys still complete mutual attestation. This guards
+// the FDR-0021 deprecation — the config-seed id stops being written, so the
+// handshake's repoId field rides empty or colliding and must never gate
+// identity (two hosts both named "default" are distinguished by pubkey).
+func TestHandshakeIdentityIsPubkeyNotRepoId(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	clientConn, serverConn := net.Pipe()
+
+	serverKeys := makeTestKeys(t.T)
+	clientKeys := makeTestKeys(t.T)
+
+	results := make(chan error, 1)
+
+	go func() {
+		s := makeSession(serverConn)
+		_, _, err := serverHandshake(
+			s,
+			serverKeys,
+			selfCaps{listType: testListType, repoId: "default"},
+			false,
+		)
+		results <- err
+	}()
+
+	s := makeSession(clientConn)
+
+	serverCaps, _, err := clientHandshake(
+		s,
+		clientKeys,
+		selfCaps{listType: testListType, repoId: "default"},
+		serverKeys.public,
+	)
+	t.AssertNoError(err)
+	// The server advertised the colliding repoId, yet attestation succeeded:
+	// identity came from the pubkey, and repoId is carried-but-inert metadata.
+	t.AssertEqual("default", serverCaps.RepoId)
+
+	want, err := signWant(clientKeys, serverCaps.Nonce, control{
+		Direction: DirectionFetch,
+		Query:     ":z",
+	})
+	t.AssertNoError(err)
+	t.AssertNoError(s.writeControl(TypeWant, want))
+
+	t.AssertNoError(<-results)
+}
+
 // TestHandshakeOverWebSocket exercises the websocket transport end to end:
 // the handshake runs over a real upgraded connection adapted via
 // websocket.NetConn, verifying framing survives message boundaries.
