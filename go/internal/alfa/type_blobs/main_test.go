@@ -36,6 +36,12 @@ func TestDefaultTaskType(t1 *testing.T) {
 		t.Errorf("FieldsReader script missing urgency projection: %q", blob.FieldsReader.Script)
 	}
 
+	// The reader must drop null-valued keys so an unset optional field (e.g.
+	// urgency) reads as field-unset rather than a commit-rejected explicit null.
+	if !strings.Contains(blob.FieldsReader.Script, "with_entries(select(.value != null))") {
+		t.Errorf("FieldsReader script missing null-key drop: %q", blob.FieldsReader.Script)
+	}
+
 	t.AssertNotNil(blob.FieldsWriter, "FieldsWriter")
 
 	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_FIELD_status") {
@@ -64,6 +70,10 @@ func TestDefaultChoreType(t1 *testing.T) {
 
 	if !strings.Contains(blob.FieldsReader.Script, `"recurrence": .recurrence`) {
 		t.Errorf("FieldsReader script missing recurrence projection: %q", blob.FieldsReader.Script)
+	}
+
+	if !strings.Contains(blob.FieldsReader.Script, "with_entries(select(.value != null))") {
+		t.Errorf("FieldsReader script missing null-key drop: %q", blob.FieldsReader.Script)
 	}
 
 	t.AssertNotNil(blob.FieldsWriter, "FieldsWriter")

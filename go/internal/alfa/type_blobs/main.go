@@ -88,10 +88,14 @@ func recurringFields() []FieldDefinition {
 
 // actionableFieldsReader returns the yq script that projects fields from a
 // TOML blob into Metadata.Index.Fields during commit. The output JSON keys
-// must match the field names declared by actionableFields.
+// must match the field names declared by actionableFields. Null-valued keys
+// (absent in the blob) are dropped via with_entries(select(.value != null))
+// so an unset optional field (e.g. urgency) reads as field-unset rather than
+// being projected as an explicit null that commit would reject; this also
+// restores the field-level defaults for status/priority when absent.
 func actionableFieldsReader() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due}'`,
+		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due} | with_entries(select(.value != null))'`,
 	}
 }
 
@@ -106,10 +110,12 @@ func actionableFieldsWriter() *script_config.ScriptConfig {
 }
 
 // recurringFieldsReader mirrors actionableFieldsReader but also projects the
-// recurrence field declared by recurringFields.
+// recurrence field declared by recurringFields. It drops null-valued keys for
+// the same reason: an unset optional field reads as field-unset rather than a
+// commit-rejected explicit null.
 func recurringFieldsReader() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "recurrence": .recurrence}'`,
+		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "recurrence": .recurrence} | with_entries(select(.value != null))'`,
 	}
 }
 

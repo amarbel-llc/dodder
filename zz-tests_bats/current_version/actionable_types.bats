@@ -99,7 +99,7 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 
 		[fields-reader]
 		script = """
-		yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due}'"""
+		yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due} | with_entries(select(.value != null))'"""
 
 		[fields-writer]
 		script = """
