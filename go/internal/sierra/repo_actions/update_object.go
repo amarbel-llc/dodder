@@ -54,9 +54,16 @@ func (op UpdateObject) runAlreadyLocked(
 	metadata := result.GetMetadataMutable()
 
 	if changes.Description != nil {
-		if err = metadata.GetDescriptionMutable().Set(
-			*changes.Description,
-		); err != nil {
+		// Reset before Set: descriptions.Description.Set is cumulative — it
+		// space-joins onto any existing value so the doddish parser can build
+		// a description token by token — so without the reset an edit would
+		// APPEND to the object's current description instead of replacing it.
+		// Mirrors the ResetTags() in the tags branch, which makes tag edits
+		// replace.
+		description := metadata.GetDescriptionMutable()
+		description.Reset()
+
+		if err = description.Set(*changes.Description); err != nil {
 			err = errors.Wrap(err)
 			return result, err
 		}
@@ -87,9 +94,20 @@ func (op UpdateObject) runAlreadyLocked(
 		}
 	}
 
+	// MergeCheckedOut mirrors what organize does
+	// (repo_actions/organize_options.go): it routes the commit through the
+	// store's ReadExternalAndMergeIfNecessary, which refreshes the
+	// checked-out working-directory copy when it still matches HEAD
+	// (objects.EqualerSansTai) and raises a conflict-merge when the user has
+	// local edits. It is a no-op when the object is not checked out.
+	// Without it, an MCP `edit` of a checked-out object left the
+	// working-directory copy stale even though its working copy was clean.
+	storeOptions := sku.GetStoreOptionsUpdate()
+	storeOptions.MergeCheckedOut = true
+
 	if err = op.GetStore().CreateOrUpdate(
 		result,
-		sku.CommitOptions{StoreOptions: sku.GetStoreOptionsUpdate()},
+		sku.CommitOptions{StoreOptions: storeOptions},
 	); err != nil {
 		err = errors.Wrap(err)
 		return result, err

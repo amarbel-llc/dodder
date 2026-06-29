@@ -594,6 +594,50 @@ function mcp_edit_and_blob_formats_route_by_repo_id { # @test
   refute_output --regexp 'per-repo not yet supported'
 }
 
+# Regression: an MCP `edit` of an object whose checked-out working copy
+# still matches HEAD refreshes that working copy to the committed state,
+# the same way `organize` does — the commit sets MergeCheckedOut, which
+# routes through the store's ReadExternalAndMergeIfNecessary (clean
+# working copy -> UpdateCheckoutFromCheckedOut). one/dos is checked out
+# clean, then its description is edited via MCP; `status` must report it
+# `same` (working copy == store) carrying the NEW description, proving
+# the clean checkout was updated rather than left stale. Editing only the
+# description leaves the blob digest unchanged. The exact "after mcp edit"
+# (not "wow ok again after mcp edit") also guards that edit REPLACES the
+# description rather than appending to it (descriptions.Set is cumulative,
+# so UpdateObject resets before setting).
+function mcp_edit_refreshes_clean_checkout { # @test
+  copy_from_version "$DIR"
+  run_dodder_init_workspace
+
+  run_dodder checkout one/dos
+  assert_success
+  assert_output_unsorted - <<-EOM
+		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+	EOM
+
+  local in_edit="$BATS_TEST_TMPDIR/mcp-edit-refresh.jsonrpc"
+  write_mcp_tool_call_input "$in_edit" edit \
+    '{"object_id":"one/dos","description":"after mcp edit"}'
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$in_edit"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'after mcp edit'
+
+  # The JSON-RPC input was written into the workspace root (BATS_TEST_TMPDIR
+  # is the test cwd); remove it so it does not show up as an untracked entry
+  # in the status assertion below.
+  rm -f "$in_edit"
+
+  # The checked-out working copy now matches the store: status reports it
+  # `same` with the edited description (it was refreshed in place).
+  run_dodder status
+  assert_success
+  assert_output_unsorted - <<-EOM
+		             same [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "after mcp edit" tag-3 tag-4]
+	EOM
+}
+
 function mcp_query_empty_result_has_non_empty_text { # @test
   # Same root cause as the show-type test: an empty result set yields
   # empty stdout and an empty content block; assert the placeholder.
