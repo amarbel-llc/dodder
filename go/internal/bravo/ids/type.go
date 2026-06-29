@@ -185,9 +185,10 @@ func (id typeStruct) ToType() TypeStruct {
 }
 
 // ToMadder converts dodder's structurally-identical typeStruct to
-// madder's pkgs/ids.TypeStruct. Needed at the boundary with
-// madder/pkgs/hyphence's TypedBlob.Type field, which is typed against
-// madder's TypeStruct rather than dodder's.
+// madder's pkgs/ids.TypeStruct. Needed at the boundary with the hyphence
+// library's TypedBlob.Type field (reached through dodder's
+// internal/0/hyphence facade, which pre-fills madder's TypeStruct), which
+// is typed against madder's TypeStruct rather than dodder's.
 func (id typeStruct) ToMadder() mad_ids.TypeStruct {
 	return mad_ids.TypeStruct{Value: id.Value}
 }

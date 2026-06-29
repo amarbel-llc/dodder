@@ -118,30 +118,6 @@ explore-drop-http-statuses-fork:
 
   echo "==> done"
 
-# [explore] one-shot: drop dodder's internal/charlie/hyphence fork in
-# favor of madder's pkgs/hyphence re-export. ToMadder() on dodder's
-# bravo/ids.typeStruct bridges the TypeStruct boundary at TypedBlob.Type
-# call sites. After this runs, build to surface remaining mismatches.
-[group('explore')]
-explore-drop-charlie-hyphence-fork:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  cd ..
-
-  dodder_hyphence='code.linenisgreat.com/dodder/go/internal/charlie/hyphence'
-  madder_hyphence='github.com/amarbel-llc/madder/go/pkgs/hyphence'
-
-  echo "==> rewriting charlie/hyphence imports in all *.go files under go/"
-  find go -name '*.go' -type f \
-    \! -path 'go/internal/charlie/hyphence/*' \
-    -print0 | xargs -0 sed -i \
-      -e "s|${dodder_hyphence}|${madder_hyphence}|g"
-
-  echo "==> deleting dodder's charlie/hyphence fork"
-  rm -rf go/internal/charlie/hyphence
-
-  echo "==> done"
-
 # [explore] one-shot: drop dodder's internal/bravo/markl fork in favor of
 # madder's pkgs/markl re-export. id_coding_doddish.go was already removed
 # (dead code, no callers). After this runs, build with `just build` to
