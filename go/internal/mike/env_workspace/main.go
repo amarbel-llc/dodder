@@ -7,6 +7,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/caldav"
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/0/webdav"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -18,7 +19,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_caldav"
 	"code.linenisgreat.com/dodder/go/internal/lima/haustoria_orgmode"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"

@@ -17,7 +17,7 @@ package orgie
 import (
 	"io"
 
-	"github.com/amarbel-llc/hyphence/go/hyphence"
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/format"
 )

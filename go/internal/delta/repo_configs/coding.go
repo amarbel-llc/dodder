@@ -1,17 +1,15 @@
 package repo_configs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
-var Coder = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigOverlay]{
-	Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigOverlay]{},
-	Blob: hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigOverlay](
+var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigOverlay]{},
+	Blob: hyphence.CoderTypeMapWithoutType[ConfigOverlay](
 		map[string]interfaces.CoderBufferedReadWriter[*ConfigOverlay]{
 			ids.TypeTomlConfigV0: hyphence.CoderTommy[
 				ConfigOverlay,

@@ -429,6 +429,7 @@
       },
       "original": {
         "owner": "amarbel-llc",
+        "ref": "go/v0.2.0",
         "repo": "hyphence",
         "type": "github"
       }
@@ -463,6 +464,9 @@
         "conformist": "conformist_2",
         "crap": "crap",
         "doppelgang": "doppelgang_2",
+        "hyphence": [
+          "hyphence"
+        ],
         "igloo": [
           "igloo"
         ],
@@ -481,15 +485,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1782490859,
-        "narHash": "sha256-ReByCR9cF5zGpulDYsMwR3dZur2isiipYk38y3bLs90=",
+        "lastModified": 1782729075,
+        "narHash": "sha256-evjN3mTZ1DNW3dt5FuGvetzCA7DE3FHZPzraDxmI3ls=",
         "owner": "amarbel-llc",
         "repo": "madder",
-        "rev": "e8e897bd018f9ca2bd3ea6b6c415083e0197c46e",
+        "rev": "2822d2e29d17fc04bab526b2715e876958cfd7ef",
         "type": "github"
       },
       "original": {
         "owner": "amarbel-llc",
+        "ref": "go/v0.4.0",
         "repo": "madder",
         "type": "github"
       }

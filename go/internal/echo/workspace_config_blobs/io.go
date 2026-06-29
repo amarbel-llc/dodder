@@ -1,17 +1,15 @@
 package workspace_config_blobs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	workspace_config_value_blobs "code.linenisgreat.com/dodder/go/internal/delta/workspace_config_value_blobs"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
-var Coder = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Config]{
-	Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Config]{},
-	Blob: hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Config](
+var Coder = hyphence.CoderToTypedBlob[Config]{
+	Metadata: hyphence.TypedMetadataCoder[Config]{},
+	Blob: hyphence.CoderTypeMapWithoutType[Config](
 		map[string]interfaces.CoderBufferedReadWriter[*Config]{
 			ids.TypeTomlWorkspaceConfigV0: hyphence.CoderTommy[
 				Config,

@@ -1,15 +1,13 @@
 package workspace_config_blobs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
 type (
-	TypedConfig = hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Config]
+	TypedConfig = hyphence.TypedBlob[Config]
 
 	Config interface {
 		GetDefaults() repo_configs.Defaults

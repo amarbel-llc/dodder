@@ -26,23 +26,27 @@
       inputs.utils.follows = "utils";
     };
 
+    # hyphence format library, extracted from madder (madder #253). madder
+    # consumes it too; madder.inputs.hyphence.follows below keeps both on the
+    # same rev (RFC 0001 flake-input-go_mod bridge — see go/gomod.nix).
+    hyphence = {
+      url = "github:amarbel-llc/hyphence/go/v0.2.0";
+      inputs.igloo.follows = "igloo";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.bats.follows = "bats";
+      inputs.purse-first.follows = "purse-first";
+    };
+
     madder = {
-      url = "github:amarbel-llc/madder";
+      url = "github:amarbel-llc/madder/go/v0.4.0";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
       inputs.tommy.follows = "tommy";
       inputs.bats.follows = "bats";
       inputs.purse-first.follows = "purse-first";
-    };
-
-    hyphence = {
-      url = "github:amarbel-llc/hyphence";
-      inputs.igloo.follows = "igloo";
-      inputs.nixpkgs-master.follows = "nixpkgs-master";
-      inputs.utils.follows = "utils";
-      inputs.bats.follows = "bats";
-      inputs.purse-first.follows = "purse-first";
+      inputs.hyphence.follows = "hyphence";
     };
 
     tommy = {

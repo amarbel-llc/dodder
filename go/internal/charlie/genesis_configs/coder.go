@@ -1,17 +1,15 @@
 package genesis_configs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	genesis_config_blobs "code.linenisgreat.com/dodder/go/internal/bravo/genesis_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
-var CoderPrivate = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPrivate]{
-	Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPrivate]{},
-	Blob: hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPrivate](
+var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigPrivate]{},
+	Blob: hyphence.CoderTypeMapWithoutType[ConfigPrivate](
 		map[string]interfaces.CoderBufferedReadWriter[*ConfigPrivate]{
 			ids.TypeTomlConfigImmutableV2: hyphence.CoderTommy[
 				ConfigPrivate,
@@ -39,9 +37,9 @@ var CoderPrivate = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeSt
 	),
 }
 
-var CoderPublic = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPublic]{
-	Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPublic]{},
-	Blob: hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigPublic](
+var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
+	Metadata: hyphence.TypedMetadataCoder[ConfigPublic]{},
+	Blob: hyphence.CoderTypeMapWithoutType[ConfigPublic](
 		map[string]interfaces.CoderBufferedReadWriter[*ConfigPublic]{
 			ids.TypeTomlConfigImmutableV2: hyphence.CoderTommy[
 				ConfigPublic,

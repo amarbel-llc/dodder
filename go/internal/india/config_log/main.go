@@ -19,10 +19,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/amarbel-llc/hyphence/go/hyphence"
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -241,11 +239,11 @@ func (log Log) writeTypeHeaderIfEmpty(file *os.File) (err error) {
 		return err
 	}
 
-	coder := hyphence.Coder[*hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, struct{}]]{
-		Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, struct{}]{},
+	coder := hyphence.Coder[*hyphence.TypedBlobEmpty]{
+		Metadata: hyphence.TypedMetadataCoder[struct{}]{},
 	}
 
-	header := hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, struct{}]{
+	header := hyphence.TypedBlobEmpty{
 		Type: log.blobType.ToMadder(),
 	}
 

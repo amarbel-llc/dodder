@@ -1,19 +1,17 @@
 package repo_blobs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	charlie_rb "code.linenisgreat.com/dodder/go/internal/alfa/repo_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
-type TypedBlob = hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Blob]
+type TypedBlob = hyphence.TypedBlob[Blob]
 
-var Coder = hyphence.CoderToTypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Blob]{
-	Metadata: hyphence.TypedMetadataCoder[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Blob]{},
-	Blob: hyphence.CoderTypeMapWithoutType[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, Blob](
+var Coder = hyphence.CoderToTypedBlob[Blob]{
+	Metadata: hyphence.TypedMetadataCoder[Blob]{},
+	Blob: hyphence.CoderTypeMapWithoutType[Blob](
 		map[string]interfaces.CoderBufferedReadWriter[*Blob]{
 			ids.TypeTomlRepoLocalOverridePath: hyphence.CoderTommy[
 				Blob,

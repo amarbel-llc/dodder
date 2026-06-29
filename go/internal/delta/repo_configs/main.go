@@ -1,16 +1,14 @@
 package repo_configs
 
 import (
+	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/file_extensions"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	charlie_rc "code.linenisgreat.com/dodder/go/internal/charlie/repo_configs"
-	"github.com/amarbel-llc/hyphence/go/hyphence"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
 )
 
 type (
@@ -36,7 +34,7 @@ var (
 )
 
 type (
-	TypedBlob = hyphence.TypedBlob[mad_ids.TypeStruct, *mad_ids.TypeStruct, markl.Id, *markl.Id, ConfigOverlay]
+	TypedBlob = hyphence.TypedBlob[ConfigOverlay]
 
 	ConfigOverlay interface {
 		DefaultsGetter

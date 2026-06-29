@@ -7,7 +7,7 @@ require (
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/hyphence/go v0.2.0
-	github.com/amarbel-llc/madder/go v0.3.43-0.20260620163348-d3de5838721b
+	github.com/amarbel-llc/madder/go v0.4.0
 	github.com/amarbel-llc/purse-first/libs/dewey v0.3.2
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.2.6-0.20260530121752-67a6f4d5e72d
 	github.com/amarbel-llc/tap/go v0.1.11-0.20260530160701-c3a844ec91f6
