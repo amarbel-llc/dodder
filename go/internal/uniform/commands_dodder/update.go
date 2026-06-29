@@ -76,9 +76,15 @@ func (cmd Update) Run(req command.Request) {
 				typeObject.GetMetadata().GetObjectSig(),
 			)
 
+			// MergeCheckedOut refreshes a clean checked-out copy to the
+			// re-stamped state so `dodder update` does not leave checkouts
+			// stale; a no-op when the object is not checked out. Mirrors
+			// UpdateObject / organize / revert.
 			if err = store.CreateOrUpdate(
 				object,
-				sku.CommitOptions{},
+				sku.CommitOptions{
+					StoreOptions: sku.StoreOptions{MergeCheckedOut: true},
+				},
 			); err != nil {
 				err = errors.Wrap(err)
 				return err

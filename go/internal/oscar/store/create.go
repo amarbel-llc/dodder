@@ -63,9 +63,16 @@ func (store *Store) RevertTo(
 		return err
 	}
 
+	// MergeCheckedOut refreshes a clean checked-out working copy to the
+	// reverted state (and conflict-merges a dirty one), so `dodder revert`
+	// of a checked-out object does not leave its working copy stale. Mirrors
+	// UpdateObject / organize; a no-op when the object is not checked out.
+	storeOptions := sku.GetStoreOptionsUpdate()
+	storeOptions.MergeCheckedOut = true
+
 	if err = store.Commit(
 		object,
-		sku.CommitOptions{StoreOptions: sku.GetStoreOptionsUpdate()},
+		sku.CommitOptions{StoreOptions: storeOptions},
 	); err != nil {
 		err = errors.WrapExceptSentinel(err, errors.ErrExists)
 		return err
