@@ -3,7 +3,8 @@
   "stdioServers": {
     "dodder": {
       "command": "@dodder@",
-      "args": ["mcp"]
+      "args": ["mcp"],
+      "systemPrompt": true
     }
   }
 }

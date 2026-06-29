@@ -1,0 +1,248 @@
+{{define "system-prompt-append" -}}
+# dodder repository (bound to this MCP server)
+
+Bound repo: {{.BoundRepo}} — {{.Scope}}.
+{{if .HasWorkspace}}A workspace is active (a checked-out working copy is present).{{else}}No workspace here — store operations only.{{end}}
+{{if .CountsAvailable}}Indexed: {{.TypeCount}} type(s), {{.TagCount}} tag(s).
+{{end}}
+{{.RepoCount}} repo(s) addressable from here{{if .Repos}} (each usable as a -repo_id):
+{{range .Repos}}  - {{.}}
+{{end}}{{else}}.
+{{end}}
+Next: use the discover prompt to map the type/tag vocabulary, or read dodder:///repos to switch repos.
+{{end}}
+
+{{define "discover" -}}
+{{if .Word -}}
+## Goal: Discover what's in this dodder repo related to "{{.Word}}"
+
+### Step 1: Search for matching types
+Call query-type with words: ["{{.Word}}"]
+This returns type summaries matching the word. Each result includes
+object-id, description, tags (meta-tags), and a resource-uri.
+
+### Step 2: Search for matching tags
+Call query-tag with words: ["{{.Word}}"]
+This returns tag summaries matching the word. Each result includes
+object-id, description, its own tags (meta-tags), and a resource-uri.
+
+### Step 3: Filter results using meta-tags
+Each result has a "tags" field containing meta-tags that describe the
+type or tag itself. Use meta-tags to filter — e.g. check for specific
+meta-tags that indicate status, priority, or categorization.
+
+### Step 4: Drill into interesting results
+For types, read the facets resource to understand the data shape:
+  dodder://types/<type-id>/objects/facets
+
+For tags, read the facets resource to see what's tagged:
+  dodder://tags/<tag-id>/objects/facets
+
+Facets show object counts grouped by tag prefix, revealing the
+tag taxonomy used in this repo.
+
+### Step 5: Browse objects (optional)
+  dodder://types/<type-id>/objects — all objects of a type (box format)
+  dodder://tags/<tag-id>/objects — all objects with a tag (box format)
+{{- else -}}
+## Goal: Discover what's in this dodder repo
+
+### Step 1: Browse the word indexes
+Read these resources to see what words appear in type and tag names:
+  dodder://types_index — words from all type names, with counts
+  dodder://tags_index — words from all tag names, with counts
+
+These give you the vocabulary of this repo without loading all objects.
+
+### Step 2: Search by word
+Pick interesting words from the indexes and search:
+  Call query-type with words: ["<word>"] — finds matching types
+  Call query-tag with words: ["<word>"] — finds matching tags
+
+Results include meta-tags in the "tags" field that describe each type/tag.
+
+### Step 3: Drill into interesting types or tags
+For types, read the facets resource to understand the data shape:
+  dodder://types/<type-id>/objects/facets
+
+For tags, read the facets resource to see what's tagged:
+  dodder://tags/<tag-id>/objects/facets
+
+Facets show object counts grouped by tag prefix, revealing the
+tag taxonomy used in this repo.
+
+### Step 4: Browse objects (optional)
+  dodder://types/<type-id>/objects — all objects of a type (box format)
+  dodder://tags/<tag-id>/objects — all objects with a tag (box format)
+{{- end}}
+{{- end}}
+
+{{define "query-objects" -}}
+## Goal: Query for dodder objects
+
+### Step 1: Run the query
+Call query with:
+  query: {{.QueryArray}}
+  format: "box"
+  limit: 50
+
+Query terms are AND-combined — results must match ALL terms.
+Term types:
+  - Genre filters: :z (zettels), :e (tags), :t (types)
+  - Type filters: !<type-name> (e.g. !task, !md)
+  - Tag filters: bare tag name (e.g. todo, area-home)
+
+### Step 2: Read box-format results
+Each line is one object: fixed-order fields inside brackets, then a
+description trailer.
+  [<object-id> @<blob-digest> !<type> <tag1> <tag2> ...] <description>
+
+Fields (any may be absent):
+  - <object-id>     a zettel (left/right, e.g. thallium/golem), a bare tag
+                    name, or a !-prefixed type name (for a type object)
+  - @<blob-digest>  content hash of the blob; omitted if the object has none
+  - !<type>         the object's TYPE, always !-prefixed (e.g. !md, !task);
+                    omitted if untyped. Exactly one per object. This is the
+                    same !type spelling you pass as a query filter in Step 1.
+  - <tags>          bare tag names, sorted; a %-prefixed tag is computed at
+                    display time — query it by its bare name, without the %
+
+Two !-tokens can appear on one line, because a TYPE object's id is itself
+!-prefixed while the !<type> field is that object's own type. E.g.
+  [!md @blake2b256-... !toml-type-v1]
+is the type object !md, whose own type is !toml-type-v1. So !md as an
+object-id is the type itself, whereas !md in a query filter means
+"objects whose type is md".
+
+The description after the closing bracket summarizes the object.
+
+Box is only the compact one-line view. The full object serialization is the
+hyphence format (--- fenced): the same fields as one metadata line each
+(`! type`, `@ blob`, `# description`, `- tag`) above a `---` boundary, then
+the blob body. The hyphence(7) manpage documents that grammar in full (and
+box(7) / doddish(7) cover the compact form and query syntax) — consult them
+if available; they are the authoritative reference.
+
+### Step 3: Inspect individual objects (optional)
+To see an object's full metadata and traversal links, read:
+  dodder://objects/<object-id>
+
+If the response includes "blob-formats-resource", follow it to
+discover available formatters and read the blob content.
+
+### Step 4: Refine the query (optional)
+Add more terms to narrow results. Examples:
+  [":z", "!md"] — all markdown zettels
+  ["!task", "todo"] — tasks tagged with todo
+  [":e", "area"] — tags in the "area" namespace
+{{- end}}
+
+{{define "read-object" -}}
+## Goal: Read object content for {{.ObjectId}}
+
+### Step 1: Get object metadata
+Read the resource:
+  dodder://objects/{{.ObjectId}}
+
+This returns JSON with: object-id, date, description, type, tags, and
+traversal links to related resources.
+
+### Step 2: Discover blob formatters
+If the response includes a "blob-formats-resource" field, read that URI:
+  dodder://objects/{{.ObjectId}}/blob/formats
+
+This returns a list of available formatter IDs with their resource URIs.
+If there is no "blob-formats-resource" field, the object has no blob content — skip to step 4.
+
+### Step 3: Read formatted blob content
+Pick a formatter from step 2 and read its resource URI:
+  dodder://objects/{{.ObjectId}}/blob/formats/<format-id>
+
+This renders the blob content using that formatter. Common formatters
+depend on the object's type (e.g. markdown types may have text formatters).
+
+### Step 4: Explore related objects (optional)
+The step 1 response includes traversal links:
+- "type-resource" → the type definition for this object
+- "type-objects-resource" → all objects sharing this type
+- "tag-resources" → each tag with links to its objects
+- "markl-resource" → integrity/provenance data (rarely needed)
+{{- end}}
+
+{{define "explore-type" -}}
+## Goal: Explore the {{.Type}} type
+
+### Step 1: Find the type
+Call query-type with words: ["{{.Type}}"]
+This returns type summaries matching the word. Each result includes
+object-id, description, tags, and a resource-uri for drill-down.
+
+### Step 2: Get type metadata
+Read the resource:
+  dodder://types/{{.Type}}
+
+This returns the type's metadata with links to sub-resources:
+blob-resource, objects-resource, and markl-resource.
+
+### Step 3: Analyze tag distribution
+Read the resource:
+  dodder://types/{{.Type}}/objects/facets
+
+This shows how objects of this type are distributed across tags,
+grouped by tag prefix (priority-, urgency-, area-, project-).
+Use this to understand the shape of the data.
+
+### Step 4: Browse objects
+Read the resource:
+  dodder://types/{{.Type}}/objects
+
+This returns a box-format listing of all objects with this type.
+Each line shows: [object-id @blob-digest !type tag1 tag2 ...] description
+
+### Step 5: Inspect individual objects (optional)
+Pick an object-id from step 4 and read:
+  dodder://objects/<object-id>
+
+Follow the read-object workflow to see its content.
+{{- end}}
+
+{{define "explore-tag" -}}
+## Goal: Explore the {{.Tag}} tag
+
+### Step 1: Find the tag
+Call query-tag with words: ["{{.Tag}}"]
+This returns tag summaries matching the word. Each result includes
+object-id, description, its own tags (meta-tags), and a resource-uri.
+
+### Step 2: Check meta-tags
+Look at the "tags" field in the result. Meta-tags tell you about the
+tag itself — e.g. "active" means currently active, "priority-0_must"
+means high priority, "area-home" is the life area.
+
+### Step 3: Get tag metadata
+Read the resource:
+  dodder://tags/{{.Tag}}
+
+This returns the tag's full metadata with links to objects-resource
+and markl-resource.
+
+### Step 4: Analyze tagged objects
+Read the resource:
+  dodder://tags/{{.Tag}}/objects/facets
+
+This shows how objects with this tag break down by other tags,
+grouped by prefix. Useful for understanding what kinds of content
+carry this tag.
+
+### Step 5: Browse tagged objects
+Read the resource:
+  dodder://tags/{{.Tag}}/objects
+
+This returns a box-format listing of all objects with this tag.
+
+### Step 6: Inspect individual objects (optional)
+Pick an object-id from step 5 and read:
+  dodder://objects/<object-id>
+
+Follow the read-object workflow to see its content.
+{{- end}}

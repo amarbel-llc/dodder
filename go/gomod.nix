@@ -53,6 +53,7 @@
     extras = [
       ".*\\.lua$"
       ".*\\.yaml$"
+      ".*\\.tmpl$"
       ".*/embedded/.*\\.txt$"
     ];
   };

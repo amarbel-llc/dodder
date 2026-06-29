@@ -1202,19 +1202,24 @@ func (p *typeResourceProvider) readTagsListing(
 // mirroring `info-repo repos`. mcp_dodder is tango tier and cannot import
 // uniform's listScopedRepos, so this reimplements the directory scan from
 // the captured base paths.
-func (p *typeResourceProvider) readReposList(
-	ctx context.Context,
-) (*protocol.ResourceReadResult, error) {
-	type repoEntry struct {
-		// RepoId is the -repo_id spelling that addresses the repo: `.name`
-		// for a cwd-scope repo, `name` for an XDG-user repo. ResourceURI
-		// embeds it so the listing's links round-trip back to the repo.
-		RepoId      string `json:"repo_id"`
-		Name        string `json:"name"`
-		ResourceURI string `json:"resource_uri"`
-	}
+// scopedRepoEntry is one repo addressable from the active scope(s).
+type scopedRepoEntry struct {
+	// RepoId is the -repo_id spelling that addresses the repo: `.name`
+	// for a cwd-scope repo, `name` for an XDG-user repo. ResourceURI
+	// embeds it so the listing's links round-trip back to the repo.
+	RepoId      string `json:"repo_id"`
+	Name        string `json:"name"`
+	ResourceURI string `json:"resource_uri"`
+}
 
-	var repos []repoEntry
+// scopedRepos enumerates the repos addressable from here across both
+// scopes by scanning the captured un-nested <data>/repos/ directories:
+// the active scope (cwd spelled `.name`, else XDG-user `name`), plus the
+// XDG-user scope as a distinct second set (spelled `name`) when the active
+// scope is cwd. Sorted by repo_id. Shared by the dodder:///repos listing
+// and the system-prompt-append fragment.
+func (p *typeResourceProvider) scopedRepos() ([]scopedRepoEntry, error) {
+	var repos []scopedRepoEntry
 
 	addScope := func(dir, prefix string) error {
 		if dir == "" {
@@ -1236,7 +1241,7 @@ func (p *typeResourceProvider) readReposList(
 			}
 
 			repoId := prefix + entry.Name()
-			repos = append(repos, repoEntry{
+			repos = append(repos, scopedRepoEntry{
 				RepoId:      repoId,
 				Name:        entry.Name(),
 				ResourceURI: fmt.Sprintf("dodder:///repos/%s", repoId),
@@ -1268,9 +1273,20 @@ func (p *typeResourceProvider) readReposList(
 		return repos[i].RepoId < repos[j].RepoId
 	})
 
+	return repos, nil
+}
+
+func (p *typeResourceProvider) readReposList(
+	ctx context.Context,
+) (*protocol.ResourceReadResult, error) {
+	repos, err := p.scopedRepos()
+	if err != nil {
+		return nil, err
+	}
+
 	doc := struct {
-		TotalRepos int         `json:"total_repos"`
-		Repos      []repoEntry `json:"repos"`
+		TotalRepos int               `json:"total_repos"`
+		Repos      []scopedRepoEntry `json:"repos"`
 	}{
 		TotalRepos: len(repos),
 		Repos:      repos,

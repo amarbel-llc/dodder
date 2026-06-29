@@ -2,14 +2,69 @@ package mcp_dodder
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"strings"
+	"text/template"
 
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
 	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
 )
 
-func registerPrompts(prompts *server.PromptRegistry) {
+// Prompt bodies live in the sibling prompts.tmpl (embedded below) as named
+// {{define}} blocks, one per registered prompt. Keeping the wording out of
+// Go keeps the recipes reviewable as plain text. The nix build only bundles
+// non-Go files matched by go/gomod.nix `extras`, so the `.tmpl` pattern there
+// must include this file or the embed fails under nix.
+//
+//go:embed prompts.tmpl
+var promptsTmplText string
+
+var promptsTmpl = template.Must(
+	template.New("prompts").Parse(promptsTmplText),
+)
+
+// renderPromptBody executes the named template block from prompts.tmpl into a
+// single user-role text message.
+func renderPromptBody(
+	name, description string,
+	data any,
+) (*protocol.PromptGetResult, error) {
+	var b strings.Builder
+	if err := promptsTmpl.ExecuteTemplate(&b, name, data); err != nil {
+		return nil, err
+	}
+
+	return &protocol.PromptGetResult{
+		Description: description,
+		Messages: []protocol.PromptMessage{
+			{
+				Role:    "user",
+				Content: protocol.TextContent(b.String()),
+			},
+		},
+	}, nil
+}
+
+func registerPrompts(
+	prompts *server.PromptRegistry,
+	provider *typeResourceProvider,
+	startupRepoId scoped_id.Id,
+	hasWorkspace bool,
+) {
+	// clown dynamic system-prompt contribution (RFC-0002 §5, dodder#277):
+	// clown-stdio-bridge fetches /clown/system-prompt by issuing prompts/get
+	// for the well-known name "system-prompt-append" at session launch and
+	// appends the result to the agent's system prompt.
+	prompts.Register(
+		protocol.Prompt{
+			Name:        "system-prompt-append",
+			Description: "Live orientation for the bound dodder repo (clown dynamic system-prompt fragment).",
+		},
+		renderSystemPromptAppend(provider, startupRepoId, hasWorkspace),
+	)
+
 	prompts.Register(
 		protocol.Prompt{
 			Name:        "discover",
@@ -92,90 +147,91 @@ func registerPrompts(prompts *server.PromptRegistry) {
 	)
 }
 
+// systemPromptAppendData is the template input for the clown dynamic
+// system-prompt fragment (dodder#277).
+type systemPromptAppendData struct {
+	BoundRepo       string
+	Scope           string
+	HasWorkspace    bool
+	CountsAvailable bool
+	TypeCount       int
+	TagCount        int
+	RepoCount       int
+	Repos           []string
+}
+
+// renderSystemPromptAppend builds the clown dynamic system-prompt fragment
+// (dodder#277): a concise, live orientation for the repo this MCP server is
+// bound to, plus the repos addressable from here. It is best-effort — a
+// fresh or unreadable store must never turn this optional fragment into an
+// error, so index/repo-scan failures degrade to omitted lines and the call
+// still returns a fragment.
+func renderSystemPromptAppend(
+	provider *typeResourceProvider,
+	startupRepoId scoped_id.Id,
+	hasWorkspace bool,
+) server.PromptRenderer {
+	return func(
+		ctx context.Context,
+		args map[string]string,
+	) (*protocol.PromptGetResult, error) {
+		data := systemPromptAppendData{
+			BoundRepo:    repoSeg(startupRepoId),
+			HasWorkspace: hasWorkspace,
+		}
+
+		if provider.startupIsCwd {
+			data.Scope = "cwd-ancestor .dodder scope (spelled .name)"
+		} else {
+			data.Scope = "XDG-user scope (spelled name)"
+		}
+
+		// Counts are best-effort: skip silently if an index can't build.
+		if idx := provider.typeIndexFor(startupRepoId); idx.ensureBuilt() == nil {
+			if tagIdx := provider.tagIndexFor(startupRepoId); tagIdx.ensureBuilt() == nil {
+				data.CountsAvailable = true
+				data.TypeCount = countUniqueTypes(idx)
+				data.TagCount = countUniqueTags(tagIdx)
+			}
+		}
+
+		// Repos addressable from here (both scopes), so the agent knows
+		// which -repo_id / dodder:///repos/<id> targets exist.
+		if repos, err := provider.scopedRepos(); err == nil {
+			data.RepoCount = len(repos)
+			for _, r := range repos {
+				data.Repos = append(data.Repos, r.RepoId)
+			}
+		}
+
+		return renderPromptBody(
+			"system-prompt-append",
+			"dodder repository orientation",
+			data,
+		)
+	}
+}
+
+type discoverData struct {
+	Word string
+}
+
 func renderDiscover(
 	ctx context.Context,
 	args map[string]string,
 ) (*protocol.PromptGetResult, error) {
 	word := args["word"]
 
+	description := "Discover what's in this dodder repo"
 	if word != "" {
-		return &protocol.PromptGetResult{
-			Description: fmt.Sprintf("Discover types and tags matching '%s'", word),
-			Messages: []protocol.PromptMessage{
-				{
-					Role: "user",
-					Content: protocol.TextContent(fmt.Sprintf(`## Goal: Discover what's in this dodder repo related to "%s"
-
-### Step 1: Search for matching types
-Call query-type with words: ["%s"]
-This returns type summaries matching the word. Each result includes
-object-id, description, tags (meta-tags), and a resource-uri.
-
-### Step 2: Search for matching tags
-Call query-tag with words: ["%s"]
-This returns tag summaries matching the word. Each result includes
-object-id, description, its own tags (meta-tags), and a resource-uri.
-
-### Step 3: Filter results using meta-tags
-Each result has a "tags" field containing meta-tags that describe the
-type or tag itself. Use meta-tags to filter — e.g. check for specific
-meta-tags that indicate status, priority, or categorization.
-
-### Step 4: Drill into interesting results
-For types, read the facets resource to understand the data shape:
-  dodder://types/<type-id>/objects/facets
-
-For tags, read the facets resource to see what's tagged:
-  dodder://tags/<tag-id>/objects/facets
-
-Facets show object counts grouped by tag prefix, revealing the
-tag taxonomy used in this repo.
-
-### Step 5: Browse objects (optional)
-  dodder://types/<type-id>/objects — all objects of a type (box format)
-  dodder://tags/<tag-id>/objects — all objects with a tag (box format)`, word, word, word)),
-				},
-			},
-		}, nil
+		description = fmt.Sprintf("Discover types and tags matching '%s'", word)
 	}
 
-	return &protocol.PromptGetResult{
-		Description: "Discover what's in this dodder repo",
-		Messages: []protocol.PromptMessage{
-			{
-				Role: "user",
-				Content: protocol.TextContent(`## Goal: Discover what's in this dodder repo
+	return renderPromptBody("discover", description, discoverData{Word: word})
+}
 
-### Step 1: Browse the word indexes
-Read these resources to see what words appear in type and tag names:
-  dodder://types_index — words from all type names, with counts
-  dodder://tags_index — words from all tag names, with counts
-
-These give you the vocabulary of this repo without loading all objects.
-
-### Step 2: Search by word
-Pick interesting words from the indexes and search:
-  Call query-type with words: ["<word>"] — finds matching types
-  Call query-tag with words: ["<word>"] — finds matching tags
-
-Results include meta-tags in the "tags" field that describe each type/tag.
-
-### Step 3: Drill into interesting types or tags
-For types, read the facets resource to understand the data shape:
-  dodder://types/<type-id>/objects/facets
-
-For tags, read the facets resource to see what's tagged:
-  dodder://tags/<tag-id>/objects/facets
-
-Facets show object counts grouped by tag prefix, revealing the
-tag taxonomy used in this repo.
-
-### Step 4: Browse objects (optional)
-  dodder://types/<type-id>/objects — all objects of a type (box format)
-  dodder://tags/<tag-id>/objects — all objects with a tag (box format)`),
-			},
-		},
-	}, nil
+type queryObjectsData struct {
+	QueryArray string
 }
 
 func renderQueryObjects(
@@ -202,47 +258,15 @@ func renderQueryObjects(
 		queryArray = `["<term1>", "<term2>"]`
 	}
 
-	return &protocol.PromptGetResult{
-		Description: "Find objects using AND-combined query filters",
-		Messages: []protocol.PromptMessage{
-			{
-				Role: "user",
-				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Query for dodder objects
+	return renderPromptBody(
+		"query-objects",
+		"Find objects using AND-combined query filters",
+		queryObjectsData{QueryArray: queryArray},
+	)
+}
 
-### Step 1: Run the query
-Call query with:
-  query: %s
-  format: "box"
-  limit: 50
-
-Query terms are AND-combined — results must match ALL terms.
-Term types:
-  - Genre filters: :z (zettels), :e (tags), :t (types)
-  - Type filters: !<type-name> (e.g. !task, !md)
-  - Tag filters: bare tag name (e.g. todo, area-home)
-
-### Step 2: Read box-format results
-Each line in the output looks like:
-  [<object-id> @<blob-digest> !<type> <tag1> <tag2> ...] <description>
-
-The description after the closing bracket summarizes the object.
-Tags inside brackets show the object's full tag set.
-
-### Step 3: Inspect individual objects (optional)
-To see an object's full metadata and traversal links, read:
-  dodder://objects/<object-id>
-
-If the response includes "blob-formats-resource", follow it to
-discover available formatters and read the blob content.
-
-### Step 4: Refine the query (optional)
-Add more terms to narrow results. Examples:
-  [":z", "!md"] — all markdown zettels
-  ["!task", "todo"] — tasks tagged with todo
-  [":e", "area"] — tags in the "area" namespace`, queryArray)),
-			},
-		},
-	}, nil
+type readObjectData struct {
+	ObjectId string
 }
 
 func renderReadObject(
@@ -254,43 +278,15 @@ func renderReadObject(
 		objectId = "<object_id>"
 	}
 
-	return &protocol.PromptGetResult{
-		Description: "Inspect an object and read its blob content",
-		Messages: []protocol.PromptMessage{
-			{
-				Role: "user",
-				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Read object content for %s
+	return renderPromptBody(
+		"read-object",
+		"Inspect an object and read its blob content",
+		readObjectData{ObjectId: objectId},
+	)
+}
 
-### Step 1: Get object metadata
-Read the resource:
-  dodder://objects/%s
-
-This returns JSON with: object-id, date, description, type, tags, and
-traversal links to related resources.
-
-### Step 2: Discover blob formatters
-If the response includes a "blob-formats-resource" field, read that URI:
-  dodder://objects/%s/blob/formats
-
-This returns a list of available formatter IDs with their resource URIs.
-If there is no "blob-formats-resource" field, the object has no blob content — skip to step 4.
-
-### Step 3: Read formatted blob content
-Pick a formatter from step 2 and read its resource URI:
-  dodder://objects/%s/blob/formats/<format-id>
-
-This renders the blob content using that formatter. Common formatters
-depend on the object's type (e.g. markdown types may have text formatters).
-
-### Step 4: Explore related objects (optional)
-The step 1 response includes traversal links:
-- "type-resource" → the type definition for this object
-- "type-objects-resource" → all objects sharing this type
-- "tag-resources" → each tag with links to its objects
-- "markl-resource" → integrity/provenance data (rarely needed)`, objectId, objectId, objectId, objectId)),
-			},
-		},
-	}, nil
+type exploreTypeData struct {
+	Type string
 }
 
 func renderExploreType(
@@ -302,48 +298,15 @@ func renderExploreType(
 		typeName = "<type>"
 	}
 
-	return &protocol.PromptGetResult{
-		Description: fmt.Sprintf("Explore the %s type", typeName),
-		Messages: []protocol.PromptMessage{
-			{
-				Role: "user",
-				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Explore the %s type
+	return renderPromptBody(
+		"explore-type",
+		fmt.Sprintf("Explore the %s type", typeName),
+		exploreTypeData{Type: typeName},
+	)
+}
 
-### Step 1: Find the type
-Call query-type with words: ["%s"]
-This returns type summaries matching the word. Each result includes
-object-id, description, tags, and a resource-uri for drill-down.
-
-### Step 2: Get type metadata
-Read the resource:
-  dodder://types/%s
-
-This returns the type's metadata with links to sub-resources:
-blob-resource, objects-resource, and markl-resource.
-
-### Step 3: Analyze tag distribution
-Read the resource:
-  dodder://types/%s/objects/facets
-
-This shows how objects of this type are distributed across tags,
-grouped by tag prefix (priority-, urgency-, area-, project-).
-Use this to understand the shape of the data.
-
-### Step 4: Browse objects
-Read the resource:
-  dodder://types/%s/objects
-
-This returns a box-format listing of all objects with this type.
-Each line shows: [object-id @blob-digest !type tag1 tag2 ...] description
-
-### Step 5: Inspect individual objects (optional)
-Pick an object-id from step 4 and read:
-  dodder://objects/<object-id>
-
-Follow the read-object workflow to see its content.`, typeName, typeName, typeName, typeName, typeName)),
-			},
-		},
-	}, nil
+type exploreTagData struct {
+	Tag string
 }
 
 func renderExploreTag(
@@ -355,50 +318,9 @@ func renderExploreTag(
 		tag = "<tag>"
 	}
 
-	return &protocol.PromptGetResult{
-		Description: fmt.Sprintf("Explore the %s tag", tag),
-		Messages: []protocol.PromptMessage{
-			{
-				Role: "user",
-				Content: protocol.TextContent(fmt.Sprintf(`## Goal: Explore the %s tag
-
-### Step 1: Find the tag
-Call query-tag with words: ["%s"]
-This returns tag summaries matching the word. Each result includes
-object-id, description, its own tags (meta-tags), and a resource-uri.
-
-### Step 2: Check meta-tags
-Look at the "tags" field in the result. Meta-tags tell you about the
-tag itself — e.g. "active" means currently active, "priority-0_must"
-means high priority, "area-home" is the life area.
-
-### Step 3: Get tag metadata
-Read the resource:
-  dodder://tags/%s
-
-This returns the tag's full metadata with links to objects-resource
-and markl-resource.
-
-### Step 4: Analyze tagged objects
-Read the resource:
-  dodder://tags/%s/objects/facets
-
-This shows how objects with this tag break down by other tags,
-grouped by prefix. Useful for understanding what kinds of content
-carry this tag.
-
-### Step 5: Browse tagged objects
-Read the resource:
-  dodder://tags/%s/objects
-
-This returns a box-format listing of all objects with this tag.
-
-### Step 6: Inspect individual objects (optional)
-Pick an object-id from step 5 and read:
-  dodder://objects/<object-id>
-
-Follow the read-object workflow to see its content.`, tag, tag, tag, tag, tag)),
-			},
-		},
-	}, nil
+	return renderPromptBody(
+		"explore-tag",
+		fmt.Sprintf("Explore the %s tag", tag),
+		exploreTagData{Tag: tag},
+	)
 }

@@ -311,7 +311,7 @@ func RunServer(
 	registerResources(resources, provider)
 
 	prompts := server.NewPromptRegistry()
-	registerPrompts(prompts)
+	registerPrompts(prompts, provider, startupRepoId, hasWorkspace)
 
 	t := transport.NewStdio(os.Stdin, os.Stdout)
 	srv, err := server.New(t, server.Options{
