@@ -329,10 +329,59 @@ func (client *client) pullQueryGroupFromWorkingCopy(
 	}
 }
 
+// ReadObjectHistory fetches the object's full version history from the server
+// over the /object-history route. The parent negotiator needs the remote's
+// complete history to find the merge base by TAI; the incremental transfer
+// payload does not carry it (#299). Mirrors MakeInventoryList's decode.
 func (client *client) ReadObjectHistory(
 	oid *ids.ObjectId,
 ) (skus []*sku.Transacted, err error) {
-	panic(errors.Err501NotImplemented)
+	var request *http.Request
+
+	if request, err = client.newRequest(
+		"GET",
+		fmt.Sprintf(
+			"/object-history/%s",
+			url.QueryEscape(oid.String()),
+		),
+		nil,
+	); err != nil {
+		err = errors.Wrap(err)
+		return skus, err
+	}
+
+	var response *http.Response
+
+	if response, err = client.http.Do(request); err != nil {
+		err = errors.ErrorWithStackf("failed to read response: %w", err)
+		return skus, err
+	}
+
+	if err = ReadErrorFromBodyOnNot(response, 200); err != nil {
+		err = errors.Wrap(err)
+		return skus, err
+	}
+
+	listTypeString := client.GetImmutableConfigPublic().GetInventoryListTypeId()
+	inventoryListCoderCloset := client.repo.GetInventoryListCoderCloset()
+
+	var list *sku.HeapTransacted
+
+	if list, err = inventoryListCoderCloset.ReadInventoryListBlob(
+		client.repo.GetEnvRepo(),
+		ids.GetOrPanic(listTypeString).TypeStruct,
+		bufio.NewReader(response.Body),
+	); err != nil {
+		err = errors.Wrap(err)
+		return skus, err
+	}
+
+	for object := range list.All() {
+		clone, _ := object.CloneTransacted() //repool:owned
+		skus = append(skus, clone)
+	}
+
+	return skus, err
 }
 
 // configDescriptorJSON is the wire shape of the RFC-0005 GET /config

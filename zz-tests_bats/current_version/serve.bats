@@ -80,6 +80,15 @@ function serve_query_route_registered { # @test
   assert_output 400
 }
 
+# The /object-history route backs the parent negotiator's over-the-wire
+# history fetch for merge resolution on pull (#299). Confirm it is registered
+# (sig-auth 400, not a 404 from the not-found matcher).
+function serve_object_history_route_registered { # @test
+  run curl_status GET /object-history/some_object
+  assert_success
+  assert_output 400
+}
+
 function serve_mcp_route_registered { # @test
   run curl_status POST /mcp '{"jsonrpc":"2.0","method":"initialize","id":1}'
   assert_success

@@ -242,6 +242,14 @@ func (server *Server) makeRouter(
 			"GET",
 		)
 
+	router.HandleFunc(
+		"/object-history/{object_id}",
+		makeHandler(server.handleGetObjectHistory),
+	).
+		Methods(
+			"GET",
+		)
+
 	router.HandleFunc("/mcp", makeHandler(server.handleMCP)).
 		Methods("POST")
 
@@ -1018,6 +1026,87 @@ func (server *Server) handleGetObject(request Request) (response Response) {
 		server.Repo,
 		ids.GetOrPanic(listTypeString).TypeStruct,
 		quiter.MakeSeqErrorFromSeq(seqOne),
+		bufferedWriter,
+	); err != nil {
+		server.EnvLocal.Cancel(err)
+	}
+
+	if err := bufferedWriter.Flush(); err != nil {
+		server.EnvLocal.Cancel(err)
+	}
+
+	response.Body = ohio.NopCloser(buffer)
+
+	return response
+}
+
+// handleGetObjectHistory returns every committed version of an object as an
+// inventory list — same wire format as /objects/{object_id}, so the client
+// decodes it via the existing inventory-list codec. The parent negotiator
+// uses this to find the merge base when the receiver already holds the object;
+// the incremental transfer payload alone does not carry the history (#299).
+func (server *Server) handleGetObjectHistory(request Request) (response Response) {
+	var oidString string
+
+	{
+		var err error
+
+		if oidString, err = url.QueryUnescape(
+			request.Vars()["object_id"],
+		); err != nil {
+			response.ErrorWithStatus(http.StatusBadRequest, err)
+			return response
+		}
+	}
+
+	var oid ids.ObjectId
+
+	if err := oid.Set(oidString); err != nil {
+		response.ErrorWithStatus(http.StatusBadRequest, err)
+		return response
+	}
+
+	var history []*sku.Transacted
+
+	{
+		var err error
+
+		if history, err = server.Repo.ReadObjectHistory(&oid); err != nil {
+			response.Error(err)
+			return response
+		}
+	}
+
+	seqHistory := func(yield func(*sku.Transacted) bool) {
+		for _, object := range history {
+			if !yield(object) {
+				return
+			}
+		}
+	}
+
+	if acceptsJSON(request) {
+		server.writeObjectsJSON(
+			seqHistory,
+			wantsBlobString(request, true),
+			&response,
+		)
+		return response
+	}
+
+	listTypeString := server.Repo.GetImmutableConfigPublic().GetInventoryListTypeId()
+
+	buffer := bytes.NewBuffer(nil)
+
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(buffer)
+	defer repoolBufferedWriter()
+
+	inventoryListCoderCloset := server.Repo.GetInventoryListCoderCloset()
+
+	if _, err := inventoryListCoderCloset.WriteBlobToWriter(
+		server.Repo,
+		ids.GetOrPanic(listTypeString).TypeStruct,
+		quiter.MakeSeqErrorFromSeq(seqHistory),
 		bufferedWriter,
 	); err != nil {
 		server.EnvLocal.Cancel(err)
