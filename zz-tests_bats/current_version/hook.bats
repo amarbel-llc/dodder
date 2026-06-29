@@ -21,9 +21,21 @@ function hook_allows_read_only_mcp_tool { # @test
   assert_output '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"read-only dodder MCP tool, cannot mutate the store"}}'
 }
 
-function hook_falls_through_for_mutating_mcp_tool { # @test
+function hook_allows_local_scoped_write { # @test
+  # A scoped write addressing the server's default repo (no repo_id) is
+  # auto-approved; checkin has no repo_id param, so it is always local.
   run_dodder hook <<-EOM
 		{"hook_event_name": "PreToolUse", "tool_name": "mcp__plugin_dodder_dodder__checkin", "tool_input": {}}
+	EOM
+  assert_success
+  assert_output '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow","permissionDecisionReason":"dodder write scoped to the server'"'"'s default repo or a cwd-scoped repo, no cross-repo reach"}}'
+}
+
+function hook_falls_through_for_cross_repo_write { # @test
+  # A scoped write addressing a different XDG-user repo (bare-name
+  # repo_id) gets no opinion, so normal gating applies.
+  run_dodder hook <<-EOM
+		{"hook_event_name": "PreToolUse", "tool_name": "mcp__plugin_dodder_dodder__new", "tool_input": {"repo_id": "work"}}
 	EOM
   assert_success
   assert_output ''

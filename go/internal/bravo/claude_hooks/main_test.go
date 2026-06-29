@@ -13,10 +13,20 @@ import (
 func makeInput(t *ui.T, eventName, toolName string) []byte {
 	t.Helper()
 
+	return makeInputWithToolInput(t, eventName, toolName, map[string]any{})
+}
+
+func makeInputWithToolInput(
+	t *ui.T,
+	eventName, toolName string,
+	toolInput map[string]any,
+) []byte {
+	t.Helper()
+
 	input := map[string]any{
 		"hook_event_name": eventName,
 		"tool_name":       toolName,
-		"tool_input":      map[string]any{},
+		"tool_input":      toolInput,
 	}
 
 	data, err := json.Marshal(input)
@@ -131,29 +141,160 @@ func TestReadOnlyToolsAutoApproved(t1 *testing.T) {
 	}
 }
 
-func TestMutatingToolsFallThrough(t1 *testing.T) {
+// scopedWriteTools mutate the repo the call addresses; the hook
+// auto-approves them only when that repo is local (the server default,
+// or a cwd-scoped .name).
+var scopedWriteTools = []string{
+	"mcp__plugin_dodder_dodder__new",
+	"mcp__plugin_dodder_dodder__edit",
+	"mcp__plugin_dodder_dodder__organize_commit",
+	"mcp__plugin_dodder_dodder__checkin",
+	"mcp__plugin_dodder_dodder__pull",
+}
+
+// TestScopedWritesAutoApprovedWhenLocal: a scoped write with no repo_id
+// (the server's default repo) or a cwd-scoped repo_id (.name) is
+// auto-approved. checkin has no repo_id param at all and so is always
+// local.
+func TestScopedWritesAutoApprovedWhenLocal(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	mutatingTools := []string{
-		"mcp__plugin_dodder_dodder__new",
-		"mcp__plugin_dodder_dodder__edit",
-		"mcp__plugin_dodder_dodder__checkin",
+	localInputs := []map[string]any{
+		{},                      // no repo_id → server default
+		{"repo_id": ".default"}, // cwd-scoped default
+		{"repo_id": ".work"},    // cwd-scoped named repo
+		{"repo_id": "..backup"}, // cwd ancestor (still cwd-scoped)
 	}
 
-	for _, toolName := range mutatingTools {
+	for _, toolName := range scopedWriteTools {
+		for _, toolInput := range localInputs {
+			var stdout bytes.Buffer
+
+			if err := Run(
+				bytes.NewReader(makeInputWithToolInput(
+					&t, "PreToolUse", toolName, toolInput,
+				)),
+				&stdout,
+			); err != nil {
+				t.Fatalf("unexpected error for %s %v: %s", toolName, toolInput, err)
+			}
+
+			if stdout.Len() == 0 {
+				t.Fatalf(
+					"expected allow output for %s with %v, got none",
+					toolName,
+					toolInput,
+				)
+			}
+
+			decision, reason := parseDecision(&t, stdout.Bytes())
+
+			if decision != "allow" {
+				t.Errorf(
+					"expected allow for %s with %v, got %q",
+					toolName,
+					toolInput,
+					decision,
+				)
+			}
+
+			if reason == "" {
+				t.Errorf("expected a reason for %s with %v", toolName, toolInput)
+			}
+		}
+	}
+}
+
+// TestScopedWritesFallThroughWhenCrossRepo: a scoped write that names a
+// different XDG-user or system repo, or a repo_id that does not parse,
+// gets no opinion so normal gating applies.
+func TestScopedWritesFallThroughWhenCrossRepo(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	crossRepoInputs := []map[string]any{
+		{"repo_id": "work"},           // XDG-user repo (bare name)
+		{"repo_id": "//config"},       // forced system repo
+		{"repo_id": "not a valid id"}, // unparseable → fail-safe
+	}
+
+	for _, toolName := range scopedWriteTools {
+		for _, toolInput := range crossRepoInputs {
+			var stdout bytes.Buffer
+
+			if err := Run(
+				bytes.NewReader(makeInputWithToolInput(
+					&t, "PreToolUse", toolName, toolInput,
+				)),
+				&stdout,
+			); err != nil {
+				t.Fatalf("unexpected error for %s %v: %s", toolName, toolInput, err)
+			}
+
+			if stdout.Len() != 0 {
+				t.Errorf(
+					"expected no output (fall through) for %s with %v, got %q",
+					toolName,
+					toolInput,
+					stdout.String(),
+				)
+			}
+		}
+	}
+}
+
+// TestImportUnconditionallyAllowed: import auto-approves regardless of
+// target repo — it brings user-named inventory paths in.
+func TestImportUnconditionallyAllowed(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	for _, toolInput := range []map[string]any{
+		{"paths": []string{"/some/inventory"}},
+		{"paths": []string{"/some/inventory"}, "repo_id": "work"},
+	} {
 		var stdout bytes.Buffer
 
 		if err := Run(
-			bytes.NewReader(makeInput(&t, "PreToolUse", toolName)),
+			bytes.NewReader(makeInputWithToolInput(
+				&t, "PreToolUse", "mcp__plugin_dodder_dodder__import", toolInput,
+			)),
 			&stdout,
 		); err != nil {
-			t.Fatalf("unexpected error for %s: %s", toolName, err)
+			t.Fatalf("unexpected error for import %v: %s", toolInput, err)
+		}
+
+		decision, _ := parseDecision(&t, stdout.Bytes())
+
+		if decision != "allow" {
+			t.Errorf("expected allow for import %v, got %q", toolInput, decision)
+		}
+	}
+}
+
+// TestPushFallsThrough: push always falls through to normal gating — it
+// sends objects OUT to another repo — even when scoped locally.
+func TestPushFallsThrough(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	for _, toolInput := range []map[string]any{
+		{},
+		{"repo_id": ".default"},
+		{"direct": "/some/local/repo"},
+	} {
+		var stdout bytes.Buffer
+
+		if err := Run(
+			bytes.NewReader(makeInputWithToolInput(
+				&t, "PreToolUse", "mcp__plugin_dodder_dodder__push", toolInput,
+			)),
+			&stdout,
+		); err != nil {
+			t.Fatalf("unexpected error for push %v: %s", toolInput, err)
 		}
 
 		if stdout.Len() != 0 {
 			t.Errorf(
-				"expected no output for mutating tool %s, got %q",
-				toolName,
+				"expected no output (fall through) for push %v, got %q",
+				toolInput,
 				stdout.String(),
 			)
 		}

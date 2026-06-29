@@ -59,3 +59,57 @@ var ByName = map[string]Permission{
 func Of(name string) Permission {
 	return ByName[name]
 }
+
+// WriteFlow refines a PermissionWrite tool by how its write moves data
+// relative to the repo the call targets. Only the PreToolUse hook
+// (bravo/claude_hooks) reads it, to make a context-aware auto-approval
+// decision; the capability classification above (Permission, consumed
+// by the MCP server's tool annotations) stays deliberately separate,
+// because auto-approving a write does not make it read-only — a
+// WriteFlowScoped tool is still annotated PermissionWrite. Only
+// PermissionWrite tools carry a flow; every other tool is WriteFlowNone.
+type WriteFlow int
+
+const (
+	// WriteFlowNone is the zero value: the tool is not a write tool (or
+	// is unclassified), so WriteFlow says nothing about it.
+	WriteFlowNone WriteFlow = iota
+
+	// WriteFlowScoped: the write lands in the repo the call addresses
+	// via its repo_id. The hook auto-approves it only when that repo is
+	// the server's default (no repo_id given) or an explicitly
+	// cwd-scoped repo (.name); a write aimed at a different XDG-user or
+	// system repo falls through to normal gating.
+	WriteFlowScoped
+
+	// WriteFlowUnconditional: always safe to auto-approve regardless of
+	// the target repo. import reads user-named inventory paths into a
+	// repo — the user has already chosen the source files, so it carries
+	// no cross-repo prompt.
+	WriteFlowUnconditional
+
+	// WriteFlowGated: never auto-approved; always falls through to
+	// normal gating. push sends objects OUT to another repo — the one
+	// write direction that leaves the local repo.
+	WriteFlowGated
+)
+
+// WriteFlowByName classifies each PermissionWrite tool by its data flow.
+// Every tool ByName marks PermissionWrite MUST appear here (the
+// consistency test guards it); tools of any other permission are absent
+// and resolve to WriteFlowNone.
+var WriteFlowByName = map[string]WriteFlow{
+	"new":             WriteFlowScoped,
+	"edit":            WriteFlowScoped,
+	"organize_commit": WriteFlowScoped,
+	"checkin":         WriteFlowScoped,
+	"pull":            WriteFlowScoped,
+	"import":          WriteFlowUnconditional,
+	"push":            WriteFlowGated,
+}
+
+// WriteFlowOf returns the WriteFlow for a bare tool name, or
+// WriteFlowNone if the tool is not a classified write tool.
+func WriteFlowOf(name string) WriteFlow {
+	return WriteFlowByName[name]
+}
