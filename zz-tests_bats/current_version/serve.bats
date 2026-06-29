@@ -6,7 +6,7 @@ setup() {
 
   # dodder serve loads its blob stores from a madder store. Without
   # MADDER_XDG_UTILITY_OVERRIDE, madder defaults to $HOME/.madder
-  # which is (a) blocked by sandcastle and (b) the user's real madder
+  # which is (a) blocked by the bats sandbox and (b) the user's real madder
   # store outside the sandbox. Pin both to the test tmpdir so init
   # writes there and serve reads from there.
   export DODDER_XDG_UTILITY_OVERRIDE="$BATS_TEST_TMPDIR"

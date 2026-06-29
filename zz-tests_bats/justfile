@@ -67,6 +67,19 @@ test-targets *targets="current_version/*.bats":
   BATS_TEST_TIMEOUT="{{bats_timeout}}" \
     bats --jobs {{num_cpus()}} {{targets}}
 
+# runs specific bats test files without the bats sandbox. The bats fork's
+# sandbox stands up a per-run network namespace / Linux bridge; on hosts where
+# that bridge can't initialize ("timeout waiting for bridge sockets") the
+# sandboxed lane can't run at all. The standard current_version files are
+# hermetic via common.bash's tmpdir/XDG pinning, so they run correctly without
+# the sandbox (only af_unix/serve/sftp-tagged files need its network isolation,
+# and those run via test-bats-network). The merge-hook nix lane remains the
+# authoritative gate.
+[group("test")]
+test-targets-no-sandbox *targets="current_version/*.bats":
+  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
+    bats --no-sandbox --jobs {{num_cpus()}} {{targets}}
+
 # runs specific bats test tags
 [group("test")]
 test-tags *tags:

@@ -107,6 +107,22 @@ test-bats-targets *targets:
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     just zz-tests_bats/test-targets {{targets}}
 
+# As test-bats-targets, but bypasses the bats sandbox (--no-sandbox). Use
+# when the bats fork's per-run network bridge can't initialize on this host
+# ("failed to initialize Linux bridge: timeout waiting for bridge sockets");
+# the standard current_version files are hermetic via tmpdir/XDG pinning, so
+# they run correctly without the sandbox. The merge-hook nix lane stays the
+# authoritative gate.
+test-bats-targets-no-sandbox *targets:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+  GOMEMLIMIT=512MiB \
+    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    just zz-tests_bats/test-targets-no-sandbox {{targets}}
+
 # Run bats with race-instrumented binary to detect data races in pool reuse.
 test-bats-race:
   just go/test-bats-race
