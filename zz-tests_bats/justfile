@@ -61,24 +61,46 @@ test-generate_fixtures:
 
 bats_timeout := "30"
 
-# runs specific bats test files, or a default of all.
+# runs specific bats test files, or a default of all. A bare filename (no `/`)
+# is resolved under current_version/ (the common case) so `info_repo.bats`
+# works from the repo root and matches the documented usage; targets that
+# already contain `/` (previous_versions/main.bats, the default glob) and flags
+# (`-...`, e.g. --no-tempdir-cleanup) pass through untouched. Without this, a
+# bare name resolves against this recipe's cwd (zz-tests_bats/) and bats errors
+# "Test file ... does not exist".
 [group("test")]
 test-targets *targets="current_version/*.bats":
-  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats --jobs {{num_cpus()}} {{targets}}
+  #!/usr/bin/env bash
+  set -euo pipefail
+  resolved=()
+  for t in {{targets}}; do
+    case "$t" in
+      -*|*/*) resolved+=("$t") ;;
+      *)      resolved+=("current_version/$t") ;;
+    esac
+  done
+  BATS_TEST_TIMEOUT="{{bats_timeout}}" bats --jobs {{num_cpus()}} "${resolved[@]}"
 
-# runs specific bats test files without the bats sandbox. The bats fork's
-# sandbox stands up a per-run network namespace / Linux bridge; on hosts where
-# that bridge can't initialize ("timeout waiting for bridge sockets") the
-# sandboxed lane can't run at all. The standard current_version files are
-# hermetic via common.bash's tmpdir/XDG pinning, so they run correctly without
-# the sandbox (only af_unix/serve/sftp-tagged files need its network isolation,
-# and those run via test-bats-network). The merge-hook nix lane remains the
-# authoritative gate.
+# As test-targets, but without the bats sandbox. The bats fork's sandbox stands
+# up a per-run network namespace / Linux bridge; on hosts where that bridge
+# can't initialize ("timeout waiting for bridge sockets") the sandboxed lane
+# can't run at all. The standard current_version files are hermetic via
+# common.bash's tmpdir/XDG pinning, so they run correctly without the sandbox
+# (only af_unix/serve/sftp-tagged files need its network isolation, and those
+# run via test-bats-network). The merge-hook nix lane remains the authoritative
+# gate. Same bare-filename resolution as test-targets.
 [group("test")]
 test-targets-no-sandbox *targets="current_version/*.bats":
-  BATS_TEST_TIMEOUT="{{bats_timeout}}" \
-    bats --no-sandbox --jobs {{num_cpus()}} {{targets}}
+  #!/usr/bin/env bash
+  set -euo pipefail
+  resolved=()
+  for t in {{targets}}; do
+    case "$t" in
+      -*|*/*) resolved+=("$t") ;;
+      *)      resolved+=("current_version/$t") ;;
+    esac
+  done
+  BATS_TEST_TIMEOUT="{{bats_timeout}}" bats --no-sandbox --jobs {{num_cpus()}} "${resolved[@]}"
 
 # runs specific bats test tags
 [group("test")]
