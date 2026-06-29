@@ -4,7 +4,7 @@
 > implement this plan task-by-task.
 
 **Goal:** Extend the existing built-in `!task` / `!chore` v2 types (and add
-`!habit`) with twerk3's richer semantics — a `urgency` field, a recurrence
+`!habit`) with the personal repo's richer semantics — a `urgency` field, a recurrence
 field on the recurring kinds, a `dang`-typed markdown `body` rendered by
 blob-backed pandoc, and self-contained per-state/recurrence hooks — taking the
 best of both source sets.
@@ -46,7 +46,7 @@ codec is retained. Single-revert of the `type_blobs` + genesis changes.
   first-line convention the formatter strips.
 - Richer formatter outputs (`html` / `html-gdoc` / `pdf-beamer`) — additive,
   add later without rework.
-- Migrating existing twerk3 data (urgency/date tags + state types → fields).
+- Migrating existing the personal repo data (urgency/date tags + state types → fields).
 - Haustoria (`mike/haustoria_caldav`) emitting `urgency`/`recurrence` — the
   reader tolerates their absence, so the CalDAV path keeps working unchanged;
   mapping VTODO → the new fields is a follow-up.
@@ -132,7 +132,7 @@ func TestDefaultTaskTypeHasUrgency(t1 *testing.T) {
 	Kind:    "enum",
 	Values:  []string{"0_hour", "1_day", "2_week", "3_month", "4_quarter", "5_episode", "6_year"},
 	// no Default — urgency is unset until triaged. (Tuning lever: a default
-	// could be "6_year"; left unset to match twerk3, where an untagged item
+	// could be "6_year"; left unset to match the personal repo, where an untagged item
 	// has no urgency.)
 },
 ```
@@ -400,7 +400,7 @@ together. The frozen v14 snapshot stays untouched.
 > (`WithStringLuaHooks`, `on_format`/`on_pre_commit`, gopher-lua) is **separate**
 > from pandoc's lua. Whether a hook can (a) read `Metadata.Index.Fields`,
 > (b) mutate the blob (advance `due`), and (c) archive (set dormant / add a tag)
-> is unverified. The twerk3 hooks only manipulated tags (`kinder.Etiketten`).
+> is unverified. The the personal repo hooks only manipulated tags (`kinder.Etiketten`).
 > **Do the spike before writing hook code.**
 
 ### Task B1: Spike — what can a lua hook see and mutate?
@@ -435,7 +435,7 @@ commit/format hook. Do not force a speculative implementation.
   Default*Type constructors (inline the embedded lua, or `require` the
   materialized blob per B1's answer)
 
-**Behavior (field model, replacing twerk3's tag-collapse machinery):**
+**Behavior (field model, replacing the personal repo's tag-collapse machinery):**
 - `on_pre_commit` / `on_format`:
   - `status == "cancelled"` → archive (all three).
   - `status == "done"`:

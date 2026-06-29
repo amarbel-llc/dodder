@@ -11,7 +11,7 @@ and the forthcoming `dang` scoped-typefulness FDR (tracked separately).
 Two divergent definitions of the actionable types exist and need merging into a
 single canonical set, "taking the best from both":
 
-- **twerk3 set** (a real user repo, `!toml-type-v1`): pandoc/markdown actionable
+- **the personal repo set** (a real user repo, `!toml-type-v1`): pandoc/markdown actionable
   types with a shared `actionable-common` lua hook object (`cotton/horsea`),
   rich pandoc formatters on `!task`. State is modeled as **separate types**
   (`!task-done`, `!task-cancelled` = `archived=true`, `!task-in_progress`).
@@ -28,7 +28,7 @@ single canonical set, "taking the best from both":
   `fields-writer` scripts. No formatters, no hooks. State is a **field**.
   `!habit` absent.
 
-The two encode the *same concepts* with different machinery: twerk3 spreads
+The two encode the *same concepts* with different machinery: the personal repo spreads
 state/urgency/scheduling/archival across types + tags + lua hooks; v2 captures a
 subset as structured fields. The merge reconciles these per-dimension.
 
@@ -40,7 +40,7 @@ both" is expressible as a single `!toml-type-v2` per kind — no new schema.
 ## Goals
 
 - One canonical `!task` / `!chore` / `!habit`, each `!toml-type-v2`, combining
-  v2's structured fields with twerk3's formatters + hooks + richer semantics.
+  v2's structured fields with the personal repo's formatters + hooks + richer semantics.
 - Target **both** dodder's Go builtins (`type_blobs.DefaultTaskType` /
   `DefaultChoreType` + a new `DefaultHabitType`) and the user's repo, with the
   eventual home being a **public dodder.net type repo** (so the types must be
@@ -49,7 +49,7 @@ both" is expressible as a single `!toml-type-v2` per kind — no new schema.
 ## Non-goals (deferred)
 
 - The `dang` scoped-typefulness mechanism itself (its own FDR — see Dependencies).
-- Migrating the user's *existing* twerk3 task data (urgency/date tags + state
+- Migrating the user's *existing* the personal repo task data (urgency/date tags + state
   types → fields). Existing v1-typed objects keep working; bulk migration is a
   later phase.
 - dodder.net publishing.
@@ -61,12 +61,12 @@ both" is expressible as a single `!toml-type-v2` per kind — no new schema.
 ### Field schema
 
 All three types are `!toml-type-v2` with a structured field set. The
-state/urgency/scheduling dimensions that twerk3 spread across types + tags + hooks
+state/urgency/scheduling dimensions that the personal repo spread across types + tags + hooks
 collapse into fields.
 
 Shared by `!task` / `!chore` / `!habit`:
 
-| field      | kind                         | values / shape                                                        | default | replaces (twerk3)                         |
+| field      | kind                         | values / shape                                                        | default | replaces (the personal repo)                         |
 |------------|------------------------------|-----------------------------------------------------------------------|---------|-------------------------------------------|
 | `status`   | enum                         | `todo`, `in_progress`, `done`, `cancelled`                            | `todo`  | the `!task-done/-cancelled/-in_progress` state types |
 | `urgency`  | enum                         | 7-level time-pressure: `0_hour`, `1_day`, `2_week`, `3_month`, `4_quarter`, `5_episode`, `6_year` | unset   | the `urgency-N_*` tags                    |
@@ -80,7 +80,7 @@ Shared by `!task` / `!chore` / `!habit`:
 |--------------|---------------|----------------------------------------------------|----------------------------------------------------------------|
 | `recurrence` | string / enum | cadence (ISO-8601 duration `P1W`, or enum)         | drives the "advance `due`, reset `todo`" hook; `!task` omits it |
 
-Two orthogonal priority axes are intentional: `urgency` = "how soon" (twerk3's
+Two orthogonal priority axes are intentional: `urgency` = "how soon" (the personal repo's
 time-pressure scale), `priority` = "how much it matters" (v2). A task can be
 urgent-not-important or vice versa.
 
@@ -138,7 +138,7 @@ formats with no host setup:
 
 - The type carries blob references to pandoc lua filters + defaults, materialized
   to a tmpdir (`DODDER_BLOB_TREE`) by the existing materializer.
-- twerk3's formatter set (`text`/`html`/`html-gdoc`/`pdf-beamer`) is preserved.
+- the personal repo's formatter set (`text`/`html`/`html-gdoc`/`pdf-beamer`) is preserved.
 - Each formatter pipeline: extract `body` (yq) → strip the `dang` line → pandoc
   with the blob-backed defaults.
 
@@ -149,7 +149,7 @@ The `cotton/horsea` lua becomes a **self-contained, blob-backed
 a reference to the user's private object. All three types carry a blob reference
 to it and `require` the materialized copy.
 
-Behavior re-expressed for the field model (twerk3's date-tag collapse/today
+Behavior re-expressed for the field model (the personal repo's date-tag collapse/today
 machinery is replaced by explicit, status-driven transitions in `on_format` /
 `on_pre_commit`):
 
@@ -162,7 +162,7 @@ machinery is replaced by explicit, status-driven transitions in `on_format` /
 - Field normalization: default `urgency`, guard `due` on recurring objects, etc.
 
 Archival uses dodder's tag-driven dormancy (the hook applies an archive tag the
-repo's dormant config recognizes — successor to twerk3's `zz-archive`).
+repo's dormant config recognizes — successor to the personal repo's `zz-archive`).
 
 ### Per-type differentiation
 
@@ -192,7 +192,7 @@ engine); they differ only in default cadence and description. `!task` omits
   formatters + hooks, the field schema, `dang`-as-convention for `body`. Ships
   behind the existing opt-in genesis flag.
 - **Phase 2 (deferred):** the `dang` FDR + first-class scoped-type integration.
-- **Phase 3 (deferred):** dodder.net publishing + migrating existing twerk3 data.
+- **Phase 3 (deferred):** dodder.net publishing + migrating existing the personal repo data.
 
 ## Rollback
 
