@@ -91,6 +91,21 @@ func (store *Store) MergeCheckedOut(
 		return commitOptions, err
 	}
 
+	// Fast-forward: when the most-recent common ancestor is the local
+	// (receiving) version, the incoming remote version is a strict descendant
+	// of it. Accept the remote directly instead of running a 3-way merge — the
+	// merge base equals the local side, so diff3 has nothing to reconcile, and
+	// the degenerate base==local merge otherwise yields an empty object,
+	// silently dropping the incoming edit. SetMother above has already
+	// re-parented the remote onto the local head. This mirrors the "accept the
+	// remote version directly" behavior used when there is no parent negotiator
+	// (see remote_transfer importLeaf), and is what makes a clean linear push a
+	// fast-forward rather than a false conflict (#298).
+	if conflicted.Base != nil &&
+		conflicted.Base.GetTai().Equals(conflicted.Local.GetTai()) {
+		return commitOptions, err
+	}
+
 	var skuReplacement *sku.Transacted
 
 	// TODO pass mode / conflicts

@@ -497,3 +497,51 @@ function push_forbid_blobless_type_definition_aborts { # @test
 	assert_failure
 	assert_output --partial 'blobless type definition skipped'
 }
+
+# #298: pushing a clean, linear, single-author descendant to a parent that
+# already holds an older ancestor of the local head must fast-forward, not
+# raise a false "import failed with conflicts, merging required". The parent's
+# older head is on the path to the local head, so there is no real divergence.
+function push_fast_forward_linear_no_conflict { # @test
+	run_dodder_init_workspace
+
+	bootstrap_without_content_xdg
+
+	run_dodder remote-add \
+		toml-repo-local_override_path-v0 \
+		"$(realpath them)" \
+		them
+	assert_success
+
+	# First push syncs the parent to the current local head of one/uno.
+	run_dodder push /them one/uno
+	assert_success
+
+	# Edit one/uno locally, producing a strict linear descendant (v_next).
+	run_dodder checkout one/uno
+	assert_success
+
+	{
+		echo "---"
+		echo "# wow the second"
+		echo "- tag-3"
+		echo "- tag-4"
+		echo "! md"
+		echo "---"
+		echo
+		echo "edited locally"
+	} >one/uno.zettel
+
+	run_dodder checkin -delete one/uno.zettel
+	assert_success
+
+	# Second push must be a clean fast-forward, not a conflict.
+	run_dodder push /them one/uno
+	assert_success
+
+	pushd them || exit 1
+	run_dodder show one/uno
+	assert_success
+	assert_output --regexp '\[one/uno @blake2b256-.+ !md "wow the second" tag-3 tag-4\]'
+	popd || exit 1
+}
