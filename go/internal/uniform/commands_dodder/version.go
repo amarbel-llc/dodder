@@ -27,6 +27,14 @@ func SetVersion(v, c string) {
 	versionCmd.commit = c
 }
 
+// dodderVersionString returns the ldflag-injected build identity in the same
+// "<version>+<commit>" form the version subcommand prints. Used to surface
+// which binary is serving the MCP (so an MCP-observed bug report carries the
+// version that produced it).
+func dodderVersionString() string {
+	return versionCmd.version + "+" + versionCmd.commit
+}
+
 type Version struct {
 	version string
 	commit  string

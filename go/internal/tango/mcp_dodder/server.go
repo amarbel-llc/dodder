@@ -268,6 +268,7 @@ func RunServer(
 	repo *local_working_copy.Repo,
 	startupRepoId scoped_id.Id,
 	userReposDir string,
+	dodderVersion string,
 ) error {
 	// An explicit startup -repo_id pins the server to that repo (per-call
 	// repo_id is then restricted to it); an auto/default startup lets each
@@ -319,7 +320,7 @@ func RunServer(
 	registerResources(resources, provider)
 
 	prompts := server.NewPromptRegistry()
-	registerPrompts(prompts, provider, startupRepoId, hasWorkspace)
+	registerPrompts(prompts, provider, startupRepoId, hasWorkspace, dodderVersion)
 
 	t := transport.NewStdio(os.Stdin, os.Stdout)
 	srv, err := server.New(t, server.Options{

@@ -57,6 +57,7 @@ func (cmd Mcp) Run(req command.Request) {
 		repo,
 		config.RepoId,
 		userReposDir,
+		dodderVersionString(),
 	); err != nil {
 		req.Cancel(err)
 	}

@@ -19,6 +19,7 @@ func TestSystemPromptAppendUserScopeWithCountsAndRepos(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
 	got := renderSystemPromptAppendBody(&t, systemPromptAppendData{
+		Version:         "0.2.7+abc1234",
 		BoundRepo:       "default",
 		Scope:           "XDG-user scope (spelled name)",
 		HasWorkspace:    false,
@@ -31,6 +32,7 @@ func TestSystemPromptAppendUserScopeWithCountsAndRepos(t1 *testing.T) {
 
 	expected := `# dodder repository (bound to this MCP server)
 
+Server: dodder 0.2.7+abc1234 (this is the binary serving this MCP — match it against a bug report's version before assuming a bug is unfixed).
 Bound repo: default — XDG-user scope (spelled name).
 No workspace here — store operations only.
 Indexed: 5 type(s), 12 tag(s).
@@ -51,6 +53,7 @@ func TestSystemPromptAppendCwdScopeWorkspaceNoCountsNoRepos(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
 	got := renderSystemPromptAppendBody(&t, systemPromptAppendData{
+		Version:         "dev+unknown",
 		BoundRepo:       ".notes",
 		Scope:           "cwd-ancestor .dodder scope (spelled .name)",
 		HasWorkspace:    true,
@@ -61,6 +64,7 @@ func TestSystemPromptAppendCwdScopeWorkspaceNoCountsNoRepos(t1 *testing.T) {
 
 	expected := `# dodder repository (bound to this MCP server)
 
+Server: dodder dev+unknown (this is the binary serving this MCP — match it against a bug report's version before assuming a bug is unfixed).
 Bound repo: .notes — cwd-ancestor .dodder scope (spelled .name).
 A workspace is active (a checked-out working copy is present).
 

@@ -52,6 +52,7 @@ func registerPrompts(
 	provider *typeResourceProvider,
 	startupRepoId scoped_id.Id,
 	hasWorkspace bool,
+	dodderVersion string,
 ) {
 	// clown dynamic system-prompt contribution (RFC-0002 §5, dodder#277):
 	// clown-stdio-bridge fetches /clown/system-prompt by issuing prompts/get
@@ -62,7 +63,7 @@ func registerPrompts(
 			Name:        "system-prompt-append",
 			Description: "Live orientation for the bound dodder repo (clown dynamic system-prompt fragment).",
 		},
-		renderSystemPromptAppend(provider, startupRepoId, hasWorkspace),
+		renderSystemPromptAppend(provider, startupRepoId, hasWorkspace, dodderVersion),
 	)
 
 	prompts.Register(
@@ -150,6 +151,7 @@ func registerPrompts(
 // systemPromptAppendData is the template input for the clown dynamic
 // system-prompt fragment (dodder#277).
 type systemPromptAppendData struct {
+	Version         string
 	BoundRepo       string
 	Scope           string
 	HasWorkspace    bool
@@ -170,12 +172,14 @@ func renderSystemPromptAppend(
 	provider *typeResourceProvider,
 	startupRepoId scoped_id.Id,
 	hasWorkspace bool,
+	dodderVersion string,
 ) server.PromptRenderer {
 	return func(
 		ctx context.Context,
 		args map[string]string,
 	) (*protocol.PromptGetResult, error) {
 		data := systemPromptAppendData{
+			Version:      dodderVersion,
 			BoundRepo:    repoSeg(startupRepoId),
 			HasWorkspace: hasWorkspace,
 		}

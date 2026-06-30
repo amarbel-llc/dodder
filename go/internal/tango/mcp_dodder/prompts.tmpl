@@ -1,6 +1,7 @@
 {{define "system-prompt-append" -}}
 # dodder repository (bound to this MCP server)
 
+Server: dodder {{.Version}} (this is the binary serving this MCP — match it against a bug report's version before assuming a bug is unfixed).
 Bound repo: {{.BoundRepo}} — {{.Scope}}.
 {{if .HasWorkspace}}A workspace is active (a checked-out working copy is present).{{else}}No workspace here — store operations only.{{end}}
 {{if .CountsAvailable}}Indexed: {{.TypeCount}} type(s), {{.TagCount}} tag(s).
