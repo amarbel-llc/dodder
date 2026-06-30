@@ -9,7 +9,7 @@ here works identically with both `dodder` and `der`.
 
 Initialize a new dodder repository.
 
-**Positional arguments:** `repo-id` (required)
+**Positional arguments:** `repo-id` (required) — the new repo's location handle; scope comes from the spelling (`name` = XDG user, `.name` = CWD, `//name` = system)
 
 **Key flags:**
 
@@ -19,9 +19,10 @@ Initialize a new dodder repository.
 | `-yang` | `""` | File containing list of zettel ID right parts |
 | `-yin-default` | `false` | Use the built-in default zettel ID left parts when `-yin` is unset |
 | `-yang-default` | `false` | Use the built-in default zettel ID right parts when `-yang` is unset |
-| `-repo_id` | `""` | Repo location: `.` for CWD, empty for XDG user |
 | `-inventory_list-type` | (current version) | Type for inventory lists |
 | `-blob_store-id` | `""` | Name of an existing madder blob store to use |
+
+`-repo_id` / `DODDER_REPO_ID` address an *existing* repo and are rejected on `init`; the new repo's location is named by the positional handle.
 
 Genesis configuration flags (set at creation time):
 
@@ -33,7 +34,7 @@ Genesis configuration flags (set at creation time):
 
 ```bash
 dodder init my-repo
-dodder init -repo_id . my-repo
+dodder init .my-repo
 dodder init -yin left-words.txt -yang right-words.txt my-repo
 ```
 
@@ -41,14 +42,14 @@ dodder init -yin left-words.txt -yang right-words.txt my-repo
 
 Initialize a repository with sensible defaults, for an unattended or
 per-session bootstrap. Creates the repository in the current directory; the
-`repo-id` defaults to the current directory name; the signing key is
-auto-detected from the SSH agent (a fresh per-repo key is generated when none
-is available); an existing CWD-local `.default` madder blob store is reused;
-and the zettel-ID vocabulary is seeded from a built-in default word list.
-Re-running in an already-initialized directory is a no-op.
+`repo-id` location handle defaults to the cwd `.default` repo; the signing key
+is auto-detected from the SSH agent (a fresh per-repo key is generated when
+none is available); an existing CWD-local `.default` madder blob store is
+reused; and the zettel-ID vocabulary is seeded from a built-in default word
+list. Re-running in an already-initialized directory is a no-op.
 
-**Positional arguments:** `repo-id` (optional; defaults to the current
-directory name)
+**Positional arguments:** `repo-id` (optional location handle; defaults to the
+cwd `.default` repo)
 
 ```bash
 dodder init-default
@@ -59,15 +60,18 @@ dodder init-default my-repo
 
 Clone a repository from a remote source.
 
-**Positional arguments:** `new-repo-id` (required), remote URI (required),
-optional query arguments
+**Positional arguments:** `new-repo-id` (required) — the new local repo's
+location handle (scope via spelling); remote URI (required); optional query
+arguments
 
 **Key flags:** Same genesis flags as `init`, plus remote transfer flags.
+`-repo_id` / `DODDER_REPO_ID` are rejected (the new repo is named by the
+positional handle).
 
 ```bash
 dodder clone local-id remote:///path/to/source
 dodder clone local-id remote:///path !md:z
-dodder clone -repo_id . local-id remote:///path
+dodder clone .local-id remote:///path
 ```
 
 ### deinit
