@@ -170,11 +170,15 @@ function checkin_simple_typ { # @test
 [one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
+  # #294/FDR-0021 T4: these objects are SELF provenance (authored by this
+  # repo), so under the no-selector archive view the pubkey renders as the
+  # bare `ed25519_pub-...` self form rather than the foreign
+  # `dodder-repo-public_key-v1@...` purpose-prefixed form.
   run_dodder last -format box-archive
   assert_success
   assert_output_unsorted --regexp - <<-'EOM'
-\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow the first" tag-3 tag-4]
-\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow ok again" tag-3 tag-4]
+\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd ed25519_pub-.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow the first" tag-3 tag-4]
+\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd ed25519_pub-.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !md@.* "wow ok again" tag-3 tag-4]
 	EOM
 
   run_dodder show -format blob !md:t

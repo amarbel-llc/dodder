@@ -83,6 +83,10 @@ function show_config_after_edit_config_roundtrips { # @test
   # Exactly two entries: the init-seeded root and the one edit. Guards
   # against a duplicate/idempotency regression that --index alone misses.
   assert_equal "${#lines[@]}" 2
-  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
-  assert_line --index 1 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-mother-sig-v2@ed25519_sig-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+  # #294/FDR-0021 T4: the konfig is SELF provenance (signed by this repo), so
+  # show-config -history (no -repo_id -> empty handle) renders the bare
+  # `ed25519_pub-...` self form, not the `dodder-repo-public_key-v1@...`
+  # purpose-prefixed form a foreign object keeps.
+  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+  assert_line --index 1 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-mother-sig-v2@ed25519_sig-[a-z0-9]+ dodder-object-sig-v2@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
 }

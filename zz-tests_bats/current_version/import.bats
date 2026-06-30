@@ -48,6 +48,12 @@ function import { # @test
   run_dodder info-repo pubkey
   assert_success
   new_pubkey="$output"
+  # #294/FDR-0021 T4: imported objects carry the importing repo's pubkey, so
+  # they are SELF provenance. Under `show -format inventory_list` (no -repo_id
+  # selector -> empty handle) the self form degrades to the bare pubkey
+  # (ed25519_pub-...), dropping the dodder-repo-public_key-v1@ purpose prefix
+  # a foreign object would keep.
+  bare_pubkey="${new_pubkey#*@}"
 
   run_dodder import \
     -blob_store-id shared \
@@ -58,10 +64,17 @@ function import { # @test
   assert_success
   assert_output_unsorted --regexp - <<-EOM
 		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
-		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $new_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
-		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $new_pubkey .* !md@.* "wow the first" tag-3 tag-4]
-		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $new_pubkey .* !md@.* "wow ok" tag-1 tag-2]
+		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $bare_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
+		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $bare_pubkey .* !md@.* "wow the first" tag-3 tag-4]
+		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $bare_pubkey .* !md@.* "wow ok" tag-1 tag-2]
 	EOM
+
+  # With an explicit -repo_id selector the handle is non-empty, so the SAME
+  # self object renders the full `<handle>@<pubkey>` provenance form
+  # (symmetric with `info-repo id`).
+  run_dodder show -repo_id .default -format inventory_list one/uno
+  assert_success
+  assert_output --regexp "\\.default@$bare_pubkey"
 
   run_dodder show one/uno
   assert_success
@@ -96,6 +109,9 @@ function import_with_overwrite_sig { # @test
   run_dodder info-repo pubkey
   assert_success
   new_pubkey="$output"
+  # self provenance renders the bare pubkey under the no-selector inventory
+  # list view (see the `import` test for the full rationale).
+  bare_pubkey="${new_pubkey#*@}"
 
   run_dodder import \
     -overwrite-signatures=true \
@@ -107,9 +123,9 @@ function import_with_overwrite_sig { # @test
   assert_success
   assert_output_unsorted --regexp - <<-EOM
 		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
-		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $new_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
-		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $new_pubkey .* !md@.* "wow the first" tag-3 tag-4]
-		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $new_pubkey .* !md@.* "wow ok" tag-1 tag-2]
+		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $bare_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
+		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $bare_pubkey .* !md@.* "wow the first" tag-3 tag-4]
+		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $bare_pubkey .* !md@.* "wow ok" tag-1 tag-2]
 	EOM
 
   run_dodder show one/uno
@@ -194,6 +210,9 @@ function import_with_dupes_in_list { # @test
   run_dodder info-repo pubkey
   assert_success
   new_pubkey="$output"
+  # self provenance renders the bare pubkey under the no-selector inventory
+  # list view (see the `import` test for the full rationale).
+  bare_pubkey="${new_pubkey#*@}"
 
   run_dodder import \
     -overwrite-signatures=true \
@@ -214,9 +233,9 @@ function import_with_dupes_in_list { # @test
   assert_success
   assert_output_unsorted --regexp - <<-EOM
 		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
-		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $new_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
-		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $new_pubkey .* !md@.* "wow the first" tag-3 tag-4]
-		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $new_pubkey .* !md@.* "wow ok" tag-1 tag-2]
+		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $bare_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
+		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $bare_pubkey .* !md@.* "wow the first" tag-3 tag-4]
+		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $bare_pubkey .* !md@.* "wow ok" tag-1 tag-2]
 	EOM
 
   run_dodder show one/uno
