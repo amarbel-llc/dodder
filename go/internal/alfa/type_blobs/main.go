@@ -1,8 +1,39 @@
 package type_blobs
 
 import (
+	"fmt"
+
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 )
+
+// ArchiveTag is the tag the built-in actionable hooks add to archive an object
+// on a terminal status. Genesis seeds it into the dormant index (when the
+// built-in actionable types are included) so a carrying object becomes
+// dormant. The "zz-" prefix follows the repo's archive-tag convention and
+// keeps it sorted last.
+const ArchiveTag = "zz-archive"
+
+// actionableArchiveHook is the shared on_commit_fields lua hook for the
+// built-in actionable types. It archives (adds ArchiveTag) on
+// status == "cancelled" for all actionable types, and on status == "done"
+// ONLY for !task. !chore / !habit "done" is left untouched -- recurrence
+// handling is deferred. The hook reads the projected fields
+// (kinder.Fields.status) that the on_commit_fields commit stage populates
+// before invocation; it never writes fields back.
+func actionableArchiveHook() string {
+	return fmt.Sprintf(`return {
+  on_commit_fields = function(kinder, mutter)
+    local f = kinder.Fields
+    local status = f and f.status
+    if status == "cancelled" then
+      kinder.Etiketten[%[1]q] = true
+    elseif status == "done" and kinder.Typ == "!task" then
+      kinder.Etiketten[%[1]q] = true
+    end
+  end,
+}
+`, ArchiveTag)
+}
 
 func Default() TomlV2 {
 	return TomlV2{
@@ -155,6 +186,7 @@ func DefaultTaskType() TomlV2 {
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
+		Hooks:         actionableArchiveHook(),
 		Fields:        actionableFields(),
 		FieldsReader:  actionableFieldsReader(),
 		FieldsWriter:  actionableFieldsWriter(),
@@ -171,6 +203,7 @@ func DefaultChoreType() TomlV2 {
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
+		Hooks:         actionableArchiveHook(),
 		Fields:        recurringFields(),
 		FieldsReader:  recurringFieldsReader(),
 		FieldsWriter:  recurringFieldsWriter(),
@@ -187,6 +220,7 @@ func DefaultHabitType() TomlV2 {
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
+		Hooks:         actionableArchiveHook(),
 		Fields:        recurringFields(),
 		FieldsReader:  recurringFieldsReader(),
 		FieldsWriter:  recurringFieldsWriter(),

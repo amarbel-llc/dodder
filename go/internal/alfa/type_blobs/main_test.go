@@ -55,6 +55,21 @@ func TestDefaultTaskType(t1 *testing.T) {
 	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_BLOB_PATH") {
 		t.Errorf("FieldsWriter script missing DODDER_BLOB_PATH: %q", blob.FieldsWriter.Script)
 	}
+
+	// !task archives on terminal status via the on_commit_fields hook: both
+	// "cancelled" and "done" add the archive tag (the done branch is gated on
+	// !task).
+	if !strings.Contains(blob.Hooks, "on_commit_fields") {
+		t.Errorf("Hooks missing on_commit_fields: %q", blob.Hooks)
+	}
+
+	if !strings.Contains(blob.Hooks, ArchiveTag) {
+		t.Errorf("Hooks missing archive tag %q: %q", ArchiveTag, blob.Hooks)
+	}
+
+	if !strings.Contains(blob.Hooks, `status == "done" and kinder.Typ == "!task"`) {
+		t.Errorf("Hooks missing !task done branch: %q", blob.Hooks)
+	}
 }
 
 func TestDefaultChoreType(t1 *testing.T) {
@@ -80,6 +95,17 @@ func TestDefaultChoreType(t1 *testing.T) {
 
 	if !strings.Contains(blob.FieldsWriter.Script, "DODDER_FIELD_recurrence") {
 		t.Errorf("FieldsWriter script missing DODDER_FIELD_recurrence: %q", blob.FieldsWriter.Script)
+	}
+
+	// !chore archives on "cancelled" but NOT on "done": the shared hook gates
+	// the done branch on kinder.Typ == "!task", so a recurring type's "done"
+	// is left active (recurrence handling is deferred).
+	if !strings.Contains(blob.Hooks, "on_commit_fields") {
+		t.Errorf("Hooks missing on_commit_fields: %q", blob.Hooks)
+	}
+
+	if !strings.Contains(blob.Hooks, `status == "done" and kinder.Typ == "!task"`) {
+		t.Errorf("Hooks missing !task-gated done branch: %q", blob.Hooks)
 	}
 }
 
