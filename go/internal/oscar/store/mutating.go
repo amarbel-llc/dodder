@@ -175,6 +175,10 @@ func (commitFacilitator commitFacilitator) commit(
 	// commit reaching this point with it set came from within a hook. (The
 	// legitimate nested commit — addMissingTypes -> createType -> Commit — runs
 	// after the hooks return, with hookDepth back at zero.)
+	//
+	// This guard assumes commits are serialized per Store: hookDepth is a
+	// single counter, so a future parallel-import path committing concurrently
+	// would need a per-commit scope (e.g. context-carried) instead.
 	if commitFacilitator.hookDepth.Load() > 0 {
 		err = errors.ErrorWithStackf(
 			"nested commit from within a hook is not permitted",

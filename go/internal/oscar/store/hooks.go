@@ -390,11 +390,13 @@ func (store *Store) tryPreCommitHook(
 	vm.Push(tableKinder.Transacted)
 	vm.Push(tableMutter.Transacted)
 
+	// defer the decrement so a panic in PCall cannot permanently wedge the
+	// re-entrancy guard; it fires at function return, before the caller's
+	// write-back runs, so commit() still observes depth 0.
 	store.hookDepth.Add(1)
-	err = vm.PCall(2, 1, nil)
-	store.hookDepth.Add(-1)
+	defer store.hookDepth.Add(-1)
 
-	if err != nil {
+	if err = vm.PCall(2, 1, nil); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -483,12 +485,14 @@ func (store *Store) tryHookWithName(
 
 	// hookDepth guards against a hook re-entering the commit path (RFC 0006
 	// cycle guarantee #3): any commit initiated while it is non-zero is
-	// rejected loudly by commitFacilitator.commit.
+	// rejected loudly by commitFacilitator.commit. The decrement is deferred so
+	// a panic in PCall cannot permanently wedge the guard; it fires at function
+	// return, before the caller's bounded write-back runs, so the legitimate
+	// nested commit (createType) still observes depth 0.
 	store.hookDepth.Add(1)
-	err = vm.PCall(2, 1, nil)
-	store.hookDepth.Add(-1)
+	defer store.hookDepth.Add(-1)
 
-	if err != nil {
+	if err = vm.PCall(2, 1, nil); err != nil {
 		err = errors.Wrap(err)
 		return fieldsChanged, err
 	}
