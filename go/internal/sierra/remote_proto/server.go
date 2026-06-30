@@ -121,6 +121,7 @@ func (server *Server) serveSession(s *session) (err error) {
 			want,
 			negotiateCompression(clientCaps.Compression),
 			server.configDescriptor(),
+			true, // ship full object history for the receiver's merge negotiator (Option B, #299)
 		); err != nil {
 			s.writeError(err.Error(), 500)
 			err = errors.Wrap(err)

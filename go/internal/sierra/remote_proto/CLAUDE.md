@@ -68,6 +68,21 @@ transport so it can ride a websocket.
   bytes, so content addressing is unaffected. `blobFrameWriter` /
   `blobFrameReader` (session.go) adapt the frame stream to the
   encoder/decoder.
+- **A fetch ships each object's full history for merge negotiation (#299).**
+  `sendClosure(..., expandObjectHistory=true)` on the server's fetch path
+  expands the closure to every version of each object (`ReadObjectHistory`)
+  before edges/objects; the pulling receiver's `receiveClosure` builds a
+  `local_working_copy.ParentNegotiatorInBand` from that single objects frame
+  (`addObjectsToNegotiator`) and sets it on `importerOptions` before importing,
+  so the merge can find the common ancestor by TAI. This is the lock-step
+  protocol's substitute for the out-of-band history query the HTTP transport
+  uses (`/object-history`): there is no in-session way to ask the sender for
+  history, so the sender volunteers it. Push does NOT do this
+  (`expandObjectHistory=false`); push-receive runs a nil negotiator (the
+  server cannot query the pushing client — Option A, still open on #299). Do
+  not "optimize" the fetch back to latest-only: blobs are already deduped by
+  have-negotiation, so the only extra bytes are historical object metadata, and
+  without them the receiver cannot distinguish a fast-forward from a divergence.
 
 ## CLI surface
 

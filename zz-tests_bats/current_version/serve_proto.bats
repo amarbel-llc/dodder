@@ -319,3 +319,198 @@ function push_over_websocket { # @test
 
   assert_success
 }
+
+# pull_over_websocket_fast_forward exercises the #299 pull-side merge
+# resolution over drtp: `us` pulls one/uno v0, then `them` edits it into a
+# strict linear descendant, then `us` pulls again. The second pull must
+# fast-forward (no spurious conflict) and land them's new version. The merge
+# base is found from the sender's full object history, shipped in-band on the
+# fetch (Option B) — without it the receiver runs a nil-negotiator merge and
+# cannot tell a fast-forward from a real divergence. The server is stopped
+# while `them` mutates its store (serve-proto holds the repo open) and
+# restarted on a fresh port, so `us` re-adds the same physical repo under a
+# second alias; the parent pin keys on the repo pubkey, not the alias, so it
+# still matches.
+function pull_over_websocket_fast_forward { # @test
+  bootstrap_them
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder_init
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws
+  assert_success
+
+  # First pull: us receives one/uno v0.
+  run_dodder pull \
+    -remote-connection-type url-websocket \
+    /them-ws +zettel,typ,etikett
+  assert_success
+
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
+	EOM
+  popd || exit 1
+
+  # them edits one/uno into a strict linear descendant. Stop the server so the
+  # store is free to mutate, then restart (new OS-assigned port).
+  stop_proto_server
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  pushd them || exit 1
+
+  run_dodder checkout one/uno
+  assert_success
+
+  {
+    echo "---"
+    echo "# wow the second"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited remotely"
+  } >one/uno.zettel
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+  popd || exit 1
+
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  pushd us || exit 1
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws2
+  assert_success
+
+  # Second pull must fast-forward to them's descendant, not raise a spurious
+  # conflict (#299).
+  run_dodder pull \
+    -remote-connection-type url-websocket \
+    /them-ws2 +zettel,typ,etikett
+  assert_success
+
+  run_dodder show one/uno
+  assert_success
+  assert_output --regexp '^\[one/uno @blake2b256-.+ !md "wow the second" tag\]$'
+}
+
+# pull_over_websocket_divergence_conflict is the negative twin of the
+# fast-forward test: `us` and `them` both edit one/uno independently after `us`
+# pulls v0, so the histories genuinely diverge. The pull must report a conflict
+# (assert_failure) rather than silently accepting them's version — the failure
+# mode the nil-negotiator merge had before #299, which could not distinguish a
+# real divergence from a fast-forward and overwrote the local edit.
+function pull_over_websocket_divergence_conflict { # @test
+  bootstrap_them
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder_init
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws
+  assert_success
+
+  run_dodder pull \
+    -remote-connection-type url-websocket \
+    /them-ws +zettel,typ,etikett
+  assert_success
+
+  # us diverges: edit one/uno locally off the shared v0.
+  run_dodder checkout one/uno
+  assert_success
+
+  {
+    echo "---"
+    echo "# wow the local"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited locally"
+  } >one/uno.zettel
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+  popd || exit 1
+
+  # them diverges independently off the same v0.
+  stop_proto_server
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  pushd them || exit 1
+
+  run_dodder checkout one/uno
+  assert_success
+
+  {
+    echo "---"
+    echo "# wow the remote"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited remotely"
+  } >one/uno.zettel
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+  popd || exit 1
+
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  pushd us || exit 1
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws2
+  assert_success
+
+  # Genuine divergence: the pull must fail with a conflict, not overwrite.
+  run_dodder pull \
+    -remote-connection-type url-websocket \
+    /them-ws2 +zettel,typ,etikett
+  assert_failure
+  assert_line --regexp 'conflicted.*\[one/uno\]'
+
+  # The local divergent edit survives — the conflicted pull did not clobber it.
+  run_dodder show one/uno
+  assert_success
+  assert_output --regexp '^\[one/uno @blake2b256-.+ !md "wow the local" tag\]$'
+}

@@ -41,6 +41,7 @@ func sendClosure(
 	want control,
 	compression string,
 	configDescriptor *control,
+	expandObjectHistory bool,
 ) (err error) {
 	var queryGroup *queries.Query
 
@@ -58,6 +59,19 @@ func sendClosure(
 	if list, err = src.MakeInventoryList(queryGroup); err != nil {
 		err = errors.Wrap(err)
 		return err
+	}
+
+	// Option B (#299): on a fetch, ship each object's full version history so
+	// the pulling receiver's in-band merge negotiator can find the common
+	// ancestor. The transfer is otherwise effectively incremental (the query
+	// may resolve to latest-only), which would leave the receiver unable to
+	// tell a fast-forward from a real divergence. Blobs are still deduped by
+	// have-negotiation below, so this re-sends only historical object metadata.
+	if expandObjectHistory {
+		if list, err = expandListToObjectHistory(src, list); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
 	}
 
 	explorer := store.MakeEdgeExplorer(
@@ -159,6 +173,43 @@ func sendClosure(
 	}
 
 	return err
+}
+
+// expandListToObjectHistory returns a new list holding the full version
+// history of every distinct object id in the input, read from src. A fetch
+// sender uses it so the pulling receiver gets the sender's complete history
+// per object for in-band merge negotiation (Option B, #299).
+func expandListToObjectHistory(
+	src repo.Repo,
+	list *sku.HeapTransacted,
+) (expanded *sku.HeapTransacted, err error) {
+	expanded = sku.MakeListTransacted()
+	seen := make(map[string]struct{})
+
+	for object := range list.All() {
+		key := object.GetObjectId().String()
+
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+
+		var history []*sku.Transacted
+
+		if history, err = src.ReadObjectHistory(
+			object.GetObjectId(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return expanded, err
+		}
+
+		for _, version := range history {
+			expanded.Add(version)
+		}
+	}
+
+	return expanded, err
 }
 
 // appendConfigBlob folds the config-log head blob digest into the blob
@@ -491,6 +542,27 @@ func receiveClosure(
 				return err
 			}
 
+			// Option B (#299): on a fetch (pull), the sender ships each
+			// object's full history in this batch (sendClosure's
+			// expandObjectHistory), so build the in-band merge negotiator from
+			// it before importing — the receiver has no out-of-band way to
+			// query the sender's history over this lock-step session. Push
+			// receive keeps the nil negotiator for now (Option A, deferred).
+			if want.Direction == DirectionFetch || want.Direction == "" {
+				negotiator := local_working_copy.MakeParentNegotiatorInBand(dst)
+
+				if err = addObjectsToNegotiator(
+					dst,
+					payload,
+					negotiator,
+				); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				importerOptions.ParentNegotiator = negotiator
+			}
+
 			if err = importObjects(dst, payload, importerOptions, storeOptions); err != nil {
 				err = errors.Wrap(err)
 				return err
@@ -642,6 +714,32 @@ func importObjects(
 	if err = dst.ImportSeq(seq, importer); err != nil {
 		err = errors.Wrap(err)
 		return err
+	}
+
+	return err
+}
+
+// addObjectsToNegotiator decodes the transferred object batch and records each
+// version as the sender's history in the in-band merge negotiator. It decodes a
+// fresh reader over the in-memory payload; importObjects decodes the same bytes
+// again to import (the negotiator must be populated before that import runs).
+func addObjectsToNegotiator(
+	dst *local_working_copy.Repo,
+	payload []byte,
+	negotiator *local_working_copy.ParentNegotiatorInBand,
+) (err error) {
+	seq := dst.GetInventoryListCoderCloset().AllDecodedObjectsFromStream(
+		bytes.NewReader(payload),
+		nil,
+	)
+
+	for object, iterErr := range seq {
+		if iterErr != nil {
+			err = errors.Wrap(iterErr)
+			return err
+		}
+
+		negotiator.AddRemoteObject(object)
 	}
 
 	return err

@@ -6,6 +6,42 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
+// mostRecentCommonAncestor returns the highest-TAI version present in both
+// histories — the merge base. Versions are matched across repos by TAI, which
+// is preserved on transfer and (unlike the content locks EqualerSansTai
+// compares) is independent of the repo pubkey, so the same logical version
+// still matches after a repo re-signs it under its own key (#298). Returns nil
+// when the histories share no version (genuine divergence), which the caller
+// treats as "no base" — a real conflict.
+func mostRecentCommonAncestor(
+	ancestorsLocal, ancestorsRemote []*sku.Transacted,
+) (ancestor *sku.Transacted) {
+	for _, candidate := range ancestorsLocal {
+		isCommon := false
+
+		for _, remote := range ancestorsRemote {
+			if candidate.GetTai().Equals(remote.GetTai()) {
+				isCommon = true
+				break
+			}
+		}
+
+		if !isCommon {
+			continue
+		}
+
+		if ancestor == nil || ancestor.GetTai().Less(candidate.GetTai()) {
+			ancestor = candidate
+		}
+	}
+
+	return ancestor
+}
+
+// ParentNegotiatorFirstAncestor finds the merge base by reading both repos'
+// full object histories directly. Used by the direct/local-override transport
+// (both repos local) and the HTTP/stdio transport, where the remote's
+// ReadObjectHistory fetches over the wire (remote_http /object-history, #299).
 type ParentNegotiatorFirstAncestor struct {
 	Local, Remote repo.Repo
 }
@@ -52,47 +88,60 @@ func (parentNegotiator ParentNegotiatorFirstAncestor) FindBestCommonAncestor(
 		return ancestor, err
 	}
 
-	if len(ancestorsLocal) == 0 || len(ancestorsRemote) == 0 {
+	ancestor = mostRecentCommonAncestor(ancestorsLocal, ancestorsRemote)
+
+	return ancestor, err
+}
+
+// ParentNegotiatorInBand finds the merge base using the sender's object history
+// delivered IN-BAND in the transferred batch, rather than querying the remote.
+// The drtp/websocket transport uses this: its session is a lock-step stream
+// with no out-of-band history query, so the fetch sender ships each transferred
+// object's full history and the receiver builds this negotiator from it (#299).
+// The local side is the receiving repo's own history.
+type ParentNegotiatorInBand struct {
+	local         repo.Repo
+	remoteHistory map[string][]*sku.Transacted
+}
+
+func MakeParentNegotiatorInBand(
+	local repo.Repo,
+) *ParentNegotiatorInBand {
+	return &ParentNegotiatorInBand{
+		local:         local,
+		remoteHistory: make(map[string][]*sku.Transacted),
+	}
+}
+
+// AddRemoteObject records one version from the transferred batch as part of the
+// sender's history. The object is cloned because transfer iterators reuse
+// pooled values.
+func (negotiator *ParentNegotiatorInBand) AddRemoteObject(
+	object *sku.Transacted,
+) {
+	key := object.GetObjectId().String()
+	clone, _ := object.CloneTransacted() //repool:owned
+	negotiator.remoteHistory[key] = append(negotiator.remoteHistory[key], clone)
+}
+
+func (negotiator *ParentNegotiatorInBand) FindBestCommonAncestor(
+	conflicted sku.Conflicted,
+) (ancestor *sku.Transacted, err error) {
+	objectId := conflicted.Local.GetObjectId()
+
+	var ancestorsLocal []*sku.Transacted
+
+	if ancestorsLocal, err = negotiator.local.ReadObjectHistory(
+		objectId,
+	); err != nil {
+		err = errors.Wrap(err)
 		return ancestor, err
 	}
 
-	// TODO repool all skus except ancestor
-
-	// Pick the most recent common ancestor: the highest-TAI version present in
-	// both histories. Versions are matched across repos by TAI, which is
-	// preserved on transfer and — unlike the content locks that EqualerSansTai
-	// compares — is independent of the repo pubkey. The same logical version
-	// therefore still matches after the parent re-signs it under its own key
-	// (the cross-pubkey case in #298).
-	//
-	// The previous code compared only the single oldest version of each
-	// history (by content, including the pubkey-bearing type lock) and required
-	// them to be equal. For a clean, linear fast-forward — where the parent
-	// holds an older-but-on-path ancestor of the local head — that selected the
-	// chain root, or across pubkeys no base at all, as the merge base. An empty
-	// or too-old base makes the parent's own progression look like a divergent
-	// change and manufactures a false "merging required" conflict (#298).
-	// Selecting the newest shared version makes the parent's head the base, so
-	// the local head merges as a fast-forward; genuinely divergent histories
-	// share no TAI and still conflict.
-	for _, candidate := range ancestorsLocal {
-		isCommon := false
-
-		for _, remote := range ancestorsRemote {
-			if candidate.GetTai().Equals(remote.GetTai()) {
-				isCommon = true
-				break
-			}
-		}
-
-		if !isCommon {
-			continue
-		}
-
-		if ancestor == nil || ancestor.GetTai().Less(candidate.GetTai()) {
-			ancestor = candidate
-		}
-	}
+	ancestor = mostRecentCommonAncestor(
+		ancestorsLocal,
+		negotiator.remoteHistory[objectId.String()],
+	)
 
 	return ancestor, err
 }
