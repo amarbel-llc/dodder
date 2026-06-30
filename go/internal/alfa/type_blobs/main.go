@@ -14,21 +14,41 @@ import (
 const ArchiveTag = "zz-archive"
 
 // actionableArchiveHook is the shared on_commit_fields lua hook for the
-// built-in actionable types. It archives (adds ArchiveTag) on
-// status == "cancelled" for all actionable types, and on status == "done"
-// ONLY for !task. !chore / !habit "done" is left untouched -- recurrence
-// handling is deferred. The hook reads the projected fields
-// (kinder.Fields.status) that the on_commit_fields commit stage populates
-// before invocation; it never writes fields back.
+// built-in actionable types. Branching on the projected status field
+// (kinder.Fields.status), populated by the on_commit_fields commit stage
+// before invocation:
+//
+//   - status == "cancelled": archive (add ArchiveTag) for every actionable
+//     type. Tag-only, no field mutation, so no write-back fires.
+//   - status == "done" on a !task: one-shot completion -> archive. Tag-only.
+//   - status == "done" on a recurring type (!chore / !habit) carrying a
+//     non-empty recurrence: roll the object forward instead of archiving --
+//     advance kinder.Fields.due by the recurrence duration (via the host
+//     dodder_advance_date helper) and reset status to "todo". Mutating the
+//     `due` / `status` fields triggers the RFC 0006 Phase 1 commit-time field
+//     write-back (a single bounded, hook-free tryWriteFields + tryReadFields
+//     pass), persisting the recurred values to the blob.
+//
+// An empty `due` is guarded: a recurring task with no date only resets status,
+// leaving due empty (nothing to advance). A recurring "done" with no
+// recurrence value falls through unchanged.
 func actionableArchiveHook() string {
 	return fmt.Sprintf(`return {
   on_commit_fields = function(kinder, mutter)
     local f = kinder.Fields
-    local status = f and f.status
+    if not f then return end
+    local status = f.status
     if status == "cancelled" then
       kinder.Etiketten[%[1]q] = true
-    elseif status == "done" and kinder.Typ == "!task" then
-      kinder.Etiketten[%[1]q] = true
+    elseif status == "done" then
+      if kinder.Typ == "!task" then
+        kinder.Etiketten[%[1]q] = true
+      elseif f.recurrence ~= nil and f.recurrence ~= "" then
+        if f.due ~= nil and f.due ~= "" then
+          f.due = dodder_advance_date(f.due, f.recurrence)
+        end
+        f.status = "todo"
+      end
     end
   end,
 }
@@ -211,10 +231,10 @@ func DefaultChoreType() TomlV2 {
 }
 
 // DefaultHabitType returns the built-in !habit type blob. It is structurally
-// identical to !chore (the recurring field set + recurring reader/writer); the
-// semantic distinction (a consistency practice vs a periodic obligation)
-// surfaces as a tighter default cadence in the hooks (future work) and in the
-// type description, not in the field schema.
+// identical to !chore (the recurring field set + recurring reader/writer) and
+// shares the actionable recurrence hook; the semantic distinction (a
+// consistency practice vs a periodic obligation) surfaces in the per-instance
+// recurrence cadence and the type description, not in the field schema.
 func DefaultHabitType() TomlV2 {
 	return TomlV2{
 		FileExtension: "toml",
