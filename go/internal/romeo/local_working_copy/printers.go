@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/charlie/id_fmts"
+	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
@@ -139,6 +140,8 @@ func (local *Repo) MakePrinterBoxArchive(
 		local.GetConfig().GetPrintOptions().WithPrintTai(includeTai),
 	)
 
+	local.setBoxSelfProvenance(boxFormat)
+
 	return string_format_writer.MakeDelim(
 		"\n",
 		out,
@@ -147,5 +150,27 @@ func (local *Repo) MakePrinterBoxArchive(
 				return boxFormat.EncodeStringTo(o, w)
 			},
 		),
+	)
+}
+
+// setBoxSelfProvenance stamps THIS repo's identity (handle + pubkey) onto a
+// user-facing display box so objects authored by this repo render as
+// `<handle>@<pubkey>` under -print-sigs, distinguishing them from foreign
+// provenance (bare pubkey). The handle mirrors `info-repo id`
+// (config.GetRepoId().String()); the pubkey is the repo's config-public key.
+//
+// Display-only: never call this on a box formatter that feeds the
+// inventory-list wire coder (typed_blob_store / export / persisted lists),
+// which must stay bare so the wire form round-trips.
+func (local *Repo) setBoxSelfProvenance(boxFormat *box_format.BoxTransacted) {
+	var handle string
+
+	if cliConfig, ok := local.GetCLIConfig().(repo_config_cli.Config); ok {
+		handle = cliConfig.GetRepoId().String()
+	}
+
+	boxFormat.SetSelfProvenance(
+		local.GetImmutableConfigPublic().GetPublicKey(),
+		handle,
 	)
 }

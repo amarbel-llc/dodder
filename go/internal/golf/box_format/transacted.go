@@ -11,8 +11,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_box_builder"
+	"code.linenisgreat.com/dodder/go/internal/echo/repo_identity"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
@@ -76,11 +79,37 @@ type BoxTransacted struct {
 	fsItemReadWriter sku.FSItemReadWriter
 	relativePath     mad_env_dir.RelativePath
 
+	// selfPubKey + selfHandle carry the local repo's provenance identity.
+	// When an object's GetRepoPubKey() matches selfPubKey, the pubkey renders
+	// as the `<handle>@<pubkey>` self form under -print-sigs (see
+	// addFieldsMetadata). Both zero by default; an unset selfPubKey degrades to
+	// today's bare pubkey rendering. Display-only: only the user-facing
+	// printers (romeo/local_working_copy) set these --- the inventory-list wire
+	// coder and other internal / archive constructors leave them unset so
+	// persisted / exported bytes stay bare.
+	selfPubKey markl.Id
+	selfHandle string
+
 	isArchive bool
 }
 
 func (format *BoxTransacted) SetAbbr(abbr ids.Abbr) {
 	format.abbr = abbr
+}
+
+// SetSelfProvenance stamps the local repo's identity onto the formatter so
+// objects authored by this repo render their provenance as
+// `<handle>@<pubkey>` under -print-sigs, distinguishing them from foreign
+// provenance (bare pubkey). A null pubkey leaves self-provenance unset.
+func (format *BoxTransacted) SetSelfProvenance(
+	pubKey mad_domain_interfaces.MarklId,
+	handle string,
+) {
+	if pubKey != nil && !pubKey.IsNull() {
+		format.selfPubKey.ResetWithMarklId(pubKey)
+	}
+
+	format.selfHandle = handle
 }
 
 func (format *BoxTransacted) EncodeStringTo(
@@ -262,7 +291,20 @@ func (format *BoxTransacted) addFieldsMetadata(
 	}
 
 	if options.PrintSigs && !object.GetMetadata().GetObjectSig().IsNull() {
-		builder.AddRepoPubKey(metadata, format.abbr.PubKey.Abbreviate)
+		objectPubKey := metadata.GetRepoPubKey()
+
+		if !objectPubKey.IsNull() &&
+			!format.selfPubKey.IsNull() &&
+			markl.Equals(objectPubKey, format.selfPubKey) {
+			// self provenance: object authored by this repo
+			builder.AddRepoIdentity(
+				repo_identity.Render(format.selfHandle, objectPubKey),
+			)
+		} else {
+			// foreign / legacy provenance: bare (abbreviated) pubkey
+			builder.AddRepoPubKey(metadata, format.abbr.PubKey.Abbreviate)
+		}
+
 		builder.AddMotherSigIfNecessary(metadata, format.abbr.Sig.Abbreviate)
 		builder.AddObjectSig(metadata, format.abbr.Sig.Abbreviate)
 	}

@@ -68,6 +68,25 @@ func (builder *Builder) AddRepoPubKey(
 	}
 }
 
+// AddRepoIdentity appends a pre-rendered repo-identity provenance field (the
+// self `<handle>@<pubkey>` form produced by repo_identity.Render) in the same
+// box slot AddRepoPubKey would occupy. The value is emitted verbatim --- the
+// `@` separating handle and pubkey is already part of s --- so downstream box
+// parsing sees the field in the unchanged position.
+func (builder *Builder) AddRepoIdentity(s string) {
+	if s == "" {
+		return
+	}
+
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: s,
+			Type:  fields.TypeHash,
+		},
+		NoTruncate: true,
+	})
+}
+
 func (builder *Builder) AddObjectSig(
 	metadata objects.MetadataMutable,
 	funcAbbreviate domain_interfaces.FuncAbbreviateString,
