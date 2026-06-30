@@ -66,8 +66,11 @@ func sendClosure(
 	// would leave the receiver unable to tell a fast-forward from a real
 	// divergence. Symmetric across both directions (fetch and push); blobs are
 	// still deduped by have-negotiation below, so this re-sends only historical
-	// object metadata.
-	if list, err = expandListToObjectHistory(src, list); err != nil {
+	// object metadata. Shared with the HTTP transport.
+	if list, err = local_working_copy.ExpandListToObjectHistory(
+		src,
+		list,
+	); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -171,43 +174,6 @@ func sendClosure(
 	}
 
 	return err
-}
-
-// expandListToObjectHistory returns a new list holding the full version
-// history of every distinct object id in the input, read from src. A fetch
-// sender uses it so the pulling receiver gets the sender's complete history
-// per object for in-band merge negotiation (Option B, #299).
-func expandListToObjectHistory(
-	src repo.Repo,
-	list *sku.HeapTransacted,
-) (expanded *sku.HeapTransacted, err error) {
-	expanded = sku.MakeListTransacted()
-	seen := make(map[string]struct{})
-
-	for object := range list.All() {
-		key := object.GetObjectId().String()
-
-		if _, ok := seen[key]; ok {
-			continue
-		}
-
-		seen[key] = struct{}{}
-
-		var history []*sku.Transacted
-
-		if history, err = src.ReadObjectHistory(
-			object.GetObjectId(),
-		); err != nil {
-			err = errors.Wrap(err)
-			return expanded, err
-		}
-
-		for _, version := range history {
-			expanded.Add(version)
-		}
-	}
-
-	return expanded, err
 }
 
 // appendConfigBlob folds the config-log head blob digest into the blob

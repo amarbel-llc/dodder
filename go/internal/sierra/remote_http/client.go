@@ -205,6 +205,18 @@ func (client *client) pullQueryGroupFromWorkingCopy(
 		return err
 	}
 
+	// #299: ship each object's full version history so the receiving server's
+	// in-band merge negotiator can find the common ancestor. The query may
+	// resolve to latest-only (incremental transfer), which would leave the
+	// server unable to tell a fast-forward from a real divergence.
+	if list, err = local_working_copy.ExpandListToObjectHistory(
+		remote,
+		list,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	// TODO local / remote version negotiation
 
 	listType := ids.GetOrPanic(

@@ -58,9 +58,9 @@ curl_status() {
 # the route isn't registered — failing back through the matcher to
 # the mux's default not-found.
 #
-# These tests are intentionally negative-path-only: stage 4 (HTTP
-# variants of clone/pull/push) covers the positive path through
-# RoundTripperBufioWrappedSigner once #166 lands.
+# These tests are intentionally negative-path-only. The positive path
+# through RoundTripperBufioWrappedSigner lives in clone_port.bats (HTTP
+# clone) and transfer_port.bats (HTTP pull/push merge resolution).
 
 function serve_config_immutable_route_registered { # @test
   run curl_status GET /config-immutable

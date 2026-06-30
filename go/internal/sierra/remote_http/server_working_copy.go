@@ -2,6 +2,7 @@ package remote_http
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
@@ -75,6 +76,34 @@ func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(
 		return err
 	}
 
+	payload, err := io.ReadAll(request.Body)
+	if err != nil {
+		response.Error(errors.Wrap(err))
+		return response
+	}
+
+	// #299: build the in-band merge negotiator from the pushed full-history
+	// list before importing. The receiving server cannot query the pushing
+	// client's history (the topology inverse of pull, where the receiver is the
+	// initiator), so the client ships history in the POSTed list and the server
+	// resolves the merge base from it by TAI. Decode the buffered payload once
+	// to populate the negotiator, then again below to import.
+	negotiator := local_working_copy.MakeParentNegotiatorInBand(server.Repo)
+
+	for object, iterErr := range listCoderCloset.AllDecodedObjectsFromStream(
+		bytes.NewReader(payload),
+		nil,
+	) {
+		if iterErr != nil {
+			response.Error(errors.Wrap(iterErr))
+			return response
+		}
+
+		negotiator.AddRemoteObject(object)
+	}
+
+	importerOptions.ParentNegotiator = negotiator
+
 	importer := server.Repo.MakeImporter(
 		importerOptions,
 		sku.GetStoreOptionsRemoteTransfer(),
@@ -83,7 +112,7 @@ func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(
 	var claimedBlobDigest markl.Id
 
 	seq := listCoderCloset.AllDecodedObjectsFromStreamWithBlobDigestValidation(
-		request.Body,
+		bytes.NewReader(payload),
 		nil,
 		digestWriter,
 		&claimedBlobDigest,

@@ -145,3 +145,43 @@ func (negotiator *ParentNegotiatorInBand) FindBestCommonAncestor(
 
 	return ancestor, err
 }
+
+// ExpandListToObjectHistory returns a new list holding the full version history
+// of every distinct object id in the input, read from src. A transfer sender
+// uses it so the receiver's in-band negotiator (ParentNegotiatorInBand) gets
+// the sender's complete history per object: the transfer is otherwise
+// effectively incremental (the query may resolve to latest-only), which would
+// leave the receiver unable to tell a fast-forward from a real divergence
+// (#299). Shared by both the drtp and HTTP transports.
+func ExpandListToObjectHistory(
+	src repo.Repo,
+	list *sku.HeapTransacted,
+) (expanded *sku.HeapTransacted, err error) {
+	expanded = sku.MakeListTransacted()
+	seen := make(map[string]struct{})
+
+	for object := range list.All() {
+		key := object.GetObjectId().String()
+
+		if _, ok := seen[key]; ok {
+			continue
+		}
+
+		seen[key] = struct{}{}
+
+		var history []*sku.Transacted
+
+		if history, err = src.ReadObjectHistory(
+			object.GetObjectId(),
+		); err != nil {
+			err = errors.Wrap(err)
+			return expanded, err
+		}
+
+		for _, version := range history {
+			expanded.Add(version)
+		}
+	}
+
+	return expanded, err
+}
