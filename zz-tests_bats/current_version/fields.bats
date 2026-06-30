@@ -388,6 +388,99 @@ function field_full_task_organize_mutate_one_of_three { # @test
 # blob path to mutate). Implication: the haustoria MUST write a non-empty
 # starter blob before setting fields, OR write the full TOML blob with fields
 # already baked in (option 2 — see field_full_task_three_fields_from_blob).
+# A throwaway type carrying a `marker` string field and an on_commit_fields hook
+# that MUTATES that field (untouched -> touched). Proves the RFC 0006 Phase 1
+# commit-time field write-back mechanism end-to-end: the hook's mutation is
+# persisted via the single bounded, hook-free write-back pass (tryWriteFields +
+# tryReadFields), not just reflected in the in-memory index.
+function create_marker_type {
+  cat - >marker.type <<-'EOM'
+		file-extension = "toml"
+		vim-syntax-type = "toml"
+		hooks = """
+		return {
+		  on_commit_fields = function(kinder, mutter)
+		    local f = kinder.Fields
+		    if f and f.marker == "untouched" then
+		      kinder.Fields.marker = "touched"
+		    end
+		  end,
+		}
+		"""
+
+		[[fields]]
+		name = "marker"
+		kind = "string"
+
+		[fields-reader]
+		script = "yq -p toml -o json '{\"marker\": .marker}'"
+
+		[fields-writer]
+		script = "yq -p toml -o toml -i \".marker = \\\"$DODDER_FIELD_marker\\\"\" \"$DODDER_BLOB_PATH\""
+	EOM
+
+  run_dodder checkin -delete marker.type
+  assert_success
+}
+
+# Commit-time field mutation: the on_commit_fields hook rewrites marker from
+# "untouched" to "touched", and the bounded write-back persists it. The commit
+# COMPLETES (a cycle would hang or blow the stack), and `dodder show` reflects
+# the rewritten value re-projected from the rewritten blob.
+function field_hook_mutates_field_and_persists { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  create_marker_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# probe object
+		! marker
+		---
+
+		marker = "untouched"
+	EOM
+  assert_success
+
+  run_dodder show '!marker'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-884d8x9xlt30hdrzm3f8wy5sd5a0x8g5qqufaqrvcrg9afx7u8xssurxag !marker "probe object" marker=touched]
+	EOM
+}
+
+# Idempotency: re-committing the already-mutated object is stable. The hook sees
+# marker already "touched", the untouched-guard is false, no field changes, so
+# the bounded write-back is skipped and the object stays touched.
+function field_hook_mutation_is_idempotent { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  create_marker_type
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# probe object
+		! marker
+		---
+
+		marker = "untouched"
+	EOM
+  assert_success
+
+  # re-commit with the same (already-touched) value via organize
+  run_dodder organize -mode commit-directly '!marker' <<-EOM
+		- [one/uno !marker marker=touched] probe object
+	EOM
+  assert_success
+
+  run_dodder show '!marker'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-884d8x9xlt30hdrzm3f8wy5sd5a0x8g5qqufaqrvcrg9afx7u8xssurxag !marker "probe object" marker=touched]
+	EOM
+}
+
 function field_full_task_organize_from_empty_blob { # @test
   create_task_type_full
   run_dodder init-workspace -experimental-repo=false
