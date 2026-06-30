@@ -6,7 +6,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
-	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
@@ -97,9 +96,47 @@ func (cmd *Genesis) SetFlagDefinitions(
 	)
 }
 
+// SetLocationFromPositionalRequired pops the required new-repo location
+// positional and parses it into config.RepoId via the shared *Config
+// pointer (FromAny returns a copy, so the mutation must go through the
+// pointer). A non-auto config.RepoId means -repo_id / DODDER_REPO_ID was
+// set, and under FDR-0021 T3-C those address an EXISTING repo rather than
+// name a new one — so reject and point the caller at the positional.
+func (cmd Genesis) SetLocationFromPositionalRequired(
+	req command.Request,
+	argName string,
+) {
+	config, ok := req.Utility.GetConfigAny().(*repo_config_cli.Config)
+	if !ok {
+		req.Cancel(
+			errors.ErrorWithStackf(
+				"expected *repo_config_cli.Config, got %T",
+				req.Utility.GetConfigAny(),
+			),
+		)
+		return
+	}
+
+	if !repo_id.IsAuto(config.RepoId) {
+		req.Cancel(
+			errors.BadRequestf(
+				"-repo_id / DODDER_REPO_ID addresses an existing repo and "+
+					"cannot name a new one; pass the new repo's location as "+
+					"the %q positional instead",
+				argName,
+			),
+		)
+		return
+	}
+
+	if err := config.RepoId.Set(req.PopArg(argName)); err != nil {
+		req.Cancel(err)
+		return
+	}
+}
+
 func (cmd Genesis) OnTheFirstDay(
 	req command.Request,
-	repoIdString string,
 ) *local_working_copy.Repo {
 	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 	envUI := env_ui.Make(
@@ -108,14 +145,6 @@ func (cmd Genesis) OnTheFirstDay(
 		config.Debug,
 		env_ui.Options{},
 	)
-
-	var repoId ids.RepoId
-
-	if err := repoId.Set(repoIdString); err != nil {
-		envUI.Cancel(err)
-	}
-
-	cmd.GenesisConfig.Blob.SetRepoId(repoId)
 
 	if err := repo_id.CheckSupported(config.RepoId); err != nil {
 		envUI.Cancel(err)

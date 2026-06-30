@@ -31,7 +31,7 @@ func (cmd *Init) GetArgs() []command.ArgGroup {
 	return []command.ArgGroup{{
 		Args: []command.Arg{{
 			Name:        "repo-id",
-			Description: "identifier for the new repository",
+			Description: "location handle for the new repository (scope via spelling: name=user, .name=cwd, //name=system)",
 			Required:    true,
 		}},
 	}}
@@ -43,8 +43,9 @@ func (cmd Init) GetDescription() command.Description {
 		Long: "Create a new dodder repository in the current directory. " +
 			"Generates cryptographic keys for signing, initializes the " +
 			"default blob store, and sets up the object index. The " +
-			"repo-id argument names the repository (used for remote " +
-			"synchronization).",
+			"repo-id argument is the repository's location handle; its " +
+			"scope is determined by the spelling (`name` = user, " +
+			"`.name` = cwd, `//name` = system).",
 	}
 }
 
@@ -53,8 +54,8 @@ func (cmd *Init) SetFlagDefinitions(flagSet interfaces.CLIFlagDefinitions) {
 }
 
 func (cmd *Init) Run(req command.Request) {
-	repoId := req.PopArg("repo-id")
+	cmd.SetLocationFromPositionalRequired(req, "repo-id")
 	req.AssertNoMoreArgs()
 
-	cmd.OnTheFirstDay(req, repoId)
+	cmd.OnTheFirstDay(req)
 }

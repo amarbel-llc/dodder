@@ -250,7 +250,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		parentIsHomeRepo,
 	)
 
-	local := cmd.OnTheFirstDay(req, workspaceRepoIdString)
+	local := cmd.OnTheFirstDay(req)
 
 	remote := cmd.makeParentRemote(req, local, absParentPath, parentIsHomeRepo)
 

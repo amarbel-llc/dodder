@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
@@ -16,10 +14,6 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
-
-// initDefaultRepoIdUnsafe matches characters not allowed in a repo-id
-// derived from a directory name; they are collapsed to '-'.
-var initDefaultRepoIdUnsafe = regexp.MustCompile(`[^A-Za-z0-9_-]+`)
 
 func init() {
 	bigBang := env_repo.BigBang{}
@@ -33,8 +27,8 @@ func init() {
 }
 
 // InitDefault initializes a repository with sensible defaults for an
-// unattended / per-session bootstrap: the repo-id defaults to the
-// current directory name, the signing key is auto-detected from the SSH
+// unattended / per-session bootstrap: the location defaults to the
+// cwd `.default` repo, the signing key is auto-detected from the SSH
 // agent (a fresh per-repo key is generated when none is available), an
 // existing CWD-local `.default` madder blob store is reused, and the
 // zettel-id vocabulary is seeded from the embedded default word lists.
@@ -51,7 +45,7 @@ func (cmd *InitDefault) GetArgs() []command.ArgGroup {
 	return []command.ArgGroup{{
 		Args: []command.Arg{{
 			Name:        "repo-id",
-			Description: "identifier for the new repository (defaults to the current directory name)",
+			Description: "location handle for the new repository (scope via spelling; defaults to the cwd .default repo)",
 			Required:    false,
 		}},
 	}}
@@ -61,12 +55,12 @@ func (cmd InitDefault) GetDescription() command.Description {
 	return command.Description{
 		Short: "initialize a repository with sensible defaults",
 		Long: "Like `init`, but for an unattended / per-session bootstrap. " +
-			"The repo-id defaults to the current directory name. The signing " +
-			"key is auto-detected from the SSH agent (a fresh per-repo key is " +
-			"generated when none is available), an existing CWD-local " +
-			"`.default` madder blob store is reused when present, and the " +
-			"zettel-id vocabulary is seeded from the embedded default word " +
-			"lists. Re-running in an already-initialized directory is a no-op.",
+			"The location handle defaults to the cwd `.default` repo. The " +
+			"signing key is auto-detected from the SSH agent (a fresh " +
+			"per-repo key is generated when none is available), an existing " +
+			"CWD-local `.default` madder blob store is reused when present, " +
+			"and the zettel-id vocabulary is seeded from the embedded default " +
+			"word lists. Re-running in an already-initialized directory is a no-op.",
 	}
 }
 
@@ -77,7 +71,7 @@ func (cmd *InitDefault) SetFlagDefinitions(
 }
 
 func (cmd *InitDefault) Run(req command.Request) {
-	repoId := req.PopArgOrDefault("repo-id", "")
+	location := req.PopArgOrDefault("repo-id", "")
 	req.AssertNoMoreArgs()
 
 	cwd, err := os.Getwd()
@@ -86,15 +80,21 @@ func (cmd *InitDefault) Run(req command.Request) {
 		return
 	}
 
-	// Default to a CWD-local repository (`.dodder` in the current
-	// directory) — the per-session use case — unless the caller chose a
-	// location via -repo_id / DODDER_REPO_ID. GetConfigAny returns the
-	// shared *Config pointer (OnTheFirstDay reads the same one), so this
-	// sticks. Same cast pattern as init-workspace. Resolve this before the
+	// The positional, when given, is the new repo's location handle (full
+	// FDR-0019 grammar). When omitted, fall back to the cwd `.default` repo —
+	// the per-session bootstrap default — unless -repo_id / DODDER_REPO_ID
+	// already chose a location. GetConfigAny returns the shared *Config
+	// pointer (OnTheFirstDay reads the same one), so the mutation sticks.
+	// Same cast pattern as init-workspace. Resolve this before the
 	// idempotency probe so the probe targets the repo this run will write.
 	repoName := repo_id.DefaultName
 	if config, ok := req.Utility.GetConfigAny().(*repo_config_cli.Config); ok {
-		if repo_id.IsAuto(config.RepoId) {
+		if location != "" {
+			if err := config.RepoId.Set(location); err != nil {
+				req.Cancel(err)
+				return
+			}
+		} else if repo_id.IsAuto(config.RepoId) {
 			config.RepoId = repo_id.CwdDefault()
 		}
 		repoName = repo_id.EffectiveName(config.RepoId)
@@ -110,13 +110,9 @@ func (cmd *InitDefault) Run(req command.Request) {
 		return
 	}
 
-	if repoId == "" {
-		repoId = deriveRepoIdFromDir(cwd)
-	}
-
 	cmd.applyDefaults(cwd)
 
-	cmd.OnTheFirstDay(req, repoId)
+	cmd.OnTheFirstDay(req)
 }
 
 // applyDefaults wires the auto-detected signing key, blob-store reuse,
@@ -174,17 +170,6 @@ func firstSSHAgentSigningKey() (key string, ok bool) {
 	}
 
 	return string(text), true
-}
-
-func deriveRepoIdFromDir(dir string) string {
-	id := initDefaultRepoIdUnsafe.ReplaceAllString(filepath.Base(dir), "-")
-	id = strings.Trim(id, "-")
-
-	if id == "" {
-		return "dodder-worktree"
-	}
-
-	return id
 }
 
 func pathExists(path string) bool {

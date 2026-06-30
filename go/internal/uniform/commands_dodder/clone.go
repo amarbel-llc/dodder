@@ -47,7 +47,7 @@ func (cmd *Clone) GetArgs() []command.ArgGroup {
 	return []command.ArgGroup{
 		{Args: []command.Arg{{
 			Name:        "repo-id",
-			Description: "identifier for the new local repository",
+			Description: "location handle for the new local repository (scope via spelling: name=user, .name=cwd, //name=system)",
 			Required:    true,
 		}}},
 		cmd.Query.GetArgGroup(),
@@ -69,7 +69,9 @@ func (cmd *Clone) SetFlagDefinitions(
 }
 
 func (cmd Clone) Run(req command.Request) {
-	local := cmd.OnTheFirstDay(req, req.PopArg("new repo id"))
+	cmd.SetLocationFromPositionalRequired(req, "new repo id")
+
+	local := cmd.OnTheFirstDay(req)
 
 	var remote repo.Repo
 	var remoteObject *sku.Transacted
