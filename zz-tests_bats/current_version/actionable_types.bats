@@ -65,12 +65,12 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
   # `multiline` tommy tag). urgency carries no default (untriaged reads as
   # unset). The text formatter pipes the TOML `body` key through yq, strips
   # the leading `#!dang` convention line, then normalizes via pandoc. The
-  # `hooks` value is the archive-on-status on_commit_fields lua hook,
+  # `hooks` value is the archive/recurrence on_commit_fields lua hook,
   # serialized by tommy's plain string encoder as a single escaped line.
   assert_output - <<-'EOM'
 		file-extension = "toml"
 		vim-syntax-type = "toml"
-		hooks = "return {\n  on_commit_fields = function(kinder, mutter)\n    local f = kinder.Fields\n    local status = f and f.status\n    if status == \"cancelled\" then\n      kinder.Etiketten[\"zz-archive\"] = true\n    elseif status == \"done\" and kinder.Typ == \"!task\" then\n      kinder.Etiketten[\"zz-archive\"] = true\n    end\n  end,\n}\n"
+		hooks = "return {\n  on_commit_fields = function(kinder, mutter)\n    local f = kinder.Fields\n    if not f then return end\n    local status = f.status\n    if status == \"cancelled\" then\n      kinder.Etiketten[\"zz-archive\"] = true\n    elseif status == \"done\" then\n      if kinder.Typ == \"!task\" then\n        kinder.Etiketten[\"zz-archive\"] = true\n      elseif f.recurrence ~= nil and f.recurrence ~= \"\" then\n        if f.due ~= nil and f.due ~= \"\" then\n          f.due = dodder_advance_date(f.due, f.recurrence)\n        end\n        f.status = \"todo\"\n      end\n    end\n  end,\n}\n"
 
 		[formatters.text]
 		description = "Render the dang-typed body with pandoc"
@@ -352,10 +352,75 @@ function actionable_cancelled_archives_all_types { # @test
 	EOM
 }
 
-# A recurring actionable type (!chore / !habit) with status = "done" is NOT
-# archived: the shared hook gates the done branch on kinder.Typ == "!task", so
-# a recurring "done" stays active (recurrence handling is deferred).
-function actionable_recurring_done_not_archived { # @test
+# A recurring actionable type (!chore / !habit) committed with status = "done"
+# is NOT archived: the shared hook recurs it instead. When the blob carries a
+# `due` date, the hook advances due by the recurrence duration (via the
+# dodder_advance_date host helper) and resets status to "todo". The commit
+# COMPLETES (a recurrence cycle would hang); `dodder show` reflects the
+# rewritten values re-projected from the rewritten blob.
+function actionable_chore_recurs_on_done { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# weekly chore
+		! chore
+		---
+
+		status = "done"
+		priority = "p1"
+		due = "2026-07-01"
+		recurrence = "P1W"
+	EOM
+  assert_success
+
+  # recurred, not archived: still in the default (non-dormant) listing, due
+  # advanced exactly one week, status reset to todo.
+  run_dodder show '!chore'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-7cqs2zt3f8nfxdjnxvcrpdgt3ftfmnkmlxxkudmuskuavwq2z2psxatwq2 !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
+	EOM
+}
+
+# A !habit recurs the same way: P1D advances due by one day and resets status
+# to todo. Confirms the recurrence hook is shared across recurring types, not
+# !chore-specific.
+function actionable_habit_recurs_on_done { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# daily habit
+		! habit
+		---
+
+		status = "done"
+		priority = "p1"
+		due = "2026-07-01"
+		recurrence = "P1D"
+	EOM
+  assert_success
+
+  run_dodder show '!habit'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-r6t8h7ylhdahpgl2g9qkd75zmrktjgulgtzt6awxgu32ua2t2pvs8cv8x8 !habit "daily habit" status=todo priority=p1 due=2026-07-02 recurrence=P1D]
+	EOM
+}
+
+# Empty-due guard: a recurring type completed with no `due` value recurs by
+# resetting status to todo only -- there is nothing to advance, so due stays
+# empty. Still not archived.
+function actionable_recurring_done_resets_status_with_empty_due { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
   init_fixture -include-builtin-actionable-types
   run_dodder init-workspace -experimental-repo=false
 
@@ -371,23 +436,47 @@ function actionable_recurring_done_not_archived { # @test
 	EOM
   assert_success
 
+  run_dodder show '!chore'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-mz2vlvexlkamunp4s4vpf3mep89a2ae2uthngd2ythgdyl64ff5slxzvrh !chore "done chore" status=todo priority=p1 due= recurrence=P1W]
+	EOM
+}
+
+# Idempotency: the recurred chore is now status=todo. Re-committing it (via
+# organize, with the already-recurred field values) does NOT advance due again
+# -- the hook only acts on status="done", so a todo re-commit is a no-op for
+# recurrence. due stays at the once-advanced 2026-07-08.
+function actionable_chore_recurrence_is_idempotent { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
   run_dodder new -edit=false - <<-EOM
 		---
-		# done habit
-		! habit
+		# weekly chore
+		! chore
 		---
 
 		status = "done"
 		priority = "p1"
-		recurrence = "P1D"
+		due = "2026-07-01"
+		recurrence = "P1W"
 	EOM
   assert_success
 
-  # both remain in the default (non-dormant) listing -- not archived
-  run_dodder show ':z'
+  # re-commit the already-recurred (status=todo, due=2026-07-08) values
+  run_dodder organize -mode commit-directly '!chore' <<-EOM
+		- [one/uno !chore status=todo priority=p1 due=2026-07-08 recurrence=P1W] weekly chore
+	EOM
   assert_success
-  assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-smjh7lktppj3ufunh87dvhgt4sydmhm53jc0wj8czrdshqgh52nq362757 !chore "done chore" status=done priority=p1 due= recurrence=P1W]
-		[one/dos @blake2b256-d3684kxr0tu839mcg0zmglr78asered75qh060cvhe06rcn2lxds249pjy !habit "done habit" status=done priority=p1 due= recurrence=P1D]
+
+  # due unchanged: no second advance (same blob digest as the single-recur
+  # case confirms idempotency at the content level)
+  run_dodder show '!chore'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-7cqs2zt3f8nfxdjnxvcrpdgt3ftfmnkmlxxkudmuskuavwq2z2psxatwq2 !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
 	EOM
 }
