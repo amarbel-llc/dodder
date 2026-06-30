@@ -22,6 +22,14 @@ func (a *TomlV1) ResetWith(b TomlV1) {
 }
 
 func (tb *TomlV1) ContainsSku(tg sku.TransactedGetter) bool {
+	// A filterless tag has no Lua VM built (typed_blob_store/tag.go skips the
+	// build for an empty filter). Such a tag matches purely by membership,
+	// handled by the enclosing CompoundMatch's ObjectId half, so the filter
+	// half is a no-op here rather than a nil-pool dereference (#307).
+	if tb.LuaVMPoolV1 == nil {
+		return false
+	}
+
 	// lb := b.luaVMPoolBuilder.Clone().WithApply(MakeSelfApply(sk))
 	vm, vmRepool := tb.GetWithRepool()
 	defer vmRepool()

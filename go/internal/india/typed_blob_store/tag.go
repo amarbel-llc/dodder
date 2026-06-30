@@ -118,20 +118,29 @@ func (store Tag) GetBlob(
 			return blobGeneric, repool, err
 		}
 
-		luaVMPoolBuilder := store.envLua.MakeLuaVMPoolBuilder().WithApply(
-			tag_blobs.MakeLuaSelfApplyV1(object),
-		)
+		// A tag with an empty filter is a plain membership tag, not a Lua query
+		// filter. Building a Lua VM from an empty script fails validation
+		// (GetTopTableOrError expects the chunk to return a table), which would
+		// abort any query that names a materialized filterless tag (#307). Skip
+		// the VM build; the query layer treats a filterless tag as a bare-tag
+		// membership match (see makeTagOrLuaTag).
+		if blob.Filter != "" {
+			luaVMPoolBuilder := store.envLua.MakeLuaVMPoolBuilder().WithApply(
+				tag_blobs.MakeLuaSelfApplyV1(object),
+			)
 
-		var luaVMPool *lua.VMPool
+			luaVMPoolBuilder.WithScript(blob.Filter)
 
-		luaVMPoolBuilder.WithScript(blob.Filter)
+			var luaVMPool *lua.VMPool
 
-		if luaVMPool, err = luaVMPoolBuilder.Build(); err != nil {
-			err = errors.Wrap(err)
-			return blobGeneric, repool, err
+			if luaVMPool, err = luaVMPoolBuilder.Build(); err != nil {
+				err = errors.Wrap(err)
+				return blobGeneric, repool, err
+			}
+
+			blob.LuaVMPoolV1 = sku_lua.MakeLuaVMPoolV1(luaVMPool, nil)
 		}
 
-		blob.LuaVMPoolV1 = sku_lua.MakeLuaVMPoolV1(luaVMPool, nil)
 		blobGeneric = blob
 
 	case ids.TypeLuaTagV1:
