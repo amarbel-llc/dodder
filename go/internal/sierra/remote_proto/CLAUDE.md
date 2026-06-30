@@ -68,21 +68,23 @@ transport so it can ride a websocket.
   bytes, so content addressing is unaffected. `blobFrameWriter` /
   `blobFrameReader` (session.go) adapt the frame stream to the
   encoder/decoder.
-- **A fetch ships each object's full history for merge negotiation (#299).**
-  `sendClosure(..., expandObjectHistory=true)` on the server's fetch path
-  expands the closure to every version of each object (`ReadObjectHistory`)
-  before edges/objects; the pulling receiver's `receiveClosure` builds a
-  `local_working_copy.ParentNegotiatorInBand` from that single objects frame
-  (`addObjectsToNegotiator`) and sets it on `importerOptions` before importing,
-  so the merge can find the common ancestor by TAI. This is the lock-step
-  protocol's substitute for the out-of-band history query the HTTP transport
-  uses (`/object-history`): there is no in-session way to ask the sender for
-  history, so the sender volunteers it. Push does NOT do this
-  (`expandObjectHistory=false`); push-receive runs a nil negotiator (the
-  server cannot query the pushing client — Option A, still open on #299). Do
-  not "optimize" the fetch back to latest-only: blobs are already deduped by
-  have-negotiation, so the only extra bytes are historical object metadata, and
-  without them the receiver cannot distinguish a fast-forward from a divergence.
+- **Every transfer ships full object history for merge negotiation, both
+  directions (#299).** `sendClosure` always expands the closure to every
+  version of each object (`expandListToObjectHistory` → `ReadObjectHistory`)
+  before edges/objects, and `receiveClosure` always builds a
+  `local_working_copy.ParentNegotiatorInBand` from the single objects frame
+  (`addObjectsToNegotiator`), setting it on `importerOptions` before importing
+  so the merge finds the common ancestor by TAI. This is symmetric: on a fetch
+  the server sends and the client receives; on a push the client sends and the
+  server receives — `dst` is the receiving repo either way, so the same code
+  resolves the base for both. It is the lock-step protocol's substitute for the
+  out-of-band history query the HTTP transport uses (`/object-history`): there
+  is no in-session way to ask the peer for history, so the sender always
+  volunteers it. Do not gate this by direction or "optimize" it back to
+  latest-only: blobs are already deduped by have-negotiation, so the only extra
+  bytes are historical object metadata, and without them the receiver cannot
+  distinguish a fast-forward from a divergence. (HTTP/stdio *push* merge
+  resolution is separately still open on #299, blocked on #166.)
 
 ## CLI surface
 

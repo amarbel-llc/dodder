@@ -514,3 +514,220 @@ function pull_over_websocket_divergence_conflict { # @test
   assert_success
   assert_output --regexp '^\[one/uno @blake2b256-.+ !md "wow the local" tag\]$'
 }
+
+# push_over_websocket_fast_forward is the push-direction twin of the
+# fast-forward pull: `us` authors one/uno, pushes v0 to `them`, edits it into a
+# strict linear descendant, and pushes again. The second push must fast-forward
+# on `them` (the receiver/server), not raise a spurious conflict (#299). The
+# server stays up the whole test — `us` only mutates its own store between
+# pushes, so there is no store contention on `them`. Without the symmetric
+# in-band negotiator this would still pass (a nil negotiator blind-accepts the
+# newer version); it guards the negotiator from wrongly conflicting a linear
+# push.
+function push_over_websocket_fast_forward { # @test
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  mkdir -p them
+  (
+    pushd them || exit 1
+    run_dodder_init
+  )
+
+  start_proto_server them
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder_init
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# wow
+		- tag
+		! md
+		---
+
+		body
+	EOM
+  assert_success
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws
+  assert_success
+
+  # First push: them receives one/uno v0.
+  run_dodder push \
+    -remote-connection-type url-websocket \
+    /them-ws one/uno
+  assert_success
+
+  # us edits one/uno into a strict linear descendant.
+  run_dodder checkout one/uno
+  assert_success
+
+  {
+    echo "---"
+    echo "# wow the second"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited locally"
+  } >one/uno.zettel
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+
+  # Second push must fast-forward on them, not raise a spurious conflict.
+  run_dodder push \
+    -remote-connection-type url-websocket \
+    /them-ws one/uno
+  assert_success
+  popd || exit 1
+
+  # them holds the descendant.
+  stop_proto_server
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  pushd them || exit 1
+  run_dodder show one/uno
+  assert_success
+  assert_output --regexp '^\[one/uno @blake2b256-.+ !md "wow the second" tag\]$'
+  popd || exit 1
+}
+
+# push_over_websocket_divergence_conflict is the discriminator for the push side
+# (#299): it fails before the fix (nil negotiator blind-accepts and silently
+# overwrites them's divergent version) and passes after. `us` pushes one/uno v0
+# to `them`; both then edit one/uno independently off that shared v0; `us`'s
+# second push must fail with a conflict on `them` rather than clobbering them's
+# version. The conflict is reported on the server coproc's stderr (not the
+# client output), so we assert on the push failure plus them's surviving state.
+function push_over_websocket_divergence_conflict { # @test
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  mkdir -p them
+  (
+    pushd them || exit 1
+    run_dodder_init
+  )
+
+  start_proto_server them
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  run_dodder_init
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# wow
+		- tag
+		! md
+		---
+
+		body
+	EOM
+  assert_success
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws
+  assert_success
+
+  # Push the shared v0 to them.
+  run_dodder push \
+    -remote-connection-type url-websocket \
+    /them-ws one/uno
+  assert_success
+  popd || exit 1
+
+  # them diverges off v0. Stop the server so them's store is free to mutate,
+  # then restart (new OS-assigned port).
+  stop_proto_server
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  pushd them || exit 1
+  run_dodder checkout one/uno
+  assert_success
+
+  {
+    echo "---"
+    echo "# wow the remote"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited remotely"
+  } >one/uno.zettel
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+  popd || exit 1
+
+  start_proto_server them
+
+  # us diverges independently off the same v0.
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  pushd us || exit 1
+  run_dodder checkout one/uno
+  assert_success
+
+  {
+    echo "---"
+    echo "# wow the local"
+    echo "- tag"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited locally"
+  } >one/uno.zettel
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+
+  run_dodder remote-add \
+    -remote-connection-type url-websocket \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    them-ws2
+  assert_success
+
+  # Genuine divergence: the push must fail, not silently overwrite them's edit.
+  run_dodder push \
+    -remote-connection-type url-websocket \
+    /them-ws2 one/uno
+  assert_failure
+  popd || exit 1
+
+  # them still holds its own divergent version — us's push did not clobber it.
+  stop_proto_server
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$them_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$them_home"
+
+  pushd them || exit 1
+  run_dodder show one/uno
+  assert_success
+  assert_output --regexp '^\[one/uno @blake2b256-.+ !md "wow the remote" tag\]$'
+  popd || exit 1
+}

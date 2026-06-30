@@ -41,7 +41,6 @@ func sendClosure(
 	want control,
 	compression string,
 	configDescriptor *control,
-	expandObjectHistory bool,
 ) (err error) {
 	var queryGroup *queries.Query
 
@@ -61,17 +60,16 @@ func sendClosure(
 		return err
 	}
 
-	// Option B (#299): on a fetch, ship each object's full version history so
-	// the pulling receiver's in-band merge negotiator can find the common
-	// ancestor. The transfer is otherwise effectively incremental (the query
-	// may resolve to latest-only), which would leave the receiver unable to
-	// tell a fast-forward from a real divergence. Blobs are still deduped by
-	// have-negotiation below, so this re-sends only historical object metadata.
-	if expandObjectHistory {
-		if list, err = expandListToObjectHistory(src, list); err != nil {
-			err = errors.Wrap(err)
-			return err
-		}
+	// #299: ship each object's full version history so the receiver's in-band
+	// merge negotiator can find the common ancestor. The transfer is otherwise
+	// effectively incremental (the query may resolve to latest-only), which
+	// would leave the receiver unable to tell a fast-forward from a real
+	// divergence. Symmetric across both directions (fetch and push); blobs are
+	// still deduped by have-negotiation below, so this re-sends only historical
+	// object metadata.
+	if list, err = expandListToObjectHistory(src, list); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	explorer := store.MakeEdgeExplorer(
@@ -542,26 +540,24 @@ func receiveClosure(
 				return err
 			}
 
-			// Option B (#299): on a fetch (pull), the sender ships each
-			// object's full history in this batch (sendClosure's
-			// expandObjectHistory), so build the in-band merge negotiator from
-			// it before importing — the receiver has no out-of-band way to
-			// query the sender's history over this lock-step session. Push
-			// receive keeps the nil negotiator for now (Option A, deferred).
-			if want.Direction == DirectionFetch || want.Direction == "" {
-				negotiator := local_working_copy.MakeParentNegotiatorInBand(dst)
+			// #299: the sender ships each object's full history in this batch
+			// (sendClosure expands it), so build the in-band merge negotiator
+			// from the batch before importing — the lock-step session has no
+			// out-of-band way to query the sender's history. dst is the
+			// receiving repo in both directions (client on fetch, server on
+			// push), so this resolves the merge base symmetrically.
+			negotiator := local_working_copy.MakeParentNegotiatorInBand(dst)
 
-				if err = addObjectsToNegotiator(
-					dst,
-					payload,
-					negotiator,
-				); err != nil {
-					err = errors.Wrap(err)
-					return err
-				}
-
-				importerOptions.ParentNegotiator = negotiator
+			if err = addObjectsToNegotiator(
+				dst,
+				payload,
+				negotiator,
+			); err != nil {
+				err = errors.Wrap(err)
+				return err
 			}
+
+			importerOptions.ParentNegotiator = negotiator
 
 			if err = importObjects(dst, payload, importerOptions, storeOptions); err != nil {
 				err = errors.Wrap(err)

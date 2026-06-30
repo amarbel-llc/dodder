@@ -167,8 +167,7 @@ func (client *Client) Push(
 		client.local.GetEnvRepo(),
 		want,
 		negotiateCompression(serverCaps.Compression),
-		nil,   // config is never pushed (RFC 0005)
-		false, // push does not ship object history (Option A deferred, #299)
+		nil, // config is never pushed (RFC 0005)
 	); err != nil {
 		err = errors.Wrap(err)
 		return err
