@@ -20,7 +20,7 @@ function bootstrap_workspace_repo {
 	(
 		mkdir -p "$parent"
 		pushd "$parent" || exit 1
-		run_dodder_init -repo_id .default "parent-repo-id"
+		run_dodder_init
 
 		run_dodder new -edit=false - <<-EOM
 			---

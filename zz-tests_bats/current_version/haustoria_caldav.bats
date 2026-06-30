@@ -256,9 +256,8 @@ function init_haustoria_parent {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -repo_id .default \
     -include-builtin-actionable-types \
-    test-parent
+    .default
   assert_success
   popd || return 1
 }

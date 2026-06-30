@@ -67,7 +67,7 @@ function bootstrap_without_content {
 	mkdir -p them || exit 1
 
 	pushd them || exit 1
-	run_dodder_init -repo_id .default test-repo-id-them
+	run_dodder_init
 	assert_success
 	popd || exit 1
 }
@@ -77,9 +77,8 @@ function bootstrap_archive {
 
 	pushd them || exit 1
 	run_dodder init \
-		-repo_id .default \
 		-repo-type archive \
-		test-repo-id-them
+		.default
 
 	run_dodder info-repo type
 	assert_success

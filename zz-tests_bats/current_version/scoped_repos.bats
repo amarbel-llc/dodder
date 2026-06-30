@@ -20,10 +20,10 @@ teardown() {
 
 # bats test_tags=user_story:scoped_repos,isolation
 function scoped_user_repos_are_isolated { # @test
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id work work-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) work
 	assert_success
 
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id personal personal-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) personal
 	assert_success
 
 	# a zettel committed to "work"
@@ -59,7 +59,7 @@ function scoped_user_repos_are_isolated { # @test
 
 # bats test_tags=user_story:scoped_repos,env_var
 function scoped_repo_addressed_via_env_var { # @test
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id work work-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) work
 	assert_success
 
 	DODDER_REPO_ID=work run_dodder info-repo id
@@ -78,7 +78,7 @@ function scoped_repo_multi_dot_resolves_nth_ancestor { # @test
 	export MADDER_TEST_CEILING="$(dirname "$BATS_TEST_TMPDIR")"
 
 	# outer `notes` repo at $BATS_TEST_TMPDIR, with one zettel as its marker.
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id .notes outer-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) .notes
 	assert_success
 	run_dodder new -repo_id .notes -edit=false
 	assert_success
@@ -89,7 +89,7 @@ function scoped_repo_multi_dot_resolves_nth_ancestor { # @test
 	# trips a separate, pre-existing blob-store bug; see #283.)
 	mkdir -p inner
 	pushd inner || exit 1
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id .notes inner-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) .notes
 	assert_success
 
 	# from inner: `.notes` (nearest match) is the inner repo — empty.
@@ -119,7 +119,7 @@ function explicit_user_repo_pins_to_user_scope_from_inside_workspace { # @test
 	# workspace repo by MakeDefault's walk-up.
 
 	# user-scope `default`, populated, BEFORE any workspace exists in cwd.
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id default user-default-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) default
 	assert_success
 	run_dodder new -repo_id default -edit=false
 	assert_success
@@ -130,7 +130,7 @@ function explicit_user_repo_pins_to_user_scope_from_inside_workspace { # @test
 	# workspace-local `.default` in cwd, left empty — content distinguishes the
 	# two repos (user has one/uno, workspace empty), avoiding the nested-cwd
 	# commit bug (#283).
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id .default workspace-default-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) .default
 	assert_success
 
 	# (a) explicit bare `default` from inside the workspace -> the USER repo.

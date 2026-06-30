@@ -21,7 +21,7 @@ teardown() {
 # generates a new key each run, so the object blob digests are matched by
 # regexp.
 function init_default_creates_repo { # @test
-  run_dodder init-default test-default-repo
+  run_dodder init-default
   assert_success
   assert_line --regexp '^\[!md @blake2b256-.+ !toml-type-v2\]$'
 
@@ -33,10 +33,10 @@ function init_default_creates_repo { # @test
 # (init is not re-runnable), so the bootstrap is safe to re-run: it
 # returns before printing anything.
 function init_default_idempotent { # @test
-  run_dodder init-default test-default-repo
+  run_dodder init-default
   assert_success
 
-  run_dodder init-default test-default-repo
+  run_dodder init-default
   assert_success
   assert_output ''
 }
@@ -45,7 +45,7 @@ function init_default_idempotent { # @test
 # first id is the first yin word over the first yang word (arbor/amber).
 # The blob digest is over the body content (deterministic).
 function init_default_seeds_embedded_vocab { # @test
-  run_dodder init-default test-default-repo
+  run_dodder init-default
   assert_success
 
   run_dodder init-workspace -experimental-repo=false

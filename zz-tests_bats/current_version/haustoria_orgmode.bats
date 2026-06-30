@@ -122,7 +122,7 @@ function bootstrap_orgmode_workspace {
   mkdir -p "$parent_dir" "$workspace_dir"
 
   pushd "$parent_dir" || return 1
-  run_dodder_init_disable_age "test-parent"
+  run_dodder_init_disable_age
   popd || return 1
 
   pushd "$workspace_dir" || return 1
@@ -350,7 +350,7 @@ function sftp_known_hosts_rejects_wrong_key { # @test
   mkdir -p "$parent_dir" "$workspace_dir"
 
   pushd "$parent_dir" || return 1
-  run_dodder_init_disable_age "test-parent"
+  run_dodder_init_disable_age
   popd || return 1
 
   pushd "$workspace_dir" || return 1

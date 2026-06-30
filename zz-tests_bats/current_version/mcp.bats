@@ -437,8 +437,7 @@ function mcp_repos_lists_both_scopes { # @test
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -repo_id userrepo \
-    test-repo-id
+    userrepo
   assert_success
 
   run_dodder_init_disable_age
@@ -464,7 +463,7 @@ function mcp_bare_name_routes_to_user_scope_not_workspace { # @test
 
   # user-scope `default` with a distinctive marker, before any cwd workspace.
   run_dodder init -yin <(cat_yin) -yang <(cat_yang) -encryption none \
-    -repo_id default user-default-id
+    default
   assert_success
   user_zettel="$(mktemp)"
   {

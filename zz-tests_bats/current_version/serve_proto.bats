@@ -75,7 +75,7 @@ function bootstrap_them {
   mkdir -p them
   (
     pushd them || exit 1
-    run_dodder_init -repo_id .default "test-repo-id-them"
+    run_dodder_init
 
     run_dodder new -edit=false - <<-EOM
 			---
@@ -108,7 +108,7 @@ function pull_over_websocket { # @test
   mkdir -p us
   pushd us || exit 1
 
-  run_dodder_init -repo_id .default "test-repo-id-us"
+  run_dodder_init
 
   run_dodder remote-add \
     -remote-connection-type url-websocket \
@@ -148,9 +148,8 @@ function clone_over_websocket { # @test
     -encryption none \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -remote-connection-type url-websocket \
-    test-repo-id-us \
+    .default \
     toml-repo-uri-v0 \
     "http://${server_addr}" \
     +zettel,typ,etikett
@@ -178,7 +177,7 @@ function clone_over_websocket_seeds_config_from_source { # @test
   mkdir -p them
   (
     pushd them || exit 1
-    run_dodder_init -repo_id .default "test-repo-id-them"
+    run_dodder_init
 
     export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
     run_dodder edit-config
@@ -204,9 +203,8 @@ function clone_over_websocket_seeds_config_from_source { # @test
     -encryption none \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -remote-connection-type url-websocket \
-    test-repo-id-us \
+    .default \
     toml-repo-uri-v0 \
     "http://${server_addr}" \
     +zettel,typ,etikett
@@ -239,9 +237,8 @@ function clone_over_websocket_unmodified_source { # @test
     -encryption none \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -remote-connection-type url-websocket \
-    test-repo-id-us \
+    .default \
     toml-repo-uri-v0 \
     "http://${server_addr}" \
     +zettel,typ,etikett
@@ -283,7 +280,7 @@ function push_over_websocket { # @test
   mkdir -p them
   (
     pushd them || exit 1
-    run_dodder_init -repo_id .default "test-repo-id-them"
+    run_dodder_init
   )
 
   start_proto_server them
@@ -294,7 +291,7 @@ function push_over_websocket { # @test
   mkdir -p us
   pushd us || exit 1
 
-  run_dodder_init -repo_id .default "test-repo-id-us"
+  run_dodder_init
 
   run_dodder new -edit=false - <<-EOM
 		---

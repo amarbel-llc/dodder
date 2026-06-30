@@ -34,7 +34,7 @@ function info_config_immutable { # @test
 
 		public-key = "dodder-repo-public_key-v1.*"
 		store-version = $storeVersionCurrent
-		id = "test-repo-id"
+		id = ""
 		inventory_list-type = "!inventory_list-v2"
 		object-sig-type = "dodder-object-sig-v2"
 	EOM
@@ -53,7 +53,7 @@ function info_repo_id_shows_handle_at_pubkey { # @test
 	# repo's public key --- not the deprecated config-seed id. The handle is
 	# the FDR-0019 scoped repo id (`work` here); the pubkey is freshly
 	# generated per repo, so only its format is matched with --regexp.
-	run_dodder init -yin <(cat_yin) -yang <(cat_yang) -repo_id work work-id
+	run_dodder init -yin <(cat_yin) -yang <(cat_yang) work
 	assert_success
 
 	run_dodder info-repo -repo_id work id
@@ -74,7 +74,7 @@ function info_age_some { # @test
 	assert_output --regexp 'madder-private_key-v1@age_x25519_sec-'
 	key="$output"
 	echo "$key" >age-key
-	run_dodder_init -repo_id .default -encryption age-key test-repo-id
+	run_dodder_init -encryption age-key .default
 	run_dodder info-repo encryption
 	assert_output "$key"
 }
@@ -103,7 +103,7 @@ function info_xdg { # @test
 }
 
 function info_non_xdg { # @test
-	run_dodder_init -repo_id .default test-repo-id
+	run_dodder_init
 	run_dodder info-repo xdg
 	assert_output - <<-EOM
 		XDG_DATA_HOME=$BATS_TEST_TMPDIR/.dodder/local/share/repos/default
@@ -125,8 +125,7 @@ function info_repo_system_scope_roots_at_system_root { # @test
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
 		-encryption none \
-		-repo_id //backup \
-		test-repo-id
+		//backup
 	assert_success
 
 	# init rooted the repo's xdg under the system root, not $HOME
@@ -162,7 +161,7 @@ function info_repo_repos_lists_repos { # @test
 	# run_dodder_init creates a cwd repo (-repo_id .default), so the listing
 	# shows its routable `.default` spelling, not the ambiguous bare
 	# `default` (which would name a user-scope repo). FDR-0019 #276.
-	run_dodder_init test-repo-id
+	run_dodder_init
 
 	run_dodder info-repo repos
 	assert_success
@@ -177,11 +176,10 @@ function info_repo_repos_lists_both_scopes { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id userrepo \
-		test-repo-id
+		userrepo
 	assert_success
 
-	run_dodder_init test-repo-id
+	run_dodder_init
 
 	run_dodder info-repo repos
 	assert_success

@@ -141,7 +141,7 @@ function konfig_blob_fresh_init_is_bare_toml { # @test
 	# must run from a fresh subdirectory to avoid the collision.
 	mkdir -p "$BATS_TEST_TMPDIR/fresh"
 	cd "$BATS_TEST_TMPDIR/fresh"
-	run_dodder_init_disable_age test-bare-konfig
+	run_dodder_init_disable_age
 
 	# Config left the query surface (FDR 0020); the blob digest is recovered
 	# from the config log via show-config -history rather than `:konfig`.

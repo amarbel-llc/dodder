@@ -19,7 +19,7 @@ teardown() {
 # from `status`; a normal top-level file is reported untracked. The blob
 # digest is over the file content (deterministic).
 function init_workspace_default_ignores_default_dirs { # @test
-  run_dodder init-default test-iwd-repo
+  run_dodder init-default
   assert_success
 
   run_dodder init-workspace-default
@@ -41,7 +41,7 @@ function init_workspace_default_ignores_default_dirs { # @test
 # A second init-workspace-default is a no-op (a workspace already
 # exists), so the bootstrap is safe to re-run.
 function init_workspace_default_idempotent { # @test
-  run_dodder init-default test-iwd-repo
+  run_dodder init-default
   assert_success
 
   run_dodder init-workspace-default

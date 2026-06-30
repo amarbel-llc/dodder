@@ -10,7 +10,7 @@ setup() {
   export DODDER_XDG_UTILITY_OVERRIDE="$BATS_TEST_TMPDIR"
   export MADDER_XDG_UTILITY_OVERRIDE="$BATS_TEST_TMPDIR"
 
-  run_dodder_init test-serve-public
+  run_dodder_init
 
   # -public relaxes sigMiddleware for nonce-less read requests (see
   # remote_http.Server.Public). start_server forwards trailing args as

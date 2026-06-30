@@ -19,7 +19,7 @@ function clone_history_zettel_type_tag { # @test
 	bootstrap "$them"
 
 	run_clone_default_with \
-		test-repo-id-us \
+		.default \
 		toml-repo-local_override_path-v0 \
 		"$(realpath ./them)" \
 		+zettel,typ,etikett
@@ -42,7 +42,7 @@ function clone_history_zettel_type_tag_stdio_local { # @test
 	bootstrap "$them"
 
 	run_clone_default_with \
-		test-repo-id-us \
+		.default \
 		toml-repo-local_override_path-v0 \
 		"$(realpath them)" \
 		+zettel,typ,etikett
@@ -67,7 +67,7 @@ function clone_history_one_zettel_stdio_local { # @test
 	bootstrap "$them"
 
 	run_clone_default_with \
-		test-repo-id-us \
+		.default \
 		"$(realpath them)" \
 		o/d+
 
@@ -84,7 +84,7 @@ function clone_history_zettel_type_tag_stdio_ssh { # @test
 	bootstrap "$them"
 
 	run_clone_default_with \
-		test-repo-id-us \
+		.default \
 		toml-repo-local_override_path-v0 \
 		"$(realpath them)" \
 		+zettel,typ,etikett
@@ -107,7 +107,7 @@ function clone_history_default_allow_conflicts { # @test
 	bootstrap "$them"
 
 	run_clone_default_with \
-		test-repo-id-us \
+		.default \
 		toml-repo-local_override_path-v0 \
 		"$(realpath ./them)"
 
@@ -134,7 +134,7 @@ function clone_direct_local_path { # @test
 
 	run_clone_default_with \
 		-direct "$(realpath ./them)" \
-		test-repo-id-us \
+		.default \
 		+zettel,typ,etikett
 
 	assert_success
@@ -176,7 +176,7 @@ function clone_direct_seeds_config_from_source { # @test
 
 	run_clone_default_with \
 		-direct "$(realpath ./them)" \
-		test-repo-id-us \
+		.default \
 		+zettel,typ,etikett
 
 	assert_success
@@ -191,7 +191,7 @@ function clone_direct_no_repo_at_path { # @test
 
 	run_clone_default_with \
 		-direct "$(realpath empty_dir)" \
-		test-repo-id-us
+		.default
 
 	assert_failure
 	assert_output --partial 'not in a dodder directory'

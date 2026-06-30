@@ -20,10 +20,9 @@ function json_init_and_checkin { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption generate \
     -inventory_list-type inventory_list-json-v0 \
-    test-repo-id
+    .default
 
   assert_success
 
@@ -76,10 +75,9 @@ function json_checkin_multiple_versions { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption generate \
     -inventory_list-type inventory_list-json-v0 \
-    test-repo-id
+    .default
 
   assert_success
 
@@ -131,10 +129,9 @@ function json_signature_verification { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption generate \
     -inventory_list-type inventory_list-json-v0 \
-    test-repo-id
+    .default
 
   assert_success
 
@@ -194,10 +191,9 @@ function json_inventory_list_preserves_all_lock_kinds { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption generate \
     -inventory_list-type inventory_list-json-v0 \
-    test-repo-id
+    .default
 
   assert_success
 

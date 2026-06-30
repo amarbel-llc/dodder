@@ -33,7 +33,7 @@ function clone_history_zettel_type_tag_port { # @test
   start_server them
 
   run_clone_default_with \
-    test-repo-id-us \
+    .default \
     toml-repo-uri-v0 \
     "http://${server_addr}" \
     +zettel,typ,etikett
@@ -69,7 +69,7 @@ function clone_over_http_seeds_config_from_source { # @test
   mkdir -p them
   (
     pushd them || exit 1
-    run_dodder_init -repo_id .default "test-repo-id-them"
+    run_dodder_init
 
     export EDITOR="bash -c 'echo \"# clone-seed-marker\" >> \"\$0\"'"
     run_dodder edit-config
@@ -94,7 +94,7 @@ function clone_over_http_seeds_config_from_source { # @test
   pushd us || exit 1
 
   run_clone_default_with \
-    test-repo-id-us \
+    .default \
     toml-repo-uri-v0 \
     "http://${server_addr}" \
     +zettel,typ,etikett
@@ -128,7 +128,7 @@ function clone_over_http_unmodified_source { # @test
   pushd us || exit 1
 
   run_clone_default_with \
-    test-repo-id-us \
+    .default \
     toml-repo-uri-v0 \
     "http://${server_addr}" \
     +zettel,typ,etikett

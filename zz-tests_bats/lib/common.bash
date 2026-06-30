@@ -175,7 +175,7 @@ function run_dodder_stderr_unified {
 
 function run_dodder_init {
   if [[ $# -eq 0 ]]; then
-    args=("test")
+    args=(".default")
   else
     args=("$@")
   fi
@@ -183,7 +183,6 @@ function run_dodder_init {
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     "${args[@]}"
 
   assert_success
@@ -196,7 +195,7 @@ EOM
 
 function run_dodder_init_sha256 {
   if [[ $# -eq 0 ]]; then
-    args=("test")
+    args=(".default")
   else
     args=("$@")
   fi
@@ -204,7 +203,6 @@ function run_dodder_init_sha256 {
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -hash_type-id sha256 \
     "${args[@]}"
 
@@ -236,7 +234,7 @@ run_find() {
 
 function run_dodder_init_disable_age_xdg {
   if [[ $# -eq 0 ]]; then
-    args=("test-repo-id")
+    args=("default")
   else
     args=("$@")
   fi
@@ -277,7 +275,7 @@ function run_dodder_init_disable_age_xdg {
 
 function run_dodder_init_disable_age {
   if [[ $# -eq 0 ]]; then
-    args=("test-repo-id")
+    args=(".default")
   else
     args=("$@")
   fi
@@ -286,7 +284,6 @@ function run_dodder_init_disable_age {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -repo_id .default \
     "${args[@]}"
 
   assert_success

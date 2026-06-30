@@ -15,7 +15,7 @@ setup() {
 function show_config_head { # @test
   mkdir -p "$BATS_TEST_TMPDIR/fresh"
   cd "$BATS_TEST_TMPDIR/fresh"
-  run_dodder_init_disable_age test-show-config-head
+  run_dodder_init_disable_age
 
   run_dodder show-config
   assert_success
@@ -68,7 +68,7 @@ merge = ["vimdiff"]'
 function show_config_after_edit_config_roundtrips { # @test
   mkdir -p "$BATS_TEST_TMPDIR/fresh"
   cd "$BATS_TEST_TMPDIR/fresh"
-  run_dodder_init_disable_age test-show-config
+  run_dodder_init_disable_age
 
   export EDITOR="bash -c 'echo \"# this is the body 2\" >> \"\$0\"'"
   run_dodder edit-config

@@ -13,7 +13,7 @@ teardown() {
 
 # bats test_tags=repo_id
 function repo_id_cwd_selects_cwd_repo { # @test
-	run_dodder_init test-repo-id
+	run_dodder_init
 
 	run test -d ".dodder"
 	assert_success
@@ -36,36 +36,38 @@ function repo_id_remote_first_rejected_no_transport { # @test
 	run_dodder_stderr_unified init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id /backup \
-		test-repo-id
+		/backup
 
 	assert_failure
 	assert_output --regexp 'remote-first.*not yet resolvable'
 }
 
 # bats test_tags=repo_id
-function dodder_repo_id_env_var_selects_cwd_repo { # @test
+function dodder_repo_id_env_var_rejected_on_init { # @test
+	# FDR-0021 T3-C: DODDER_REPO_ID addresses an EXISTING repo; it no longer
+	# names a new one on init. Setting it (making config.RepoId non-auto) is
+	# rejected, pointing the caller at the location positional. The location
+	# is named by the required positional instead.
 	DODDER_REPO_ID=.default run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		test-repo-id
+		.default
 
-	assert_success
-
-	run test -d ".dodder"
-	assert_success
+	assert_failure
+	assert_output --regexp 'cannot name a new one'
 }
 
 # bats test_tags=repo_id
-function repo_id_flag_overrides_env_var { # @test
-	DODDER_REPO_ID=/ run_dodder init \
+function init_rejects_non_auto_repo_id { # @test
+	# FDR-0021 T3-C: -repo_id addresses an existing repo and cannot name a new
+	# one on init. Supplying it alongside the required location positional is
+	# rejected.
+	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-		-repo_id .default \
-		test-repo-id
+		-repo_id other \
+		.default
 
-	assert_success
-
-	run test -d ".dodder"
-	assert_success
+	assert_failure
+	assert_output --regexp 'cannot name a new one'
 }

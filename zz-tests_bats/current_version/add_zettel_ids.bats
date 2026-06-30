@@ -83,7 +83,7 @@ function add_zettel_ids_bootstrap_from_nothing { # @test
 
 	# init WITHOUT -yin/-yang: no zettel-id pool is seeded, so the
 	# object_ids/Yin and object_ids/Yang flat files do not exist.
-	run_dodder init -encryption none -repo_id .default test-repo-id
+	run_dodder init -encryption none .default
 	assert_success
 
 	run_dodder init-workspace -experimental-repo=false

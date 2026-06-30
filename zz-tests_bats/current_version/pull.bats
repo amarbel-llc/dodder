@@ -26,7 +26,7 @@ function bootstrap_repo_at_dir_with_name {
   (
     mkdir -p "$1"
     pushd "$1" || exit 1
-    run_dodder_init -repo_id .default "$1"
+    run_dodder_init
     bootstrap_content
   )
 }

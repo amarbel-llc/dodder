@@ -26,7 +26,7 @@ function deinit_force() { # @test
 		not in a dodder directory
 	EOM
 
-	run_dodder_init -blob_store-id .default test
+	run_dodder_init -blob_store-id .default .default
 
 	run_dodder last
 	assert_success

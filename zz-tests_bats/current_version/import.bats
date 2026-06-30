@@ -16,10 +16,9 @@ setup() {
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption none \
     -blob_store-id shared \
-    test
+    .default
   assert_success
 
   run_dodder init-workspace -experimental-repo=false

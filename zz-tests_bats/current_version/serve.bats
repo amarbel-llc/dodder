@@ -12,7 +12,7 @@ setup() {
   export DODDER_XDG_UTILITY_OVERRIDE="$BATS_TEST_TMPDIR"
   export MADDER_XDG_UTILITY_OVERRIDE="$BATS_TEST_TMPDIR"
 
-  run_dodder_init test-serve
+  run_dodder_init
 
   start_server
 }

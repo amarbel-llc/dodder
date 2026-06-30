@@ -29,7 +29,7 @@ function init_compression { # @test
 
 			public-key = "dodder-repo-public_key-v1.*"
 			store-version = $storeVersionCurrent
-			id = "test-repo-id"
+			id = ""
 			inventory_list-type = "!inventory_list-v2"
 			object-sig-type = "dodder-object-sig-v2"
 		EOM
@@ -100,7 +100,7 @@ function init_and_with_another_age { # @test
 	mkdir inner
 	pushd inner || exit 1
 
-	run_dodder_init -yin <(cat_yin) -yang <(cat_yang) -encryption "$age_id" test-repo-id
+	run_dodder_init -yin <(cat_yin) -yang <(cat_yang) -encryption "$age_id" .default
 	assert_success
 
 	run_madder info-repo encryption
@@ -109,7 +109,7 @@ function init_and_with_another_age { # @test
 }
 
 function init_with_non_xdg { # @test
-	run_dodder_init -repo_id .default test-repo-id
+	run_dodder_init
 	run tree .dodder
 	assert_output
 
@@ -128,7 +128,7 @@ function non_repo_failure { # @test
 }
 
 function init_and_init { # @test
-	run_dodder_init test-repo-id
+	run_dodder_init
 	assert_success
 
 	{
@@ -153,7 +153,7 @@ function init_and_init { # @test
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
 
-	run_dodder init -repo_id .default test-repo-id
+	run_dodder init .default
 	assert_failure
 	assert_output --partial ': file exists'
 
@@ -179,9 +179,8 @@ function init_with_age { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-    -repo_id .default \
 		-encryption generate \
-		test-repo-id
+		.default
 
 	assert_success
 	assert_output - <<-EOM
@@ -221,7 +220,7 @@ function init_blob_store_id_missing_fails_fast { # @test
 		-yang <(cat_yang) \
 		-encryption none \
 		-blob_store-id never-created \
-		test-repo-id
+		default
 
 	assert_failure
 	assert_output --partial 'blob store'
@@ -241,7 +240,7 @@ function init_with_existing_madder_store { # @test
 		-yang <(cat_yang) \
 		-encryption none \
 		-blob_store-id shared \
-		test-repo-id
+		default
 
 	assert_success
 	assert_output --regexp - <<-'EOM'
@@ -262,10 +261,9 @@ function init_with_json_inventory_list_type { # @test
 	run_dodder init \
 		-yin <(cat_yin) \
 		-yang <(cat_yang) \
-    -repo_id .default \
 		-encryption generate \
 		-inventory_list-type inventory_list-json-v0 \
-		test-repo-id
+		.default
 
 	assert_success
 	assert_output - <<-EOM
