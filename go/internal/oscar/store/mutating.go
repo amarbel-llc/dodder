@@ -103,12 +103,45 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 	// Runs after tryReadFields so the on_commit_fields hook sees the
 	// projected fields (kinder.Fields.<name>). A tag added here takes effect
 	// because applyDormantAndRealizeTags runs later in commit().
-	if err = commitFacilitator.tryPostFieldHooks(daughter, mother, options); err != nil {
+	var fieldsChanged bool
+
+	if fieldsChanged, err = commitFacilitator.tryPostFieldHooks(
+		daughter,
+		mother,
+		options,
+	); err != nil {
 		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
 			err = nil
 		} else {
 			err = errors.Wrap(err)
 			return err
+		}
+	}
+
+	// RFC 0006 Phase 1: when on_commit_fields mutated a field value, persist it
+	// with exactly ONE bounded write-back. tryWriteFields runs the type's yq
+	// fields-writer (projecting the mutated field into the blob) and
+	// tryReadFields re-projects the rewritten blob into the index. Both run
+	// scripts, never lua hooks, so on_commit_fields does NOT re-fire — there is
+	// no second hook invocation and no cycle. This pass runs exactly once; it is
+	// never looped.
+	if fieldsChanged {
+		if err = commitFacilitator.tryWriteFields(daughter, mother, options); err != nil {
+			if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
+				err = nil
+			} else {
+				err = errors.Wrap(err)
+				return err
+			}
+		}
+
+		if err = commitFacilitator.tryReadFields(daughter, options); err != nil {
+			if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
+				err = nil
+			} else {
+				err = errors.Wrap(err)
+				return err
+			}
 		}
 	}
 
@@ -135,6 +168,18 @@ func (commitFacilitator commitFacilitator) commit(
 ) (err error) {
 	if daughter == nil {
 		panic("empty daughter")
+	}
+
+	// RFC 0006 cycle guarantee #3: a commit-time hook must not trigger a nested
+	// commit. hookDepth is non-zero only while a lua hook is executing, so a
+	// commit reaching this point with it set came from within a hook. (The
+	// legitimate nested commit — addMissingTypes -> createType -> Commit — runs
+	// after the hooks return, with hookDepth back at zero.)
+	if commitFacilitator.hookDepth.Load() > 0 {
+		err = errors.ErrorWithStackf(
+			"nested commit from within a hook is not permitted",
+		)
+		return err
 	}
 
 	ui.Log().Printf("%s -> %s", options, daughter)

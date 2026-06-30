@@ -51,8 +51,8 @@ func ToLuaTableV1(
 	}
 
 	// Project the metadata index fields (name -> string value) so hooks can
-	// read them as kinder.Fields.<name>. Read-only: FromLuaTableV1 does not
-	// read these back (field write-back is deferred).
+	// read them as kinder.Fields.<name> and mutate them in place; FromLuaTableV1
+	// reads the mutated values back (RFC 0006 Phase 1 field write-back).
 	fieldsTable := luaTable.Fields
 
 	for field := range object.GetMetadata().GetIndex().GetFields() {
@@ -60,11 +60,16 @@ func ToLuaTableV1(
 	}
 }
 
+// FromLuaTableV1 writes the hook's mutations back onto object. It returns
+// fieldsChanged when the hook altered any projected field value (RFC 0006
+// Phase 1 field write-back), so the commit pipeline can run its single bounded,
+// hook-free write-back pass. Tag and id write-back are unconditional and do not
+// affect fieldsChanged.
 func FromLuaTableV1(
 	object *sku.Transacted,
 	luaState *lua.LState,
 	luaTable *LuaTableV1,
-) (err error) {
+) (fieldsChanged bool, err error) {
 	transacted := luaTable.Transacted
 
 	genre := genres.MakeOrUnknown(
@@ -77,7 +82,7 @@ func FromLuaTableV1(
 	if id != "" {
 		if err = object.GetObjectIdMutable().Set(id); err != nil {
 			err = errors.Wrap(err)
-			return err
+			return fieldsChanged, err
 		}
 	}
 
@@ -86,7 +91,7 @@ func FromLuaTableV1(
 
 	if !ok {
 		err = errors.ErrorWithStackf("expected table but got %T", tags)
-		return err
+		return fieldsChanged, err
 	}
 
 	object.GetMetadataMutable().ResetTags()
@@ -104,11 +109,62 @@ func FromLuaTableV1(
 		},
 	)
 
+	fieldsChanged = writeFieldsBack(object, luaTable.Fields)
+
 	// TODO Bezeichnung
 	// TODO Typ
 	// TODO Tai
 	// TODO Blob
 	// TODO Verzeichnisse
 
-	return err
+	return fieldsChanged, err
+}
+
+// writeFieldsBack applies any values the hook set on kinder.Fields back onto
+// the object's projected index fields. Only fields that already exist in the
+// index are updated (Key + TypeBlobDigest preserved); a brand-new key is
+// ignored because a field with no TypeBlobDigest cannot be persisted by the
+// fields-writer. A nil or empty Fields table is a graceful no-op — this matters
+// because FromLuaTableV1 also runs for on_pre_commit, before fields are
+// projected. Returns whether any field value actually changed.
+func writeFieldsBack(
+	object *sku.Transacted,
+	fieldsTable *lua.LTable,
+) (fieldsChanged bool) {
+	if fieldsTable == nil {
+		return fieldsChanged
+	}
+
+	indexFields := object.GetMetadataMutable().GetIndexMutable().GetFieldsMutable()
+
+	if indexFields.Len() == 0 {
+		return fieldsChanged
+	}
+
+	fieldsTable.ForEach(
+		func(key, value lua.LValue) {
+			keyString := key.String()
+			valueString := value.String()
+
+			for i := 0; i < indexFields.Len(); i++ {
+				field := indexFields.At(i)
+
+				if field.Key != keyString {
+					continue
+				}
+
+				if field.Value == valueString {
+					break
+				}
+
+				field.Value = valueString
+				(*indexFields)[i] = field
+				fieldsChanged = true
+
+				break
+			}
+		},
+	)
+
+	return fieldsChanged
 }

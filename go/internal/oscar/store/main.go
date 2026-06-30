@@ -1,6 +1,8 @@
 package store
 
 import (
+	"sync/atomic"
+
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -42,6 +44,11 @@ type Store struct {
 	queryBuilder *queries.Builder
 
 	ui sku.UIStorePrinters
+
+	// hookDepth is non-zero while a commit-time lua hook is executing. A commit
+	// initiated while it is non-zero is a hook attempting to re-enter the commit
+	// path; commitFacilitator.commit rejects it (RFC 0006 cycle guarantee #3).
+	hookDepth atomic.Int32
 }
 
 var _ sku.RepoStore = &Store{}

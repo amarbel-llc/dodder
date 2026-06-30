@@ -69,3 +69,93 @@ func TestToLuaTableV1ProjectsFields(t1 *testing.T) {
 		vm.LState.GetField(fieldsTable, "status").String(),
 	)
 }
+
+// A hook that mutates kinder.Fields.<name> has its new value written back onto
+// the object's projected index field, and FromLuaTableV1 reports the change
+// (RFC 0006 Phase 1 field write-back).
+func TestFromLuaTableV1WritesFieldsBack(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript("return {}").Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+
+	tablePool := MakeLuaTablePoolV1(vm)
+
+	table, tableRepool := tablePool.GetWithRepool()
+	defer tableRepool()
+
+	object, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool()
+
+	metadata := object.GetMetadataMutable()
+	t.AssertNoError(object.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(metadata.GetTypeMutable().SetType("task"))
+
+	fieldsMutable := metadata.GetIndexMutable().GetFieldsMutable()
+	fieldsMutable.Append(fields.Field{
+		Type:  fields.TypeUserData,
+		Key:   "status",
+		Value: "todo",
+	})
+	fieldsMutable.Append(fields.Field{
+		Type:  fields.TypeUserData,
+		Key:   "priority",
+		Value: "p1",
+	})
+
+	// project, then simulate a hook mutating one field and leaving the other
+	ToLuaTableV1(object, vm.LState, table)
+	vm.LState.SetField(table.Fields, "status", lua.LString("done"))
+
+	fieldsChanged, err := FromLuaTableV1(object, vm.LState, table)
+	t.AssertNoError(err)
+	t.AssertTrue(fieldsChanged, "a mutated field should report fieldsChanged")
+
+	got := make(map[string]string)
+	for field := range object.GetMetadata().GetIndex().GetFields() {
+		got[field.Key] = field.Value
+	}
+
+	t.AssertEqualStrings("done", got["status"])
+	t.AssertEqualStrings("p1", got["priority"])
+}
+
+// A hook that leaves kinder.Fields untouched reports fieldsChanged=false, so
+// the commit pipeline skips the bounded write-back pass entirely.
+func TestFromLuaTableV1NoFieldChangeReportsFalse(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript("return {}").Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+
+	tablePool := MakeLuaTablePoolV1(vm)
+
+	table, tableRepool := tablePool.GetWithRepool()
+	defer tableRepool()
+
+	object, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool()
+
+	metadata := object.GetMetadataMutable()
+	t.AssertNoError(object.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(metadata.GetTypeMutable().SetType("task"))
+
+	fieldsMutable := metadata.GetIndexMutable().GetFieldsMutable()
+	fieldsMutable.Append(fields.Field{
+		Type:  fields.TypeUserData,
+		Key:   "status",
+		Value: "todo",
+	})
+
+	ToLuaTableV1(object, vm.LState, table)
+
+	fieldsChanged, err := FromLuaTableV1(object, vm.LState, table)
+	t.AssertNoError(err)
+	t.AssertFalse(fieldsChanged, "an untouched Fields table must not report a change")
+}

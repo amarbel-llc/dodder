@@ -54,7 +54,7 @@ func (store *Store) tryNewHook(
 		return err
 	}
 
-	if err = store.tryHookWithName(
+	if _, err = store.tryHookWithName(
 		child,
 		nil,
 		options,
@@ -117,7 +117,7 @@ func (store *Store) TryFormatHook(
 		return err
 	}
 
-	if err = store.tryHookWithName(
+	if _, err = store.tryHookWithName(
 		object,
 		objectMother,
 		sku.CommitOptions{},
@@ -198,7 +198,7 @@ func (store *Store) tryPreCommitHooks(
 			continue
 		}
 
-		if err = store.tryHookWithName(
+		if _, err = store.tryHookWithName(
 			child,
 			mother,
 			options,
@@ -236,9 +236,9 @@ func (store *Store) tryPostFieldHooks(
 	child *sku.Transacted,
 	mother *sku.Transacted,
 	options sku.CommitOptions,
-) (err error) {
+) (fieldsChanged bool, err error) {
 	if !options.RunHooks {
-		return err
+		return fieldsChanged, err
 	}
 
 	type hook struct {
@@ -257,9 +257,9 @@ func (store *Store) tryPostFieldHooks(
 			err = errors.Wrap(err)
 		}
 
-		return err
+		return fieldsChanged, err
 	} else if typeObject == nil {
-		return err
+		return fieldsChanged, err
 	}
 
 	var blob type_blobs.Blob
@@ -276,7 +276,7 @@ func (store *Store) tryPostFieldHooks(
 			}
 
 			err = errors.Wrap(err)
-			return err
+			return fieldsChanged, err
 		}
 
 		defer repool()
@@ -298,7 +298,9 @@ func (store *Store) tryPostFieldHooks(
 			continue
 		}
 
-		if err = store.tryHookWithName(
+		var hookFieldsChanged bool
+
+		if hookFieldsChanged, err = store.tryHookWithName(
 			child,
 			mother,
 			options,
@@ -317,12 +319,14 @@ func (store *Store) tryPostFieldHooks(
 				// TODO fix this to properly continue past the failure
 				err = nil
 			} else {
-				return err
+				return fieldsChanged, err
 			}
 		}
+
+		fieldsChanged = fieldsChanged || hookFieldsChanged
 	}
 
-	return err
+	return fieldsChanged, err
 }
 
 func (store *Store) tryPreCommitHook(
@@ -386,7 +390,11 @@ func (store *Store) tryPreCommitHook(
 	vm.Push(tableKinder.Transacted)
 	vm.Push(tableMutter.Transacted)
 
-	if err = vm.PCall(2, 1, nil); err != nil {
+	store.hookDepth.Add(1)
+	err = vm.PCall(2, 1, nil)
+	store.hookDepth.Add(-1)
+
+	if err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -399,7 +407,9 @@ func (store *Store) tryPreCommitHook(
 		return err
 	}
 
-	if err = sku_lua.FromLuaTableV1(child, vm.LState, tableKinder); err != nil {
+	// on_pre_commit runs before fields are projected, so any field write-back
+	// is necessarily a no-op here; the returned fieldsChanged is ignored.
+	if _, err = sku_lua.FromLuaTableV1(child, vm.LState, tableKinder); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
@@ -415,12 +425,12 @@ func (store *Store) tryHookWithName(
 	self *sku.Transacted,
 	script string,
 	name string,
-) (err error) {
+) (fieldsChanged bool, err error) {
 	var vp sku_lua.LuaVMPoolV1
 
 	if vp, err = store.MakeLuaVMPoolV1(self, script); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return fieldsChanged, err
 	}
 
 	vm, vmRepool2 := vp.GetWithRepool()
@@ -430,13 +440,13 @@ func (store *Store) tryHookWithName(
 
 	if tt, err = vm.GetTopTableOrError(); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return fieldsChanged, err
 	}
 
 	f := vm.GetField(tt, name)
 
 	if f.Type() != lua.LTFunction {
-		return err
+		return fieldsChanged, err
 	}
 
 	tableKinder, tableKinderRepool2 := vm.TablePool.GetWithRepool()
@@ -471,9 +481,16 @@ func (store *Store) tryHookWithName(
 		vm.Push(nil)
 	}
 
-	if err = vm.PCall(2, 1, nil); err != nil {
+	// hookDepth guards against a hook re-entering the commit path (RFC 0006
+	// cycle guarantee #3): any commit initiated while it is non-zero is
+	// rejected loudly by commitFacilitator.commit.
+	store.hookDepth.Add(1)
+	err = vm.PCall(2, 1, nil)
+	store.hookDepth.Add(-1)
+
+	if err != nil {
 		err = errors.Wrap(err)
-		return err
+		return fieldsChanged, err
 	}
 
 	retval := vm.LState.Get(1)
@@ -481,13 +498,17 @@ func (store *Store) tryHookWithName(
 
 	if retval.Type() != lua.LTNil {
 		err = errors.ErrorWithStackf("lua error: %s", retval)
-		return err
+		return fieldsChanged, err
 	}
 
-	if err = sku_lua.FromLuaTableV1(child, vm.LState, tableKinder); err != nil {
+	if fieldsChanged, err = sku_lua.FromLuaTableV1(
+		child,
+		vm.LState,
+		tableKinder,
+	); err != nil {
 		err = errors.Wrap(err)
-		return err
+		return fieldsChanged, err
 	}
 
-	return err
+	return fieldsChanged, err
 }
