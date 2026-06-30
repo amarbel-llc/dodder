@@ -12,6 +12,7 @@ type LuaTableV1 struct {
 	Transacted   *lua.LTable
 	Tags         *lua.LTable
 	TagsImplicit *lua.LTable
+	Fields       *lua.LTable
 }
 
 func ToLuaTableV1(
@@ -47,6 +48,15 @@ func ToLuaTableV1(
 
 	for tag := range object.GetMetadata().GetIndex().GetImplicitTags().All() {
 		luaState.SetField(tags, tag.String(), lua.LBool(true))
+	}
+
+	// Project the metadata index fields (name -> string value) so hooks can
+	// read them as kinder.Fields.<name>. Read-only: FromLuaTableV1 does not
+	// read these back (field write-back is deferred).
+	fieldsTable := luaTable.Fields
+
+	for field := range object.GetMetadata().GetIndex().GetFields() {
+		luaState.SetField(fieldsTable, field.Key, lua.LString(field.Value))
 	}
 }
 

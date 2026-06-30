@@ -65,11 +65,13 @@ func MakeLuaTablePoolV1(vm *lua.VM) LuaTablePoolV1 {
 			transacted, _ := vm.PoolPtr.GetWithRepool()   //repool:owned
 			tags, _ := vm.PoolPtr.GetWithRepool()         //repool:owned
 			tagsImplicit, _ := vm.PoolPtr.GetWithRepool() //repool:owned
+			fields, _ := vm.PoolPtr.GetWithRepool()       //repool:owned
 
 			table = &LuaTableV1{
 				Transacted:   transacted,
 				Tags:         tags,
 				TagsImplicit: tagsImplicit,
+				Fields:       fields,
 			}
 
 			vm.SetField(table.Transacted, "Etiketten", table.Tags)
@@ -78,12 +80,14 @@ func MakeLuaTablePoolV1(vm *lua.VM) LuaTablePoolV1 {
 				"EtikettenImplicit",
 				table.TagsImplicit,
 			)
+			vm.SetField(table.Transacted, "Fields", table.Fields)
 
 			return table
 		},
 		func(t *LuaTableV1) {
 			lua.ClearTable(vm.LState, t.Tags)
 			lua.ClearTable(vm.LState, t.TagsImplicit)
+			lua.ClearTable(vm.LState, t.Fields)
 		},
 	)
 }
