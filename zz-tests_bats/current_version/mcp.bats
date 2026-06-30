@@ -653,6 +653,23 @@ function mcp_query_empty_result_has_non_empty_text { # @test
   refute_output '"text":""'
 }
 
+# #306: query-tag searches only materialized tag objects, so an empty result in
+# a tag-string-heavy repo would otherwise read as "no match" rather than "no tag
+# objects exist". A fresh repo has no tag objects, so query-tag must return the
+# materialization hint, not a bare empty array.
+function mcp_query_tag_empty_explains_materialization { # @test
+  run_dodder_init_disable_age
+
+  local input="$BATS_TEST_TMPDIR/mcp-query-tag-empty.jsonrpc"
+  write_mcp_tool_call_input "$input" query-tag '{"words":["zzznomatch"]}'
+
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2"'
+
+  assert_success
+  assert_output --regexp 'materialized tag objects'
+}
+
 # The new tool's object_id + blob args author a type object (e.g. !task)
 # directly: the chosen id is honored, the meta-type is set from the genre
 # (!toml-type-v2), and the blob body is written. Mirrors the CLI

@@ -617,6 +617,32 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 
 			results := tagIdx.query(p.Words)
 
+			// Non-silent empty result (#306): query-tag searches only
+			// materialized tag OBJECTS (genre :e). Tags applied to objects as
+			// plain strings are never auto-materialized, so an empty result in
+			// a tag-heavy repo otherwise reads as "no match" when the real
+			// reason is "no tag objects exist." Explain the contract instead of
+			// returning a bare [].
+			if len(results) == 0 {
+				return &protocol.ToolCallResultV1{
+					Content: []protocol.ContentBlockV1{
+						protocol.TextContentV1(
+							"No matching tag objects.\n\n" +
+								"query-tag searches only materialized tag objects " +
+								"(genre :e, authored via `new -object-id <tag>` or " +
+								"`organize`). Tags applied to objects as plain " +
+								"strings are not materialized as tag objects, so " +
+								"they do not appear here and carry no meta-tags " +
+								"until materialized. To filter objects by a tag " +
+								"string regardless of materialization, use the " +
+								"query tool with the bare tag name (e.g. query " +
+								"[\"<tag>\"]). See the tag materialization behavior " +
+								"in docs/features/0022-tag-materialization.md.",
+						),
+					},
+				}, nil
+			}
+
 			output, err := json.MarshalIndent(results, "", "  ")
 			if err != nil {
 				return protocol.ErrorResultV1(err.Error()), nil

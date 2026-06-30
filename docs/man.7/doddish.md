@@ -36,8 +36,9 @@ search. The genre restricts which object kinds to return.
 A predicate can be:
 
 **tag name**
-:   A bare identifier matches objects tagged with that tag. Example: **todo**,
-    **priority-0_must**
+:   A bare identifier matches objects tagged with that tag. It matches on the
+    tag *string* carried by each object, whether or not a tag *object* of that
+    name has been materialized. Example: **todo**, **priority-0_must**
 
 **type filter**
 :   A **!** prefix matches objects whose type is the given type. Example:
@@ -128,7 +129,12 @@ The **\^** operator negates a group or term:
 :   List all type objects.
 
 **:e**
-:   List all tag objects.
+:   List all tag objects. Only *materialized* tag objects are listed: a tag
+    applied to objects purely as a string does not appear until it is authored
+    as a tag object (**new -object-id <tag>** or **organize**). Materialization
+    also gates meta-tags --- a tag carries meta-tags, and participates in
+    meta-tag laddering, only once it exists as an object. Matching objects by a
+    bare tag name (above) works either way.
 
 **:k**
 :   List all repo objects.
