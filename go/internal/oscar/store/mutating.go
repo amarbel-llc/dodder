@@ -100,6 +100,18 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 		}
 	}
 
+	// Runs after tryReadFields so the on_commit_fields hook sees the
+	// projected fields (kinder.Fields.<name>). A tag added here takes effect
+	// because applyDormantAndRealizeTags runs later in commit().
+	if err = commitFacilitator.tryPostFieldHooks(daughter, mother, options); err != nil {
+		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
+			err = nil
+		} else {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	// TODO just just mutter == nil
 	if mother == nil {
 		if err = commitFacilitator.tryNewHook(daughter, options); err != nil {

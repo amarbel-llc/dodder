@@ -225,6 +225,106 @@ func (store *Store) tryPreCommitHooks(
 	return err
 }
 
+// tryPostFieldHooks runs the on_commit_fields hook, the post-field-read
+// counterpart to tryPreCommitHooks. It fires after tryReadFields has projected
+// the blob into Metadata.Index.Fields, so the hook can read the projected
+// fields as kinder.Fields.<name>. A distinct hook name (on_commit_fields)
+// keeps existing on_pre_commit hooks untouched and never double-run. Like
+// tryPreCommitHooks it runs both the type's hook script and the
+// config-mutable hook script.
+func (store *Store) tryPostFieldHooks(
+	child *sku.Transacted,
+	mother *sku.Transacted,
+	options sku.CommitOptions,
+) (err error) {
+	if !options.RunHooks {
+		return err
+	}
+
+	type hook struct {
+		script      string
+		description string
+	}
+
+	hooks := []hook{}
+
+	var typeObject *sku.Transacted
+
+	if typeObject, err = store.ReadObjectTypeAndLockIfNecessary(child); err != nil {
+		if errors.IsErrNotFound(err) {
+			err = nil
+		} else {
+			err = errors.Wrap(err)
+		}
+
+		return err
+	} else if typeObject == nil {
+		return err
+	}
+
+	var blob type_blobs.Blob
+
+	{
+		var repool interfaces.FuncRepool
+
+		if blob, repool, _, err = store.GetTypedBlobStore().Type.ParseTypedBlob(
+			typeObject.GetType(),
+			typeObject.GetBlobDigest(),
+		); err != nil {
+			if repool != nil {
+				repool()
+			}
+
+			err = errors.Wrap(err)
+			return err
+		}
+
+		defer repool()
+	}
+
+	script := blob.GetStringLuaHooks()
+
+	hooks = append(hooks, hook{script: script, description: "type"})
+	hooks = append(
+		hooks,
+		hook{
+			script:      store.GetConfigStore().GetConfig().Hooks,
+			description: "config-mutable",
+		},
+	)
+
+	for _, h := range hooks {
+		if h.script == "" {
+			continue
+		}
+
+		if err = store.tryHookWithName(
+			child,
+			mother,
+			options,
+			typeObject,
+			h.script,
+			"on_commit_fields",
+		); err != nil {
+			err = errors.Wrapf(err, "Hook: %#v", h)
+			err = errors.Wrapf(err, "Type: %q", child.GetType())
+
+			if store.envRepo.Retry(
+				"hook failed",
+				"ignore error and continue?",
+				err,
+			) {
+				// TODO fix this to properly continue past the failure
+				err = nil
+			} else {
+				return err
+			}
+		}
+	}
+
+	return err
+}
+
 func (store *Store) tryPreCommitHook(
 	child *sku.Transacted,
 	mother *sku.Transacted,
