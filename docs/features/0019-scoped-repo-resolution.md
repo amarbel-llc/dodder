@@ -148,10 +148,11 @@ Two same-named repos on the walk-up, from
     # same name, one ancestor further up
     dodder show -repo_id ..notes :z
 
-User-scoped repos side by side:
+User-scoped repos side by side (FDR-0021: `init` names the new repo by its
+location-handle positional; `-repo_id` is for addressing existing repos):
 
-    dodder init -repo_id work ...
-    dodder init -repo_id personal ...
+    dodder init work ...
+    dodder init personal ...
     dodder show -repo_id work :t
 
 Scoping a shell session:
