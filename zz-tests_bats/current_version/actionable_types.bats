@@ -20,9 +20,8 @@ function init_fixture {
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -repo_id .default \
     "$@" \
-    test-repo-id
+    .default
   assert_success
 }
 

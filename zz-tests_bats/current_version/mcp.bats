@@ -721,10 +721,9 @@ function mcp_import_from_inventory_list { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption none \
     -blob_store-id shared \
-    test
+    .default
   assert_success
 
   run_dodder init-workspace -experimental-repo=false
@@ -771,10 +770,9 @@ function mcp_import_dry_run { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption none \
     -blob_store-id shared \
-    test
+    .default
   assert_success
 
   run_dodder init-workspace -experimental-repo=false
@@ -824,10 +822,9 @@ function mcp_import_resolve_blobless_type { # @test
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
-    -repo_id .default \
     -encryption none \
     -blob_store-id shared \
-    test
+    .default
   assert_success
 
   run_dodder init-workspace -experimental-repo=false

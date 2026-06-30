@@ -158,9 +158,9 @@ function info_repo_dynamic_config_key { # @test
 
 # bats test_tags=user_story:repos
 function info_repo_repos_lists_repos { # @test
-	# run_dodder_init creates a cwd repo (-repo_id .default), so the listing
-	# shows its routable `.default` spelling, not the ambiguous bare
-	# `default` (which would name a user-scope repo). FDR-0019 #276.
+	# run_dodder_init creates a cwd repo (the `.default` location positional),
+	# so the listing shows its routable `.default` spelling, not the ambiguous
+	# bare `default` (which would name a user-scope repo). FDR-0019 #276.
 	run_dodder_init
 
 	run_dodder info-repo repos
