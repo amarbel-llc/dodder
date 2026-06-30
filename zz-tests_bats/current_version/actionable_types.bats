@@ -65,10 +65,13 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
   # multiline string and unescapes backslashes (the Script field has the
   # `multiline` tommy tag). urgency carries no default (untriaged reads as
   # unset). The text formatter pipes the TOML `body` key through yq, strips
-  # the leading `#!dang` convention line, then normalizes via pandoc.
+  # the leading `#!dang` convention line, then normalizes via pandoc. The
+  # `hooks` value is the archive-on-status on_commit_fields lua hook,
+  # serialized by tommy's plain string encoder as a single escaped line.
   assert_output - <<-'EOM'
 		file-extension = "toml"
 		vim-syntax-type = "toml"
+		hooks = "return {\n  on_commit_fields = function(kinder, mutter)\n    local f = kinder.Fields\n    local status = f and f.status\n    if status == \"cancelled\" then\n      kinder.Etiketten[\"zz-archive\"] = true\n    elseif status == \"done\" and kinder.Typ == \"!task\" then\n      kinder.Etiketten[\"zz-archive\"] = true\n    end\n  end,\n}\n"
 
 		[formatters.text]
 		description = "Render the dang-typed body with pandoc"
@@ -251,5 +254,141 @@ function actionable_body_renders_via_pandoc { # @test
   assert_success
   assert_output - <<-EOM
 		# Hello
+	EOM
+}
+
+# A !task committed with status = "done" is archived: the on_commit_fields
+# hook adds the genesis-seeded dormant archive tag (zz-archive), so the task is
+# absent from the default listing and only visible with the dormant (?) sigil.
+function actionable_task_archives_on_done { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# done task
+		! task
+		---
+
+		status = "done"
+		priority = "p1"
+	EOM
+  assert_success
+
+  # hidden from the default (non-dormant) listing
+  run_dodder show '!task'
+  assert_success
+  assert_output ''
+
+  # visible with the dormant sigil, carrying the archive tag
+  run_dodder show '!task?z'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-53nnqmn2c6eny28wu06vz0lzjxynx94taxx2l459l97kxn45yqzq69uegz !task "done task" zz-archive status=done priority=p1 due=]
+	EOM
+}
+
+# status = "cancelled" archives every actionable type (!task, !chore, !habit):
+# the shared hook adds the archive tag regardless of type, so all three become
+# dormant and drop out of the default zettel listing.
+function actionable_cancelled_archives_all_types { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# cancelled task
+		! task
+		---
+
+		status = "cancelled"
+		priority = "p1"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# cancelled chore
+		! chore
+		---
+
+		status = "cancelled"
+		priority = "p1"
+		recurrence = "P1W"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# cancelled habit
+		! habit
+		---
+
+		status = "cancelled"
+		priority = "p1"
+		recurrence = "P1D"
+	EOM
+  assert_success
+
+  # each type's default (non-dormant) listing is empty -- all archived
+  run_dodder show '!task'
+  assert_success
+  assert_output ''
+
+  run_dodder show '!chore'
+  assert_success
+  assert_output ''
+
+  run_dodder show '!habit'
+  assert_success
+  assert_output ''
+
+  # all three are visible with the dormant sigil, each carrying the archive tag
+  run_dodder show ':?z'
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/uno @blake2b256-lhud3f7ausygpq5n946xhqa8jhfsu0p2vxvggufev9seeaftr7fsrrue2k !task "cancelled task" zz-archive status=cancelled priority=p1 due=]
+		[one/dos @blake2b256-qjs3evuzk5a4vcgrpqpgrcqtxcyf40qvguy3jqpj3znflqujzzgq2cc885 !chore "cancelled chore" zz-archive status=cancelled priority=p1 due= recurrence=P1W]
+		[two/uno @blake2b256-nns0qun0lejzas0pc9hp72r0vlpgaza537fkrlf7mh5rwmeekt0svujpa9 !habit "cancelled habit" zz-archive status=cancelled priority=p1 due= recurrence=P1D]
+	EOM
+}
+
+# A recurring actionable type (!chore / !habit) with status = "done" is NOT
+# archived: the shared hook gates the done branch on kinder.Typ == "!task", so
+# a recurring "done" stays active (recurrence handling is deferred).
+function actionable_recurring_done_not_archived { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# done chore
+		! chore
+		---
+
+		status = "done"
+		priority = "p1"
+		recurrence = "P1W"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# done habit
+		! habit
+		---
+
+		status = "done"
+		priority = "p1"
+		recurrence = "P1D"
+	EOM
+  assert_success
+
+  # both remain in the default (non-dormant) listing -- not archived
+  run_dodder show ':z'
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/uno @blake2b256-smjh7lktppj3ufunh87dvhgt4sydmhm53jc0wj8czrdshqgh52nq362757 !chore "done chore" status=done priority=p1 due= recurrence=P1W]
+		[one/dos @blake2b256-d3684kxr0tu839mcg0zmglr78asered75qh060cvhe06rcn2lxds249pjy !habit "done habit" status=done priority=p1 due= recurrence=P1D]
 	EOM
 }
