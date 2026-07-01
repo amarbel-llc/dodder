@@ -111,9 +111,11 @@ func ParseDuration(s string) (duration Duration, err error) {
 
 // AdvanceDate advances dateStr (in DateFormat, YYYY-MM-DD) by the ISO-8601
 // duration in durationStr (the PnY nM nW nD subset), returning the advanced
-// date in the same format. Month/year arithmetic uses time.AddDate, so
-// overflowing day-of-month values normalize forward (e.g. Jan 31 + P1M lands in
-// early March). It errors on an unparseable date or duration.
+// date in the same format. The year+month part is applied first and clamps an
+// overflowing day-of-month to the target month's last valid day rather than
+// spilling forward (e.g. Jan 31 + P1M yields Feb 28, or Feb 29 in a leap year).
+// The week+day part is exact and applied after the clamp. It errors on an
+// unparseable date or duration.
 func AdvanceDate(dateStr, durationStr string) (advanced string, err error) {
 	var t time.Time
 
@@ -128,11 +130,43 @@ func AdvanceDate(dateStr, durationStr string) (advanced string, err error) {
 		return advanced, err
 	}
 
-	advanced = t.AddDate(
-		duration.Years,
-		duration.Months,
+	// Compute the target year+month by normalizing the raw month index. time.Date
+	// carries any out-of-range month into the year, so a December + P2M lands in
+	// the following February.
+	totalMonths := (int(t.Month()) - 1) +
+		duration.Years*12 + duration.Months
+	targetYear := t.Year() + totalMonths/12
+	targetMonth := time.Month(totalMonths%12 + 1)
+
+	if targetMonth < time.January {
+		targetMonth += 12
+		targetYear--
+	}
+
+	clampedDay := t.Day()
+
+	if last := lastDayOfMonth(targetYear, targetMonth); clampedDay > last {
+		clampedDay = last
+	}
+
+	advanced = time.Date(
+		targetYear,
+		targetMonth,
+		clampedDay,
+		0, 0, 0, 0,
+		time.UTC,
+	).AddDate(
+		0,
+		0,
 		duration.Weeks*7+duration.Days,
 	).Format(DateFormat)
 
 	return advanced, err
+}
+
+// lastDayOfMonth returns the number of days in the given month by asking for day
+// zero of the following month, which time.Date normalizes to the last day of
+// the requested month.
+func lastDayOfMonth(year int, month time.Month) int {
+	return time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC).Day()
 }
