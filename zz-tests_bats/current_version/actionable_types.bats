@@ -61,8 +61,11 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
   run_dodder show -format blob '!task:t'
   assert_success
   # Note: tommy's TOML encoder serializes script as a triple-quoted
-  # multiline string and unescapes backslashes (the Script field has the
-  # `multiline` tommy tag). urgency carries no default (untriaged reads as
+  # multiline string (the Script field has the `multiline` tommy tag). The
+  # fields-writer reads values via yq's strenv() env accessor and is
+  # single-quoted so the shell performs no interpolation, keeping a
+  # quote-bearing field value as string data rather than expression text
+  # (#297). urgency carries no default (untriaged reads as
   # unset). The text formatter pipes the TOML `body` key through yq, strips
   # the leading `#!dang` convention line, then normalizes via pandoc. The
   # `hooks` value is the archive/recurrence on_commit_fields lua hook,
@@ -105,7 +108,7 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 
 		[fields-writer]
 		script = """
-		yq -p toml -o toml -i ".status = \"$DODDER_FIELD_status\" | .urgency = \"$DODDER_FIELD_urgency\" | .priority = \"$DODDER_FIELD_priority\" | .due = \"$DODDER_FIELD_due\"" "$DODDER_BLOB_PATH""""
+		yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due)' "$DODDER_BLOB_PATH""""
 	EOM
 }
 
@@ -478,5 +481,46 @@ function actionable_chore_recurrence_is_idempotent { # @test
   assert_success
   assert_output - <<-EOM
 		[one/uno @blake2b256-7cqs2zt3f8nfxdjnxvcrpdgt3ftfmnkmlxxkudmuskuavwq2z2psxatwq2 !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
+	EOM
+}
+
+# Regression (#297): a free-form field value containing a double-quote must
+# round-trip through the fields-writer. The writer reads values via yq's
+# strenv() env accessor rather than shell-interpolating them into the yq
+# expression, so a `"` in the free-form `due` field is treated as string data,
+# not expression text. With the old shell-interpolated writer the `"` closed
+# the yq string early, breaking the yq parse (or injecting expression syntax)
+# and failing the commit. Here the quote is driven through the real !task
+# writer via an organize field mutation, then read back intact.
+function actionable_field_writer_survives_quote_in_due { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# quote task
+		! task
+		---
+
+		status = "todo"
+		priority = "p1"
+		due = "20260415T120000Z"
+	EOM
+  assert_success
+
+  # mutate `due` to a value containing a double-quote; the fields-writer
+  # projects it back into the TOML blob via strenv(), so the yq parse is not
+  # broken and the value round-trips.
+  run_dodder organize -mode commit-directly '!task' <<-EOM
+		- [one/uno !task status=todo priority=p1 due="he said \"hi\""] quote task
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-9gn057hrvpq8utxmuhvlng6fwmp6nh8qwrmdvzvyy25xayf2xmrs2zpg0k !task "quote task" status=todo priority=p1 due="he said \"hi\""]
 	EOM
 }

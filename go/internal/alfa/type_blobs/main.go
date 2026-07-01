@@ -154,9 +154,18 @@ func actionableFieldsReader() *script_config.ScriptConfig {
 // into the TOML blob during organize mutations. Reads DODDER_FIELD_status,
 // DODDER_FIELD_urgency, DODDER_FIELD_priority, DODDER_FIELD_due env vars and
 // writes them into the blob at DODDER_BLOB_PATH.
+//
+// Values are read via yq's strenv() env accessor rather than shell-interpolated
+// into the expression, so a field value containing a double-quote (or yq
+// expression syntax) is treated as string data, not expression text. The
+// free-form `due`/`recurrence` fields make this a live injection surface; the
+// enum-constrained fields are safe by construction but use strenv() uniformly.
+// strenv (not env) forces the value to a string, matching the enum/string field
+// kinds. The expression is single-quoted so the shell performs no substitution
+// (see #297).
 func actionableFieldsWriter() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o toml -i ".status = \"$DODDER_FIELD_status\" | .urgency = \"$DODDER_FIELD_urgency\" | .priority = \"$DODDER_FIELD_priority\" | .due = \"$DODDER_FIELD_due\"" "$DODDER_BLOB_PATH"`,
+		Script: `yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due)' "$DODDER_BLOB_PATH"`,
 	}
 }
 
@@ -171,10 +180,14 @@ func recurringFieldsReader() *script_config.ScriptConfig {
 }
 
 // recurringFieldsWriter mirrors actionableFieldsWriter but also writes the
-// recurrence field from DODDER_FIELD_recurrence into the blob.
+// recurrence field from DODDER_FIELD_recurrence into the blob. Like
+// actionableFieldsWriter, values are read via yq's strenv() accessor so a
+// value containing a double-quote is treated as string data, not expression
+// text; recurrence is a free-form string, so it is a live injection surface
+// (see #297).
 func recurringFieldsWriter() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o toml -i ".status = \"$DODDER_FIELD_status\" | .urgency = \"$DODDER_FIELD_urgency\" | .priority = \"$DODDER_FIELD_priority\" | .due = \"$DODDER_FIELD_due\" | .recurrence = \"$DODDER_FIELD_recurrence\"" "$DODDER_BLOB_PATH"`,
+		Script: `yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due) | .recurrence = strenv(DODDER_FIELD_recurrence)' "$DODDER_BLOB_PATH"`,
 	}
 }
 
