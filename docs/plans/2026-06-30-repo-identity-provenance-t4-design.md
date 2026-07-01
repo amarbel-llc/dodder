@@ -45,12 +45,18 @@ Under `-print-sigs`, distinguish provenance:
   emits the same field key as `AddRepoPubKey` with a pre-rendered value, or
   parametrize the existing method — implementer's call, keep the box field key
   identical so downstream parsing is unaffected.)
-- **Set self-provenance only at the user-facing construction site** in
-  `romeo/local_working_copy` (`main.go:~133`, `printers.go:~137`). Internal /
-  archive constructors (`oscar/store/reindex`, `india/config_log`,
-  `india/inventory_list_store`, `november/store_config`, `sierra/remote_http`,
-  `tango/command_components_dodder/inventory_lists`) leave it unset →
-  graceful degradation to today's bare output.
+- **Set self-provenance only at the user-facing DISPLAY printer** in
+  `romeo/local_working_copy/printers.go` (`MakePrinterBoxArchive`, via
+  `setBoxSelfProvenance`). CORRECTION (verified during impl): `main.go:~133`'s
+  box is NOT a display site — it feeds the inventory-list wire coder
+  (`typed_blob_store` → `doddish` → export & persisted lists), so setting
+  self-provenance there would rewrite persisted/exported bytes and break import
+  round-trip. It (and every other internal / archive constructor:
+  `oscar/store/reindex`, `india/config_log`, `india/inventory_list_store`,
+  `november/store_config`, `sierra/remote_http`,
+  `tango/command_components_dodder/inventory_lists`) leaves it UNSET →
+  graceful degradation to today's bare (purpose-prefixed) output; wire form
+  stays byte-identical.
 
 ## Open thread for the implementer: handle source
 
