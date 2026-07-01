@@ -72,8 +72,32 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 		return err
 	}
 
+	// Resolve the type object and both hook scripts once, so the on_pre_commit
+	// and on_commit_fields stages below share a single parse of the type blob
+	// (issue #304). typeObject is nil when hooks are disabled or the object has
+	// no user type, making both hook stages no-ops.
+	hookTypeObject, hookScripts, err := commitFacilitator.resolveCommitHookScripts(
+		daughter,
+		options,
+	)
+	if err != nil {
+		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
+			err = nil
+		} else {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
 	// modify pre commit hooks to support import
-	if err = commitFacilitator.tryPreCommitHooks(daughter, mother, options); err != nil {
+	if _, err = commitFacilitator.tryNamedCommitHooks(
+		daughter,
+		mother,
+		options,
+		hookTypeObject,
+		hookScripts,
+		"on_pre_commit",
+	); err != nil {
 		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
 			err = nil
 		} else {
@@ -105,10 +129,13 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 	// because applyDormantAndRealizeTags runs later in commit().
 	var fieldsChanged bool
 
-	if fieldsChanged, err = commitFacilitator.tryPostFieldHooks(
+	if fieldsChanged, err = commitFacilitator.tryNamedCommitHooks(
 		daughter,
 		mother,
 		options,
+		hookTypeObject,
+		hookScripts,
+		"on_commit_fields",
 	); err != nil {
 		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
 			err = nil

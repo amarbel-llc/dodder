@@ -123,6 +123,69 @@ func TestFromLuaTableV1WritesFieldsBack(t1 *testing.T) {
 	t.AssertEqualStrings("p1", got["priority"])
 }
 
+// The pool clears the projected Fields table on repool, so a table borrowed
+// for a fresh object never carries the prior object's fields. Without this
+// reset a commit hook would observe a previous object's kinder.Fields.<name>
+// (RFC 0006 leak). Locks the reset path in lua_transacted_v1_pool.go.
+func TestLuaTablePoolV1ClearsFieldsOnRepool(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript("return {}").Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+
+	tablePool := MakeLuaTablePoolV1(vm)
+
+	object, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool()
+
+	metadata := object.GetMetadataMutable()
+	t.AssertNoError(object.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(metadata.GetTypeMutable().SetType("task"))
+
+	fieldsMutable := metadata.GetIndexMutable().GetFieldsMutable()
+	fieldsMutable.Append(fields.Field{
+		Type:  fields.TypeUserData,
+		Key:   "status",
+		Value: "done",
+	})
+	fieldsMutable.Append(fields.Field{
+		Type:  fields.TypeUserData,
+		Key:   "priority",
+		Value: "p1",
+	})
+
+	// first borrow: project an object that carries fields, populating Fields
+	table, tableRepool := tablePool.GetWithRepool()
+	ToLuaTableV1(object, vm.LState, table)
+	t.AssertTrue(
+		countLuaTableEntries(vm.LState, table.Fields) > 0,
+		"Fields should be populated after projecting an object with fields",
+	)
+
+	// repool runs the pool's reset, which clears Fields
+	tableRepool()
+
+	// second borrow must not leak the prior object's projected fields
+	table2, table2Repool := tablePool.GetWithRepool()
+	defer table2Repool()
+
+	t.AssertEqual(
+		0,
+		countLuaTableEntries(vm.LState, table2.Fields),
+	)
+}
+
+func countLuaTableEntries(luaState *lua.LState, table *lua.LTable) (count int) {
+	luaState.ForEach(table, func(_, _ lua.LValue) {
+		count++
+	})
+
+	return count
+}
+
 // A hook that leaves kinder.Fields untouched reports fieldsChanged=false, so
 // the commit pipeline skips the bounded write-back pass entirely.
 func TestFromLuaTableV1NoFieldChangeReportsFalse(t1 *testing.T) {

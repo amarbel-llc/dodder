@@ -132,123 +132,31 @@ func (store *Store) TryFormatHook(
 	return err
 }
 
-func (store *Store) tryPreCommitHooks(
-	child *sku.Transacted,
-	mother *sku.Transacted,
-	options sku.CommitOptions,
-) (err error) {
-	if !options.RunHooks {
-		return err
-	}
-
-	type hook struct {
-		script      string
-		description string
-	}
-
-	hooks := []hook{}
-
-	var typeObject *sku.Transacted
-
-	if typeObject, err = store.ReadObjectTypeAndLockIfNecessary(child); err != nil {
-		if errors.IsErrNotFound(err) {
-			err = nil
-		} else {
-			err = errors.Wrap(err)
-		}
-
-		return err
-	} else if typeObject == nil {
-		return err
-	}
-
-	var blob type_blobs.Blob
-
-	{
-		var repool interfaces.FuncRepool
-
-		if blob, repool, _, err = store.GetTypedBlobStore().Type.ParseTypedBlob(
-			typeObject.GetType(),
-			typeObject.GetBlobDigest(),
-		); err != nil {
-			if repool != nil {
-				repool()
-			}
-
-			err = errors.Wrap(err)
-			return err
-		}
-
-		defer repool()
-	}
-
-	script := blob.GetStringLuaHooks()
-
-	hooks = append(hooks, hook{script: script, description: "type"})
-	hooks = append(
-		hooks,
-		hook{
-			script:      store.GetConfigStore().GetConfig().Hooks,
-			description: "config-mutable",
-		},
-	)
-
-	for _, h := range hooks {
-		if h.script == "" {
-			continue
-		}
-
-		if _, err = store.tryHookWithName(
-			child,
-			mother,
-			options,
-			typeObject,
-			h.script,
-			"on_pre_commit",
-		); err != nil {
-			err = errors.Wrapf(err, "Hook: %#v", h)
-			err = errors.Wrapf(err, "Type: %q", child.GetType())
-
-			if store.envRepo.Retry(
-				"hook failed",
-				"ignore error and continue?",
-				err,
-			) {
-				// TODO fix this to properly continue past the failure
-				err = nil
-			} else {
-				return err
-			}
-		}
-	}
-
-	return err
+// commitHookScript is one named lua hook script resolved for a commit: either
+// the type object's own hook script or the repo's config-mutable hook script.
+type commitHookScript struct {
+	script      string
+	description string
 }
 
-// tryPostFieldHooks runs the on_commit_fields hook, the post-field-read
-// counterpart to tryPreCommitHooks. It fires after tryReadFields has projected
-// the blob into Metadata.Index.Fields, so the hook can read the projected
-// fields as kinder.Fields.<name>. A distinct hook name (on_commit_fields)
-// keeps existing on_pre_commit hooks untouched and never double-run. Like
-// tryPreCommitHooks it runs both the type's hook script and the
-// config-mutable hook script.
-func (store *Store) tryPostFieldHooks(
+// resolveCommitHookScripts loads a commit's type object once and extracts both
+// hook scripts (the type's own script and the config-mutable script) so the
+// on_pre_commit and on_commit_fields stages can share a single parse of the
+// type blob instead of each re-reading and re-parsing it. It returns a nil
+// typeObject (and empty scripts) when hooks are disabled or the object has no
+// user type, in which case tryNamedCommitHooks is a no-op.
+//
+// The type blob is released before this function returns: GetStringLuaHooks
+// yields an immutable Go string, so the copies held in the returned scripts
+// stay valid after the pooled blob is repooled, and no blob is threaded across
+// the two hook stages.
+func (store *Store) resolveCommitHookScripts(
 	child *sku.Transacted,
-	mother *sku.Transacted,
 	options sku.CommitOptions,
-) (fieldsChanged bool, err error) {
+) (typeObject *sku.Transacted, scripts []commitHookScript, err error) {
 	if !options.RunHooks {
-		return fieldsChanged, err
+		return typeObject, scripts, err
 	}
-
-	type hook struct {
-		script      string
-		description string
-	}
-
-	hooks := []hook{}
-
-	var typeObject *sku.Transacted
 
 	if typeObject, err = store.ReadObjectTypeAndLockIfNecessary(child); err != nil {
 		if errors.IsErrNotFound(err) {
@@ -257,9 +165,9 @@ func (store *Store) tryPostFieldHooks(
 			err = errors.Wrap(err)
 		}
 
-		return fieldsChanged, err
+		return typeObject, scripts, err
 	} else if typeObject == nil {
-		return fieldsChanged, err
+		return typeObject, scripts, err
 	}
 
 	var blob type_blobs.Blob
@@ -276,24 +184,43 @@ func (store *Store) tryPostFieldHooks(
 			}
 
 			err = errors.Wrap(err)
-			return fieldsChanged, err
+			return typeObject, scripts, err
 		}
 
 		defer repool()
 	}
 
-	script := blob.GetStringLuaHooks()
-
-	hooks = append(hooks, hook{script: script, description: "type"})
-	hooks = append(
-		hooks,
-		hook{
+	scripts = []commitHookScript{
+		{script: blob.GetStringLuaHooks(), description: "type"},
+		{
 			script:      store.GetConfigStore().GetConfig().Hooks,
 			description: "config-mutable",
 		},
-	)
+	}
 
-	for _, h := range hooks {
+	return typeObject, scripts, err
+}
+
+// tryNamedCommitHooks runs the named lua hook (on_pre_commit before fields are
+// projected, on_commit_fields after) for each of a commit's resolved hook
+// scripts, against the already-parsed type object from resolveCommitHookScripts.
+// It OR-accumulates the fieldsChanged flag reported by the field write-back so
+// the commit pipeline can run its single bounded write-back pass. A failing
+// hook is surfaced through envRepo.Retry, matching the historical per-stage
+// behavior.
+func (store *Store) tryNamedCommitHooks(
+	child *sku.Transacted,
+	mother *sku.Transacted,
+	options sku.CommitOptions,
+	typeObject *sku.Transacted,
+	scripts []commitHookScript,
+	name string,
+) (fieldsChanged bool, err error) {
+	if !options.RunHooks || typeObject == nil {
+		return fieldsChanged, err
+	}
+
+	for _, h := range scripts {
 		if h.script == "" {
 			continue
 		}
@@ -306,7 +233,7 @@ func (store *Store) tryPostFieldHooks(
 			options,
 			typeObject,
 			h.script,
-			"on_commit_fields",
+			name,
 		); err != nil {
 			err = errors.Wrapf(err, "Hook: %#v", h)
 			err = errors.Wrapf(err, "Type: %q", child.GetType())
