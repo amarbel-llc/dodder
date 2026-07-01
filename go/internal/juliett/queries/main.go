@@ -138,6 +138,15 @@ func (query *Query) addOptimized(
 		if !ok {
 			existing = buildState.makeQuery()
 			existing.Genre = ids.MakeGenre(g)
+			// The optimized per-genre query is what containsSku consults, so it
+			// must carry the Hidden (dormant) matcher. buildState.makeQuery()
+			// leaves it nil, and the empty/default query path (see
+			// addDefaultsIfNecessary) never routes through Query.add, which is
+			// the only other place Hidden is set. Without this the ShouldHide
+			// check on the empty-predicate `:z` / default `show` / `status` fast
+			// path is a silent no-op and dormant objects can leak through as a
+			// bare `[id]` row (#303).
+			existing.Hidden = query.hidden
 		}
 
 		if err = existing.Merge(exp); err != nil {

@@ -290,6 +290,48 @@ function actionable_task_archives_on_done { # @test
 	EOM
 }
 
+# A commit-time-dormant object (archived by the on_commit_fields hook) must be
+# hidden by the empty-predicate genre-only query ':z' exactly like a
+# runtime-dormant object (dormant-add), not leak through as a bare row. It stays
+# visible with the dormant sigil ':?z'.
+function actionable_task_archives_on_done_hidden_under_empty_genre_query { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# done task
+		! task
+		---
+
+		status = "done"
+		priority = "p1"
+	EOM
+  assert_success
+
+  # hidden from the empty-predicate genre-only listing
+  run_dodder show ':z'
+  assert_success
+  assert_output ''
+
+  # hidden from the default listing
+  run_dodder show
+  assert_success
+  assert_output ''
+
+  # hidden from status
+  run_dodder status
+  assert_success
+  assert_output ''
+
+  # visible with the dormant sigil, carrying the archive tag and full metadata
+  run_dodder show ':?z'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-53nnqmn2c6eny28wu06vz0lzjxynx94taxx2l459l97kxn45yqzq69uegz !task "done task" zz-archive status=done priority=p1 due=]
+	EOM
+}
+
 # status = "cancelled" archives every actionable type (!task, !chore, !habit):
 # the shared hook adds the archive tag regardless of type, so all three become
 # dormant and drop out of the default zettel listing.
