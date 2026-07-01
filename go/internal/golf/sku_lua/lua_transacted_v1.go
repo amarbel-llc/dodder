@@ -112,9 +112,9 @@ func FromLuaTableV1(
 	fieldsChanged = writeFieldsBack(object, luaTable.Fields)
 
 	// TODO Bezeichnung
-	// TODO Typ
+	// TODO Typ — retyping from a hook: RFC 0006 Phase 2 (currently forbidden), #319
 	// TODO Tai
-	// TODO Blob
+	// TODO Blob — hook direct blob mutation: RFC 0006 Phase 2, #319
 	// TODO Verzeichnisse
 
 	return fieldsChanged, err
