@@ -892,3 +892,93 @@ function mcp_import_resolve_blobless_type { # @test
   refute_output --partial '!custom'
   popd || exit 1
 }
+
+# create_two_abbreviating_zettels seeds one/uno and two/dos with
+# abbreviation explicitly enabled (run_dodder's fixture defaults disable
+# it, -abbreviate-zettel-ids=false, for deterministic assertions
+# elsewhere). Against just these two, "one" and "two" abbreviate to their
+# first letter, so one/uno -> o/u and two/dos -> t/d. Shared by the
+# abbreviated-object-id and abbreviated-edit tests below.
+function create_two_abbreviating_zettels {
+  run_dodder new -edit=false -abbreviate-zettel-ids=true \
+    -object-id one/uno -type md
+  assert_success
+
+  run_dodder new -edit=false -abbreviate-zettel-ids=true \
+    -object-id two/dos -type md
+  assert_success
+}
+
+# `show -format json` on a zettel carries both the full object-id and an
+# abbreviated-object-id companion field, so an MCP client can read/paste the
+# short form without losing the canonical full id. Non-zettel objects (the
+# !md type here) get no abbreviated-object-id field: abbreviation only
+# applies to zettel genre ids.
+function mcp_show_json_includes_abbreviated_object_id_for_zettel { # @test
+  run_dodder_init_disable_age
+
+  create_two_abbreviating_zettels
+
+  local input="$BATS_TEST_TMPDIR/mcp-show-json-abbr.jsonrpc"
+  write_mcp_tool_call_input "$input" show \
+    '{"object_id":"one/uno","format":"json"}'
+
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp '\\"object-id\\":\\"one/uno\\"'
+  assert_output --regexp '\\"abbreviated-object-id\\":\\"o/u\\"'
+
+  # The type object (!md) is not a zettel, so it gets no
+  # abbreviated-object-id field at all.
+  local input_type="$BATS_TEST_TMPDIR/mcp-show-json-type.jsonrpc"
+  write_mcp_tool_call_input "$input_type" show \
+    '{"object_id":"!md:t","format":"json"}'
+
+  run bash -o pipefail -c \
+    'timeout 5s "'"$DODDER_BIN"'" mcp <"'"$input_type"'" | grep "\"id\":2"'
+  assert_success
+  refute_output --regexp 'abbreviated-object-id'
+}
+
+# The MCP edit tool's object_id must accept an abbreviated zettel id, the
+# same way show/query/organize already do via the query builder's
+# expanders — edit is the one path that reads the object directly
+# (ReadOneObjectId) rather than through that expansion, so this is a
+# regression guard, not just a smoke test.
+function mcp_edit_accepts_abbreviated_zettel_id { # @test
+  run_dodder_init_disable_age
+
+  create_two_abbreviating_zettels
+
+  local input="$BATS_TEST_TMPDIR/mcp-edit-abbr.jsonrpc"
+  write_mcp_tool_call_input "$input" edit \
+    '{"object_id":"o/u","description":"edited via abbreviated id"}'
+
+  run bash -o pipefail -c \
+    'timeout 15s "'"$DODDER_BIN"'" mcp <"'"$input"'" | grep "\"id\":2"'
+  assert_success
+  assert_output --regexp 'edited via abbreviated id'
+  refute_output --regexp 'not found'
+
+  # The edit landed on the correct object (one/uno), not two/dos. Fresh
+  # per-test keys (run_dodder_init_disable_age) mean the type signature is
+  # not deterministic, so match its shape with --regexp rather than a
+  # fixed value.
+  run_dodder show -format text one/uno
+  assert_success
+  assert_output --regexp - <<-EOM
+		---
+		# edited via abbreviated id
+		! md@ed25519_sig-.+
+		---
+	EOM
+
+  run_dodder show -format text two/dos
+  assert_success
+  assert_output --regexp - <<-EOM
+		---
+		! md@ed25519_sig-.+
+		---
+	EOM
+}

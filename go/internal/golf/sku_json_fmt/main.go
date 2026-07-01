@@ -20,21 +20,22 @@ import (
 )
 
 type Transacted struct {
-	BlobId          string                   `json:"blob-id"`
-	BlobReferences  map[string]BlobReference `json:"blob-references,omitempty"`
-	BlobString      string                   `json:"blob-string,omitempty"`
-	Date            string                   `json:"date"`
-	Description     string                   `json:"description"`
-	Lock            Lock                     `json:"lock"`
-	MotherObjectSig markl.Id                 `json:"mother-object-sig"`
-	ObjectDigest    markl.Id                 `json:"object-digest"`
-	ObjectId        string                   `json:"object-id"`
-	RepoPubkey      markl.Id                 `json:"repo-pub_key"`
-	RepoSig         markl.Id                 `json:"repo-sig"`
-	Sha             string                   `json:"sha"`
-	Tags            []string                 `json:"tags"`
-	Tai             string                   `json:"tai"`
-	Type            string                   `json:"type"`
+	AbbreviatedObjectId string                   `json:"abbreviated-object-id,omitempty"`
+	BlobId              string                   `json:"blob-id"`
+	BlobReferences      map[string]BlobReference `json:"blob-references,omitempty"`
+	BlobString          string                   `json:"blob-string,omitempty"`
+	Date                string                   `json:"date"`
+	Description         string                   `json:"description"`
+	Lock                Lock                     `json:"lock"`
+	MotherObjectSig     markl.Id                 `json:"mother-object-sig"`
+	ObjectDigest        markl.Id                 `json:"object-digest"`
+	ObjectId            string                   `json:"object-id"`
+	RepoPubkey          markl.Id                 `json:"repo-pub_key"`
+	RepoSig             markl.Id                 `json:"repo-sig"`
+	Sha                 string                   `json:"sha"`
+	Tags                []string                 `json:"tags"`
+	Tai                 string                   `json:"tai"`
+	Type                string                   `json:"type"`
 }
 
 // TODO make a json factory
@@ -143,6 +144,36 @@ func (json *Transacted) FromTransacted(
 		object.GetMetadataMutable(),
 		blobStore,
 	)
+}
+
+// SetAbbreviatedObjectId populates AbbreviatedObjectId with the short form
+// of the object's zettel id, using abbr's zettel abbreviator. It is a
+// separate step from FromTransacted (rather than a parameter on it) so the
+// many existing FromTransacted call sites that don't have an ids.Abbr handy
+// are unaffected. A no-op for non-zettel genres or when abbreviation does
+// not shorten the id (e.g. the abbreviation index has no entries yet), so
+// AbbreviatedObjectId stays its zero value and is omitted from the JSON
+// (`omitempty`) rather than duplicating ObjectId.
+func (json *Transacted) SetAbbreviatedObjectId(
+	abbr ids.Abbr,
+	object *sku.Transacted,
+) (err error) {
+	if abbr.ZettelId.Abbreviate == nil {
+		return err
+	}
+
+	objectId := ids.MustObjectId(object.GetObjectId())
+
+	if err = abbr.AbbreviateZettelIdOnly(objectId); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	if abbreviated := objectId.String(); abbreviated != json.ObjectId {
+		json.AbbreviatedObjectId = abbreviated
+	}
+
+	return err
 }
 
 func (json *Transacted) ToTransacted(

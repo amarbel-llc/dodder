@@ -54,6 +54,21 @@ omitting it errors with "no type given and repo has no default type; pass
 also be typeless (it reads as a bare !); typeless objects break push/import,
 so always give a new zettel a type.
 
+## Zettel ID Abbreviation
+
+Zettel IDs can be long (e.g. ceroplastes/midtown). Dodder maintains a
+shortest-unique-prefix abbreviation for each half, so the SAME zettel is
+often addressable as a much shorter id (e.g. cer/mid). Both forms always
+work everywhere a zettel id is accepted (object_id params, query terms,
+show/edit/organize) — PREFER pasting the short form back into later calls
+over retyping the full one; it saves tokens and is exactly as unambiguous.
+
+- Box-format object listings (see below) already print the abbreviated
+  form, not the full one, whenever abbreviation is enabled for the repo.
+- json/json-with-blob_string format always includes the full form in
+  "object-id" AND, for zettels, the short form in "abbreviated-object-id"
+  (omitted when there is nothing to shorten, e.g. non-zettel genres).
+
 ## Query Syntax
 
 Query terms in the query tool are AND-combined. Term types:
@@ -125,6 +140,11 @@ Object listings (e.g. dodder://types/<id>/objects) use the compact box format.
 Each line represents one object:
 
   [<object-id> @<blob-digest> !<type> <tag1> <tag2> ...] <description>
+
+For a zettel, <object-id> is already the ABBREVIATED form when
+abbreviation is enabled (see "Zettel ID Abbreviation" above) — it is
+directly usable as-is in later object_id/query params, no need to look up
+the full id.
 
 Field order inside brackets:
 1. Object ID (e.g. thallium/golem, !md, konfig)
@@ -349,7 +369,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 				"properties": {
 					"object_id": {
 						"type": "string",
-						"description": "Object identifier or query term (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', type like '!type', or a genre query like ':z'). Sigils attach to the TERM before the genre letter: ':' latest (default), '+' history (e.g. '!task+:t', NOT '+!task:t'), '.' external/checked-out, '?' dormant/hidden."
+						"description": "Object identifier or query term (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', type like '!type', or a genre query like ':z'). Zettel IDs may be given in their abbreviated form (e.g. 'cer/mid') — box-format output already shows the abbreviated form. Sigils attach to the TERM before the genre letter: ':' latest (default), '+' history (e.g. '!task+:t', NOT '+!task:t'), '.' external/checked-out, '?' dormant/hidden."
 					},
 					"format": {
 						"type": "string",
@@ -706,7 +726,7 @@ func registerTools(tools *server.ToolRegistryV1, bridge Bridge, index *typeIndex
 				"properties": {
 					"object_id": {
 						"type": "string",
-						"description": "Object identifier (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', or type like '!md')"
+						"description": "Object identifier (e.g. zettel ID like 'ceroplastes/midtown', tag like 'todo', or type like '!md'). Zettel IDs may be given in their abbreviated form (e.g. 'cer/mid')."
 					},
 					"description": {
 						"type": "string",
@@ -1187,6 +1207,19 @@ func makeEditHandler(
 			ctx,
 			p.RepoId,
 			func(repo *local_working_copy.Repo) error {
+				// Unlike show/organize (which route through the query
+				// builder's expanders), edit reads objectId directly via
+				// ReadOneObjectId, which does no abbreviation expansion.
+				// Expand in place here so an abbreviated zettel id (e.g.
+				// "cer/mid" for "ceroplastes/midtown") resolves the same
+				// way it already does everywhere else. A no-op for
+				// non-zettel genres.
+				if err := repo.GetAbbr().GetAbbr().ExpandZettelIdOnly(
+					objectId,
+				); err != nil {
+					return err
+				}
+
 				op := repo_actions.MakeUpdateObject(repo)
 
 				changes := repo_actions.ObjectChanges{

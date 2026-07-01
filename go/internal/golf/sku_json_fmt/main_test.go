@@ -8,6 +8,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/store_abbr"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
@@ -314,4 +315,54 @@ func TestRoundTripPartialLocks(t1 *testing.T) {
 		t.AssertEqualStrings(testSig3, decodedTypeLock.GetValue().String())
 		t.AssertEqualStrings("", decodedMeta.GetBlobReferenceAlias(blobId))
 	}
+}
+
+// TestSetAbbreviatedObjectIdZettel confirms AbbreviatedObjectId is
+// populated with the short form for a zettel once the abbreviation index
+// has enough entries to actually shorten it, and that ObjectId always
+// keeps the full form regardless.
+func TestSetAbbreviatedObjectIdZettel(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	object1, repool1 := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool1()
+	t.AssertNoError(object1.GetObjectIdMutable().Set("one/uno"))
+
+	object2, repool2 := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool2()
+	t.AssertNoError(object2.GetObjectIdMutable().Set("two/dos"))
+
+	index := store_abbr.NewInMemoryIndex()
+	t.AssertNoError(index.AddObject(object1))
+	t.AssertNoError(index.AddObject(object2))
+
+	var jsonObj Transacted
+	t.AssertNoError(jsonObj.FromTransacted(object1, nil))
+	t.AssertEqualStrings("one/uno", jsonObj.ObjectId)
+
+	t.AssertNoError(jsonObj.SetAbbreviatedObjectId(index.GetAbbr(), object1))
+	t.AssertEqualStrings("one/uno", jsonObj.ObjectId)
+	t.AssertEqualStrings("o/u", jsonObj.AbbreviatedObjectId)
+}
+
+// TestSetAbbreviatedObjectIdNonZettelOmitted confirms a non-zettel object
+// (a type, here) gets no AbbreviatedObjectId at all: abbreviation only
+// ever applies to the zettel genre, and the field is left at its zero
+// value (omitted from JSON via omitempty) rather than duplicating
+// ObjectId.
+func TestSetAbbreviatedObjectIdNonZettelOmitted(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	object, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool()
+	t.AssertNoError(object.GetObjectIdMutable().Set("!md"))
+
+	index := store_abbr.NewInMemoryIndex()
+	t.AssertNoError(index.AddObject(object))
+
+	var jsonObj Transacted
+	t.AssertNoError(jsonObj.FromTransacted(object, nil))
+
+	t.AssertNoError(jsonObj.SetAbbreviatedObjectId(index.GetAbbr(), object))
+	t.AssertEqualStrings("", jsonObj.AbbreviatedObjectId)
 }

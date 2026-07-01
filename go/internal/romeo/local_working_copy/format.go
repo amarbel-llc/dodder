@@ -634,11 +634,20 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			writer interfaces.WriterAndStringWriter,
 		) interfaces.FuncIter[*sku.Transacted] {
 			enc := json.NewEncoder(writer)
+			abbr := repo.GetAbbr().GetAbbr()
 
 			return func(object *sku.Transacted) (err error) {
 				var jsonRep sku_json_fmt.Transacted
 
 				if err = jsonRep.FromTransacted(object, nil); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				if err = jsonRep.SetAbbreviatedObjectId(
+					abbr,
+					object,
+				); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -658,6 +667,7 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			writer interfaces.WriterAndStringWriter,
 		) interfaces.FuncIter[*sku.Transacted] {
 			enc := json.NewEncoder(writer)
+			abbr := repo.GetAbbr().GetAbbr()
 
 			return func(object *sku.Transacted) (err error) {
 				var jsonRep sku_json_fmt.Transacted
@@ -665,6 +675,14 @@ var formatters = map[string]FormatFuncConstructorEntry{
 				if err = jsonRep.FromTransacted(
 					object,
 					repo.GetStore().GetEnvRepo().GetDefaultBlobStore(),
+				); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				if err = jsonRep.SetAbbreviatedObjectId(
+					abbr,
+					object,
 				); err != nil {
 					err = errors.Wrap(err)
 					return err

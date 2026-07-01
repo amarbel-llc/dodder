@@ -100,7 +100,10 @@ description trailer.
 
 Fields (any may be absent):
   - <object-id>     a zettel (left/right, e.g. thallium/golem), a bare tag
-                    name, or a !-prefixed type name (for a type object)
+                    name, or a !-prefixed type name (for a type object).
+                    For a zettel this is already the ABBREVIATED form when
+                    abbreviation is enabled — use it as-is in later steps,
+                    no need to look up the full id.
   - @<blob-digest>  content hash of the blob; omitted if the object has none
   - !<type>         the object's TYPE, always !-prefixed (e.g. !md, !task);
                     omitted if untyped. Exactly one per object. This is the

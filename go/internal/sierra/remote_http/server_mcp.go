@@ -441,6 +441,13 @@ func (server *Server) readMCPResourceObject(
 		return nil, errors.Wrap(err)
 	}
 
+	if err := jsonRep.SetAbbreviatedObjectId(
+		repo.GetAbbr().GetAbbr(),
+		object,
+	); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
 	var typeBlob type_blobs.Blob
 	var repoolTypeBlob interfaces.FuncRepool
 
