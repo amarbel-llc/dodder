@@ -123,11 +123,22 @@ function teardown_repo {
   chflags_nouchg
 }
 
+# Per-invocation wall-clock budget for a single dodder/madder command run
+# under run_dodder/run_madder/run_dodder_debug. 5s was too tight under a
+# loaded nix build sandbox: `checkin -delete` in serve_proto.bats /
+# transfer_port.bats's fast-forward tests would occasionally still be
+# writing when the 5s mark hit, so `timeout` SIGTERMed it mid-flush
+# ("dodder aborting due to signal: terminated") and the test failed on
+# infra timing, not on real behavior. 15s gives real runs comfortable
+# headroom while still catching a genuinely hung process; override with
+# DODDER_TEST_CMD_TIMEOUT if a slower host needs more.
+DODDER_TEST_CMD_TIMEOUT="${DODDER_TEST_CMD_TIMEOUT:-15s}"
+
 function run_dodder_debug {
   cmd="$1"
   shift
   #shellcheck disable=SC2068
-  timeout --preserve-status "5s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
+  timeout --preserve-status "$DODDER_TEST_CMD_TIMEOUT" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
 }
 
 function run_dodder {
@@ -151,7 +162,7 @@ function run_dodder {
   run env \
     DODDER_CEILING_DIRECTORIES="${DODDER_TEST_CEILING:-$PWD}" \
     MADDER_CEILING_DIRECTORIES="${MADDER_TEST_CEILING:-$PWD}" \
-    timeout --preserve-status "5s" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
+    timeout --preserve-status "$DODDER_TEST_CMD_TIMEOUT" "$DODDER_BIN" "$cmd" ${cmd_dodder_def[@]} "$@"
 }
 
 function run_madder {
@@ -162,7 +173,7 @@ function run_madder {
     DODDER_CEILING_DIRECTORIES="${DODDER_TEST_CEILING:-$PWD}" \
     MADDER_CEILING_DIRECTORIES="${MADDER_TEST_CEILING:-$PWD}" \
     XDG_LOG_HOME="$BATS_TEST_TMPDIR/.xdg/log" \
-    timeout --preserve-status "5s" "$MADDER_BIN" "$cmd" "$@"
+    timeout --preserve-status "$DODDER_TEST_CMD_TIMEOUT" "$MADDER_BIN" "$cmd" "$@"
 }
 
 # TODO make this actually unify stderr
