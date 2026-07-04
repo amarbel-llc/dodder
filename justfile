@@ -26,6 +26,7 @@ default: lint build test
 # what the spinclass pre-merge hook (bare `just`) enforces.
 lint:
   just go/check-treelint
+  just go/check-shellcheck
 
 #   ____        _ _     _
 #  | __ ) _   _(_) | __| |

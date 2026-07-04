@@ -436,7 +436,29 @@ check-treelint:
   bin=$(nix build --no-link --print-out-paths '..#treelint-fmt')
   "$bin/bin/treelint-fmt" check
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-treelint test-go-unit
+# Read-only shellcheck gate for tracked shell scripts (*.sh/*.bash). Lives
+# OUTSIDE conformist.toml on purpose: the shared eng conformist-repair /
+# -pre-commit hooks run a wrapper with no shellcheck on PATH, so a
+# [linter.shellcheck] lane there hard-fails at linter init and blocks the merge
+# (amarbel-llc/eng#222, dodder#323). Mirrors the retired treelint.toml linter's
+# scope: excludes go/vimdiff.bash (vendored upstream git-vimdiff harness) and the
+# frozen zz-tests_bats/previous_versions/** snapshots. Wired into the pre-merge
+# lane via the root `lint` recipe. Uses the dev-shell shellcheck (same build the
+# old linter drove).
+check-shellcheck:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "{{ justfile_directory() }}/.."
+  mapfile -t files < <(
+    git ls-files '*.sh' '*.bash' |
+      grep -vE '^(go/vimdiff\.bash$|zz-tests_bats/previous_versions/)'
+  )
+  if [ "${#files[@]}" -eq 0 ]; then
+    exit 0
+  fi
+  shellcheck "${files[@]}"
+
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-treelint check-shellcheck test-go-unit
 
 #   _____         _
 #  |_   _|__  ___| |_
