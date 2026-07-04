@@ -319,11 +319,7 @@ function show_complex_zettel_tag_negation { # @test
 function show_simple_all { # @test
   run_dodder show :z,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted show_simple_all
 
   run_dodder show -format blob :z,t
   assert_success
@@ -336,39 +332,27 @@ function show_simple_all { # @test
 
   run_dodder show -format sku-metadata-sans-tai :z,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		Type !md blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2
-		Zettel one/dos blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md tag-3 tag-4 "wow ok again"
-		Zettel one/uno blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md tag-3 tag-4 "wow the first"
-	EOM
+  assert_golden_unsorted show_simple_all_sku_metadata
 }
 
 function show_simple_type_one { # @test
   run_dodder show !md:t
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted show_simple_type_one
 }
 
 function show_simple_type_one_history { # @test
   run_dodder show !md+t
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted show_simple_type_one_history
 }
 
 function show_simple_type_tail { # @test
   run_dodder show :t
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted show_simple_type_tail
 }
 
 function show_simple_type_history { # @test
   run_dodder show +t
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted show_simple_type_history
 }
 
 function show_simple_tag_tail { # @test
@@ -440,12 +424,7 @@ merge = ["vimdiff"]'
 
 function show_history_all { # @test
   run_dodder show +kasten,typ,etikett,zettel
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
+  assert_golden_unsorted show_history_all
 }
 
 # bats test_tags=user_story:workspace

@@ -319,10 +319,7 @@ function import_twice_no_dupes_one_zettel { # @test
 
   run_dodder show :z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted import_twice_no_dupes_one_zettel
 }
 
 # TODO add support for conflict resolution
@@ -392,12 +389,7 @@ function import_twice_no_dupes { # @test
 
   run_dodder show +z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
+  assert_golden_unsorted import_twice_no_dupes_show_history
 
   run_dodder import \
     -blob_store-id shared \
@@ -408,20 +400,11 @@ function import_twice_no_dupes { # @test
 
   run_dodder show :z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted import_twice_no_dupes_show_tail
 
   run_dodder show +z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
+  assert_golden_unsorted import_twice_no_dupes_show_history_after
 }
 
 function import_reimport_no_local_checkout { # @test
@@ -524,9 +507,7 @@ function import_dry_run { # @test
   # Verify no objects were committed (inner should have only init objects)
   run_dodder show :z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted import_dry_run
 }
 
 function import_dry_run_objects_format { # @test
@@ -591,12 +572,7 @@ function import_multiple_lists { # @test
   # All objects from both lists should be present
   run_dodder show +z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
+  assert_golden_unsorted import_multiple_lists
 }
 
 function import_multiple_lists_cross_dedup { # @test
@@ -697,12 +673,7 @@ function import_inventory_lists { # @test
 
   run_dodder show +z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
-	EOM
+  assert_golden_unsorted import_inventory_lists
 }
 
 function import_interactive_flag_accepted_non_tty { # @test

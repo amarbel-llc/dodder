@@ -148,6 +148,28 @@ test-bats-update-fixtures:
   echo "Review with: git diff -- $dest"
   echo "Then: git add $dest && git commit -m 'Update test fixtures'"
 
+# Regenerate golden files for approval-testing assertions (assert_golden /
+# assert_golden_unsorted from zz-tests_bats/lib/golden.bash). Runs the target
+# files with DODDER_UPDATE_GOLDENS=1 so each assert_golden writes its
+# normalized $output into zz-tests_bats/**/goldens/<file>/<name>.txt instead of
+# asserting. Uses the NO-SANDBOX batman path because this host's bats Linux
+# bridge can't initialize; the merge-hook nix lane remains the authoritative
+# gate (it consumes the committed goldens read-only). Defaults to all
+# current_version files; pass specific files (e.g.
+# `just test-bats-update-goldens current_version/show.bats
+# previous_versions/main.bats`) to scope the regen. Review the diff and commit
+# the goldens alongside the converted assertions.
+test-bats-update-goldens *targets="current_version/*.bats":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+  GOMEMLIMIT=512MiB \
+    DODDER_UPDATE_GOLDENS=1 \
+    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    just zz-tests_bats/test-targets-no-sandbox {{targets}}
+
 # Snapshot current test suite for future reference.
 # Run BEFORE bumping VCurrent in store_version/main.go.
 test-bats-snapshot-version:

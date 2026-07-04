@@ -17,11 +17,7 @@ function prepare_checkouts() {
   run_dodder_init_workspace
   run_dodder checkout :z,t,e
   assert_success
-  assert_output_unsorted - <<-EOM
-		      checked out [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted prepare_checkouts
 }
 
 # bats file_tags=user_story:clean

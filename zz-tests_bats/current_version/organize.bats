@@ -75,29 +75,11 @@ function organize_simple_commit { # @test
 		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 %virtual_etikett new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" %virtual_etikett new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" %virtual_etikett new-etikett-for-all tag-3 tag-4]
-		[tag-1 %virtual_etikett new-etikett-for-all]
-		[tag-2 %virtual_etikett new-etikett-for-all]
-		[tag-3 %virtual_etikett new-etikett-for-all]
-		[tag-4 %virtual_etikett new-etikett-for-all]
-		[tag %virtual_etikett new-etikett-for-all]
-	EOM
+  assert_golden_unsorted organize_simple_commit
 
   run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
-		[tag-1 new-etikett-for-all]
-		[tag-2 new-etikett-for-all]
-		[tag-3 new-etikett-for-all]
-		[tag-4 new-etikett-for-all]
-		[tag new-etikett-for-all]
-	EOM
+  assert_golden_unsorted organize_simple_commit_log
 }
 
 function organize_simple_checkedout_matchesmutter { # @test
@@ -119,29 +101,11 @@ function organize_simple_checkedout_matchesmutter { # @test
 		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[-tag-1 new-etikett-for-all]
-		[-tag-2 new-etikett-for-all]
-		[-tag-3 new-etikett-for-all]
-		[-tag-4 new-etikett-for-all]
-		[-tag new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_matchesmutter_commit
 
   run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[-tag-1 new-etikett-for-all]
-		[-tag-2 new-etikett-for-all]
-		[-tag-3 new-etikett-for-all]
-		[-tag-4 new-etikett-for-all]
-		[-tag new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_matchesmutter_log
 
   run_dodder status one/dos.zettel
   assert_success
@@ -176,19 +140,11 @@ function organize_simple_checkedout_merge_no_conflict { # @test
 		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_merge_no_conflict_commit
 
   run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_merge_no_conflict_log
 
   run_dodder status one/dos.zettel
   assert_success
@@ -260,29 +216,11 @@ function organize_simple_checkedout_merge_conflict { # @test
 		- [one/uno   !txt2 tag-3 tag-4] wow the first
 	EOM
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[-tag new-etikett-for-all]
-		[-tag-1 new-etikett-for-all]
-		[-tag-2 new-etikett-for-all]
-		[-tag-3 new-etikett-for-all]
-		[-tag-4 new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again different" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt2 "wow the first" new-etikett-for-all tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_merge_conflict_commit
 
   run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2 new-etikett-for-all]
-		[-tag-1 new-etikett-for-all]
-		[-tag-2 new-etikett-for-all]
-		[-tag-3 new-etikett-for-all]
-		[-tag-4 new-etikett-for-all]
-		[-tag new-etikett-for-all]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again different" new-etikett-for-all tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt2 "wow the first" new-etikett-for-all tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_merge_conflict_log
 
   run_dodder status one/dos.zettel
   assert_success
@@ -1295,11 +1233,7 @@ function object_with_newline_in_description { # @test
 function organize_checked_out { # @test
   run_dodder checkout :z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		      checked out [md.type @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted organize_checked_out
 
   run_dodder organize -mode output-only .
   assert_success

@@ -12,11 +12,7 @@ setup() {
 
   run_dodder checkout :z,t,e
   assert_success
-  assert_output_unsorted - <<-EOM
-		      checked out [md.type @$(get_type_blob_sha) !toml-type-v2]
-		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted setup_checkout
 
   run ls
   assert_success
@@ -149,11 +145,7 @@ function checkin_simple_all_dry_run { # @test
 
   run_dodder show -format log :z,e,t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
-		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
-	EOM
+  assert_golden_unsorted checkin_simple_all_dry_run
 }
 
 function checkin_simple_typ { # @test

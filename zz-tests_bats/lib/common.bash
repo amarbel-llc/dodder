@@ -47,6 +47,13 @@ bats_load_library "bats-assert-additions"
 bats_load_library "bats-island"
 bats_load_library "bats-emo"
 
+# Golden-file (approval-testing) assertions. Local to this repo, not a bats
+# library, so source it by path rather than bats_load_library. shellcheck
+# cannot follow the runtime-resolved path (SC1091); golden.bash is linted on
+# its own.
+# shellcheck disable=SC1091
+source "$(dirname "${BASH_SOURCE[0]}")/golden.bash"
+
 # get the test infrastructure root (zz-tests_bats/)
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 

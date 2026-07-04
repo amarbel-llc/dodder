@@ -59,17 +59,13 @@ function init_and_reindex { # @test
   assert_success
   run_dodder show :t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted init_and_reindex_first
 
   run_dodder reindex
   assert_success
   run_dodder show :t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted init_and_reindex_second
 }
 
 function init_and_deinit { # @test
@@ -115,9 +111,7 @@ function init_with_non_xdg { # @test
 
   run_dodder show +t
   assert_success
-  assert_output_unsorted - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden_unsorted init_with_non_xdg
 }
 
 function non_repo_failure { # @test
@@ -183,9 +177,7 @@ function init_with_age { # @test
     .default
 
   assert_success
-  assert_output - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-	EOM
+  assert_golden init_with_age
 
   run test -f .xdg/data/dodder/config-permanent
 
@@ -266,9 +258,7 @@ function init_with_json_inventory_list_type { # @test
     .default
 
   assert_success
-  assert_output - <<-EOM
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
-	EOM
+  assert_golden init_with_json
 
   run_dodder show :b
   assert_success

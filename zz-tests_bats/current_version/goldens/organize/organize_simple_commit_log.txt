@@ -1,0 +1,8 @@
+[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2 new-etikett-for-all]
+[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
+[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
+[tag new-etikett-for-all]
+[tag-1 new-etikett-for-all]
+[tag-2 new-etikett-for-all]
+[tag-3 new-etikett-for-all]
+[tag-4 new-etikett-for-all]

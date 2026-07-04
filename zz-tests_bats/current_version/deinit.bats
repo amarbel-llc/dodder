@@ -30,9 +30,7 @@ function deinit_force() { # @test
 
   run_dodder last
   assert_success
-  assert_output - <<-EOM
-		[!md @$(get_type_blob_sha) !toml-type-v2]
-	EOM
+  assert_golden deinit_force_last
 }
 
 function deinit() { # @test
