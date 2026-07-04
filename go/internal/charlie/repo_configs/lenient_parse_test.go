@@ -9,13 +9,23 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
-// Pins Tommy's lenient TOML parsing of leading hyphence-fence lines
-// (`---`) and type-directive lines (`! toml-config-v2`). Older stores
-// hold konfig blobs that begin with that wrapper; the load path
-// decodes them via the bare `Coder.Blob` decoder and relies on Tommy
-// to ignore the wrapper lines. If Tommy ever becomes strict, every
-// such store would fail to load.
-func TestDecodeV2_LenientWithHyphenceWrapper(t1 *testing.T) {
+// Pins that the bare V2 config coder decodes a body-only TOML blob.
+// Config blobs are stored and presented bare: the leading hyphence
+// `---` / `! toml-config-v2` frame is object-level metadata that
+// hyphence's CoderToTypedBlob.DecodeFrom (via readMetadataFrom) strips
+// before the body ever reaches this bare Coder.Blob / DecodeV2 decoder.
+// Both production call sites feed body-only bytes —
+// november/store_config/persist.go (bootstrap mutable-config read of the
+// blob content) and uniform/commands_dodder/konfig_edit.go (the temp
+// file is a verbatim copy of the bare blob bytes) — so a framed blob
+// never reaches DecodeV2.
+//
+// This replaces the former TestDecodeV2_LenientWithHyphenceWrapper,
+// which asserted tommy leniently swallowed an embedded `---` frame. That
+// path does not exist in production, and tommy v0.4.3's decode-
+// normalization made the parser strict about a leading fence, so the
+// wrapped case was skipped and is now removed. See #257.
+func TestDecodeV2_DecodesBareBody(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
 	body := strings.Join([]string{
@@ -26,56 +36,18 @@ func TestDecodeV2_LenientWithHyphenceWrapper(t1 *testing.T) {
 		"",
 	}, "\n")
 
-	wrapped := strings.Join([]string{
-		"---",
-		"! toml-config-v2",
-		"---",
-		"",
-		body,
-	}, "\n")
-
-	docBare, err := DecodeV2([]byte(body))
+	doc, err := DecodeV2([]byte(body))
 	if err != nil {
 		t.Fatalf("bare TOML failed to decode: %v", err)
 	}
-	bare := docBare.Data()
 
-	// tommy v0.4.3's decode-normalization rewrite made the parser strict
-	// about a leading hyphence fence (`---`), so feeding the framed bytes
-	// straight to the bare DecodeV2 now fails. Production never does this:
-	// hyphence's CoderToTypedBlob.DecodeFrom strips the `---` / type-line
-	// frame (readMetadataFrom) before the body reaches the bare blob
-	// decoder, so tommy only ever sees the body. The wrapped-input
-	// expectation here pins a path that does not exist; parked pending a
-	// decision on dropping v14 support and removing this case outright.
-	t1.Skip("wrapped hyphence-fence decode is no longer lenient under tommy v0.4.3; the frame is stripped upstream in production — see commit isolating tommy codegen")
+	data := doc.Data()
 
-	docWrapped, err := DecodeV2([]byte(wrapped))
-	if err != nil {
-		t.Fatalf(
-			"wrapped TOML failed to decode — v14 stores would "+
-				"hard-fail on load. Tommy parser became strict? "+
-				"error: %v", err,
-		)
-	}
-	wrap := docWrapped.Data()
-
-	// Same blob-stores set on both forms.
-	if len(bare.BlobStores) != len(wrap.BlobStores) {
-		t.Fatalf(
-			"blob-stores count mismatch: bare=%d wrapped=%d",
-			len(bare.BlobStores), len(wrap.BlobStores),
-		)
-	}
-	if len(bare.BlobStores) != 1 {
-		t.Fatalf("expected exactly 1 blob-store in bare form, got %d", len(bare.BlobStores))
+	if len(data.BlobStores) != 1 {
+		t.Fatalf("expected exactly 1 blob-store, got %d", len(data.BlobStores))
 	}
 
-	// Same defaults.type on both forms.
-	if bare.Defaults.Type.String() != wrap.Defaults.Type.String() {
-		t.Fatalf(
-			"defaults.type mismatch: bare=%q wrapped=%q",
-			bare.Defaults.Type, wrap.Defaults.Type,
-		)
+	if data.Defaults.Type.String() != "!md" {
+		t.Fatalf("expected defaults.type !md, got %q", data.Defaults.Type)
 	}
 }
