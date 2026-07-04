@@ -1,8 +1,6 @@
 package type_blobs
 
 import (
-	"fmt"
-
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 )
 
@@ -11,48 +9,24 @@ import (
 // built-in actionable types are included) so a carrying object becomes
 // dormant. The "zz-" prefix follows the repo's archive-tag convention and
 // keeps it sorted last.
+//
+// COUPLING: the "zz-archive" string literal in the blob-backed
+// actionable-common.lua module
+// (romeo/local_working_copy/embedded/actionable/actionable-common.lua) MUST
+// match this const. The archive logic lives in that lua module now (delivered
+// as a blob reference on the actionable type objects); this const is still
+// used by genesis to seed the dormant index.
 const ArchiveTag = "zz-archive"
 
-// actionableArchiveHook is the shared on_commit_fields lua hook for the
-// built-in actionable types. Branching on the projected status field
-// (kinder.Fields.status), populated by the on_commit_fields commit stage
-// before invocation:
-//
-//   - status == "cancelled": archive (add ArchiveTag) for every actionable
-//     type. Tag-only, no field mutation, so no write-back fires.
-//   - status == "done" on a !task: one-shot completion -> archive. Tag-only.
-//   - status == "done" on a recurring type (!chore / !habit) carrying a
-//     non-empty recurrence: roll the object forward instead of archiving --
-//     advance kinder.Fields.due by the recurrence duration (via the host
-//     dodder_advance_date helper) and reset status to "todo". Mutating the
-//     `due` / `status` fields triggers the RFC 0006 Phase 1 commit-time field
-//     write-back (a single bounded, hook-free tryWriteFields + tryReadFields
-//     pass), persisting the recurred values to the blob.
-//
-// An empty `due` is guarded: a recurring task with no date only resets status,
-// leaving due empty (nothing to advance). A recurring "done" with no
-// recurrence value falls through unchanged.
-func actionableArchiveHook() string {
-	return fmt.Sprintf(`return {
-  on_commit_fields = function(kinder, mutter)
-    local f = kinder.Fields
-    if not f then return end
-    local status = f.status
-    if status == "cancelled" then
-      kinder.Etiketten[%[1]q] = true
-    elseif status == "done" then
-      if kinder.Typ == "!task" then
-        kinder.Etiketten[%[1]q] = true
-      elseif f.recurrence ~= nil and f.recurrence ~= "" then
-        if f.due ~= nil and f.due ~= "" then
-          f.due = dodder_advance_date(f.due, f.recurrence)
-        end
-        f.status = "todo"
-      end
-    end
-  end,
-}
-`, ArchiveTag)
+// actionableCommonHook is the thin type-blob hook script for the built-in
+// actionable types: it require()s the blob-backed actionable-common module
+// (delivered as a blob reference on the type object, preloaded into the hook
+// VM by oscar/store) and returns its hooks table. The archive/recurrence/
+// completed-date logic lives in embedded/actionable/actionable-common.lua.
+func actionableCommonHook() string {
+	return `local common = require("actionable-common")
+return common.hooks
+`
 }
 
 func Default() TomlV2 {
@@ -219,7 +193,7 @@ func DefaultTaskType() TomlV2 {
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
-		Hooks:         actionableArchiveHook(),
+		Hooks:         actionableCommonHook(),
 		Fields:        actionableFields(),
 		FieldsReader:  actionableFieldsReader(),
 		FieldsWriter:  actionableFieldsWriter(),
@@ -236,7 +210,7 @@ func DefaultChoreType() TomlV2 {
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
-		Hooks:         actionableArchiveHook(),
+		Hooks:         actionableCommonHook(),
 		Fields:        recurringFields(),
 		FieldsReader:  recurringFieldsReader(),
 		FieldsWriter:  recurringFieldsWriter(),
@@ -253,7 +227,7 @@ func DefaultHabitType() TomlV2 {
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
-		Hooks:         actionableArchiveHook(),
+		Hooks:         actionableCommonHook(),
 		Fields:        recurringFields(),
 		FieldsReader:  recurringFieldsReader(),
 		FieldsWriter:  recurringFieldsWriter(),

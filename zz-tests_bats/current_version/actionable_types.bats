@@ -38,17 +38,22 @@ function genesis_default_omits_actionable_types { # @test
 }
 
 # With -include-builtin-actionable-types, all three actionable types
-# (!task, !chore, !habit) are committed during genesis alongside !md.
+# (!task, !chore, !habit) are committed during genesis alongside !md, plus the
+# !lua tool type that locks the actionable-common.lua blob reference each
+# actionable type carries. The actionable types render that blob reference
+# inline (alias<@digest !lua@ed25519_sig-...); the signature is
+# non-deterministic, so match it with --regexp.
 function genesis_includes_actionable_types_when_opted_in { # @test
   init_fixture -include-builtin-actionable-types
 
   run_dodder show ':t'
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\[!chore @blake2b256-.+ !toml-type-v2]
-		\[!habit @blake2b256-.+ !toml-type-v2]
+		\[!chore @blake2b256-.+ !toml-type-v2 "actionable-common\.lua<@blake2b256-.+ !lua@ed25519_sig-.+"]
+		\[!habit @blake2b256-.+ !toml-type-v2 "actionable-common\.lua<@blake2b256-.+ !lua@ed25519_sig-.+"]
+		\[!lua @blake2b256-.+ !toml-type-v2]
 		\[!md @blake2b256-.+ !toml-type-v2]
-		\[!task @blake2b256-.+ !toml-type-v2]
+		\[!task @blake2b256-.+ !toml-type-v2 "actionable-common\.lua<@blake2b256-.+ !lua@ed25519_sig-.+"]
 	EOM
 }
 
@@ -68,12 +73,14 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
   # (#297). urgency carries no default (untriaged reads as
   # unset). The text formatter pipes the TOML `body` key through yq, strips
   # the leading `#!dang` convention line, then normalizes via pandoc. The
-  # `hooks` value is the archive/recurrence on_commit_fields lua hook,
-  # serialized by tommy's plain string encoder as a single escaped line.
+  # `hooks` value is now the THIN loader: it require()s the blob-backed
+  # actionable-common module (delivered as a blob reference on the type object)
+  # and returns its hooks table. The archive/recurrence/completed-date logic
+  # lives in actionable-common.lua, not this inline string.
   assert_output - <<-'EOM'
 		file-extension = "toml"
 		vim-syntax-type = "toml"
-		hooks = "return {\n  on_commit_fields = function(kinder, mutter)\n    local f = kinder.Fields\n    if not f then return end\n    local status = f.status\n    if status == \"cancelled\" then\n      kinder.Etiketten[\"zz-archive\"] = true\n    elseif status == \"done\" then\n      if kinder.Typ == \"!task\" then\n        kinder.Etiketten[\"zz-archive\"] = true\n      elseif f.recurrence ~= nil and f.recurrence ~= \"\" then\n        if f.due ~= nil and f.due ~= \"\" then\n          f.due = dodder_advance_date(f.due, f.recurrence)\n        end\n        f.status = \"todo\"\n      end\n    end\n  end,\n}\n"
+		hooks = "local common = require(\"actionable-common\")\nreturn common.hooks\n"
 
 		[formatters.text]
 		description = "Render the dang-typed body with pandoc"
@@ -259,6 +266,38 @@ function actionable_body_renders_via_pandoc { # @test
 	EOM
 }
 
+# B2 resolution proof: the actionable type's Hooks string carries NO archive
+# logic -- it is a thin `require("actionable-common")` loader. The logic lives
+# solely in the actionable-common.lua blob, delivered as a blob REFERENCE on the
+# type object and preloaded into the hook VM by name (oscar/store). So a done
+# !task archiving at all proves require() resolved that blob-backed module
+# through the object graph (FDR-0000). Distinct from actionable_task_archives_on_done
+# in intent: this asserts the graph-resolved require path fires, not just the
+# archive behavior.
+function actionable_hook_resolves_via_blob_reference { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# graph-resolved done task
+		! task
+		---
+
+		status = "done"
+		priority = "p2"
+	EOM
+  assert_success
+
+  # archived + due-stamped: only reachable if the thin hook's
+  # require("actionable-common") loaded the blob-referenced module.
+  run_dodder show '!task?z'
+  assert_success
+  assert_output --regexp - <<-EOM
+		\[one/uno @blake2b256-.+ !task "graph-resolved done task" zz-archive status=done priority=p2 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
+	EOM
+}
+
 # A !task committed with status = "done" is archived: the on_commit_fields
 # hook adds the genesis-seeded dormant archive tag (zz-archive), so the task is
 # absent from the default listing and only visible with the dormant (?) sigil.
@@ -282,11 +321,13 @@ function actionable_task_archives_on_done { # @test
   assert_success
   assert_output ''
 
-  # visible with the dormant sigil, carrying the archive tag
+  # visible with the dormant sigil, carrying the archive tag. The B1
+  # completed-date auto-stamp fills the empty `due` with today (UTC), so the
+  # blob digest and `due` value are date-dependent -- match with --regexp.
   run_dodder show '!task?z'
   assert_success
-  assert_output - <<-EOM
-		[one/uno @blake2b256-53nnqmn2c6eny28wu06vz0lzjxynx94taxx2l459l97kxn45yqzq69uegz !task "done task" zz-archive status=done priority=p1 due=]
+  assert_output --regexp - <<-EOM
+		\[one/uno @blake2b256-.+ !task "done task" zz-archive status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
 	EOM
 }
 
@@ -324,11 +365,13 @@ function actionable_task_archives_on_done_hidden_under_empty_genre_query { # @te
   assert_success
   assert_output ''
 
-  # visible with the dormant sigil, carrying the archive tag and full metadata
+  # visible with the dormant sigil, carrying the archive tag and full metadata.
+  # B1 stamps today into the empty `due`, so blob digest + `due` are
+  # date-dependent -- match with --regexp.
   run_dodder show ':?z'
   assert_success
-  assert_output - <<-EOM
-		[one/uno @blake2b256-53nnqmn2c6eny28wu06vz0lzjxynx94taxx2l459l97kxn45yqzq69uegz !task "done task" zz-archive status=done priority=p1 due=]
+  assert_output --regexp - <<-EOM
+		\[one/uno @blake2b256-.+ !task "done task" zz-archive status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
 	EOM
 }
 
@@ -387,13 +430,15 @@ function actionable_cancelled_archives_all_types { # @test
   assert_success
   assert_output ''
 
-  # all three are visible with the dormant sigil, each carrying the archive tag
+  # all three are visible with the dormant sigil, each carrying the archive
+  # tag. B1 stamps today (UTC) into each empty `due` on archive, so the blob
+  # digests and `due` values are date-dependent -- match with --regexp.
   run_dodder show ':?z'
   assert_success
-  assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-lhud3f7ausygpq5n946xhqa8jhfsu0p2vxvggufev9seeaftr7fsrrue2k !task "cancelled task" zz-archive status=cancelled priority=p1 due=]
-		[one/dos @blake2b256-qjs3evuzk5a4vcgrpqpgrcqtxcyf40qvguy3jqpj3znflqujzzgq2cc885 !chore "cancelled chore" zz-archive status=cancelled priority=p1 due= recurrence=P1W]
-		[two/uno @blake2b256-nns0qun0lejzas0pc9hp72r0vlpgaza537fkrlf7mh5rwmeekt0svujpa9 !habit "cancelled habit" zz-archive status=cancelled priority=p1 due= recurrence=P1D]
+  assert_output_unsorted --regexp - <<-EOM
+		\[one/uno @blake2b256-.+ !task "cancelled task" zz-archive status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
+		\[one/dos @blake2b256-.+ !chore "cancelled chore" zz-archive status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} recurrence=P1W]
+		\[two/uno @blake2b256-.+ !habit "cancelled habit" zz-archive status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} recurrence=P1D]
 	EOM
 }
 

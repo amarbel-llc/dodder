@@ -261,6 +261,24 @@ func (local *Repo) prepareBuiltinActionableTypes(
 		return err
 	}
 
+	// Commit the !lua tool type and write the shared actionable-common lua
+	// blob UNCONDITIONALLY (not gated on IncludeDefaultPandocTools): the
+	// actionable hook is a thin `require("actionable-common")` loader that
+	// depends on this blob reference, so it must always exist. The blob
+	// reference's type lock names !lua, a non-builtin type whose existence is
+	// validated by object_finalizer during finalize, so the type object is
+	// committed here first.
+	if err = local.prepareActionableCommonType(builder); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	actionableCommonDigest, err := local.writeRawBlob(embeddedActionableCommon)
+	if err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	for _, builtin := range []struct {
 		objectIdString string
 		blob           type_blobs.TomlV2
@@ -309,10 +327,67 @@ func (local *Repo) prepareBuiltinActionableTypes(
 			}
 		}
 
+		if err = addToolBlobReference(
+			object,
+			actionableCommonDigest,
+			"lua",
+			"actionable-common.lua",
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
 		if err = builder.AddObject(object, 0); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
+	}
+
+	return err
+}
+
+// prepareActionableCommonType commits the !lua tool type used as the type lock
+// for the actionable-common.lua blob reference. Mirrors
+// prepareToolTypes' per-type commit: !lua is a non-builtin type, so
+// object_finalizer validates its existence when finalizing the actionable
+// type objects' blob references. Committed unconditionally with the actionable
+// types (not gated on pandoc tools) since the actionable hook always depends on
+// the blob.
+func (local *Repo) prepareActionableCommonType(
+	builder *import_plan.Builder,
+) (err error) {
+	tipe := ids.DefaultOrPanic(genres.Type)
+
+	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
+
+	if err = object.GetObjectIdMutable().SetWithId(
+		ids.MustTypeStruct("lua"),
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	blob := type_blobs.TomlV2{
+		FileExtension: "lua",
+		VimSyntaxType: "lua",
+	}
+
+	var digest mad_domain_interfaces.MarklId
+
+	if digest, _, err = local.GetStore().GetTypedBlobStore().Type.SaveBlobText(
+		tipe,
+		&blob,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
+	object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
+
+	if err = builder.AddObject(object, 0); err != nil {
+		err = errors.Wrap(err)
+		return err
 	}
 
 	return err

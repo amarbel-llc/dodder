@@ -56,19 +56,12 @@ func TestDefaultTaskType(t1 *testing.T) {
 		t.Errorf("FieldsWriter script missing DODDER_BLOB_PATH: %q", blob.FieldsWriter.Script)
 	}
 
-	// !task archives on terminal status via the on_commit_fields hook: both
-	// "cancelled" and "done" add the archive tag (the done branch is gated on
-	// !task).
-	if !strings.Contains(blob.Hooks, "on_commit_fields") {
-		t.Errorf("Hooks missing on_commit_fields: %q", blob.Hooks)
-	}
-
-	if !strings.Contains(blob.Hooks, ArchiveTag) {
-		t.Errorf("Hooks missing archive tag %q: %q", ArchiveTag, blob.Hooks)
-	}
-
-	if !strings.Contains(blob.Hooks, `if kinder.Typ == "!task" then`) {
-		t.Errorf("Hooks missing !task done branch: %q", blob.Hooks)
+	// The archive/recurrence/completed-date logic now lives in the blob-backed
+	// actionable-common.lua module; the type Hooks string is a thin loader that
+	// require()s it (delivered as a blob reference on the type object,
+	// preloaded into the hook VM by oscar/store).
+	if !strings.Contains(blob.Hooks, `require("actionable-common")`) {
+		t.Errorf("Hooks missing actionable-common require: %q", blob.Hooks)
 	}
 }
 
@@ -97,20 +90,11 @@ func TestDefaultChoreType(t1 *testing.T) {
 		t.Errorf("FieldsWriter script missing DODDER_FIELD_recurrence: %q", blob.FieldsWriter.Script)
 	}
 
-	// !chore archives on "cancelled" but on "done" recurs instead of archiving:
-	// the shared hook gates the archive on kinder.Typ == "!task" and, for a
-	// recurring type carrying a recurrence, advances due and resets status to
-	// "todo" via the dodder_advance_date host helper.
-	if !strings.Contains(blob.Hooks, "on_commit_fields") {
-		t.Errorf("Hooks missing on_commit_fields: %q", blob.Hooks)
-	}
-
-	if !strings.Contains(blob.Hooks, `if kinder.Typ == "!task" then`) {
-		t.Errorf("Hooks missing !task-gated archive branch: %q", blob.Hooks)
-	}
-
-	if !strings.Contains(blob.Hooks, "dodder_advance_date(f.due, f.recurrence)") {
-		t.Errorf("Hooks missing recurrence advance branch: %q", blob.Hooks)
+	// !chore shares the thin actionable-common loader with !task; the
+	// recurrence/archive branching lives in the blob-backed
+	// actionable-common.lua module, not the inline Hooks string.
+	if !strings.Contains(blob.Hooks, `require("actionable-common")`) {
+		t.Errorf("Hooks missing actionable-common require: %q", blob.Hooks)
 	}
 }
 

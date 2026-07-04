@@ -47,7 +47,7 @@ func (store *Store) MakeLuaVMPoolV1(
 ) (vp sku_lua.LuaVMPoolV1, err error) {
 	b := store.envLua.MakeLuaVMPoolBuilder().
 		WithScript(script).
-		WithApply(tag_blobs.MakeLuaSelfApplyV1(self))
+		WithApply(store.makeHookApply(self))
 
 	var lvmp *lua.VMPool
 

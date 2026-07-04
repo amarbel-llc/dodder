@@ -10,3 +10,6 @@ var embeddedPandocEditFilter []byte
 
 //go:embed embedded/pandoc/defaults/dodder-edit.yaml
 var embeddedPandocEditDefaults []byte
+
+//go:embed embedded/actionable/actionable-common.lua
+var embeddedActionableCommon []byte
