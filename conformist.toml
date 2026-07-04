@@ -31,10 +31,6 @@ excludes = [
   # Frozen fixtures + snapshotted bats suites. Reformatting these would break
   # migration conformance (previous_versions/main.bats) and fixture hashes.
   "zz-tests_bats/previous_versions/**",
-  # bats formatting deferred for now (large suite; would churn). Adopting shfmt
-  # over *.bats is tracked as a follow-up; until then dodder's own config keeps
-  # the suite frozen so the eng catch-all cannot restyle it.
-  "*.bats",
   # conformist's own config has intentional layout; leave it be.
   "conformist.toml",
 ]
@@ -61,12 +57,14 @@ command = "nixfmt"
 includes = ["*.nix"]
 
 # Project shell style: 2-space indent, simplify, case-branch indent. -w writes.
-# *.bats is intentionally NOT included yet (see the excludes note above).
+# *.bats is included (matches eng's catch-all shfmt lane); the frozen snapshot
+# suites under zz-tests_bats/previous_versions/** stay excluded above so
+# migration conformance and fixture hashes are unaffected.
 
 [formatter.shfmt]
 command = "shfmt"
 options = ["-w", "-i", "2", "-s", "-ci"]
-includes = ["*.sh", "*.bash"]
+includes = ["*.sh", "*.bash", "*.bats"]
 
 # Lua via stylua. No options → stylua's defaults (tab indentation), matching
 # eng's catch-all so the adopted style is byte-stable across dodder and eng.

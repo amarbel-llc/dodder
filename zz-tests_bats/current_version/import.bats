@@ -670,7 +670,7 @@ function import_tai_collision_resolution { # @test
   assert_success
 
   line_count="$(echo "$output" | wc -l)"
-  [[ "$line_count" -eq 2 ]]
+  [[ $line_count -eq 2 ]]
 }
 
 function import_inventory_lists { # @test

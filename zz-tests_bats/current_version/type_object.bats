@@ -10,21 +10,21 @@
 # (e.g. checkin.bats).
 
 setup() {
-	load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
+  load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
 
-	# for shellcheck SC2154
-	export output
+  # for shellcheck SC2154
+  export output
 }
 
 teardown() {
-	chflags_nouchg
+  chflags_nouchg
 }
 
 # https://github.com/amarbel-llc/dodder/issues/40
 function checkin_type_file_creates_type_object { # @test
-	run_dodder_init_disable_age
+  run_dodder_init_disable_age
 
-	cat >img.type <<-'TYPEFILE'
+  cat >img.type <<-'TYPEFILE'
 		---
 		! toml-type-v2
 		---
@@ -32,11 +32,11 @@ function checkin_type_file_creates_type_object { # @test
 		file-extension = "png"
 	TYPEFILE
 
-	run_dodder checkin -delete img.type
-	assert_success
+  run_dodder checkin -delete img.type
+  assert_success
 
-	# The type object !img should exist after checkin
-	run_dodder show '!img:t'
-	assert_success
-	assert_output --regexp '^\[!img @blake2b256-.+ !toml-type-v2\]$'
+  # The type object !img should exist after checkin
+  run_dodder show '!img:t'
+  assert_success
+  assert_output --regexp '^\[!img @blake2b256-.+ !toml-type-v2\]$'
 }

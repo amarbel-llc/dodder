@@ -1,24 +1,24 @@
 #! /usr/bin/env bats
 
 setup() {
-	load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
+  load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
 
-	# for shellcheck SC2154
-	export output
+  # for shellcheck SC2154
+  export output
 
-	copy_from_version "$DIR"
+  copy_from_version "$DIR"
 }
 
 teardown() {
-	chflags_nouchg
+  chflags_nouchg
 }
 
 function format_simple { # @test
-	run_dodder_init_workspace
-	run_dodder checkout !md:t
-	assert_success
+  run_dodder_init_workspace
+  run_dodder checkout !md:t
+  assert_success
 
-	cat >md.type <<-EOM
+  cat >md.type <<-EOM
 		inline-akte = true
 		[formatters.text]
 		shell = [
@@ -26,19 +26,19 @@ function format_simple { # @test
 		]
 	EOM
 
-	# run cat .dodder/Objekten/Akten/*/*
-	# assert_output ''
+  # run cat .dodder/Objekten/Akten/*/*
+  # assert_output ''
 
-	run_dodder checkin -delete .t
-	assert_success
-	assert_output - <<-EOM
+  run_dodder checkin -delete .t
+  assert_success
+  assert_output - <<-EOM
 		[!md @blake2b256-ghtjyld0g0hhdntnx4xlkd9xt3yj74xer69rklenws6txve3k7pq567f47 !toml-type-v2]
 		          deleted [md.type]
 	EOM
 
-	run_dodder format-object -mode both one/uno text
-	assert_success
-	assert_output --regexp - <<EOM
+  run_dodder format-object -mode both one/uno text
+  assert_success
+  assert_output --regexp - <<EOM
 ---
 # wow the first
 - tag-3
@@ -47,9 +47,9 @@ function format_simple { # @test
 ---
 EOM
 
-	run_dodder checkout one/uno
-	assert_success
-	cat >one/uno.zettel <<-EOM
+  run_dodder checkout one/uno
+  assert_success
+  cat >one/uno.zettel <<-EOM
 		---
 		# wow the second
 		- tag-3
@@ -60,9 +60,9 @@ EOM
 		last time but new
 	EOM
 
-	run_dodder format-object -mode both one/uno.zettel text
-	assert_success
-	assert_output --regexp - <<EOM
+  run_dodder format-object -mode both one/uno.zettel text
+  assert_success
+  assert_output --regexp - <<EOM
 ---
 # wow the second
 - tag-3
@@ -73,25 +73,25 @@ EOM
 }
 
 function show_simple_one_zettel_binary { # @test
-	run_dodder init-workspace -experimental-repo=false
-	assert_success
+  run_dodder init-workspace -experimental-repo=false
+  assert_success
 
-	echo "binary file" >file.bin
-	run_dodder add -delete file.bin
-	assert_success
-	assert_output_unsorted - <<-EOM
+  echo "binary file" >file.bin
+  run_dodder add -delete file.bin
+  assert_success
+  assert_output_unsorted - <<-EOM
 		          deleted [file.bin]
 		[!bin !toml-type-v2]
 		[two/uno @blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk !bin "file"]
 	EOM
 
-	run_dodder checkout !bin:t
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder checkout !bin:t
+  assert_success
+  assert_output_unsorted - <<-EOM
 		      checked out [bin.type !toml-type-v2]
 	EOM
 
-	cat >bin.type <<-EOM
+  cat >bin.type <<-EOM
 		---
 		! toml-type-v2
 		---
@@ -99,16 +99,16 @@ function show_simple_one_zettel_binary { # @test
 		binary = true
 	EOM
 
-	run_dodder checkin -delete bin.type
-	assert_success
-	assert_output_unsorted - <<-EOM
+  run_dodder checkin -delete bin.type
+  assert_success
+  assert_output_unsorted - <<-EOM
 		          deleted [bin.type]
 		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v2]
 	EOM
 
-	run_dodder format-object -mode both two/uno
-	assert_success
-	assert_output --regexp - <<-EOM
+  run_dodder format-object -mode both two/uno
+  assert_success
+  assert_output --regexp - <<-EOM
 		---
 		# file
 		@ blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk

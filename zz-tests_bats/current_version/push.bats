@@ -1,43 +1,43 @@
 #! /usr/bin/env bats
 
 setup() {
-	load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
+  load "$(dirname "$BATS_TEST_FILE")/../lib/common.bash"
 
-	# for shellcheck SC2154
-	export output
+  # for shellcheck SC2154
+  export output
 
-	copy_from_version "$DIR"
+  copy_from_version "$DIR"
 }
 
 teardown() {
-	chflags_nouchg
+  chflags_nouchg
 }
 
 # bats file_tags=user_story:pull,user_story:repo,user_store:xdg,user_story:remote
 
 function bootstrap_with_content {
-	(
-		mkdir -p "$1"
-		pushd "$1" || exit 1
-		run_dodder_init
+  (
+    mkdir -p "$1"
+    pushd "$1" || exit 1
+    run_dodder_init
 
-		{
-			echo "---"
-			echo "# wow"
-			echo "- tag"
-			echo "! md"
-			echo "---"
-			echo
-			echo "body"
-		} >to_add
+    {
+      echo "---"
+      echo "# wow"
+      echo "- tag"
+      echo "! md"
+      echo "---"
+      echo
+      echo "body"
+    } >to_add
 
-		run_dodder new -edit=false to_add
-		assert_success
-		assert_output - <<-EOM
+    run_dodder new -edit=false to_add
+    assert_success
+    assert_output - <<-EOM
 			[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		EOM
 
-		run_dodder new -edit=false - <<-EOM
+    run_dodder new -edit=false - <<-EOM
 			---
 			# zettel with multiple etiketten
 			- this_is_the_first
@@ -48,66 +48,66 @@ function bootstrap_with_content {
 			zettel with multiple etiketten body
 		EOM
 
-		assert_success
-		assert_output - <<-EOM
+    assert_success
+    assert_output - <<-EOM
 			[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		EOM
-	)
+  )
 }
 
 function bootstrap_without_content_xdg {
-	mkdir -p them || exit 1
-	pushd them || exit 1
-	run_dodder_init
-	assert_success
-	popd || exit 1
+  mkdir -p them || exit 1
+  pushd them || exit 1
+  run_dodder_init
+  assert_success
+  popd || exit 1
 }
 
 function bootstrap_without_content {
-	mkdir -p them || exit 1
+  mkdir -p them || exit 1
 
-	pushd them || exit 1
-	run_dodder_init
-	assert_success
-	popd || exit 1
+  pushd them || exit 1
+  run_dodder_init
+  assert_success
+  popd || exit 1
 }
 
 function bootstrap_archive {
-	mkdir -p them || exit 1
+  mkdir -p them || exit 1
 
-	pushd them || exit 1
-	run_dodder init \
-		-repo-type archive \
-		.default
+  pushd them || exit 1
+  run_dodder init \
+    -repo-type archive \
+    .default
 
-	run_dodder info-repo type
-	assert_success
-	assert_output 'archive'
+  run_dodder info-repo type
+  assert_success
+  assert_output 'archive'
 
-	assert_success
-	popd || exit 1
+  assert_success
+  popd || exit 1
 }
 
 function push_history_zettel_type_tag_no_conflicts { # @test
-	(
-		mkdir -p them
-		pushd them || exit 1
-		run_dodder_init
-	)
+  (
+    mkdir -p them
+    pushd them || exit 1
+    run_dodder_init
+  )
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder push /them:k +zettel,typ,etikett
+  run_dodder push /them:k +zettel,typ,etikett
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
@@ -116,30 +116,30 @@ function push_history_zettel_type_tag_no_conflicts { # @test
 		copied Blob blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 (27 B)
 	EOM
 
-	(
-		pushd them || exit 1
-		run_dodder show +zettel,typ,etikett,repo
-		assert_output_unsorted - <<-EOM
+  (
+    pushd them || exit 1
+    run_dodder show +zettel,typ,etikett,repo
+    assert_output_unsorted - <<-EOM
 			[!md @$(get_type_blob_sha) !toml-type-v2]
 			[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 			[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 			[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 		EOM
-	)
+  )
 }
 
 function push_history_zettel_type_tag_yes_conflicts { # @test
-	bootstrap_with_content them
+  bootstrap_with_content them
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	run_dodder push /them +zettel,typ,etikett
+  run_dodder push /them +zettel,typ,etikett
 
-	assert_failure
-	assert_output_unsorted - <<-EOM
+  assert_failure
+  assert_output_unsorted - <<-EOM
 		       conflicted [one/dos]
 		       conflicted [one/uno]
 		       conflicted [one/uno]
@@ -149,20 +149,20 @@ function push_history_zettel_type_tag_yes_conflicts { # @test
 		import failed with conflicts, merging required
 	EOM
 
-	(
-		pushd them || exit 1
-		run_dodder_init_workspace
+  (
+    pushd them || exit 1
+    run_dodder_init_workspace
 
-		run_dodder status .
-		assert_output_unsorted - <<-EOM
+    run_dodder status .
+    assert_output_unsorted - <<-EOM
 			       conflicted [one/dos]
 			       conflicted [one/uno]
 			        untracked [to_add @blake2b256-45lpe4rm9mjvdx8pt04kp5gh04uy77h0m0xtw2fhr0q7vl98g0vqls6hxe]
 		EOM
-	)
+  )
 
-	run_dodder show +zettel,typ,etikett
-	assert_output_unsorted - <<-EOM
+  run_dodder show +zettel,typ,etikett
+  assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
@@ -171,33 +171,33 @@ function push_history_zettel_type_tag_yes_conflicts { # @test
 }
 
 function push_history_default { # @test
-	bootstrap_without_content_xdg
+  bootstrap_without_content_xdg
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder push /them
+  run_dodder push /them
 
-	assert_success
+  assert_success
 
-	run_dodder show +?z,e,t
-	assert_output_unsorted - <<-EOM
+  run_dodder show +?z,e,t
+  assert_output_unsorted - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 
-	pushd them || exit 1
-	run_dodder show +zettel,typ,etikett #,repo
-	assert_output_unsorted - <<-EOM
+  pushd them || exit 1
+  run_dodder show +zettel,typ,etikett #,repo
+  assert_output_unsorted - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
@@ -206,22 +206,22 @@ function push_history_default { # @test
 }
 
 function push_history_default_only_blobs { # @test
-	bootstrap_without_content_xdg
+  bootstrap_without_content_xdg
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder push -exclude-objects /them
+  run_dodder push -exclude-objects /them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		copied Blob .* \(.*)
 		copied Blob .* \(.*)
 		copied Blob .* \(.*)
@@ -231,141 +231,141 @@ function push_history_default_only_blobs { # @test
 		copied Blob .* \(.*)
 	EOM
 
-	run_dodder show +?z,e,t
-	assert_output_unsorted - <<-EOM
+  run_dodder show +?z,e,t
+  assert_output_unsorted - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
 
-	pushd them || exit 1
-	run_dodder show +zettel,typ,etikett,repo
-	assert_output_unsorted - <<-EOM
+  pushd them || exit 1
+  run_dodder show +zettel,typ,etikett,repo
+  assert_output_unsorted - <<-EOM
 		[!md @$(get_type_blob_sha) !toml-type-v2]
 	EOM
 }
 
 function push_default_stdio_local_once { # @test
-	bootstrap_without_content
+  bootstrap_without_content
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		them \
-		them
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    them \
+    them
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	# 	run_dodder show -format text /them
-	# 	assert_success
-	# 	assert_output ''
+  # 	run_dodder show -format text /them
+  # 	assert_success
+  # 	assert_output ''
 
-	run_dodder push /them
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  run_dodder push /them
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	pushd them || exit 1
-	run_dodder show :zettel
-	assert_success
-	assert_output_unsorted - <<-EOM
+  pushd them || exit 1
+  run_dodder show :zettel
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
 function push_history_default_stdio_local_twice { # @test
-	bootstrap_without_content
+  bootstrap_without_content
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		them \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    them \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder push /them :z
-	assert_success
-	assert_output_unsorted --partial - <<-EOM
+  run_dodder push /them :z
+  assert_success
+  assert_output_unsorted --partial - <<-EOM
 		copied Blob blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd (10 B)
 		copied Blob blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd (16 B)
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 
-	pushd them || exit 1
-	run_dodder show :zettel
-	assert_success
-	assert_output_unsorted - <<-EOM
+  pushd them || exit 1
+  run_dodder show :zettel
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
-	popd || exit 1
+  popd || exit 1
 
-	run_dodder push /them :z
+  run_dodder push /them :z
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 	EOM
 }
 
 # bats test_tags=user_story:integrity
 function push_validates_blob_digest { # @test
-	# Verify that the push flow includes blob digest validation by
-	# confirming a normal push succeeds (the client computes and sends
-	# the digest, the server validates it).
-	bootstrap_without_content
+  # Verify that the push flow includes blob digest validation by
+  # confirming a normal push succeeds (the client computes and sends
+  # the digest, the server validates it).
+  bootstrap_without_content
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		them \
-		them
-	assert_success
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    them \
+    them
+  assert_success
 
-	run_dodder push /them
-	assert_success
+  run_dodder push /them
+  assert_success
 
-	pushd them || exit 1
-	run_dodder show :zettel
-	assert_success
-	assert_output_unsorted - <<-EOM
+  pushd them || exit 1
+  run_dodder show :zettel
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
 
 function push_history_default_stdio_twice { # @test
-	bootstrap_without_content
+  bootstrap_without_content
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		them \
-		them
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    them \
+    them
 
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]
 	EOM
 
-	run_dodder push /them
+  run_dodder push /them
 
-	assert_success
-	assert_line --regexp '\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]'
-	assert_line --regexp '\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]'
-	assert_line --partial '[one/dos @blake2b256-'
-	assert_line --partial '[one/uno @blake2b256-'
-	assert_line --regexp 'copied Blob blake2b256-.+ \(.*\)'
+  assert_success
+  assert_line --regexp '\[/them @blake2b256-.+ !toml-repo-local_override_path-v0]'
+  assert_line --regexp '\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]'
+  assert_line --partial '[one/dos @blake2b256-'
+  assert_line --partial '[one/uno @blake2b256-'
+  assert_line --regexp 'copied Blob blake2b256-.+ \(.*\)'
 
-	pushd them || exit 1
-	run_dodder show +z,e,t,b
-	assert_success
-	assert_output_unsorted --regexp - <<-'EOM'
+  pushd them || exit 1
+  run_dodder show +z,e,t,b
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
@@ -377,24 +377,24 @@ function push_history_default_stdio_twice { # @test
 		\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 	EOM
-	popd || exit 1
+  popd || exit 1
 
-	run_dodder push /them
-	assert_success
-	assert_output_unsorted ''
+  run_dodder push /them
+  assert_success
+  assert_output_unsorted ''
 }
 
 function push_direct_local_path_no_conflicts { # @test
-	(
-		mkdir -p them
-		pushd them || exit 1
-		run_dodder_init
-	)
+  (
+    mkdir -p them
+    pushd them || exit 1
+    run_dodder_init
+  )
 
-	run_dodder push -direct "$(realpath them)" +zettel,typ,etikett
+  run_dodder push -direct "$(realpath them)" +zettel,typ,etikett
 
-	assert_success
-	assert_output_unsorted - <<-EOM
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
@@ -403,25 +403,25 @@ function push_direct_local_path_no_conflicts { # @test
 		copied Blob blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 (27 B)
 	EOM
 
-	(
-		pushd them || exit 1
-		run_dodder show +zettel,typ,etikett
-		assert_output_unsorted - <<-EOM
+  (
+    pushd them || exit 1
+    run_dodder show +zettel,typ,etikett
+    assert_output_unsorted - <<-EOM
 			[!md @$(get_type_blob_sha) !toml-type-v2]
 			[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 			[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 			[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 		EOM
-	)
+  )
 }
 
 function push_direct_no_repo_at_path { # @test
-	mkdir -p empty_dir
+  mkdir -p empty_dir
 
-	run_dodder push -direct "$(realpath empty_dir)" +zettel
+  run_dodder push -direct "$(realpath empty_dir)" +zettel
 
-	assert_failure
-	assert_output --partial 'not in a dodder directory'
+  assert_failure
+  assert_output --partial 'not in a dodder directory'
 }
 
 # #291: a blobless type definition (a type object with a null blob digest) is a
@@ -429,10 +429,10 @@ function push_direct_no_repo_at_path { # @test
 # on the default (continue-on-error=false) path, aborting the whole push. The
 # transfer should succeed, skipping the blobless type and transferring the rest.
 function push_skips_blobless_type_definition { # @test
-	bootstrap_without_content_xdg
+  bootstrap_without_content_xdg
 
-	# A normal zettel that must transfer.
-	run_dodder new -edit=false - <<-EOM
+  # A normal zettel that must transfer.
+  run_dodder new -edit=false - <<-EOM
 		---
 		# normal zettel
 		- tag
@@ -441,60 +441,60 @@ function push_skips_blobless_type_definition { # @test
 
 		body
 	EOM
-	assert_success
+  assert_success
 
-	# A blobless type definition: `new -object-id '!task'` with no -blob
-	# commits a type object with a null blob digest (shown without @digest).
-	run_dodder new -edit=false -object-id '!task'
-	assert_success
-	assert_output - <<-EOM
+  # A blobless type definition: `new -object-id '!task'` with no -blob
+  # commits a type object with a null blob digest (shown without @digest).
+  run_dodder new -edit=false -object-id '!task'
+  assert_success
+  assert_output - <<-EOM
 		[!task !toml-type-v2]
 	EOM
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
-	assert_success
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
+  assert_success
 
-	# Default push (continue-on-error=false) must NOT abort on the blobless
-	# type; it is skipped and a notice is emitted on stderr.
-	run_dodder push /them
-	assert_success
+  # Default push (continue-on-error=false) must NOT abort on the blobless
+  # type; it is skipped and a notice is emitted on stderr.
+  run_dodder push /them
+  assert_success
 
-	# The parent received the fixture content + the normal zettel and the !md
-	# type, but NOT the skipped blobless !task type. Content-addressed digests
-	# are deterministic, so assert the exact set.
-	pushd them || exit 1
-	run_dodder show +zettel,typ,etikett
-	assert_success
-	assert_output_unsorted - <<-EOM
+  # The parent received the fixture content + the normal zettel and the !md
+  # type, but NOT the skipped blobless !task type. Content-addressed digests
+  # are deterministic, so assert the exact set.
+  pushd them || exit 1
+  run_dodder show +zettel,typ,etikett
+  assert_success
+  assert_output_unsorted - <<-EOM
 		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]
 		[two/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "normal zettel" tag]
 	EOM
-	refute_output --partial '!task'
+  refute_output --partial '!task'
 }
 
 # #291: with -forbid-blobless-types, a blobless type definition is fatal again
 # (opt-in strict mode), so the push aborts.
 function push_forbid_blobless_type_definition_aborts { # @test
-	bootstrap_without_content_xdg
+  bootstrap_without_content_xdg
 
-	run_dodder new -edit=false -object-id '!task'
-	assert_success
+  run_dodder new -edit=false -object-id '!task'
+  assert_success
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
-	assert_success
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
+  assert_success
 
-	run_dodder push -forbid-blobless-types /them
-	assert_failure
-	assert_output --partial 'blobless type definition skipped'
+  run_dodder push -forbid-blobless-types /them
+  assert_failure
+  assert_output --partial 'blobless type definition skipped'
 }
 
 # #298: pushing a clean, linear, single-author descendant to a parent that
@@ -502,45 +502,45 @@ function push_forbid_blobless_type_definition_aborts { # @test
 # raise a false "import failed with conflicts, merging required". The parent's
 # older head is on the path to the local head, so there is no real divergence.
 function push_fast_forward_linear_no_conflict { # @test
-	run_dodder_init_workspace
+  run_dodder_init_workspace
 
-	bootstrap_without_content_xdg
+  bootstrap_without_content_xdg
 
-	run_dodder remote-add \
-		toml-repo-local_override_path-v0 \
-		"$(realpath them)" \
-		them
-	assert_success
+  run_dodder remote-add \
+    toml-repo-local_override_path-v0 \
+    "$(realpath them)" \
+    them
+  assert_success
 
-	# First push syncs the parent to the current local head of one/uno.
-	run_dodder push /them one/uno
-	assert_success
+  # First push syncs the parent to the current local head of one/uno.
+  run_dodder push /them one/uno
+  assert_success
 
-	# Edit one/uno locally, producing a strict linear descendant (v_next).
-	run_dodder checkout one/uno
-	assert_success
+  # Edit one/uno locally, producing a strict linear descendant (v_next).
+  run_dodder checkout one/uno
+  assert_success
 
-	{
-		echo "---"
-		echo "# wow the second"
-		echo "- tag-3"
-		echo "- tag-4"
-		echo "! md"
-		echo "---"
-		echo
-		echo "edited locally"
-	} >one/uno.zettel
+  {
+    echo "---"
+    echo "# wow the second"
+    echo "- tag-3"
+    echo "- tag-4"
+    echo "! md"
+    echo "---"
+    echo
+    echo "edited locally"
+  } >one/uno.zettel
 
-	run_dodder checkin -delete one/uno.zettel
-	assert_success
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
 
-	# Second push must be a clean fast-forward, not a conflict.
-	run_dodder push /them one/uno
-	assert_success
+  # Second push must be a clean fast-forward, not a conflict.
+  run_dodder push /them one/uno
+  assert_success
 
-	pushd them || exit 1
-	run_dodder show one/uno
-	assert_success
-	assert_output --regexp '\[one/uno @blake2b256-.+ !md "wow the second" tag-3 tag-4\]'
-	popd || exit 1
+  pushd them || exit 1
+  run_dodder show one/uno
+  assert_success
+  assert_output --regexp '\[one/uno @blake2b256-.+ !md "wow the second" tag-3 tag-4\]'
+  popd || exit 1
 }

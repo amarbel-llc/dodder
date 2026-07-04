@@ -91,7 +91,7 @@ function complete_subcmd { # @test
   # differently than the actual whitespace padding under the C locale,
   # producing a sort-order mismatch even when every command is present.
   while IFS= read -r line; do
-    [[ -z "$line" ]] && continue
+    [[ -z $line ]] && continue
     assert_line --regexp "$line"
   done <<-'EOM'
 		^add[[:space:]]+commit workspace changes to the store$
