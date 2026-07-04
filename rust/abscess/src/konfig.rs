@@ -1,11 +1,11 @@
 use pcsc::*;
-use std::fs::read_to_string;
 use std::fs::OpenOptions;
+use std::fs::read_to_string;
 use std::io::BufWriter;
 use std::io::Read;
 use std::io::Write;
 
-use anyhow::{Error, Context};
+use anyhow::{Context, Error};
 use serde::{Deserialize, Serialize};
 
 use crate::alfa::age::Age;

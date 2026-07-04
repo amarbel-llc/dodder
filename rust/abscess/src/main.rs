@@ -2,8 +2,8 @@ mod add;
 mod alfa;
 mod init;
 mod konfig;
-mod show;
 mod prelude;
+mod show;
 
 use crate::alfa::compression::Compression;
 use crate::alfa::hash::digest::Digest;

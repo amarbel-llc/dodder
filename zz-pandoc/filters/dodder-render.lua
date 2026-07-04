@@ -33,34 +33,34 @@ local common = require("dodder-common")
 
 -- TODO add code formatter
 function CodeBlock(el)
-  local classes = el.classes
+	local classes = el.classes
 
-  if #classes < 1 then
-    return nil
-  end
+	if #classes < 1 then
+		return nil
+	end
 
-  local type = classes[1]
+	local type = classes[1]
 
-  if type:find("^!") == nil then
-    return nil
-  end
+	if type:find("^!") == nil then
+		return nil
+	end
 
-  local format = "text"
+	local format = "text"
 
-  if common.IsBinary then
-    format = "png"
-  end
+	if common.IsBinary then
+		format = "png"
+	end
 
-  format = "png"
-  local data = pandoc.pipe("dodder", { "format-object", "-stdin", format, type }, el.text)
+	format = "png"
+	local data = pandoc.pipe("dodder", { "format-object", "-stdin", format, type }, el.text)
 
-  local id = pandoc.utils.sha1(el.text)
-  local fname = id .. ".png"
+	local id = pandoc.utils.sha1(el.text)
+	local fname = id .. ".png"
 
-  local file = io.open(fname, "wb")
-  file:write(data)
-  file:close()
+	local file = io.open(fname, "wb")
+	file:write(data)
+	file:close()
 
-  -- pandoc.mediabag.insert(fname, "image/png", data)
-  return pandoc.Image("", fname)
+	-- pandoc.mediabag.insert(fname, "image/png", data)
+	return pandoc.Image("", fname)
 end

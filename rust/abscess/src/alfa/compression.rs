@@ -1,7 +1,7 @@
 use anyhow::Error;
+use flate2::Compression as NOT_OUR_COMPRESSION;
 use flate2::read::DeflateDecoder;
 use flate2::write::DeflateEncoder;
-use flate2::Compression as NOT_OUR_COMPRESSION;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fmt;
@@ -43,10 +43,7 @@ impl WrapIO for Compression {
         })
     }
 
-    fn wrap_output(
-        &self,
-        writer: Box<dyn WriteFinish>,
-    ) -> Result<Box<dyn WriteFinish>> {
+    fn wrap_output(&self, writer: Box<dyn WriteFinish>) -> Result<Box<dyn WriteFinish>> {
         Ok(match self {
             Self::None => writer,
             Self::Gzip => Box::new(DeflateEncoder::new(writer, NOT_OUR_COMPRESSION::default())),

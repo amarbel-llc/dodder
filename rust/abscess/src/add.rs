@@ -3,11 +3,11 @@ use crate::alfa::hash::writer::Writer;
 use crate::alfa::wrap_io::WrapIO;
 use crate::konfig::Konfig;
 use io_tee::TeeWriter;
-use rand::{distributions::Alphanumeric, Rng};
+use rand::{Rng, distributions::Alphanumeric};
 use std::error::Error;
-use std::fs::{create_dir, rename, File};
-use std::fs::{remove_file, OpenOptions};
-use std::io::{self, copy, stdin, BufReader, BufWriter, ErrorKind, Read};
+use std::fs::{File, create_dir, rename};
+use std::fs::{OpenOptions, remove_file};
+use std::io::{self, BufReader, BufWriter, ErrorKind, Read, copy, stdin};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
@@ -59,7 +59,9 @@ fn copy_file_to_temp_and_generate_digest<T: Read>(
     konfig: &Konfig,
 ) -> Result<Digest> {
     let mut reader = BufReader::new(input);
-    let writer = konfig.angeboren.wrap_output(Box::new(BufWriter::new(output)))?;
+    let writer = konfig
+        .angeboren
+        .wrap_output(Box::new(BufWriter::new(output)))?;
     let mut hash_writer = Writer::new();
     let mut tee_writer = TeeWriter::new(writer, &mut hash_writer);
 

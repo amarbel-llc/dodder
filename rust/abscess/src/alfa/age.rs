@@ -3,8 +3,8 @@ use age::IdentityFileEntry;
 use anyhow::Error;
 use std::io::Read;
 
-use age::stream::StreamWriter;
 use age::Encryptor;
+use age::stream::StreamWriter;
 
 use super::wrap_io::{WrapIO, WriteFinish};
 

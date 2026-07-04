@@ -47,10 +47,11 @@ codemod-go-fix_redundant_import_aliases:
 
 files_go := "internal/ lib/ cmd/"
 
-# Format the whole repo via treelint (treefmt successor): goimports + gofumpt
-# for Go, nixfmt for *.nix, shfmt for shell. Replaces the old direct
-# goimports/gofumpt pair. Resolves the wrapped treelint (which bundles those
-# formatters on PATH) from the flake so it works regardless of the dev-shell.
+# Format the whole repo via conformist (treefmt successor): goimports + gofumpt
+# for Go, nixfmt for *.nix, shfmt for shell, stylua for *.lua, rustfmt for *.rs.
+# Replaces the old direct goimports/gofumpt pair. Resolves the wrapped conformist
+# (which bundles those formatters on PATH) from the flake so it works regardless
+# of the dev-shell. Config lives in the repo-root conformist.toml.
 codemod-go-fmt: codemod-go-fix_redundant_import_aliases
   #!/usr/bin/env bash
   set -euo pipefail

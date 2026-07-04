@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{Parser};
+use clap::Parser;
 
 use crate::alfa::hash::digest::Digest;
 

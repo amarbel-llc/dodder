@@ -4,7 +4,7 @@ use std::fs::create_dir;
 use std::io;
 use std::path::PathBuf;
 
-use crate::konfig::{Konfig, Angeboren};
+use crate::konfig::{Angeboren, Konfig};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 

@@ -251,8 +251,9 @@ let
 
   # conformist (the renamed treelint; treefmt successor) wrapped with the
   # formatter binaries it drives on PATH, so `conformist` / `conformist
-  # check` resolve goimports (gotools) / gofumpt / nixfmt / shfmt without
-  # depending on the caller's shell. Mirrors amarbel-llc/purse-first's
+  # check` resolve goimports (gotools) / gofumpt / nixfmt / shfmt / stylua /
+  # rustfmt without depending on the caller's shell. Mirrors
+  # amarbel-llc/purse-first's
   # treelintFmt wrapper. The treelint flake input's `packages.default` now
   # ships a `conformist` binary (the tool was renamed), so the wrapper execs
   # `conformist`, not `treelint`; the wrapper name and `..#treelint-fmt`
@@ -283,6 +284,12 @@ let
           pkgs.nixfmt
           pkgs.shfmt
           pkgs.shellcheck
+          # stylua ([formatter.stylua], *.lua) + rustfmt ([formatter.rustfmt],
+          # *.rs): dodder OWNS conformist.toml (see amarbel-llc/eng#222) and
+          # explicitly adopts these two lanes, so the wrapper must carry the
+          # binaries the eng catch-all would otherwise have supplied.
+          pkgs.stylua
+          pkgs.rustfmt
           # tommy (TOML formatter, [formatter.tommy]) + go + the codegen driver
           # ([linter.tommy-codegen]), so the wrapper resolves the formatter and
           # the codegen repair regen. go is needed by `tommy generate`'s
