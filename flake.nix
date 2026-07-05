@@ -39,7 +39,9 @@
     };
 
     madder = {
-      url = "github:amarbel-llc/madder/go/v0.4.0";
+      # pinned past go/v0.4.0 for the dodder-object-*-v3 markl purposes
+      # (madder#255); repoint to the next go/vX tag when one lands.
+      url = "github:amarbel-llc/madder/05e8c68ac1f4fae5d440b1b085073f55cf98df4c";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";

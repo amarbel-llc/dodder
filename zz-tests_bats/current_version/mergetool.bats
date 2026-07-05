@@ -81,9 +81,9 @@ function mergetool_conflict_one_local { # @test
 
   run cat one/dos.conflict
   assert_output --regexp - <<-'EOM'
-		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd [0-9]+\.[0-9]+ dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* !txt2@.* "wow ok again" new-etikett-for-all tag-3 tag-4]
-		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd [0-9]+\.[0-9]+ dodder-repo-public_key-v1@.* dodder-object-sig-v2@.* !md@.* "wow ok again" tag-3 tag-4]
-		\[one/dos @blake2b256-k680x8tenq3j3ts88ydzga2ghjyg75czkfhzr4g3xxc8f33tykjs47n7xv [0-9]+\.[0-9]+ dodder-repo-public_key-v1@.* dodder-object-mother-sig-v2@.* dodder-object-sig-v2@.* !txt "wow ok again" get_this_shit_merged tag-3 tag-4]
+		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd [0-9]+\.[0-9]+ dodder-repo-public_key-v1@.* dodder-object-mother-sig-v3@.* !txt2@.* "wow ok again" new-etikett-for-all tag-3 tag-4]
+		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd [0-9]+\.[0-9]+ dodder-repo-public_key-v1@.* dodder-object-sig-v3@.* !md@.* "wow ok again" tag-3 tag-4]
+		\[one/dos @blake2b256-k680x8tenq3j3ts88ydzga2ghjyg75czkfhzr4g3xxc8f33tykjs47n7xv [0-9]+\.[0-9]+ dodder-repo-public_key-v1@.* dodder-object-mother-sig-v3@.* dodder-object-sig-v3@.* !txt "wow ok again" get_this_shit_merged tag-3 tag-4]
 	EOM
 
   # TODO add `-delete` option to `merge-tool`

@@ -4,7 +4,8 @@ Pre-allocated catgut.String constants for common field names used throughout the
 
 ## Constants
 
-- `Blob`, `Comment`, `Description`
+- `Blob`, `BlobReference`, `BlobReferenceAlias`, `BlobReferenceTypeLock`
+- `Comment`, `Description`
 - `Genre`, `ObjectId`, `Sigil`
 - `Tag`, `Tai`, `Type`, `TypeLock`
 - `ZZRepoPub`, `ZZSigMother`

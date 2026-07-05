@@ -201,7 +201,6 @@ func (index *Index) VerifyObjectProbes(
 ) (err error) {
 	for probeId := range object.AllProbeIds(
 		index.probeIndex.index.GetHashType(),
-		index.probeIndex.defaultObjectDigestMarklFormatId,
 	) {
 		if probeId.Id.IsNull() {
 			continue

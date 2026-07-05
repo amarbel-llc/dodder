@@ -72,6 +72,55 @@ func (format format) writeMetadataKeyStringTo(
 			return n, err
 		}
 
+	case key_strings.BlobReference:
+		// deterministic: BlobReferences.Add keeps entries key-sorted
+		for blobId := range metadata.AllBlobReferences() {
+			n1, err = ohio.WriteKeySpaceValueNewlineString(
+				writer,
+				key.String(),
+				blobId.String(),
+			)
+			n += int64(n1)
+
+			if err != nil {
+				err = errors.Wrap(err)
+				return n, err
+			}
+
+			typeLock := metadata.GetBlobReferenceTypeLock(blobId)
+			typeLockString := markl.MakeLockCoderValueNotRequired(
+				typeLock,
+			).String()
+
+			if typeLockString != "" {
+				n1, err = ohio.WriteKeySpaceValueNewlineString(
+					writer,
+					key_strings.BlobReferenceTypeLock.String(),
+					typeLockString,
+				)
+				n += int64(n1)
+
+				if err != nil {
+					err = errors.Wrap(err)
+					return n, err
+				}
+			}
+
+			if alias := metadata.GetBlobReferenceAlias(blobId); alias != "" {
+				n1, err = ohio.WriteKeySpaceValueNewlineString(
+					writer,
+					key_strings.BlobReferenceAlias.String(),
+					alias,
+				)
+				n += int64(n1)
+
+				if err != nil {
+					err = errors.Wrap(err)
+					return n, err
+				}
+			}
+		}
+
 	case key_strings.Description:
 		lines := strings.Split(metadata.GetDescription().String(), "\n")
 

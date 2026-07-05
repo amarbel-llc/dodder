@@ -174,9 +174,14 @@ func (imp importer) commitPlanEntry(
 			return err
 		}
 	} else {
+		// recomputes the digest of an imported object that already
+		// carries a sig: derive the digest purpose from that sig so
+		// v2-signed imports into a v3 repo (and vice versa) verify
 		if err = imp.finalizer.FinalizeUsingObject(
 			object,
-			imp.envRepo.GetObjectDigestType(),
+			object.ObjectDigestPurposeOrDefault(
+				imp.envRepo.GetObjectDigestType(),
+			),
 		); err != nil {
 			err = errors.Wrap(err)
 			return err

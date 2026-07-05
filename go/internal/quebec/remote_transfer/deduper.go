@@ -3,30 +3,29 @@ package remote_transfer
 import (
 	"sync"
 
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"github.com/amarbel-llc/madder/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
+// dedup keys are computed with the deduper's own purpose
+// (PurposeV5MetadataDigestWithoutTai) over unsigned metadata, so no
+// object-digest purpose (per-object or repo default) is involved here.
 type deduper struct {
-	formatId                         string
-	lookupLock                       *sync.RWMutex
-	lookup                           map[string]struct{}
-	id                               markl.Id
-	defaultObjectDigestMarklFormatId string
+	formatId   string
+	lookupLock *sync.RWMutex
+	lookup     map[string]struct{}
+	id         markl.Id
 }
 
 func (deduper *deduper) initialize(
 	options repo.ImporterOptions,
-	envRepo env_repo.Env,
 ) {
 	if options.DedupingFormatId != "" {
 		deduper.formatId = options.DedupingFormatId
 		deduper.lookupLock = &sync.RWMutex{}
 		deduper.lookup = make(map[string]struct{})
-		deduper.defaultObjectDigestMarklFormatId = envRepo.GetObjectDigestType()
 	}
 }
 

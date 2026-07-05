@@ -31,9 +31,9 @@ function format_mother_one { # @test
 
   run_dodder show -format sig-mother one/uno
   assert_success
-  assert_output "dodder-object-mother-sig-v2@$mother_sig"
+  assert_output "dodder-object-mother-sig-v3@$mother_sig"
 
-  run_dodder show "dodder-object-sig-v2@$mother_sig"+
+  run_dodder show "dodder-object-sig-v3@$mother_sig"+
   assert_success
   assert_output - <<-EOM
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]

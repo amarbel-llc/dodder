@@ -106,6 +106,22 @@ func init() {
 		key_strings.ZZRepoPub,
 		key_strings.ZZSigMother,
 	)
+
+	// V3 = V2 + typed blob-reference coverage: each reference's id, type
+	// lock (including its lock value/sig), and alias become part of the
+	// signed object digest.
+	registerFormat(
+		markl.PurposeObjectDigestV3,
+		key_strings.Blob,
+		key_strings.BlobReference,
+		key_strings.Description,
+		key_strings.ObjectId,
+		key_strings.Tag,
+		key_strings.Tai,
+		key_strings.TypeLock,
+		key_strings.ZZRepoPub,
+		key_strings.ZZSigMother,
+	)
 }
 
 func WriteDigest(

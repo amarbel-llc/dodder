@@ -1,5 +1,5 @@
 ---
-date: 2026-04-04
+date: 2026-07-05
 status: proposed
 ---
 
@@ -306,11 +306,15 @@ Each purpose belongs to a purpose type that groups related purposes:
 
   `dodder-object-digest-v2`                        Object Digest              `sha256`, `blake2b256`
 
+  `dodder-object-digest-v3`                        Object Digest              `sha256`, `blake2b256`
+
   `dodder-object-metadata-digest-without_tai-v1`   Object Digest              `sha256`, `blake2b256`
 
   `dodder-object-mother-sig-v1`                    Mother Sig                 `ed25519_sig`
 
   `dodder-object-mother-sig-v2`                    Mother Sig                 `ed25519_sig`
+
+  `dodder-object-mother-sig-v3`                    Mother Sig                 `ed25519_sig`
 
   `dodder-repo-sig-v1`                             Object Sig                 `ed25519_sig`
 
@@ -318,6 +322,9 @@ Each purpose belongs to a purpose type that groups related purposes:
                                                                               `ecdsa_p256_sig`
 
   `dodder-object-sig-v2`                           Object Sig                 `ed25519_sig`,
+                                                                              `ecdsa_p256_sig`
+
+  `dodder-object-sig-v3`                           Object Sig                 `ed25519_sig`,
                                                                               `ecdsa_p256_sig`
 
   `dodder-repo-public_key-v1`                      Repo Public Key            `ed25519_pub`,

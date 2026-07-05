@@ -77,7 +77,6 @@ func (fb *pageAdditionsFileBacked) add(object *sku.Transacted) {
 
 	seqProbeIds := object.AllProbeIds(
 		fb.index.index.GetHashType(),
-		fb.index.defaultObjectDigestMarklFormatId,
 	)
 
 	additionProbes := fb.index.probeIndex.additionProbes

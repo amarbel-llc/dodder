@@ -53,6 +53,24 @@ func (transacted *Transacted) AssertObjectDigestAndObjectSigNotNull() (err error
 	return err
 }
 
+// ObjectDigestPurposeOrDefault returns the digest purpose to use when
+// recomputing this object's digest for verification: derived from the
+// object's own signature purpose (the markl "digest" relation), so
+// objects signed under different sig versions (v2/v3) coexist within
+// one repo. Unsigned objects fall back to defaultPurposeId (typically
+// the repo-global envRepo.GetObjectDigestType()).
+func (transacted *Transacted) ObjectDigestPurposeOrDefault(
+	defaultPurposeId string,
+) string {
+	sig := transacted.GetMetadata().GetObjectSig()
+
+	if sig.IsNull() || sig.GetPurposeId() == "" {
+		return defaultPurposeId
+	}
+
+	return markl.GetDigestTypeForSigType(sig.GetPurposeId())
+}
+
 func (transacted *Transacted) Verify() (err error) {
 	pubKey := transacted.GetMetadata().GetRepoPubKey()
 

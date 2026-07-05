@@ -37,9 +37,15 @@ var coderConstructors = map[string]funcListFormatConstructor{
 					configGenesis.GetPublicKey(),
 				)
 
+				// recomputes the digest of a decoded (possibly signed)
+				// object: derive the purpose per object so v2/v3-signed
+				// lists verify; unsigned v1-era objects fall back to the
+				// repo default
 				if err = finalizer.FinalizeUsingObject(
 					object,
-					envRepo.GetObjectDigestType(),
+					object.ObjectDigestPurposeOrDefault(
+						envRepo.GetObjectDigestType(),
+					),
 				); err != nil {
 					err = errors.Wrap(err)
 					return err
@@ -70,9 +76,14 @@ var coderConstructors = map[string]funcListFormatConstructor{
 				return err
 			},
 			afterDecoding: func(object *sku.Transacted) error {
+				// verification of a decoded, already-signed object:
+				// derive the digest purpose from the object's own sig
+				// purpose so v2- and v3-signed objects both verify
 				return finalizer.FinalizeAndVerify(
 					object,
-					envRepo.GetObjectDigestType(),
+					object.ObjectDigestPurposeOrDefault(
+						envRepo.GetObjectDigestType(),
+					),
 				)
 			},
 		}
@@ -91,9 +102,14 @@ var coderConstructors = map[string]funcListFormatConstructor{
 			listCoder:      jsonCoder,
 			beforeEncoding: finalizer.Verify,
 			afterDecoding: func(object *sku.Transacted) error {
+				// verification of a decoded, already-signed object:
+				// derive the digest purpose from the object's own sig
+				// purpose so v2- and v3-signed objects both verify
 				return finalizer.FinalizeAndVerify(
 					object,
-					envRepo.GetObjectDigestType(),
+					object.ObjectDigestPurposeOrDefault(
+						envRepo.GetObjectDigestType(),
+					),
 				)
 			},
 		}

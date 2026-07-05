@@ -1,7 +1,6 @@
 package remote_transfer
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -15,12 +14,11 @@ type committer struct {
 
 func (committer *committer) initialize(
 	options repo.ImporterOptions,
-	envRepo env_repo.Env,
 	storeObject sku.StoreCommitter,
 ) {
 	committer.options = options
 	committer.storeObject = storeObject
-	committer.deduper.initialize(options, envRepo)
+	committer.deduper.initialize(options)
 }
 
 func (committer *committer) Commit(

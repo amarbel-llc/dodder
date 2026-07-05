@@ -53,7 +53,7 @@ func Make(
 		storeOptions:                storeOptions,
 	}
 
-	importer.committer.initialize(options, envRepo, storeCommitter)
+	importer.committer.initialize(options, storeCommitter)
 
 	if importer.blobCopierDelegate == nil &&
 		importer.remoteBlobStore.BlobStore != nil &&
@@ -255,9 +255,14 @@ func (importer importer) importLeaf(
 			return checkedOut, err
 		}
 	} else {
+		// recomputes the digest of an imported object that already
+		// carries a sig: derive the digest purpose from that sig so
+		// v2-signed imports into a v3 repo (and vice versa) verify
 		if err = importer.finalizer.FinalizeUsingObject(
 			checkedOut.GetSkuExternal(),
-			importer.envRepo.GetObjectDigestType(),
+			checkedOut.GetSkuExternal().ObjectDigestPurposeOrDefault(
+				importer.envRepo.GetObjectDigestType(),
+			),
 		); err != nil {
 			err = errors.Wrap(err)
 			return checkedOut, err

@@ -228,7 +228,6 @@ func (transacted *Transacted) GetStringProbeKeys() map[string]string {
 
 func (transacted *Transacted) AllProbeIds(
 	hashType markl.FormatHash,
-	defaultObjectDigestMarklFormatId string,
 ) interfaces.Seq[ids.ProbeId] {
 	return func(yield func(ids.ProbeId) bool) {
 		for key, value := range transacted.GetStringProbeKeys() {
@@ -270,8 +269,19 @@ func (transacted *Transacted) AllProbeIds(
 		}
 
 		{
+			// derive the key from the object's actual sig purpose so
+			// v2- and v3-signed objects label their probes correctly.
+			// probe lookups are keyed by the id's bytes (the key string
+			// is diagnostic-only), so read+write stay symmetric across
+			// sig versions; unsigned objects keep the historical v2
+			// label.
+			sigPurposeId := transacted.GetMetadata().GetObjectSig().GetPurposeId()
+			if sigPurposeId == "" {
+				sigPurposeId = markl.PurposeObjectSigV2
+			}
+
 			probeId := ids.ProbeId{
-				Key: markl.PurposeObjectSigV2,
+				Key: sigPurposeId,
 				Id:  transacted.GetMetadata().GetObjectSig(),
 			}
 

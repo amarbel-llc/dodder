@@ -941,7 +941,6 @@ var formatters = map[string]FormatFuncConstructorEntry{
 			return func(object *sku.Transacted) (err error) {
 				for probeId := range object.AllProbeIds(
 					markl.FormatHashSha256,
-					repo.GetEnvRepo().GetObjectDigestType(),
 				) {
 					if _, err = fmt.Fprintf(
 						writer,

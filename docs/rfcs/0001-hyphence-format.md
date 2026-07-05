@@ -1,5 +1,5 @@
 ---
-date: 2026-03-14
+date: 2026-07-05
 status: proposed
 ---
 
@@ -111,7 +111,7 @@ line type, followed by a space and the line content:
   `!`      Type               Object type identifier, optionally locked
   `@`      Blob               Blob reference (markl ID or file path)
   `#`      Description        Human-readable description text
-  `-`      Tag or Reference   Tag identifier or object reference
+  `-`      Tag or Reference   Tag, object reference, or blob reference
   `<`      Reference          Object reference (explicit prefix)
   `%`      Comment            Opaque implementation-specific comment
 
@@ -215,6 +215,51 @@ the same reference syntax as described above (bare, locked, or aliased).
     < <object-id> < <markl-id>
     < <alias> < <object-id>@<markl-id>
 
+#### Typed Blob Reference Line (`-` with `@`)
+
+Typed blob references attach additional content-addressable blobs to an
+object, beyond the object's own blob line. Each reference carries the blob's
+markl ID, an OPTIONAL type lock, and an OPTIONAL alias. Blob references use
+the `-` prefix and are distinguished from tags and object references by the
+`@` digest marker.
+
+Bare reference (digest only):
+
+    - @<markl-id>
+
+Typed reference (digest followed by a space and the type lock; the lock MAY
+carry a lock value after the type's own `@`):
+
+    - @<markl-id> !<type-string>
+    - @<markl-id> !<type-string>@<markl-id>
+
+Aliased reference (alias, space, `<`, space, then the digest and OPTIONAL
+type lock):
+
+    - <alias> < @<markl-id>
+    - <alias> < @<markl-id> !<type-string>@<markl-id>
+
+The alias MUST be written as a double-quoted string (Go/C-style quoting) if
+and only if it contains a space, tab, or double-quote character; otherwise
+it MUST be written unquoted. Parsers MUST unquote a quoted alias.
+
+**Box/doddish two-sequence form.** In the box (doddish) wire form used by
+inventory lists, a blob reference is encoded as two doddish sequences with
+no spaces around the `<`:
+
+    <alias><@<markl-id> !<type-string>@<markl-id>
+
+for example `filters/edit.lua<@sha256-... !pandoc-lua_filter@nonce-...`. In
+this form the alias MUST be a doddish identifier sequence --- it MUST NOT
+contain spaces, tabs, or quote characters.
+
+**Digest Coverage.** Under the `dodder-object-digest-v3` purpose (see RFC
+0002), an object's typed blob references --- each reference's markl ID, its
+type lock including the lock value, and its alias --- are covered by the
+signed object digest; mutating any of them invalidates the object's
+signature. Under `dodder-object-digest-sha256-v1` and
+`dodder-object-digest-v2` they are NOT covered.
+
 #### Comment Line (`%`)
 
 Comment lines are opaque and implementation-specific. Their content is preserved
@@ -301,12 +346,11 @@ However, when encoding (formatting) a metadata section, implementations SHOULD
 write lines in canonical order:
 
 1.  Description lines (`#`)
-2.  Locked object references (references with a `<` lock)
-3.  Aliased object references (references with an alias)
-4.  Bare object references (references without lock or alias)
-5.  Tags
-6.  Blob line (`@`)
-7.  Type line (`!`) --- MUST be the last non-comment line
+2.  Tags
+3.  Blob line (`@`)
+4.  Type line (`!`)
+5.  Object references (locked, aliased, and bare)
+6.  Typed blob references --- the last non-comment lines when present
 
 #### Comment Entanglement
 

@@ -169,7 +169,7 @@ func (cmd Fsck) runVerification(
 		WithVerifyOptions(cmd.VerifyOptions).
 		Build()
 
-	digestType := repo.GetEnvRepo().GetObjectDigestType()
+	defaultDigestType := repo.GetEnvRepo().GetObjectDigestType()
 
 	if err := errors.RunChildContextWithPrintTicker(
 		repo,
@@ -198,9 +198,14 @@ func (cmd Fsck) runVerification(
 				}
 
 				if cmd.Recompute {
+					// recompute-for-verification of an existing signed
+					// object: derive the digest purpose per object so
+					// v2- and v3-signed objects both verify
 					if err := finalizer.FinalizeAndVerify(
 						object,
-						digestType,
+						object.ObjectDigestPurposeOrDefault(
+							defaultDigestType,
+						),
 					); err != nil {
 						objectErrors = append(objectErrors, err)
 					}

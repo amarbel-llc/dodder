@@ -17,15 +17,12 @@ type additions interface {
 // pageAdditions is the in-memory additions implementation used for normal
 // (non-reindex) commit paths.
 type pageAdditions struct {
-	defaultObjectDigestMarklFormatId string
-	index                            *Index
-	objectIdLookup                   map[string]struct{}
-	objects                          *sku.HeapTransacted
+	index          *Index
+	objectIdLookup map[string]struct{}
+	objects        *sku.HeapTransacted
 }
 
 func (pa *pageAdditions) initialize(index *Index) {
-	index.defaultObjectDigestMarklFormatId = index.envRepo.GetObjectDigestType()
-
 	pa.index = index
 	pa.objects = sku.MakeListTransacted()
 	pa.objectIdLookup = make(map[string]struct{})
@@ -39,7 +36,6 @@ func (pa *pageAdditions) add(object *sku.Transacted) {
 
 	seqProbeIds := object.AllProbeIds(
 		pa.index.index.GetHashType(),
-		pa.defaultObjectDigestMarklFormatId,
 	)
 
 	pa.index.probeIndex.additionProbesMu.Lock()
