@@ -6,8 +6,39 @@ import (
 	"strings"
 	"testing"
 
+	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
+
+func TestDefaultWithPandocFormatter(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	blob := DefaultWithPandocFormatter()
+
+	t.AssertEqualStrings("md", blob.FileExtension)
+	t.AssertEqualStrings("markdown", blob.VimSyntaxType)
+
+	assertFormatterSet(&t, blob.Formatters, map[string]string{
+		"text":       "md",
+		"html":       "html",
+		"html-gdoc":  "html",
+		"pdf-beamer": "pdf",
+	})
+
+	// Every formatter must resolve pandoc tooling from the materialized blob
+	// tree, never from host pandoc data dirs (portability contract).
+	for name, formatter := range blob.Formatters {
+		if !strings.Contains(formatter.Script, `--data-dir="$DODDER_BLOB_TREE"`) {
+			t.Errorf("formatter %q script missing blob-tree data-dir: %q", name, formatter.Script)
+		}
+	}
+
+	// pandoc refuses to write PDF to stdout, so pdf-beamer must route the
+	// output through a fifo drained to stdout.
+	if !strings.Contains(blob.Formatters["pdf-beamer"].Script, "mkfifo") {
+		t.Errorf("pdf-beamer script missing fifo wrapper: %q", blob.Formatters["pdf-beamer"].Script)
+	}
+}
 
 func TestDefaultTaskType(t1 *testing.T) {
 	t := ui.MakeT(t1)
@@ -16,6 +47,8 @@ func TestDefaultTaskType(t1 *testing.T) {
 
 	t.AssertEqualStrings("toml", blob.FileExtension)
 	t.AssertEqualStrings("toml", blob.VimSyntaxType)
+
+	assertActionableFormatters(&t, blob.Formatters)
 
 	assertActionableFields(&t, blob.Fields)
 
@@ -72,6 +105,8 @@ func TestDefaultChoreType(t1 *testing.T) {
 
 	t.AssertEqualStrings("toml", blob.FileExtension)
 
+	assertActionableFormatters(&t, blob.Formatters)
+
 	assertRecurringFields(&t, blob.Fields)
 
 	t.AssertNotNil(blob.FieldsReader, "FieldsReader")
@@ -106,6 +141,8 @@ func TestDefaultHabitType(t1 *testing.T) {
 	t.AssertEqualStrings("toml", blob.FileExtension)
 	t.AssertEqualStrings("toml", blob.VimSyntaxType)
 
+	assertActionableFormatters(&t, blob.Formatters)
+
 	assertRecurringFields(&t, blob.Fields)
 
 	// !habit is structurally identical to !chore (recurring field set +
@@ -118,6 +155,61 @@ func TestDefaultHabitType(t1 *testing.T) {
 
 	t.AssertEqualStrings(choreBlob.FieldsReader.Script, blob.FieldsReader.Script)
 	t.AssertEqualStrings(choreBlob.FieldsWriter.Script, blob.FieldsWriter.Script)
+}
+
+// assertFormatterSet asserts formatters contains exactly the names in
+// expected, each with the expected output file extension.
+func assertFormatterSet(
+	t *ui.T,
+	formatters map[string]script_config.WithOutputFormat,
+	expected map[string]string,
+) {
+	if len(formatters) != len(expected) {
+		t.Errorf(
+			"expected %d formatters (%v), got %d (%v)",
+			len(expected), expected, len(formatters), formatters,
+		)
+	}
+
+	for name, fileExtension := range expected {
+		formatter, ok := formatters[name]
+
+		if !ok {
+			t.Errorf("missing formatter %q", name)
+			continue
+		}
+
+		t.AssertEqualStrings(fileExtension, formatter.FileExtension)
+
+		if formatter.Script == "" {
+			t.Errorf("formatter %q has an empty script", name)
+		}
+	}
+}
+
+// assertActionableFormatters asserts the shared actionable formatter set
+// (!task/!chore/!habit): text/html/html-gdoc render the dang-typed body via
+// blob-backed pandoc; pdf-beamer is deliberately absent (slides don't fit
+// task prose).
+func assertActionableFormatters(
+	t *ui.T,
+	formatters map[string]script_config.WithOutputFormat,
+) {
+	assertFormatterSet(t, formatters, map[string]string{
+		"text":      "md",
+		"html":      "html",
+		"html-gdoc": "html",
+	})
+
+	for name, formatter := range formatters {
+		if !strings.HasPrefix(formatter.Script, `yq -p toml -r '.body'`) {
+			t.Errorf("formatter %q script missing body extraction prefix: %q", name, formatter.Script)
+		}
+
+		if !strings.Contains(formatter.Script, `--data-dir="$DODDER_BLOB_TREE"`) {
+			t.Errorf("formatter %q script missing blob-tree data-dir: %q", name, formatter.Script)
+		}
+	}
 }
 
 type expectedField struct {

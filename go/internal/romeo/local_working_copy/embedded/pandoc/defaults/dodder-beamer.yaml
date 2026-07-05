@@ -1,0 +1,11 @@
+# Renders dodder markdown to a beamer slide-deck PDF. slide-level 2
+# matches dodder-edit.yaml so section headings map to slides
+# consistently. The pdf-engine binary must be provided by the host
+# (e.g. a texlive install); pandoc itself is blob-tree-resolved but
+# cannot ship a LaTeX engine as a blob.
+from: markdown
+to: beamer
+slide-level: 2
+pdf-engine: pdflatex
+filters:
+  - dodder-edit.lua

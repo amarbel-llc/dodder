@@ -55,7 +55,8 @@ function genesis_includes_actionable_types_when_opted_in { # @test
 
 # The !task type blob exposes the actionable field definitions (status,
 # urgency, priority, due), the yq reader/writer scripts, and the
-# blob-backed pandoc `text` formatter that renders the dang-typed body.
+# blob-backed pandoc body formatters (text/html/html-gdoc; no pdf-beamer —
+# slides don't fit task prose).
 function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
   init_fixture -include-builtin-actionable-types
 
@@ -67,8 +68,8 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
   # single-quoted so the shell performs no interpolation, keeping a
   # quote-bearing field value as string data rather than expression text
   # (#297). urgency carries no default (untriaged reads as
-  # unset). The text formatter pipes the TOML `body` key through yq, strips
-  # the leading `#!dang` convention line, then normalizes via pandoc. The
+  # unset). Each body formatter pipes the TOML `body` key through yq, strips
+  # the leading `#!dang` convention line, then renders via pandoc. The
   # `hooks` value is now the THIN loader: it require()s the blob-backed
   # actionable-common module (delivered as a blob reference on the type object)
   # and returns its hooks table. The archive/recurrence/completed-date logic
@@ -78,6 +79,16 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 		vim-syntax-type = "toml"
 		hooks = "local common = require(\"actionable-common\")\nreturn common.hooks\n"
 
+		[formatters.html]
+		description = "Render the dang-typed body to an HTML fragment with pandoc"
+		script = """
+		yq -p toml -r '.body' | sed '1{/^#!dang/d}' | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html"""
+		file-extension = "html"
+		[formatters.html-gdoc]
+		description = "Render the dang-typed body to standalone HTML for pasting into Google Docs"
+		script = """
+		yq -p toml -r '.body' | sed '1{/^#!dang/d}' | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc"""
+		file-extension = "html"
 		[formatters.text]
 		description = "Render the dang-typed body with pandoc"
 		script = """
@@ -260,6 +271,75 @@ function actionable_body_renders_via_pandoc { # @test
   assert_output - <<-EOM
 		# Hello
 	EOM
+}
+
+# The actionable `html` formatter mirrors `text`: the dang-typed body is
+# extracted with yq, the `#!dang` convention line is stripped, then rendered
+# to an HTML fragment via the blob-backed dodder-html defaults. (There is
+# deliberately no pdf-beamer on actionable types — slides don't fit task
+# prose.)
+function actionable_body_renders_html_via_pandoc { # @test
+  command -v pandoc >/dev/null || skip "pandoc not available"
+  command -v yq >/dev/null || skip "yq not available"
+
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# body task
+		! task
+		---
+
+		status = "todo"
+		urgency = "2_week"
+		priority = "p1"
+		body = """
+		#!dang md
+		# Hello
+		"""
+	EOM
+  assert_success
+
+  run_dodder format-blob one/uno html
+  assert_success
+  assert_output - <<-EOM
+		<h1 id="hello">Hello</h1>
+	EOM
+}
+
+# The actionable `html-gdoc` formatter renders the body as a standalone
+# HTML document; only the load-bearing shape is asserted (the bulk is
+# pandoc's default template).
+function actionable_body_renders_gdoc_html_via_pandoc { # @test
+  command -v pandoc >/dev/null || skip "pandoc not available"
+  command -v yq >/dev/null || skip "yq not available"
+
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# body task
+		! task
+		---
+
+		status = "todo"
+		urgency = "2_week"
+		priority = "p1"
+		body = """
+		#!dang md
+		# Hello
+		"""
+	EOM
+  assert_success
+
+  run_dodder format-blob one/uno html-gdoc
+  assert_success
+  assert_output --regexp '^<!DOCTYPE html>'
+  assert_output --regexp '<title>dodder</title>'
+  assert_output --regexp '<h1 id="hello">Hello</h1>'
+  assert_output --regexp '</html>$'
 }
 
 # B2 resolution proof: the actionable type's Hooks string carries NO archive

@@ -1,0 +1,15 @@
+# Renders dodder markdown to a standalone HTML document suitable for
+# pasting/importing into Google Docs. embed-resources inlines images and
+# other resources as data URIs so the document is a single offline-safe
+# file (pandoc's built-in template pulls nothing from the network). The
+# pagetitle metadata silences pandoc's nonempty-<title> warning, which
+# would otherwise pollute stderr on every render.
+from: markdown
+to: html
+wrap: none
+standalone: true
+embed-resources: true
+metadata:
+  pagetitle: dodder
+filters:
+  - dodder-edit.lua

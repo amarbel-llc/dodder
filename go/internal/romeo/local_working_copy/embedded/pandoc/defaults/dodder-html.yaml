@@ -1,0 +1,9 @@
+# Renders dodder markdown to an HTML fragment (no <html> scaffolding):
+# the blob-backed equivalent of `pandoc --to html --wrap=none`. Shares
+# the dodder-edit.lua filter with dodder-edit.yaml so typed code blocks
+# and sku links resolve the same way in every output format.
+from: markdown
+to: html
+wrap: none
+filters:
+  - dodder-edit.lua

@@ -11,5 +11,14 @@ var embeddedPandocEditFilter []byte
 //go:embed embedded/pandoc/defaults/dodder-edit.yaml
 var embeddedPandocEditDefaults []byte
 
+//go:embed embedded/pandoc/defaults/dodder-html.yaml
+var embeddedPandocHtmlDefaults []byte
+
+//go:embed embedded/pandoc/defaults/dodder-gdoc.yaml
+var embeddedPandocGdocDefaults []byte
+
+//go:embed embedded/pandoc/defaults/dodder-beamer.yaml
+var embeddedPandocBeamerDefaults []byte
+
 //go:embed embedded/actionable/actionable-common.lua
 var embeddedActionableCommon []byte

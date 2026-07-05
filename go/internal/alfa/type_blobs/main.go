@@ -36,6 +36,25 @@ func Default() TomlV2 {
 	}
 }
 
+// pandocBeamerScript wraps pandoc's beamer PDF writer in a fifo so the binary
+// PDF can still stream to the formatter's stdout: pandoc refuses to write PDF
+// output to stdout, so the script mints a fifo, drains it to stdout with a
+// background cat, and points pandoc's --output at the fifo. Pandoc only opens
+// the output file after the LaTeX engine succeeds, so on failure the fifo is
+// opened once for write to unblock the drain before exiting nonzero.
+func pandocBeamerScript() string {
+	return `tmp="$(mktemp -d)" || exit 1
+trap 'rm -rf "$tmp"' EXIT
+mkfifo "$tmp/out.pdf" || exit 1
+cat "$tmp/out.pdf" &
+if ! pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-beamer --output="$tmp/out.pdf"; then
+  : >"$tmp/out.pdf"
+  wait
+  exit 1
+fi
+wait`
+}
+
 func DefaultWithPandocFormatter() TomlV2 {
 	return TomlV2{
 		FileExtension: "md",
@@ -46,6 +65,27 @@ func DefaultWithPandocFormatter() TomlV2 {
 					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit`,
 				},
 				FileExtension: "md",
+			},
+			"html": {
+				ScriptConfig: script_config.ScriptConfig{
+					Description: "Render markdown to an HTML fragment with pandoc",
+					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html`,
+				},
+				FileExtension: "html",
+			},
+			"html-gdoc": {
+				ScriptConfig: script_config.ScriptConfig{
+					Description: "Render markdown to standalone HTML for pasting into Google Docs",
+					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc`,
+				},
+				FileExtension: "html",
+			},
+			"pdf-beamer": {
+				ScriptConfig: script_config.ScriptConfig{
+					Description: "Render markdown to a beamer slide PDF (requires a host LaTeX engine)",
+					Script:      pandocBeamerScript(),
+				},
+				FileExtension: "pdf",
 			},
 		},
 		VimSyntaxType: "markdown",
@@ -165,19 +205,39 @@ func recurringFieldsWriter() *script_config.ScriptConfig {
 	}
 }
 
+// actionableBodyExtract is the shared pipeline prefix for the actionable body
+// formatters: it extracts the dang-typed `body` field from the TOML blob and
+// strips the leading `#!dang ...` convention line (Phase-1 stand-in until the
+// dang mechanism lands, see issue #296).
+const actionableBodyExtract = `yq -p toml -r '.body' | sed '1{/^#!dang/d}'`
+
 // actionableFormatters renders the dang-typed `body` field via the
-// blob-backed pandoc tooling (materialized to $DODDER_BLOB_TREE). The body is
-// extracted from the TOML blob, the leading `#!dang ...` convention line is
-// stripped (Phase-1 stand-in until the dang mechanism lands, see issue #296),
-// then normalized with the shared dodder-edit defaults.
+// blob-backed pandoc tooling (materialized to $DODDER_BLOB_TREE): text
+// normalizes with the shared dodder-edit defaults, html/html-gdoc mirror the
+// !md formatters of the same name. No pdf-beamer here: slides don't fit task
+// prose.
 func actionableFormatters() map[string]script_config.WithOutputFormat {
 	return map[string]script_config.WithOutputFormat{
 		"text": {
 			ScriptConfig: script_config.ScriptConfig{
 				Description: "Render the dang-typed body with pandoc",
-				Script:      `yq -p toml -r '.body' | sed '1{/^#!dang/d}' | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit`,
+				Script:      actionableBodyExtract + ` | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit`,
 			},
 			FileExtension: "md",
+		},
+		"html": {
+			ScriptConfig: script_config.ScriptConfig{
+				Description: "Render the dang-typed body to an HTML fragment with pandoc",
+				Script:      actionableBodyExtract + ` | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html`,
+			},
+			FileExtension: "html",
+		},
+		"html-gdoc": {
+			ScriptConfig: script_config.ScriptConfig{
+				Description: "Render the dang-typed body to standalone HTML for pasting into Google Docs",
+				Script:      actionableBodyExtract + ` | pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc`,
+			},
+			FileExtension: "html",
 		},
 	}
 }

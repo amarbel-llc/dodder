@@ -12,9 +12,12 @@ import (
 )
 
 type toolBlobDigests struct {
-	commonFilter markl.Id
-	editFilter   markl.Id
-	editDefaults markl.Id
+	commonFilter   markl.Id
+	editFilter     markl.Id
+	editDefaults   markl.Id
+	htmlDefaults   markl.Id
+	gdocDefaults   markl.Id
+	beamerDefaults markl.Id
 }
 
 func (local *Repo) prepareToolTypes(
@@ -80,49 +83,54 @@ func (local *Repo) writeRawBlob(content []byte) (digest markl.Id, err error) {
 }
 
 func (local *Repo) prepareToolBlobs() (digests toolBlobDigests, err error) {
-	if digests.commonFilter, err = local.writeRawBlob(embeddedPandocCommonFilter); err != nil {
-		return digests, errors.Wrap(err)
-	}
-
-	if digests.editFilter, err = local.writeRawBlob(embeddedPandocEditFilter); err != nil {
-		return digests, errors.Wrap(err)
-	}
-
-	if digests.editDefaults, err = local.writeRawBlob(embeddedPandocEditDefaults); err != nil {
-		return digests, errors.Wrap(err)
+	for _, blob := range []struct {
+		digest  *markl.Id
+		content []byte
+	}{
+		{&digests.commonFilter, embeddedPandocCommonFilter},
+		{&digests.editFilter, embeddedPandocEditFilter},
+		{&digests.editDefaults, embeddedPandocEditDefaults},
+		{&digests.htmlDefaults, embeddedPandocHtmlDefaults},
+		{&digests.gdocDefaults, embeddedPandocGdocDefaults},
+		{&digests.beamerDefaults, embeddedPandocBeamerDefaults},
+	} {
+		if *blob.digest, err = local.writeRawBlob(blob.content); err != nil {
+			return digests, errors.Wrap(err)
+		}
 	}
 
 	return digests, err
 }
 
-// attachPandocToolRefs attaches the three blob-backed pandoc tool references
-// (common filter, edit filter, edit defaults) to object. Shared by
-// prepareDefaultType (!md) and prepareBuiltinActionableTypes
+// attachPandocToolRefs attaches the blob-backed pandoc tool references (the
+// two lua filters plus the edit/html/gdoc/beamer defaults) to object. Shared
+// by prepareDefaultType (!md) and prepareBuiltinActionableTypes
 // (!task/!chore/!habit); callers gate it on
-// !bigBang.ExcludeDefaultPandocTools so the referenced tool blobs always exist.
+// !bigBang.ExcludeDefaultPandocTools so the referenced tool blobs always
+// exist. The actionable types carry the beamer defaults blob even though they
+// lack a pdf-beamer formatter: a single shared ref set keeps genesis simple
+// and the extra ref is harmless.
 func attachPandocToolRefs(
 	object *sku.Transacted,
 	toolBlobs toolBlobDigests,
 ) (err error) {
-	if err = addToolBlobReference(
-		object, toolBlobs.commonFilter,
-		"pandoc-lua_filter", "filters/dodder-common.lua",
-	); err != nil {
-		return errors.Wrap(err)
-	}
-
-	if err = addToolBlobReference(
-		object, toolBlobs.editFilter,
-		"pandoc-lua_filter", "filters/dodder-edit.lua",
-	); err != nil {
-		return errors.Wrap(err)
-	}
-
-	if err = addToolBlobReference(
-		object, toolBlobs.editDefaults,
-		"pandoc-defaults", "defaults/dodder-edit.yaml",
-	); err != nil {
-		return errors.Wrap(err)
+	for _, ref := range []struct {
+		digest     markl.Id
+		typeString string
+		alias      string
+	}{
+		{toolBlobs.commonFilter, "pandoc-lua_filter", "filters/dodder-common.lua"},
+		{toolBlobs.editFilter, "pandoc-lua_filter", "filters/dodder-edit.lua"},
+		{toolBlobs.editDefaults, "pandoc-defaults", "defaults/dodder-edit.yaml"},
+		{toolBlobs.htmlDefaults, "pandoc-defaults", "defaults/dodder-html.yaml"},
+		{toolBlobs.gdocDefaults, "pandoc-defaults", "defaults/dodder-gdoc.yaml"},
+		{toolBlobs.beamerDefaults, "pandoc-defaults", "defaults/dodder-beamer.yaml"},
+	} {
+		if err = addToolBlobReference(
+			object, ref.digest, ref.typeString, ref.alias,
+		); err != nil {
+			return errors.Wrap(err)
+		}
 	}
 
 	return err
