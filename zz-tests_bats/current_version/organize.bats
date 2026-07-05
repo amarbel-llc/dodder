@@ -51,11 +51,15 @@ function organize_simple { # @test
   actual="$(mktemp)"
   run_dodder organize "${cmd_def_organize[@]}" -mode output-only :z,e,t >"$actual"
   assert_success
-  assert_output_unsorted - <<-EOM
+  # Pandoc tools default-on (#208): !md carries unquoted two-token blob
+  # references (per-run ed25519 sigs -> --regexp), plus the two tool types.
+  assert_output_unsorted --regexp - <<-'EOM'
 
-		- [!md !toml-type-v2]
-		- [one/dos !md tag-3 tag-4] wow ok again
-		- [one/uno !md tag-3 tag-4] wow the first
+		- \[!md !toml-type-v2 .+]
+		- \[!pandoc-defaults !toml-type-v2]
+		- \[!pandoc-lua_filter !toml-type-v2]
+		- \[one/dos !md tag-3 tag-4] wow ok again
+		- \[one/uno !md tag-3 tag-4] wow the first
 	EOM
 }
 
@@ -1237,11 +1241,15 @@ function organize_checked_out { # @test
 
   run_dodder organize -mode output-only .
   assert_success
-  assert_output - <<-EOM
+  # Pandoc tools default-on (#208): md.type carries unquoted two-token blob
+  # references (per-run ed25519 sigs -> --regexp), plus the two tool types.
+  assert_output_unsorted --regexp - <<-'EOM'
 
-		- [md.type !toml-type-v2]
-		- [one/dos.zettel !md tag-3 tag-4] wow ok again
-		- [one/uno.zettel !md tag-3 tag-4] wow the first
+		- \[md.type !toml-type-v2 .+]
+		- \[one/dos.zettel !md tag-3 tag-4] wow ok again
+		- \[one/uno.zettel !md tag-3 tag-4] wow the first
+		- \[pandoc-defaults.type !toml-type-v2]
+		- \[pandoc-lua_filter.type !toml-type-v2]
 	EOM
 }
 

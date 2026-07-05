@@ -1,5 +1,7 @@
-[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
 [!md @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
+[!md @blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j !toml-type-v2 defaults/dodder-edit.yaml<@blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-<SIG> filters/dodder-edit.lua<@blake2b256-kgh3lg7gu6rpv8ua68ph30q5400afcus5r8ee23fnl0z3hgrud9sytqvzs !pandoc-lua_filter@ed25519_sig-<SIG> filters/dodder-common.lua<@blake2b256-rn433263q9qx43808kl2ehnqv3mhre8l7wwsk6cp9vvpt06t6uqs04umuq !pandoc-lua_filter@ed25519_sig-<SIG>]
+[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
+[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
 [one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 [one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 [one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 !md "wow ok" tag-1 tag-2]

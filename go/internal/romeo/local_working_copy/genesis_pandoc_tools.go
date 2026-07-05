@@ -99,7 +99,7 @@ func (local *Repo) prepareToolBlobs() (digests toolBlobDigests, err error) {
 // (common filter, edit filter, edit defaults) to object. Shared by
 // prepareDefaultType (!md) and prepareBuiltinActionableTypes
 // (!task/!chore/!habit); callers gate it on
-// bigBang.IncludeDefaultPandocTools so the referenced tool blobs always exist.
+// !bigBang.ExcludeDefaultPandocTools so the referenced tool blobs always exist.
 func attachPandocToolRefs(
 	object *sku.Transacted,
 	toolBlobs toolBlobDigests,

@@ -63,7 +63,9 @@ function import { # @test
   run_dodder show -format inventory_list +z,e,t
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
+		\\[!md @$(get_type_blob_sha) .* !toml-type-v2 .*]
+		\\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d .* !toml-type-v2]
+		\\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw .* !toml-type-v2]
 		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $bare_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
 		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $bare_pubkey .* !md@.* "wow the first" tag-3 tag-4]
 		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $bare_pubkey .* !md@.* "wow ok" tag-1 tag-2]
@@ -96,7 +98,7 @@ function import_with_overwrite_sig { # @test
 		! inventory_list-v2
 		---
 
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj 2135591162.342034946 dodder-repo-public_key-v1@ed25519_pub-vhhh5p6qfc9q5fpqm2xmjmetgnagmjpxxqlwlac4uvrhrvjvgevsv5z5q6 dodder-object-sig-v1@ed25519_sig-anhgqrkdqnn6uzvcaj93hr7epr72v8vefv0gkrhd7ktskl6pez2cr8kwe3krrndw8lefh8a7k5dzhete4pjk72zfp4vgf8f0srpksqsy6nn8g !toml-type-v2]
+		[!md @$(get_type_blob_sha) 2135591162.342034946 dodder-repo-public_key-v1@ed25519_pub-vhhh5p6qfc9q5fpqm2xmjmetgnagmjpxxqlwlac4uvrhrvjvgevsv5z5q6 dodder-object-sig-v1@ed25519_sig-anhgqrkdqnn6uzvcaj93hr7epr72v8vefv0gkrhd7ktskl6pez2cr8kwe3krrndw8lefh8a7k5dzhete4pjk72zfp4vgf8f0srpksqsy6nn8g !toml-type-v2]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 2135591162.520209927 dodder-repo-public_key-v1@ed25519_pub-vhhh5p6qfc9q5fpqm2xmjmetgnagmjpxxqlwlac4uvrhrvjvgevsv5z5q6 dodder-object-sig-v1@ed25519_sig-jr7jqjh6rq0zd42n03z5vcl2grqr3eg9eqwnuwxj809h3eaxqw58mm3garf4nzenptmu9mhamhtlt9uuxsrt5wl4dshsfsnak3zvgrcelwkhr !md "wow ok" tag-1 tag-2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd 2135591162.606407248 dodder-repo-public_key-v1@ed25519_pub-vhhh5p6qfc9q5fpqm2xmjmetgnagmjpxxqlwlac4uvrhrvjvgevsv5z5q6 dodder-object-sig-v1@ed25519_sig-3ya9fl5nlx7e77qk4vvx2ae7cez8uagywym8f2h5r6f4ern2fhslgtvqjge6fzxjwkkgfr9qjpt0kjjq6slzrm7phraq9jm4z42q2qqnnh2eu !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd 2135591162.697539117 dodder-repo-public_key-v1@ed25519_pub-vhhh5p6qfc9q5fpqm2xmjmetgnagmjpxxqlwlac4uvrhrvjvgevsv5z5q6 dodder-object-mother-sig-v1@ed25519_sig-jr7jqjh6rq0zd42n03z5vcl2grqr3eg9eqwnuwxj809h3eaxqw58mm3garf4nzenptmu9mhamhtlt9uuxsrt5wl4dshsfsnak3zvgrcelwkhr dodder-object-sig-v1@ed25519_sig-3ngs79lfywr6ewtdze0c9d3mwk824mymu8xjavzn3uc5s26fzwdy6mz487yasxhd2nqwefjuq3rtnfsj6a4p2u4dcj0wt2h4s2yl6qgm73qt6 !md "wow the first" tag-3 tag-4]
@@ -122,7 +124,9 @@ function import_with_overwrite_sig { # @test
   run_dodder show -format inventory_list +z,e,t
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
+		\\[!md @$(get_type_blob_sha) .* !toml-type-v2 .*]
+		\\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d .* !toml-type-v2]
+		\\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw .* !toml-type-v2]
 		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $bare_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
 		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $bare_pubkey .* !md@.* "wow the first" tag-3 tag-4]
 		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $bare_pubkey .* !md@.* "wow ok" tag-1 tag-2]
@@ -197,7 +201,7 @@ function import_with_dupes_in_list { # @test
 		! inventory_list-v2
 		---
 
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj 2135591162.342034946 !toml-type-v2]
+		[!md @$(get_type_blob_sha) 2135591162.342034946 !toml-type-v2]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 2135591162.520209927 !md "wow ok" tag-1 tag-2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd 2135591162.606407248 !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd 2135591162.697539117 !md "wow the first" tag-3 tag-4]
@@ -232,7 +236,9 @@ function import_with_dupes_in_list { # @test
   run_dodder show -format inventory_list +z,e,t
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
+		\\[!md @$(get_type_blob_sha) .* !toml-type-v2 .*]
+		\\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d .* !toml-type-v2]
+		\\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw .* !toml-type-v2]
 		\\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd .* $bare_pubkey .* !md@.* "wow ok again" tag-3 tag-4]
 		\\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd .* $bare_pubkey .* !md@.* "wow the first" tag-3 tag-4]
 		\\[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 .* $bare_pubkey .* !md@.* "wow ok" tag-1 tag-2]
@@ -617,7 +623,7 @@ function import_tai_collision_resolution { # @test
 		! inventory_list-v2
 		---
 
-		[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj 2135591162.342034946 !toml-type-v2]
+		[!md @$(get_type_blob_sha) 2135591162.342034946 !toml-type-v2]
 		[one/uno @blake2b256-c5xgv9eyuv6g49mcwqks24gd3dh39w8220l0kl60qxt60rnt60lsc8fqv0 2135591162.520209927 !md "wow ok" tag-1 tag-2]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd 2135591162.520209927 !md "wow the first" tag-3 tag-4]
 	EOM

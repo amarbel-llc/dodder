@@ -1,0 +1,25 @@
+
+
+
+
+! toml-type-v2
+! toml-type-v2
+! toml-type-v2
+- defaults/dodder-edit.yaml < @blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-<SIG>
+- filters/dodder-common.lua < @blake2b256-rn433263q9qx43808kl2ehnqv3mhre8l7wwsk6cp9vvpt06t6uqs04umuq !pandoc-lua_filter@ed25519_sig-<SIG>
+- filters/dodder-edit.lua < @blake2b256-kgh3lg7gu6rpv8ua68ph30q5400afcus5r8ee23fnl0z3hgrud9sytqvzs !pandoc-lua_filter@ed25519_sig-<SIG>
+---
+---
+---
+---
+---
+---
+[formatters.text]
+description = "Normalize markdown with pandoc"
+file-extension = "lua"
+file-extension = "md"
+file-extension = "md"
+file-extension = "yaml"
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
+script = """
+vim-syntax-type = "markdown"

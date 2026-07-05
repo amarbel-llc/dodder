@@ -815,10 +815,11 @@ function mcp_import_dry_run { # @test
   # The plan summary (FormatSummary) is in the result text.
   assert_output --partial "committable"
 
-  # Nothing committed: inner still has only its init type.
+  # Nothing committed: inner still has only its init types. Query output
+  # order is nondeterministic -> unsorted golden.
   run_dodder show :z,e,t
   assert_success
-  assert_golden mcp_import_dry_run
+  assert_golden_unsorted mcp_import_dry_run
   popd || exit 1
 }
 

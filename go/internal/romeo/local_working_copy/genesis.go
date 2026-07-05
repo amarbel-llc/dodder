@@ -70,7 +70,7 @@ func (local *Repo) initDefaultTypeAndConfig(
 
 	var toolBlobs toolBlobDigests
 
-	if bigBang.IncludeDefaultPandocTools {
+	if !bigBang.ExcludeDefaultPandocTools {
 		if err = local.prepareToolTypes(&builder); err != nil {
 			return errors.Wrap(err)
 		}
@@ -205,7 +205,7 @@ func (local *Repo) prepareDefaultType(
 	tipe := ids.DefaultOrPanic(genres.Type)
 
 	var blob type_blobs.TomlV2
-	if bigBang.IncludeDefaultPandocTools {
+	if !bigBang.ExcludeDefaultPandocTools {
 		blob = type_blobs.DefaultWithPandocFormatter()
 	} else {
 		blob = type_blobs.Default()
@@ -231,7 +231,7 @@ func (local *Repo) prepareDefaultType(
 	object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
 	object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
 
-	if bigBang.IncludeDefaultPandocTools {
+	if !bigBang.ExcludeDefaultPandocTools {
 		if err = attachPandocToolRefs(object, toolBlobs); err != nil {
 			return objectIdType, errors.Wrap(err)
 		}
@@ -249,7 +249,7 @@ func (local *Repo) prepareDefaultType(
 // types when bigBang.IncludeBuiltinActionableTypes is set. !task carries the
 // one-shot actionable field set (status, urgency, priority, due); !chore and
 // !habit add a recurrence field. All three carry a blob-backed pandoc body
-// formatter, so when bigBang.IncludeDefaultPandocTools is also set they get the
+// formatter, so unless bigBang.ExcludeDefaultPandocTools is set they get the
 // same pandoc tool-blob references as !md. Opt-in for now per
 // docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md.
 func (local *Repo) prepareBuiltinActionableTypes(
@@ -262,7 +262,7 @@ func (local *Repo) prepareBuiltinActionableTypes(
 	}
 
 	// Commit the !lua tool type and write the shared actionable-common lua
-	// blob UNCONDITIONALLY (not gated on IncludeDefaultPandocTools): the
+	// blob UNCONDITIONALLY (not gated on ExcludeDefaultPandocTools): the
 	// actionable hook is a thin `require("actionable-common")` loader that
 	// depends on this blob reference, so it must always exist. The blob
 	// reference's type lock names !lua, a non-builtin type whose existence is
@@ -320,7 +320,7 @@ func (local *Repo) prepareBuiltinActionableTypes(
 		object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
 		object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
 
-		if bigBang.IncludeDefaultPandocTools {
+		if !bigBang.ExcludeDefaultPandocTools {
 			if err = attachPandocToolRefs(object, toolBlobs); err != nil {
 				err = errors.Wrap(err)
 				return err

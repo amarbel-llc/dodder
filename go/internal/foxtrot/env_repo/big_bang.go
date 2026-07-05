@@ -37,7 +37,7 @@ type BigBang struct {
 	YangDefault                   bool
 	ExcludeDefaultType            bool
 	ExcludeDefaultConfig          bool
-	IncludeDefaultPandocTools     bool
+	ExcludeDefaultPandocTools     bool
 	IncludeBuiltinActionableTypes bool
 	BlobStoreId                   blob_store_id.Id
 }

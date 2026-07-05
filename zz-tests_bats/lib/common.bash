@@ -204,9 +204,14 @@ function run_dodder_init {
     "${args[@]}"
 
   assert_success
-  assert_output - <<-EOM
-[!md @$(get_type_blob_sha) !toml-type-v2]
-EOM
+  # Pandoc tools are default-on since #208: genesis commits !pandoc-defaults,
+  # !pandoc-lua_filter, and an !md carrying three blob references whose per-ref
+  # ed25519 signatures vary per init -- so match the shape with --regexp.
+  assert_output_unsorted --regexp - <<-EOM
+		\[!pandoc-defaults @blake2b256-.+ !toml-type-v2]
+		\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v2]
+		\[!md @blake2b256-.+ !toml-type-v2 .+]
+	EOM
 
   run_dodder_init_workspace
 }
@@ -225,8 +230,12 @@ function run_dodder_init_sha256 {
     "${args[@]}"
 
   assert_success
-  assert_output --regexp - <<-EOM
-		\[!md @sha256-.+ !toml-type-v2]
+  # Pandoc tools default-on (#208): sha256-store variant of the 3-line genesis
+  # output. Per-ref ed25519 signatures vary per init -> --regexp.
+  assert_output_unsorted --regexp - <<-EOM
+		\[!pandoc-defaults @sha256-.+ !toml-type-v2]
+		\[!pandoc-lua_filter @sha256-.+ !toml-type-v2]
+		\[!md @sha256-.+ !toml-type-v2 .+]
 	EOM
 }
 
@@ -305,9 +314,13 @@ function run_dodder_init_disable_age {
     "${args[@]}"
 
   assert_success
-  assert_output --regexp - <<-EOM
-\[!md @blake2b256-.+ !toml-type-v2]
-EOM
+  # Pandoc tools default-on (#208): 3-line genesis output. Per-ref ed25519
+  # signatures vary per init -> --regexp.
+  assert_output_unsorted --regexp - <<-EOM
+		\[!pandoc-defaults @blake2b256-.+ !toml-type-v2]
+		\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v2]
+		\[!md @blake2b256-.+ !toml-type-v2 .+]
+	EOM
 
   run_dodder init-workspace -experimental-repo=false
 }

@@ -235,8 +235,12 @@ function init_with_existing_madder_store { # @test
     default
 
   assert_success
-  assert_output --regexp - <<-'EOM'
-		\[!md @blake2b256-[[:alnum:]]+ !toml-type-v2]
+  # Pandoc tools default-on (#208): genesis emits the two pandoc tool types
+  # plus an !md carrying blob references (unquoted two-token trailer).
+  assert_output_unsorted --regexp - <<-'EOM'
+		\[!md @blake2b256-[[:alnum:]]+ !toml-type-v2 .+]
+		\[!pandoc-defaults @blake2b256-[[:alnum:]]+ !toml-type-v2]
+		\[!pandoc-lua_filter @blake2b256-[[:alnum:]]+ !toml-type-v2]
 	EOM
 
   run_dodder init-workspace -experimental-repo=false
@@ -245,7 +249,9 @@ function init_with_existing_madder_store { # @test
   run_dodder last -format inventory_list-sans-tai
   assert_success
   assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-[[:alnum:]]+ .* !toml-type-v2]
+		\[!md @blake2b256-[[:alnum:]]+ .* !toml-type-v2 .*]
+		\[!pandoc-defaults @blake2b256-[[:alnum:]]+ .* !toml-type-v2]
+		\[!pandoc-lua_filter @blake2b256-[[:alnum:]]+ .* !toml-type-v2]
 	EOM
 }
 

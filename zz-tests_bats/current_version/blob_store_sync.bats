@@ -30,17 +30,18 @@ function blob_store_sync_twice { # @test
   # (madder-sync(1)).
   run_madder sync -format ndjson
   assert_success
-  assert_line "Successes: 17, Failures: 0, Ignored: 0, Total: 17"
-  # 1 summary line + 17 JSON lines, one per blob in the v15 fixture's
-  # default store.
-  [[ ${#lines[@]} -eq 18 ]] ||
-    fail "sync 1: expected 18 output lines, got ${#lines[@]}: ${output}"
+  assert_line "Successes: 22, Failures: 0, Ignored: 0, Total: 22"
+  # 1 summary line + 22 JSON lines, one per blob in the v15 fixture's
+  # default store (pandoc tools default-on since #208 add the two pandoc type
+  # blobs plus the three tool blobs).
+  [[ ${#lines[@]} -eq 23 ]] ||
+    fail "sync 1: expected 23 output lines, got ${#lines[@]}: ${output}"
 
   run_madder sync -format ndjson
   assert_success
-  assert_line "Successes: 0, Failures: 0, Ignored: 17, Total: 17"
-  [[ ${#lines[@]} -eq 18 ]] ||
-    fail "sync 2: expected 18 output lines, got ${#lines[@]}: ${output}"
+  assert_line "Successes: 0, Failures: 0, Ignored: 22, Total: 22"
+  [[ ${#lines[@]} -eq 23 ]] ||
+    fail "sync 2: expected 23 output lines, got ${#lines[@]}: ${output}"
 }
 
 function blob_store_sync_cross_hash_multi_hash_destination { # @test

@@ -264,13 +264,31 @@ LOOP_AFTER_OBJECT_ID:
 				return err
 			}
 
-		// alias<@digest (blob reference with alias)
-		case seq.MatchAll(doddish.TokenMatcherBlobReferenceAlias...):
+		// alias<@digest / <@digest (typed blob reference, optionally
+		// aliased). Matched on the `<@digest` SUFFIX rather than an exact
+		// token shape because the alias may span several tokens (a path
+		// shape like filters/dodder-edit.lua tokenizes as multiple
+		// identifiers and path separators). No other seq form places `<`
+		// directly before `@`, so the suffix match cannot claim an aliased
+		// object reference (alias<id@sig keeps the object id between them).
+		case matchesBlobReference(seq):
+			ok, aliasSeq, refSeq := seq.MatchEnd(
+				doddish.TokenMatcherBlobReference...,
+			)
+			if !ok {
+				panic("matchesBlobReference and MatchEnd disagree")
+			}
+
 			var blobId markl.Id
-			if err = blobId.Set(seq.At(3).String()); err != nil {
+			if err = blobId.Set(refSeq.At(2).String()); err != nil {
 				err = errors.Wrap(err)
 				return err
 			}
+
+			// capture the alias BEFORE the type-lock lookahead: the seq's
+			// token contents are views into the scanner's buffer, which the
+			// lookahead scan invalidates
+			alias := aliasSeq.String()
 
 			var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
 			if err = format.scanBlobReferenceTypeLock(scanner, &typeLock); err != nil {
@@ -279,26 +297,15 @@ LOOP_AFTER_OBJECT_ID:
 
 			object.GetMetadataMutable().AddBlobReference(blobId, typeLock)
 
-			alias := seq.At(0).String()
-			if err = object.GetMetadataMutable().SetBlobReferenceAlias(blobId, alias); err != nil {
-				err = errors.Wrap(err)
-				return err
+			if alias != "" {
+				if err = object.GetMetadataMutable().SetBlobReferenceAlias(
+					blobId,
+					alias,
+				); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
 			}
-
-		// <@digest (blob reference without alias)
-		case seq.MatchAll(doddish.TokenMatcherBlobReference...):
-			var blobId markl.Id
-			if err = blobId.Set(seq.At(2).String()); err != nil {
-				err = errors.Wrap(err)
-				return err
-			}
-
-			var typeLock markl.Lock[ids.SeqId, *ids.SeqId]
-			if err = format.scanBlobReferenceTypeLock(scanner, &typeLock); err != nil {
-				return err
-			}
-
-			object.GetMetadataMutable().AddBlobReference(blobId, typeLock)
 
 			// <ref@sig (referenced object without alias)
 		case seq.MatchAll(doddish.TokenMatcherReferencedObject...):
@@ -428,6 +435,13 @@ func (format *BoxTransacted) parseMarklIdTag(
 	}
 
 	return err
+}
+
+// matchesBlobReference reports whether seq is a typed blob reference:
+// any (possibly empty) alias prefix followed by the `<@digest` suffix.
+func matchesBlobReference(seq doddish.Seq) bool {
+	ok, _, _ := seq.MatchEnd(doddish.TokenMatcherBlobReference...)
+	return ok
 }
 
 // scanBlobReferenceTypeLock looks ahead in the scanner for an optional type lock

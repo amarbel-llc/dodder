@@ -16,9 +16,13 @@ setup() {
 
   run ls
   assert_success
+  # Pandoc tools default-on (#208): checkout :z,t,e now also materializes the
+  # two pandoc tool type objects as .type files.
   assert_output_unsorted - <<-EOM
 		md.type
 		one
+		pandoc-defaults.type
+		pandoc-lua_filter.type
 	EOM
 
   cat >one/uno.zettel <<-EOM
@@ -127,6 +131,8 @@ function checkin_simple_all { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!md @blake2b256-76m5lj0dp3je79ft9z2mdwpcrzrf9sddj04tvewpuk6gyqmll27sz46w72 !toml-type-v2]
+		[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
+		[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
 		[one/dos @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		[one/uno @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
 		[zz-archive @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]

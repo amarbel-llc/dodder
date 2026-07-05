@@ -1,4 +1,4 @@
-[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2 new-etikett-for-all]
+[!md @blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j !toml-type-v2 new-etikett-for-all]
 [-tag new-etikett-for-all]
 [-tag-1 new-etikett-for-all]
 [-tag-2 new-etikett-for-all]

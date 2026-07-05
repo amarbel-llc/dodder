@@ -323,10 +323,20 @@ function show_simple_all { # @test
 
   run_dodder show -format blob :z,t
   assert_success
-  assert_output_unsorted - <<-EOM
+  # Pandoc tools default-on (#208): the pandoc tool type blobs and the
+  # !md [formatters.text] block are part of the genesis blob set.
+  assert_output_unsorted - <<-'EOM'
+
+		description = "Normalize markdown with pandoc"
+		file-extension = "lua"
 		file-extension = "md"
+		file-extension = "md"
+		file-extension = "yaml"
+		[formatters.text]
 		last time
 		not another one
+		pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
+		script = """
 		vim-syntax-type = "markdown"
 	EOM
 
@@ -579,14 +589,11 @@ function show_inventory_list_blob_sort_correct { # @test
 function show_builtin_type_md { # @test
   run_dodder show -format text !toml-type-v2:t
   assert_success
-  assert_output - <<-EOM
-		---
-		! toml-type-v2
-		---
-
-		file-extension = "md"
-		vim-syntax-type = "markdown"
-	EOM
+  # Pandoc tools default-on (#208): all three genesis type objects render,
+  # and !md's hyphence header carries the blob-reference lines (fixture
+  # sigs). Golden-backed so fixture regeneration regoldens it; the per-type
+  # render order is nondeterministic -> unsorted golden.
+  assert_golden_unsorted show_builtin_type_md
 }
 
 # bats file_tags=user_story:workspace
@@ -1122,10 +1129,12 @@ function show_box_format_includes_blob_references { # @test
 	EOM
   assert_success
 
-  # Verify box format includes blob reference with type lock
+  # Verify box format includes blob reference with type lock: two unquoted
+  # space-free fields (`<@digest`, `!type@sig`) -- a quoted single field
+  # would decode as a description and drop the reference.
   run_dodder show two/uno
   assert_success
-  assert_output --regexp '"<@blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md@ed25519_sig-.+"'
+  assert_output --regexp '<@blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md@ed25519_sig-.+]'
 }
 
 # bats test_tags=user_story:referenced_objects

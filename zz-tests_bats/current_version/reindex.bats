@@ -26,6 +26,8 @@ function reindex_simple { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		!md [Paths: [], All: []]
+		!pandoc-defaults [Paths: [], All: []]
+		!pandoc-lua_filter [Paths: [], All: []]
 		one/dos [Paths: [TypeDirect:[tag-3] TypeDirect:[tag-4]], All: [tag-3:[TypeDirect:[tag-3]] tag-4:[TypeDirect:[tag-4]]]]
 		one/uno [Paths: [TypeDirect:[tag-3] TypeDirect:[tag-4]], All: [tag-3:[TypeDirect:[tag-3]] tag-4:[TypeDirect:[tag-4]]]]
 	EOM
@@ -73,9 +75,17 @@ function reindex_after_changes { # @test
   function verify() {
     run_dodder show -format blob !md+t
     assert_success
-    assert_output - <<-EOM
+    # The fixture's genesis !md blob is the pandoc-flavored one (#208): it
+    # carries a [formatters.text] block. The checked-in replacement follows.
+    assert_output - <<-'EOM'
 			file-extension = "md"
 			vim-syntax-type = "markdown"
+
+			[formatters.text]
+			description = "Normalize markdown with pandoc"
+			script = """
+			pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
+			file-extension = "md"
 			inline-akte = false
 			vim-syntax-type = "test"
 		EOM

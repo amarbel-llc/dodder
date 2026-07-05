@@ -303,6 +303,15 @@ func (builder *Builder) AddReferencedObjectsAndLocks(metadata objects.MetadataMu
 	}
 }
 
+// AddBlobReferences emits each typed blob reference as TWO space-free fields
+// (`alias<@digest`, then `!type@sig`), matching the doddish grammar (two seqs
+// split by a space -- see 0/doddish/scanner_test.go "typed blob ref" cases)
+// and the box reader (box_format/read.go TokenMatcherBlobReference* +
+// scanBlobReferenceTypeLock lookahead). A single combined field would embed a
+// space, which the fields writer quotes -- and a quoted string decodes as a
+// DESCRIPTION, silently dropping the references and corrupting the signed
+// object digest (the blob-ref round-trip bug behind repo-fsck / transfer
+// signature failures).
 func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
 	for blobId := range metadata.AllBlobReferences() {
 		alias := metadata.GetBlobReferenceAlias(blobId)
@@ -314,13 +323,6 @@ func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
 			value = "<@" + blobId.String()
 		}
 
-		typeLock := metadata.GetBlobReferenceTypeLock(blobId)
-		typeLockStr := markl.MakeLockCoderValueNotRequired(typeLock).String()
-
-		if typeLockStr != "" {
-			value = value + " " + typeLockStr
-		}
-
 		builder.Contents.Append(string_format_writer.FormattedField{
 			Field: fields.Field{
 				Value: value,
@@ -328,6 +330,19 @@ func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
 			},
 			NoTruncate: true,
 		})
+
+		typeLock := metadata.GetBlobReferenceTypeLock(blobId)
+		typeLockStr := markl.MakeLockCoderValueNotRequired(typeLock).String()
+
+		if typeLockStr != "" {
+			builder.Contents.Append(string_format_writer.FormattedField{
+				Field: fields.Field{
+					Value: typeLockStr,
+					Type:  fields.TypeType,
+				},
+				NoTruncate: true,
+			})
+		}
 	}
 }
 

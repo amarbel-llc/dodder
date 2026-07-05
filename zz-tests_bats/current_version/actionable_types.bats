@@ -26,35 +26,31 @@ function init_fixture {
 }
 
 # Without the opt-in flag, dodder init does NOT commit !task / !chore /
-# !habit. Only the default !md type is present.
+# !habit. Only the default !md type (with its pandoc tool tree, default-on
+# since #208) and the two pandoc tool types are present. Golden-backed so the
+# genesis snapshot regenerates with the pandoc default.
 function genesis_default_omits_actionable_types { # @test
   init_fixture
 
   run_dodder show ':t'
   assert_success
-  assert_output --regexp - <<-EOM
-		\[!md @blake2b256-.+ !toml-type-v2]
-	EOM
+  assert_golden_unsorted genesis_default_omits_actionable_types
 }
 
 # With -include-builtin-actionable-types, all three actionable types
 # (!task, !chore, !habit) are committed during genesis alongside !md, plus the
 # !lua tool type that locks the actionable-common.lua blob reference each
-# actionable type carries. The actionable types render that blob reference
-# inline (alias<@digest !lua@ed25519_sig-...); the signature is
-# non-deterministic, so match it with --regexp.
+# actionable type carries, and the two pandoc tool types (default-on since
+# #208). Each actionable type also carries the three pandoc tool-blob
+# references alongside actionable-common.lua. Golden-backed: the normalizer
+# masks the per-init ed25519 signatures while keeping the deterministic
+# content-addressed blob digests verbatim.
 function genesis_includes_actionable_types_when_opted_in { # @test
   init_fixture -include-builtin-actionable-types
 
   run_dodder show ':t'
   assert_success
-  assert_output_unsorted --regexp - <<-EOM
-		\[!chore @blake2b256-.+ !toml-type-v2 "actionable-common\.lua<@blake2b256-.+ !lua@ed25519_sig-.+"]
-		\[!habit @blake2b256-.+ !toml-type-v2 "actionable-common\.lua<@blake2b256-.+ !lua@ed25519_sig-.+"]
-		\[!lua @blake2b256-.+ !toml-type-v2]
-		\[!md @blake2b256-.+ !toml-type-v2]
-		\[!task @blake2b256-.+ !toml-type-v2 "actionable-common\.lua<@blake2b256-.+ !lua@ed25519_sig-.+"]
-	EOM
+  assert_golden_unsorted genesis_includes_actionable_types_when_opted_in
 }
 
 # The !task type blob exposes the actionable field definitions (status,
@@ -240,7 +236,7 @@ function actionable_body_renders_via_pandoc { # @test
   command -v pandoc >/dev/null || skip "pandoc not available"
   command -v yq >/dev/null || skip "yq not available"
 
-  init_fixture -include-builtin-actionable-types -include-default-pandoc-tools
+  init_fixture -include-builtin-actionable-types
   run_dodder init-workspace -experimental-repo=false
 
   run_dodder new -edit=false - <<-EOM

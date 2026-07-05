@@ -39,6 +39,8 @@ function clean_all { # @test
 		          deleted [one/]
 		          deleted [one/dos.zettel]
 		          deleted [one/uno.zettel]
+		          deleted [pandoc-defaults.type]
+		          deleted [pandoc-lua_filter.type]
 	EOM
 
   run_find
@@ -60,6 +62,8 @@ function clean_zettels { # @test
   assert_output_unsorted - <<-EOM
 		.
 		./md.type
+		./pandoc-defaults.type
+		./pandoc-lua_filter.type
 	EOM
 }
 
@@ -102,6 +106,8 @@ function clean_all_dirty_wd { # @test
   run_dodder clean .
   assert_success
   assert_output_unsorted - <<-EOM
+		          deleted [pandoc-defaults.type]
+		          deleted [pandoc-lua_filter.type]
 	EOM
 
   run_find
@@ -161,6 +167,8 @@ function clean_all_force_dirty_wd { # @test
 		          deleted [one/dos.zettel]
 		          deleted [one/uno.zettel]
 		          deleted [one/]
+		          deleted [pandoc-defaults.type]
+		          deleted [pandoc-lua_filter.type]
 		          deleted [zz-archive.tag]
 	EOM
 

@@ -82,10 +82,10 @@ func (cmd *Genesis) SetFlagDefinitions(
 	)
 
 	flagSet.BoolVar(
-		&cmd.BigBang.IncludeDefaultPandocTools,
-		"include-default-pandoc-tools",
+		&cmd.BigBang.ExcludeDefaultPandocTools,
+		"exclude-default-pandoc-tools",
 		false,
-		"Include pandoc Lua filters and defaults as blob references on the default type",
+		"Exclude pandoc Lua filters and defaults from the default type",
 	)
 
 	flagSet.BoolVar(

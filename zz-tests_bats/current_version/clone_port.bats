@@ -39,13 +39,20 @@ function clone_history_zettel_type_tag_port { # @test
     +zettel,typ,etikett
 
   assert_success
+  # Pandoc tools default-on (#208): the !md line carries the unquoted
+  # two-token blob-ref trailer (per-run sigs -> .+), and the pandoc tool
+  # types appear twice each (clone genesis + transferred history).
   assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj !toml-type-v2]
+		\[!md @blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j !toml-type-v2 .+]
+		\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
+		\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
+		\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
+		\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
 		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B\)
 		copied Blob blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc \(5 B\)
-		copied Blob blake2b256-45v3c002j9xfjguu2a7ljxnf68tqglg8fa0csjgnn7d2n36ltp0snfjxgj \(51 B\)
+		copied Blob blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j \(216 B\)
 	EOM
 
   try_add_new_after_clone

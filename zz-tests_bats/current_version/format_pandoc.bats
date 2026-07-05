@@ -22,7 +22,6 @@ function init_with_pandoc_tools_creates_type_objects { # @test
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -include-default-pandoc-tools \
     .default
 
   assert_success
@@ -40,7 +39,7 @@ function init_with_pandoc_tools_creates_type_objects { # @test
   run_dodder show '!md:t'
   assert_success
   assert_output --regexp - <<-'EOM'
-		\[!md @blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j !toml-type-v2 "defaults/dodder-edit\.yaml<@blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-[a-z0-9]+" "filters/dodder-edit\.lua<@blake2b256-kgh3lg7gu6rpv8ua68ph30q5400afcus5r8ee23fnl0z3hgrud9sytqvzs !pandoc-lua_filter@ed25519_sig-[a-z0-9]+" "filters/dodder-common\.lua<@blake2b256-rn433263q9qx43808kl2ehnqv3mhre8l7wwsk6cp9vvpt06t6uqs04umuq !pandoc-lua_filter@ed25519_sig-[a-z0-9]+"\]
+		\[!md @blake2b256-wn23tupt0wdt5ha776v4pavqley07cfazp3mzgsk5t83fgw4k6aqltcd7j !toml-type-v2 defaults/dodder-edit\.yaml<@blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-[a-z0-9]+ filters/dodder-edit\.lua<@blake2b256-kgh3lg7gu6rpv8ua68ph30q5400afcus5r8ee23fnl0z3hgrud9sytqvzs !pandoc-lua_filter@ed25519_sig-[a-z0-9]+ filters/dodder-common\.lua<@blake2b256-rn433263q9qx43808kl2ehnqv3mhre8l7wwsk6cp9vvpt06t6uqs04umuq !pandoc-lua_filter@ed25519_sig-[a-z0-9]+\]
 	EOM
 }
 
@@ -53,7 +52,6 @@ function format_blob_stdin_pandoc_normalizes_markdown { # @test
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -include-default-pandoc-tools \
     .default
 
   assert_success
@@ -83,13 +81,12 @@ function format_blob_stdin_pandoc_normalizes_markdown { # @test
 	EOM
 }
 
-# Default init (without the opt-in flag) must not create pandoc tool
-# types and must leave !md formatter-free. When the opt-in -> opt-out
-# flip lands (see docs/plans/2026-03-27-pandoc-internal-formatting-
-# design.md), this test will fail and the assertions become the canary
-# for the flip itself.
+# Pandoc tools are default-on since #208. Passing -exclude-default-pandoc-tools
+# opts back out: genesis must NOT create the pandoc tool types and must leave
+# !md formatter-free. (The default-on case — pandoc tools present — is covered
+# by init_with_pandoc_tools_creates_type_objects above.)
 # bats test_tags=pandoc
-function init_without_pandoc_flag_produces_minimal_md_type { # @test
+function init_with_exclude_flag_produces_minimal_md_type { # @test
   wd="$(mktemp -d)"
   cd "$wd" || exit 1
 
@@ -97,6 +94,7 @@ function init_without_pandoc_flag_produces_minimal_md_type { # @test
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
+    -exclude-default-pandoc-tools \
     .default
 
   assert_success
@@ -132,7 +130,6 @@ function format_object_stdin_pandoc_normalizes_markdown { # @test
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
-    -include-default-pandoc-tools \
     .default
 
   assert_success
@@ -170,11 +167,13 @@ function format_blob_with_trivial_formatter_no_blob_refs { # @test
   wd="$(mktemp -d)"
   cd "$wd" || exit 1
 
-  # init WITHOUT pandoc flag -> !md has no formatters and no blob refs
+  # init with -exclude-default-pandoc-tools -> !md has no formatters and no
+  # blob refs
   run_dodder init \
     -yin <(cat_yin) \
     -yang <(cat_yang) \
     -encryption none \
+    -exclude-default-pandoc-tools \
     .default
 
   assert_success
