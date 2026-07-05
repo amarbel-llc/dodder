@@ -55,6 +55,17 @@ fi
 wait`
 }
 
+// DefaultWithPandocFormatter is the builtin pandoc-backed !md type blob. Its
+// formatters split into two pipelines: the EDIT pipeline (dodder-edit.lua:
+// typed code blocks are normalized inline as text — safe for checkout/editing
+// and for any type, used by text/html/html-gdoc/pdf-beamer) and the RENDER
+// pipeline (dodder-render.lua: typed code blocks are replaced with rendered
+// images via `dodder format-object -stdin png <type>`, so the referenced type
+// must ship a png formatter — used by text-render/html-partial). The
+// output-flavored html/html-gdoc formatters deliberately stay on the edit
+// filter: builtin types ship no png formatter, so the render filter would
+// hard-fail any document embedding a builtin-typed code block, and its
+// image-file side effects don't fit stdout-pipe formatters.
 func DefaultWithPandocFormatter() TomlV2 {
 	return TomlV2{
 		FileExtension: "md",
@@ -66,10 +77,24 @@ func DefaultWithPandocFormatter() TomlV2 {
 				},
 				FileExtension: "md",
 			},
+			"text-render": {
+				ScriptConfig: script_config.ScriptConfig{
+					Description: "Render markdown for output with pandoc (typed code blocks become images)",
+					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-render`,
+				},
+				FileExtension: "md",
+			},
 			"html": {
 				ScriptConfig: script_config.ScriptConfig{
 					Description: "Render markdown to an HTML fragment with pandoc",
 					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html`,
+				},
+				FileExtension: "html",
+			},
+			"html-partial": {
+				ScriptConfig: script_config.ScriptConfig{
+					Description: "Render markdown to an HTML fragment via the render pipeline (typed code blocks become images)",
+					Script:      `pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html-partial`,
 				},
 				FileExtension: "html",
 			},
@@ -86,6 +111,28 @@ func DefaultWithPandocFormatter() TomlV2 {
 					Script:      pandocBeamerScript(),
 				},
 				FileExtension: "pdf",
+			},
+		},
+		// UTI groups bundle formatters by output medium so `format-object
+		// -uti-group <name>` (and UTI-aware consumers) can pick the right
+		// formatter for a requested UTI. Every value must name a formatter in
+		// Formatters above.
+		UTIGroups: map[string]UTIGroup{
+			"default": {
+				"public.utf8-plain-text": "text",
+				"public.html":            "html",
+			},
+			"text-render": {
+				"public.utf8-plain-text": "text-render",
+				"public.html":            "html",
+			},
+			"gdoc": {
+				"public.utf8-plain-text": "text",
+				"public.html":            "html-gdoc",
+			},
+			"pdf": {
+				"public.utf8-plain-text": "text",
+				"com.adobe.pdf":          "pdf-beamer",
 			},
 		},
 		VimSyntaxType: "markdown",

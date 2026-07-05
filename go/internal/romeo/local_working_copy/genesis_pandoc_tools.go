@@ -12,12 +12,15 @@ import (
 )
 
 type toolBlobDigests struct {
-	commonFilter   markl.Id
-	editFilter     markl.Id
-	editDefaults   markl.Id
-	htmlDefaults   markl.Id
-	gdocDefaults   markl.Id
-	beamerDefaults markl.Id
+	commonFilter        markl.Id
+	editFilter          markl.Id
+	renderFilter        markl.Id
+	editDefaults        markl.Id
+	renderDefaults      markl.Id
+	htmlDefaults        markl.Id
+	htmlPartialDefaults markl.Id
+	gdocDefaults        markl.Id
+	beamerDefaults      markl.Id
 }
 
 func (local *Repo) prepareToolTypes(
@@ -89,8 +92,11 @@ func (local *Repo) prepareToolBlobs() (digests toolBlobDigests, err error) {
 	}{
 		{&digests.commonFilter, embeddedPandocCommonFilter},
 		{&digests.editFilter, embeddedPandocEditFilter},
+		{&digests.renderFilter, embeddedPandocRenderFilter},
 		{&digests.editDefaults, embeddedPandocEditDefaults},
+		{&digests.renderDefaults, embeddedPandocRenderDefaults},
 		{&digests.htmlDefaults, embeddedPandocHtmlDefaults},
+		{&digests.htmlPartialDefaults, embeddedPandocHtmlPartialDefaults},
 		{&digests.gdocDefaults, embeddedPandocGdocDefaults},
 		{&digests.beamerDefaults, embeddedPandocBeamerDefaults},
 	} {
@@ -103,13 +109,13 @@ func (local *Repo) prepareToolBlobs() (digests toolBlobDigests, err error) {
 }
 
 // attachPandocToolRefs attaches the blob-backed pandoc tool references (the
-// two lua filters plus the edit/html/gdoc/beamer defaults) to object. Shared
-// by prepareDefaultType (!md) and prepareBuiltinActionableTypes
-// (!task/!chore/!habit); callers gate it on
+// three lua filters plus the edit/render/html/html-partial/gdoc/beamer
+// defaults) to object. Shared by prepareDefaultType (!md) and
+// prepareBuiltinActionableTypes (!task/!chore/!habit); callers gate it on
 // !bigBang.ExcludeDefaultPandocTools so the referenced tool blobs always
-// exist. The actionable types carry the beamer defaults blob even though they
-// lack a pdf-beamer formatter: a single shared ref set keeps genesis simple
-// and the extra ref is harmless.
+// exist. The actionable types carry the beamer/render defaults blobs even
+// though they lack the corresponding formatters: a single shared ref set
+// keeps genesis simple and the extra refs are harmless.
 func attachPandocToolRefs(
 	object *sku.Transacted,
 	toolBlobs toolBlobDigests,
@@ -121,8 +127,11 @@ func attachPandocToolRefs(
 	}{
 		{toolBlobs.commonFilter, "pandoc-lua_filter", "filters/dodder-common.lua"},
 		{toolBlobs.editFilter, "pandoc-lua_filter", "filters/dodder-edit.lua"},
+		{toolBlobs.renderFilter, "pandoc-lua_filter", "filters/dodder-render.lua"},
 		{toolBlobs.editDefaults, "pandoc-defaults", "defaults/dodder-edit.yaml"},
+		{toolBlobs.renderDefaults, "pandoc-defaults", "defaults/dodder-render.yaml"},
 		{toolBlobs.htmlDefaults, "pandoc-defaults", "defaults/dodder-html.yaml"},
+		{toolBlobs.htmlPartialDefaults, "pandoc-defaults", "defaults/dodder-html-partial.yaml"},
 		{toolBlobs.gdocDefaults, "pandoc-defaults", "defaults/dodder-gdoc.yaml"},
 		{toolBlobs.beamerDefaults, "pandoc-defaults", "defaults/dodder-beamer.yaml"},
 	} {

@@ -1,0 +1,15 @@
+# Renders dodder markdown for OUTPUT consumption (the render pipeline):
+# typed code blocks are replaced with rendered images by dodder-render.lua
+# (which shells back into `dodder format-object -stdin png <type>`, so the
+# referenced type must ship a png formatter), unlike dodder-edit.yaml's
+# edit pipeline, which inlines a text rendering for checkout/editing. The
+# `to:` extension chain matches dodder-edit.yaml so both pipelines emit
+# the same markdown dialect.
+from: markdown
+to: markdown+definition_lists+shortcut_reference_links+simple_tables+table_captions+line_blocks+fenced_code_attributes-raw_attribute+yaml_metadata_block+footnotes
+standalone: true
+reference-links: true
+reference-location: document
+slide-level: 2
+filters:
+  - dodder-render.lua

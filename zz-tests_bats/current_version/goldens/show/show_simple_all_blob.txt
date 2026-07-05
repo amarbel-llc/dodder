@@ -1,0 +1,58 @@
+
+  : >"$tmp/out.pdf"
+  exit 1
+  wait
+"com.adobe.pdf" = "pdf-beamer"
+"public.html" = "html"
+"public.html" = "html"
+"public.html" = "html-gdoc"
+"public.utf8-plain-text" = "text"
+"public.utf8-plain-text" = "text"
+"public.utf8-plain-text" = "text"
+"public.utf8-plain-text" = "text-render"
+[formatters.html-gdoc]
+[formatters.html-partial]
+[formatters.html]
+[formatters.pdf-beamer]
+[formatters.text-render]
+[formatters.text]
+[uti-groups.default]
+[uti-groups.gdoc]
+[uti-groups.pdf]
+[uti-groups.text-render]
+cat "$tmp/out.pdf" &
+description = "Normalize markdown with pandoc"
+description = "Render markdown for output with pandoc (typed code blocks become images)"
+description = "Render markdown to a beamer slide PDF (requires a host LaTeX engine)"
+description = "Render markdown to an HTML fragment via the render pipeline (typed code blocks become images)"
+description = "Render markdown to an HTML fragment with pandoc"
+description = "Render markdown to standalone HTML for pasting into Google Docs"
+fi
+file-extension = "html"
+file-extension = "html"
+file-extension = "html"
+file-extension = "lua"
+file-extension = "md"
+file-extension = "md"
+file-extension = "md"
+file-extension = "pdf"
+file-extension = "yaml"
+if ! pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-beamer --output="$tmp/out.pdf"; then
+last time
+mkfifo "$tmp/out.pdf" || exit 1
+not another one
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc"""
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html"""
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html-partial"""
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-render"""
+script = """
+script = """
+script = """
+script = """
+script = """
+script = """
+tmp="$(mktemp -d)" || exit 1
+trap 'rm -rf "$tmp"' EXIT
+vim-syntax-type = "markdown"
+wait"""

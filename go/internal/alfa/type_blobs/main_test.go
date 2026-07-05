@@ -19,10 +19,12 @@ func TestDefaultWithPandocFormatter(t1 *testing.T) {
 	t.AssertEqualStrings("markdown", blob.VimSyntaxType)
 
 	assertFormatterSet(&t, blob.Formatters, map[string]string{
-		"text":       "md",
-		"html":       "html",
-		"html-gdoc":  "html",
-		"pdf-beamer": "pdf",
+		"text":         "md",
+		"text-render":  "md",
+		"html":         "html",
+		"html-partial": "html",
+		"html-gdoc":    "html",
+		"pdf-beamer":   "pdf",
 	})
 
 	// Every formatter must resolve pandoc tooling from the materialized blob
@@ -37,6 +39,81 @@ func TestDefaultWithPandocFormatter(t1 *testing.T) {
 	// output through a fifo drained to stdout.
 	if !strings.Contains(blob.Formatters["pdf-beamer"].Script, "mkfifo") {
 		t.Errorf("pdf-beamer script missing fifo wrapper: %q", blob.Formatters["pdf-beamer"].Script)
+	}
+
+	// The edit/render pipeline split: text/html/html-gdoc normalize via the
+	// edit defaults chain, text-render/html-partial render via the render
+	// filter chain (typed code blocks become images).
+	for name, defaults := range map[string]string{
+		"text":         "--defaults=dodder-edit",
+		"text-render":  "--defaults=dodder-render",
+		"html":         "--defaults=dodder-html",
+		"html-partial": "--defaults=dodder-html-partial",
+		"html-gdoc":    "--defaults=dodder-gdoc",
+	} {
+		if !strings.Contains(blob.Formatters[name].Script, defaults) {
+			t.Errorf("formatter %q script missing %q: %q", name, defaults, blob.Formatters[name].Script)
+		}
+	}
+
+	assertUTIGroups(&t, blob)
+}
+
+// assertUTIGroups asserts the builtin !md UTI groups: the expected group
+// shape, and that every group value names a shipped formatter (a dangling
+// name would make `format-object -uti-group` fail at lookup time).
+func assertUTIGroups(t *ui.T, blob TomlV2) {
+	expected := map[string]UTIGroup{
+		"default": {
+			"public.utf8-plain-text": "text",
+			"public.html":            "html",
+		},
+		"text-render": {
+			"public.utf8-plain-text": "text-render",
+			"public.html":            "html",
+		},
+		"gdoc": {
+			"public.utf8-plain-text": "text",
+			"public.html":            "html-gdoc",
+		},
+		"pdf": {
+			"public.utf8-plain-text": "text",
+			"com.adobe.pdf":          "pdf-beamer",
+		},
+	}
+
+	if len(blob.UTIGroups) != len(expected) {
+		t.Errorf(
+			"expected %d uti-groups (%v), got %d (%v)",
+			len(expected), expected, len(blob.UTIGroups), blob.UTIGroups,
+		)
+	}
+
+	for groupName, wantGroup := range expected {
+		gotGroup, ok := blob.UTIGroups[groupName]
+
+		if !ok {
+			t.Errorf("missing uti-group %q", groupName)
+			continue
+		}
+
+		if !gotGroup.Equals(wantGroup) {
+			t.Errorf(
+				"uti-group %q: expected %v, got %v",
+				groupName, wantGroup, gotGroup,
+			)
+		}
+	}
+
+	for groupName, group := range blob.UTIGroups {
+		for uti, formatterName := range group.Map() {
+			if _, ok := blob.Formatters[formatterName]; !ok {
+				t.Errorf(
+					"uti-group %q maps %q to unknown formatter %q",
+					groupName, uti, formatterName,
+				)
+			}
+		}
 	}
 }
 

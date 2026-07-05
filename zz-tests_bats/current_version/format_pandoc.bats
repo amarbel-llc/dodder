@@ -32,16 +32,38 @@ function init_with_pandoc_tools_creates_type_objects { # @test
 
   run_dodder init-workspace -experimental-repo=false
 
-  # The !md type metadata should carry exactly six blob references (two
-  # lua filters + the edit/html/gdoc/beamer defaults), sorted by
-  # content-addressed blob digest. Blob digests are pinned (deterministic
-  # from embedded file content); ed25519_sig values vary per init so they
-  # are matched via --regexp.
+  # The !md type metadata should carry exactly nine blob references (three
+  # lua filters + the edit/render/html/html-partial/gdoc/beamer defaults),
+  # sorted by content-addressed blob digest. Blob digests are deterministic
+  # from embedded file content; ed25519_sig values vary per init and are
+  # masked by the golden normalizer.
   run_dodder show '!md:t'
   assert_success
-  assert_output --regexp - <<-'EOM'
-		\[!md @blake2b256-6y95wlu53ac7l3nwqyqmf404e2njyaqn2t0ledt5tuqe3wxgszqspmngzv !toml-type-v2 defaults/dodder-beamer\.yaml<@blake2b256-0krzxu5vg9qhza76ydqlwg3dzlwzlx6phkxun4zyc3cd8aas0m7sz6qn50 !pandoc-defaults@ed25519_sig-[a-z0-9]+ defaults/dodder-edit\.yaml<@blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-[a-z0-9]+ defaults/dodder-gdoc\.yaml<@blake2b256-h78yye7mzdyutm5e5sylue7fqffwqq2dcjzh5rc4gtn6gst5jmysvd7t8e !pandoc-defaults@ed25519_sig-[a-z0-9]+ filters/dodder-edit\.lua<@blake2b256-kgh3lg7gu6rpv8ua68ph30q5400afcus5r8ee23fnl0z3hgrud9sytqvzs !pandoc-lua_filter@ed25519_sig-[a-z0-9]+ filters/dodder-common\.lua<@blake2b256-rn433263q9qx43808kl2ehnqv3mhre8l7wwsk6cp9vvpt06t6uqs04umuq !pandoc-lua_filter@ed25519_sig-[a-z0-9]+ defaults/dodder-html\.yaml<@blake2b256-ufhtc0lw0lefaq9reqv5r53nemhp0ekup9mja5fvpqnf0hr4s6cqs5s2z8 !pandoc-defaults@ed25519_sig-[a-z0-9]+\]
-	EOM
+  assert_golden md_type_blob_references
+}
+
+# The builtin !md type blob carries the full formatter matrix (the edit
+# pipeline text/html/html-gdoc/pdf-beamer plus the render pipeline
+# text-render/html-partial) and the uti-groups bundling them by output
+# medium. Every uti-group value must name a formatter above it.
+# bats test_tags=pandoc
+function md_type_blob_lists_formatters_and_uti_groups { # @test
+  wd="$(mktemp -d)"
+  cd "$wd" || exit 1
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    .default
+
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder show -format blob '!md:t'
+  assert_success
+  assert_golden md_type_blob_formatters_and_uti_groups
 }
 
 # The html formatter renders markdown to an HTML fragment (no <html>
@@ -148,6 +170,77 @@ function format_blob_stdin_pandoc_normalizes_markdown { # @test
 
 		this is a paragraph that is way too long and should be wrapped by pandoc because
 		it exceeds the column width of eighty characters which pandoc enforces
+	EOM
+}
+
+# The text-render formatter renders markdown for OUTPUT via the blob-backed
+# dodder-render defaults (render pipeline): reference-style links, no
+# 80-column re-wrap. For plain markdown (no typed code blocks) the render
+# filter is a no-op, so no dodder binary round-trip happens.
+# bats test_tags=pandoc
+function format_blob_stdin_pandoc_text_render_renders_markdown { # @test
+  command -v pandoc >/dev/null || skip "pandoc not available"
+
+  wd="$(mktemp -d)"
+  cd "$wd" || exit 1
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    .default
+
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder format-blob -stdin text-render !md <<-'EOM'
+		# Hello
+
+		some *emphasis* and a [link](https://example.com)
+	EOM
+  assert_success
+
+  assert_output - <<-'EOM'
+		# Hello
+
+		some *emphasis* and a [link]
+
+		  [link]: https://example.com
+	EOM
+}
+
+# The html-partial formatter renders the same HTML fragment shape as html,
+# but via the RENDER pipeline (dodder-render.lua): for plain markdown the
+# two are identical; they diverge only on typed code blocks (render
+# replaces them with rendered images instead of inlining text).
+# bats test_tags=pandoc
+function format_blob_stdin_pandoc_html_partial_renders_fragment { # @test
+  command -v pandoc >/dev/null || skip "pandoc not available"
+
+  wd="$(mktemp -d)"
+  cd "$wd" || exit 1
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    .default
+
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder format-blob -stdin html-partial !md <<-'EOM'
+		# Hello
+
+		some *emphasis* and a [link](https://example.com)
+	EOM
+  assert_success
+
+  assert_output - <<-'EOM'
+		<h1 id="hello">Hello</h1>
+		<p>some <em>emphasis</em> and a <a href="https://example.com">link</a></p>
 	EOM
 }
 

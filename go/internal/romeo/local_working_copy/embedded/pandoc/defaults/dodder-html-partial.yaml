@@ -1,0 +1,11 @@
+# Renders dodder markdown to an HTML fragment via the RENDER pipeline:
+# typed code blocks become rendered images (dodder-render.lua) instead of
+# the inlined text produced by dodder-html.yaml's edit-pipeline filter.
+# Note the image path is emitted relative to the formatter's working
+# directory; standalone consumers that need a self-contained document
+# should use dodder-gdoc.yaml (embed-resources) instead.
+from: markdown
+to: html
+wrap: none
+filters:
+  - dodder-render.lua

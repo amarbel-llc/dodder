@@ -323,48 +323,12 @@ function show_simple_all { # @test
 
   run_dodder show -format blob :z,t
   assert_success
-  # Pandoc tools default-on (#208): the pandoc tool type blobs and the
-  # !md formatter blocks (text/html/html-gdoc/pdf-beamer) are part of the
-  # genesis blob set. The pdf-beamer script is multiline (fifo wrapper),
-  # so its individual lines appear here.
-  assert_output_unsorted - <<-'EOM'
-
-		  : >"$tmp/out.pdf"
-		cat "$tmp/out.pdf" &
-		description = "Normalize markdown with pandoc"
-		description = "Render markdown to a beamer slide PDF (requires a host LaTeX engine)"
-		description = "Render markdown to an HTML fragment with pandoc"
-		description = "Render markdown to standalone HTML for pasting into Google Docs"
-		  exit 1
-		fi
-		file-extension = "html"
-		file-extension = "html"
-		file-extension = "lua"
-		file-extension = "md"
-		file-extension = "md"
-		file-extension = "pdf"
-		file-extension = "yaml"
-		[formatters.html]
-		[formatters.html-gdoc]
-		[formatters.pdf-beamer]
-		[formatters.text]
-		if ! pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-beamer --output="$tmp/out.pdf"; then
-		last time
-		mkfifo "$tmp/out.pdf" || exit 1
-		not another one
-		pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
-		pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc"""
-		pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html"""
-		script = """
-		script = """
-		script = """
-		script = """
-		tmp="$(mktemp -d)" || exit 1
-		trap 'rm -rf "$tmp"' EXIT
-		vim-syntax-type = "markdown"
-		  wait
-		wait"""
-	EOM
+  # Pandoc tools default-on (#208): the pandoc tool type blobs, the !md
+  # formatter blocks (edit pipeline text/html/html-gdoc/pdf-beamer plus
+  # render pipeline text-render/html-partial), and the uti-groups tables
+  # are part of the genesis blob set. The pdf-beamer script is multiline
+  # (fifo wrapper), so its individual lines appear here.
+  assert_golden_unsorted show_simple_all_blob
 
   run_dodder show -format sku-metadata-sans-tai :z,t
   assert_success

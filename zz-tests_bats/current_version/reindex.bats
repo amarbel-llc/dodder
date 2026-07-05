@@ -76,44 +76,10 @@ function reindex_after_changes { # @test
     run_dodder show -format blob !md+t
     assert_success
     # The fixture's genesis !md blob is the pandoc-flavored one (#208): it
-    # carries the text/html/html-gdoc/pdf-beamer formatter blocks. The
-    # checked-in replacement follows.
-    assert_output - <<-'EOM'
-			file-extension = "md"
-			vim-syntax-type = "markdown"
-
-			[formatters.html]
-			description = "Render markdown to an HTML fragment with pandoc"
-			script = """
-			pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html"""
-			file-extension = "html"
-			[formatters.html-gdoc]
-			description = "Render markdown to standalone HTML for pasting into Google Docs"
-			script = """
-			pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc"""
-			file-extension = "html"
-			[formatters.pdf-beamer]
-			description = "Render markdown to a beamer slide PDF (requires a host LaTeX engine)"
-			script = """
-			tmp="$(mktemp -d)" || exit 1
-			trap 'rm -rf "$tmp"' EXIT
-			mkfifo "$tmp/out.pdf" || exit 1
-			cat "$tmp/out.pdf" &
-			if ! pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-beamer --output="$tmp/out.pdf"; then
-			  : >"$tmp/out.pdf"
-			  wait
-			  exit 1
-			fi
-			wait"""
-			file-extension = "pdf"
-			[formatters.text]
-			description = "Normalize markdown with pandoc"
-			script = """
-			pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
-			file-extension = "md"
-			inline-akte = false
-			vim-syntax-type = "test"
-		EOM
+    # carries the uti-groups tables plus the formatter blocks (edit pipeline
+    # text/html/html-gdoc/pdf-beamer, render pipeline
+    # text-render/html-partial). The checked-in replacement follows.
+    assert_golden reindex_after_changes_blob_history
 
     run_dodder show -format blob !md:t
     assert_success

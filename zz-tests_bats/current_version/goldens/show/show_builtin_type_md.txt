@@ -8,12 +8,23 @@
 ! toml-type-v2
 ! toml-type-v2
 ! toml-type-v2
+"com.adobe.pdf" = "pdf-beamer"
+"public.html" = "html"
+"public.html" = "html"
+"public.html" = "html-gdoc"
+"public.utf8-plain-text" = "text"
+"public.utf8-plain-text" = "text"
+"public.utf8-plain-text" = "text"
+"public.utf8-plain-text" = "text-render"
 - defaults/dodder-beamer.yaml < @blake2b256-0krzxu5vg9qhza76ydqlwg3dzlwzlx6phkxun4zyc3cd8aas0m7sz6qn50 !pandoc-defaults@ed25519_sig-<SIG>
 - defaults/dodder-edit.yaml < @blake2b256-amzdh9dljzhu9885kmh654zkyys5mxq62eadx3ej8hwf3ypwd3qq00chz7 !pandoc-defaults@ed25519_sig-<SIG>
 - defaults/dodder-gdoc.yaml < @blake2b256-h78yye7mzdyutm5e5sylue7fqffwqq2dcjzh5rc4gtn6gst5jmysvd7t8e !pandoc-defaults@ed25519_sig-<SIG>
+- defaults/dodder-html-partial.yaml < @blake2b256-6th9kvjr5dp4pva9jj9mkncvqct5v3g625g9ngzhsva67s0umq7s3x93a8 !pandoc-defaults@ed25519_sig-<SIG>
 - defaults/dodder-html.yaml < @blake2b256-ufhtc0lw0lefaq9reqv5r53nemhp0ekup9mja5fvpqnf0hr4s6cqs5s2z8 !pandoc-defaults@ed25519_sig-<SIG>
+- defaults/dodder-render.yaml < @blake2b256-evw2dk33u67rnfl8urzc8xdll52gfxlsa03z4ze70ruzs3cs73aqultdty !pandoc-defaults@ed25519_sig-<SIG>
 - filters/dodder-common.lua < @blake2b256-rn433263q9qx43808kl2ehnqv3mhre8l7wwsk6cp9vvpt06t6uqs04umuq !pandoc-lua_filter@ed25519_sig-<SIG>
 - filters/dodder-edit.lua < @blake2b256-kgh3lg7gu6rpv8ua68ph30q5400afcus5r8ee23fnl0z3hgrud9sytqvzs !pandoc-lua_filter@ed25519_sig-<SIG>
+- filters/dodder-render.lua < @blake2b256-x9zy37vd2mah6j85fkjs3yp8cup9jh3lm5k25fekme58wdhmz4essnt03x !pandoc-lua_filter@ed25519_sig-<SIG>
 ---
 ---
 ---
@@ -21,18 +32,28 @@
 ---
 ---
 [formatters.html-gdoc]
+[formatters.html-partial]
 [formatters.html]
 [formatters.pdf-beamer]
+[formatters.text-render]
 [formatters.text]
+[uti-groups.default]
+[uti-groups.gdoc]
+[uti-groups.pdf]
+[uti-groups.text-render]
 cat "$tmp/out.pdf" &
 description = "Normalize markdown with pandoc"
+description = "Render markdown for output with pandoc (typed code blocks become images)"
 description = "Render markdown to a beamer slide PDF (requires a host LaTeX engine)"
+description = "Render markdown to an HTML fragment via the render pipeline (typed code blocks become images)"
 description = "Render markdown to an HTML fragment with pandoc"
 description = "Render markdown to standalone HTML for pasting into Google Docs"
 fi
 file-extension = "html"
 file-extension = "html"
+file-extension = "html"
 file-extension = "lua"
+file-extension = "md"
 file-extension = "md"
 file-extension = "md"
 file-extension = "pdf"
@@ -42,6 +63,10 @@ mkfifo "$tmp/out.pdf" || exit 1
 pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-edit"""
 pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-gdoc"""
 pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html"""
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-html-partial"""
+pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-render"""
+script = """
+script = """
 script = """
 script = """
 script = """

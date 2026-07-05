@@ -346,7 +346,7 @@ function push_history_default_stdio_twice { # @test
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
 		\[[0-9]+\.[0-9]+ @blake2b256-.+ !inventory_list-v2]
-		\[!md @blake2b256-6y95wlu53ac7l3nwqyqmf404e2njyaqn2t0ledt5tuqe3wxgszqspmngzv !toml-type-v2 .+]
+		\[!md @blake2b256-e3ew5ma0s399rmk3akms90ah2kdmr88l4jluckmdqylnlqtzu7dq60533j !toml-type-v2 .+]
 		\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
 		\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
 		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
