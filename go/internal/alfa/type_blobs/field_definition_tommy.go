@@ -64,6 +64,12 @@ func DecodeFieldDefinition(input []byte) (*FieldDefinitionDocument, error) {
 			_vDefault.MarkConsumed()
 		}
 	}
+	if _vRequired, _ok := model.Get("required"); _ok && _vRequired.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractBool(_vRequired.Leaf); _xok {
+			d.data.Required = _x
+			_vRequired.MarkConsumed()
+		}
+	}
 	return d, nil
 }
 
@@ -95,6 +101,13 @@ func (d *FieldDefinitionDocument) Encode() ([]byte, error) {
 		}
 	} else {
 		cst.DeleteValue(d.cstDoc.Root(), "default")
+	}
+	if d.data.Required != false {
+		if err := cst.SetAny(d.cstDoc.Root(), "required", d.data.Required); err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(d.cstDoc.Root(), "required")
 	}
 	return d.cstDoc.Bytes(), nil
 }
@@ -150,6 +163,12 @@ func DecodeFieldDefinitionInto(data *FieldDefinition, sub *cst.Value) error {
 			_vDefault.MarkConsumed()
 		}
 	}
+	if _vRequired, _ok := sub.Get("required"); _ok && _vRequired.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractBool(_vRequired.Leaf); _xok {
+			data.Required = _x
+			_vRequired.MarkConsumed()
+		}
+	}
 	return nil
 }
 
@@ -177,6 +196,13 @@ func EncodeFieldDefinitionFrom(data *FieldDefinition, doc *document.Document, co
 		}
 	} else {
 		cst.DeleteValue(container, "default")
+	}
+	if data.Required != false {
+		if err := cst.SetAny(container, "required", data.Required); err != nil {
+			return fmt.Errorf("%w", err)
+		}
+	} else {
+		cst.DeleteValue(container, "required")
 	}
 	return nil
 }

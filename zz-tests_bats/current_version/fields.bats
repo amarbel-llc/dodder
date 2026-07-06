@@ -504,3 +504,184 @@ function field_full_task_organize_from_empty_blob { # @test
 		[one/uno !task "my task"]
 	EOM
 }
+
+# A !bookmark-shaped type: url is a required string field (required = true),
+# notes is optional, and the fields-reader projects both (dropping null keys
+# so an absent optional field reads as unset rather than empty). The writer
+# mirrors the real !bookmark shape (and reader-only types hit the known
+# field-duplication bug — see field_persists_with_reader_only_no_writer).
+function create_bookmark_type {
+  cat - >bookmark.type <<-'EOM'
+		file-extension = "toml"
+		vim-syntax-type = "toml"
+
+		[[fields]]
+		name = "url"
+		kind = "string"
+		required = true
+
+		[[fields]]
+		name = "notes"
+		kind = "string"
+
+		[fields-reader]
+		script = "yq -p toml -o json '{\"url\": .url, \"notes\": .notes} | with_entries(select(.value != null))'"
+
+		[fields-writer]
+		script = "yq -p toml -o toml -i \".url = \\\"$DODDER_FIELD_url\\\" | .notes = \\\"$DODDER_FIELD_notes\\\"\" \"$DODDER_BLOB_PATH\""
+	EOM
+
+  run_dodder checkin -delete bookmark.type
+  assert_success
+}
+
+# Same shape, but the fields-reader ALSO carries the interim yq error() guard
+# (the pre-Required enforcement pattern). A type can declare both: the script
+# guard fires first for missing/empty url, the Go Required check backstops it.
+function create_guarded_bookmark_type {
+  cat - >guarded.type <<-'EOM'
+		file-extension = "toml"
+		vim-syntax-type = "toml"
+
+		[[fields]]
+		name = "url"
+		kind = "string"
+		required = true
+
+		[fields-reader]
+		script = "yq -p toml -o json 'with(select(.url == null or .url == \"\"); error(\"url required\")) | {\"url\": .url}'"
+
+		[fields-writer]
+		script = "yq -p toml -o toml -i \".url = \\\"$DODDER_FIELD_url\\\"\" \"$DODDER_BLOB_PATH\""
+	EOM
+
+  run_dodder checkin -delete guarded.type
+  assert_success
+}
+
+function field_required_missing_rejects_commit { # @test
+  create_bookmark_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# missing url
+		! bookmark
+		---
+
+		notes = "no url here"
+	EOM
+  assert_failure
+  assert_output --regexp 'type !bookmark: field "url" is required but missing or empty'
+}
+
+function field_required_empty_rejects_commit { # @test
+  create_bookmark_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# empty url
+		! bookmark
+		---
+
+		url = ""
+	EOM
+  assert_failure
+  assert_output --regexp 'type !bookmark: field "url" is required but missing or empty'
+}
+
+function field_required_present_commits { # @test
+  create_bookmark_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# a url worth keeping
+		! bookmark
+		---
+
+		url = "https://example.com/page"
+		notes = "keeper"
+	EOM
+  assert_success
+
+  run_dodder show '!bookmark'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-vvhmw3f30ghxe05tgxlazn3lvpklw832k4fgznnu997uvysuc8escfh6yd !bookmark "a url worth keeping" url="https://example.com/page" notes=keeper]
+	EOM
+}
+
+function field_required_blobless_rejects_commit { # @test
+  create_bookmark_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# blobless bookmark
+		! bookmark
+		---
+	EOM
+  assert_failure
+  assert_output --regexp 'type !bookmark requires fields \(url\) but object has no blob'
+}
+
+# Regression lock: a type with field definitions and a reader but NO required
+# fields still accepts blobless commits (the pre-Required behavior).
+function field_no_required_blobless_still_commits { # @test
+  create_task_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# blobless task
+		! task
+		---
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno !task "blobless task"]
+	EOM
+}
+
+# The interim yq error() guard and the Go Required mechanism coexist on one
+# type: missing url is rejected (the script guard fires before the Go check),
+# present url passes both layers, and blobless is rejected by the Go check
+# (the reader script never runs without a blob).
+function field_required_and_reader_guard_coexist { # @test
+  create_guarded_bookmark_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# missing url
+		! guarded
+		---
+
+		unrelated = "value"
+	EOM
+  assert_failure
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# blobless
+		! guarded
+		---
+	EOM
+  assert_failure
+  assert_output --regexp 'type !guarded requires fields \(url\) but object has no blob'
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# a url worth keeping
+		! guarded
+		---
+
+		url = "https://example.com/page"
+	EOM
+  assert_success
+
+  run_dodder show '!guarded'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-rkhsn7033c8w7jyg98nxcj3fg272yx0n3u5qc6uanzqctrl2kccsd9h5p7 !guarded "a url worth keeping" url="https://example.com/page"]
+	EOM
+}

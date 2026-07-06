@@ -233,6 +233,12 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 					_vFieldsDefault.MarkConsumed()
 				}
 			}
+			if _vFieldsRequired, _ok := _eFields.Get("required"); _ok && _vFieldsRequired.Kind == cst.VLeaf {
+				if _x, _xok := cst.ExtractBool(_vFieldsRequired.Leaf); _xok {
+					d.data.Fields[i].Required = _x
+					_vFieldsRequired.MarkConsumed()
+				}
+			}
 		}
 	}
 	if _eaFields, _eaok := model.Get("fields"); _eaok && _eaFields.IsEmptyArray() {
@@ -388,6 +394,13 @@ func (d *TomlV2Document) Encode() ([]byte, error) {
 				}
 			} else {
 				cst.DeleteValue(container, "default")
+			}
+			if d.data.Fields[i].Required != false {
+				if err := cst.SetAny(container, "required", d.data.Fields[i].Required); err != nil {
+					return nil, fmt.Errorf("%w", err)
+				}
+			} else {
+				cst.DeleteValue(container, "required")
 			}
 		}
 	}
@@ -619,6 +632,12 @@ func DecodeTomlV2Into(data *TomlV2, sub *cst.Value) error {
 					_vFieldsDefault.MarkConsumed()
 				}
 			}
+			if _vFieldsRequired, _ok := _eFields.Get("required"); _ok && _vFieldsRequired.Kind == cst.VLeaf {
+				if _x, _xok := cst.ExtractBool(_vFieldsRequired.Leaf); _xok {
+					data.Fields[i].Required = _x
+					_vFieldsRequired.MarkConsumed()
+				}
+			}
 		}
 	}
 	if _eaFields, _eaok := sub.Get("fields"); _eaok && _eaFields.IsEmptyArray() {
@@ -772,6 +791,13 @@ func EncodeTomlV2From(data *TomlV2, doc *document.Document, container *cst.Node)
 				}
 			} else {
 				cst.DeleteValue(container, "default")
+			}
+			if data.Fields[i].Required != false {
+				if err := cst.SetAny(container, "required", data.Fields[i].Required); err != nil {
+					return fmt.Errorf("%w", err)
+				}
+			} else {
+				cst.DeleteValue(container, "required")
 			}
 		}
 	}
