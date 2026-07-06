@@ -5,7 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 )
 
 // Config used to initialize a repo for the first time

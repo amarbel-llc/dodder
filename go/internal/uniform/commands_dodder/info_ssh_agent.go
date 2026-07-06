@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/agent"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
@@ -29,13 +29,13 @@ func (cmd InfoSSHAgent) GetDescription() command.Description {
 }
 
 func (cmd InfoSSHAgent) Run(req command.Request) {
-	ed25519Keys, err := markl.DiscoverSSHAgentEd25519KeysVerbose()
+	ed25519Keys, err := agent.DiscoverSSHAgentEd25519KeysVerbose()
 	if err != nil {
 		errors.ContextCancelWithError(req, err)
 		return
 	}
 
-	ecdhKeys, err := markl.DiscoverSSHAgentECDHKeysVerbose()
+	ecdhKeys, err := agent.DiscoverSSHAgentECDHKeysVerbose()
 	if err != nil {
 		errors.ContextCancelWithError(req, err)
 		return

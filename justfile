@@ -472,3 +472,34 @@ release version:
   fi
   just tag "{{version}}" "$msg"
 
+# Duplicate-registration runtime proof for the madder#255 cutover. A fresh
+# `dodder init` (and any other command) would panic at init() on any duplicate
+# RegisterPurpose / RegisterPurposeIdAlias between dodder's, madder's, and
+# piggy's registration packages; `dodder gen` additionally mints madder-*
+# purposes (proving dodder inherits them from madder's now-madder-only
+# registrations). Runs entirely in a throwaway temp dir with CWD-scoped repos.
+[group('debug')]
+debug-cutover-smoke:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+  base=$(mktemp -d)
+  trap 'rm -rf "$base"' EXIT
+  export DODDER_CEILING_DIRECTORIES="$base"
+  export MADDER_CEILING_DIRECTORIES="$base"
+  printf '%s\n' alpha bravo charlie delta echo foxtrot golf hotel india juliett > "$base/yin"
+  printf '%s\n' kilo lima mike november oscar papa quebec romeo sierra tango > "$base/yang"
+
+  echo "==> fresh init (encryption none)"
+  mkdir "$base/plain"
+  (cd "$base/plain" && dodder init -yin "$base/yin" -yang "$base/yang" -encryption none .default)
+
+  echo "==> fresh init (default age encryption)"
+  mkdir "$base/age"
+  (cd "$base/age" && dodder init -yin "$base/yin" -yang "$base/yang" .default)
+
+  echo "==> gen: madder-* (inherited) and dodder-* (own) private-key purposes"
+  dodder gen madder-private_key-v0 madder-private_key-v1 dodder-repo-private_key-v1
+
+  echo "==> cutover smoke OK"

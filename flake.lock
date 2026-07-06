@@ -121,6 +121,35 @@
     "conformist_3": {
       "inputs": {
         "igloo": [
+          "piggy",
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "piggy",
+          "nixpkgs-master"
+        ],
+        "utils": [
+          "piggy",
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783088709,
+        "narHash": "sha256-7AM794S06PSDajYUXKxbql8o61ZfNDLyfN5h6aUB3+c=",
+        "owner": "amarbel-llc",
+        "repo": "conformist",
+        "rev": "14ce434d52a1a8fd28f7d6912fff9d53a598cb7b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "conformist",
+        "type": "github"
+      }
+    },
+    "conformist_4": {
+      "inputs": {
+        "igloo": [
           "purse-first",
           "igloo"
         ],
@@ -147,7 +176,7 @@
         "type": "github"
       }
     },
-    "conformist_4": {
+    "conformist_5": {
       "inputs": {
         "igloo": [
           "tap",
@@ -442,6 +471,22 @@
         "type": "github"
       }
     },
+    "jcardsim": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1589327878,
+        "narHash": "sha256-0akp8BAp6QxGuBrDFEg0ED/F98bCkO2WQSocYqWszyI=",
+        "owner": "arekinath",
+        "repo": "jcardsim",
+        "rev": "4c766cfb48c43507f9a30a1443e7214d2073a430",
+        "type": "github"
+      },
+      "original": {
+        "owner": "arekinath",
+        "repo": "jcardsim",
+        "type": "github"
+      }
+    },
     "madder": {
       "inputs": {
         "bats": [
@@ -459,6 +504,9 @@
         "nixpkgs-master": [
           "nixpkgs-master"
         ],
+        "piggy": [
+          "piggy"
+        ],
         "purse-first": [
           "purse-first"
         ],
@@ -471,17 +519,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1783266922,
-        "narHash": "sha256-FkaOWa6mf9eHsaV0CT11QqWC/PNzjqdCo+/YDyUR9l8=",
+        "lastModified": 1783305705,
+        "narHash": "sha256-qAw1thCvSyCyxT9ub21eUmcNKMC56bS9CZ5C+mIb/Ao=",
         "owner": "amarbel-llc",
         "repo": "madder",
-        "rev": "05e8c68ac1f4fae5d440b1b085073f55cf98df4c",
+        "rev": "0063d397ab4004e68b00ab0e8a4bbc5a457072f0",
         "type": "github"
       },
       "original": {
         "owner": "amarbel-llc",
         "repo": "madder",
-        "rev": "05e8c68ac1f4fae5d440b1b085073f55cf98df4c",
+        "rev": "0063d397ab4004e68b00ab0e8a4bbc5a457072f0",
         "type": "github"
       }
     },
@@ -517,9 +565,77 @@
         "type": "github"
       }
     },
+    "oracle-javacard-sdks": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778827321,
+        "narHash": "sha256-HL4EdW+aX/Ff2uqibxnOYTthVVglD6bf58CNvNEOGEA=",
+        "owner": "martinpaljak",
+        "repo": "oracle_javacard_sdks",
+        "rev": "6a75ec0d6913db236d354f154df7dbc9573d976d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "martinpaljak",
+        "repo": "oracle_javacard_sdks",
+        "type": "github"
+      }
+    },
+    "piggy": {
+      "inputs": {
+        "bats": [
+          "bats"
+        ],
+        "conformist": "conformist_3",
+        "igloo": [
+          "igloo"
+        ],
+        "jcardsim": "jcardsim",
+        "nixpkgs-master": [
+          "nixpkgs-master"
+        ],
+        "oracle-javacard-sdks": "oracle-javacard-sdks",
+        "pivapplet": "pivapplet",
+        "purse-first": [
+          "purse-first"
+        ],
+        "utils": [
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783304237,
+        "narHash": "sha256-RIsppC+cc4VtqbJWfV4oCyCh20cLbloACGtMx36gMLY=",
+        "owner": "amarbel-llc",
+        "repo": "piggy",
+        "rev": "a08ad5ae28b3773a0239563f0c02cdea5aea471b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "piggy",
+        "type": "github"
+      }
+    },
+    "pivapplet": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1661144882,
+        "narHash": "sha256-FuO9iocgB1ZjQCKW9EfPUuCIx066LIz0mhb73SmGMAw=",
+        "owner": "arekinath",
+        "repo": "PivApplet",
+        "rev": "5cb14a9e8d16e92fbad73dcad86a219a9210554f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "arekinath",
+        "repo": "PivApplet",
+        "type": "github"
+      }
+    },
     "purse-first": {
       "inputs": {
-        "conformist": "conformist_3",
+        "conformist": "conformist_4",
         "gomod2nix": "gomod2nix",
         "igloo": [
           "igloo"
@@ -547,7 +663,7 @@
     },
     "purse-first_2": {
       "inputs": {
-        "conformist": "conformist_4",
+        "conformist": "conformist_5",
         "gomod2nix": [
           "tap",
           "gomod2nix"
@@ -586,6 +702,7 @@
         "igloo": "igloo",
         "madder": "madder",
         "nixpkgs-master": "nixpkgs-master_2",
+        "piggy": "piggy",
         "purse-first": "purse-first",
         "tap": "tap_2",
         "tommy": "tommy",

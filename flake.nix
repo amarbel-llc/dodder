@@ -39,9 +39,11 @@
     };
 
     madder = {
-      # pinned past go/v0.4.0 for the dodder-object-*-v3 markl purposes
-      # (madder#255); repoint to the next go/vX tag when one lands.
-      url = "github:amarbel-llc/madder/05e8c68ac1f4fae5d440b1b085073f55cf98df4c";
+      # pinned past go/v0.4.0 for the piggy markl cutover (madder#255:
+      # markl core lives in piggy's go module, madder's registrations
+      # are madder-only, dodder registers its own dodder-* purposes);
+      # repoint to the next go/vX tag when one lands.
+      url = "github:amarbel-llc/madder/0063d397ab4004e68b00ab0e8a4bbc5a457072f0";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -49,6 +51,22 @@
       inputs.bats.follows = "bats";
       inputs.purse-first.follows = "purse-first";
       inputs.hyphence.follows = "hyphence";
+      inputs.piggy.follows = "piggy";
+    };
+
+    # The markl-id framework home (piggy#183 ownership inversion),
+    # sourced via goFlakeInputs so a piggy bump only touches flake.lock
+    # — no go.mod / gomod2nix.toml lockstep edits. Its go-pkgs producer
+    # is scoped to go/ (module github.com/amarbel-llc/piggy/go, no
+    # subPath). madder consumes it too; madder.inputs.piggy.follows
+    # above keeps both on the same rev.
+    piggy = {
+      url = "github:amarbel-llc/piggy";
+      inputs.igloo.follows = "igloo";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.bats.follows = "bats";
+      inputs.purse-first.follows = "purse-first";
     };
 
     tommy = {
@@ -78,6 +96,7 @@
       tommy,
       madder,
       hyphence,
+      piggy,
       purse-first,
       treelint,
       ...
@@ -101,6 +120,7 @@
             system
             madder
             hyphence
+            piggy
             tap
             tommy
             purse-first

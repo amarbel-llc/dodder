@@ -15,8 +15,8 @@ import (
 	// Side-effect: register format-purpose pairs (matches production
 	// binaries which pull this in via commands_dodder/main.go's blank
 	// import). Required because the testing Repo's keypair generation
-	// goes through madder's markl format registry.
-	_ "github.com/amarbel-llc/madder/go/pkgs/markl_registrations"
+	// goes through piggy's markl format registry.
+	_ "code.linenisgreat.com/dodder/go/internal/0/markl_registrations"
 )
 
 // TestHandleGetObjectMissingReturns404 pins the missing-OID semantics

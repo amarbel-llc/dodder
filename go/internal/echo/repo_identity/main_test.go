@@ -4,7 +4,13 @@ import (
 	"testing"
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+
+	// Core format registrations (ed25519_pub et al.) so Set of a bare
+	// format-data id resolves. Registers piggy-* purposes only — the
+	// dodder-* purposes deliberately stay unregistered here (see the
+	// StringWithFormat comment below).
+	_ "github.com/amarbel-llc/piggy/go/pkgs/markl_registrations"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 

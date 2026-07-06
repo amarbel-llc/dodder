@@ -5,7 +5,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/agent"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
@@ -27,14 +28,14 @@ func connectSSHSignerIfNecessary(privateKey *markl.Id) error {
 
 	sshConnectOnce.Do(func() {
 		pubKey := ed25519.PublicKey(privateKey.GetBytes())
-		signer, closer, err := markl.ConnectSSHAgentSigner(pubKey)
+		signer, closer, err := agent.ConnectSSHAgentSigner(pubKey)
 		if err != nil {
 			sshConnectErr = errors.Wrap(err)
 			return
 		}
 
 		sshConn = closer
-		markl.RegisterSSHEd25519Format(signer)
+		agent.RegisterSSHEd25519Format(signer)
 		sshConnectErr = privateKey.ReloadFormat()
 	})
 
@@ -59,14 +60,14 @@ func connectEcdsaP256SignerIfNecessary(privateKey *markl.Id) error {
 
 	ecdsaP256ConnectOnce.Do(func() {
 		compressed := privateKey.GetBytes()
-		signer, closer, err := markl.ConnectEcdsaP256AgentSigner(compressed)
+		signer, closer, err := agent.ConnectEcdsaP256AgentSigner(compressed)
 		if err != nil {
 			ecdsaP256ConnectErr = errors.Wrap(err)
 			return
 		}
 
 		ecdsaP256Conn = closer
-		markl.RegisterEcdsaP256SSHFormat(signer)
+		agent.RegisterEcdsaP256SSHFormat(signer)
 		ecdsaP256ConnectErr = privateKey.ReloadFormat()
 	})
 

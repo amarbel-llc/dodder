@@ -10,7 +10,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/agent"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
@@ -159,7 +160,7 @@ func (cmd *InitDefault) applyDefaults(cwd string) {
 // -private_key` accepts. ok is false on any discovery error or when no
 // ed25519 key is present.
 func firstSSHAgentSigningKey() (key string, ok bool) {
-	keys, err := markl.DiscoverSSHAgentEd25519KeysVerbose()
+	keys, err := agent.DiscoverSSHAgentEd25519KeysVerbose()
 	if err != nil || len(keys) == 0 {
 		return "", false
 	}

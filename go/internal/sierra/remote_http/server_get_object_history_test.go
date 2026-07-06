@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/mux"
 
 	// Side-effect: register format-purpose pairs (see server_get_object_test).
-	_ "github.com/amarbel-llc/madder/go/pkgs/markl_registrations"
+	_ "code.linenisgreat.com/dodder/go/internal/0/markl_registrations"
 )
 
 // TestHandleGetObjectHistoryRoundTrip is a wiring smoke test for the

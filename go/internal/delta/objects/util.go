@@ -7,7 +7,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
@@ -44,7 +44,7 @@ func GetMarklIdForPurpose(
 	case markl.PurposeTypeObjectMotherSig:
 		return metadata.GetMotherObjectSig()
 
-	case markl.PurposeTypeObjectSig:
+	case markl.PurposeTypeDodderObjectSig:
 		return metadata.GetObjectSig()
 
 	case markl.PurposeTypeRepoPubKey:
@@ -69,7 +69,7 @@ func GetMarklIdMutableForPurpose(
 	case markl.PurposeTypeObjectMotherSig:
 		return metadata.GetMotherObjectSigMutable()
 
-	case markl.PurposeTypeObjectSig:
+	case markl.PurposeTypeDodderObjectSig:
 		return metadata.GetObjectSigMutable()
 
 	case markl.PurposeTypeRepoPubKey:

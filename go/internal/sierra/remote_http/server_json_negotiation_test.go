@@ -16,8 +16,8 @@ import (
 
 	// Side-effect: register format-purpose pairs (matches production
 	// binaries). Required because the testing Repo's keypair
-	// generation goes through madder's markl format registry.
-	_ "github.com/amarbel-llc/madder/go/pkgs/markl_registrations"
+	// generation goes through piggy's markl format registry.
+	_ "code.linenisgreat.com/dodder/go/internal/0/markl_registrations"
 )
 
 // TestHandleGetQueryAcceptsJSON pins the content-negotiation contract

@@ -12,7 +12,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/agent"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
@@ -205,11 +206,11 @@ func getFlagValuePrivateKey(
 
 			defer errors.ContextMustFlush(envLocal, bufferedWriter)
 
-			if keys, err := markl.DiscoverSSHAgentEd25519KeysVerbose(); err == nil {
+			if keys, err := agent.DiscoverSSHAgentEd25519KeysVerbose(); err == nil {
 				writeDiscoveredKeys(bufferedWriter, keys)
 			}
 
-			if keys, err := markl.DiscoverSSHAgentECDHKeysVerbose(); err == nil {
+			if keys, err := agent.DiscoverSSHAgentECDHKeysVerbose(); err == nil {
 				writeDiscoveredKeys(bufferedWriter, keys)
 			}
 		},
@@ -218,7 +219,7 @@ func getFlagValuePrivateKey(
 
 func writeDiscoveredKeys(
 	bufferedWriter *bufio.Writer,
-	keys []markl.DiscoveredKey,
+	keys []agent.DiscoveredKey,
 ) {
 	for _, dk := range keys {
 		text, err := dk.Id.MarshalText()

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/agent"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
@@ -29,7 +29,7 @@ func (cmd InfoPivyAgent) GetDescription() command.Description {
 }
 
 func (cmd InfoPivyAgent) Run(req command.Request) {
-	keys, err := markl.DiscoverPivyAgentECDHKeysVerbose()
+	keys, err := agent.DiscoverPivyAgentECDHKeysVerbose()
 	if err != nil {
 		errors.ContextCancelWithError(req, err)
 		return

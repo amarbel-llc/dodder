@@ -6,10 +6,10 @@
 #     downstream amarbel-llc consumers can bridge dodder's Go module
 #     without organic gomod2nix.toml resolution (#217).
 #
-#   - consumer: goFlakeInputs routes the 6 cross-amarbel `require`
+#   - consumer: goFlakeInputs routes the 7 cross-amarbel `require`
 #     lines onto flake inputs, bypassing the organic gomod2nix.toml
 #     hash and eliminating the flake.lock / go.mod / gomod2nix.toml
-#     drift surface (#218). Consequence: for these 6 deps the go.mod
+#     drift surface (#218). Consequence: for these 7 deps the go.mod
 #     rev (and the gomod2nix.toml hash) is VESTIGIAL — every
 #     buildGoApplication here (release, dodder-debug, dodder-go-test,
 #     race, cover, bats lanes) inherits goFlakeInputs and so compiles
@@ -30,6 +30,7 @@
   src,
   madder,
   hyphence,
+  piggy,
   tap,
   tommy,
   purse-first,
@@ -79,6 +80,11 @@
     # hyphence scopes its go-pkgs at /go (like madder), so no subPath.
     "github.com/amarbel-llc/hyphence/go" = {
       src = hyphence.packages.${system}.go-pkgs;
+    };
+    # piggy owns the markl-id framework (piggy#183 inversion). Its
+    # go-pkgs producer is scoped to go/ (module root, no subPath).
+    "github.com/amarbel-llc/piggy/go" = {
+      src = piggy.packages.${system}.go-pkgs;
     };
     "github.com/amarbel-llc/tap/go" = {
       src = tap.packages.${system}.go-pkgs;

@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/madder/go/pkgs/markl"
+	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

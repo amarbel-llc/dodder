@@ -255,8 +255,9 @@ update-flake-input input:
   # github.com/amarbel-llc/madder/go) — read go.mod to find the exact
   # module path that contains amarbel-llc/{{input}} and pass that to
   # `go get`. Falls back to the bare path when no longer-form match is
-  # found. For goFlakeInputs-bridged inputs (madder, tap, tommy,
-  # purse-first) the nix build ignores this go.mod rev and builds from
+  # found. For goFlakeInputs-bridged inputs (madder, hyphence, piggy,
+  # tap, tommy, purse-first) the nix build ignores this go.mod rev and
+  # builds from
   # the flake input just refreshed above; the `go get` here only keeps
   # the vestigial shadow rev aligned for the bare-`go test` /
   # devshell-`go build` escape hatches (see resync-flake-go).

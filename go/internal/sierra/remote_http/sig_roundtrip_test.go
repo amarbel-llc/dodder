@@ -18,7 +18,7 @@ import (
 
 	// Side-effect: register format-purpose pairs (matches production binaries
 	// which pull this in via commands_dodder/main.go's blank import).
-	_ "github.com/amarbel-llc/madder/go/pkgs/markl_registrations"
+	_ "code.linenisgreat.com/dodder/go/internal/0/markl_registrations"
 )
 
 // These tests exercise the full sign-on-server / verify-on-client round
