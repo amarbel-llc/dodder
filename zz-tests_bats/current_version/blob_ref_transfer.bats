@@ -20,10 +20,11 @@ teardown() {
 # builtin !md refs -- so these tests reference a blob genesis does NOT
 # provide (a unique madder-written blob) and assert it lands in the clone.
 #
-# NOTE: `dodder fsck` verifies only each object's OWN blob digest, not its
-# blob references (fsck.go checks object.GetBlobDigest() only), so a clone
-# missing a referenced content blob still passes fsck clean. The madder cat
-# assertion below is therefore the load-bearing check.
+# NOTE: `dodder fsck` verifies each object's OWN blob digest AND the
+# presence of every typed blob reference (#330): a repo missing a referenced
+# content blob fails fsck with a distinct `missing blob reference` finding
+# (see fsck_reports_missing_blob_reference below). The madder cat assertions
+# in the clone tests still directly pin where the referenced bytes land.
 
 # bootstrap_source_with_blob_ref initializes a source repo in $1, writes a
 # unique content blob to its store, and commits a zettel carrying a metadata
@@ -99,4 +100,54 @@ function clone_explicit_genres_transfers_metadata_blob_reference { # @test
   run_madder cat "$ref_blob_sha"
   assert_success
   assert_output "custom tool payload not provided by genesis"
+}
+
+# fsck must flag an object whose metadata blob reference points at a content
+# blob absent from every blob store (#330). The referenced digest is real --
+# content-addressed bytes written into a SIBLING repo's CWD-scoped store --
+# but the repo under test never receives the blob, so the reference dangles.
+function fsck_reports_missing_blob_reference { # @test
+  mkdir -p elsewhere
+  pushd elsewhere || exit 1
+
+  run_dodder_init_disable_age
+
+  run_madder write -format tap <(echo "payload never present in the repo under test")
+  assert_success
+  ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
+  [[ -n $ref_blob_sha ]] || fail "could not extract blob sha from madder write output: $output"
+
+  popd || exit 1
+
+  run_dodder_init_disable_age
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# zettel carrying a dangling blob reference
+		- missing-tool < @${ref_blob_sha} !md
+		! md
+		---
+
+		body referencing an absent blob
+	EOM
+  assert_success
+
+  run_dodder fsck
+  assert_output --regexp "not ok .*one/uno"
+  assert_output --regexp "missing blob reference missing-tool<@${ref_blob_sha} on one/uno"
+}
+
+# The positive twin: when the referenced content blob IS present in the
+# repo's blob store, fsck stays clean (#330 must not flag healthy refs).
+function fsck_passes_with_present_blob_reference { # @test
+  bootstrap_source_with_blob_ref here
+
+  pushd here || exit 1
+
+  run_dodder fsck
+  assert_success
+  refute_output --partial "not ok"
+  refute_output --partial "missing blob reference"
+
+  popd || exit 1
 }

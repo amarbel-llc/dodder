@@ -91,6 +91,19 @@ func (local *Repo) pullQueryGroupFromWorkingCopy(
 		remoteBlobStore := remote.GetBlobStore()
 		localBlobStore := local.GetEnvRepo().GetDefaultBlobStore()
 
+		// #331: report these copies through the same printer delegate the
+		// importer's blob copies use, so edge-discovered blob copies (e.g.
+		// blob references) show up in clone/pull output instead of
+		// happening silently.
+		blobCopierDelegate := importerOptions.BlobCopierDelegate
+
+		if blobCopierDelegate == nil && importerOptions.PrintCopies {
+			blobCopierDelegate = sku.MakeBlobCopierDelegate(
+				local.GetEnvRepo().GetUI(),
+				false,
+			)
+		}
+
 		for _, blobDigest := range edges.Blobs {
 			copyResult := blob_stores.CopyBlobIfNecessary(
 				local.GetEnv(),
@@ -107,6 +120,14 @@ func (local *Repo) pullQueryGroupFromWorkingCopy(
 				}
 
 				return errors.Wrapf(copyErr, "copying additional blob %s", blobDigest.String())
+			}
+
+			if blobCopierDelegate != nil {
+				if err = blobCopierDelegate(
+					sku.BlobCopyResult{CopyResult: copyResult},
+				); err != nil {
+					return errors.Wrap(err)
+				}
 			}
 		}
 	}

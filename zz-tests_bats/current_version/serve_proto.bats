@@ -94,6 +94,84 @@ function bootstrap_them {
   )
 }
 
+# bootstrap_them_with_blob_ref initializes `them` with a unique content blob
+# in its store and a zettel carrying a metadata blob reference (RFC 0001
+# `alias < @digest !type` hyphence line) to it -- the #325/#329 fixture: the
+# blob is one genesis does NOT provide, so it can only reach a clone via the
+# transfer's blob closure. Exports ref_blob_sha for the caller.
+#
+# NOTE: no *_XDG_UTILITY_OVERRIDE here, unlike this file's other fixtures.
+# The madder CLI ignores MADDER_XDG_UTILITY_OVERRIDE (madder_env: madder
+# always resolves $XDG_*_HOME/madder), so `run_madder write` cannot reach a
+# store dodder registered under an override scope. Both repos instead live
+# in the plain test XDG scope; isolation still holds because each uses a
+# `.default` CWD-scoped blob store (same model as blob_ref_transfer.bats).
+# Pair with start_proto_server_plain_xdg so the server sees the same scope.
+function bootstrap_them_with_blob_ref {
+  mkdir -p them
+  pushd them || exit 1
+
+  run_dodder_init_disable_age
+
+  run_madder write -format tap <(echo "custom tool payload not provided by genesis")
+  assert_success
+  ref_blob_sha="$(echo "$output" | grep -oP 'blake2b256-\S+' | head -1)"
+  [[ -n $ref_blob_sha ]] || fail "could not extract blob sha from madder write output: $output"
+  export ref_blob_sha
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# zettel carrying custom blob reference
+		- custom-tool < @${ref_blob_sha} !md
+		! md
+		---
+
+		body referencing a non-genesis blob
+	EOM
+  assert_success
+
+  popd || exit 1
+}
+
+# start_proto_server_plain_xdg mirrors start_proto_server but inherits the
+# test's plain XDG scope instead of exporting the them_home overrides, so it
+# serves a repo initialized by bootstrap_them_with_blob_ref (see its NOTE).
+function start_proto_server_plain_xdg {
+  local dir="$1"
+  shift || true
+  local serve_args=("$@")
+
+  coproc proto_server {
+    if [[ -n $dir ]]; then
+      cd "$dir" || exit 1
+    fi
+    # shellcheck disable=SC2068
+    "$DODDER_BIN" serve-proto ${cmd_dodder_def[@]} -handshake ${serve_args[@]}
+  }
+
+  local line
+  if ! IFS= read -r -t 5 -u "${proto_server[0]}" line; then
+    fail <<-EOM
+			no handshake from dodder serve-proto within 5s.
+			server pid: ${proto_server_PID:-unknown}
+		EOM
+  fi
+
+  # 1|1|tcp|127.0.0.1:PORT|dodder-drtp-v1
+  local _core _app _net addr _proto
+  IFS='|' read -r _core _app _net addr _proto <<<"$line"
+
+  if [[ -z $addr ]]; then
+    fail <<-EOM
+			could not parse handshake line from dodder serve-proto.
+			line: $line
+		EOM
+  fi
+
+  # shellcheck disable=SC2154
+  export server_addr="$addr"
+}
+
 # pull_over_websocket exercises the drtp websocket transport end to end:
 # serve-proto in `them`, then a fetch from a separate `us` repo over
 # ws://. The server runs -public so the fetch needs no client attestation,
@@ -161,6 +239,43 @@ function clone_over_websocket { # @test
   assert_output - <<-EOM
 		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 	EOM
+}
+
+# clone_over_websocket_default_query_transfers_metadata_blob_reference is the
+# drtp twin of blob_ref_transfer.bats's default-query clone test (#329): the
+# DEFAULT clone query resolves to the inventory-list genre, so the sender's
+# blob manifest must expand each list into its contained objects and include
+# their own blobs AND their blob-reference blobs. drtp pre-streams the whole
+# closure (the receiver has no remote blob store to fetch from reactively),
+# so an incomplete manifest fails the clone outright at import.
+function clone_over_websocket_default_query_transfers_metadata_blob_reference { # @test
+  bootstrap_them_with_blob_ref
+  start_proto_server_plain_xdg them -public
+
+  mkdir -p us
+  pushd us || exit 1
+
+  # No trailing query: the clone uses the default (inventory-list) query.
+  run_dodder clone \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -remote-connection-type url-websocket \
+    .default \
+    toml-repo-uri-v0 \
+    "http://${server_addr}"
+
+  assert_success
+
+  # The transferred zettel is present with its blob reference intact.
+  run_dodder show -format text one/uno:
+  assert_success
+  assert_output --regexp "custom-tool < @${ref_blob_sha}"
+
+  # The referenced CONTENT blob itself made it into the clone's blob store.
+  run_madder cat "$ref_blob_sha"
+  assert_success
+  assert_output "custom tool payload not provided by genesis"
 }
 
 # clone_over_websocket_seeds_config_from_source exercises RFC 0005 over the

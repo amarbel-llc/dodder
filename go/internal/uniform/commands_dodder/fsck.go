@@ -170,6 +170,7 @@ func (cmd Fsck) runVerification(
 		Build()
 
 	defaultDigestType := repo.GetEnvRepo().GetObjectDigestType()
+	readBlobStore := repo.GetEnvRepo().GetReadBlobStore()
 
 	if err := errors.RunChildContextWithPrintTicker(
 		repo,
@@ -234,6 +235,29 @@ func (cmd Fsck) runVerification(
 						); err != nil {
 							objectErrors = append(objectErrors, errors.Wrapf(err, "blob verification failed"))
 						}
+					}
+
+					// #330: an object's typed blob references are part of its
+					// integrity surface -- a dangling reference (RFC 0001
+					// `alias < @digest !type` line whose content blob is
+					// absent from every blob store) previously passed fsck
+					// clean. Presence-check each referenced digest across the
+					// multi-store read view and report misses distinctly.
+					metadata := object.GetMetadata()
+
+					for refDigest := range metadata.AllBlobReferences() {
+						refCopy := refDigest
+
+						if readBlobStore.HasBlob(&refCopy) {
+							continue
+						}
+
+						objectErrors = append(objectErrors, errors.Errorf(
+							"missing blob reference %s<@%s on %s",
+							metadata.GetBlobReferenceAlias(refCopy),
+							refCopy.String(),
+							object.GetObjectId(),
+						))
 					}
 				}
 

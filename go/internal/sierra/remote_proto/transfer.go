@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 
+	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -111,7 +112,15 @@ func sendClosure(
 	var manifest []string
 
 	if !want.ExcludeBlobs {
-		manifest = gatherBlobDigests(readBlobStore, list, edges)
+		if manifest, err = gatherBlobDigests(
+			readBlobStore,
+			src,
+			list,
+			edges,
+		); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
 
 		// RFC 0005: fold the config-log head blob into the transfer's
 		// blob set so it streams via the ordinary manifest/have/blob
@@ -211,14 +220,22 @@ func appendConfigBlob(
 }
 
 // gatherBlobDigests collects, deduplicated, every blob digest in the
-// closure that the sender actually holds: each object's own blob plus every
-// blob reference discovered by expand-edges. Only locally-present blobs are
+// closure that the sender actually holds: each object's own blob, every
+// blob reference discovered by expand-edges, and -- for each inventory-list
+// object in the closure -- the contained objects' own blobs plus their blob
+// references (#329). Expand-edges never traverses into a list's contained
+// objects, so without that last expansion an inventory-list-genre query
+// (what a DEFAULT clone/pull resolves to) advertises none of the contained
+// objects' blobs and the receiver's import fails with an incomplete
+// closure. This is the sender-side twin of the importer's reference copy
+// (remote_transfer.ImportBlobIfNecessary). Only locally-present blobs are
 // advertised, so the receiver never expects a blob the sender cannot send.
 func gatherBlobDigests(
 	blobStore mad_domain_interfaces.BlobStore,
+	src repo.Repo,
 	list *sku.HeapTransacted,
 	edges sku.Edges,
-) (digests []string) {
+) (digests []string, err error) {
 	seen := make(map[string]struct{})
 
 	add := func(digest mad_domain_interfaces.MarklId) {
@@ -241,15 +258,49 @@ func gatherBlobDigests(
 		digests = append(digests, key)
 	}
 
-	for object := range list.All() {
+	addObjectBlobs := func(object *sku.Transacted) {
 		add(object.GetBlobDigest())
+
+		metadata := object.GetMetadata()
+
+		for refDigest := range metadata.AllBlobReferences() {
+			refCopy := refDigest
+			add(&refCopy)
+		}
+	}
+
+	for object := range list.All() {
+		addObjectBlobs(object)
+
+		if object.GetGenre() != genres.InventoryList {
+			continue
+		}
+
+		// The sender holds the whole store, so a list blob it cannot
+		// decode is a hard error: silently skipping would reintroduce
+		// the incomplete-closure failure this expansion exists to fix.
+		containedSeq := src.GetInventoryListCoderCloset().
+			StreamInventoryListBlobSkus(object)
+
+		for contained, iterErr := range containedSeq {
+			if iterErr != nil {
+				err = errors.Wrapf(
+					iterErr,
+					"expanding inventory list %s",
+					sku.String(object),
+				)
+				return nil, err
+			}
+
+			addObjectBlobs(contained)
+		}
 	}
 
 	for i := range edges.Blobs {
 		add(&edges.Blobs[i])
 	}
 
-	return digests
+	return digests, nil
 }
 
 // sendBlobs streams each manifested blob the receiver does not already hold
