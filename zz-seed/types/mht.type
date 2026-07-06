@@ -1,0 +1,8 @@
+---
+# mhtml web archive
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: none
+binary = true
+file-extension = "mht"

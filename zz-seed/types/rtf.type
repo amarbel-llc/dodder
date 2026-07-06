@@ -1,0 +1,8 @@
+---
+# rich text format document
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: pandoc -f rtf -t markdown
+binary = true
+file-extension = "rtf"

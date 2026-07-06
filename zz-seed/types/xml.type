@@ -1,0 +1,9 @@
+---
+# extensible markup language document
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: xmllint --format (libxml2)
+binary = false
+file-extension = "xml"
+vim-syntax-type = "xml"

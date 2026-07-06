@@ -1,0 +1,8 @@
+---
+# opentype font
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: otfinfo -i (lcdf-typetools); fc-scan (fontconfig)
+binary = true
+file-extension = "otf"

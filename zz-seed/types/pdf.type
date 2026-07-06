@@ -1,0 +1,8 @@
+---
+# portable document format
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: pdftotext (poppler-utils); exiftool (exclude File* filesystem-timestamp tags for determinism)
+binary = true
+file-extension = "pdf"

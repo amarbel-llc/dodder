@@ -1,0 +1,8 @@
+---
+# microsoft excel spreadsheet
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: xlsx2csv
+binary = true
+file-extension = "xlsx"

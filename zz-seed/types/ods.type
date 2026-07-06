@@ -1,0 +1,8 @@
+---
+# opendocument spreadsheet
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: ssconvert (gnumeric)
+binary = true
+file-extension = "ods"

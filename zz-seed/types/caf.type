@@ -1,0 +1,8 @@
+---
+# apple core audio format
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: exiftool (exclude File* filesystem-timestamp tags for determinism)
+binary = true
+file-extension = "caf"

@@ -1,0 +1,9 @@
+---
+# open policy agent rego policy
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: opa fmt (open-policy-agent)
+binary = false
+file-extension = "rego"
+vim-syntax-type = "rego"

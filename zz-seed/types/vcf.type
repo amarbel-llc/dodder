@@ -1,0 +1,8 @@
+---
+# vcard contact data
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: none
+binary = true
+file-extension = "vcf"

@@ -1,0 +1,8 @@
+---
+# webp image
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: exiftool (exclude File* filesystem-timestamp tags for determinism); dwebp -o - (libwebp; decode to png)
+binary = true
+file-extension = "webp"

@@ -1,0 +1,9 @@
+---
+# plantuml diagram source
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: plantuml -tutxt (ascii-art render; layout varies across versions)
+binary = false
+file-extension = "puml"
+vim-syntax-type = "plantuml"

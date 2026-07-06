@@ -1,0 +1,8 @@
+---
+# ascii-armored pgp data
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: gpg --list-packets (gnupg)
+binary = true
+file-extension = "asc"

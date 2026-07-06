@@ -1,0 +1,8 @@
+---
+# opendocument text
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: pandoc -f odt -t markdown
+binary = true
+file-extension = "odt"

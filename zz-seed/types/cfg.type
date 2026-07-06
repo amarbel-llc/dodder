@@ -1,0 +1,9 @@
+---
+# generic configuration file
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: none
+binary = false
+file-extension = "cfg"
+vim-syntax-type = "cfg"

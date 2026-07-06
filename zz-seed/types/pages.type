@@ -1,0 +1,8 @@
+---
+# apple pages document
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: unzip -l (structure listing)
+binary = true
+file-extension = "pages"

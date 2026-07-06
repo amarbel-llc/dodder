@@ -1,0 +1,8 @@
+---
+# apple disk image
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: 7z l (p7zip)
+binary = true
+file-extension = "dmg"

@@ -1,0 +1,9 @@
+---
+# bash shell script
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: shfmt
+binary = false
+file-extension = "bash"
+vim-syntax-type = "sh"

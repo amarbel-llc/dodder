@@ -1,0 +1,9 @@
+---
+# comma-separated values
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: mlr --icsv --opprint cat (miller); csvlook (csvkit)
+binary = false
+file-extension = "csv"
+vim-syntax-type = "csv"

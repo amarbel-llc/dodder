@@ -1,0 +1,9 @@
+---
+# scalable vector graphics image
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: xmllint --format (libxml2)
+binary = false
+file-extension = "svg"
+vim-syntax-type = "svg"

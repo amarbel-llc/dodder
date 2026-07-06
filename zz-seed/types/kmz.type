@@ -1,0 +1,8 @@
+---
+# google earth kmz (zipped kml)
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: unzip -l (structure listing)
+binary = true
+file-extension = "kmz"

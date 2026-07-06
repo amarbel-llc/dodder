@@ -1,0 +1,9 @@
+---
+# javascript source
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: prettier
+binary = false
+file-extension = "js"
+vim-syntax-type = "javascript"

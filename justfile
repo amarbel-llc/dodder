@@ -38,6 +38,13 @@ lint:
 build:
   just go/build-go
 
+# Regenerate the dodder.net seed-set type files (FDR-0010 Phase 3) into
+# zz-seed/types/ from the table in go/cmd/dodder-gen_seed_types/table.go.
+# Deterministic and idempotent (stable ordering, no timestamps; stale files
+# pruned) — review the diff and commit. Agent dev-loop: seed-set table edits.
+generate-seed-types:
+  cd go && go run ./cmd/dodder-gen_seed_types -dir ../zz-seed/types
+
 #    ____ _               _
 #   / ___| |__   ___  ___| | __
 #  | |   | '_ \ / _ \/ __| |/ /

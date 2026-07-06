@@ -1,0 +1,8 @@
+---
+# optical disc image
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: isoinfo -l (cdrkit)
+binary = true
+file-extension = "iso"

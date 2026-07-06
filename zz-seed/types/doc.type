@@ -1,0 +1,8 @@
+---
+# microsoft word legacy document
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: catdoc; antiword
+binary = true
+file-extension = "doc"

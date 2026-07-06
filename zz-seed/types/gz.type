@@ -1,0 +1,8 @@
+---
+# gzip-compressed data
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: zcat (gzip)
+binary = true
+file-extension = "gz"

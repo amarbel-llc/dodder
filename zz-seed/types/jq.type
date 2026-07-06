@@ -1,0 +1,9 @@
+---
+# jq filter script
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: none
+binary = false
+file-extension = "jq"
+vim-syntax-type = "jq"

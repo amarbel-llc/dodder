@@ -1,0 +1,9 @@
+---
+# lilypond music notation
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: none
+binary = false
+file-extension = "ly"
+vim-syntax-type = "lilypond"

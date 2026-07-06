@@ -1,0 +1,9 @@
+---
+# awk script
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: gawk -o- (pretty-print)
+binary = false
+file-extension = "awk"
+vim-syntax-type = "awk"

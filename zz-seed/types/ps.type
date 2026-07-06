@@ -1,0 +1,8 @@
+---
+# postscript document
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: ps2ascii (ghostscript)
+binary = true
+file-extension = "ps"

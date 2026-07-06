@@ -1,0 +1,9 @@
+---
+# excalidraw sketch (json)
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: jq .
+binary = false
+file-extension = "excalidraw"
+vim-syntax-type = "json"

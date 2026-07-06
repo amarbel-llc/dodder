@@ -1,0 +1,9 @@
+---
+# archive html email
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: none
+binary = false
+file-extension = "eml"
+vim-syntax-type = "mail"

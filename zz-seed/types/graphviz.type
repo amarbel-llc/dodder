@@ -1,0 +1,9 @@
+---
+# graphviz dot graph
+! toml-type-v2
+---
+
+# nixpkgs-formatter-candidates: dot -Tplain (graphviz; deterministic for a given engine version)
+binary = false
+file-extension = "dot"
+vim-syntax-type = "dot"
