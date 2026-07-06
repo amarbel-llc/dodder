@@ -432,5 +432,41 @@ func (importer importer) ImportBlobIfNecessary(
 		return err
 	}
 
+	// https://github.com/amarbel-llc/dodder/issues/325
+	// An object's typed blob references are part of its closure: copy each
+	// referenced content blob alongside the object's own blob. This is the
+	// receive-side guarantee for transfers whose list contains inventory
+	// list objects (the default clone/pull query): expand-edges never
+	// traverses into a list's contained objects, so a reference from a
+	// contained object would otherwise be silently dropped. Gated on a
+	// remote blob store being present: drtp pre-streams its whole manifest
+	// (no remote store on the receiver), and the HTTP push server cannot
+	// fetch from the pushing client. A reference blob the remote does not
+	// hold is skipped, matching the edges copy loop in local_op_pull.
+	if importer.remoteBlobStore.BlobStore != nil {
+		for blobDigest := range object.GetMetadata().AllBlobReferences() {
+			blobCopy := blobDigest
+
+			refResult := importer.blobImporter.ImportBlobToStoreIfNecessary(
+				importer.envRepo.GetDefaultBlobStore(),
+				&blobCopy,
+				object,
+			)
+
+			if refErr := refResult.GetError(); refErr != nil {
+				if errors.IsErrNotFound(refErr) {
+					continue
+				}
+
+				err = errors.Wrapf(
+					refErr,
+					"blob reference %s",
+					blobCopy.String(),
+				)
+				return err
+			}
+		}
+	}
+
 	return err
 }
