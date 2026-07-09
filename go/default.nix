@@ -249,6 +249,28 @@ let
     };
   };
 
+  # dodder-alfred-workflow stages the macOS Alfred workflow at ../zz-alfred
+  # (keyword/snippet triggers that shell out to dodder cat-alfred / new /
+  # edit / format-blob). Like dodder-vim it is a plain copy — the only
+  # build step is baking the dodder binary path into run.bash's `@dodder@`
+  # placeholder, mirroring how dodder-clown-plugin bakes `@dodder@` into
+  # clown.json. The `@workspace@` placeholder is intentionally left intact:
+  # it is per-user config, substituted later by the home-manager module
+  # (../zz-alfred/hm-module.nix) from the required `workspace` option. The
+  # path is referenced directly, so the non-flake `import ./go/default.nix`
+  # path builds it too. Consumers point Alfred (or the home-manager module)
+  # at `${dodder-alfred-workflow}/share/dodder/alfred/workflow`.
+  dodder-alfred-workflow = pkgs.runCommand "dodder-alfred-workflow" { } ''
+    workflowRoot=$out/share/dodder/alfred/workflow
+    mkdir -p "$workflowRoot"
+    cp ${../zz-alfred/workflow/info.plist} "$workflowRoot/info.plist"
+    substitute \
+      ${../zz-alfred/workflow/run.bash} \
+      "$workflowRoot/run.bash" \
+      --replace-fail '@dodder@' '${dodder}/bin/dodder'
+    chmod 0755 "$workflowRoot/run.bash"
+  '';
+
   # conformist (the renamed treelint; treefmt successor) wrapped with the
   # formatter binaries it drives on PATH, so `conformist` / `conformist
   # check` resolve goimports (gotools) / gofumpt / nixfmt / shfmt / stylua /
@@ -311,6 +333,7 @@ in
       dodder-debug-dwarf
       dodder-clown-plugin
       dodder-vim
+      dodder-alfred-workflow
       dodder-go-test
       ;
     default = dodder;

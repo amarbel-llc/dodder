@@ -1,0 +1,117 @@
+workflow_plist := justfile_directory() / "workflow" / "info.plist"
+
+default: validate
+
+#  __     __    _ _     _       _
+#  \ \   / /_ _| (_) __| | __ _| |_ ___
+#   \ \ / / _` | | |/ _` |/ _` | __/ _ \
+#    \ V / (_| | | | (_| | (_| | ||  __/
+#     \_/ \__,_|_|_|\__,_|\__,_|\__\___|
+#
+
+validate: validate-plist
+
+# Assert the workflow's info.plist is a well-formed property list that
+# round-trips through plistlib (the same reader the prune recipe and the
+# Nix packaging use). Catches a hand-edit that left the XML malformed.
+validate-plist:
+  python3 -c 'import plistlib,sys; plistlib.load(open(sys.argv[1],"rb"))' {{workflow_plist}}
+
+#    ____          _                       _
+#   / ___|___   __| | ___ _ __ ___   ___ __| |
+#  | |   / _ \ / _` |/ _ \ '_ ` _ \ / _ \/ _` |
+#  | |__| (_) | (_| |  __/ | | | | |  __/ (_| |
+#   \____\___/ \__,_|\___|_| |_| |_|\___|\__,_|
+#
+
+# One-shot prune of the zit-era orphan objects (the file-copy `z add`
+# action chain and the `snippet-address` filter) from info.plist. These
+# have no current dodder CLI equivalent; see prune_orphans.py for the
+# exact dead-uid set and the objects/connections/uidata surgery. The
+# script is idempotent-guarded: it errors if the dead uids are already
+# gone, so re-running on an already-pruned plist is a no-op failure, not
+# silent corruption. Agent dev-loop: porting the Alfred workflow.
+[group('codemod')]
+codemod-prune-plist:
+  python3 {{justfile_directory()}}/prune_orphans.py {{workflow_plist}}
+
+#   _____            _
+#  | ____|_  ___ __ | | ___  _ __ ___
+#  |  _| \ \/ / '_ \| |/ _ \| '__/ _ \
+#  | |___ >  <| |_) | | (_) | | |  __/
+#  |_____/_/\_\ .__/|_|\___/|_|  \___|
+#             |_|
+
+# Exercise the home-manager module's per-user staging step in isolation:
+# build the dodder-alfred-workflow package, then run the SAME
+# @workspace@ substitution hm-module.nix does, with a dummy workspace.
+# Verifies the substitute --replace-fail succeeds (a renamed placeholder
+# would fail the build) and prints the resulting run.bash so both the
+# baked @dodder@ store path and the substituted workspace are visible.
+# Agent dev-loop: changes to run.bash placeholders or hm-module.nix.
+[group('explore')]
+explore-stage-workflow workspace="/tmp/dodder-workspace-example":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  pkg=$(nix build --no-link --print-out-paths '..#dodder-alfred-workflow')
+  out=$(nix build --no-link --print-out-paths --impure --expr "
+    let pkgs = import <nixpkgs> {}; in
+    pkgs.runCommand \"dodder-alfred-workflow-configured\" {} ''
+      mkdir -p \$out
+      cp ${pkg}/share/dodder/alfred/workflow/info.plist \$out/info.plist
+      substitute \
+        ${pkg}/share/dodder/alfred/workflow/run.bash \
+        \$out/run.bash \
+        --replace-fail '@workspace@' '{{workspace}}'
+      chmod 0755 \$out/run.bash
+    ''
+  ")
+  echo "==> staged workflow: $out"
+  echo "==> run.bash:"
+  cat "$out/run.bash"
+
+# Evaluate hm-module.nix through lib.evalModules alongside a stub that
+# declares `programs.alfred.extraWorkflows` (mirroring eng's
+# home/alfred.nix), and print the resulting extraWorkflows.dodder store
+# path. This proves the module wires into the shared option correctly and
+# the @workspace@ staging derivation evaluates — without dragging in the
+# full home-manager/eng flake. Agent dev-loop: changes to hm-module.nix's
+# integration surface.
+[group('explore')]
+explore-eval-module workspace="/tmp/dodder-workspace-example":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # Write the expression to a file so bash never tries to expand any
+  # Nix dollar-brace interpolations. The heredoc is unquoted so just's
+  # own substitutions land; this expr contains no literal Nix
+  # dollar-brace, so nothing needs escaping.
+  expr=$(mktemp)
+  trap 'rm -f "$expr"' EXIT
+  cat > "$expr" <<NIX
+  let
+    flake = builtins.getFlake (toString {{justfile_directory()}}/..);
+    pkgs = import <nixpkgs> {};
+    lib = pkgs.lib;
+    # Minimal stand-in for eng's home/alfred.nix: just the option this
+    # module writes into.
+    alfredStub = {
+      options.programs.alfred.extraWorkflows =
+        lib.mkOption { type = lib.types.attrsOf lib.types.path; default = {}; };
+    };
+    dodderModule = flake.homeManagerModules.dodder-alfred;
+    evaluated = lib.evalModules {
+      modules = [
+        alfredStub
+        dodderModule
+        {
+          _module.args.pkgs = pkgs;
+          programs.dodder-alfred = { enable = true; workspace = "{{workspace}}"; };
+        }
+      ];
+    };
+  in
+    toString evaluated.config.programs.alfred.extraWorkflows.dodder
+  NIX
+  echo "==> extraWorkflows.dodder ="
+  nix eval --impure --raw -f "$expr"
+  echo ""

@@ -166,5 +166,13 @@
         devShells.default = result.devShells.default;
         formatter = result.formatter;
       }
-    ));
+    ))
+    // {
+      # System-independent home-manager module that installs the macOS
+      # Alfred workflow (zz-alfred). It closes over `self` to resolve the
+      # per-system `dodder-alfred-workflow` package, so consumers only
+      # need to set `programs.dodder-alfred.workspace`. See
+      # zz-alfred/hm-module.nix.
+      homeManagerModules.dodder-alfred = import ./zz-alfred/hm-module.nix self;
+    };
 }
