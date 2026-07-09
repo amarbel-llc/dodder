@@ -1,7 +1,7 @@
 ---
-status: exploring
+status: proposed
 date: 2026-07-09
-promotion-criteria: solution direction selected and a full Interface/Examples draft exists (exploring -> proposed); a working `edit`/`new`-from-anywhere path exists in the CLI with BATS coverage (proposed -> experimental)
+promotion-criteria: a working `edit -ephemeral` / `checkout -ephemeral` path exists in the CLI with BATS coverage — temp repo-backed workspace created, object checked out + edited, pushed to the resolved repo, torn down on success, and the temp repo preserved on push failure (proposed -> experimental); the dodder Alfred workflow's edit path switched to `-ephemeral` and exercised end-to-end (experimental -> testing)
 ---
 
 # Ephemeral Workspaces
@@ -33,34 +33,35 @@ FDR promotes that exploration into a focused, implementable feature scoped to th
 
 ## Interface
 
-> This section is a sketch, not a committed design — status is `exploring`.
-> The concrete flag/command surface is an open question (see Limitations).
+A `-ephemeral` boolean flag on `edit` (and `checkout`). When set, the command
+does not require — or discover — a persistent `.dodder-workspace`. Instead, for
+a resolvable target repo (cwd-ancestor `.dodder`, an explicit `-parent`/`-direct`
+path, or the home repo), it:
 
-The intended behavior: a write command (`edit`, and by extension `checkout`)
-invoked with no discoverable `.dodder-workspace`, but with a resolvable repo
-(via cwd-ancestor `.dodder`, an explicit repo target, or a configured default),
-should be able to:
+1. materializes an **ephemeral** repo-backed workspace in a temp dir, blob
+   storage pointing at the resolved repo (the FDR-0005 `TomlPointerV1` — no blob
+   copy),
+2. checks out the queried objects into it,
+3. opens them in the editor,
+4. on editor exit, commits and **pushes** the changes back to the resolved repo,
+   then
+5. tears the ephemeral workspace down — **only** on push success; on push
+   failure the temp repo is preserved and its path surfaced, so no edit is lost.
 
-1. materialize an **ephemeral** working copy (a repo-backed workspace in a temp
-   dir, blob storage pointing at the resolved repo per FDR-0005),
-2. check out the queried objects into it,
-3. open them in the editor,
-4. on editor exit, commit + **push** the changes back to the resolved repo, and
-5. tear the ephemeral working copy down.
+`-ephemeral` is opt-in: it changes nothing about the existing in-workspace
+`edit`/`checkout` path, and it does not replace today's temporary-workspace
+offer-to-create prompt for the non-`-ephemeral` case. This keeps the blast
+radius small and sidesteps the perf question (a genesis + filtered pull per
+invocation) that would gate making it the default.
 
-Candidate surfaces (undecided):
-
-- an `-ephemeral` flag on `edit`/`checkout` that opts into the above;
-- promoting it to the *default* fallback when a write command hits a temporary
-  workspace and a repo is resolvable (replacing today's interactive
-  offer-to-create); or
-- a distinct verb (e.g. `dodder edit -repo <id>`) that never touches the
-  workspace-discovery path at all.
-
-The repo the ephemeral workspace pushes to must be selectable, since the
-motivating users have *several* repos/workspaces — a single baked path is
-insufficient (this is the concrete gap behind the Alfred workflow, see
-[#340](https://github.com/amarbel-llc/dodder/issues/340)).
+**First consumer — the dodder Alfred workflow.** The workflow
+(`zz-alfred/`) currently `cd`s into a single baked workspace before invoking
+`edit`, which fails for users with several workspaces under a parent dir
+([#340](https://github.com/amarbel-llc/dodder/issues/340)). Switching its edit
+triggers to `edit -ephemeral` against a resolved repo removes the baked-workspace
+requirement: the launcher can edit any object from anywhere. The repo the
+ephemeral workspace targets still has to be chosen when several are reachable —
+that selection UX is #340; this flag is the mechanism it will build on.
 
 ## Examples
 
@@ -68,10 +69,20 @@ insufficient (this is the concrete gap behind the Alfred workflow, see
     $ dodder edit some/zettel
     error: not in a workspace          # offer-to-create prompt can't be answered
 
-    # intended (illustrative — surface undecided):
+    # with -ephemeral, from anywhere with a resolvable repo:
     $ dodder edit -ephemeral some/zettel
-    # → temp repo-backed workspace created, object checked out, editor opens,
-    #   on exit the change is pushed to the resolved repo, temp workspace removed
+    # → temp repo-backed workspace created (blob pointer to the resolved repo),
+    #   some/zettel checked out, editor opens; on exit the change is committed +
+    #   pushed to the repo and the temp workspace is removed.
+
+    # push failure preserves the work rather than discarding it:
+    $ dodder edit -ephemeral some/zettel
+    # ... edit ..., push conflicts →
+    # error: push failed; ephemeral workspace kept at /tmp/dodder-ephemeral-XXXX
+
+    # the Alfred workflow's edit trigger becomes (illustrative):
+    #   ./run.bash edit -ephemeral -parent <resolved-repo> "$@"
+    # so it no longer needs to cd into a single baked workspace.
 
 ## Limitations
 
@@ -83,11 +94,49 @@ insufficient (this is the concrete gap behind the Alfred workflow, see
   to, when several are reachable, is the open UX problem tracked in
   [#340](https://github.com/amarbel-llc/dodder/issues/340). This FDR assumes a
   resolved repo; it does not specify the selection mechanism.
-- **Not yet designed.** Status is `exploring`: the flag/command surface, the
-  single-commit push semantics, failure/rollback on a push conflict, and cleanup
-  guarantees are all open. FDR-0005's own open questions (lines under "Possible
-  middle ground" — whether ephemeral workspace-repos are simpler than the current
-  checkout store, or "checkout stores with extra steps") apply directly.
+- **Open semantics (status `proposed`, not yet built).** The surface is decided
+  (`-ephemeral` on `edit`/`checkout`), but the single-commit push semantics
+  (does the parent absorb the workspace commit or make its own — FDR-0005
+  "Commit History" open question) and the exact push-failure landing behavior
+  are still to be pinned in implementation. FDR-0005's perf open question —
+  whether an ephemeral repo is cheaper than the current checkout store or just
+  "checkout stores with extra steps" — is why this is opt-in rather than the
+  default fallback.
+
+## Implementation Notes
+
+> Grounded in the current `runExperimentalRepo` path
+> (`commands_dodder/init_workspace.go`). Recorded to show the mechanism is a
+> lifecycle wrapper over existing pieces, not new store machinery — but the
+> surface and the teardown/rollback semantics remain open (status `exploring`).
+
+The durable repo-backed-workspace init already performs every step an ephemeral
+workspace needs; the only additions are (a) a temp-dir root and (b) a
+teardown. Mapping today's `runExperimentalRepo` onto an ephemeral lifecycle:
+
+| Ephemeral step | Existing mechanism (init_workspace.go) |
+|---|---|
+| resolve target repo | `resolveParentPath` / `makeParentRemote` (home repo or `-parent` path) |
+| root the workspace in a temp dir | today it is CWD-rooted (`repo_id.CwdDefault()`, `OnTheFirstDay`); ephemeral would root at a `mktemp -d` instead |
+| share the target's blobs | `setupParentPointerBlobStore` writes a `TomlPointerV1` (no blob copy) — reused verbatim |
+| pull the objects to edit | `PullQueryGroupFromRemote` with the query = the object(s) being edited |
+| edit | existing `edit`/`checkout` `MakeCheckout` path, now against the temp workspace |
+| push back | the FDR-0005 implicit-parent `push` (`ResolveImplicitDirectPath`, stored `ParentPath` + `ParentPubkey`) |
+| tear down | **new** — `rm -rf` the temp repo after a successful push |
+
+Open mechanism questions this raises (beyond the surface choice):
+
+- **Push-failure rollback.** If the push conflicts or fails, the temp workspace
+  holds the only copy of the edit. Teardown must be gated on push success, and
+  the failure path needs a durable landing spot (keep the temp repo? surface its
+  path?) rather than silently discarding work.
+- **Single-commit lifecycle.** FDR-0005 frames ephemeral repos as
+  single-commit; whether the parent absorbs that commit or makes its own
+  (FDR-0005 "Commit History" open question) applies here unchanged.
+- **Cost.** Each invocation does a genesis (`.dodder/` + signing key) + filtered
+  pull. FDR-0005's open question — whether this is cheaper than the current
+  checkout store or "checkout stores with extra steps" — is the gating perf
+  question for making this the *default* fallback vs. an opt-in.
 
 ## More Information
 
