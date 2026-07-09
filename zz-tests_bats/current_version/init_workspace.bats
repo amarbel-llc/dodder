@@ -70,3 +70,12 @@ function init_workspace { # @test
   assert_success
   assert_output 'due'
 }
+
+# -organize only makes sense on the experimental-repo path (it filters what
+# gets pulled from a parent repo before init); the lightweight path never
+# queries or pulls at init time, so -organize has nothing to filter.
+function init_workspace_organize_rejected_with_lightweight { # @test
+  run_dodder init-workspace -experimental-repo=false -organize
+  assert_failure
+  assert_output --partial '-organize cannot be used with -experimental-repo=false'
+}

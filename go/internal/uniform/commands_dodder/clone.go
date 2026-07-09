@@ -36,6 +36,7 @@ type Clone struct {
 	command_components_dodder.Genesis
 	command_components_dodder.RemoteTransfer
 	command_components_dodder.Query
+	Organize bool
 }
 
 var (
@@ -66,6 +67,13 @@ func (cmd *Clone) SetFlagDefinitions(
 	cmd.Genesis.SetFlagDefinitions(flagDefinitions)
 	cmd.RemoteTransfer.SetFlagDefinitions(flagDefinitions)
 	cmd.Query.SetFlagDefinitions(flagDefinitions)
+
+	flagDefinitions.BoolVar(
+		&cmd.Organize,
+		"organize",
+		false,
+		"open organize to filter which objects get cloned before pulling",
+	)
 }
 
 func (cmd Clone) Run(req command.Request) {
@@ -80,6 +88,15 @@ func (cmd Clone) Run(req command.Request) {
 	if cmd.IsDirectTransfer() {
 		remote = cmd.MakeDirectRemoteFromPath(req, local)
 	} else if cmd.IsWebSocketProtocol() {
+		if cmd.Organize {
+			req.Cancel(
+				errors.BadRequestf(
+					"-organize is not supported over the websocket protocol",
+				),
+			)
+			return
+		}
+
 		// MakeRemoteAndObject builds the remote object (carrying the url)
 		// without connecting for a websocket remote, so we get the object
 		// to dial and skip the remote_http client entirely.
@@ -102,6 +119,16 @@ func (cmd Clone) Run(req command.Request) {
 		local,
 		req.PopArgs(),
 	)
+
+	if cmd.Organize {
+		queryGroup = cmd.RunOrganizeAgainstRemote(
+			req,
+			local,
+			remote,
+			queryGroup,
+			"instructions: to exclude an object from the clone, delete it entirely",
+		)
+	}
 
 	var networkConfigDescriptor remote_proto.ConfigDescriptor
 

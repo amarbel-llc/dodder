@@ -1,7 +1,6 @@
 package repo_actions
 
 import (
-	"io"
 	"os"
 	"sync"
 
@@ -12,6 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
+	papa_repo "code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
@@ -46,6 +46,35 @@ func (op Organize) RunWithQueryGroup(
 	}
 
 	if organizeResults, err = op.RunWithSkuType(qg, skus); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	return organizeResults, err
+}
+
+// RunWithRemoteQueryGroup resolves qg against remote (not the local store),
+// then runs the same organize outline/diff flow as RunWithTransacted. Used
+// for pre-pull filtering (clone, init-workspace): the objects don't exist
+// locally yet, so there is nothing local to query against.
+func (op Organize) RunWithRemoteQueryGroup(
+	remote papa_repo.Repo,
+	qg *queries.Query,
+) (organizeResults orgie.OrganizeResults, err error) {
+	var list *sku.HeapTransacted
+
+	if list, err = remote.MakeInventoryList(qg); err != nil {
+		err = errors.Wrap(err)
+		return organizeResults, err
+	}
+
+	transacted := sku.MakeTransactedMutableSet()
+
+	for object := range list.All() {
+		transacted.Add(object)
+	}
+
+	if organizeResults, err = op.RunWithTransacted(qg, transacted); err != nil {
 		err = errors.Wrap(err)
 		return organizeResults, err
 	}
@@ -161,20 +190,32 @@ func (op Organize) RunWithSkuType(
 		// 	return
 		// }
 
-		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
+		// Reopen by path rather than seeking on the original handle: an
+		// editor that saves via the common rename-over-original-path
+		// idiom (e.g. vim's default backupcopy=auto) replaces the inode
+		// at file.Name(), leaving the original *os.File pointing at the
+		// old, unlinked-but-still-open inode. Seeking and reading from
+		// that stale handle silently returns the pre-edit content.
+		var reopened *os.File
 
-		if _, err = file.Seek(0, io.SeekStart); err != nil {
+		if reopened, err = os.Open(file.Name()); err != nil {
 			err = errors.Wrap(err)
 			return organizeResults, err
 		}
 
-		if organizeResults.After, err = readOrganizeTextOp.Run(
-			file,
+		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
+
+		organizeResults.After, err = readOrganizeTextOp.Run(
+			reopened,
 			orgie.NewMetadataWithOptionCommentLookup(
 				organizeResults.Before.GetRepoId(),
 				op.GetPrototypeOptionComments(),
 			),
-		); err != nil {
+		)
+
+		errors.PanicIfError(reopened.Close())
+
+		if err != nil {
 			if op.handleReadChangesError(op.repo, err) {
 				err = nil
 				continue

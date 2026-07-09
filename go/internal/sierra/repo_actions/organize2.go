@@ -2,7 +2,6 @@ package repo_actions
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -74,20 +73,32 @@ func (op Organize2) Run(
 			return organizeResults, err
 		}
 
-		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
+		// Reopen by path rather than seeking on the original handle: an
+		// editor that saves via the common rename-over-original-path
+		// idiom (e.g. vim's default backupcopy=auto) replaces the inode
+		// at file.Name(), leaving the original *os.File pointing at the
+		// old, unlinked-but-still-open inode. Seeking and reading from
+		// that stale handle silently returns the pre-edit content.
+		var reopened *os.File
 
-		if _, err = file.Seek(0, io.SeekStart); err != nil {
+		if reopened, err = os.Open(file.Name()); err != nil {
 			err = errors.Wrap(err)
 			return organizeResults, err
 		}
 
-		if organizeResults.After, err = readOrganizeTextOp.Run(
-			file,
+		readOrganizeTextOp := MakeReadOrganizeFile(op.repo)
+
+		organizeResults.After, err = readOrganizeTextOp.Run(
+			reopened,
 			orgie.NewMetadataWithOptionCommentLookup(
 				organizeResults.Before.GetRepoId(),
 				op.GetPrototypeOptionComments(),
 			),
-		); err != nil {
+		)
+
+		errors.PanicIfError(reopened.Close())
+
+		if err != nil {
 			if op.handleReadChangesError(op.repo, err) {
 				err = nil
 				continue

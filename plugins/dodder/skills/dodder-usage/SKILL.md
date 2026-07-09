@@ -204,10 +204,13 @@ The first argument is the remote URI and the second is the local name. The
 ```bash
 dodder clone backup remote:///path/to/source     # new local repo "backup" (XDG-user)
 dodder clone .backup remote:///path/to/source     # new local repo as .dodder in CWD
+dodder clone -organize backup remote:///path/to/source !md:z  # filter what gets cloned first
 ```
 
 Clone creates a new local repository and pulls all inventory lists from the
-remote. Additional query arguments filter what to clone.
+remote. Additional query arguments filter what to clone. `-organize` opens an
+editable outline of the matched objects before pulling — delete an entry to
+exclude it (not supported over the websocket transport).
 
 ### Push and pull
 
@@ -231,6 +234,7 @@ dodder init-workspace subdir       # create workspace in a subdirectory
 dodder init-workspace -tags work   # set default tags for the workspace
 dodder init-workspace -type md     # set default type for the workspace
 dodder init-workspace -query "project:z" # set default query
+dodder init-workspace -organize -parent /path/to/parent workspace-id # filter what gets pulled first
 dodder info-workspace              # show workspace configuration
 dodder info-workspace query        # show default query
 dodder info-workspace defaults.tags # show default tags
@@ -239,7 +243,9 @@ dodder info-workspace defaults.type # show default type
 
 When a workspace exists, `checkin`, `new`, and `organize` automatically apply
 the workspace's default tags. `show` uses the workspace's default query when no
-arguments are given.
+arguments are given. `-organize` on `init-workspace` opens an editable outline
+of the objects that would be pulled from the parent repo before initializing
+(requires `-experimental-repo`, the default).
 
 ## Query Syntax
 

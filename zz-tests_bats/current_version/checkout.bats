@@ -41,6 +41,27 @@ teardown() {
   chflags_nouchg
 }
 
+# -organize's outline supports deleting an entry to exclude it from the
+# checkout. The scripted $EDITOR here saves via a rename-over-original-path
+# (mv), the same idiom vim's default backupcopy=auto uses — this exercises
+# the reopen-by-path fix (rather than seeking on the original *os.File
+# handle, which would still see the pre-edit, now-unlinked inode).
+function checkout_organize_deletion_excludes_entry { # @test
+  function editor() {
+    # shellcheck disable=SC2317
+    grep -v '^- \[one/dos' "$1" >"$1.filtered"
+    mv "$1.filtered" "$1"
+  }
+
+  export -f editor
+  # shellcheck disable=SC2016
+  export EDITOR='bash -c "editor $0"'
+
+  run_dodder checkout -organize :
+  assert_success
+  assert_output '      checked out [one/uno.zettel @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]'
+}
+
 function checkout_simple_all { # @test
   run_dodder checkout :z,t,e
   assert_success

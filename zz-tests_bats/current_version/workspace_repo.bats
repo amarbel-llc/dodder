@@ -604,6 +604,46 @@ function workspace_repo_init_experimental_repo_empty_query { # @test
   assert [ -f .dodder-workspace ]
 }
 
+# -organize opens the matched objects (resolved against the parent repo,
+# pre-pull) in an editable outline; deleting an entry excludes it from the
+# workspace. EDITOR here deletes the "second zettel" heading, leaving only
+# "first zettel" to survive into the narrowed query that is actually
+# pulled. -organize must be placed before positional args (Go's flag
+# package stops parsing flags at the first non-flag argument).
+function workspace_repo_init_experimental_repo_organize_filters_objects { # @test
+  parent="parent"
+  bootstrap_parent "$parent"
+  parent_path="$(realpath "$parent")"
+
+  mkdir -p workspace
+  pushd workspace || exit 1
+
+  function editor() {
+    # shellcheck disable=SC2317
+    grep -v '^- \[one/dos' "$1" >"$1.filtered"
+    mv "$1.filtered" "$1"
+  }
+
+  export -f editor
+  # shellcheck disable=SC2016
+  export EDITOR='bash -c "editor $0"'
+
+  run_dodder init-workspace \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -organize \
+    -parent "$parent_path" \
+    workspace-repo-id \
+    project-alpha:z
+
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output '[one/uno @blake2b256-jdy7wf2wgj0t4gksz35n5tzxml2gdgazzxs3c4f20gtdl596824skehnks !md "first zettel" project-alpha]'
+}
+
 function workspace_repo_push_unfiltered { # @test
   parent="parent"
   bootstrap_parent "$parent"

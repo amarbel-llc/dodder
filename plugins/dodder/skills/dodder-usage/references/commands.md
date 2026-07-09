@@ -68,10 +68,15 @@ arguments
 `-repo_id` / `DODDER_REPO_ID` are rejected (the new repo is named by the
 positional handle).
 
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-organize` | `false` | Open organize to filter which objects get cloned before pulling (not supported over the websocket transport) |
+
 ```bash
 dodder clone local-id remote:///path/to/source
 dodder clone local-id remote:///path !md:z
 dodder clone .local-id remote:///path
+dodder clone -organize local-id remote:///path !md:z
 ```
 
 ### deinit
@@ -139,12 +144,14 @@ default tags, type, and query for operations within that directory.
 | `-tags` | `""` | Default tags for `checkin`, `new`, `organize` |
 | `-type` | `""` | Default type for `new` and `organize` |
 | `-query` | `""` | Default query for `show` |
+| `-organize` | `false` | Open organize to filter which objects get pulled from the parent repo before initializing (requires `-experimental-repo`, the default) |
 
 ```bash
 dodder init-workspace
 dodder init-workspace project-dir
 dodder init-workspace -tags work -type md
 dodder init-workspace -query "project:z"
+dodder init-workspace -organize -parent /path/to/parent workspace-id
 ```
 
 ### init-workspace-default

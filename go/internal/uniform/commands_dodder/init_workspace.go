@@ -51,6 +51,7 @@ type InitWorkspace struct {
 	EmitInventoryListPath string
 	DefaultQueryGroup     values.String
 	Proto                 sku.Proto
+	Organize              bool
 }
 
 var _ interfaces.CommandComponentWriter = (*InitWorkspace)(nil)
@@ -100,6 +101,13 @@ func (cmd *InitWorkspace) SetFlagDefinitions(
 		"emit-inventory_list",
 		"",
 		"if set, write the inventory list selected by -query to this path (inventory_list-v2 format) before pulling; useful for offline reproduction with `der fsck -inventory_list-path`",
+	)
+
+	flagSet.BoolVar(
+		&cmd.Organize,
+		"organize",
+		false,
+		"open organize to filter which objects get pulled from the parent repo before initializing (requires -experimental-repo)",
 	)
 
 	cmd.Genesis.SetFlagDefinitions(flagSet)
@@ -169,6 +177,15 @@ func (cmd InitWorkspace) Run(req command.Request) {
 		req.Cancel(
 			errors.BadRequestf(
 				"-parent cannot be used with -experimental-repo=false",
+			),
+		)
+		return
+	}
+
+	if !cmd.ExperimentalRepo && cmd.Organize {
+		req.Cancel(
+			errors.BadRequestf(
+				"-organize cannot be used with -experimental-repo=false",
 			),
 		)
 		return
@@ -276,6 +293,16 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 		remote,
 		queryArgs,
 	)
+
+	if cmd.Organize {
+		queryGroup = cmd.RunOrganizeAgainstRemote(
+			req,
+			local,
+			remote,
+			queryGroup,
+			"instructions: to exclude an object from the workspace, delete it entirely",
+		)
+	}
 
 	if cmd.EmitInventoryListPath != "" {
 		cmd.emitInventoryList(req, local, remote, queryGroup)

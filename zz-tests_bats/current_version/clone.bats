@@ -154,6 +154,54 @@ function clone_direct_seeds_config_from_source { # @test
   assert_line '# clone-seed-marker'
 }
 
+# -organize opens the matched objects (resolved against the source repo,
+# pre-pull) in an editable outline; deleting an entry excludes it from the
+# clone. EDITOR here deletes the "one/dos" heading, leaving only "one/uno"
+# to survive into the narrowed query that is actually pulled.
+function clone_direct_organize_filters_objects { # @test
+  them="them"
+  bootstrap "$them"
+
+  function editor() {
+    # shellcheck disable=SC2317
+    grep -v '^- \[one/dos ' "$1" >"$1.filtered"
+    mv "$1.filtered" "$1"
+  }
+
+  export -f editor
+  # shellcheck disable=SC2016
+  export EDITOR='bash -c "editor $0"'
+
+  run_clone_default_with \
+    -direct "$(realpath ./them)" \
+    -organize \
+    .default \
+    +zettel,typ,etikett
+
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output '[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]'
+}
+
+# -organize resolves the pre-pull outline in-process against the remote;
+# the websocket transport has no such intermediate step (client.Fetch is a
+# single opaque streamed RPC), so -organize is rejected before any dial is
+# attempted.
+function clone_websocket_organize_rejected { # @test
+  run_clone_default_with \
+    -remote-connection-type url-websocket \
+    -organize \
+    .default \
+    toml-repo-uri-v0 \
+    "http://127.0.0.1:1" \
+    +zettel,typ,etikett
+
+  assert_failure
+  assert_output --partial '-organize is not supported over the websocket protocol'
+}
+
 function clone_direct_no_repo_at_path { # @test
   mkdir -p empty_dir
 
