@@ -101,27 +101,23 @@ func (cmd ParentBackedWorkspace) ResolveParentPath(
 	return absPath, true
 }
 
-// ParentRepoMetadataDir returns the parent repo's dodder-metadata directory.
-// FDR-0019: dodder metadata nests under repos/<repoName>/. repoName is the
-// default repo for a path-addressed or implicit (home) parent, or the
-// XDG-user -repo_id name (e.g. "work"). For a home / repo-id parent,
-// absParentPath is the dodder data dir (<dataHome>/dodder); for a -parent
-// path it is the repo root containing .dodder/local/share.
-func ParentRepoMetadataDir(
+// parentDodderMetadataDir returns the parent repo's dodder-metadata directory
+// (<dataRoot>/repos/<repoName>) by building the parent's dodder env_dir via the
+// FDR-0019 resolver and reading its data dir — the resolver applies the
+// repos/<name> nesting, so no hardcoded layout math is needed here. Replaces
+// the former ParentRepoMetadataDir + parentRepoName pair.
+func (cmd ParentBackedWorkspace) parentDodderMetadataDir(
+	req command.Request,
 	absParentPath string,
 	isHomeRepo bool,
-	repoName string,
 ) string {
-	dataRoot := absParentPath
-	if !isHomeRepo {
-		dataRoot = filepath.Join(
-			absParentPath,
-			"."+dodder_env.XDGUtilityName,
-			"local", "share",
-		)
-	}
+	parentDodderEnv := MakeOperateEnvDir(
+		req,
+		cmd.parentConfig(req, absParentPath, isHomeRepo),
+		dodder_env.XDGUtilityName,
+	)
 
-	return filepath.Join(dataRoot, "repos", repoName)
+	return parentDodderEnv.GetXDG().Data.ActualValue
 }
 
 // ValidateParentRepo cancels the request when no dodder repo exists at the
@@ -131,8 +127,26 @@ func (cmd ParentBackedWorkspace) ValidateParentRepo(
 	absPath string,
 	isHomeRepo bool,
 ) {
+	// Guard the resolver call for a -parent path: parentDodderMetadataDir builds
+	// the env via MakeOperateEnvDir, whose *AndInitialize constructor mkdirs
+	// under the root — for a nonexistent -parent path that surfaces a raw
+	// "mkdir ...: read-only file system" instead of the clean error below (and
+	// would create dirs under a bad path). Stat the path first so a missing
+	// parent errors cleanly without triggering the mkdir. Interim until madder
+	// grows a no-init XDG-root-override constructor (madder#260); then the whole
+	// helper family moves to it and this guard drops.
+	if !isHomeRepo && !files.Exists(absPath) {
+		req.Cancel(
+			errors.BadRequestf(
+				"no dodder repo found at -parent path %s",
+				absPath,
+			),
+		)
+		return
+	}
+
 	inventoryListLog := filepath.Join(
-		ParentRepoMetadataDir(absPath, isHomeRepo, cmd.parentRepoName()),
+		cmd.parentDodderMetadataDir(req, absPath, isHomeRepo),
 		"inventory_lists_log",
 	)
 
@@ -215,6 +229,7 @@ func (cmd ParentBackedWorkspace) MakeParentRemote(
 // workspace repos to create new zettels using the parent's ID space without
 // requiring the user to maintain separate word lists.
 func (cmd *ParentBackedWorkspace) LinkParentZettelIdProviders(
+	req command.Request,
 	absParentPath string,
 	isHomeRepo bool,
 ) {
@@ -223,7 +238,7 @@ func (cmd *ParentBackedWorkspace) LinkParentZettelIdProviders(
 	}
 
 	parentObjectIdDir := filepath.Join(
-		ParentRepoMetadataDir(absParentPath, isHomeRepo, cmd.parentRepoName()),
+		cmd.parentDodderMetadataDir(req, absParentPath, isHomeRepo),
 		"object_ids",
 	)
 
@@ -424,7 +439,7 @@ func (cmd ParentBackedWorkspace) RunEphemeral(
 
 	absParentPath, parentIsHomeRepo := cmd.ResolveParentPath(req)
 	cmd.ValidateParentRepo(req, absParentPath, parentIsHomeRepo)
-	cmd.LinkParentZettelIdProviders(absParentPath, parentIsHomeRepo)
+	cmd.LinkParentZettelIdProviders(req, absParentPath, parentIsHomeRepo)
 
 	originalCwd, err := os.Getwd()
 	if err != nil {

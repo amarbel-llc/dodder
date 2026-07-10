@@ -250,7 +250,7 @@ func (cmd InitWorkspace) runExperimentalRepo(req command.Request) {
 	cmd.ValidateParentRepo(req, absParentPath, parentIsHomeRepo)
 
 	cmd.Genesis.BigBang.ExcludeDefaultType = true
-	cmd.LinkParentZettelIdProviders(absParentPath, parentIsHomeRepo)
+	cmd.LinkParentZettelIdProviders(req, absParentPath, parentIsHomeRepo)
 
 	workspaceRepoIdString := req.PopArg("workspace repo id")
 	cmd.SetupParentPointerBlobStore(
