@@ -205,6 +205,26 @@ func MakeWithXDGRootOverrideHomeAndInitialize(
 	)
 }
 
+// MakeWithXDGRootOverrideHomeNoInit is the no-init sibling of
+// MakeWithXDGRootOverrideHomeAndInitialize: it computes the XDG paths for
+// xdgRootOverride without creating them (no mkdir side effect), for callers
+// that need a possibly-nonexistent root's paths for an existence check
+// (madder#260). Same dodder argument order as the -AndInitialize wrapper.
+func MakeWithXDGRootOverrideHomeNoInit(
+	context errors.Context,
+	xdgRootOverride string,
+	utilityName string,
+	debugOptions debug.Options,
+	repoName string,
+) mad_env_dir.Env {
+	return mad_env_dir.MakeWithXDGRootOverrideHomeNoInit(
+		context,
+		configFor(utilityName, repoName, debugOptions),
+		utilityName,
+		xdgRootOverride,
+	)
+}
+
 // MakeWithHomeAndInitialize keeps dodder's argument order
 // (utilityName, home, debug) which differs from madder's
 // (Config, scope, home).

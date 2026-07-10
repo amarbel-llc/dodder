@@ -42,6 +42,33 @@ func MakeOperateEnvDir(
 	config repo_config_cli.Config,
 	utilityName string,
 ) mad_env_dir.Env {
+	return makeOperateEnvDir(req, config, utilityName, true)
+}
+
+// MakeOperateEnvDirNoInit computes a repo's on-disk paths for a root that may
+// not exist yet, without the mkdir side effect, for existence checks (e.g.
+// ParentBackedWorkspace.ValidateParentRepo probing a -parent path). Only the
+// BasePath branch has genuinely side-effect-free behavior: its base dir is the
+// explicit override, computed before any mkdir (madder#260). Every other
+// branch still initializes — the default/XDG-user/system/cwd-multi-dot scopes
+// address roots that already exist by the time an existence check reaches them
+// (the home repo, an XDG-user repo), so the mkdir is a harmless no-op, and the
+// only truly no-init constructor for the default branch (MakeDefaultNoInit)
+// leaves the XDG base unpopulated — see the default-branch note below.
+func MakeOperateEnvDirNoInit(
+	req command.Request,
+	config repo_config_cli.Config,
+	utilityName string,
+) mad_env_dir.Env {
+	return makeOperateEnvDir(req, config, utilityName, false)
+}
+
+func makeOperateEnvDir(
+	req command.Request,
+	config repo_config_cli.Config,
+	utilityName string,
+	initialize bool,
+) mad_env_dir.Env {
 	repoId := config.RepoId
 
 	switch {
@@ -57,6 +84,16 @@ func MakeOperateEnvDir(
 		repoName := repo_id.EffectiveName(repoId)
 		if utilityName == XDGUtilityNameMadder {
 			repoName = ""
+		}
+
+		if !initialize {
+			return env_dir.MakeWithXDGRootOverrideHomeNoInit(
+				req,
+				config.BasePath,
+				utilityName,
+				config.Debug,
+				repoName,
+			)
 		}
 
 		return env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
@@ -103,6 +140,15 @@ func MakeOperateEnvDir(
 		)
 
 	default:
+		// NOTE: the no-init form deliberately does NOT use MakeDefaultNoInit
+		// here. MakeDefaultNoInit skips the XDG base initialization (not just the
+		// mkdir), leaving GetXDG().Data.ActualValue as a bare "repos/<name>" with
+		// no base dir — unusable for path computation. Only the BasePath branch
+		// above has a sound no-init form (its base comes from the explicit
+		// override, computed pre-mkdir). The default branch addresses the home
+		// repo, which already exists, so the initializing form's mkdir is a
+		// harmless no-op even on the validation path. See parent_backed_workspace
+		// ValidateParentRepo (only -parent paths need the true no-init behavior).
 		return env_dir.MakeDefault(
 			req,
 			utilityName,

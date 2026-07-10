@@ -20,6 +20,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
+	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -106,16 +107,26 @@ func (cmd ParentBackedWorkspace) ResolveParentPath(
 // FDR-0019 resolver and reading its data dir — the resolver applies the
 // repos/<name> nesting, so no hardcoded layout math is needed here. Replaces
 // the former ParentRepoMetadataDir + parentRepoName pair.
+//
+// noInit selects the side-effect-free resolver (MakeOperateEnvDirNoInit) for
+// callers that must compute the path for a possibly-nonexistent root without
+// mkdir'ing it — namely ValidateParentRepo, which runs before the parent is
+// known to exist. Post-validation callers pass false (the repo exists, so the
+// initializing resolver's mkdir is a no-op).
 func (cmd ParentBackedWorkspace) parentDodderMetadataDir(
 	req command.Request,
 	absParentPath string,
 	isHomeRepo bool,
+	noInit bool,
 ) string {
-	parentDodderEnv := MakeOperateEnvDir(
-		req,
-		cmd.parentConfig(req, absParentPath, isHomeRepo),
-		dodder_env.XDGUtilityName,
-	)
+	config := cmd.parentConfig(req, absParentPath, isHomeRepo)
+
+	var parentDodderEnv mad_env_dir.Env
+	if noInit {
+		parentDodderEnv = MakeOperateEnvDirNoInit(req, config, dodder_env.XDGUtilityName)
+	} else {
+		parentDodderEnv = MakeOperateEnvDir(req, config, dodder_env.XDGUtilityName)
+	}
 
 	return parentDodderEnv.GetXDG().Data.ActualValue
 }
@@ -127,26 +138,14 @@ func (cmd ParentBackedWorkspace) ValidateParentRepo(
 	absPath string,
 	isHomeRepo bool,
 ) {
-	// Guard the resolver call for a -parent path: parentDodderMetadataDir builds
-	// the env via MakeOperateEnvDir, whose *AndInitialize constructor mkdirs
-	// under the root — for a nonexistent -parent path that surfaces a raw
-	// "mkdir ...: read-only file system" instead of the clean error below (and
-	// would create dirs under a bad path). Stat the path first so a missing
-	// parent errors cleanly without triggering the mkdir. Interim until madder
-	// grows a no-init XDG-root-override constructor (madder#260); then the whole
-	// helper family moves to it and this guard drops.
-	if !isHomeRepo && !files.Exists(absPath) {
-		req.Cancel(
-			errors.BadRequestf(
-				"no dodder repo found at -parent path %s",
-				absPath,
-			),
-		)
-		return
-	}
-
+	// noInit: this runs before the parent is known to exist, so use the
+	// side-effect-free resolver — the initializing form would mkdir under a
+	// nonexistent -parent path (surfacing a raw "mkdir ...: read-only file
+	// system" instead of the clean error below, and creating dirs under a bad
+	// path). madder#260 added the no-init XDG-root-override constructor this
+	// relies on.
 	inventoryListLog := filepath.Join(
-		cmd.parentDodderMetadataDir(req, absPath, isHomeRepo),
+		cmd.parentDodderMetadataDir(req, absPath, isHomeRepo, true),
 		"inventory_lists_log",
 	)
 
@@ -238,7 +237,7 @@ func (cmd *ParentBackedWorkspace) LinkParentZettelIdProviders(
 	}
 
 	parentObjectIdDir := filepath.Join(
-		cmd.parentDodderMetadataDir(req, absParentPath, isHomeRepo),
+		cmd.parentDodderMetadataDir(req, absParentPath, isHomeRepo, false),
 		"object_ids",
 	)
 
