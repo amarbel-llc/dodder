@@ -1,7 +1,7 @@
 ---
-status: proposed
+status: experimental
 date: 2026-07-09
-promotion-criteria: a working `edit -ephemeral` / `checkout -ephemeral` path exists in the CLI with BATS coverage — temp repo-backed workspace created, object checked out + edited, pushed to the resolved repo, torn down on success, and the temp repo preserved on push failure (proposed -> experimental); the dodder Alfred workflow's edit path switched to `-ephemeral` and exercised end-to-end (experimental -> testing)
+promotion-criteria: `checkout -ephemeral` added alongside `edit -ephemeral`; the dodder Alfred workflow's edit path switched to `-ephemeral` and exercised end-to-end (experimental -> testing)
 ---
 
 # Ephemeral Workspaces
@@ -33,12 +33,12 @@ FDR promotes that exploration into a focused, implementable feature scoped to th
 
 ## Interface
 
-A `-ephemeral` boolean flag on `edit` (and `checkout`). When set, the command
-does not require — or discover — a persistent `.dodder-workspace`. Instead, for
-a resolvable target repo (cwd-ancestor `.dodder`, an explicit `-parent`/`-direct`
-path, or the home repo), it:
+A `-ephemeral` boolean flag on `edit` (implemented) and, planned, `checkout`.
+When set, the command does not require — or discover — a persistent
+`.dodder-workspace`. Instead, for a resolvable target repo (an explicit
+`-parent` path, or the home repo), it:
 
-1. materializes an **ephemeral** repo-backed workspace in a temp dir, blob
+1. materializes an **ephemeral** repo-backed workspace in a temp dir, with blob
    storage pointing at the resolved repo (the FDR-0005 `TomlPointerV1` — no blob
    copy),
 2. checks out the queried objects into it,
@@ -94,49 +94,70 @@ that selection UX is #340; this flag is the mechanism it will build on.
   to, when several are reachable, is the open UX problem tracked in
   [#340](https://github.com/amarbel-llc/dodder/issues/340). This FDR assumes a
   resolved repo; it does not specify the selection mechanism.
-- **Open semantics (status `proposed`, not yet built).** The surface is decided
-  (`-ephemeral` on `edit`/`checkout`), but the single-commit push semantics
-  (does the parent absorb the workspace commit or make its own — FDR-0005
-  "Commit History" open question) and the exact push-failure landing behavior
-  are still to be pinned in implementation. FDR-0005's perf open question —
-  whether an ephemeral repo is cheaper than the current checkout store or just
-  "checkout stores with extra steps" — is why this is opt-in rather than the
-  default fallback.
+- **`edit` only (so far).** `-ephemeral` is implemented on `edit`; `checkout
+  -ephemeral` is named in the interface but not yet wired.
+- **Single-commit semantics** (parent absorb vs. own commit — FDR-0005 "Commit
+  History" open question) remain to be pinned. Opt-in, not default, pending the
+  cost question below.
+- **Cost.** Each invocation does a genesis (`.dodder/` + signing key) + filtered
+  pull; blobs are NOT copied (the pointer store shares the parent's). Whether the
+  genesis+pull overhead is acceptable enough to ever make `-ephemeral` the
+  *default* fallback (rather than opt-in) is the open perf question.
 
 ## Implementation Notes
 
-> Grounded in the current `runExperimentalRepo` path
-> (`commands_dodder/init_workspace.go`). Recorded to show the mechanism is a
-> lifecycle wrapper over existing pieces, not new store machinery — but the
-> surface and the teardown/rollback semantics remain open (status `exploring`).
+> Reflects the shipped `edit -ephemeral` implementation. The
+> parent-backed-workspace create+pull sequence was extracted out of
+> `runExperimentalRepo` into `command_components_dodder.ParentBackedWorkspace`
+> (a behavior-preserving refactor — `init-workspace -experimental-repo` calls
+> the same helper), and `edit` gained `-ephemeral` / `-parent` flags driving a
+> `runEphemeral` path.
 
-The durable repo-backed-workspace init already performs every step an ephemeral
-workspace needs; the only additions are (a) a temp-dir root and (b) a
-teardown. Mapping today's `runExperimentalRepo` onto an ephemeral lifecycle:
+The durable repo-backed-workspace init already performed every step an ephemeral
+workspace needs; the additions were (a) a temp-dir root and (b) a
+teardown. As-built lifecycle:
 
-| Ephemeral step | Existing mechanism (init_workspace.go) |
+| Ephemeral step | Mechanism |
 |---|---|
-| resolve target repo | `resolveParentPath` / `makeParentRemote` (home repo or `-parent` path) |
-| root the workspace in a temp dir | today it is CWD-rooted (`repo_id.CwdDefault()`, `OnTheFirstDay`); ephemeral would root at a `mktemp -d` instead |
-| share the target's blobs | `setupParentPointerBlobStore` writes a `TomlPointerV1` (no blob copy) — reused verbatim |
-| pull the objects to edit | `PullQueryGroupFromRemote` with the query = the object(s) being edited |
-| edit | existing `edit`/`checkout` `MakeCheckout` path, now against the temp workspace |
-| push back | the FDR-0005 implicit-parent `push` (`ResolveImplicitDirectPath`, stored `ParentPath` + `ParentPubkey`) |
-| tear down | **new** — `rm -rf` the temp repo after a successful push |
+| resolve target repo | `ParentBackedWorkspace.ResolveParentPath` / `MakeParentRemote` (home repo or `-parent` path) |
+| root the workspace in a temp dir | `os.MkdirTemp` + `os.Chdir`; the shared `*repo_config_cli.Config`'s `RepoId` is set to `repo_id.CwdDefault()` (CWD-scoped) so genesis roots `.dodder`/`.madder` in the temp dir |
+| share the target's blobs | `SetupParentPointerBlobStore` writes a `TomlPointerV1` at the parent's default store — **no blob copy** (same mechanism as init-workspace) |
+| pull the objects to edit | `CreateRepoAndPullFromParent` → `PullQueryGroupFromRemote` with the query = the object(s) being edited |
+| edit | a **fresh** `MakeLocalWorkingCopy` opened after `CreateWorkspace` (so the workspace resolves as writable, not the genesis env's read-only temporary), driving the existing `MakeCheckout` Edit path |
+| push back | `remote.PullQueryGroupFromRemote(edited, <all-workspace query>, …)` — push is "remote pulls from local" (mirrors `push.go`) |
+| tear down | `os.RemoveAll(tempDir)` after a successful push; on any failure the temp dir is preserved and its path surfaced in the error |
 
-Open mechanism questions this raises (beyond the surface choice):
+Two subtleties were load-bearing (each cost a debugging cycle):
 
-- **Push-failure rollback.** If the push conflicts or fails, the temp workspace
-  holds the only copy of the edit. Teardown must be gated on push success, and
-  the failure path needs a durable landing spot (keep the temp repo? surface its
-  path?) rather than silently discarding work.
-- **Single-commit lifecycle.** FDR-0005 frames ephemeral repos as
-  single-commit; whether the parent absorbs that commit or makes its own
-  (FDR-0005 "Commit History" open question) applies here unchanged.
+- **Mutate the SHARED config, not a `FromAny` copy.** `runEphemeral` sets
+  `config.RepoId` on the `*repo_config_cli.Config` obtained by a type-assertion
+  on `req.Utility.GetConfigAny()`, NOT on a `repo_config_cli.FromAny(...)` copy.
+  `Genesis.OnTheFirstDay` reads config via its own `FromAny`; a copy-mutation
+  never reaches it, leaving genesis with the original auto/`LocationTypeUnknown`
+  id, which resolves to the XDG-home fallback and roots `.dodder`/`.madder` +
+  the pointer store OUTSIDE the temp dir (so a later fresh open finds no default
+  store → nil deref at `env_repo.makeReadBlobStore`). This mirrors
+  `runExperimentalRepo`.
+- **Re-pin the ceilings to the temp dir.** The temp dir sits under `$TMPDIR`,
+  typically outside the caller's ceiling; the fresh `MakeLocalWorkingCopy`'s
+  walk-up for `.dodder-workspace` honors the ceiling, so both ceilings are
+  re-`os.Setenv`'d to the temp dir before the fresh open.
+
+An earlier attempt re-exec'd a child `dodder` process for the edit/push,
+believing the pointer store could only be discovered from disk by a *separate*
+process. That was a misdiagnosis (see the closed
+[#341](https://github.com/amarbel-llc/dodder/issues/341)): the real fault was the
+copy-vs-shared-config bug above, which mis-rooted everything. With the config
+fix, the whole flow runs **in-process** — no re-exec.
+
+Still open:
+
+- **Single-commit lifecycle.** Whether the parent absorbs the workspace commit
+  or makes its own (FDR-0005 "Commit History" open question) applies unchanged.
 - **Cost.** Each invocation does a genesis (`.dodder/` + signing key) + filtered
-  pull. FDR-0005's open question — whether this is cheaper than the current
-  checkout store or "checkout stores with extra steps" — is the gating perf
-  question for making this the *default* fallback vs. an opt-in.
+  pull (no blob copy). Whether that overhead is low enough to ever make
+  `-ephemeral` the *default* fallback rather than opt-in is the open perf
+  question.
 
 ## More Information
 
