@@ -367,13 +367,15 @@ build-go-binary tags output:
 explore-debug-bin *args:
   build/debug/dodder {{args}}
 
-# Native build retained for ad-hoc dev use (PATH-add build/debug/ and
-# run `dodder` directly). No justfile recipe consumes it after the
-# 2026 nix migration; bats/explore/check recipes all resolve binaries
-# via `nix build --no-link --print-out-paths .#<attr>`.
-build-go: \
-    build-go-generate \
-    (build-go-binary "debug" "build/debug") \
+# Codegen for the gate lane. Does NOT build a native binary: the root `build`
+# recipe (`just go/build-go`) is the pre-merge gate's build step, and a naked
+# `go build` there reads go.mod, whose rev for the 7 goFlakeInputs-bridged deps
+# is vestigial (see gomod.nix) — the authoritative build is build-nix, which
+# compiles them from the flake input. Wiring the naked build into the gate made
+# it break whenever go.mod lagged flake.lock (e.g. a madder bump whose go-side
+# resync hadn't run). For an ad-hoc native binary use
+# `just build-go-binary debug build/debug`. See dodder#349.
+build-go: build-go-generate
 
 build-nix-gomod:
   gomod2nix
