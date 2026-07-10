@@ -21,6 +21,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
@@ -245,6 +246,43 @@ func (cmd *ParentBackedWorkspace) LinkParentZettelIdProviders(
 	}
 }
 
+// parentConfig builds a repo_config_cli.Config that addresses the resolved
+// parent repo through MakeOperateEnvDir (the FDR-0019 resolver): a -parent path
+// becomes a BasePath override (-dir-dodder shape, #343 step 1), an XDG-user
+// -repo_id becomes the RepoId scope, and the home parent is left at the default
+// scope. Feeding this to MakeOperateEnvDir yields the parent's real on-disk
+// dodder / madder env_dirs without the hardcoded repos/<name> / madder-flat
+// layout math the path helpers used to carry.
+func (cmd ParentBackedWorkspace) parentConfig(
+	req command.Request,
+	absParentPath string,
+	isHomeRepo bool,
+) repo_config_cli.Config {
+	config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
+
+	// The ephemeral CWD-scope RepoId the caller set for genesis must not leak
+	// into the parent resolution; reset it to the parent's scope.
+	config.RepoId = scoped_id.Id{}
+	config.BasePath = ""
+
+	switch {
+	case cmd.ParentRepoId != "":
+		if err := config.RepoId.Set(cmd.ParentRepoId); err != nil {
+			req.Cancel(err)
+		}
+
+	case !isHomeRepo:
+		// A -parent path: root the resolver at it (BasePath override), default
+		// scope selects repos/<default> within.
+		config.BasePath = absParentPath
+
+	default:
+		// Home parent: default scope resolves to the XDG-user home repo.
+	}
+
+	return config
+}
+
 // SetupParentPointerBlobStore configures Genesis.BigBang so that genesis writes
 // a TomlPointerV1 instead of a freshly-initialized local-hash-bucketed store
 // (#200). The pointer resolves to the parent repo's default blob store, so blob
@@ -253,40 +291,27 @@ func (cmd *ParentBackedWorkspace) LinkParentZettelIdProviders(
 //
 // The pointer id is "." + workspaceRepoIdString (CWD-scoped, prefixed with "."
 // per dodder's blob_store_id convention). The base path is the parent's
-// <madder>/blob_stores/default directory — computed from absParentPath and the
-// madder XDG utility name. For the home-repo parent, absParentPath is
-// <dataHome>/dodder; the madder sibling is <dataHome>/madder. For the -parent
-// path, the parent dir contains .madder/local/share/ alongside
-// .dodder/local/share/.
-//
-// TODO https://github.com/amarbel-llc/dodder/issues/219
-// construct a parent env_dir for the madder utility and ask it
-// for the blob_stores path, rather than hardcoding the layout
-// here — the hardcoded form may diverge from what
-// env_dir.MakeDefaultAndInitialize produces under non-default
-// XDG env vars (notably the bats sandbox's XDG_DATA_HOME override).
+// default-blob-store dir, obtained by building the parent's madder env_dir via
+// the FDR-0019 resolver (parentConfig → MakeOperateEnvDir) and joining
+// blob_stores/default under its data dir — replacing the previously hardcoded
+// <madder>/blob_stores/default math, which could diverge from what the resolver
+// produces under a non-default XDG_DATA_HOME (the bats sandbox). Closes #219.
 func (cmd *ParentBackedWorkspace) SetupParentPointerBlobStore(
 	req command.Request,
 	workspaceRepoIdString string,
 	absParentPath string,
 	isHomeRepo bool,
 ) {
-	var parentBlobStoreBasePath string
-	if isHomeRepo {
-		// absParentPath = <dataHome>/dodder; sibling = <dataHome>/madder.
-		parentBlobStoreBasePath = filepath.Join(
-			filepath.Dir(absParentPath),
-			XDGUtilityNameMadder,
-			"blob_stores", "default",
-		)
-	} else {
-		parentBlobStoreBasePath = filepath.Join(
-			absParentPath,
-			"."+XDGUtilityNameMadder,
-			"local", "share",
-			"blob_stores", "default",
-		)
-	}
+	parentMadderEnv := MakeOperateEnvDir(
+		req,
+		cmd.parentConfig(req, absParentPath, isHomeRepo),
+		XDGUtilityNameMadder,
+	)
+
+	parentBlobStoreBasePath := filepath.Join(
+		parentMadderEnv.GetXDG().Data.ActualValue,
+		"blob_stores", "default",
+	)
 
 	if !files.Exists(parentBlobStoreBasePath) {
 		req.Cancel(

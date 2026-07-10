@@ -122,11 +122,12 @@ function new_ephemeral_edit_true_pushes_edited_body_to_parent { # @test
     -edit=true -type md -description "ephemeral edit zettel"
   assert_success
 
-  # The new zettel — full metadata + editor-written body — landed in the parent
-  # alongside the bootstrap zettel. run_dodder_init generates a fresh key per
-  # run, so the type signature is non-deterministic — match it with --regexp.
+  # The new zettel — full metadata + editor-written body — landed in the parent.
+  # Query it by its specific id (one/dos: bootstrap made one/uno first, this is
+  # the second) so the assertion is independent of :z listing order. The fresh
+  # per-run key makes the type signature non-deterministic — match with --regexp.
   pushd "$parent_path" || exit 1
-  run_dodder show -format text :z
+  run_dodder show -format text one/dos
   assert_success
   assert_output --regexp - <<-EOM
 		---
@@ -135,13 +136,6 @@ function new_ephemeral_edit_true_pushes_edited_body_to_parent { # @test
 		---
 
 		created via ephemeral edit
-		---
-		# first zettel
-		- project-alpha
-		! md@.*
-		---
-
-		original body
 	EOM
   popd || exit 1
 
