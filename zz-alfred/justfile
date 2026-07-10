@@ -43,14 +43,14 @@ codemod-prune-plist:
 #             |_|
 
 # Exercise the home-manager module's per-user staging step in isolation:
-# build the dodder-alfred-workflow package, then run the SAME
-# @workspace@ substitution hm-module.nix does, with a dummy workspace.
-# Verifies the substitute --replace-fail succeeds (a renamed placeholder
-# would fail the build) and prints the resulting run.bash so both the
-# baked @dodder@ store path and the substituted workspace are visible.
-# Agent dev-loop: changes to run.bash placeholders or hm-module.nix.
+# build the dodder-alfred-workflow package, then run the SAME @repo_id@
+# substitution hm-module.nix does, with a dummy repo-id. Verifies the
+# substitute --replace-fail succeeds (a renamed placeholder would fail the
+# build) and prints the resulting info.plist so both the baked @dodder@ store
+# path and the substituted repo-id are visible.
+# Agent dev-loop: changes to info.plist placeholders or hm-module.nix.
 [group('explore')]
-explore-stage-workflow workspace="/tmp/dodder-workspace-example":
+explore-stage-workflow repoId="work":
   #!/usr/bin/env bash
   set -euo pipefail
   pkg=$(nix build --no-link --print-out-paths '..#dodder-alfred-workflow')
@@ -58,27 +58,25 @@ explore-stage-workflow workspace="/tmp/dodder-workspace-example":
     let pkgs = import <nixpkgs> {}; in
     pkgs.runCommand \"dodder-alfred-workflow-configured\" {} ''
       mkdir -p \$out
-      cp ${pkg}/share/dodder/alfred/workflow/info.plist \$out/info.plist
       substitute \
-        ${pkg}/share/dodder/alfred/workflow/run.bash \
-        \$out/run.bash \
-        --replace-fail '@workspace@' '{{workspace}}'
-      chmod 0755 \$out/run.bash
+        ${pkg}/share/dodder/alfred/workflow/info.plist \
+        \$out/info.plist \
+        --replace-fail '@repo_id@' '{{repoId}}'
     ''
   ")
   echo "==> staged workflow: $out"
-  echo "==> run.bash:"
-  cat "$out/run.bash"
+  echo "==> info.plist:"
+  cat "$out/info.plist"
 
 # Evaluate hm-module.nix through lib.evalModules alongside a stub that
 # declares `programs.alfred.extraWorkflows` (mirroring eng's
 # home/alfred.nix), and print the resulting extraWorkflows.dodder store
 # path. This proves the module wires into the shared option correctly and
-# the @workspace@ staging derivation evaluates — without dragging in the
+# the @repo_id@ staging derivation evaluates — without dragging in the
 # full home-manager/eng flake. Agent dev-loop: changes to hm-module.nix's
 # integration surface.
 [group('explore')]
-explore-eval-module workspace="/tmp/dodder-workspace-example":
+explore-eval-module:
   #!/usr/bin/env bash
   set -euo pipefail
   # Write the expression to a file so bash never tries to expand any
@@ -105,7 +103,7 @@ explore-eval-module workspace="/tmp/dodder-workspace-example":
         dodderModule
         {
           _module.args.pkgs = pkgs;
-          programs.dodder-alfred = { enable = true; repoId = "work"; workspace = "{{workspace}}"; };
+          programs.dodder-alfred = { enable = true; repoId = "work"; };
         }
       ];
     };

@@ -669,7 +669,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; nohup '@dodder@' new -organize -delete "$@"</string>
+				<string>nohup '@dodder@' new -repo_id '@repo_id@' -ephemeral -organize -delete "$@"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -692,11 +692,10 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>cd '@workspace@'
-if [[ "$#" -gt 0 ]]; then
-	'@dodder@' new -edit=true -description "$*"
+				<string>if [[ "$#" -gt 0 ]]; then
+	'@dodder@' new -repo_id '@repo_id@' -ephemeral -edit=true -description "$*"
 else
-	'@dodder@' new -edit=true
+	'@dodder@' new -repo_id '@repo_id@' -ephemeral -edit=true
 fi</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
@@ -758,7 +757,7 @@ fi</string>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' new</string>
+				<string>'@dodder@' new -repo_id '@repo_id@' -ephemeral</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>

@@ -15,9 +15,9 @@
 #
 # The workflow package already baked the dodder binary path into
 # info.plist's `@dodder@` placeholder. This module supplies the remaining
-# per-user config: `@repo_id@` (from the required `repoId` option — the
-# repo the search + edit actions target via -repo_id) and `@workspace@`
-# (from `workspace` — the dir the not-yet-migrated new actions cd into).
+# per-user config: `@repo_id@` (from the required `repoId` option — the repo
+# every action targets via -repo_id; search + edit read it, and the new/zn/
+# Move-to-Dodder write actions create against it via -ephemeral).
 self:
 {
   config,
@@ -31,18 +31,16 @@ let
   workflowPkg = self.packages.${pkgs.system}.dodder-alfred-workflow;
 
   # The staged workflow: take the package's bundle (which already baked
-  # @dodder@ into info.plist) and substitute the per-user @repo_id@ (search +
-  # edit actions target it via -repo_id) and @workspace@ (the dir the
-  # not-yet-migrated new actions cd into). A runCommand over the store path
-  # yields a plain directory that alfred.nix's activation symlinks into
-  # workflows/dodder.
+  # @dodder@ into info.plist) and substitute the per-user @repo_id@ that every
+  # action targets via -repo_id (search + edit read it; the write actions
+  # create against it via -ephemeral). A runCommand over the store path yields a
+  # plain directory that alfred.nix's activation symlinks into workflows/dodder.
   stagedWorkflow = pkgs.runCommand "dodder-alfred-workflow-configured" { } ''
     mkdir -p "$out"
     substitute \
       "${workflowPkg}/share/dodder/alfred/workflow/info.plist" \
       "$out/info.plist" \
-      --replace-fail '@repo_id@' '${cfg.repoId}' \
-      --replace-fail '@workspace@' '${cfg.workspace}'
+      --replace-fail '@repo_id@' '${cfg.repoId}'
   '';
 in
 {
@@ -53,24 +51,13 @@ in
       type = lib.types.str;
       example = "work";
       description = ''
-        The dodder repo-id the search and edit actions target via -repo_id
-        (the FDR-0019 scope mechanism — the same targeting show/cat-alfred/the
-        MCP use). Typically an XDG-user repo name like "work", or "default".
-        The edit action resolves its ephemeral parent from this id. No cwd is
-        used, so the actions work from anywhere.
-      '';
-    };
-
-    workspace = lib.mkOption {
-      type = lib.types.str;
-      example = "/Users/you/dodder-workspace";
-      description = ''
-        Absolute path the not-yet-migrated write actions (der new, zn,
-        Move-to-Dodder) cd into before running `new`. These still need a real
-        workspace with a default type; once ephemeral `new` inherits the
-        parent's default type they will move to -repo_id and this option can
-        be dropped. Until then it must point at a dir dodder resolves a
-        workspace/repo scope from.
+        The dodder repo-id every action targets via -repo_id (the FDR-0019
+        scope mechanism — the same targeting show/cat-alfred/the MCP use).
+        Typically an XDG-user repo name like "work", or "default". Search and
+        edit read from it; the new/zn/Move-to-Dodder write actions create
+        against it via -ephemeral (a temp repo-backed workspace pulled from this
+        repo, pushed back, torn down). No cwd is used, so the actions work from
+        anywhere.
       '';
     };
 

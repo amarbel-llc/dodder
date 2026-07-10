@@ -323,3 +323,26 @@ function new_object_id_type_rejects_explicit_type { # @test
   assert_line --index 0 \
     '-type cannot be combined with a non-zettel -object-id (!task); the meta-type is set automatically from the id'"'"'s genre'
 }
+
+# `new -organize <path>` imports the file, then opens organize on the created
+# object. Regression guard for #345: `new` used to build the organize op with a
+# zero-value orgie.Metadata, whose uninitialized OptionCommentSet.prototype made
+# GetOptions panic ("Metadata not initalized"). EDITOR=true accepts the organize
+# plan unchanged, so the imported object commits as-is.
+function new_organize_imports_and_organizes { # @test
+  to_add="$(mktemp)"
+  {
+    echo "---"
+    echo "# organized"
+    echo "! md"
+    echo "---"
+  } >"$to_add"
+
+  export EDITOR="true"
+  run_dodder new -organize "$to_add"
+  assert_success
+  assert_output - <<-EOM
+		[two/uno !md "organized"]
+		[one/tres !md "organized"]
+	EOM
+}

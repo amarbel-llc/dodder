@@ -1,6 +1,8 @@
 package commands_dodder
 
 import (
+	"path/filepath"
+
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/0/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
@@ -316,14 +318,16 @@ func (cmd *New) Run(req command.Request) {
 		return
 	}
 
-	cmd.runInWorkspace(req)
+	cmd.runInWorkspace(req, req.PopArgs())
 }
 
 // runInWorkspace is the normal `new` flow: create the object(s) in the current
 // workspace/repo. Also invoked by runEphemeral after it has materialized and
-// chdir'd into a temp repo-backed workspace.
-func (cmd *New) runInWorkspace(req command.Request) {
-	args := req.PopArgs()
+// chdir'd into a temp repo-backed workspace. Args are passed in (rather than
+// popped here) so runEphemeral can resolve positional file paths to absolute
+// BEFORE the chdir — a relative path would otherwise resolve against the temp
+// dir, not the caller's cwd.
+func (cmd *New) runInWorkspace(req command.Request, args []string) {
 	repo := cmd.MakeLocalWorkingCopy(req)
 
 	if err := cmd.ValidateFlagsAndArgs(repo, args...); err != nil {
@@ -425,7 +429,16 @@ func (cmd *New) runInWorkspace(req command.Request) {
 	}
 
 	if cmd.Organize {
-		opOrganize := repo_actions.MakeOrganize(repo, orgie.Metadata{})
+		// orgie.Metadata's embedded OptionCommentSet must be built via
+		// MakeOptionCommentSet — a zero value leaves its prototype map nil and
+		// GetOptions panics ("Metadata not initalized"). Every other organize
+		// caller (last.go, clean.go, checkin.go) does this; #345.
+		opOrganize := repo_actions.MakeOrganize(
+			repo,
+			orgie.Metadata{
+				OptionCommentSet: orgie.MakeOptionCommentSet(nil),
+			},
+		)
 
 		if err := opOrganize.Metadata.SetFromObjectMetadata(
 			&cmd.Metadata,
@@ -486,6 +499,24 @@ func (cmd *New) runEphemeral(req command.Request) {
 	config.RepoId = repo_id.CwdDefault()
 	cmd.ephemeral.ParentPath = cmd.ParentPath
 
+	// Resolve positional file-path arguments to absolute BEFORE RunEphemeral
+	// chdirs into the temp workspace. Positional args to `new` are file paths to
+	// import (the Move-to-Dodder / -organize path); a relative path would resolve
+	// against the temp dir after the chdir and fail to be found. -shas args are
+	// blob SHAs, not paths, so leave them verbatim. This is a local fix; #347
+	// tracks hoisting path-resolution into RunEphemeral as free machinery for all
+	// commands, and #346 tracks presenting the literal arg while manipulating the
+	// absolute one.
+	args := req.PopArgs()
+
+	if !cmd.Shas {
+		for i, arg := range args {
+			if abs, absErr := filepath.Abs(arg); absErr == nil {
+				args[i] = abs
+			}
+		}
+	}
+
 	// The shared lifecycle (temp repo-backed workspace, pull, push, teardown)
 	// lives in ParentBackedWorkspace.RunEphemeral; the new-specific step is
 	// creating the object(s) via the normal in-workspace flow. runInWorkspace
@@ -497,7 +528,7 @@ func (cmd *New) runEphemeral(req command.Request) {
 		req,
 		nil,
 		func(_ *local_working_copy.Repo) error {
-			cmd.runInWorkspace(req)
+			cmd.runInWorkspace(req, args)
 			return nil
 		},
 	)
