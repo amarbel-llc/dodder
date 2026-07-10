@@ -45,6 +45,28 @@ func MakeOperateEnvDir(
 	repoId := config.RepoId
 
 	switch {
+	case config.BasePath != "":
+		// -dir-dodder (config.BasePath) roots the env_dir tree at an explicit
+		// path, taking precedence over the scope's default location — the scope
+		// still selects repos/<name> WITHIN that tree. Without this branch
+		// -dir-dodder is inert on operate commands (it only reached
+		// env_repo.Make / genesis), so `show -dir-dodder <path>` fell back to the
+		// default XDG repo. Rooting here lets a filesystem path be addressed as
+		// `-dir-dodder <path>` + scope (#343). The madder blob slot never nests a
+		// repo name (configFor), so blank it there.
+		repoName := repo_id.EffectiveName(repoId)
+		if utilityName == XDGUtilityNameMadder {
+			repoName = ""
+		}
+
+		return env_dir.MakeWithXDGRootOverrideHomeAndInitialize(
+			req,
+			config.BasePath,
+			utilityName,
+			config.Debug,
+			repoName,
+		)
+
 	case repoId.GetLocationType() == scoped_id.LocationTypeXDGSystem ||
 		repoId.GetLocationType() == scoped_id.LocationTypeXDGUser:
 		// Both are explicit scopes that must NOT take MakeDefault's cwd
