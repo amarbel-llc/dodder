@@ -39,11 +39,10 @@
     };
 
     madder = {
-      # pinned past go/v0.4.0 for the piggy markl cutover (madder#255:
-      # markl core lives in piggy's go module, madder's registrations
-      # are madder-only, dodder registers its own dodder-* purposes);
-      # repoint to the next go/vX tag when one lands.
-      url = "github:amarbel-llc/madder/0063d397ab4004e68b00ab0e8a4bbc5a457072f0";
+      # tracks madder master; move it with `just go/update-flake-input madder`
+      # (updates flake.lock + go.mod + gomod2nix in one shot) rather than
+      # pinning a rev here.
+      url = "github:amarbel-llc/madder";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
