@@ -430,7 +430,7 @@
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>./run.bash cat-alfred ':?z,e'</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred ':?z,e'</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -499,7 +499,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>./run-ephemeral.bash edit -mode "$actions" "$1"</string>
+				<string>'@dodder@' edit -ephemeral -parent '@workspace@' -mode "$actions" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -562,7 +562,7 @@
 				<key>runningsubtext</key>
 				<string>loading</string>
 				<key>script</key>
-				<string>./run.bash cat-alfred ':z,e'</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred ':z,e'</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -669,7 +669,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>nohup ./run.bash new -organize -delete "$@"</string>
+				<string>cd '@workspace@' &amp;&amp; nohup '@dodder@' new -organize -delete "$@"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -692,10 +692,11 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>if [[ "$#" -gt 0 ]]; then
-	./run.bash new -edit=true -description "$*"
+				<string>cd '@workspace@'
+if [[ "$#" -gt 0 ]]; then
+	'@dodder@' new -edit=true -description "$*"
 else
-	./run.bash new -edit=true
+	'@dodder@' new -edit=true
 fi</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
@@ -757,7 +758,7 @@ fi</string>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>./run.bash new</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' new</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -780,7 +781,7 @@ fi</string>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>./run.bash format-blob "$@" text</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' format-blob "$@" text</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -838,7 +839,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>./run.bash cat-alfred :z</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred :z</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -904,7 +905,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>./run.bash cat-alfred :z</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred :z</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -976,7 +977,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>./run.bash cat-alfred ?e</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred ?e</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -1040,7 +1041,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>./run.bash cat-alfred :e</string>
+				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred :e</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>

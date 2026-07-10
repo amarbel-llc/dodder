@@ -249,31 +249,28 @@ let
     };
   };
 
-  # dodder-alfred-workflow stages the macOS Alfred workflow at ../zz-alfred
-  # (keyword/snippet triggers that shell out to dodder cat-alfred / new /
-  # edit / format-blob). Like dodder-vim it is a plain copy — the only
-  # build step is baking the dodder binary path into the entry scripts'
-  # `@dodder@` placeholder, mirroring how dodder-clown-plugin bakes `@dodder@`
-  # into clown.json. Two entry scripts: run.bash (legacy cd-into-workspace,
-  # used by search/read actions) and run-ephemeral.bash (the FDR-0023
-  # `-ephemeral -parent` path, used by the edit action). The `@workspace@`
-  # placeholder is intentionally left intact in both: it is per-user config,
-  # substituted later by the home-manager module (../zz-alfred/hm-module.nix)
-  # from the `workspace` option. The path is referenced directly, so the
-  # non-flake `import ./go/default.nix` path builds it too. Consumers point
-  # Alfred (or the home-manager module) at
+  # dodder-alfred-workflow stages the macOS Alfred workflow at ../zz-alfred.
+  # Each Alfred action's inline `<script>` calls the dodder binary directly
+  # (no wrapper scripts): the `@dodder@` placeholder is baked to the binary's
+  # nix-store path at build time here, mirroring how dodder-clown-plugin bakes
+  # `@dodder@` into clown.json. Read/search actions inline `cd @workspace@ &&
+  # @dodder@ …`; the edit action inlines `@dodder@ edit -ephemeral -parent
+  # @workspace@ …` (FDR-0023). The `@workspace@` placeholder is intentionally
+  # left intact: it is per-user config, substituted later by the home-manager
+  # module (../zz-alfred/hm-module.nix) from the `workspace` option. Baking
+  # into the plist (rather than a run.bash wrapper) works because Alfred runs
+  # each action as GUI/non-login `/bin/bash -c` with no direnv/PATH to lean
+  # on, so an absolute store path is exactly what's needed. The path is
+  # referenced directly, so the non-flake `import ./go/default.nix` path
+  # builds it too. Consumers point Alfred (or the home-manager module) at
   # `${dodder-alfred-workflow}/share/dodder/alfred/workflow`.
   dodder-alfred-workflow = pkgs.runCommand "dodder-alfred-workflow" { } ''
     workflowRoot=$out/share/dodder/alfred/workflow
     mkdir -p "$workflowRoot"
-    cp ${../zz-alfred/workflow/info.plist} "$workflowRoot/info.plist"
-    for script in run.bash run-ephemeral.bash; do
-      substitute \
-        ${../zz-alfred/workflow}/"$script" \
-        "$workflowRoot/$script" \
-        --replace-fail '@dodder@' '${dodder}/bin/dodder'
-      chmod 0755 "$workflowRoot/$script"
-    done
+    substitute \
+      ${../zz-alfred/workflow/info.plist} \
+      "$workflowRoot/info.plist" \
+      --replace-fail '@dodder@' '${dodder}/bin/dodder'
   '';
 
   # conformist (the renamed treelint; treefmt successor) wrapped with the

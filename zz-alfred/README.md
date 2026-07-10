@@ -7,35 +7,38 @@ zettels.
 
 ## Layout
 
-- `workflow/info.plist` — the Alfred workflow definition. Read/search
-  actions shell out to `./run.bash <subcommand>`; the write action `edit`
-  shells out to `./run-ephemeral.bash edit ...` (FDR-0023).
-- `workflow/run.bash` — legacy entry point for the search/read actions.
-  `cd`s into the dodder workspace, then execs the dodder binary.
-- `workflow/run-ephemeral.bash` — entry point for the write actions. Instead
-  of `cd`-ing, it runs `dodder <subcommand> -ephemeral -parent <workspace>`,
-  so dodder spins a throwaway repo-backed workspace against the parent repo,
-  applies the change, pushes it back, and tears the temp workspace down — no
-  persistent `.dodder-workspace` / cwd required.
-
-  Both scripts carry two build-time placeholders:
-  - `@dodder@` — the dodder binary path, baked in by the
+- `workflow/info.plist` — the Alfred workflow definition, and the only
+  runtime artifact. Each action's inline `<script>` calls the dodder binary
+  directly — there are no wrapper shell scripts. Two build-time placeholders
+  are baked into every `<script>`:
+  - `@dodder@` — the dodder binary path, baked to its nix-store path by the
     `dodder-alfred-workflow` Nix package (see `../go/default.nix`).
   - `@workspace@` — the workspace/parent directory, baked in by the
     home-manager module (see `hm-module.nix`) from the `workspace` option.
 
-  Left unsubstituted (e.g. importing the raw workflow by hand), both fall
-  back to the `DODDER_BIN` / `DODDER_WORKSPACE` env vars, then to `dodder`
-  on `PATH` (and `$PWD` for run.bash; run-ephemeral.bash omits `-parent`,
-  targeting the home repo).
+  Read/search actions inline `cd '@workspace@' && '@dodder@' cat-alfred …`.
+  The `edit` action inlines
+  `'@dodder@' edit -ephemeral -parent '@workspace@' …` (FDR-0023): dodder
+  spins a throwaway repo-backed workspace against the parent repo, applies
+  the change, pushes it back, and tears the temp workspace down — no
+  persistent `.dodder-workspace` / cwd required.
+
+  Baking an absolute store path directly into the plist (rather than a
+  `run.bash` wrapper that resolved the binary on `PATH`) works because Alfred
+  runs each action as a GUI/non-login `/bin/bash -c` with no direnv or login
+  `PATH` to lean on. The old `run.bash` existed to hardcode the binary path
+  and workspace before nix/direnv; nix baking is the correct replacement, and
+  it removes the wrapper indirection entirely.
 - `hm-module.nix` — the home-manager module.
 - `prune_orphans.py` + `justfile` — tooling used during the port (see
   below).
 
 Only `edit` uses the ephemeral path so far. The remaining write actions
-(`der new`, `zn`, Move-to-Dodder) still use `run.bash`; migrating them needs
-a default-type strategy for ephemeral workspace-repos and more test coverage
-(tracked as followups; see also [dodder#340](https://github.com/amarbel-llc/dodder/issues/340)).
+(`der new`, `zn`, Move-to-Dodder) still `cd` into `@workspace@` and run a
+plain `new`; migrating them to `-ephemeral` needs ephemeral workspace-repos
+to inherit the parent's default type (a `new` has no type otherwise) plus
+more test coverage (tracked as followups; see also
+[dodder#340](https://github.com/amarbel-llc/dodder/issues/340)).
 
 ## Triggers
 
