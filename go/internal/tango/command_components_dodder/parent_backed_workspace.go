@@ -12,6 +12,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
@@ -20,6 +21,7 @@ import (
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
 )
 
 // ParentBackedWorkspace bundles the create-a-repo-backed-workspace-pointing-at-a-parent
@@ -358,4 +360,173 @@ func (cmd ParentBackedWorkspace) CreateRepoAndPullFromParent(
 	}
 
 	return local, remote
+}
+
+// RunEphemeral drives the FDR-0023 ephemeral-workspace lifecycle shared by
+// `edit -ephemeral` and `new -ephemeral`: materialize a temp repo-backed
+// workspace whose blob store points at the resolved parent (zero-copy), pull
+// the objects named by pullQueryArgs, run the caller's work against a fresh
+// writable working copy of that workspace, push the result back to the parent,
+// then tear the temp workspace down. On any failure after the workspace is
+// created, the temp workspace is PRESERVED and its path surfaced so no work is
+// lost.
+//
+// The CALLER must, before calling, have (a) set ParentPath / ParentRepoId to
+// select the parent and (b) overwritten config.RepoId with repo_id.CwdDefault()
+// via the shared *repo_config_cli.Config pointer, so genesis roots the
+// ephemeral repo (and its pointer blob store) inside the temp dir — see the
+// per-command runEphemeral for why the config must be the shared pointer, not a
+// FromAny copy.
+//
+// work receives a fresh in-process working copy of the temp workspace (opened
+// after CreateWorkspace, so it resolves as writable rather than the genesis
+// env's read-only temporary). edit uses it to run the checkout/edit; new opens
+// its own via runInWorkspace and ignores the argument — either is fine, both
+// operate on the same temp workspace.
+func (cmd ParentBackedWorkspace) RunEphemeral(
+	req command.Request,
+	pullQueryArgs []string,
+	work func(edited *local_working_copy.Repo) error,
+) {
+	cmd.Genesis.BigBang.SetDefaults()
+
+	// Workspace repos have no default type (matches init-workspace
+	// -experimental-repo); creating new objects requires an explicit -type,
+	// editing existing ones does not.
+	cmd.Genesis.BigBang.ExcludeDefaultType = true
+
+	absParentPath, parentIsHomeRepo := cmd.ResolveParentPath(req)
+	cmd.ValidateParentRepo(req, absParentPath, parentIsHomeRepo)
+	cmd.LinkParentZettelIdProviders(absParentPath, parentIsHomeRepo)
+
+	originalCwd, err := os.Getwd()
+	if err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	tempDir, err := os.MkdirTemp("", "dodder-ephemeral-")
+	if err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	// Resolve symlinks so tempDir matches os.Getwd()'s canonical form after
+	// chdir (macOS $TMPDIR is a symlink); the ceiling comparison is
+	// path-equality based, so the two must agree.
+	if resolved, resolveErr := filepath.EvalSymlinks(tempDir); resolveErr == nil {
+		tempDir = resolved
+	}
+
+	if err = os.Chdir(tempDir); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	// Pin both ceilings to the temp dir for the rest of this process. The temp
+	// dir sits under $TMPDIR, typically OUTSIDE the caller's ceiling; the fresh
+	// MakeLocalWorkingCopy below discovers the workspace by walking UP from cwd
+	// for .dodder-workspace, and that walk-up honors the ceiling. Without
+	// re-pinning, the caller's ceiling (which may sit below tempDir under a
+	// sandbox) would cut the walk short and the workspace would not be found.
+	if err = os.Setenv(
+		xdg.CeilingEnvVarName(dodder_env.XDGUtilityName),
+		tempDir,
+	); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	if err = os.Setenv(
+		xdg.CeilingEnvVarName(dodder_env.XDGUtilityNameMadder),
+		tempDir,
+	); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	// FDR-0005 / FDR-0023: wire a TomlPointerV1 blob store pointing at the
+	// parent's default store so the workspace repo holds NO blob copy of its
+	// own. Because config.RepoId is CWD-scoped (set by the caller via the
+	// shared *Config pointer), genesis roots .dodder/.madder AND this pointer
+	// store inside tempDir, so the fresh in-process working copy discovers it.
+	cmd.SetupParentPointerBlobStore(
+		req,
+		"ephemeral",
+		absParentPath,
+		parentIsHomeRepo,
+	)
+
+	local, remote := cmd.CreateRepoAndPullFromParent(
+		req,
+		absParentPath,
+		parentIsHomeRepo,
+		pullQueryArgs,
+		repo.ImporterOptions{}.WithPrintCopies(true),
+	)
+
+	if err = local.GetEnvWorkspace().CreateWorkspace(
+		&workspace_config_blobs.V0{},
+	); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	// Flush the genesis repo and open a fresh working copy of the now-written
+	// temp workspace: the genesis env was built before .dodder-workspace
+	// existed, so it still resolves as a read-only temporary workspace. The
+	// fresh open resolves it as writable and re-discovers the pointer blob
+	// store from tempDir.
+	if err = local.Flush(); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	edited := cmd.MakeLocalWorkingCopy(req)
+
+	if err = work(edited); err != nil {
+		// Preserve the temp workspace so the work is not lost (FDR-0023).
+		req.Cancel(
+			errors.Wrapf(err, "ephemeral work failed; workspace kept at %s", tempDir),
+		)
+		return
+	}
+
+	// Push back to the parent: the remote pulls the whole workspace from the
+	// ephemeral local (push is "remote pulls from local"; mirrors push.go).
+	pushQueryGroup := cmd.Query.MakeQueryIncludingWorkspace(
+		req,
+		queries.BuilderOptions(
+			queries.BuilderOptionDefaultSigil(
+				ids.SigilHistory,
+				ids.SigilHidden,
+			),
+			queries.BuilderOptionDefaultGenres(genres.InventoryList),
+		),
+		edited,
+		nil,
+	)
+
+	if err = remote.PullQueryGroupFromRemote(
+		edited,
+		pushQueryGroup,
+		repo.ImporterOptions{}.WithPrintCopies(true),
+	); err != nil {
+		// Preserve the temp workspace so the work is not lost (FDR-0023).
+		req.Cancel(
+			errors.Wrapf(err, "ephemeral push failed; workspace kept at %s", tempDir),
+		)
+		return
+	}
+
+	// Teardown only on success.
+	if err = os.Chdir(originalCwd); err != nil {
+		req.Cancel(err)
+		return
+	}
+
+	if err = os.RemoveAll(tempDir); err != nil {
+		req.Cancel(err)
+		return
+	}
 }

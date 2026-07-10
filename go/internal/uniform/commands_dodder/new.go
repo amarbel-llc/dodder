@@ -1,11 +1,7 @@
 package commands_dodder
 
 import (
-	"os"
-	"path/filepath"
-
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/0/haustoria"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
@@ -15,19 +11,15 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_fmt_hyphence"
-	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
-	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/sierra/repo_actions"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_value"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
 )
 
 func init() {
@@ -492,137 +484,21 @@ func (cmd *New) runEphemeral(req command.Request) {
 	}
 
 	config.RepoId = repo_id.CwdDefault()
-
 	cmd.ephemeral.ParentPath = cmd.ParentPath
-	cmd.ephemeral.Genesis.BigBang.SetDefaults()
 
-	// Workspace repos have no default type (matches init-workspace
-	// -experimental-repo); creating a new object there requires an explicit
-	// -type (the test passes one).
-	cmd.ephemeral.Genesis.BigBang.ExcludeDefaultType = true
-
-	absParentPath, parentIsHomeRepo := cmd.ephemeral.ResolveParentPath(req)
-	cmd.ephemeral.ValidateParentRepo(req, absParentPath, parentIsHomeRepo)
-
-	cmd.ephemeral.LinkParentZettelIdProviders(absParentPath, parentIsHomeRepo)
-
-	originalCwd, err := os.Getwd()
-	if err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	tempDir, err := os.MkdirTemp("", "dodder-ephemeral-")
-	if err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	// Resolve symlinks so tempDir matches os.Getwd()'s canonical form after
-	// chdir (macOS $TMPDIR is a symlink).
-	if resolved, resolveErr := filepath.EvalSymlinks(tempDir); resolveErr == nil {
-		tempDir = resolved
-	}
-
-	if err = os.Chdir(tempDir); err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	// Re-pin both ceilings to the temp dir: it sits under $TMPDIR, outside the
-	// caller's ceiling, and the fresh working-copy open below discovers the
-	// workspace by walking UP from cwd for .dodder-workspace (which honors the
-	// ceiling).
-	if err = os.Setenv(
-		xdg.CeilingEnvVarName(dodder_env.XDGUtilityName),
-		tempDir,
-	); err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	if err = os.Setenv(
-		xdg.CeilingEnvVarName(dodder_env.XDGUtilityNameMadder),
-		tempDir,
-	); err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	// Zero-copy blob storage: the workspace repo's default store is a
-	// TomlPointerV1 at the parent's default store (no blob copy).
-	cmd.ephemeral.SetupParentPointerBlobStore(
+	// The shared lifecycle (temp repo-backed workspace, pull, push, teardown)
+	// lives in ParentBackedWorkspace.RunEphemeral; the new-specific step is
+	// creating the object(s) via the normal in-workspace flow. runInWorkspace
+	// opens its own working copy of the temp workspace (resolved as writable,
+	// pointer store discovered from tempDir) and handles its own errors via
+	// req.Cancel, so the closure ignores the passed working copy and returns
+	// nil.
+	cmd.ephemeral.RunEphemeral(
 		req,
-		"ephemeral",
-		absParentPath,
-		parentIsHomeRepo,
-	)
-
-	local, remote := cmd.ephemeral.CreateRepoAndPullFromParent(
-		req,
-		absParentPath,
-		parentIsHomeRepo,
 		nil,
-		repo.ImporterOptions{}.WithPrintCopies(true),
+		func(_ *local_working_copy.Repo) error {
+			cmd.runInWorkspace(req)
+			return nil
+		},
 	)
-
-	if err = local.GetEnvWorkspace().CreateWorkspace(
-		&workspace_config_blobs.V0{},
-	); err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	if err = local.Flush(); err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	// Create the new object(s) in the temp workspace via the normal flow. A
-	// fresh MakeLocalWorkingCopy (inside runInWorkspace) resolves the temp
-	// workspace as writable and discovers the pointer store from tempDir.
-	cmd.runInWorkspace(req)
-
-	// Push back to the parent: the remote pulls the whole workspace from the
-	// ephemeral local (push is "remote pulls from local"; mirrors push.go).
-	edited := cmd.ephemeral.MakeLocalWorkingCopy(req)
-
-	pushQueryGroup := cmd.ephemeral.Query.MakeQueryIncludingWorkspace(
-		req,
-		queries.BuilderOptions(
-			queries.BuilderOptionDefaultSigil(
-				ids.SigilHistory,
-				ids.SigilHidden,
-			),
-			queries.BuilderOptionDefaultGenres(genres.InventoryList),
-		),
-		edited,
-		nil,
-	)
-
-	if err = remote.PullQueryGroupFromRemote(
-		edited,
-		pushQueryGroup,
-		repo.ImporterOptions{}.WithPrintCopies(true),
-	); err != nil {
-		req.Cancel(
-			errors.Wrapf(
-				err,
-				"ephemeral push failed; workspace kept at %s",
-				tempDir,
-			),
-		)
-		return
-	}
-
-	// Teardown only on success.
-	if err = os.Chdir(originalCwd); err != nil {
-		req.Cancel(err)
-		return
-	}
-
-	if err = os.RemoveAll(tempDir); err != nil {
-		req.Cancel(err)
-		return
-	}
 }
