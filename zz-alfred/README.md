@@ -7,21 +7,35 @@ zettels.
 
 ## Layout
 
-- `workflow/info.plist` — the Alfred workflow definition. Every object
-  that runs a script shells out to `./run.bash <dodder-subcommand>`.
-- `workflow/run.bash` — entry point. `cd`s into the dodder workspace, then
-  execs the dodder binary. Contains two build-time placeholders:
+- `workflow/info.plist` — the Alfred workflow definition. Read/search
+  actions shell out to `./run.bash <subcommand>`; the write action `edit`
+  shells out to `./run-ephemeral.bash edit ...` (FDR-0023).
+- `workflow/run.bash` — legacy entry point for the search/read actions.
+  `cd`s into the dodder workspace, then execs the dodder binary.
+- `workflow/run-ephemeral.bash` — entry point for the write actions. Instead
+  of `cd`-ing, it runs `dodder <subcommand> -ephemeral -parent <workspace>`,
+  so dodder spins a throwaway repo-backed workspace against the parent repo,
+  applies the change, pushes it back, and tears the temp workspace down — no
+  persistent `.dodder-workspace` / cwd required.
+
+  Both scripts carry two build-time placeholders:
   - `@dodder@` — the dodder binary path, baked in by the
     `dodder-alfred-workflow` Nix package (see `../go/default.nix`).
-  - `@workspace@` — the workspace directory, baked in by the home-manager
-    module (see `hm-module.nix`) from the required `workspace` option.
+  - `@workspace@` — the workspace/parent directory, baked in by the
+    home-manager module (see `hm-module.nix`) from the `workspace` option.
 
   Left unsubstituted (e.g. importing the raw workflow by hand), both fall
   back to the `DODDER_BIN` / `DODDER_WORKSPACE` env vars, then to `dodder`
-  on `PATH` and `$PWD`.
+  on `PATH` (and `$PWD` for run.bash; run-ephemeral.bash omits `-parent`,
+  targeting the home repo).
 - `hm-module.nix` — the home-manager module.
 - `prune_orphans.py` + `justfile` — tooling used during the port (see
   below).
+
+Only `edit` uses the ephemeral path so far. The remaining write actions
+(`der new`, `zn`, Move-to-Dodder) still use `run.bash`; migrating them needs
+a default-type strategy for ephemeral workspace-repos and more test coverage
+(tracked as followups; see also [dodder#340](https://github.com/amarbel-llc/dodder/issues/340)).
 
 ## Triggers
 

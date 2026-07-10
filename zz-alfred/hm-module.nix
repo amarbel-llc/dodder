@@ -30,17 +30,19 @@ let
   workflowPkg = self.packages.${pkgs.system}.dodder-alfred-workflow;
 
   # The staged workflow: take the package's bundle and substitute the
-  # per-user @workspace@ placeholder in run.bash. A runCommand over the
-  # store path yields a plain directory that alfred.nix's activation
-  # symlinks into workflows/dodder.
+  # per-user @workspace@ placeholder in both entry scripts (run.bash and
+  # run-ephemeral.bash). A runCommand over the store path yields a plain
+  # directory that alfred.nix's activation symlinks into workflows/dodder.
   stagedWorkflow = pkgs.runCommand "dodder-alfred-workflow-configured" { } ''
     mkdir -p "$out"
     cp "${workflowPkg}/share/dodder/alfred/workflow/info.plist" "$out/info.plist"
-    substitute \
-      "${workflowPkg}/share/dodder/alfred/workflow/run.bash" \
-      "$out/run.bash" \
-      --replace-fail '@workspace@' '${cfg.workspace}'
-    chmod 0755 "$out/run.bash"
+    for script in run.bash run-ephemeral.bash; do
+      substitute \
+        "${workflowPkg}/share/dodder/alfred/workflow/$script" \
+        "$out/$script" \
+        --replace-fail '@workspace@' '${cfg.workspace}'
+      chmod 0755 "$out/$script"
+    done
   '';
 in
 {
