@@ -3,6 +3,7 @@ package command_components_dodder
 import (
 	"os"
 	"path/filepath"
+	"slices"
 
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
@@ -12,6 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
+	"code.linenisgreat.com/dodder/go/internal/delta/repo_configs"
 	"code.linenisgreat.com/dodder/go/internal/echo/workspace_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
@@ -465,9 +467,26 @@ func (cmd ParentBackedWorkspace) RunEphemeral(
 		repo.ImporterOptions{}.WithPrintCopies(true),
 	)
 
-	if err = local.GetEnvWorkspace().CreateWorkspace(
-		&workspace_config_blobs.V0{},
-	); err != nil {
+	// Seed the ephemeral workspace config with the PARENT's resolved defaults
+	// (its mutable⊕workspace overlay), so `new` in the ephemeral workspace
+	// gets the parent's default type without an explicit -type — the ephemeral
+	// repo itself has no default type (ExcludeDefaultType above). #15.
+	//
+	// GetEnvWorkspace lives on repo.LocalRepo, not the base repo.Repo. Every
+	// parent-remote branch (home, -repo_id, -parent path) currently builds a
+	// *local_working_copy.Repo, so the assertion holds; a future non-local
+	// remote parent would just skip the seed (empty defaults, -type required).
+	ephemeralConfig := &workspace_config_blobs.V0{}
+
+	if localRemote, ok := remote.(repo.LocalRepo); ok {
+		parentDefaults := localRemote.GetEnvWorkspace().GetDefaults()
+		ephemeralConfig.Defaults = repo_configs.DefaultsV1OmitEmpty{
+			Type: parentDefaults.GetDefaultType(),
+			Tags: slices.Collect(parentDefaults.GetDefaultTags().All()),
+		}
+	}
+
+	if err = local.GetEnvWorkspace().CreateWorkspace(ephemeralConfig); err != nil {
 		req.Cancel(err)
 		return
 	}
