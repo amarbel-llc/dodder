@@ -485,6 +485,12 @@ func (cmd *New) runEphemeral(req command.Request) {
 		return
 	}
 
+	// The user's -repo_id (in config.RepoId) selects the PARENT repo; capture
+	// its name before config.RepoId is overwritten with CwdDefault below.
+	if !repo_id.IsAuto(config.RepoId) {
+		cmd.ephemeral.ParentRepoId = config.RepoId.GetName()
+	}
+
 	config.RepoId = repo_id.CwdDefault()
 
 	cmd.ephemeral.ParentPath = cmd.ParentPath

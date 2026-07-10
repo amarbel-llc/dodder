@@ -39,15 +39,39 @@ type ParentBackedWorkspace struct {
 
 	// ParentPath is the explicit -parent path; empty means the home repo.
 	ParentPath string
+
+	// ParentRepoId, when non-empty (an XDG-user repo-id like "work"), selects
+	// the parent repo by id via the FDR-0019 scope resolver — the same
+	// mechanism `show`/`cat-alfred`/the MCP use — instead of by -parent path or
+	// the home default. Takes precedence over ParentPath. Only XDG-user
+	// (bare-name) ids are supported for now; cwd-scoped ids are future work
+	// (see the re-examine task). Empty leaves the -parent/home path behavior.
+	ParentRepoId string
+}
+
+// parentRepoName is the dodder repo name the parent's metadata nests under
+// (repos/<name>/). An XDG-user -repo_id (e.g. "work") names it directly;
+// otherwise the default repo. The madder blob store is flat (always
+// "default"), so this only affects the dodder-metadata slot.
+func (cmd ParentBackedWorkspace) parentRepoName() string {
+	if cmd.ParentRepoId != "" {
+		return cmd.ParentRepoId
+	}
+
+	return repo_id.DefaultName
 }
 
 // ResolveParentPath mirrors init-workspace's parent resolution: an explicit
-// -parent path (made absolute) or, when unset, the home repo under
-// XDG_DATA_HOME.
+// -parent path (made absolute), an XDG-user -repo_id (resolved under the home
+// XDG data dir, same root as the home repo — only the repos/<name> nesting
+// differs, handled via parentRepoName), or, when both are unset, the home
+// default repo.
 func (cmd ParentBackedWorkspace) ResolveParentPath(
 	req command.Request,
 ) (absPath string, isHomeRepo bool) {
-	if cmd.ParentPath != "" {
+	// A -parent path takes precedence only when no -repo_id was given; an
+	// XDG-user repo-id resolves under the home XDG data dir (isHomeRepo shape).
+	if cmd.ParentPath != "" && cmd.ParentRepoId == "" {
 		absPath = cmd.ParentPath
 		if !filepath.IsAbs(absPath) {
 			var err error
@@ -73,12 +97,16 @@ func (cmd ParentBackedWorkspace) ResolveParentPath(
 }
 
 // ParentRepoMetadataDir returns the parent repo's dodder-metadata directory.
-// FDR-0019: dodder metadata nests under repos/<name>/, and a path-addressed or
-// implicit (home) parent carries no -repo_id so it resolves to the default repo
-// (matching MakeParentRemote). For a home parent, absParentPath is already the
-// dodder data dir (<dataHome>/dodder); for a -parent path it is the repo root
-// containing .dodder/local/share.
-func ParentRepoMetadataDir(absParentPath string, isHomeRepo bool) string {
+// FDR-0019: dodder metadata nests under repos/<repoName>/. repoName is the
+// default repo for a path-addressed or implicit (home) parent, or the
+// XDG-user -repo_id name (e.g. "work"). For a home / repo-id parent,
+// absParentPath is the dodder data dir (<dataHome>/dodder); for a -parent
+// path it is the repo root containing .dodder/local/share.
+func ParentRepoMetadataDir(
+	absParentPath string,
+	isHomeRepo bool,
+	repoName string,
+) string {
 	dataRoot := absParentPath
 	if !isHomeRepo {
 		dataRoot = filepath.Join(
@@ -88,7 +116,7 @@ func ParentRepoMetadataDir(absParentPath string, isHomeRepo bool) string {
 		)
 	}
 
-	return filepath.Join(dataRoot, "repos", repo_id.DefaultName)
+	return filepath.Join(dataRoot, "repos", repoName)
 }
 
 // ValidateParentRepo cancels the request when no dodder repo exists at the
@@ -99,7 +127,7 @@ func (cmd ParentBackedWorkspace) ValidateParentRepo(
 	isHomeRepo bool,
 ) {
 	inventoryListLog := filepath.Join(
-		ParentRepoMetadataDir(absPath, isHomeRepo),
+		ParentRepoMetadataDir(absPath, isHomeRepo, cmd.parentRepoName()),
 		"inventory_lists_log",
 	)
 
@@ -144,9 +172,12 @@ func (cmd ParentBackedWorkspace) MakeParentRemote(
 			dodder_env.XDGUtilityName,
 			home,
 			config.Debug,
-			repo_id.DefaultName,
+			cmd.parentRepoName(),
 		)
 
+		// The madder blob store is flat (never nested by repo name), so the
+		// parent's blob pool is always the shared "default" store regardless of
+		// the dodder repo name — see the confirmed on-disk layout in FDR-0023.
 		madderDir := env_dir.MakeWithHomeAndInitialize(
 			req,
 			XDGUtilityNameMadder,
@@ -187,7 +218,7 @@ func (cmd *ParentBackedWorkspace) LinkParentZettelIdProviders(
 	}
 
 	parentObjectIdDir := filepath.Join(
-		ParentRepoMetadataDir(absParentPath, isHomeRepo),
+		ParentRepoMetadataDir(absParentPath, isHomeRepo, cmd.parentRepoName()),
 		"object_ids",
 	)
 
