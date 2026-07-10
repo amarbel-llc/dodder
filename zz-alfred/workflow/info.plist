@@ -430,7 +430,7 @@
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred ':?z,e'</string>
+				<string>'@dodder@' cat-alfred -repo_id '@repo_id@' ':?z,e'</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -499,7 +499,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>'@dodder@' edit -ephemeral -parent '@workspace@' -mode "$actions" "$1"</string>
+				<string>'@dodder@' edit -repo_id '@repo_id@' -ephemeral -mode "$actions" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -562,7 +562,7 @@
 				<key>runningsubtext</key>
 				<string>loading</string>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred ':z,e'</string>
+				<string>'@dodder@' cat-alfred -repo_id '@repo_id@' ':z,e'</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -781,7 +781,7 @@ fi</string>
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' format-blob "$@" text</string>
+				<string>'@dodder@' format-blob -repo_id '@repo_id@' "$@" text</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -839,7 +839,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred :z</string>
+				<string>'@dodder@' cat-alfred -repo_id '@repo_id@' :z</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -905,7 +905,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred :z</string>
+				<string>'@dodder@' cat-alfred -repo_id '@repo_id@' :z</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -977,7 +977,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred ?e</string>
+				<string>'@dodder@' cat-alfred -repo_id '@repo_id@' ?e</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -1041,7 +1041,7 @@ fi</string>
 				<key>runningsubtext</key>
 				<string></string>
 				<key>script</key>
-				<string>cd '@workspace@' &amp;&amp; '@dodder@' cat-alfred :e</string>
+				<string>'@dodder@' cat-alfred -repo_id '@repo_id@' :e</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>

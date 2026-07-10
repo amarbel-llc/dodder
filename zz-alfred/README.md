@@ -9,19 +9,22 @@ zettels.
 
 - `workflow/info.plist` — the Alfred workflow definition, and the only
   runtime artifact. Each action's inline `<script>` calls the dodder binary
-  directly — there are no wrapper shell scripts. Two build-time placeholders
-  are baked into every `<script>`:
+  directly — there are no wrapper shell scripts. Three build-time placeholders
+  are baked into the `<script>`s:
   - `@dodder@` — the dodder binary path, baked to its nix-store path by the
     `dodder-alfred-workflow` Nix package (see `../go/default.nix`).
-  - `@workspace@` — the workspace/parent directory, baked in by the
-    home-manager module (see `hm-module.nix`) from the `workspace` option.
+  - `@repo_id@` — the dodder repo-id the search + edit actions target, baked
+    by the home-manager module (see `hm-module.nix`) from the `repoId` option.
+  - `@workspace@` — a workspace directory, baked from the `workspace` option;
+    used only by the not-yet-migrated `new` actions.
 
-  Read/search actions inline `cd '@workspace@' && '@dodder@' cat-alfred …`.
-  The `edit` action inlines
-  `'@dodder@' edit -ephemeral -parent '@workspace@' …` (FDR-0023): dodder
-  spins a throwaway repo-backed workspace against the parent repo, applies
-  the change, pushes it back, and tears the temp workspace down — no
-  persistent `.dodder-workspace` / cwd required.
+  Search actions inline `'@dodder@' cat-alfred -repo_id '@repo_id@' …` and the
+  `edit` action inlines `'@dodder@' edit -repo_id '@repo_id@' -ephemeral …`
+  (FDR-0023): dodder resolves the target repo by id (the FDR-0019 scope
+  mechanism — no cwd), and for edit spins a throwaway repo-backed workspace
+  against it, applies the change, pushes it back, and tears the temp
+  workspace down. No `cd`, no persistent `.dodder-workspace` — the actions
+  work from anywhere.
 
   Baking an absolute store path directly into the plist (rather than a
   `run.bash` wrapper that resolved the binary on `PATH`) works because Alfred
@@ -33,11 +36,11 @@ zettels.
 - `prune_orphans.py` + `justfile` — tooling used during the port (see
   below).
 
-Only `edit` uses the ephemeral path so far. The remaining write actions
-(`der new`, `zn`, Move-to-Dodder) still `cd` into `@workspace@` and run a
-plain `new`; migrating them to `-ephemeral` needs ephemeral workspace-repos
-to inherit the parent's default type (a `new` has no type otherwise) plus
-more test coverage (tracked as followups; see also
+Search + `edit` use the repo-id path. The remaining write actions (`der new`,
+`zn`, Move-to-Dodder) still `cd` into `@workspace@` and run a plain `new`;
+migrating them to `-repo_id`/`-ephemeral` needs ephemeral workspace-repos to
+inherit the parent's default type (a `new` has no type otherwise) plus more
+test coverage (tracked as followups; see also
 [dodder#340](https://github.com/amarbel-llc/dodder/issues/340)).
 
 ## Triggers

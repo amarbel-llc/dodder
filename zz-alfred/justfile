@@ -105,7 +105,7 @@ explore-eval-module workspace="/tmp/dodder-workspace-example":
         dodderModule
         {
           _module.args.pkgs = pkgs;
-          programs.dodder-alfred = { enable = true; workspace = "{{workspace}}"; };
+          programs.dodder-alfred = { enable = true; repoId = "work"; workspace = "{{workspace}}"; };
         }
       ];
     };
