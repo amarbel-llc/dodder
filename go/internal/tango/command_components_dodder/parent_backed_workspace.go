@@ -7,7 +7,6 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/bravo/repo_id"
@@ -55,23 +54,11 @@ type ParentBackedWorkspace struct {
 	ParentRepoId string
 }
 
-// parentRepoName is the dodder repo name the parent's metadata nests under
-// (repos/<name>/). An XDG-user -repo_id (e.g. "work") names it directly;
-// otherwise the default repo. The madder blob store is flat (always
-// "default"), so this only affects the dodder-metadata slot.
-func (cmd ParentBackedWorkspace) parentRepoName() string {
-	if cmd.ParentRepoId != "" {
-		return cmd.ParentRepoId
-	}
-
-	return repo_id.DefaultName
-}
-
 // ResolveParentPath mirrors init-workspace's parent resolution: an explicit
 // -parent path (made absolute), an XDG-user -repo_id (resolved under the home
 // XDG data dir, same root as the home repo — only the repos/<name> nesting
-// differs, handled via parentRepoName), or, when both are unset, the home
-// default repo.
+// differs, applied by the resolver via parentConfig), or, when both are unset,
+// the home default repo.
 func (cmd ParentBackedWorkspace) ResolveParentPath(
 	req command.Request,
 ) (absPath string, isHomeRepo bool) {
@@ -168,9 +155,11 @@ func (cmd ParentBackedWorkspace) ValidateParentRepo(
 	}
 }
 
-// MakeParentRemote opens the resolved parent repo as a remote. For the home
-// repo it constructs the XDG-scoped repo directly; for a -parent path it uses
-// the direct-remote-from-path machinery.
+// MakeParentRemote opens the resolved parent repo as a remote. For the home /
+// -repo_id parent it builds the dodder + madder env_dirs through the FDR-0019
+// resolver (parentConfig -> MakeOperateEnvDir), the same mechanism the metadata
+// and blob-store paths now use; for a -parent path it uses the
+// direct-remote-from-path machinery.
 func (cmd ParentBackedWorkspace) MakeParentRemote(
 	req command.Request,
 	local *local_working_copy.Repo,
@@ -180,29 +169,14 @@ func (cmd ParentBackedWorkspace) MakeParentRemote(
 	if isHomeRepo {
 		config := repo_config_cli.FromAny(req.Utility.GetConfigAny())
 
-		home, err := os.UserHomeDir()
-		if err != nil {
-			req.Cancel(err)
-		}
+		parentConfig := cmd.parentConfig(req, absParentPath, isHomeRepo)
 
-		ownDir := env_dir.MakeWithHomeAndInitialize(
-			req,
-			dodder_env.XDGUtilityName,
-			home,
-			config.Debug,
-			cmd.parentRepoName(),
-		)
-
-		// The madder blob store is flat (never nested by repo name), so the
-		// parent's blob pool is always the shared "default" store regardless of
-		// the dodder repo name — see the confirmed on-disk layout in FDR-0023.
-		madderDir := env_dir.MakeWithHomeAndInitialize(
-			req,
-			XDGUtilityNameMadder,
-			home,
-			config.Debug,
-			repo_id.DefaultName,
-		)
+		// The resolver applies the repos/<name> nesting for the dodder slot and
+		// keeps the madder blob pool flat (configFor blanks the madder repo
+		// name) — replacing the hand-built MakeWithHomeAndInitialize +
+		// parentRepoName/DefaultName split.
+		ownDir := MakeOperateEnvDir(req, parentConfig, dodder_env.XDGUtilityName)
+		madderDir := MakeOperateEnvDir(req, parentConfig, XDGUtilityNameMadder)
 
 		envUI := env_ui.Make(
 			req,
@@ -291,7 +265,16 @@ func (cmd ParentBackedWorkspace) parentConfig(
 		config.BasePath = absParentPath
 
 	default:
-		// Home parent: default scope resolves to the XDG-user home repo.
+		// Home parent: pin to the XDG-USER default repo explicitly. A zero/auto
+		// RepoId would take MakeOperateEnvDir's default branch, whose cwd walk-up
+		// roots at the current workspace's own .dodder/ (the ephemeral flow runs
+		// from inside the workspace dir) instead of the home repo under
+		// $XDG_DATA_HOME. An explicit XDG-user scope pins to the user home with
+		// NO walk-up — matching the former MakeWithHomeAndInitialize behavior.
+		config.RepoId = scoped_id.MakeWithLocation(
+			repo_id.DefaultName,
+			scoped_id.LocationTypeXDGUser,
+		)
 	}
 
 	return config
