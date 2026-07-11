@@ -30,6 +30,21 @@ accepted: 2026-05-18
 > remains a living document; future per-store probe optimizations
 > ([madder#196](https://github.com/amarbel-llc/madder/issues/196))
 > will land when madder picks an approach.
+>
+> **Update (2026-07-11):** The "no remaining `GetDefaultBlobStore()`
+> read calls" claim above was incomplete. A `der reindex` failure
+> surfaced 17 more reader call sites across 7 files that were never in
+> the Phase 3 list — including `inventory_list_store.Store.blobBlobStore`
+> (backing `reindex`/`revert`), `remote_http/server.go`'s HTTP blob
+> serving and push/pull presence cache, and `typed_blob_store`'s
+> `Config`/`Tag` saved-blob formatters. All fixed in
+> [dodder#352](https://github.com/amarbel-llc/dodder/issues/352).
+> `local_working_copy.Repo.GetBlobStore()` — a thin wrapper around
+> `GetDefaultBlobStore()` with at least one legitimate write caller —
+> was left untouched pending a full per-caller trace, tracked in
+> [dodder#355](https://github.com/amarbel-llc/dodder/issues/355) along
+> with renaming/restricting `GetDefaultBlobStore()` itself so future
+> call sites can't reach for it by habit.
 
 ## Problem Statement
 
