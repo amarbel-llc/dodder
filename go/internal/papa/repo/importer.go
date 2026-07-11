@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/oscar/env_box"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
@@ -43,7 +43,7 @@ type (
 		ForbidBloblessTypes bool
 
 		DedupingFormatId   string
-		RemoteBlobStore    blob_stores.BlobStoreInitialized
+		RemoteBlobStore    mad_domain_interfaces.BlobStore
 		BlobCopierDelegate interfaces.FuncIter[sku.BlobCopyResult]
 		ParentNegotiator   sku.ParentNegotiator
 		CheckedOutPrinter  interfaces.FuncIter[*sku.CheckedOut]

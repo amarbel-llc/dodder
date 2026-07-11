@@ -20,7 +20,7 @@ import (
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
-func (client *client) GetBlobStore() blob_stores.BlobStoreInitialized {
+func (client *client) GetBlobStore() mad_domain_interfaces.BlobStore {
 	return blob_stores.BlobStoreInitialized{
 		ConfigNamed: blob_store_configs.ConfigNamed{
 			Path: directory_layout.MakeBlobStorePath(

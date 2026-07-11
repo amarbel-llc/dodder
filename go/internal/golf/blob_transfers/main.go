@@ -16,7 +16,7 @@ import (
 
 func MakeBlobImporter(
 	envRepo env_repo.BlobStoreEnv,
-	src blob_stores.BlobStoreInitialized,
+	src mad_domain_interfaces.BlobStore,
 	dsts blob_stores.BlobStoreMap,
 ) BlobImporter {
 	return BlobImporter{
@@ -29,7 +29,7 @@ func MakeBlobImporter(
 type BlobImporter struct {
 	EnvBlobStore           env_repo.BlobStoreEnv
 	CopierDelegate         interfaces.FuncIter[sku.BlobCopyResult]
-	Src                    blob_stores.BlobStoreInitialized
+	Src                    mad_domain_interfaces.BlobStore
 	Dsts                   blob_stores.BlobStoreMap
 	UseDestinationHashType bool
 
@@ -133,7 +133,7 @@ func (blobImporter *BlobImporter) ImportBlobToStoreIfNecessary(
 			copyResult.CopyResult = blob_stores.CopyBlobIfNecessary(
 				blobImporter.EnvBlobStore,
 				dst.GetBlobStore(),
-				blobImporter.Src.GetBlobStore(),
+				blobImporter.Src,
 				blobId,
 				&progressWriter,
 				hashType,

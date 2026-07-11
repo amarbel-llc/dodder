@@ -56,7 +56,7 @@ func Make(
 	importer.committer.initialize(options, storeCommitter)
 
 	if importer.blobCopierDelegate == nil &&
-		importer.remoteBlobStore.BlobStore != nil &&
+		importer.remoteBlobStore != nil &&
 		options.PrintCopies {
 		importer.blobCopierDelegate = sku.MakeBlobCopierDelegate(
 			envRepo.GetUI(),
@@ -90,7 +90,7 @@ type importer struct {
 	excludeObjects              bool
 	continueOnError             bool
 	forbidBloblessTypes         bool
-	remoteBlobStore             blob_stores.BlobStoreInitialized
+	remoteBlobStore             mad_domain_interfaces.BlobStore
 	blobCopierDelegate          interfaces.FuncIter[sku.BlobCopyResult]
 	storeOptions                sku.StoreOptions
 	allowMergeConflicts         bool
@@ -443,7 +443,7 @@ func (importer importer) ImportBlobIfNecessary(
 	// (no remote store on the receiver), and the HTTP push server cannot
 	// fetch from the pushing client. A reference blob the remote does not
 	// hold is skipped, matching the edges copy loop in local_op_pull.
-	if importer.remoteBlobStore.BlobStore != nil {
+	if importer.remoteBlobStore != nil {
 		for blobDigest := range object.GetMetadata().AllBlobReferences() {
 			blobCopy := blobDigest
 

@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 
@@ -20,7 +20,7 @@ type Repo interface {
 	GetEnv() env_ui.Env
 	GetImmutableConfigPublic() genesis_configs.ConfigPublic
 	GetImmutableConfigPublicType() ids.TypeStruct
-	GetBlobStore() blob_stores.BlobStoreInitialized
+	GetBlobStore() mad_domain_interfaces.BlobStore
 	GetObjectStore() sku.RepoStore
 	GetInventoryListCoderCloset() inventory_list_coders.Closet
 	GetInventoryListStore() sku.InventoryListStore

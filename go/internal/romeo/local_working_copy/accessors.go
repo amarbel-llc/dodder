@@ -17,7 +17,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
 	"code.linenisgreat.com/dodder/go/internal/oscar/store"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
+	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
 )
 
@@ -89,8 +89,8 @@ func (local *Repo) GetInventoryListCoderCloset() inventory_list_coders.Closet {
 	return local.typedBlobStore.InventoryList
 }
 
-func (local *Repo) GetBlobStore() blob_stores.BlobStoreInitialized {
-	return local.GetEnvRepo().GetDefaultBlobStore()
+func (local *Repo) GetBlobStore() mad_domain_interfaces.BlobStore {
+	return local.GetEnvRepo().GetReadBlobStore()
 }
 
 func (local *Repo) GetObjectStore() sku.RepoStore {

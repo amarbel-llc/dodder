@@ -634,7 +634,7 @@ func negotiateHave(
 // is transparent to content addressing. Nothing is buffered whole.
 func recvBlob(
 	s *session,
-	blobStore blob_stores.BlobStoreInitialized,
+	blobStore mad_domain_interfaces.BlobStore,
 	header control,
 ) (err error) {
 	var writer mad_domain_interfaces.BlobWriter
