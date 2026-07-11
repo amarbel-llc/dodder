@@ -39,7 +39,7 @@ func MakeTagStore(
 			blob_library.MakeBlobFormat(
 				noopBlobDecoder[tag_blobs.V0, *tag_blobs.V0]{},
 				noopBlobEncoder[tag_blobs.V0, *tag_blobs.V0]{},
-				envRepo.GetDefaultBlobStore(),
+				envRepo.GetReadBlobStore(),
 			),
 			func(a *tag_blobs.V0) {
 				a.Reset()
@@ -67,7 +67,7 @@ func MakeTagStore(
 						return doc.Encode()
 					},
 				},
-				envRepo.GetDefaultBlobStore(),
+				envRepo.GetReadBlobStore(),
 			),
 			func(a *tag_blobs.TomlV1) {
 				a.Reset()
@@ -78,7 +78,7 @@ func MakeTagStore(
 			blob_library.MakeBlobFormat[tag_blobs.LuaV1](
 				nil,
 				nil,
-				envRepo.GetDefaultBlobStore(),
+				envRepo.GetReadBlobStore(),
 			),
 			func(a *tag_blobs.LuaV1) {
 			},
@@ -88,7 +88,7 @@ func MakeTagStore(
 			blob_library.MakeBlobFormat[tag_blobs.LuaV2](
 				nil,
 				nil,
-				envRepo.GetDefaultBlobStore(),
+				envRepo.GetReadBlobStore(),
 			),
 			func(a *tag_blobs.LuaV2) {
 			},

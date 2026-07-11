@@ -72,7 +72,7 @@ type Server struct {
 }
 
 func (server *Server) init() (err error) {
-	server.blobCache.localBlobStore = server.Repo.GetEnvRepo().GetDefaultBlobStore()
+	server.blobCache.localBlobStore = server.Repo.GetEnvRepo().GetReadBlobStore()
 	server.blobCache.ui = server.Repo.GetEnv().GetUI()
 	return err
 }
@@ -663,7 +663,7 @@ func (server *Server) handleBlobsHeadOrGet(
 	ui.Log().Printf("blob requested: %q", blobId)
 
 	if request.Method == "HEAD" {
-		if server.Repo.GetBlobStore().HasBlob(blobId) {
+		if server.Repo.GetEnvRepo().GetReadBlobStore().HasBlob(blobId) {
 			response.StatusCode = http.StatusNoContent
 		} else {
 			response.StatusCode = http.StatusNotFound
@@ -674,7 +674,7 @@ func (server *Server) handleBlobsHeadOrGet(
 		{
 			var err error
 
-			if rc, err = server.Repo.GetBlobStore().MakeBlobReader(blobId); err != nil {
+			if rc, err = server.Repo.GetEnvRepo().GetReadBlobStore().MakeBlobReader(blobId); err != nil {
 				if mad_blob_io.IsErrBlobMissing(err) {
 					response.StatusCode = http.StatusNotFound
 				} else {
@@ -720,7 +720,7 @@ func (server *Server) handleBlobsPost(request Request) (response Response) {
 		return response
 	}
 
-	if server.Repo.GetBlobStore().HasBlob(&blobDigest) {
+	if server.Repo.GetEnvRepo().GetReadBlobStore().HasBlob(&blobDigest) {
 		response.StatusCode = http.StatusFound
 		return response
 	}
@@ -843,7 +843,7 @@ func (server *Server) writeObjectsJSON(
 	var blobStore mad_domain_interfaces.BlobStore
 
 	if includeBlob {
-		blobStore = server.Repo.GetBlobStore()
+		blobStore = server.Repo.GetEnvRepo().GetReadBlobStore()
 	}
 
 	items := make([]sku_json_fmt.Transacted, 0)

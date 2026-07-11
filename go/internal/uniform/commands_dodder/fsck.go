@@ -229,7 +229,7 @@ func (cmd Fsck) runVerification(
 					if !blobDigest.IsNull() {
 						if err := blob_stores.VerifyBlob(
 							repo,
-							repo.GetEnvRepo().GetDefaultBlobStore(),
+							readBlobStore,
 							blobDigest,
 							io.Discard,
 						); err != nil {

@@ -42,7 +42,7 @@ func MakeTextFormatterWithBlobFormatter(
 		InlineTypeChecker: inlineTypeChecker,
 		FormatterFamily: object_metadata_fmt_hyphence.Factory{
 			EnvDir:        envRepo,
-			BlobStore:     envRepo.GetDefaultBlobStore(),
+			BlobStore:     envRepo.GetReadBlobStore(),
 			BlobFormatter: formatter,
 			BlobTreeDir:   blobTreeDir,
 		}.MakeFormatterFamily(),

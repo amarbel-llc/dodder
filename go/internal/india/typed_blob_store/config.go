@@ -46,7 +46,7 @@ func MakeConfigStore(
 						return doc.Encode()
 					},
 				},
-				envRepo.GetDefaultBlobStore(),
+				envRepo.GetReadBlobStore(),
 			),
 			func(a *repo_configs.V0) {
 				a.Reset()
@@ -74,7 +74,7 @@ func MakeConfigStore(
 						return doc.Encode()
 					},
 				},
-				envRepo.GetDefaultBlobStore(),
+				envRepo.GetReadBlobStore(),
 			),
 			func(a *repo_configs.V1) {
 				a.Reset()

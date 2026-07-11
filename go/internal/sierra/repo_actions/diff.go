@@ -128,7 +128,7 @@ func (op Diff) Run(
 		wg.Do(
 			op.makeDoBlob(
 				wLeft,
-				op.GetEnvRepo().GetDefaultBlobStore(),
+				op.GetEnvRepo().GetReadBlobStore(),
 				local.GetBlobDigest(),
 			),
 		)
