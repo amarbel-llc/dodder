@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/file_lock"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
+	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
 	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
@@ -28,7 +29,10 @@ type konfigState struct {
 }
 
 // TODO-P2 add support for quiet reindexing
-func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
+func (store *Store) Reindex(
+	context interfaces.ActiveContext,
+	lockfileOptions sku.LockfileOptions,
+) (err error) {
 	if !store.GetEnvRepo().GetLockSmith().IsAcquired() {
 		err = file_lock.ErrLockRequired{
 			Operation: "reindex",
@@ -146,7 +150,7 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 			continue
 		}
 
-		if err = store.reindexOne(commitFacilitator, objectWithList); err != nil {
+		if err = store.reindexOne(commitFacilitator, objectWithList, lockfileOptions); err != nil {
 			keyBytes := objectWithList.List.GetObjectDigest().GetBytes()
 
 			objectsWithErrors[string(keyBytes)] = objectWithError{
@@ -179,8 +183,17 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 	if len(objectsWithErrors) > 0 {
 		store.envRepo.GetUI().Print("objects with errors:")
 
+		var lockFailureCount int
+
 		for _, objectWithError := range objectsWithErrors {
 			ui.CLIErrorTreeEncoder.EncodeTo(objectWithError.error, store.envRepo.GetUI())
+
+			if errors.Is(
+				objectWithError.error,
+				object_finalizer.ErrFailedToReadCurrentLockObject,
+			) {
+				lockFailureCount++
+			}
 
 			if objectWithError.Object == nil {
 				store.envRepo.GetUI().Printf(
@@ -196,6 +209,19 @@ func (store *Store) Reindex(context interfaces.ActiveContext) (err error) {
 					sku.String(objectWithError.Object),
 				)
 			}
+		}
+
+		// lockFailureCount can only be nonzero here when the caller did not
+		// already set the corresponding LockfileOptions field — a tolerated
+		// failure never reaches objectsWithErrors in the first place (see
+		// object_finalizer.WriteLockfile). So a nonzero count always means
+		// -allow_lock_failures would have suppressed at least one of the
+		// errors just printed above.
+		if lockFailureCount > 0 {
+			store.envRepo.GetUI().Printf(
+				"%d of the errors above are missing lock targets (a type, tag, or referenced object that no longer exists) — rerun with -allow_lock_failures to tolerate them and finish building the index anyway",
+				lockFailureCount,
+			)
 		}
 	}
 
@@ -251,9 +277,13 @@ func (store *Store) backfillConfigLog(
 func (store *Store) reindexOne(
 	commitFacilitator commitFacilitator,
 	object sku.ObjectWithList,
+	lockfileOptions sku.LockfileOptions,
 ) (err error) {
+	storeOptions := sku.GetStoreOptionsReindex()
+	storeOptions.LockfileOptions = lockfileOptions
+
 	options := sku.CommitOptions{
-		StoreOptions: sku.GetStoreOptionsReindex(),
+		StoreOptions: storeOptions,
 	}
 
 	if err = commitFacilitator.commit(object.Object, options); err != nil {

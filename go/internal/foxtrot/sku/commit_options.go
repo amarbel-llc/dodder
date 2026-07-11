@@ -35,17 +35,19 @@ type StoreOptions struct {
 }
 
 type LockfileOptions struct {
-	AllowTypeFailure             bool
-	AllowTagFailure              bool
-	AllowReferencedObjectFailure bool
+	AllowTypeFailure              bool
+	AllowTagFailure               bool
+	AllowReferencedObjectFailure  bool
+	AllowBlobReferenceTypeFailure bool
 }
 
 func GetStoreOptionsRealizeWithProto() StoreOptions {
 	return StoreOptions{
 		LockfileOptions: LockfileOptions{
-			AllowTypeFailure:             true,
-			AllowTagFailure:              true,
-			AllowReferencedObjectFailure: true,
+			AllowTypeFailure:              true,
+			AllowTagFailure:               true,
+			AllowReferencedObjectFailure:  true,
+			AllowBlobReferenceTypeFailure: true,
 		},
 		ApplyProto: true,
 		RunHooks:   true,
@@ -56,9 +58,10 @@ func GetStoreOptionsRealizeWithProto() StoreOptions {
 func GetStoreOptionsRealizeSansProto() StoreOptions {
 	return StoreOptions{
 		LockfileOptions: LockfileOptions{
-			AllowTypeFailure:             true,
-			AllowTagFailure:              true,
-			AllowReferencedObjectFailure: true,
+			AllowTypeFailure:              true,
+			AllowTagFailure:               true,
+			AllowReferencedObjectFailure:  true,
+			AllowBlobReferenceTypeFailure: true,
 		},
 		RunHooks:  true,
 		UpdateTai: true,

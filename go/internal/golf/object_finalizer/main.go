@@ -138,7 +138,6 @@ func (finalizer finalizer) WriteLockfileIfNecessary(
 	)
 }
 
-// TODO offer option to allow type lock failures
 func (finalizer finalizer) WriteLockfile(
 	object object,
 	options sku.LockfileOptions,
@@ -228,6 +227,11 @@ func (finalizer finalizer) WriteLockfile(
 				return err
 
 			case ErrFailedToReadCurrentLockObject:
+				if options.AllowBlobReferenceTypeFailure {
+					err = nil
+					break
+				}
+
 				err = errors.Wrapf(err, "failed to write blob reference type lock for: %s", blobId)
 				return err
 
