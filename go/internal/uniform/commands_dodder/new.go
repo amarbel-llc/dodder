@@ -491,9 +491,13 @@ func (cmd *New) runEphemeral(req command.Request) {
 	}
 
 	// The user's -repo_id (in config.RepoId) selects the PARENT repo; capture
-	// its name before config.RepoId is overwritten with CwdDefault below.
+	// its full spelling (String(), NOT GetName()) before config.RepoId is
+	// overwritten with CwdDefault below. GetName() drops the scope dots, so a
+	// cwd-scoped id (`.notes`/`..notes`) would be re-parsed as a bare XDG-user
+	// name and mis-resolved to the home repo (#343 step 5); String() preserves
+	// the dots Set() parses back to the cwd scope.
 	if !repo_id.IsAuto(config.RepoId) {
-		cmd.ephemeral.ParentRepoId = config.RepoId.GetName()
+		cmd.ephemeral.ParentRepoId = config.RepoId.String()
 	}
 
 	config.RepoId = repo_id.CwdDefault()

@@ -45,12 +45,14 @@ type ParentBackedWorkspace struct {
 	// ParentPath is the explicit -parent path; empty means the home repo.
 	ParentPath string
 
-	// ParentRepoId, when non-empty (an XDG-user repo-id like "work"), selects
-	// the parent repo by id via the FDR-0019 scope resolver — the same
-	// mechanism `show`/`cat-alfred`/the MCP use — instead of by -parent path or
-	// the home default. Takes precedence over ParentPath. Only XDG-user
-	// (bare-name) ids are supported for now; cwd-scoped ids are future work
-	// (see the re-examine task). Empty leaves the -parent/home path behavior.
+	// ParentRepoId, when non-empty, selects the parent repo by id via the
+	// FDR-0019 scope resolver — the same mechanism `show`/`cat-alfred`/the MCP
+	// use — instead of by -parent path or the home default. Takes precedence
+	// over ParentPath. It is the id's FULL spelling (scoped_id.String()): a
+	// bare name like "work" (XDG-user scope) or a cwd-scoped spelling like
+	// ".notes" / "..notes" (nearest / Nth-ancestor .dodder). parentConfig
+	// re-parses it via RepoId.Set, so the leading dots route through
+	// MakeOperateEnvDir's cwd branch. Empty leaves the -parent/home behavior.
 	ParentRepoId string
 }
 
@@ -257,6 +259,21 @@ func (cmd ParentBackedWorkspace) parentConfig(
 	case cmd.ParentRepoId != "":
 		if err := config.RepoId.Set(cmd.ParentRepoId); err != nil {
 			req.Cancel(err)
+		}
+
+		// A cwd-scoped parent id (.name / ..name) can't be resolved in the
+		// ephemeral flow: RunEphemeral chdirs into the temp dir and re-pins the
+		// ceiling to it before the post-chdir resolver calls (pointer blob store,
+		// MakeParentRemote), so the cwd walk-up that DEFINES a cwd-scoped id no
+		// longer finds the ancestor .dodder/. Reject it up front with a clear
+		// error rather than silently falling back to the home repo. Resolving the
+		// ancestor to an absolute path BEFORE the chdir is tracked as #351.
+		if config.RepoId.GetLocationType() == scoped_id.LocationTypeCwd {
+			req.Cancel(errors.BadRequestf(
+				"cwd-scoped -repo_id %q is not supported for -ephemeral; "+
+					"use an XDG-user repo id (e.g. `work`) or -parent <path>",
+				cmd.ParentRepoId,
+			))
 		}
 
 	case !isHomeRepo:
