@@ -147,6 +147,7 @@ function complete_subcmd { # @test
 		^pull[[:space:]]+pull objects from a remote repository$
 		^pull-blob-store[[:space:]]+pull blobs from a remote blob store$
 		^push[[:space:]]+push objects to a remote repository$
+		^reconcile-blob-to-store[[:space:]]+TEMPORARY workaround \(dodder#359\): copy one blob by digest into an explicitly-addressed destination store$
 		^reindex[[:space:]]+rebuild store indices$
 		^remote-add[[:space:]]+add a remote repository$
 		^repo-fsck[[:space:]]+verify repository inventory list integrity$
