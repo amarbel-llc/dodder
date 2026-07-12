@@ -1,0 +1,7 @@
+{
+  "name": "tree-sitter-doddish",
+  "version": "0.1.0",
+  "description": "tree-sitter grammar for the doddish query language",
+  "license": "MIT",
+  "main": "bindings/node"
+}

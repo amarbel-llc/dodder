@@ -1,0 +1,7 @@
+{
+  "name": "tree-sitter-hyphence",
+  "version": "0.1.0",
+  "description": "tree-sitter grammar for dodder's hyphence object format",
+  "license": "MIT",
+  "main": "bindings/node"
+}

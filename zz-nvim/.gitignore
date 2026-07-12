@@ -1,0 +1,8 @@
+# Node deps pulled in only for `tree-sitter generate`/`test` during development.
+node_modules/
+
+# Compiled parsers are produced by the nix build (buildGrammar) into parser/.
+parser/*.so
+
+# tree-sitter CLI scratch.
+*.wasm

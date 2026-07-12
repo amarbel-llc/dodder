@@ -1,0 +1,139 @@
+================================================================================
+minimal type-only document
+================================================================================
+---
+! toml-blob_store_config-v3
+---
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (type_line
+      type: (type_name))))
+
+================================================================================
+zettel with description, tags, type and body
+================================================================================
+---
+# purchase izipizi glasses
+- area-home
+- todo
+! task
+---
+
+the body text
+more body
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (description_line
+      text: (description_text))
+    (tag_line
+      name: (tag_name))
+    (tag_line
+      name: (tag_name))
+    (type_line
+      type: (type_name)))
+  (body))
+
+================================================================================
+type with description and body
+================================================================================
+---
+# apple pages document
+! toml-type-v2
+---
+
+# nixpkgs comment
+binary = true
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (description_line
+      text: (description_text))
+    (type_line
+      type: (type_name)))
+  (body))
+
+================================================================================
+blob digest and type lock (markl ids)
+================================================================================
+---
+@ blake2b256-76m5abcdef
+! toml-type-v1@ed25519_sig-1qxyz
+---
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (blob_line
+      ref: (markl_id
+        format: (markl_format)
+        data: (markl_data)))
+    (type_line
+      type: (type_name)
+      lock: (markl_id
+        format: (markl_format)
+        data: (markl_data)))))
+
+================================================================================
+purpose-qualified markl id
+================================================================================
+---
+@ dodder-blob-digest-sha256-v1@blake2b256-9ft3m74l5t2ppwjr
+! md
+---
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (blob_line
+      ref: (markl_id
+        (markl_purpose)
+        format: (markl_format)
+        data: (markl_data)))
+    (type_line
+      type: (type_name))))
+
+================================================================================
+blob file path with extension
+================================================================================
+---
+# a photo
+@ vacation/beach.jpg
+! image
+---
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (description_line
+      text: (description_text))
+    (blob_line
+      ref: (file_path))
+    (type_line
+      type: (type_name))))
+
+================================================================================
+comment and reference lines
+================================================================================
+---
+% instructions: keep this object
+# a note
+< one/dos
+! md
+---
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (comment_line
+      text: (comment_text))
+    (description_line
+      text: (description_text))
+    (ref_line
+      ref: (reference_id))
+    (type_line
+      type: (type_name))))

@@ -1,0 +1,34 @@
+{
+  "grammars": [
+    {
+      "name": "hyphence",
+      "camelcase": "Hyphence",
+      "scope": "source.hyphence",
+      "path": ".",
+      "file-types": [
+        "zettel",
+        "tag",
+        "type",
+        "kasten",
+        "konfig"
+      ],
+      "injection-regex": "^hyphence$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "tree-sitter grammar for dodder's hyphence object format",
+    "links": {
+      "repository": "https://github.com/tree-sitter/tree-sitter-hyphence"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true
+  }
+}
