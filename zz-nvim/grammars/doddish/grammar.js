@@ -25,9 +25,15 @@ module.exports = grammar({
 
   rules: {
     source_file: $ =>
-      optional(seq($._element, repeat(seq($._sep, $._element)))),
+      seq(
+        optional($._sep),
+        optional(seq($._element, repeat(seq($._sep, $._element)))),
+        optional($._sep),
+      ),
 
-    _sep: $ => token(/[ \t]+/),
+    // Terms are AND-separated by whitespace; newlines are tolerated too so a
+    // query in a buffer (with its trailing newline) parses cleanly.
+    _sep: $ => token(/[ \t\n]+/),
 
     _element: $ => choice($.term, $.group, $.negation),
 
