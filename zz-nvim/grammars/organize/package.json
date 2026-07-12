@@ -1,0 +1,7 @@
+{
+  "name": "tree-sitter-dodder_organize",
+  "version": "0.1.0",
+  "description": "tree-sitter grammar for dodder's organize-text format",
+  "license": "MIT",
+  "main": "bindings/node"
+}

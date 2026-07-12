@@ -1,0 +1,102 @@
+================================================================================
+heading and object line
+================================================================================
+# tag-a
+- [one/uno !md tag-3] first note
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (heading
+    marker: (heading_marker)
+    (heading_tag))
+  (object_line
+    (box
+      (box_object_id
+        left: (box_ident)
+        right: (box_ident))
+      (box_type
+        name: (box_ident))
+      (box_tag
+        (box_ident)))
+    description: (description)))
+
+================================================================================
+metadata header then body
+================================================================================
+---
+! task
+- project-alpha
+---
+
+# project-beta
+- [two/uno !task status=todo] review PR
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (metadata
+    (type_line
+      type: (type_name))
+    (tag_line
+      name: (tag_name)))
+  (blank_line)
+  (blank_line)
+  (heading
+    marker: (heading_marker)
+    (heading_tag))
+  (object_line
+    (box
+      (box_object_id
+        left: (box_ident)
+        right: (box_ident))
+      (box_type
+        name: (box_ident))
+      (box_field
+        key: (box_ident)
+        value: (box_bare_value)))
+    description: (description)))
+
+================================================================================
+multi-tag heading with computed tag
+================================================================================
+# project-beta, %virtual_etikett
+- [   !md   ]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (heading
+    marker: (heading_marker)
+    (heading_tag)
+    (heading_tag))
+  (object_line
+    (box
+      (box_type
+        name: (box_ident)))))
+
+================================================================================
+virtual object line with quoted field and blob
+================================================================================
+% [two/uno @blake2b256-vl6ghtv2 !md due="he said \"hi\""] quote task
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (object_line
+    (box
+      (box_object_id
+        left: (box_ident)
+        right: (box_ident))
+      (box_blob
+        (markl_id
+          format: (markl_format)
+          data: (markl_data)))
+      (box_type
+        name: (box_ident))
+      (box_field
+        key: (box_ident)
+        value: (box_quoted
+          (box_escape)
+          (box_escape))))
+    description: (description)))

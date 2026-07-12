@@ -27,7 +27,7 @@
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "\\n(.|\\n)*"
+        "value": "\\n\\n(.|\\n)*"
       }
     },
     "metadata": {
@@ -51,18 +51,6 @@
         {
           "type": "STRING",
           "value": "---"
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "\n"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
         }
       ]
     },

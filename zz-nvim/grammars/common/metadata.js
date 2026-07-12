@@ -17,16 +17,16 @@
 // Requires the markl rules (markl_id, ...) to be spread into the same grammar.
 
 module.exports = {
+  // The metadata block ends exactly at the closing "---"; the fence line's
+  // terminating newline (and any following blank line / body) belongs to
+  // whatever consumes the metadata, so this composes with both the opaque
+  // hyphence body and the structured organize body without a newline conflict.
   metadata: $ =>
     seq(
       '---',
       '\n',
       repeat($._metadata_line),
       '---',
-      // Optional so a file (or corpus entry) that ends exactly at the closing
-      // fence with no trailing newline still parses. When a body follows, this
-      // consumes the fence's line terminator and the body owns the blank line.
-      optional('\n'),
     ),
 
   _metadata_line: $ =>

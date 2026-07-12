@@ -25,12 +25,13 @@ module.exports = grammar({
   rules: {
     source_file: $ => seq($.metadata, optional($.body)),
 
-    // Everything after the metadata's closing fence: the required blank line
-    // plus the remaining content. Opaque here, injected downstream. Only valid
-    // in the post-metadata state, so it never shadows metadata lines.
+    // Everything after the metadata's closing fence: the fence line's newline,
+    // the required blank line (hence the leading \n\n), then the remaining
+    // content. Opaque here, injected downstream. Requiring two newlines means a
+    // metadata-only document that merely ends in a newline produces no body.
     // NB: use (.|\n)* rather than [\s\S]* -- tree-sitter's regex does not
     // extend a [\s\S] character class across newlines, which truncates the body.
-    body: $ => token(/\n(.|\n)*/),
+    body: $ => token(/\n\n(.|\n)*/),
 
     ...metadata,
     ...markl,
