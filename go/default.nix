@@ -249,6 +249,45 @@ let
     };
   };
 
+  # dodder-nvim packages the neovim tree-sitter plugin at ../zz-nvim. Unlike
+  # dodder-vim (a plain copy), the three grammars must be compiled: each is
+  # built with pkgs.tree-sitter.buildGrammar from its committed src/parser.c
+  # (generate = false, so the shared ../common/*.js rule modules are not needed
+  # at build time), then the resulting parsers are dropped into $out/parser/ as
+  # <lang>.so so neovim's built-in vim.treesitter auto-loads them off the
+  # runtimepath -- no nvim-treesitter dependency. lua/, plugin/, and queries/
+  # ride along from the buildVimPlugin copy. Referenced directly like dodder-vim
+  # so the non-flake `import ./go/default.nix` path builds it too. dodder-vim is
+  # kept for legacy Vim users; dodder-nvim is neovim-only.
+  dodder-nvim-grammars = builtins.mapAttrs (
+    lang: subdir:
+    pkgs.tree-sitter.buildGrammar {
+      language = lang;
+      version = version;
+      src = ../zz-nvim/grammars/${subdir};
+      generate = false;
+    }
+  ) {
+    hyphence = "hyphence";
+    doddish = "doddish";
+    dodder_organize = "organize";
+  };
+
+  dodder-nvim = pkgs.vimUtils.buildVimPlugin {
+    pname = "dodder-nvim";
+    version = version;
+    src = ../zz-nvim;
+    postInstall = ''
+      mkdir -p "$out/parser"
+      cp ${dodder-nvim-grammars.hyphence}/parser "$out/parser/hyphence.so"
+      cp ${dodder-nvim-grammars.doddish}/parser "$out/parser/doddish.so"
+      cp ${dodder-nvim-grammars.dodder_organize}/parser "$out/parser/dodder_organize.so"
+    '';
+    meta = {
+      description = "Neovim tree-sitter grammars (hyphence, doddish, organize) and plugin for dodder objects, queries, and organize buffers, with per-type body-language injection";
+    };
+  };
+
   # dodder-alfred-workflow stages the macOS Alfred workflow at ../zz-alfred.
   # Each Alfred action's inline `<script>` calls the dodder binary directly
   # (no wrapper scripts): the `@dodder@` placeholder is baked to the binary's
@@ -335,6 +374,7 @@ in
       dodder-debug-dwarf
       dodder-clown-plugin
       dodder-vim
+      dodder-nvim
       dodder-alfred-workflow
       dodder-go-test
       ;
