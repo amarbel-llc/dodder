@@ -14,9 +14,7 @@
 // (after "]"), never to a group's inner items -- that keeps the group's comma
 // separator unambiguous with the genre-list comma.
 
-function sepBy1(sep, rule) {
-  return seq(rule, repeat(seq(sep, rule)));
-}
+const { sepBy1 } = require('../common/util.js');
 
 module.exports = grammar({
   name: 'doddish',

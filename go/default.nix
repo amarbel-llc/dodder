@@ -259,19 +259,22 @@ let
   # ride along from the buildVimPlugin copy. Referenced directly like dodder-vim
   # so the non-flake `import ./go/default.nix` path builds it too. dodder-vim is
   # kept for legacy Vim users; dodder-nvim is neovim-only.
-  dodder-nvim-grammars = builtins.mapAttrs (
-    lang: subdir:
-    pkgs.tree-sitter.buildGrammar {
-      language = lang;
-      version = version;
-      src = ../zz-nvim/grammars/${subdir};
-      generate = false;
-    }
-  ) {
-    hyphence = "hyphence";
-    doddish = "doddish";
-    dodder_organize = "organize";
-  };
+  dodder-nvim-grammars =
+    builtins.mapAttrs
+      (
+        lang: subdir:
+        pkgs.tree-sitter.buildGrammar {
+          language = lang;
+          version = version;
+          src = ../zz-nvim/grammars/${subdir};
+          generate = false;
+        }
+      )
+      {
+        hyphence = "hyphence";
+        doddish = "doddish";
+        dodder_organize = "organize";
+      };
 
   dodder-nvim = pkgs.vimUtils.buildVimPlugin {
     pname = "dodder-nvim";
@@ -279,10 +282,12 @@ let
     src = ../zz-nvim;
     postInstall = ''
       mkdir -p "$out/parser"
-      cp ${dodder-nvim-grammars.hyphence}/parser "$out/parser/hyphence.so"
-      cp ${dodder-nvim-grammars.doddish}/parser "$out/parser/doddish.so"
-      cp ${dodder-nvim-grammars.dodder_organize}/parser "$out/parser/dodder_organize.so"
-    '';
+    ''
+    + pkgs.lib.concatStrings (
+      pkgs.lib.mapAttrsToList (
+        lang: drv: ''cp ${drv}/parser "$out/parser/${lang}.so"'' + "\n"
+      ) dodder-nvim-grammars
+    );
     meta = {
       description = "Neovim tree-sitter grammars (hyphence, doddish, organize) and plugin for dodder objects, queries, and organize buffers, with per-type body-language injection";
     };
@@ -439,11 +444,16 @@ in
       just
       lsof
       nixfmt
+      # nodejs + tree-sitter: `tree-sitter generate`/`test` for the zz-nvim
+      # grammars (hyphence, doddish, organize) shells out to node to
+      # evaluate grammar.js.
+      nodejs
       pandoc
       radicale
       shellcheck
       shfmt
       tree
+      tree-sitter
       yq-go
     ])
     ++ pkgs.lib.optionals (bats != null) [

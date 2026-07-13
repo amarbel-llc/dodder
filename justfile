@@ -364,6 +364,160 @@ explore-live *args:
   cd "{{live_workspace}}"
   dodder {{args}}
 
+nvim_explore_dir := "/tmp/dodder-nvim-explore"
+
+# Shared prerequisite for the explore-nvim-* recipes below.
+_require-nvim:
+  #!/usr/bin/env bash
+  command -v nvim >/dev/null || { echo "nvim not found on PATH"; exit 1; }
+
+# Set up a throwaway dodder repo + workspace at /tmp/dodder-nvim-explore/
+# with a couple of example zettels, for the other explore-nvim-* recipes to
+# open in Neovim. Re-run any time to reset back to a clean slate.
+[group('explore')]
+explore-nvim-init:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  rm -rf "{{nvim_explore_dir}}"
+  mkdir -p "{{nvim_explore_dir}}"
+  cd "{{nvim_explore_dir}}"
+
+  dodder init \
+    -yin <(echo -e "aleph\nbeth\ngimel") \
+    -yang <(echo -e "one\ntwo\nthree") \
+    -encryption none \
+    .default
+  # Lightweight (non-repo-backed) workspace: this is a single throwaway
+  # repo with no parent to link, so the repo-backed path's extra wiring
+  # isn't needed here.
+  dodder init-workspace -experimental-repo=false
+
+  printf '%s\n' \
+    '---' \
+    '# First example zettel for dodder.nvim' \
+    '- project' \
+    '- demo' \
+    '! md' \
+    '---' \
+    '' \
+    '# Hello' \
+    '' \
+    'This is a **markdown** body, injected via `vim-syntax-type`.' \
+    | dodder new -edit=false -
+
+  printf '%s\n' \
+    '---' \
+    '# Second example zettel, with a list' \
+    '- reading-list' \
+    '! md' \
+    '---' \
+    '' \
+    'Body-language injection resolves per object, live, via the dodder CLI:' \
+    '' \
+    '- one' \
+    '- two' \
+    | dodder new -edit=false -
+
+  dodder checkout :z
+
+  echo ""
+  echo "==> Explore dir: {{nvim_explore_dir}}"
+  echo "==> Next, try:"
+  echo "  just explore-nvim-hyphence     # hyphence highlighting + live body injection"
+  echo "  just explore-nvim-workspace    # forced-toml injection on .dodder-workspace"
+  echo "  just explore-nvim-organize     # organize-text highlighting"
+  echo "  just explore-nvim-doddish      # doddish query language highlighting"
+  echo "  just explore-nvim-checkhealth  # :checkhealth dodder"
+
+# Open the example zettels from explore-nvim-init in Neovim with dodder.nvim
+# loaded, demonstrating hyphence highlighting and live body-language
+# injection (the dodder CLI is on PATH, so injection.lua's async resolver
+# round-trips for real).
+[group('explore')]
+explore-nvim-hyphence: _require-nvim
+  #!/usr/bin/env bash
+  set -euo pipefail
+  dodder_bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  plugin=$(nix build --no-link --print-out-paths .#dodder-nvim)
+  export PATH="$dodder_bin/bin:$PATH"
+
+  cd "{{nvim_explore_dir}}" 2>/dev/null || { echo "run 'just explore-nvim-init' first"; exit 1; }
+  files=$(find . -name '*.zettel' | sort)
+  [[ -n "$files" ]] || { echo "no .zettel files found; run 'just explore-nvim-init' first"; exit 1; }
+
+  # shellcheck disable=SC2086
+  nvim --clean -p $files \
+    --cmd "set rtp+=$plugin" \
+    -c "lua require('dodder').setup()"
+
+# Open the explore workspace's .dodder-workspace file in Neovim, showing the
+# injection path that forces the body language to TOML unconditionally (no
+# dodder CLI round-trip needed for this one).
+[group('explore')]
+explore-nvim-workspace: _require-nvim
+  #!/usr/bin/env bash
+  set -euo pipefail
+  plugin=$(nix build --no-link --print-out-paths .#dodder-nvim)
+
+  cd "{{nvim_explore_dir}}" 2>/dev/null || { echo "run 'just explore-nvim-init' first"; exit 1; }
+  [[ -f .dodder-workspace ]] || { echo ".dodder-workspace not found; run 'just explore-nvim-init' first"; exit 1; }
+
+  nvim --clean .dodder-workspace \
+    --cmd "set rtp+=$plugin" \
+    -c "lua require('dodder').setup()"
+
+# Run `dodder organize` for real against the explore workspace and open the
+# resulting organize-text buffer in Neovim.
+[group('explore')]
+explore-nvim-organize: _require-nvim
+  #!/usr/bin/env bash
+  set -euo pipefail
+  dodder_bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  plugin=$(nix build --no-link --print-out-paths .#dodder-nvim)
+  export PATH="$dodder_bin/bin:$PATH"
+
+  cd "{{nvim_explore_dir}}" 2>/dev/null || { echo "run 'just explore-nvim-init' first"; exit 1; }
+  [[ -d .dodder ]] || { echo "no .dodder store found; run 'just explore-nvim-init' first"; exit 1; }
+
+  dodder organize -mode output-only :z >example.organize
+
+  nvim --clean example.organize \
+    --cmd "set rtp+=$plugin" \
+    -c "lua require('dodder').setup()" \
+    -c "set filetype=dodder-organize"
+
+# Open the standalone doddish query-language example in Neovim. No dodder
+# repo or workspace needed -- doddish highlighting is purely syntactic.
+[group('explore')]
+explore-nvim-doddish: _require-nvim
+  #!/usr/bin/env bash
+  set -euo pipefail
+  plugin=$(nix build --no-link --print-out-paths .#dodder-nvim)
+
+  nvim --clean zz-nvim/examples/example.doddish \
+    --cmd "set rtp+=$plugin" \
+    -c "lua require('dodder').setup()" \
+    -c "set filetype=doddish"
+
+# Open :checkhealth dodder in a scratch Neovim session -- verifies the
+# dodder binary, the three compiled parsers, and the shipped queries all
+# resolve. Good first check before the other explore-nvim-* recipes.
+[group('explore')]
+explore-nvim-checkhealth: _require-nvim
+  #!/usr/bin/env bash
+  set -euo pipefail
+  dodder_bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$dodder_bin/bin:$PATH"
+  plugin=$(nix build --no-link --print-out-paths .#dodder-nvim)
+
+  nvim --clean \
+    --cmd "set rtp+=$plugin" \
+    -c "lua require('dodder').setup()" \
+    -c "checkhealth dodder"
+
 # Trace madder/dodder functions matching {{func_regexp}} while running
 # `dodder show {{query}}`, dumping a {{stack}}-deep call stack at each
 # hit. Builds the DWARF-retaining debug binary via nix (the standard

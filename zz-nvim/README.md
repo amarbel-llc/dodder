@@ -13,11 +13,16 @@ coexist; pick one per editor.
 Three grammars, each with committed generated parsers (`grammars/*/src/parser.c`)
 and `tree-sitter test` corpus tests:
 
-| Grammar           | Parses                                                        | Filetype(s)                     |
-| ----------------- | ------------------------------------------------------------ | ------------------------------- |
-| `hyphence`        | the object edit format: `---` fenced metadata + a body whose language is injected per object type (see [hyphence(7)](../docs/man.7/hyphence.md)) | `dodder-object`, `dodder-workspace` |
-| `doddish`         | the query language `predicate[sigil][genre]` (see [doddish(7)](../docs/man.7/doddish.md)) | (set manually / injected)       |
-| `dodder_organize` | organize-text: hyphence header + `#` headings + `-`/`%` box object lines (see [organize-text(7)](../docs/man.7/organize-text.md)) | `dodder-organize`               |
+- **`hyphence`** — the object edit format: `---` fenced metadata + a body whose
+  language is injected per object type (see
+  [hyphence(7)](../docs/man.7/hyphence.md)). Filetypes: `dodder-object`,
+  `dodder-workspace`.
+- **`doddish`** — the query language `predicate[sigil][genre]` (see
+  [doddish(7)](../docs/man.7/doddish.md)). Filetype set manually / injected.
+- **`dodder_organize`** — organize-text: hyphence header + `#` headings +
+  `-`/`%` box object lines (see
+  [organize-text(7)](../docs/man.7/organize-text.md)). Filetype:
+  `dodder-organize`.
 
 Shared rule modules (`grammars/common/`) parse markl-ids, hyphence metadata
 lines, and the box format, and are reused across grammars by `require()`.
@@ -101,4 +106,17 @@ for g in hyphence doddish organize; do (cd grammars/$g && tree-sitter test); don
 # highlight/injection smoke test in neovim
 nvim --clean -u tests/minimal_init.lua path/to/object.zettel
 # then :InspectTree and :Inspect
+```
+
+For a guided walkthrough with real example content (no manual setup, no
+compiled-parser fiddling), use the `explore-nvim-*` recipes from the repo
+root:
+
+```
+just explore-nvim-init          # spins up a throwaway repo + example zettels
+just explore-nvim-hyphence      # hyphence highlighting + live body injection
+just explore-nvim-workspace     # forced-toml injection on .dodder-workspace
+just explore-nvim-organize      # organize-text highlighting
+just explore-nvim-doddish       # doddish query language highlighting
+just explore-nvim-checkhealth   # :checkhealth dodder
 ```

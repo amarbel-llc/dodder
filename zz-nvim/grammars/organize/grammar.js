@@ -20,10 +20,7 @@
 const markl = require('../common/markl.js');
 const metadata = require('../common/metadata.js');
 const box = require('../common/box.js');
-
-function sepBy1(sep, rule) {
-  return seq(rule, repeat(seq(sep, rule)));
-}
+const { sepBy1 } = require('../common/util.js');
 
 module.exports = grammar({
   name: 'dodder_organize',

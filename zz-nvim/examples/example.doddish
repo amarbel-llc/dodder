@@ -1,0 +1,11 @@
+project
+!md:t
+:z,t,e
+project/idea.zettel
+/repo:k
+priority-0_must !task
+^blocked
+[!md,project]:z
+=!md
+^[legacy,archived] active
+-blocked.z
