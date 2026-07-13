@@ -14,25 +14,25 @@
 
 local M = {}
 
-local default_object_exts = { 'zettel', 'tag', 'type', 'kasten', 'konfig' }
+local default_object_exts = { "zettel", "tag", "type", "kasten", "konfig" }
 
 function M.setup(opts)
-  opts = opts or {}
-  local extension = {}
-  for _, ext in ipairs(default_object_exts) do
-    extension[ext] = 'dodder-object'
-  end
-  for _, ext in ipairs(opts.extensions or {}) do
-    extension[ext] = 'dodder-object'
-  end
+	opts = opts or {}
+	local extension = {}
+	for _, ext in ipairs(default_object_exts) do
+		extension[ext] = "dodder-object"
+	end
+	for _, ext in ipairs(opts.extensions or {}) do
+		extension[ext] = "dodder-object"
+	end
 
-  vim.filetype.add({
-    extension = extension,
-    filename = {
-      ['.dodder-workspace'] = 'dodder-workspace',
-      ['.zit-workspace'] = 'dodder-workspace',
-    },
-  })
+	vim.filetype.add({
+		extension = extension,
+		filename = {
+			[".dodder-workspace"] = "dodder-workspace",
+			[".zit-workspace"] = "dodder-workspace",
+		},
+	})
 end
 
 return M
