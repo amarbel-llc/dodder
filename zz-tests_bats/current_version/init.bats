@@ -268,6 +268,50 @@ function init_with_existing_madder_store { # @test
 	EOM
 }
 
+function init_blob_store_id_no_stray_default_store { # @test
+  # Mechanism check for amarbel-llc/dodder#365: the claim there was that
+  # `-blob_store-id` on `init` never reaches env_repo.BigBang.BlobStoreId
+  # (a "dead flag" theory), because the field looked separate from the
+  # one env_repo.Env.Genesis actually reads. But Genesis (the
+  # command_components_dodder one) embeds env_repo.BigBang anonymously
+  # and declares no BlobStoreId field of its own, so `cmd.BlobStoreId` is
+  # the SAME storage as `cmd.BigBang.BlobStoreId` via Go's field
+  # promotion -- not a separate, unwired field. This test validates the
+  # actual mechanism directly instead of arguing from the struct
+  # declarations: if the flag really reached BigBang.BlobStoreId, genesis
+  # should skip creating a local "default" blob store entirely
+  # (env_repo/genesis.go's writeBlobStoreConfigIfNecessary early-returns
+  # when BlobStoreId is non-empty) and all bootstrap content should
+  # resolve cleanly through the named store alone.
+  set_xdg "$BATS_TEST_TMPDIR"
+
+  run_madder init shared
+  assert_success
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    -blob_store-id shared \
+    default
+
+  assert_success
+
+  # No stray local "default" blob store should exist alongside "shared" --
+  # same assertion style already used for the parent-backed-workspace flow
+  # in workspace_repo.bats (":334", ":861").
+  assert [ ! -d "$XDG_DATA_HOME/madder/blob_stores/default" ]
+
+  # All bootstrap content (the pandoc default types and their blobs) must
+  # be genuinely resolvable through "shared" alone -- fsck is the
+  # established integrity check that fails loudly on any unresolvable
+  # blob reference.
+  run_dodder fsck
+  assert_success
+  assert_output --partial "TAP version 14"
+  refute_output --partial "not ok"
+}
+
 function init_with_json_inventory_list_type { # @test
   run_dodder init \
     -yin <(cat_yin) \
