@@ -131,6 +131,29 @@ test-bats-targets-no-sandbox *targets:
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     just zz-tests_bats/test-targets-no-sandbox {{targets}}
 
+# As debug-test-bats-sftp, but builds dodder-debug against a locally
+# checked-out (and possibly hand-patched) madder source tree instead of
+# the pinned flake.lock rev. Used for adding temporary diagnostic
+# fmt.Fprintf(os.Stderr, ...) instrumentation directly into madder's
+# blob store code and observing it live against the exact same
+# single-hash SFTP repro as blob_store_sftp_single_hash.bats, without
+# needing to file/push/re-bump anything first. madder_path defaults to
+# the scratch checkout used for this session's SFTP mover investigation
+# (task #21) -- point it elsewhere for unrelated debugging.
+[group('debug')]
+debug-test-bats-sftp-madder-override madder_path=".tmp/madder-debug-checkout" *targets:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug --override-input madder "path:$(realpath '{{madder_path}}')")
+  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin)
+  sftp_bin=$(nix build --no-link --print-out-paths .#madder-test-sftp-server)
+  export PATH="$bin/bin:$madder_bin/bin:$PATH"
+  GOMEMLIMIT=512MiB \
+    MADDER_TEST_SFTP_SERVER="$sftp_bin/bin/madder-test-sftp-server" \
+    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    just zz-tests_bats/test-targets-no-sandbox {{targets}}
+
 # As test-bats-targets-no-sandbox, but also builds and exports
 # MADDER_TEST_SFTP_SERVER (amarbel-llc/madder#177) for bats files that
 # use zz-tests_bats/lib/sftp.bash. Only the nix bats lane

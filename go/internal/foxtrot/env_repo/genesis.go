@@ -14,6 +14,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
 	mad_blob_store_env "github.com/amarbel-llc/madder/go/pkgs/blob_store_env"
+	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
 	mad_directory_layout "github.com/amarbel-llc/madder/go/pkgs/directory_layout"
 	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
@@ -119,6 +120,18 @@ func (env *Env) Genesis(bigBang BigBang) {
 	// the env_local embedded in the existing blobStoreEnv to avoid
 	// re-running env_dir.initializeXDG.
 	env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(env.blobStoreEnv.Env)
+
+	// Pin the caller-supplied store as the default for every write the
+	// rest of Genesis (and callers building on top of it, e.g.
+	// local_working_copy.Genesis's pandoc tool blobs) makes from here
+	// on. Without this, MakeBlobStoreEnv's own default-selection
+	// (madder's BlobStoreEnv.setupStores, an alphabetical sort of every
+	// store discovered in the XDG scope) silently wins instead, so
+	// writes land in whatever store happens to sort first rather than
+	// the one -blob_store-id named (amarbel-llc/dodder#365).
+	if !bigBang.BlobStoreId.IsEmpty() {
+		env.SetBlobStoreOrder([]blob_store_id.Id{bigBang.BlobStoreId})
+	}
 
 	env.genesisObjectIds(bigBang)
 

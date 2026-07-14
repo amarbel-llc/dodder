@@ -14,31 +14,43 @@ teardown() {
   stop_sftp_server
 }
 
-function sftp_single_hash_remote_blake2b256_blob_unreadable { # @test
-  # Reproduces a real-world mystery: a repo genesis'd with
-  # -hash_type-id blake2b256 against an SFTP blob store whose remote
-  # is legacy single-hash sha256 (as a real rsync.net-backed store,
-  # set up before madder's multi-hash SFTP support existed, actually
-  # is). amarbel-llc/madder#261/#262 fixed MakeBlobWriter silently
-  # substituting the wrong hash type on write -- re-verifying against
-  # the fixed madder showed init still succeeds silently here, and
-  # reads still fail afterward.
+function sftp_single_hash_remote_blob_store_id_pins_default_store { # @test
+  # Regression test for amarbel-llc/dodder#365. Traced through several
+  # wrong theories before landing on the real mechanism -- see the
+  # issue thread for the full history (hash-type mismatch, then a
+  # theorized SFTP mover rename bug, both ruled out by direct
+  # instrumentation). The actual bug: env_repo.Genesis() validates
+  # that -blob_store-id's named store exists but never pins it as the
+  # *default* store via madder's BlobStoreEnv.SetBlobStoreOrder.
+  # Without that, madder's own default-selection (an alphabetical sort
+  # of every blob store discovered in the XDG scope) silently wins, so
+  # genesis writes land in whatever store happens to sort first rather
+  # than the one actually named.
   #
-  # Instrumenting this test revealed the real shape of the bug: it is
-  # NOT a hash-type mismatch. Genesis's blob-write calls
-  # (writeRawBlob / SaveBlobText in
-  # go/internal/romeo/local_working_copy/genesis_pandoc_tools.go and
-  # golf/type_blobs/coder.go) pass a nil requested hash type, which
-  # resolveWriteHashFormat (madder's fix) resolves to the store's own
-  # default silently and correctly -- no mismatch, no error. `last`
-  # fails trying to read genesis's own inventory-list-log entry, and
-  # that entry's digest IS sha256 (matching the single-hash remote's
-  # native format exactly). So a *correctly* sha256-digested blob,
-  # written to a store natively configured for sha256, still cannot be
-  # read back afterward. Root cause is still open below that point --
-  # this test pins the current (buggy) behavior with direct filesystem
-  # instrumentation so it can be iterated on further without needing a
-  # live personal repo.
+  # This test reproduces that precisely: two stores coexist in the
+  # same XDG namespace -- "harvest-sha256" (created first, purely to
+  # harvest a config template) and "rsync-mimic" (an SFTP store, the
+  # one actually passed via -blob_store-id). "harvest-sha256" sorts
+  # before "rsync-mimic" alphabetically, so pre-fix it silently won
+  # and absorbed every genesis write; post-fix, everything must land
+  # in rsync-mimic specifically, verified by direct filesystem
+  # inspection of both stores.
+  #
+  # Deliberately stops at write-routing and does NOT attempt to read
+  # the repo back (no `dodder last`/`cat-object`): a repo whose only
+  # configured blob store is remote can't currently read its own
+  # bootstrap config back at all (config-bootstrap reads are
+  # restricted to local-typed stores by design -- see
+  # store_config/persist.go's loadMutableConfigBlob comment). That is
+  # a separate, much larger, already-tracked gap: amarbel-llc/dodder#223
+  # (FDR-0016 D1, multi-default with a local write-store). Not this
+  # test's concern -- see #223 for a concrete repro of that gap.
+  #
+  # The SFTP flavor here isn't essential to the #365 bug -- it's what
+  # the original real-world report happened to hit -- but it's kept as
+  # the reproduction shape since it's already fully worked out, matches
+  # the original incident precisely, and exercises the single-hash
+  # remote-store path along the way.
 
   # Harvest a real sha256 blob_store-config by creating a plain local
   # store with that hash type, rather than hand-writing the whole
@@ -87,8 +99,9 @@ function sftp_single_hash_remote_blake2b256_blob_unreadable { # @test
   assert_success
   assert_line 'false'
 
-  # The actual repro: genesis a dodder repo requesting blake2b256
-  # against this single-hash sha256 remote.
+  # The actual repro: genesis a dodder repo against the single-hash
+  # sha256 remote, with "harvest-sha256" (alphabetically earlier)
+  # still present as a competing store in the same XDG namespace.
   run_dodder init \
     -yin-default -yang-default \
     -hash_type-id blake2b256 \
@@ -96,52 +109,22 @@ function sftp_single_hash_remote_blake2b256_blob_unreadable { # @test
     legacy-single-hash-repo
   assert_success
 
-  # Capture the digest genesis ACTUALLY assigned, rather than trusting
-  # a hardcoded value from an earlier report: a stale/wrong hardcoded
-  # digest would make the cat-object check below pass trivially (any
-  # nonexistent digest "fails to be found"), proving nothing about the
-  # real bug. Pinning the previously-observed value as a same-line
-  # assertion so a genuine change (e.g. genesis starting to record a
-  # sha256 digest instead) surfaces as a clear, informative diff.
-  # Reframing: `last` itself already fails trying to read genesis's own
-  # inventory-list-log entry, NOT the pandoc-defaults type blob -- and
-  # that entry's digest is sha256, matching the single-hash remote's
-  # native format exactly as resolveWriteHashFormat's nil-request path
-  # predicts (see remote_hash_format.go). So this is not a hash-type
-  # mismatch at all: a *correctly* sha256-digested blob still can't be
-  # read back. Capture the exact digest from the failure itself.
-  run_dodder last -format inventory_list-sans-tai -repo_id legacy-single-hash-repo
+  # Decisive check #1: harvest-sha256 (alphabetically earlier) must
+  # receive NO genesis writes -- pre-fix it silently absorbed
+  # everything via madder's alphabetical default-store sort. Its blob
+  # store directory should contain only its own blob_store-config, no
+  # hash-bucket subdirectories.
+  run find "$XDG_DATA_HOME/madder/blob_stores/harvest-sha256" \
+    -mindepth 1 -not -name 'blob_store-config'
   assert_success
-  assert_output --partial 'does not exist locally'
+  assert_output ""
 
-  local inventory_log_digest
-  inventory_log_digest="$(echo "$output" | grep -o 'sha256-[a-z0-9]*' | head -n1)"
-  [ -n "$inventory_log_digest" ]
-
-  # Decisive instrumentation: inspect the SFTP remote's actual
-  # filesystem directly (madder-test-sftp-server serves a plain local
-  # directory, so remote_root IS the on-disk store) rather than
-  # inferring from error messages. This settles, definitively, whether
-  # any blob was physically written at all, whether the write path
-  # treated the store as single-hash (flat <bucket>/<rest> layout, no
-  # <hash-type-id>/ parent directory) vs multi-hash, and gives a real
-  # written path to cross-reference against the digest dodder expects.
-  run bash -c "find '$remote_root' -mindepth 1 -not -name 'blob_store-config' | sort"
+  # Decisive check #2: genesis writes DID land in rsync-mimic (the
+  # store actually named via -blob_store-id), not nowhere -- real
+  # committed blob content beyond the remote's own blob_store-config
+  # and any leaked SFTP mover temp files (amarbel-llc/dodder#366).
+  run find "$remote_root" -mindepth 1 -type f \
+    -not -name 'blob_store-config' -not -name 'tmp_*'
   assert_success
-  # This is the actual root cause: what's present is a stray,
-  # never-renamed upload temp file (sftpMover's tmp_<random-hex>
-  # naming, store_remote_sftp.go), not a properly-bucketed blob.
-  # sftpMover.Close() writes to this temp file then renames it to the
-  # final bucket path via sftpClient.Rename(tempPath, finalPath) --
-  # that rename either fails or never runs, and the failure doesn't
-  # propagate back to the caller as an error (genesis reports success
-  # throughout). No properly-bucketed blob file is ever created, so
-  # every subsequent read correctly reports "not found" -- this was
-  # never a read-side or hash-type bug at all.
-  assert_line --regexp '/tmp_[0-9a-f]+$'
-  refute_line --regexp '^[^ ]*/[0-9a-f]{2}/[0-9a-f]+$'
-
-  run_dodder cat-object -repo_id legacy-single-hash-repo "$inventory_log_digest"
-  assert_failure
-  assert_output --partial 'not found'
+  refute_output ""
 }
