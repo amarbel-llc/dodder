@@ -131,6 +131,27 @@ test-bats-targets-no-sandbox *targets:
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     just zz-tests_bats/test-targets-no-sandbox {{targets}}
 
+# As test-bats-targets-no-sandbox, but also builds and exports
+# MADDER_TEST_SFTP_SERVER (amarbel-llc/madder#177) for bats files that
+# use zz-tests_bats/lib/sftp.bash. Only the nix bats lane
+# (go/bats.nix's netCapExtraBinaries) wires that env var automatically;
+# this batman-path recipe needs the explicit build + export. Ad-hoc
+# debug recipe for iterating on SFTP-backed blob store tests --
+# amarbel-llc/dodder#118 tracks the sandbox networking restriction that
+# blocks the loopback bind even with the binary present.
+[group('debug')]
+debug-test-bats-sftp *targets:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  sftp_bin=$(nix build --no-link --print-out-paths .#madder-test-sftp-server)
+  export PATH="$bin/bin:$PATH"
+  GOMEMLIMIT=512MiB \
+    MADDER_TEST_SFTP_SERVER="$sftp_bin/bin/madder-test-sftp-server" \
+    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
+    just zz-tests_bats/test-targets-no-sandbox {{targets}}
+
 # Run bats with race-instrumented binary to detect data races in pool reuse.
 test-bats-race:
   just go/test-bats-race

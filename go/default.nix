@@ -418,7 +418,19 @@ in
     # can resolve them via `nix build .#<name>` without reaching into
     # the flake inputs by hand. Gated on the same null checks as
     # batsLaneOutputs so non-flake imports stay working.
-    if madder == null then { } else { madder-bin = madder.packages.${system}.default; }
+    if madder == null then
+      { }
+    else
+      {
+        madder-bin = madder.packages.${system}.default;
+        # SFTP test harness (amarbel-llc/madder#177), re-surfaced the
+        # same way as madder-bin so it's buildable as
+        # `nix build .#madder-test-sftp-server` without hardcoding the
+        # pinned madder rev anywhere (batman-path bats recipes don't
+        # get go/bats.nix's netCapExtraBinaries wiring, so they need
+        # an explicit build + MADDER_TEST_SFTP_SERVER export instead).
+        madder-test-sftp-server = madder.packages.${system}.madder-test-sftp-server;
+      }
   )
   // (if bats == null then { } else { bats-libs = bats.packages.${system}.bats-libs; })
   // (if treelint-fmt == null then { } else { inherit treelint-fmt; });
