@@ -293,21 +293,45 @@ let
     };
   };
 
+  # dodder-alfred-editor-wrapper is the EDITOR the workflow's edit/new
+  # actions bake in via the `@editor@` placeholder (substituted per-user in
+  # ../zz-alfred/hm-module.nix, not here — see dodder-alfred-workflow below).
+  # Alfred script actions run headless with no controlling TTY, but dodder's
+  # editor integration (go/lib/alfa/editor) never spawns a terminal itself —
+  # it just execs $EDITOR against the process's own stdio. Without this
+  # wrapper, `der new` / `der open`'s edit action exec nvim/vim headless,
+  # which fails to open a UI and exits silently (no visible symptom at all).
+  # This wrapper detects the no-TTY case and spawns kitty running nvim/vim
+  # instead, reconstructing behavior the old eng home/local-bin/editor
+  # script used to provide before its removal broke this. kitty is
+  # deliberately NOT a runtimeInput: this derivation is evaluated on every
+  # eachDefaultSystem platform (including Linux, where the workflow is never
+  # consumed), so kitty is resolved from PATH or the macOS .app bundle at
+  # runtime instead, exactly like the original script.
+  dodder-alfred-editor-wrapper = pkgs.writeShellApplication {
+    name = "dodder-alfred-editor-wrapper";
+    runtimeInputs = [ pkgs.neovim ];
+    text = builtins.readFile ../zz-alfred/workflow/editor-wrapper.bash;
+  };
+
   # dodder-alfred-workflow stages the macOS Alfred workflow at ../zz-alfred.
   # Each Alfred action's inline `<script>` calls the dodder binary directly
-  # (no wrapper scripts): the `@dodder@` placeholder is baked to the binary's
-  # nix-store path at build time here, mirroring how dodder-clown-plugin bakes
-  # `@dodder@` into clown.json. Read/search actions inline `cd @workspace@ &&
-  # @dodder@ …`; the edit action inlines `@dodder@ edit -ephemeral -parent
-  # @workspace@ …` (FDR-0023). The `@workspace@` placeholder is intentionally
-  # left intact: it is per-user config, substituted later by the home-manager
-  # module (../zz-alfred/hm-module.nix) from the `workspace` option. Baking
-  # into the plist (rather than a run.bash wrapper) works because Alfred runs
-  # each action as GUI/non-login `/bin/bash -c` with no direnv/PATH to lean
-  # on, so an absolute store path is exactly what's needed. The path is
-  # referenced directly, so the non-flake `import ./go/default.nix` path
-  # builds it too. Consumers point Alfred (or the home-manager module) at
-  # `${dodder-alfred-workflow}/share/dodder/alfred/workflow`.
+  # (no wrapper scripts for the dodder invocation itself): the `@dodder@`
+  # placeholder is baked to the binary's nix-store path at build time here,
+  # mirroring how dodder-clown-plugin bakes `@dodder@` into clown.json.
+  # Read/search actions inline `cd @workspace@ && @dodder@ …`; the edit
+  # action inlines `@dodder@ edit -ephemeral -parent @workspace@ …`
+  # (FDR-0023). The `@workspace@` and `@editor@` placeholders are
+  # intentionally left intact here: they are per-user/per-consumer config,
+  # substituted later by the home-manager module (../zz-alfred/hm-module.nix)
+  # from the `workspace` and `editorPackage` options respectively — the
+  # latter defaults to dodder-alfred-editor-wrapper above but can be
+  # overridden. Baking into the plist (rather than a run.bash wrapper) works
+  # because Alfred runs each action as GUI/non-login `/bin/bash -c` with no
+  # direnv/PATH to lean on, so an absolute store path is exactly what's
+  # needed. The path is referenced directly, so the non-flake
+  # `import ./go/default.nix` path builds it too. Consumers point Alfred (or
+  # the home-manager module) at `${dodder-alfred-workflow}/share/dodder/alfred/workflow`.
   dodder-alfred-workflow = pkgs.runCommand "dodder-alfred-workflow" { } ''
     workflowRoot=$out/share/dodder/alfred/workflow
     mkdir -p "$workflowRoot"
@@ -381,6 +405,7 @@ in
       dodder-vim
       dodder-nvim
       dodder-alfred-workflow
+      dodder-alfred-editor-wrapper
       dodder-go-test
       ;
     default = dodder;

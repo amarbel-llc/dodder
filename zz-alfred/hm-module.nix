@@ -17,7 +17,11 @@
 # info.plist's `@dodder@` placeholder. This module supplies the remaining
 # per-user config: `@repo_id@` (from the required `repoId` option — the repo
 # every action targets via -repo_id; search + edit read it, and the new/zn/
-# Move-to-Dodder write actions create against it via -ephemeral).
+# Move-to-Dodder write actions create against it via -ephemeral) and
+# `@editor@` (from the `editorPackage` option — the EDITOR the edit/new
+# actions bake in, defaulting to the flake's kitty-dispatch wrapper so those
+# actions open a visible editor window despite Alfred running them with no
+# controlling TTY).
 self:
 {
   config,
@@ -33,14 +37,19 @@ let
   # The staged workflow: take the package's bundle (which already baked
   # @dodder@ into info.plist) and substitute the per-user @repo_id@ that every
   # action targets via -repo_id (search + edit read it; the write actions
-  # create against it via -ephemeral). A runCommand over the store path yields a
+  # create against it via -ephemeral), and @editor@ (the EDITOR the edit/new
+  # actions bake in — see dodder-alfred-editor-wrapper's comment in
+  # ../go/default.nix for why this is needed at all: Alfred's script actions
+  # run with no controlling TTY, and dodder's editor integration never spawns
+  # a terminal itself). A runCommand over the store path yields a
   # plain directory that alfred.nix's activation symlinks into workflows/dodder.
   stagedWorkflow = pkgs.runCommand "dodder-alfred-workflow-configured" { } ''
     mkdir -p "$out"
     substitute \
       "${workflowPkg}/share/dodder/alfred/workflow/info.plist" \
       "$out/info.plist" \
-      --replace-fail '@repo_id@' '${cfg.repoId}'
+      --replace-fail '@repo_id@' '${cfg.repoId}' \
+      --replace-fail '@editor@' '${cfg.editorPackage}/bin/dodder-alfred-editor-wrapper'
   '';
 in
 {
@@ -68,6 +77,20 @@ in
         The attribute/directory name the workflow is registered under in
         `programs.alfred.extraWorkflows` (and thus the name it appears as
         under Alfred.alfredpreferences/workflows/). Rarely needs changing.
+      '';
+    };
+
+    editorPackage = lib.mkOption {
+      type = lib.types.path;
+      default = self.packages.${pkgs.system}.dodder-alfred-editor-wrapper;
+      description = ''
+        Editor dispatch binary baked into the workflow's edit/new actions
+        as `EDITOR=<path>`. Defaults to the flake's built-in kitty-dispatch
+        wrapper (`packages.dodder-alfred-editor-wrapper`), which detects
+        the no-TTY case Alfred's script actions always run in and spawns
+        kitty running nvim/vim instead of exec'ing headless (dodder's
+        editor integration never spawns a terminal itself). Override only
+        if you need different editor-launch behavior.
       '';
     };
   };

@@ -499,7 +499,7 @@
 				<key>escaping</key>
 				<integer>102</integer>
 				<key>script</key>
-				<string>'@dodder@' edit -repo_id '@repo_id@' -ephemeral -mode "$actions" "$1"</string>
+				<string>EDITOR='@editor@' '@dodder@' edit -repo_id '@repo_id@' -ephemeral -mode "$actions" "$1"</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
 				<key>scriptfile</key>
@@ -693,9 +693,9 @@
 				<integer>102</integer>
 				<key>script</key>
 				<string>if [[ "$#" -gt 0 ]]; then
-	'@dodder@' new -repo_id '@repo_id@' -ephemeral -edit=true -description "$*"
+	EDITOR='@editor@' '@dodder@' new -repo_id '@repo_id@' -ephemeral -edit=true -description "$*"
 else
-	'@dodder@' new -repo_id '@repo_id@' -ephemeral -edit=true
+	EDITOR='@editor@' '@dodder@' new -repo_id '@repo_id@' -ephemeral -edit=true
 fi</string>
 				<key>scriptargtype</key>
 				<integer>1</integer>
