@@ -20,7 +20,7 @@
     };
 
     purse-first = {
-      url = "git+https://code.linenisgreat.com/purse-first.git";
+      url = "git+https://github.com/amarbel-llc/purse-first.git";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -30,7 +30,7 @@
     # consumes it too; madder.inputs.hyphence.follows below keeps both on the
     # same rev (RFC 0001 flake-input-go_mod bridge — see go/gomod.nix).
     hyphence = {
-      url = "git+https://code.linenisgreat.com/hyphence.git";
+      url = "git+https://github.com/amarbel-llc/hyphence.git";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -42,7 +42,7 @@
       # tracks madder master; move it with `just go/update-flake-input madder`
       # (updates flake.lock + go.mod + gomod2nix in one shot) rather than
       # pinning a rev here.
-      url = "git+https://code.linenisgreat.com/madder.git";
+      url = "git+https://github.com/amarbel-llc/madder.git";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -69,7 +69,7 @@
     };
 
     tommy = {
-      url = "git+https://code.linenisgreat.com/tommy.git";
+      url = "git+https://github.com/amarbel-llc/tommy.git";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
