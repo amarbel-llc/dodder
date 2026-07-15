@@ -18,7 +18,7 @@ if ! tty >/dev/null 2>&1; then
   if command -v kitty >/dev/null 2>&1; then
     which_kitty=kitty
   else
-    which_kitty="/Applications/kitty.app/Contents/MacOS/kitty"
+    which_kitty="/Applications/Nix Apps/kitty.app/Contents/MacOS/kitty"
   fi
   exec "$which_kitty" "$which_vim" "$@"
 else
