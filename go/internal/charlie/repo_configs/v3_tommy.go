@@ -21,13 +21,13 @@ var (
 	_ = strings.Contains
 )
 
-type V2Document struct {
-	data   V2
+type V3Document struct {
+	data   V3
 	cstDoc *document.Document
 	model  *cst.Value
 }
 
-func DecodeV2(input []byte) (*V2Document, error) {
+func DecodeV3(input []byte) (*V3Document, error) {
 	doc, err := document.Parse(input)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func DecodeV2(input []byte) (*V2Document, error) {
 		return nil, err
 	}
 
-	d := &V2Document{
+	d := &V3Document{
 		cstDoc: doc,
 		model:  model,
 	}
@@ -51,6 +51,14 @@ func DecodeV2(input []byte) (*V2Document, error) {
 				}
 			}
 			_vBlobStores.MarkConsumed()
+		}
+	}
+	if _vDefaultBlobStore, _ok := model.Get("default-blob-store"); _ok && _vDefaultBlobStore.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vDefaultBlobStore.Leaf); _xok {
+			if err := d.data.DefaultBlobStore.UnmarshalText([]byte(_x)); err != nil {
+				return nil, fmt.Errorf("default-blob-store: %w", err)
+			}
+			_vDefaultBlobStore.MarkConsumed()
 		}
 	}
 	if _vDefaults, _ok := model.Get("defaults"); _ok && _vDefaults.Kind == cst.VTable {
@@ -122,11 +130,11 @@ func DecodeV2(input []byte) (*V2Document, error) {
 	return d, nil
 }
 
-func (d *V2Document) Data() *V2 {
+func (d *V3Document) Data() *V3 {
 	return &d.data
 }
 
-func (d *V2Document) Encode() ([]byte, error) {
+func (d *V3Document) Encode() ([]byte, error) {
 	{
 		if d.data.BlobStores != nil {
 			vals := make([]string, len(d.data.BlobStores))
@@ -140,6 +148,15 @@ func (d *V2Document) Encode() ([]byte, error) {
 			if err := cst.SetAny(d.cstDoc.Root(), "blob-stores", vals); err != nil {
 				return nil, fmt.Errorf("%w", err)
 			}
+		}
+	}
+	{
+		v, err := d.data.DefaultBlobStore.MarshalText()
+		if err != nil {
+			return nil, fmt.Errorf("default-blob-store: %w", err)
+		}
+		if err := cst.SetAny(d.cstDoc.Root(), "default-blob-store", string(v)); err != nil {
+			return nil, fmt.Errorf("%w", err)
 		}
 	}
 	{
@@ -201,30 +218,30 @@ func (d *V2Document) Encode() ([]byte, error) {
 	return d.cstDoc.Bytes(), nil
 }
 
-func (d *V2Document) Undecoded() []string {
+func (d *V3Document) Undecoded() []string {
 	if d.model == nil {
 		return nil
 	}
 	return d.model.Undecoded()
 }
 
-func (d *V2Document) Comment(key string) string {
+func (d *V3Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
 
-func (d *V2Document) SetComment(key, comment string) {
+func (d *V3Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
 
-func (d *V2Document) InlineComment(key string) string {
+func (d *V3Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
 
-func (d *V2Document) SetInlineComment(key, comment string) {
+func (d *V3Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
 
-func DecodeV2Into(data *V2, sub *cst.Value) error {
+func DecodeV3Into(data *V3, sub *cst.Value) error {
 	if _vBlobStores, _ok := sub.Get("blob-stores"); _ok && _vBlobStores.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractStringSlice(_vBlobStores.Leaf); _xok {
 			data.BlobStores = make([]blob_store_id.Id, len(_x))
@@ -234,6 +251,14 @@ func DecodeV2Into(data *V2, sub *cst.Value) error {
 				}
 			}
 			_vBlobStores.MarkConsumed()
+		}
+	}
+	if _vDefaultBlobStore, _ok := sub.Get("default-blob-store"); _ok && _vDefaultBlobStore.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vDefaultBlobStore.Leaf); _xok {
+			if err := data.DefaultBlobStore.UnmarshalText([]byte(_x)); err != nil {
+				return fmt.Errorf("default-blob-store: %w", err)
+			}
+			_vDefaultBlobStore.MarkConsumed()
 		}
 	}
 	if _vDefaults, _ok := sub.Get("defaults"); _ok && _vDefaults.Kind == cst.VTable {
@@ -305,7 +330,7 @@ func DecodeV2Into(data *V2, sub *cst.Value) error {
 	return nil
 }
 
-func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
+func EncodeV3From(data *V3, doc *document.Document, container *cst.Node) error {
 	{
 		if data.BlobStores != nil {
 			vals := make([]string, len(data.BlobStores))
@@ -319,6 +344,15 @@ func EncodeV2From(data *V2, doc *document.Document, container *cst.Node) error {
 			if err := cst.SetAny(container, "blob-stores", vals); err != nil {
 				return fmt.Errorf("%w", err)
 			}
+		}
+	}
+	{
+		v, err := data.DefaultBlobStore.MarshalText()
+		if err != nil {
+			return fmt.Errorf("default-blob-store: %w", err)
+		}
+		if err := cst.SetAny(container, "default-blob-store", string(v)); err != nil {
+			return fmt.Errorf("%w", err)
 		}
 	}
 	{

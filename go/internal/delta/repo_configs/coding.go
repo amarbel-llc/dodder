@@ -86,6 +86,31 @@ var Coder = hyphence.CoderToTypedBlob[ConfigOverlay]{
 					return doc.Encode()
 				},
 			},
+			ids.TypeTomlConfigV3: hyphence.CoderTommy[
+				ConfigOverlay,
+				*ConfigOverlay,
+			]{
+				Decode: func(b []byte) (ConfigOverlay, error) {
+					doc, err := charlie_rc.DecodeV3(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg ConfigOverlay) ([]byte, error) {
+					doc, err := charlie_rc.DecodeV3(nil)
+					if err != nil {
+						return nil, err
+					}
+					switch v := cfg.(type) {
+					case *V3:
+						*doc.Data() = *v
+					case V3:
+						*doc.Data() = v
+					}
+					return doc.Encode()
+				},
+			},
 		},
 	),
 }

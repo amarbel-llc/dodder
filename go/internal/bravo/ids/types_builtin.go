@@ -38,6 +38,7 @@ const (
 	TypeTomlConfigV0                                = "!toml-config-v0" // Deprecated
 	TypeTomlConfigV1                                = "!toml-config-v1"
 	TypeTomlConfigV2                                = "!toml-config-v2"
+	TypeTomlConfigV3                                = "!toml-config-v3"
 	TypeTomlRepoDotenvXdgV0                         = "!toml-repo-dotenv_xdg-v0"
 	TypeTomlRepoLocalOverridePath                   = "!toml-repo-local_override_path-v0"
 	TypeTomlRepoUri                                 = "!toml-repo-uri-v0"
@@ -111,6 +112,7 @@ func init() {
 	registerBuiltinTypeString(TypeTomlConfigV0, genres.Config, false)
 	registerBuiltinTypeString(TypeTomlConfigV1, genres.Config, false)
 	registerBuiltinTypeString(TypeTomlConfigV2, genres.Config, true)
+	registerBuiltinTypeString(TypeTomlConfigV3, genres.Config, false)
 	registerBuiltinTypeString(TypeTomlRepoDotenvXdgV0, genres.Repo, false)
 	registerBuiltinTypeString(TypeTomlRepoLocalOverridePath, genres.Repo, false)
 	registerBuiltinTypeString(TypeTomlRepoUri, genres.Repo, true)

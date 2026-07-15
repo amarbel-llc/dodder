@@ -23,12 +23,15 @@ type (
 	V1Document          = charlie_rc.V1Document
 	V2                  = charlie_rc.V2
 	V2Document          = charlie_rc.V2Document
+	V3                  = charlie_rc.V3
+	V3Document          = charlie_rc.V3Document
 )
 
 var (
 	DecodeV0                      = charlie_rc.DecodeV0
 	DecodeV1                      = charlie_rc.DecodeV1
 	DecodeV2                      = charlie_rc.DecodeV2
+	DecodeV3                      = charlie_rc.DecodeV3
 	DecodeDefaultsV1OmitEmptyInto = charlie_rc.DecodeDefaultsV1OmitEmptyInto
 	EncodeDefaultsV1OmitEmptyFrom = charlie_rc.EncodeDefaultsV1OmitEmptyFrom
 )
@@ -48,12 +51,20 @@ type (
 		GetBlobStores() []blob_store_id.Id
 		GetStreamIndexFixed() bool
 	}
+
+	// ConfigOverlay3 adds the digest-bearing id of the repo's default
+	// blob store (a madder multi, per FDR-0016 D1 / amarbel-llc/dodder#223).
+	ConfigOverlay3 interface {
+		ConfigOverlay2
+		GetDefaultBlobStoreId() blob_store_id.Id
+	}
 )
 
 var (
 	_ ConfigOverlay  = V0{}
 	_ ConfigOverlay  = V1{}
 	_ ConfigOverlay2 = V2{}
+	_ ConfigOverlay3 = V3{}
 )
 
 func Default(defaultType ids.Type) Config {
@@ -110,6 +121,17 @@ func GetStreamIndexFixed(
 ) bool {
 	if config, ok := config.(ConfigOverlay2); ok {
 		return config.GetStreamIndexFixed()
+	} else {
+		return otherwise
+	}
+}
+
+func GetDefaultBlobStoreId(
+	config ConfigOverlay,
+	otherwise blob_store_id.Id,
+) blob_store_id.Id {
+	if config, ok := config.(ConfigOverlay3); ok {
+		return config.GetDefaultBlobStoreId()
 	} else {
 		return otherwise
 	}
