@@ -51,11 +51,6 @@ func TestDecodeV3_DecodesBareBody(t1 *testing.T) {
 func TestV3_RoundTripsDefaultBlobStore(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	doc, err := DecodeV3(nil)
-	if err != nil {
-		t.Fatalf("failed to construct empty V3 document: %v", err)
-	}
-
 	body := strings.Join([]string{
 		`blob-stores = ["default"]`,
 		`default-blob-store = "default@blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d"`,
@@ -70,9 +65,7 @@ func TestV3_RoundTripsDefaultBlobStore(t1 *testing.T) {
 		t.Fatalf("failed to decode fixture body: %v", err)
 	}
 
-	*doc.Data() = *decoded.Data()
-
-	encoded, err := doc.Encode()
+	encoded, err := decoded.Encode()
 	if err != nil {
 		t.Fatalf("failed to encode V3: %v", err)
 	}

@@ -131,29 +131,6 @@ test-bats-targets-no-sandbox *targets:
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     just zz-tests_bats/test-targets-no-sandbox {{targets}}
 
-# As debug-test-bats-sftp, but builds dodder-debug against a locally
-# checked-out (and possibly hand-patched) madder source tree instead of
-# the pinned flake.lock rev. Used for adding temporary diagnostic
-# fmt.Fprintf(os.Stderr, ...) instrumentation directly into madder's
-# blob store code and observing it live against the exact same
-# single-hash SFTP repro as blob_store_sftp_single_hash.bats, without
-# needing to file/push/re-bump anything first. madder_path defaults to
-# the scratch checkout used for this session's SFTP mover investigation
-# (task #21) -- point it elsewhere for unrelated debugging.
-[group('debug')]
-debug-test-bats-sftp-madder-override madder_path=".tmp/madder-debug-checkout" *targets:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug --override-input madder "path:$(realpath '{{madder_path}}')")
-  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin)
-  sftp_bin=$(nix build --no-link --print-out-paths .#madder-test-sftp-server)
-  export PATH="$bin/bin:$madder_bin/bin:$PATH"
-  GOMEMLIMIT=512MiB \
-    MADDER_TEST_SFTP_SERVER="$sftp_bin/bin/madder-test-sftp-server" \
-    DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
-    MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
-    just zz-tests_bats/test-targets-no-sandbox {{targets}}
-
 # As test-bats-targets-no-sandbox, but also builds and exports
 # MADDER_TEST_SFTP_SERVER (amarbel-llc/madder#177) for bats files that
 # use zz-tests_bats/lib/sftp.bash. Only the nix bats lane
@@ -161,14 +138,25 @@ debug-test-bats-sftp-madder-override madder_path=".tmp/madder-debug-checkout" *t
 # this batman-path recipe needs the explicit build + export. Ad-hoc
 # debug recipe for iterating on SFTP-backed blob store tests --
 # amarbel-llc/dodder#118 tracks the sandbox networking restriction that
-# blocks the loopback bind even with the binary present.
+# blocks the loopback bind even with the binary present. Pass
+# madder_path to build dodder-debug against a locally checked-out (and
+# possibly hand-patched) madder source tree instead of the pinned
+# flake.lock rev -- used for adding temporary diagnostic
+# fmt.Fprintf(os.Stderr, ...) instrumentation directly into madder's
+# blob store code without needing to file/push/re-bump anything first.
 [group('debug')]
-debug-test-bats-sftp *targets:
+debug-test-bats-sftp madder_path="" *targets:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  if [ -n "{{madder_path}}" ]; then
+    bin=$(nix build --no-link --print-out-paths .#dodder-debug --override-input madder "path:$(realpath '{{madder_path}}')")
+    madder_bin=$(nix build --no-link --print-out-paths .#madder-bin)
+    export PATH="$bin/bin:$madder_bin/bin:$PATH"
+  else
+    bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+    export PATH="$bin/bin:$PATH"
+  fi
   sftp_bin=$(nix build --no-link --print-out-paths .#madder-test-sftp-server)
-  export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     MADDER_TEST_SFTP_SERVER="$sftp_bin/bin/madder-test-sftp-server" \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -708,3 +696,21 @@ debug-cutover-smoke:
   dodder gen madder-private_key-v0 madder-private_key-v1 dodder-repo-private_key-v1
 
   echo "==> cutover smoke OK"
+
+# Import the live default repo's export into the disposable
+# dodder-migration-staging repo (part of the dodder-index-test /
+# resolve-tai-reassign investigation, see chat with krusty for context).
+# The automated run of this same import hung silently for 18+ min against
+# rsync_dot_net (2 !bookmark objects there are remote-only) with no visible
+# progress from outside the process — run this interactively instead so the
+# per-object commit lines and blob_store status lines stream live.
+[group('debug')]
+debug-import-staging-baseline:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+  sp=/home/sasha/workspaces/dodder-migration-staging
+  dodder import -verbose -repo_id dodder-migration-staging -plan-format summary "$sp/default-repo.export.inventory_list"
+  echo "==> done, staging repo object count:"
+  dodder show -repo_id dodder-migration-staging '+?z,t,k,e' | wc -l
