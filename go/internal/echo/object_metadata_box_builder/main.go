@@ -354,3 +354,18 @@ func (builder *Builder) AddDescription(metadata objects.MetadataMutable) {
 		},
 	})
 }
+
+// AddDescriptionPreservingNewlines writes the description's exact string
+// (embedded newlines intact, %q-escaped by the field writer) instead of
+// the display-oriented single-line collapse AddDescription uses. Archive/
+// wire-format callers (inventory_list entries) must round-trip the exact
+// bytes an object's signature was computed over; collapsing newlines
+// there silently changes the signed digest on decode.
+func (builder *Builder) AddDescriptionPreservingNewlines(metadata objects.MetadataMutable) {
+	builder.Contents.Append(string_format_writer.FormattedField{
+		Field: fields.Field{
+			Value: metadata.GetDescription().String(),
+			Type:  fields.TypeUserData,
+		},
+	})
+}

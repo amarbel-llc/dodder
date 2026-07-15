@@ -315,6 +315,426 @@ explore-haustoria-status:
   cd /tmp/dodder-haustoria-explore/workspace
   dodder status
 
+# Pull a full copy of the real, already-initialized XDG-user "default" repo
+# (source of truth for the operator's actual notes) into a fresh workspace
+# under this worktree's .tmp/, to investigate whether -ephemeral workspaces
+# (and pull in general) bring in every object from the source rather than a
+# scoped subset (dodder#TBD). Does NOT touch the source repo.
+#
+# NOTE: `dodder clone -direct <path>` looked like the obvious tool for this
+# but is NOT usable against a plain XDG-home repo: -direct's only blob type
+# (TomlLocalOverridePathV0) resolves via
+# env_dir.MakeWithXDGRootOverrideHomeAndInitialize, whose XDG template
+# ("$XDG_OVERRIDE/.$XDG_UTILITY_NAME/local/share", dewey
+# internal/delta/xdg_defaults/main.go) inserts an extra `.dodder/local/share`
+# segment that a standard home-XDG repo (built via the DIFFERENT
+# MakeWithHomeAndInitialize / "$HOME/.local/share/$XDG_UTILITY_NAME"
+# template) never has on disk -- confirmed by direct `ls` against the real
+# repo (.dodder, config-seed, etc. are siblings, not nested under
+# .dodder/local/share). No override value collapses the two templates to
+# the same path. `clone.go`'s Run() also never reaches
+# MakeHomeRepoRemote/IsHomeRepoParent (that path is pull/push/set_parent
+# only, via ResolveImplicitDirectPath when a workspace's recorded parent
+# resolves to the home repo) -- clone has no flag equivalent for it.
+#
+# So instead: init-workspace with NO -parent (defaults to the home repo,
+# same resolution `-repo_id default` uses elsewhere; refuses to
+# auto-create if missing) followed by a plain `pull`, which DOES reach
+# MakeHomeRepoRemote for a home-repo parent.
+[group('debug')]
+debug-clone-default-into-tmp:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  dest="{{ justfile_directory() }}/.tmp/debug-clone-default/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  # Default (-experimental-repo=true) with no -parent: repo-backed
+  # workspace whose parent resolves to the home repo (V1 config with empty
+  # ParentPath), the same resolution `new -ephemeral` uses -- this is what
+  # makes ResolveImplicitDirectPath -> IsHomeRepoParent() true for `pull`.
+  # (-experimental-repo=false, the run_dodder_init_disable_age bats
+  # pattern, creates a different lightweight V0 workspace with no parent
+  # pointer at all -- confirmed by reading runLightweight vs
+  # runExperimentalRepo in init_workspace.go; that flag does NOT apply
+  # here.)
+  dodder init-workspace debug-ws
+
+  # TEMPORARY: dumps the exact bytes hashed for project-catapult_lag's
+  # digest recomputation during pull's re-verification, via debug
+  # instrumentation added to object_fmt_digest.WriteDigest (main.go).
+  # Substring match (not exact) since the object-id string format at this
+  # call site isn't confirmed yet. Redirected to a file (not stderr
+  # inline) to avoid any stream-mixing/truncation in the tool wrapper.
+  # Remove this env var (and the instrumentation) once root-caused.
+  debug_log="{{ justfile_directory() }}/.tmp/debug-digest.log"
+  DODDER_DEBUG_DIGEST_ALL=1 DODDER_DEBUG_DIGEST_OBJECT_ID=catapult dodder pull 2>"$debug_log" || true
+  echo "=== debug digest log ($debug_log) ==="
+  grep -i catapult "$debug_log" || echo "(no 'catapult' lines found in debug log)"
+  wc -l "$debug_log"
+
+  echo ""
+  echo "==> Workspace: $dest"
+  echo "==> Run:"
+  echo "  cd $dest && dodder show :z | wc -l"
+
+# Run `dodder fsck` directly against the REAL live default repo (no
+# pull/clone involved -- this is the check that reportedly passes clean
+# for project-catapult_lag), with the SAME DODDER_DEBUG_VERIFY /
+# DODDER_DEBUG_DIGEST instrumentation active, so the exact pubkey/digest/
+# sig bytes fsck sees for this object can be diffed byte-for-byte against
+# what pull captured (.tmp/debug-digest.log) for the SAME object-id.
+[group('debug')]
+debug-fsck-catapult-lag-with-instrumentation:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  debug_log="{{ justfile_directory() }}/.tmp/debug-fsck-digest.log"
+
+  # -recompute: without this, fsck only verifies the SIGNATURE against the
+  # digest ALREADY STORED on disk -- it never calls WriteDigest, so it
+  # can't reveal whether recomputing the digest from the decoded object's
+  # fields would reproduce that same stored value (confirmed by an
+  # earlier run of this recipe with no -recompute: zero DODDER_DEBUG_DIGEST
+  # lines appeared, only DODDER_DEBUG_VERIFY). With -recompute, fsck DOES
+  # call WriteDigest, so its bytes= output can be diffed directly against
+  # pull's bytes= for the same object/Tai (.tmp/debug-digest.log).
+  DODDER_DEBUG_DIGEST_ALL=1 DODDER_DEBUG_DIGEST_OBJECT_ID=catapult \
+    dodder fsck -recompute -repo_id default 'project-catapult_lag+:e' 2>"$debug_log" || true
+
+  echo "=== fsck output ==="
+  cat "$debug_log" | grep -v DODDER_DEBUG || true
+
+  echo ""
+  echo "=== debug digest/verify log ($debug_log) ==="
+  grep -A6 'DODDER_DEBUG_VERIFY' "$debug_log" || echo "(no DODDER_DEBUG_VERIFY lines found -- fsck may not be calling pubKey.Verify for this object by default)"
+
+# Sanity check BEFORE writing a new regression test: does `dodder new
+# -object-id X -description '...'` with a literal embedded blank line
+# (bash $'...\n\n...' construction) actually commit a Description with
+# REAL 0x0A bytes preserved, or does something in CLI flag parsing / the
+# commit path ALSO collapse/normalize newlines before the object is ever
+# signed -- in which case earlier bats tests using this same construction
+# never exercised the box_format/transacted.go newline-collapse bug at
+# all (nothing to corrupt if the description was already newline-free).
+# Uses `fsck -recompute` with the same DODDER_DEBUG_DIGEST instrumentation
+# to inspect the freshly-committed object's digest bytes= directly.
+[group('debug')]
+debug-verify-cli-description-has-real-newlines:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  dest="{{ justfile_directory() }}/.tmp/debug-cli-description-check/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  dodder init -encryption none .default
+
+  dodder new -edit=false -object-id sanity-check-tag \
+    -description "$(printf 'paragraph one text here.\n\nparagraph two text here.')"
+
+  debug_log="{{ justfile_directory() }}/.tmp/debug-cli-description-check.log"
+  DODDER_DEBUG_DIGEST_ALL=1 DODDER_DEBUG_DIGEST_OBJECT_ID=sanity-check-tag \
+    dodder fsck -recompute 'sanity-check-tag:e' 2>"$debug_log" || true
+
+  echo "=== fsck output ==="
+  cat "$debug_log" | grep -v DODDER_DEBUG || true
+
+  echo ""
+  echo "=== bytes= line(s) BEFORE export/reimport (look for how many separate 'Description ' keys appear) ==="
+  grep 'bytes=' "$debug_log" || echo "(no bytes= lines found)"
+
+  # Now round-trip through the ACTUAL export/import path (the real
+  # box_format-archive inventory_list encode/decode this bug lives in) and
+  # check whether the digest still matches on the other side.
+  list_path="{{ justfile_directory() }}/.tmp/debug-cli-description-check-list.inventory_list"
+  dodder export -print-time=true 'sanity-check-tag:e' >"$list_path"
+
+  dest2="{{ justfile_directory() }}/.tmp/debug-cli-description-check-reimport/$(date +%s)"
+  mkdir -p "$dest2"
+  cd "$dest2"
+  dodder init -encryption none -exclude-default-type .default
+
+  debug_log2="{{ justfile_directory() }}/.tmp/debug-cli-description-check-reimport.log"
+  DODDER_DEBUG_DIGEST_ALL=1 DODDER_DEBUG_DIGEST_OBJECT_ID=sanity-check-tag \
+    dodder import "$list_path" 2>"$debug_log2" || true
+
+  echo ""
+  echo "=== import output ==="
+  cat "$debug_log2" | grep -v DODDER_DEBUG || true
+
+  echo ""
+  echo "=== bytes= line(s) AFTER export/reimport ==="
+  grep 'bytes=' "$debug_log2" || echo "(no bytes= lines found)"
+
+# Export the real, live "default" repo's full history (all genres) to a
+# static inventory-list file under .tmp/, then bootstrap a FRESH standalone
+# repo from that file via `dodder import` -- pointing -blob_store-id at the
+# real repo's actual madder blob store (~/.local/share/madder/blob_stores/default,
+# confirmed via direct `ls` + reading its blob_store-config) so the fresh
+# repo gets real blob content copied in, not shared/live storage. This
+# gives a portable, static fixture to retest `debug-clone-default-into-tmp`
+# against without needing live repo access each time, and a starting point
+# for bisecting the inventory list to isolate which object(s) trigger the
+# pull ed25519 signature-verification bug (dodder#TBD).
+[group('debug')]
+debug-export-default-and-bootstrap:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  export_dir="{{ justfile_directory() }}/.tmp/debug-export-default"
+  mkdir -p "$export_dir"
+  list_path="$export_dir/$(date +%s).inventory_list"
+
+  dodder export -repo_id default -print-time=true +z,e,t,k >"$list_path"
+
+  echo "==> Exported to: $list_path"
+  wc -l "$list_path"
+
+  dest="{{ justfile_directory() }}/.tmp/debug-bootstrap-from-export/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  # -exclude-default-type: plain `init` otherwise always genesis-creates
+  # its OWN !md type + blob (clone/init-workspace already set this
+  # programmatically; this session added a CLI flag for `init` too, since
+  # importing the real repo's own !md object-id on top of a second,
+  # independently-genesis'd !md orphaned a blob mid config-recompile:
+  # "Blob ... does not exist locally").
+  dodder init -encryption none -exclude-default-type .default
+
+  dodder import \
+    -blob_store-id default \
+    "$list_path"
+
+  # Stable symlink so debug-pull-from-bootstrapped-export can find the
+  # most recent bootstrap without the caller having to pass a timestamp.
+  ln -sfn "$dest" "{{ justfile_directory() }}/.tmp/debug-bootstrap-from-export/latest"
+
+  echo ""
+  echo "==> Fresh bootstrapped repo: $dest"
+  echo "==> Exported list:          $list_path"
+  echo "==> Run:"
+  echo "  cd $dest && dodder show :z | wc -l"
+
+# Pull from the static, exported-and-bootstrapped fixture repo (built by
+# `just debug-export-default-and-bootstrap`) instead of the live default
+# repo -- isolates whether the pull ed25519 signature-verification bug
+# reproduces against a STANDALONE copy of the real data (no live repo
+# access, no shared blob store with the operator's actual notes), or
+# whether it needs something specific to the live repo/session that a
+# static export+import round-trip does not carry over.
+[group('debug')]
+debug-pull-from-bootstrapped-export:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  source="{{ justfile_directory() }}/.tmp/debug-bootstrap-from-export/latest"
+
+  if [[ ! -d "$source/.dodder" ]]; then
+    echo "no bootstrapped export repo found at $source -- run just debug-export-default-and-bootstrap first" >&2
+    exit 1
+  fi
+
+  dest="{{ justfile_directory() }}/.tmp/debug-pull-from-export/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  dodder init -encryption none -exclude-default-type .default
+  dodder pull -direct "$(realpath "$source")" +z,e,t,k
+
+  echo ""
+  echo "==> Source (bootstrapped export): $source"
+  echo "==> Destination:                  $dest"
+
+# Isolate whether the pull ed25519 signature-verification bug is triggered
+# by the HOME-REPO PARENT-RESOLUTION MECHANISM itself (init-workspace's
+# ParentPath -> ResolveImplicitDirectPath -> VerifyOrPinParent's pubkey
+# pin/verify check, go/internal/tango/command_components_dodder/remote.go:120-159)
+# rather than by anything data-dependent. debug-pull-from-bootstrapped-export
+# uses plain `pull -direct`, which VerifyOrPinParent treats as a no-op
+# (only a parent-RESOLVED remote is subject to the #287b pubkey check).
+# This recipe instead runs `init-workspace -parent <bootstrapped-export>`
+# so the workspace records a REAL ParentPath, then a plain `pull` (no
+# -direct) against the SAME static, already-proven-clean data -- putting
+# the parent-resolution/pin-verification code path under test while
+# holding the data constant.
+[group('debug')]
+debug-pull-via-parent-resolution-from-bootstrapped-export:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  source="{{ justfile_directory() }}/.tmp/debug-bootstrap-from-export/latest"
+
+  if [[ ! -d "$source/.dodder" ]]; then
+    echo "no bootstrapped export repo found at $source -- run just debug-export-default-and-bootstrap first" >&2
+    exit 1
+  fi
+
+  dest="{{ justfile_directory() }}/.tmp/debug-pull-via-parent/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  dodder init-workspace -parent "$(realpath "$source")" debug-ws
+  dodder pull +z,e,t,k
+
+  echo ""
+  echo "==> Source (bootstrapped export, as PARENT): $source"
+  echo "==> Destination:                             $dest"
+
+# Last isolation step: does the pull ed25519 signature-verification bug
+# need the HOME-REPO resolution mechanism specifically (MakeHomeRepoRemote,
+# go/internal/tango/command_components_dodder/remote.go:230-268), as
+# opposed to -direct (ruled out: debug-pull-from-bootstrapped-export) or
+# parent-path resolution with pubkey pin/verify (ruled out:
+# debug-pull-via-parent-resolution-from-bootstrapped-export)?
+# MakeHomeRepoRemote resolves via `os.UserHomeDir()` + the STANDARD (non-
+# override) XDG template ($HOME/.local/share/$XDG_UTILITY_NAME/repos/<name>)
+# -- NOT $XDG_DATA_HOME directly. So this recipe builds a FAKE $HOME
+# containing a `default` repo (plain name, not CWD-scoped) bootstrapped
+# from the SAME exported inventory list used by the other debug-pull-*
+# recipes, then runs `init-workspace` with NO -parent (so parentIsHomeRepo
+# resolves true) + `pull` with HOME overridden to the fake one --
+# reproducing MakeHomeRepoRemote's exact resolution against clean,
+# already-proven-clean-elsewhere static data. If this ALSO succeeds
+# cleanly, the bug needs something about the LIVE repo's actual runtime
+# state (not just its data, and not this resolution mechanism in the
+# abstract); if it reproduces the failure, MakeHomeRepoRemote itself is
+# implicated regardless of data.
+[group('debug')]
+debug-pull-via-home-repo-resolution-from-bootstrapped-export:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  export_dir="{{ justfile_directory() }}/.tmp/debug-export-default"
+  list_path="$(ls -t "$export_dir"/*.inventory_list 2>/dev/null | head -1)"
+
+  if [[ -z "$list_path" ]]; then
+    echo "no exported inventory list found in $export_dir -- run just debug-export-default-and-bootstrap first" >&2
+    exit 1
+  fi
+
+  # A fake $HOME: init-workspace's home-repo branch resolves purely via
+  # os.UserHomeDir() + the standard (non-override) XDG template
+  # ($HOME/.local/share/$XDG_UTILITY_NAME/repos/<name>, confirmed earlier
+  # this session by reading dewey's XDG template source directly). XDG_*
+  # vars must ALSO be unset: per the XDG spec (and this session's own real
+  # XDG_CONFIG_HOME etc.) an explicitly set XDG_CONFIG_HOME takes
+  # precedence over $HOME-derived defaults, so leaving it set would
+  # collide with this real session's actual ~/.config/dodder state.
+  fake_home="{{ justfile_directory() }}/.tmp/debug-fake-home/$(date +%s)"
+  mkdir -p "$fake_home/.local/share/dodder" "$fake_home/.local/share/madder"
+  export HOME="$fake_home"
+  unset XDG_DATA_HOME XDG_CONFIG_HOME XDG_STATE_HOME XDG_CACHE_HOME XDG_RUNTIME_HOME
+
+  # `-blob_store-id default`'s flag type is a scoped_id, not a path -- it
+  # rejects an arbitrary filesystem path outright, so it cannot reference
+  # the real blob store directly once HOME is overridden. Instead,
+  # symlink the fake home's expected blob-store location AT the real
+  # one: madder's own repos/default resolution (independent of dodder's)
+  # then finds the SAME real, read-only blob content under the fake HOME,
+  # with no copying and no separate store.
+  mkdir -p "$fake_home/.local/share/madder/blob_stores"
+  ln -s "/Users/sfriedenberg/.local/share/madder/blob_stores/default" \
+    "$fake_home/.local/share/madder/blob_stores/default"
+
+  (
+    mkdir -p "$fake_home/work"
+    cd "$fake_home/work"
+    dodder init -encryption none -exclude-default-type default
+    dodder import -blob_store-id default "$list_path"
+  )
+
+  dest="{{ justfile_directory() }}/.tmp/debug-pull-via-home-repo/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  # No -parent: parentPath is empty, so ResolveImplicitDirectPath falls
+  # through to the parentIsHomeRepo branch (remote.go:134-140) instead of
+  # the explicit-path branch tested by the other two debug-pull-* recipes.
+  dodder init-workspace debug-ws
+  dodder pull +z,e,t,k
+
+  echo ""
+  echo "==> Fake HOME:      $fake_home"
+  echo "==> Destination:    $dest"
+
+# Verify Go's actual %q (strconv.Quote) escaping behavior for printable
+# non-ASCII runes (em-dash, smart quotes) -- ground-truth check for the
+# ed25519 pull-verification bug theory: box_format writes descriptions with
+# %q (go/internal/alfa/string_format_writer/fields_writer.go:237) but
+# doddish's scanner (go/internal/0/doddish/scanner.go
+# consumeLiteralOrFieldValue) only unescapes a leading backslash before ANY
+# character -- it has no strconv.Quote-compatible handling of \uXXXX
+# sequences. If %q escapes em-dash/smart-quotes as \uXXXX (rather than
+# printing them raw), doddish's scanner would misparse them, corrupting the
+# description on any read path that goes through doddish (inventory_list
+# decode) but not on paths that store raw bytes directly (stream_index
+# binary). Uses `go run` directly (not `just build`) since this is
+# stdlib-only and doesn't need dodder's own build.
+[group('debug')]
+debug-verify-go-percent-q-escaping:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "{{ justfile_directory() }}/go"
+  go run "{{ justfile_directory() }}/.tmp/debug-quote-roundtrip/main.go"
+
+# Clean-room check of the exact pubkey/digest/sig bytes captured via
+# DODDER_DEBUG_VERIFY instrumentation (object_finalizer/validation.go) for
+# project-catapult_lag's FAILING verify during a live pull -- runs Go's
+# stdlib crypto/ed25519.Verify directly against those bytes, completely
+# outside dodder's own code, to determine whether the signature genuinely
+# doesn't verify (real crypto mismatch) or whether dodder's own
+# markl/piggy verify wrapper has a bug (would succeed here but fail in
+# dodder). Also sanity-checks pubkey/sig byte lengths against
+# ed25519.PublicKeySize/SignatureSize.
+[group('debug')]
+debug-verify-ed25519-bytes-standalone:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "{{ justfile_directory() }}/go"
+  go run "{{ justfile_directory() }}/.tmp/debug-quote-roundtrip/verify_check.go"
+
+# Compare the inventory_list-format (full signature-bearing) representation
+# of project-catapult_lag:e between the real default repo and der (debug aid
+# for the pull-import ed25519 signature-verification failure -- fsck on the
+# real repo passes clean, but pull's importer rejects this exact object's
+# signature every time; comparing the two representations should show
+# whether the import path re-serializes the object differently before
+# re-verifying its signature).
+[group('debug')]
+debug-compare-catapult-lag-sig:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  echo "=== dodder show -repo_id default -format inventory_list project-catapult_lag:e ==="
+  dodder show -repo_id default -format inventory_list 'project-catapult_lag:e'
+
+  echo ""
+  echo "=== der show -repo_id default -format inventory_list project-catapult_lag:e ==="
+  der show -repo_id default -format inventory_list 'project-catapult_lag:e'
+
+  echo ""
+  echo "=== dodder show -repo_id default -format text project-catapult_lag:e (cat -A, raw bytes) ==="
+  dodder show -repo_id default -format text 'project-catapult_lag:e' | cat -A
+
 live_workspace := env("HOME") / "workspaces/dodder-haustoria-caldav/workspace"
 
 # Init a CWD-scoped dodder repo and wire `.claude/mcp.json` so this

@@ -3,6 +3,8 @@ package object_fmt_digest
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
@@ -140,7 +142,45 @@ func WriteDigest(
 
 	var digest mad_domain_interfaces.MarklId
 
-	if digest, err = format.writeMetadata(nil, context); err != nil {
+	// TEMPORARY debug instrumentation for investigating the pull
+	// ed25519-verification bug. DODDER_DEBUG_DIGEST_ALL=1 logs every
+	// object-id WriteDigest processes (to find the real object-id string
+	// format at this call site); DODDER_DEBUG_DIGEST_OBJECT_ID=<substr>
+	// additionally dumps the exact bytes hashed when the object-id
+	// CONTAINS that substring (substring match, not exact, since the
+	// object-id format at this call site is not yet confirmed). No-op
+	// unless either env var is set. Not meant to be committed long-term --
+	// remove once the bug is root-caused.
+	debugAll := os.Getenv("DODDER_DEBUG_DIGEST_ALL") != ""
+	debugObjectIdSubstr := os.Getenv("DODDER_DEBUG_DIGEST_OBJECT_ID")
+	objectIdString := context.GetObjectId().String()
+
+	if debugAll {
+		fmt.Fprintf(
+			os.Stderr,
+			"DODDER_DEBUG_DIGEST_ALL: purpose=%q object_id=%q\n",
+			formatId,
+			objectIdString,
+		)
+	}
+
+	if debugObjectIdSubstr != "" && strings.Contains(objectIdString, debugObjectIdSubstr) {
+		var sb strings.Builder
+
+		if digest, err = format.writeMetadata(&sb, context); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		fmt.Fprintf(
+			os.Stderr,
+			"DODDER_DEBUG_DIGEST: purpose=%q object_id=%q digest=%s\nbytes=%q\n",
+			formatId,
+			objectIdString,
+			digest,
+			sb.String(),
+		)
+	} else if digest, err = format.writeMetadata(nil, context); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

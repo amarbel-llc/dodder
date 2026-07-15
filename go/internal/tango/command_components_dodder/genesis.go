@@ -90,6 +90,13 @@ func (cmd *Genesis) SetFlagDefinitions(
 	)
 
 	flagSet.BoolVar(
+		&cmd.BigBang.ExcludeDefaultType,
+		"exclude-default-type",
+		cmd.BigBang.ExcludeDefaultType,
+		"Skip genesis-creating a default type; the repo starts with no default type, like a workspace repo or clone",
+	)
+
+	flagSet.BoolVar(
 		&cmd.BigBang.IncludeBuiltinActionableTypes,
 		"include-builtin-actionable-types",
 		false,

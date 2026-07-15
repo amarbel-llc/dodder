@@ -265,6 +265,33 @@ func (scanner *Scanner) ConsumeSpacesOrErrorOnFalse() (ok bool) {
 	}
 }
 
+// unescapeLiteralRune maps a rune following a backslash inside a quoted
+// literal to its real character, matching the standard Go/strconv.Quote
+// escape set (Quote never emits \x/\u for printable runes -- confirmed
+// empirically -- so only the single-character escapes need handling
+// here). Any rune not in this set (including the quote/backslash
+// themselves) is returned as-is, so `\"` and `\\` round-trip unchanged.
+func unescapeLiteralRune(char rune) rune {
+	switch char {
+	case 'n':
+		return '\n'
+	case 't':
+		return '\t'
+	case 'r':
+		return '\r'
+	case 'a':
+		return '\a'
+	case 'b':
+		return '\b'
+	case 'f':
+		return '\f'
+	case 'v':
+		return '\v'
+	default:
+		return char
+	}
+}
+
 // TODO https://github.com/amarbel-llc/dodder/issues/31
 // Add support for ellipsis syntax
 func (scanner *Scanner) consumeLiteralOrFieldValue(
@@ -290,7 +317,9 @@ func (scanner *Scanner) consumeLiteralOrFieldValue(
 		end := char == start
 		content := !lastWasBackslash && !currentIsBackslash && !end
 
-		if escaped || content {
+		if escaped {
+			scanner.scanned.WriteRune(unescapeLiteralRune(char))
+		} else if content {
 			scanner.scanned.WriteRune(char)
 		}
 

@@ -946,3 +946,149 @@ function pull_direct_no_repo_at_path { # @test
   assert_failure
   assert_output --partial 'not in a dodder directory'
 }
+
+# Regression coverage for a real-world failure: pulling a Tag object with a
+# rich description (multi-paragraph, embedded literal double-quotes, an
+# em-dash) from a long-lived repo aborted with `invalid signature: ed25519:
+# invalid signature` during re-verification after inventory_list decode --
+# even though `fsck` on the source repo passed clean and `show -format
+# inventory_list` rendered identical output in both `dodder` and `der`.
+#
+# This test alone does NOT reproduce the failure (confirmed): a freshly
+# created tag with the same description shape pulls cleanly. It's kept as a
+# regression guard for the description-shape half of the investigation, and
+# a base for pull_tag_with_mother_sig_history_signature_survives below,
+# which adds the other half (a real mother-sig chain via organize).
+function pull_tag_with_rich_description_signature_survives { # @test
+  them="them"
+
+  (
+    mkdir -p "$them"
+    pushd "$them" || exit 1
+    run_dodder_init
+
+    # Mirrors a real tag's shape: multi-paragraph description (blank-line
+    # separated), embedded literal double-quotes, an em-dash, and two
+    # meta-tags.
+    run_dodder new -edit=false -object-id project-catapult_lag \
+      -description 'Catapult kafka streams throughput/lag investigation: theory that catapult'"'"'s kafka streams consumer apps hit a throughput ceiling before topic lag climbs. Dashboard: Grafana "StreamingEvents" (uid TNlXYDRZk) — personal working copy.
+
+FINDING (revised): kafka_minion_group_topic_lag no longer exists — use kafkastreams_consumer_fetch_manager_metrics_records_lag_avg instead, confirmed live.
+
+A narrow 3h sample showed only small isolated per-partition lag spikes — arguing AGAINST a throughput ceiling. But a wider window surfaced a bigger episode where rate climbed steadily with no plateau — the consumer was working harder and still could not outpace incoming volume.' \
+      -tags active,priority-2_want
+    assert_success
+  )
+
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+  run_dodder_init_disable_age
+
+  run_dodder pull -direct "$(realpath "$them")" +etikett
+  assert_success
+  refute_output --partial "invalid signature"
+
+  run_dodder show 'project-catapult_lag:e'
+  assert_success
+}
+
+# Same rich-description tag as above, but with a SECOND version created via
+# `organize -mode commit-directly` before the pull, so the pulled object
+# carries a real (non-null) mother-sig -- the one property the real failing
+# object had that the fresh single-version tag above does not.
+function pull_tag_with_mother_sig_history_signature_survives { # @test
+  them="them"
+
+  (
+    mkdir -p "$them"
+    pushd "$them" || exit 1
+    run_dodder_init
+
+    run_dodder new -edit=false -object-id project-catapult_lag \
+      -description 'Catapult kafka streams throughput/lag investigation: theory that catapult'"'"'s kafka streams consumer apps hit a throughput ceiling before topic lag climbs. Dashboard: Grafana "StreamingEvents" (uid TNlXYDRZk) — personal working copy.
+
+FINDING (revised): kafka_minion_group_topic_lag no longer exists — use kafkastreams_consumer_fetch_manager_metrics_records_lag_avg instead, confirmed live.
+
+A narrow 3h sample showed only small isolated per-partition lag spikes — arguing AGAINST a throughput ceiling. But a wider window surfaced a bigger episode where rate climbed steadily with no plateau — the consumer was working harder and still could not outpace incoming volume.' \
+      -tags active
+    assert_success
+
+    # Second version: add a meta-tag via organize, giving the tag a real
+    # mother-sig chain (v1 -> v2) rather than a fresh/null one.
+    run_dodder organize -mode commit-directly :e <<-EOM
+			# priority-2_want
+			- [project-catapult_lag]
+		EOM
+    assert_success
+  )
+
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+  run_dodder_init_disable_age
+
+  run_dodder pull -direct "$(realpath "$them")" +etikett
+  assert_success
+  refute_output --partial "invalid signature"
+
+  run_dodder show 'project-catapult_lag+:e'
+  assert_success
+}
+
+# Regression test for the actual root cause behind the two tests above: a
+# description with an embedded blank-line paragraph break (a real "\n\n",
+# not just long single-line text) was silently corrupted by two
+# independent bugs on its way through export -> import:
+#
+#   1. WRITE-SIDE (box_format/transacted.go, object_metadata_box_builder):
+#      the inventory_list/archive wire-format encoder called
+#      Description.StringWithoutNewlines() -- a DISPLAY-ONLY helper meant
+#      for collapsing multi-paragraph text onto one terminal line --
+#      silently replacing every embedded "\n" with a space before writing
+#      the signed wire-format bytes.
+#   2. READ-SIDE (doddish's Scanner.consumeLiteralOrFieldValue): even once
+#      the writer correctly `%q`-escapes a real newline as the two-byte
+#      sequence backslash+'n', the scanner's escape handling only stripped
+#      the backslash -- it did not interpret standard escape sequences, so
+#      reading `\n` back produced the literal letter 'n' glued onto the
+#      surrounding text instead of a real newline.
+#
+# Either bug alone changes the digest computed from the object's fields
+# (object_fmt_digest.WriteDigest hashes one "Description <line>" key per
+# newline-separated paragraph), so a description round-tripped through
+# export/import would recompute to a DIFFERENT digest than the one
+# originally signed -- triggering "invalid signature: ed25519: invalid
+# signature" on pull/import re-verification, even though `fsck` (which
+# trusts the stored digest without recomputing it) reported no problem.
+#
+# This test proves both are fixed for newly-created objects: it asserts
+# not just "no signature error" (the earlier two tests already covered
+# that with a real-world-shaped description) but that the description's
+# blank-line paragraph break survives byte-for-byte -- the exact property
+# that was silently lost before.
+function pull_tag_with_embedded_blank_line_description_round_trips { # @test
+  them="them"
+
+  (
+    mkdir -p "$them"
+    pushd "$them" || exit 1
+    run_dodder_init
+
+    run_dodder new -edit=false -object-id blank-line-description-tag \
+      -description "$(printf 'paragraph one text here.\n\nparagraph two text here.')"
+    assert_success
+  )
+
+  pushd "$BATS_TEST_TMPDIR" || exit 1
+  run_dodder_init_disable_age
+
+  run_dodder pull -direct "$(realpath "$them")" +etikett
+  assert_success
+  refute_output --partial "invalid signature"
+
+  run_dodder show -format text 'blank-line-description-tag:e'
+  assert_success
+  # The blank-paragraph-separator line renders as "# " (hash + trailing
+  # space, from writeCommonMetadataFormat's `# %s` with an empty line) --
+  # not a bare "#". Built with printf (not a heredoc) so the trailing
+  # space survives editor/whitespace-trimming tooling.
+  expected="$(printf -- '---\n# paragraph one text here.\n# \n# paragraph two text here.\n! toml-tag-v1\n---')"
+  assert_output "$expected"
+}
