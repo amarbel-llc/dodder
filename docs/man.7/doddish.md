@@ -100,6 +100,17 @@ Genres can be combined with commas: **:z,t,e** matches zettels, types, and tags.
 
 The genre suffix is part of the query term, not a separate argument.
 
+## Quoted Literals
+
+Field values and other literal text can be double-quoted to include
+spaces or reserved characters, e.g. **url="https://example.com/a b"**.
+Inside a quoted literal, a backslash escapes the following character:
+**\\n**, **\\t**, **\\r**, **\\a**, **\\b**, **\\f**, and **\\v** map to
+their standard control characters (newline, tab, carriage return, bell,
+backspace, form feed, vertical tab); **\\"** and **\\\\** round-trip as a
+literal quote and a literal backslash. Any other character following a
+backslash is passed through unchanged.
+
 # DEFAULTS
 
 When no sigil is given, **:** (latest) is assumed. When no genre is given, **z**
