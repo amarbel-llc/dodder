@@ -122,6 +122,10 @@ let
       #          format_pandoc.bats, several fields.bats cases).
       # vim:     mergetool tests resolve the `vimdiff` script
       #          (current_version/mergetool.bats).
+      # xxd:     zz-tests_bats/lib/sftp.bash hex-encodes a random
+      #          handshake cookie for the SFTP test server
+      #          (blob_store_sftp_single_hash.bats and any future
+      #          consumer of start_sftp_server).
       # dodder + madder + madder-test-sftp-server: a handful of tests
       #          invoke these binaries by bare name on PATH rather than
       #          through their DODDER_BIN / MADDER_BIN /
@@ -135,6 +139,7 @@ let
           git
           pandoc
           vim
+          xxd
           # yq-go: the field-script tests pipe blob contents through
           #        `yq -p toml -o json '...'` to project structured
           #        fields (current_version/fields.bats family).
