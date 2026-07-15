@@ -46,6 +46,16 @@ func makeSignedObjectWithBlobReferences(
 
 	t.AssertNoError(metadata.GetTypeMutable().SetType("!toml-type-v2"))
 
+	// A multi-paragraph description (embedded blank-line break) is part
+	// of this object's realistic shape and exercises the archive-format
+	// newline-preservation path (box_format/transacted.go's isArchive
+	// branch) in the same round-trip this test already verifies for blob
+	// references -- without it, this regression test would never have
+	// caught the description-newline corruption bug.
+	t.AssertNoError(metadata.GetDescriptionMutable().Set(
+		"first paragraph of the description.\n\nsecond paragraph, after a blank line.",
+	))
+
 	for _, ref := range []struct {
 		blobHex    string
 		typeString string
