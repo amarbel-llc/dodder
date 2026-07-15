@@ -970,10 +970,10 @@ function pull_tag_with_rich_description_signature_survives { # @test
     # Mirrors a real tag's shape: multi-paragraph description (blank-line
     # separated), embedded literal double-quotes, an em-dash, and two
     # meta-tags.
-    run_dodder new -edit=false -object-id project-catapult_lag \
-      -description 'Catapult kafka streams throughput/lag investigation: theory that catapult'"'"'s kafka streams consumer apps hit a throughput ceiling before topic lag climbs. Dashboard: Grafana "StreamingEvents" (uid TNlXYDRZk) — personal working copy.
+    run_dodder new -edit=false -object-id widget-throughput_lag \
+      -description 'Widget queue throughput/lag investigation: theory that the widget'"'"'s queue consumer apps hit a throughput ceiling before backlog climbs. Dashboard: Grafana "QueueMetrics" (uid AbCdEfGhI) — personal working copy.
 
-FINDING (revised): kafka_minion_group_topic_lag no longer exists — use kafkastreams_consumer_fetch_manager_metrics_records_lag_avg instead, confirmed live.
+FINDING (revised): widget_queue_legacy_backlog_metric no longer exists — use widget_queue_consumer_fetch_manager_metrics_records_lag_avg instead, confirmed live.
 
 A narrow 3h sample showed only small isolated per-partition lag spikes — arguing AGAINST a throughput ceiling. But a wider window surfaced a bigger episode where rate climbed steadily with no plateau — the consumer was working harder and still could not outpace incoming volume.' \
       -tags active,priority-2_want
@@ -987,7 +987,7 @@ A narrow 3h sample showed only small isolated per-partition lag spikes — argui
   assert_success
   refute_output --partial "invalid signature"
 
-  run_dodder show 'project-catapult_lag:e'
+  run_dodder show 'widget-throughput_lag:e'
   assert_success
 }
 
@@ -1003,10 +1003,10 @@ function pull_tag_with_mother_sig_history_signature_survives { # @test
     pushd "$them" || exit 1
     run_dodder_init
 
-    run_dodder new -edit=false -object-id project-catapult_lag \
-      -description 'Catapult kafka streams throughput/lag investigation: theory that catapult'"'"'s kafka streams consumer apps hit a throughput ceiling before topic lag climbs. Dashboard: Grafana "StreamingEvents" (uid TNlXYDRZk) — personal working copy.
+    run_dodder new -edit=false -object-id widget-throughput_lag \
+      -description 'Widget queue throughput/lag investigation: theory that the widget'"'"'s queue consumer apps hit a throughput ceiling before backlog climbs. Dashboard: Grafana "QueueMetrics" (uid AbCdEfGhI) — personal working copy.
 
-FINDING (revised): kafka_minion_group_topic_lag no longer exists — use kafkastreams_consumer_fetch_manager_metrics_records_lag_avg instead, confirmed live.
+FINDING (revised): widget_queue_legacy_backlog_metric no longer exists — use widget_queue_consumer_fetch_manager_metrics_records_lag_avg instead, confirmed live.
 
 A narrow 3h sample showed only small isolated per-partition lag spikes — arguing AGAINST a throughput ceiling. But a wider window surfaced a bigger episode where rate climbed steadily with no plateau — the consumer was working harder and still could not outpace incoming volume.' \
       -tags active
@@ -1016,7 +1016,7 @@ A narrow 3h sample showed only small isolated per-partition lag spikes — argui
     # mother-sig chain (v1 -> v2) rather than a fresh/null one.
     run_dodder organize -mode commit-directly :e <<-EOM
 			# priority-2_want
-			- [project-catapult_lag]
+			- [widget-throughput_lag]
 		EOM
     assert_success
   )
@@ -1028,7 +1028,7 @@ A narrow 3h sample showed only small isolated per-partition lag spikes — argui
   assert_success
   refute_output --partial "invalid signature"
 
-  run_dodder show 'project-catapult_lag+:e'
+  run_dodder show 'widget-throughput_lag+:e'
   assert_success
 }
 
