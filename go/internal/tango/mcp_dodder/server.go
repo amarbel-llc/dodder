@@ -33,8 +33,11 @@ const mcpInstructionsCommon = `Dodder is a distributed zettelkasten and content-
 ## Data Model
 
 Every object in dodder has: an object-id, a date, an optional description,
-a type, and zero or more tags. Tags are themselves objects that
-can have their own tags (meta-tags). Common meta-tag patterns:
+a type, and zero or more tags. Descriptions are short, incomplete-sentence
+phrases meant to be scanned at a glance in box-format listings and query
+results — not full prose. Keep them to 66 characters or less where
+practical. Tags are themselves objects that can have their own tags
+(meta-tags). Common meta-tag patterns:
 
 - active — marks a project/tag as currently active
 - priority-0_must, priority-1_should, priority-2_want — priority levels
