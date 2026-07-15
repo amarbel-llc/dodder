@@ -7,12 +7,12 @@ require (
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
 	github.com/amarbel-llc/hyphence/go v0.2.0
-	github.com/amarbel-llc/madder/go v0.4.1-0.20260706024145-0063d397ab40
-	github.com/amarbel-llc/piggy/go v0.0.0-20260706021717-a08ad5ae28b3
-	github.com/amarbel-llc/purse-first/libs/dewey v0.3.2
-	github.com/amarbel-llc/purse-first/libs/go-mcp v0.2.6-0.20260530121752-67a6f4d5e72d
-	github.com/amarbel-llc/tap/go v0.1.11-0.20260530160701-c3a844ec91f6
-	github.com/amarbel-llc/tommy v0.4.4-0.20260608202535-1ae69d31ec4f
+	github.com/amarbel-llc/madder/go v0.4.5-0.20260714015804-a00d07019f6f
+	github.com/amarbel-llc/piggy/go v0.0.0-20260714014714-8bebeaa66dca
+	github.com/amarbel-llc/purse-first/libs/dewey v0.4.2-0.20260714012913-f3ad3d58f150
+	github.com/amarbel-llc/purse-first/libs/go-mcp v0.4.2-0.20260714012913-f3ad3d58f150
+	github.com/amarbel-llc/tap/go v0.1.16-0.20260708132417-4531c9f064d4
+	github.com/amarbel-llc/tommy v0.4.8-0.20260714013639-d9d65588e4af
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0

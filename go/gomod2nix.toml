@@ -33,33 +33,33 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/madder/go']
-    version = 'v0.4.1-0.20260706024145-0063d397ab40'
-    hash = 'sha256-qOC8D3S1EH+Z55yzgl68uZs36RWym/vtgiKvEHXQLD4='
+    version = 'v0.4.5-0.20260714015804-a00d07019f6f'
+    hash = 'sha256-bxi1Rc/CUEuE+zBVKbSFRNrD3BQlueZ+5K1ACNvMiMg='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/piggy/go']
-    version = 'v0.0.0-20260706021717-a08ad5ae28b3'
-    hash = 'sha256-mhy75JxJnJJJyVjVj+g0OckrhspQTF97sJempRh8phs='
+    version = 'v0.0.0-20260714014714-8bebeaa66dca'
+    hash = 'sha256-dlh8MB+/GYWR7INuBIZ0+znxEEznD5cCDYeb5hsAY4s='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/purse-first/libs/dewey']
-    version = 'v0.3.2'
-    hash = 'sha256-qCPYqLkjtbqAaCX3nPxP4cGTTjBbub6iIWiOJG8ejWk='
+    version = 'v0.4.2-0.20260714012913-f3ad3d58f150'
+    hash = 'sha256-YzusBrshwv1Lq9qrPlDQ++w4Jf9tej7cMeXOx+Ou0t8='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/purse-first/libs/go-mcp']
-    version = 'v0.2.6-0.20260530121752-67a6f4d5e72d'
-    hash = 'sha256-PFWfiIvMl9pNy+o/bRxb9qNSvbMvmCNdbKmWbRO24jQ='
+    version = 'v0.4.2-0.20260714012913-f3ad3d58f150'
+    hash = 'sha256-XhMWIb22Rg/NS2NRQvCBGNa5AHrn15v4k/p0AeCkRT8='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/tap/go']
-    version = 'v0.1.11-0.20260530160701-c3a844ec91f6'
+    version = 'v0.1.16-0.20260708132417-4531c9f064d4'
     hash = 'sha256-QdUT9FLR9/Hz4EJFJqImSqXvq6OW+NV1e5piFSlFxqo='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/tommy']
-    version = 'v0.4.4-0.20260608202535-1ae69d31ec4f'
-    hash = 'sha256-ULkwi+FGr9kosGvykbJayX8TGYDwwiJmpMbk6Aby4jU='
+    version = 'v0.4.8-0.20260714013639-d9d65588e4af'
+    hash = 'sha256-1/DWglceWoHKH2TiYaFUCz0woJJvJsH+F3PVkJlXWBw='
     goVersion = '1.26'
 
   [mod.'github.com/atotto/clipboard']
