@@ -7,6 +7,7 @@ import (
 
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 
+	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
 	"code.linenisgreat.com/dodder/go/lib/alfa/collections_map"
@@ -30,7 +31,7 @@ type WorkingList struct {
 	// eagerly creates its temp file at construction, so an empty working
 	// list that opened one would leak that file when discarded without
 	// Close (issue #366).
-	makeBlobWriter           func() (mad_domain_interfaces.BlobWriter, error)
+	makeBlobWriter           domain_interfaces.FuncObjectWriter
 	blobWriter               mad_domain_interfaces.BlobWriter
 	bufferedBlobWriter       *bufio.Writer
 	bufferedBlobWriterRepool interfaces.FuncRepool
@@ -45,7 +46,7 @@ type WorkingList struct {
 
 func MakeWorkingList(
 	coder ListCoder,
-	makeBlobWriter func() (mad_domain_interfaces.BlobWriter, error),
+	makeBlobWriter domain_interfaces.FuncObjectWriter,
 	funcPreWrite interfaces.FuncIter[*Transacted],
 ) *WorkingList {
 	return &WorkingList{
@@ -161,9 +162,18 @@ func (list *WorkingList) Close() (err error) {
 
 	defer list.lock.Unlock()
 
-	// nothing was ever added: no blob writer (and no temp file) exists,
-	// so there is nothing to flush or close
-	if list.blobWriter != nil {
+	// bufferedBlobWriter is non-nil exactly when the lazy blob writer is
+	// open: skip when nothing was ever added (no temp file exists) or a
+	// previous Close already released everything
+	if list.bufferedBlobWriter != nil {
+		// repool even when flush or close errors: the borrowed buffer is
+		// abandoned either way
+		defer func() {
+			list.bufferedBlobWriter = nil
+			list.bufferedBlobWriterRepool()
+			list.bufferedBlobWriterRepool = nil
+		}()
+
 		if err = list.bufferedBlobWriter.Flush(); err != nil {
 			err = errors.Wrap(err)
 			return err
@@ -178,12 +188,6 @@ func (list *WorkingList) Close() (err error) {
 	list.cursor.Reset()
 	list.indexOrder.Reset()
 	list.indexObjectIds.Reset()
-
-	if list.bufferedBlobWriterRepool != nil {
-		list.bufferedBlobWriter = nil
-		list.bufferedBlobWriterRepool()
-		list.bufferedBlobWriterRepool = nil
-	}
 
 	return err
 }
