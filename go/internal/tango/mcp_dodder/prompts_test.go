@@ -42,12 +42,6 @@ Indexed: 5 type(s), 12 tag(s).
   - work
 
 Next: use the discover prompt to map the type/tag vocabulary, or read dodder:///repos to switch repos.
-
-When authoring or editing a tag or type's description (e.g. via new,
-edit, or organize), keep it to 66 characters or less where practical —
-it renders inline in box-format listings and query results, so a short
-description keeps those outputs scannable. This is a SHOULD, not a
-hard limit.
 `
 
 	if got != expected {
@@ -77,12 +71,6 @@ A workspace is active (a checked-out working copy is present).
 0 repo(s) addressable from here.
 
 Next: use the discover prompt to map the type/tag vocabulary, or read dodder:///repos to switch repos.
-
-When authoring or editing a tag or type's description (e.g. via new,
-edit, or organize), keep it to 66 characters or less where practical —
-it renders inline in box-format listings and query results, so a short
-description keeps those outputs scannable. This is a SHOULD, not a
-hard limit.
 `
 
 	if got != expected {
