@@ -61,7 +61,7 @@ func registerPrompts(
 	prompts.Register(
 		protocol.Prompt{
 			Name:        "system-prompt-append",
-			Description: "Live orientation for the bound dodder repo (clown dynamic system-prompt fragment).",
+			Description: "Live orientation for the bound dodder repo.",
 		},
 		renderSystemPromptAppend(provider, startupRepoId, hasWorkspace, dodderVersion),
 	)
