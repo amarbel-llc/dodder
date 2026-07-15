@@ -318,11 +318,7 @@ func (format *BoxTransacted) addFieldsMetadata(
 	description := metadata.GetDescription()
 
 	if includeDescriptionInBox && !description.IsEmpty() {
-		if format.isArchive {
-			builder.AddDescriptionPreservingNewlines(metadata)
-		} else {
-			builder.AddDescription(metadata)
-		}
+		builder.AddDescription(metadata, format.isArchive)
 	}
 
 	builder.AddTags(metadata)

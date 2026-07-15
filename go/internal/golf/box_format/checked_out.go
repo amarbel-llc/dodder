@@ -257,7 +257,7 @@ func (format *BoxCheckedOut) addFieldsMetadataWithFSItem(
 	b := metadata.GetDescription()
 
 	if includeDescriptionInBox && !b.IsEmpty() {
-		builder.AddDescription(metadata)
+		builder.AddDescription(metadata, false)
 	}
 
 	builder.AddTags(metadata)

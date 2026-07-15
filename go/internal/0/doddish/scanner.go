@@ -313,9 +313,9 @@ func (scanner *Scanner) consumeLiteralOrFieldValue(
 		}
 
 		currentIsBackslash := char == '\\'
-		escaped := lastWasBackslash && !currentIsBackslash
-		end := char == start
-		content := !lastWasBackslash && !currentIsBackslash && !end
+		escaped := lastWasBackslash
+		end := !escaped && char == start
+		content := !escaped && !currentIsBackslash && !end
 
 		if escaped {
 			scanner.scanned.WriteRune(unescapeLiteralRune(char))
@@ -323,8 +323,17 @@ func (scanner *Scanner) consumeLiteralOrFieldValue(
 			scanner.scanned.WriteRune(char)
 		}
 
-		if char != start || lastWasBackslash {
-			lastWasBackslash = currentIsBackslash
+		// A backslash only starts an escape if it isn't itself the
+		// second half of one -- consuming it here (rather than
+		// carrying escaped-ness forward when char is also a
+		// backslash) is what makes `\\` resolve to one literal
+		// backslash instead of misclassifying the rune after it as
+		// escaped. An escaped occurrence of start (e.g. `\"`) never
+		// terminates the literal, regardless of nowEscaping.
+		nowEscaping := currentIsBackslash && !escaped
+
+		if char != start || nowEscaping || escaped {
+			lastWasBackslash = nowEscaping
 			continue
 		}
 

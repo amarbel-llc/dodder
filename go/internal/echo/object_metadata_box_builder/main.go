@@ -346,25 +346,24 @@ func (builder *Builder) AddBlobReferences(metadata objects.MetadataMutable) {
 	}
 }
 
-func (builder *Builder) AddDescription(metadata objects.MetadataMutable) {
-	builder.Contents.Append(string_format_writer.FormattedField{
-		Field: fields.Field{
-			Value: metadata.GetDescription().StringWithoutNewlines(),
-			Type:  fields.TypeUserData,
-		},
-	})
-}
+// AddDescription writes the description's string form. Archive/wire-format
+// callers (inventory_list entries) must set preserveNewlines so the exact
+// bytes an object's signature was computed over round-trip; collapsing
+// newlines there silently changes the signed digest on decode. Interactive
+// display callers leave it unset for the single-line collapse.
+func (builder *Builder) AddDescription(
+	metadata objects.MetadataMutable,
+	preserveNewlines bool,
+) {
+	value := metadata.GetDescription().StringWithoutNewlines()
 
-// AddDescriptionPreservingNewlines writes the description's exact string
-// (embedded newlines intact, %q-escaped by the field writer) instead of
-// the display-oriented single-line collapse AddDescription uses. Archive/
-// wire-format callers (inventory_list entries) must round-trip the exact
-// bytes an object's signature was computed over; collapsing newlines
-// there silently changes the signed digest on decode.
-func (builder *Builder) AddDescriptionPreservingNewlines(metadata objects.MetadataMutable) {
+	if preserveNewlines {
+		value = metadata.GetDescription().String()
+	}
+
 	builder.Contents.Append(string_format_writer.FormattedField{
 		Field: fields.Field{
-			Value: metadata.GetDescription().String(),
+			Value: value,
 			Type:  fields.TypeUserData,
 		},
 	})

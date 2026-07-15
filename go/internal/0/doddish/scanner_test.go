@@ -162,6 +162,39 @@ func getScannerTestCases() []scannerTestCase {
 			},
 		},
 		{
+			// Two consecutive backslashes are one escaped literal
+			// backslash, not two independent escape starts -- the
+			// character following the pair (here `n`) must stay a
+			// plain literal `n`, not be misread as \n.
+			input: `url="C:\\nope"`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeIdentifier,
+					"url",
+					TokenTypeOperator,
+					"=",
+					TokenTypeLiteral,
+					`C:\nope`,
+				),
+			},
+		},
+		{
+			// An escaped backslash immediately followed by the
+			// closing quote must terminate the literal on that
+			// quote, not misclassify it as escaped content.
+			input: `url="C:\\"`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeIdentifier,
+					"url",
+					TokenTypeOperator,
+					"=",
+					TokenTypeLiteral,
+					`C:\`,
+				),
+			},
+		},
+		{
 			input: `.e`,
 			expected: []testSeq{
 				makeTestSeq(

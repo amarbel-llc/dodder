@@ -89,6 +89,9 @@ func (cmd *Genesis) SetFlagDefinitions(
 		"Exclude pandoc Lua filters and defaults from the default type",
 	)
 
+	// Default is the field's current value, not a literal false --
+	// clone.go's init() pre-sets ExcludeDefaultType to true before this
+	// runs, and a hardcoded false here would silently clobber that.
 	flagSet.BoolVar(
 		&cmd.BigBang.ExcludeDefaultType,
 		"exclude-default-type",
