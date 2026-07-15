@@ -131,18 +131,11 @@ func (store *Store) GetEnvRepo() env_repo.Env {
 }
 
 func (store *Store) MakeWorkingList() (workingList *sku.WorkingList, err error) {
-	var mover mad_domain_interfaces.BlobWriter
-
-	if mover, err = store.blobBlobStore.MakeBlobWriter(
-		nil,
-	); err != nil {
-		err = errors.Wrap(err)
-		return workingList, err
-	}
-
 	workingList = sku.MakeWorkingList(
 		store.getFormat(),
-		mover,
+		func() (mad_domain_interfaces.BlobWriter, error) {
+			return store.blobBlobStore.MakeBlobWriter(nil)
+		},
 		func(object *sku.Transacted) (err error) {
 			// TODO swap this to not overwrite, as when importing from remotes, we want to
 			// keep their signatures
@@ -165,6 +158,14 @@ func (store *Store) Create(
 	openList *sku.WorkingList,
 ) (object *sku.Transacted, err error) {
 	if openList.Len() == 0 {
+		// an Add that failed after opening the blob writer can leave an
+		// open writer behind an empty list; close before discarding
+		// (issue #366)
+		if err = openList.Close(); err != nil {
+			err = errors.Wrap(err)
+			return object, err
+		}
+
 		err = errors.Wrap(ErrEmptyInventoryList)
 		return object, err
 	}

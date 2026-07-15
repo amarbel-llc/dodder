@@ -25,7 +25,12 @@ type WorkingList struct {
 	lock        sync.RWMutex
 	description descriptions.Description
 
-	coder                    ListCoder
+	coder ListCoder
+	// makeBlobWriter is invoked lazily on the first Add: a blob writer
+	// eagerly creates its temp file at construction, so an empty working
+	// list that opened one would leak that file when discarded without
+	// Close (issue #366).
+	makeBlobWriter           func() (mad_domain_interfaces.BlobWriter, error)
 	blobWriter               mad_domain_interfaces.BlobWriter
 	bufferedBlobWriter       *bufio.Writer
 	bufferedBlobWriterRepool interfaces.FuncRepool
@@ -40,12 +45,12 @@ type WorkingList struct {
 
 func MakeWorkingList(
 	coder ListCoder,
-	blobWriter mad_domain_interfaces.BlobWriter,
+	makeBlobWriter func() (mad_domain_interfaces.BlobWriter, error),
 	funcPreWrite interfaces.FuncIter[*Transacted],
 ) *WorkingList {
 	return &WorkingList{
 		coder:          coder,
-		blobWriter:     blobWriter,
+		makeBlobWriter: makeBlobWriter,
 		indexOrder:     MakeHeapTransactedCursor(),
 		indexObjectIds: make(collections_map.Map[string, collections_slice.Slice[ohio.Cursor]]),
 		funcPreWrite:   funcPreWrite,
@@ -60,14 +65,22 @@ func (list *WorkingList) GetDescriptionMutable() *descriptions.Description {
 	return &list.description
 }
 
-func (list *WorkingList) getBufferedBlobWriter() *bufio.Writer {
+func (list *WorkingList) getBufferedBlobWriter() (*bufio.Writer, error) {
+	if list.blobWriter == nil {
+		var err error
+
+		if list.blobWriter, err = list.makeBlobWriter(); err != nil {
+			return nil, errors.Wrap(err)
+		}
+	}
+
 	if list.bufferedBlobWriter == nil {
 		list.bufferedBlobWriter, list.bufferedBlobWriterRepool = pool.GetBufferedWriter(
 			list.blobWriter,
 		)
 	}
 
-	return list.bufferedBlobWriter
+	return list.bufferedBlobWriter, nil
 }
 
 func (list *WorkingList) Len() int {
@@ -115,15 +128,22 @@ func (list *WorkingList) Add(object *Transacted) (err error) {
 func (list *WorkingList) writeObject(
 	object *Transacted,
 ) (n int64, err error) {
+	var bufferedBlobWriter *bufio.Writer
+
+	if bufferedBlobWriter, err = list.getBufferedBlobWriter(); err != nil {
+		err = errors.Wrap(err)
+		return n, err
+	}
+
 	if n, err = list.coder.EncodeTo(
 		object,
-		list.getBufferedBlobWriter(),
+		bufferedBlobWriter,
 	); err != nil {
 		err = errors.Wrap(err)
 		return n, err
 	}
 
-	if err = list.getBufferedBlobWriter().Flush(); err != nil {
+	if err = bufferedBlobWriter.Flush(); err != nil {
 		err = errors.Wrap(err)
 		return n, err
 	}
@@ -141,21 +161,29 @@ func (list *WorkingList) Close() (err error) {
 
 	defer list.lock.Unlock()
 
-	if err = list.getBufferedBlobWriter().Flush(); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
+	// nothing was ever added: no blob writer (and no temp file) exists,
+	// so there is nothing to flush or close
+	if list.blobWriter != nil {
+		if err = list.bufferedBlobWriter.Flush(); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
 
-	if err = list.blobWriter.Close(); err != nil {
-		err = errors.Wrap(err)
-		return err
+		if err = list.blobWriter.Close(); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
 	}
 
 	list.cursor.Reset()
 	list.indexOrder.Reset()
 	list.indexObjectIds.Reset()
-	list.bufferedBlobWriter = nil
-	list.bufferedBlobWriterRepool()
+
+	if list.bufferedBlobWriterRepool != nil {
+		list.bufferedBlobWriter = nil
+		list.bufferedBlobWriterRepool()
+		list.bufferedBlobWriterRepool = nil
+	}
 
 	return err
 }
@@ -166,6 +194,10 @@ func (list *WorkingList) GetMarklId() mad_domain_interfaces.MarklId {
 	}
 
 	defer list.lock.Unlock()
+
+	if list.blobWriter == nil {
+		panic("trying to get markl id from working list that never opened its blob writer")
+	}
 
 	return list.blobWriter.GetMarklId()
 }

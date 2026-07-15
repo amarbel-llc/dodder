@@ -169,6 +169,19 @@ function init_without_age { # @test
   assert_success
 }
 
+function init_leaves_no_leaked_temp_blob_files { # @test
+  run_dodder_init_disable_age
+
+  # cmd_dodder_def passes `-debug no-tempdir-cleanup`, so every
+  # invocation's per-pid temp dir (tmp-<pid> under the cache XDG)
+  # survives the run. A properly closed blob writer removes its temp
+  # file after publishing (madder blob_io mover), so any file left
+  # behind is a writer that was created but never closed (#366).
+  run find . -type f -path '*/tmp-*'
+  assert_success
+  assert_output ""
+}
+
 function init_with_age { # @test
   run_dodder init \
     -yin <(cat_yin) \
