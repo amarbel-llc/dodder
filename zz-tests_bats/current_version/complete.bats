@@ -140,16 +140,19 @@ function complete_subcmd { # @test
 		^mcp[[:space:]]+start the MCP server$
 		^merge-tool[[:space:]]+resolve merge conflicts with an external tool$
 		^migrate-config-seed-key[[:space:]]+re-encode config-seed private key in canonical split-HRP form$
+		^migrate-repo-layout[[:space:]]+copy a legacy flat .dodder tree into the repos/<name>/ nested layout \(FDR-0019\); never modifies -source$
 		^migrate-zettel-ids[[:space:]]+migrate zettel id flat files to log format$
 		^new[[:space:]]+create new zettels$
 		^organize[[:space:]]+organize objects with a text editor$
 		^peek-zettel-ids[[:space:]]+preview available zettel ids$
+		^prototype-lua-transform[[:space:]]+PROTOTYPE: run a Lua list-in/list-out transform over queried objects \(dry-run only\)$
 		^pull[[:space:]]+pull objects from a remote repository$
 		^pull-blob-store[[:space:]]+pull blobs from a remote blob store$
 		^push[[:space:]]+push objects to a remote repository$
 		^reconcile-blob-to-store[[:space:]]+TEMPORARY workaround \(dodder#359\): copy one blob by digest into an explicitly-addressed destination store$
 		^reindex[[:space:]]+rebuild store indices$
 		^remote-add[[:space:]]+add a remote repository$
+		^repair-legacy-config-blob[[:space:]]+ONE-TIME: repair a header-corrupted legacy \(pre-config_log\) config blob and bootstrap config_log$
 		^repo-fsck[[:space:]]+verify repository inventory list integrity$
 		^revert[[:space:]]+revert objects to their stored state$
 		^save[[:space:]]+commit workspace changes to the store$
