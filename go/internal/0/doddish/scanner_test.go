@@ -195,6 +195,70 @@ func getScannerTestCases() []scannerTestCase {
 			},
 		},
 		{
+			// A plain \n (not doubled) must decode to a real newline,
+			// not the literal two characters backslash-n.
+			input: "url=\"line one\\nline two\"",
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeIdentifier,
+					"url",
+					TokenTypeOperator,
+					"=",
+					TokenTypeLiteral,
+					"line one\nline two",
+				),
+			},
+		},
+		{
+			// Four backslashes are two escaped literal backslashes,
+			// not one escape pair plus a spurious extra -- parity
+			// tracking must extend cleanly across more than one pair.
+			input: `url="a\\\\b"`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeIdentifier,
+					"url",
+					TokenTypeOperator,
+					"=",
+					TokenTypeLiteral,
+					`a\\b`,
+				),
+			},
+		},
+		{
+			// Three backslashes before the closing quote: the first
+			// two are one escaped literal backslash, and the third
+			// escapes the quote itself, so the quote must NOT
+			// terminate the literal -- an odd backslash run still
+			// resolves to "escape the delimiter", not "terminate".
+			input: `url="a\\\""`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeIdentifier,
+					"url",
+					TokenTypeOperator,
+					"=",
+					TokenTypeLiteral,
+					`a\"`,
+				),
+			},
+		},
+		{
+			// A backslash-escaped character not in the recognized
+			// escape set (here the OTHER quote style) passes through
+			// unchanged, matching Go's %q: only n/t/r/a/b/f/v are
+			// remapped, everything else (including \' inside a
+			// double-quoted literal) round-trips as the literal
+			// character with the backslash dropped.
+			input: `"it\'s"`,
+			expected: []testSeq{
+				makeTestSeq(
+					TokenTypeLiteral,
+					`it's`,
+				),
+			},
+		},
+		{
 			input: `.e`,
 			expected: []testSeq{
 				makeTestSeq(
