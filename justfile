@@ -714,3 +714,78 @@ debug-import-staging-baseline:
   dodder import -verbose -repo_id dodder-migration-staging -plan-format summary "$sp/default-repo.export.inventory_list"
   echo "==> done, staging repo object count:"
   dodder show -repo_id dodder-migration-staging '+?z,t,k,e' | wc -l
+
+# Read-only full-repo signature audit via fsck -recompute. NOTE: this
+# does NOT detect the description-newline-collapse bug class (dodder#TBD,
+# fixed this session) -- fsck recomputes the digest directly from the
+# live store's in-memory decoded fields (stream_index binary format), and
+# never re-encodes through box_format's archive encoder or re-decodes
+# through the doddish scanner, which is exactly where that bug lived. Use
+# debug-export-import-audit instead to find objects whose signature
+# breaks specifically under the export/import wire-format round-trip.
+# This recipe is still useful for catching OTHER corruption classes
+# (bit-rot, storage corruption, unrelated digest mismatches). No query
+# means all genres/sigils (latest + history + hidden). Read-only.
+[group('debug')]
+debug-fsck-full-repo-audit repo_id="default":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+  dodder fsck -recompute -repo_id {{ repo_id }}
+
+# Real audit for the description-newline-collapse bug class: export the
+# whole repo (all genres, full history) to a static inventory-list file,
+# then import it into a fresh disposable repo. Any object whose signature
+# was computed over already-corrupted wire-format text (collapsed
+# newlines from before this session's fix) fails import's signature
+# re-verification -- printed as an import error naming the object. Unlike
+# fsck -recompute (see debug-fsck-full-repo-audit), this actually
+# exercises the box_format archive encoder + doddish scanner decoder
+# round-trip, i.e. the exact code path the bug lived in. Read-only
+# against the source repo; writes only to a throwaway .tmp/ scratch repo.
+[group('debug')]
+debug-export-import-audit repo_id="default":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  export_dir="{{ justfile_directory() }}/.tmp/debug-export-import-audit"
+  mkdir -p "$export_dir"
+  list_path="$export_dir/$(date +%s).inventory_list"
+
+  dodder export -repo_id {{ repo_id }} -print-time=true +z,e,t,k > "$list_path"
+  echo "==> exported to: $list_path"
+  wc -l "$list_path"
+
+  dest="$export_dir/scratch-$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+  dodder init -encryption none -exclude-default-type .default
+  dodder import -verbose -blob_store-id {{ repo_id }} "$list_path"
+
+# Reproduce the ORIGINAL failing scenario exactly: a repo-backed
+# workspace with NO -parent flag (resolves to the home repo, per
+# ParentBackedWorkspace.ResolveParentPath -- the same resolution `new
+# -ephemeral` uses internally), followed by a plain `pull` -- this is the
+# code path (MakeHomeRepoRemote, remote.go) the earlier investigation
+# actually failed against, distinct from a plain export/import round-trip
+# which this session's audit found clean. Confirms whether the home-repo
+# pull path still fails even though export/import doesn't. Assumes the
+# ambient XDG-user home repo IS named "default" (the repo this session's
+# investigation targeted) -- there is no flag to pick a different home
+# repo name; it's whatever $XDG_DATA_HOME/dodder resolves to.
+[group('debug')]
+debug-pull-home-repo-repro:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  export PATH="$bin/bin:$PATH"
+
+  dest="{{ justfile_directory() }}/.tmp/debug-pull-home-repo-repro/$(date +%s)"
+  mkdir -p "$dest"
+  cd "$dest"
+
+  dodder init-workspace debug-ws
+  dodder pull -verbose +z,e,t,k
