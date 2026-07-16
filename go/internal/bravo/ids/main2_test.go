@@ -40,15 +40,17 @@ func TestIdWriteToReadFrom(t1 *testing.T) {
 	}
 }
 
-// A quoted-literal value fails doddish scanning into an object-id-shaped
-// seq, but on a fresh (genres.Unknown) ObjectId, Set's error-fallback path
-// re-routes to SetBlob, which itself falls back to wrapping the RAW string
-// (quote characters included) in a single TokenTypeIdentifier token and
-// unconditionally sets Genre to Blob -- producing a Blob object-id
-// literally named `"quoted value"`, quotes and all, rather than erroring
-// or stripping the quotes. This is surprising but is the actual, tested
-// contract: quoting has no special meaning to Set on a genre-less
-// ObjectId, it's just characters in a blob name.
+// A quoted-literal value scans as a single TokenTypeLiteral token, but
+// ScanExactlyOneSeqWithDotAllowedInIdenfierFromString still reports
+// ErrMoreThanOneSeq (CanScan() is true post-literal, before EOF is
+// observed) -- so Set's error-fallback path re-routes to SetBlob, which
+// wraps the RAW string (quote characters included) in a single
+// TokenTypeIdentifier token and unconditionally sets Genre to Blob,
+// producing a Blob object-id literally named `"quoted value"`, quotes
+// and all, rather than erroring or stripping the quotes. This is
+// surprising but is the actual, tested contract: quoting has no special
+// meaning to Set on a genre-less ObjectId, it's just characters in a
+// blob name.
 func TestSetOnQuotedStringProducesLiteralBlobName(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
