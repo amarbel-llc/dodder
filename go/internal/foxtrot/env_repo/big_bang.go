@@ -5,6 +5,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_configs"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 )
 
@@ -40,6 +41,17 @@ type BigBang struct {
 	ExcludeDefaultPandocTools     bool
 	IncludeBuiltinActionableTypes bool
 	BlobStoreId                   blob_store_id.Id
+
+	// RepoId is the dodder repo location/name being genesis'd (FDR-0019's
+	// scoped_id, the same value command_components_dodder.Genesis's
+	// -repo_id-equivalent positional resolves to before OnTheFirstDay
+	// calls env_repo.Genesis). FDR-0016 D1: the repo's default blob store
+	// is a madder multi named from this id ("default-<name>") so that
+	// multiple named repos sharing one XDG scope don't collide on a
+	// single flat "default" multi -- only the underlying local write
+	// store is shared/reused across repos (see
+	// writeBlobStoreConfigIfNecessary).
+	RepoId scoped_id.Id
 }
 
 func (bigBang *BigBang) SetDefaults() {

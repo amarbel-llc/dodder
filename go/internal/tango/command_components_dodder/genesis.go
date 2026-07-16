@@ -194,6 +194,8 @@ func (cmd Genesis) OnTheFirstDay(
 		}
 	}
 
+	cmd.BigBang.RepoId = config.RepoId
+
 	envRepo.Genesis(cmd.BigBang)
 
 	return local_working_copy.Genesis(cmd.BigBang, envRepo)
