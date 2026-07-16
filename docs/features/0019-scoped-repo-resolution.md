@@ -4,11 +4,12 @@ date: 2026-06-07
 promotion-criteria: repo-id grammar (name + scope prefix + dot-depth)
   parses and round-trips in madder env_dir with dodder consuming it;
   on-disk layout matches madder's scoped layout (repos/<name>/ under
-  each scope) with legacy single-repo trees readable as the `default`
-  repo; all BATS tests pass with the new resolution; new tests cover
-  user-scoped named repos, two same-named CWD repos disambiguated by
-  dot-depth, and MCP repo_id addressing; MCP resource URIs accept the
-  repo segment and the CWD-auto sugar
+  each scope) with legacy single-repo trees migratable to the
+  `repos/default/` layout via `dodder migrate-repo-layout`; all BATS
+  tests pass with the new resolution; new tests cover user-scoped
+  named repos, two same-named CWD repos disambiguated by dot-depth,
+  and MCP repo_id addressing; MCP resource URIs accept the repo
+  segment and the CWD-auto sugar
 ---
 
 # Scoped Repo Resolution
@@ -96,11 +97,19 @@ share nothing.
 
 **Legacy compatibility.** Existing single-repo trees (the current
 `$XDG_DATA_HOME/dodder/` contents, and `.dodder/` trees without a
-`repos/` level) are recognized on read and treated as the repo named
-`default` in their scope. An explicit migration (`dodder
-migrate-repo-layout`, exact name TBD) moves a legacy tree into
-`repos/default/`. No silent rewriting: until migrated, legacy trees
-stay readable in place.
+`repos/` level) are **not** automatically readable by the current
+binary — every repo-opening command expects the `repos/<name>/`
+nesting and fails against a flat legacy tree. An explicit migration,
+`dodder migrate-repo-layout` (landed), copies a legacy tree into
+`repos/<name>/`, never modifying the source. Opening a legacy tree
+directly surfaces a distinct error naming `migrate-repo-layout`
+rather than a generic failure. No silent rewriting: a legacy tree is
+left untouched, and stays unreadable, until migrated — a deliberate
+scope decision (#363) against the read-in-place fallback originally
+promised here, since the explicit-migrate path already resolves the
+practical blocker (an unopenable repo) at far lower ongoing
+complexity than a permanent legacy-layout compat check on every
+repo-open path.
 
 ### CLI
 
@@ -276,6 +285,14 @@ Landed (master):
   level the two models coincide; they diverge only when a non-matching
   `.dodder/` sits between matches (literal counts it, store-aware skips it).
   `..name` completion is a tracked follow-up (#282).
+- **Legacy-layout migration, explicit-only (#363).** `dodder
+  migrate-repo-layout` copies a legacy flat `.dodder` tree into the
+  `repos/<name>/` nested layout (pure filesystem copy; source never
+  modified). The read-in-place fallback originally promised in
+  "Legacy compatibility" above was explicitly rejected in favor of
+  this explicit-migrate-only approach — opening a legacy tree now
+  fails with a distinct error naming the migration command instead of
+  transparent read-in-place recognition.
 - **Explicit XDG-user name is scope-pinned (#294).** The operate and
   literal-init dispatchers (`MakeOperateEnvDir`, `MakeEnvRepo`) originally
   routed an explicit `LocationTypeXDGUser` bare name through `MakeDefault`'s
@@ -301,7 +318,7 @@ Deferred (tracked follow-ups):
 | Lever | Current | Rationale | Change signal |
 |---|---|---|---|
 | Auto-resolution order | CWD walk-up, then user `default` | Matches today's empty-id behavior; least surprise | Users routinely shadowed by unexpected ancestor repos |
-| Legacy tree handling | Read-in-place as `default`, explicit migration command | No surprise rewrites of user data | Compat shim cost dominates env construction, or all known repos migrated |
+| Legacy tree handling | Explicit migration only (`migrate-repo-layout`); a distinct error names the command when a legacy tree is detected | Read-in-place would add a permanent compat check to every repo-open path for a case the explicit migration already fixes in one command (#363) | Read-in-place demand becomes common enough to justify the ongoing complexity |
 | MCP repo cache | Fresh repo built per call (no cache); `dodder.mcp.open_repo` stats-me timer tracks build duration | No lock-holding or index staleness; matches the bridge's per-call repo build | The timer shows open-repo build dominating MCP latency — then memoize one env per repo-id |
 | Dot-depth in completions | Nearest cwd (`.name`) + user (`name`) only; multi-dot `..name` resolves but isn't yet offered (#282) | Resolution shipped first; completion ergonomics split out to stay focused | #282 lands — then offer `..name` up to the ceiling |
 

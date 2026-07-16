@@ -69,6 +69,66 @@ func (err ErrNotInDodderDir) GetErrorType() pkgErrDisamb {
 	return pkgErrDisamb{}
 }
 
+// ErrLegacyRepoLayout is returned instead of ErrNotInDodderDir when the
+// expected nested repos/<name>/config-seed is missing but a legacy
+// flat-layout config-seed (pre-FDR-0019, no repos/ nesting) exists at the
+// same scope root. FDR-0019 deliberately does not recognize a legacy tree
+// in place (#363: explicit-migrate-only, not read-in-place) -- this error
+// exists so that decision surfaces as a specific, actionable message
+// naming `migrate-repo-layout` instead of the generic "not in a dodder
+// directory" ErrNotInDodderDir, for both human users and agents.
+type ErrLegacyRepoLayout struct {
+	// LegacyPath is the pre-FDR-0019 flat-layout config-seed found at the
+	// scope root (e.g. <scope>/local/share/config-seed).
+	LegacyPath string
+	// ScopeRoot is LegacyPath's directory -- the legacy tree's root,
+	// suitable as migrate-repo-layout's -source.
+	ScopeRoot string
+	// Name is the repo name that was being resolved (e.g. "default").
+	Name string
+}
+
+func (err ErrLegacyRepoLayout) Error() string {
+	return fmt.Sprintf(
+		"%s is a legacy (pre-FDR-0019) repo layout, not readable in place; migrate it first",
+		err.ScopeRoot,
+	)
+}
+
+func (err ErrLegacyRepoLayout) ShouldShowStackTrace() bool {
+	return false
+}
+
+func (err ErrLegacyRepoLayout) Is(target error) (ok bool) {
+	_, ok = target.(ErrLegacyRepoLayout)
+	return ok
+}
+
+func (err ErrLegacyRepoLayout) GetErrorType() pkgErrDisamb {
+	return pkgErrDisamb{}
+}
+
+func (err ErrLegacyRepoLayout) GetErrorCause() []string {
+	return []string{
+		fmt.Sprintf(
+			"%s holds a legacy config-seed directly at the scope root, from before FDR-0019's `repos/<name>/` nesting.",
+			err.ScopeRoot,
+		),
+		"The current binary only reads repos nested under repos/<name>/ -- it does not recognize a legacy flat tree in place (a deliberate scope decision, not a bug).",
+	}
+}
+
+func (err ErrLegacyRepoLayout) GetErrorRecovery() []string {
+	return []string{
+		fmt.Sprintf(
+			"Migrate it: `dodder migrate-repo-layout -source %q -dest <new-path> -name %s` (never modifies -source).",
+			err.ScopeRoot,
+			err.Name,
+		),
+		"Then point at the migrated tree (e.g. `-dir-dodder <new-path>`) and verify with a read-only command (`dodder show`) before treating the old tree as disposable.",
+	}
+}
+
 // ErrLegacyConfigSeedKey is returned when the `private-key` markl-id in
 // a config-seed file is in the pre-madder-v0.3.16 combined-HRP wire
 // form. It implements interfaces.ErrorRetryable: the dewey context

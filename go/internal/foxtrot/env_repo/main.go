@@ -2,6 +2,7 @@ package env_repo
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	mad_blob_store_env "github.com/amarbel-llc/madder/go/pkgs/blob_store_env"
@@ -115,7 +116,11 @@ func Make(
 			fileConfigPermanent,
 		); err != nil {
 			if errors.IsNotExist(err) {
-				err = errors.Wrap(ErrNotInDodderDir{Expected: fileConfigPermanent})
+				if legacyErr, ok := detectLegacyRepoLayout(xdg.Data.ActualValue); ok {
+					err = errors.Wrap(legacyErr)
+				} else {
+					err = errors.Wrap(ErrNotInDodderDir{Expected: fileConfigPermanent})
+				}
 			} else {
 				err = wrapConfigSeedDecodeError(err, ownEnvLocal, fileConfigPermanent)
 			}
@@ -160,6 +165,32 @@ func Make(
 	}
 
 	return env, err
+}
+
+// detectLegacyRepoLayout checks whether nestedDataDir (the resolved
+// repos/<name>/ path whose config-seed was just found missing) sits under a
+// scope root that instead holds a pre-FDR-0019 flat-layout config-seed
+// directly. Distinguishes "a legacy tree exists here, run
+// migrate-repo-layout" (#363) from "genuinely not a dodder directory at
+// all" (ErrNotInDodderDir) so the two produce different, actionable errors.
+func detectLegacyRepoLayout(nestedDataDir string) (ErrLegacyRepoLayout, bool) {
+	reposDir := filepath.Dir(nestedDataDir)
+	if filepath.Base(reposDir) != "repos" {
+		return ErrLegacyRepoLayout{}, false
+	}
+
+	scopeRoot := filepath.Dir(reposDir)
+	legacyPath := filepath.Join(scopeRoot, "config-seed")
+
+	if _, statErr := os.Stat(legacyPath); statErr != nil {
+		return ErrLegacyRepoLayout{}, false
+	}
+
+	return ErrLegacyRepoLayout{
+		LegacyPath: legacyPath,
+		ScopeRoot:  scopeRoot,
+		Name:       filepath.Base(nestedDataDir),
+	}, true
 }
 
 func (env Env) GetEnv() env_ui.Env {
