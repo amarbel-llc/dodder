@@ -14,11 +14,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784112118,
-        "narHash": "sha256-dOT85Uw1WGoZRMs+SrmbVHJAuO4tUobhgxXTc/aHbhM=",
+        "lastModified": 1784201818,
+        "narHash": "sha256-tXWylXtCnosOyuwFvRKlDOUql9GBX6CkD056B2lGc64=",
         "ref": "refs/heads/master",
-        "rev": "cdaa14ca559917f61566f3f0eb8f3dd7ddb477c9",
-        "revCount": 2073,
+        "rev": "cc408607caef418a09c20543d9fff1af780a5776",
+        "revCount": 2074,
         "type": "git",
         "url": "https://code.linenisgreat.com/bats.git"
       },
@@ -131,17 +131,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1784113139,
-        "narHash": "sha256-wn9KqGIDDvUWfp/EJNIORX9eidkdWA30mZrNBWkVlGo=",
+        "lastModified": 1784203328,
+        "narHash": "sha256-NMbEmEpKsKyX3DqkcgiSYaMRUOxYLXQ31F4uip4JqQM=",
         "ref": "refs/heads/master",
-        "rev": "62df4baeb712cc1921c4bfac11a04ab0bea4c6d5",
-        "revCount": 171,
+        "rev": "ccb690b807adf6f83b5aa7878dd9dfb18dd7513d",
+        "revCount": 172,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/crap.git"
+        "url": "https://code.linenisgreat.com/crap.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/crap.git"
+        "url": "https://code.linenisgreat.com/crap.git"
       }
     },
     "doppelgang": {
@@ -164,17 +164,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1784112671,
-        "narHash": "sha256-Ad6I9PcVq181zP8J3iz3B3n8fISHZ5eVNXED8T+Wtic=",
+        "lastModified": 1784202647,
+        "narHash": "sha256-U92jzVnNUKfKYof4AzemsFtuholDaq7JSgZdjIoJfiA=",
         "ref": "refs/heads/master",
-        "rev": "0668f76785e4e586021ffd466042bc834c0e87b4",
-        "revCount": 70,
+        "rev": "9ea116b07e8ecf8c50e4103ccc13b2000839cae1",
+        "revCount": 71,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/doppelgang.git"
+        "url": "https://code.linenisgreat.com/doppelgang.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/doppelgang.git"
+        "url": "https://code.linenisgreat.com/doppelgang.git"
       }
     },
     "flake-parts": {
@@ -246,17 +246,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1784114066,
-        "narHash": "sha256-lrnC+Oyyyni/I8TcCu1N813eCc44OAvD8xQAI5STq9k=",
+        "lastModified": 1784204397,
+        "narHash": "sha256-uIsIRuJ/Nub4einD76w6vEirGB9PVMOISR/BQUINzA8=",
         "ref": "refs/heads/master",
-        "rev": "ac83d725039cefa11475adb8ebd3467494aab9a5",
-        "revCount": 23,
+        "rev": "1094142c91b071ab51558cacca757d5f21cb1326",
+        "revCount": 24,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/hyphence.git"
+        "url": "https://code.linenisgreat.com/hyphence.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/hyphence.git"
+        "url": "https://code.linenisgreat.com/hyphence.git"
       }
     },
     "igloo": {
@@ -279,11 +279,11 @@
         "rev": "e04bba9f87552e4161ebec00c528361316d36d3c",
         "revCount": 73,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/igloo.git"
+        "url": "https://code.linenisgreat.com/igloo.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/igloo.git"
+        "url": "https://code.linenisgreat.com/igloo.git"
       }
     },
     "jcardsim": {
@@ -341,17 +341,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1784114417,
-        "narHash": "sha256-mBjZ2HxjQq2Y34eS/Xm4Mmk3M94/GC/r+c3IDMQeTPw=",
+        "lastModified": 1784204774,
+        "narHash": "sha256-pLXdK/2vHEmTzzra2a+hngTu8mynEnGu6yk4Pt46WxI=",
         "ref": "refs/heads/master",
-        "rev": "a7f7e7f281c0a7de77cf81e862be652416b0aea2",
-        "revCount": 744,
+        "rev": "22d6c9709c1a53c7e586d447db69e3217e891b0a",
+        "revCount": 745,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/madder.git"
+        "url": "https://code.linenisgreat.com/madder.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/madder.git"
+        "url": "https://code.linenisgreat.com/madder.git"
       }
     },
     "nixpkgs-master": {
@@ -411,11 +411,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784113639,
-        "narHash": "sha256-j51MyGrj/7qAFwrBO2IKlG4o52CIOE4OxNygHhTXd48=",
+        "lastModified": 1784203717,
+        "narHash": "sha256-FZWNGeQo9w7pzcnn4watp/w9prxBr19p7R0REZheg8w=",
         "ref": "refs/heads/master",
-        "rev": "d8f798bb82e183b3abf5f8bfe6831977db98d74c",
-        "revCount": 1035,
+        "rev": "07280cdff2187d8b8713031c5a033dd9c3b281f0",
+        "revCount": 1036,
         "type": "git",
         "url": "https://code.linenisgreat.com/piggy.git"
       },
@@ -457,17 +457,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1784112175,
-        "narHash": "sha256-BRgNv1GBjG5eEYms97T5wtmdoGQEImEDFoEqPq3Xp4g=",
+        "lastModified": 1784201878,
+        "narHash": "sha256-m6+98W2inaVJ4uRoRjBeIOyJ3uL1uS5OJhiU8W6Kmmw=",
         "ref": "refs/heads/master",
-        "rev": "4d3361cbfd0828b34b77d5eea622b0a721b3fdfb",
-        "revCount": 1003,
+        "rev": "2c7eac281a28cc52303f920839dc8862b820b5c6",
+        "revCount": 1004,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/purse-first.git"
+        "url": "https://code.linenisgreat.com/purse-first.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/purse-first.git"
+        "url": "https://code.linenisgreat.com/purse-first.git"
       }
     },
     "purse-first_2": {
@@ -623,11 +623,11 @@
         "rev": "68213be3d7b789ed9d3369876e7f490ed56d44a9",
         "revCount": 322,
         "type": "git",
-        "url": "https://github.com/amarbel-llc/tommy.git"
+        "url": "https://code.linenisgreat.com/tommy.git"
       },
       "original": {
         "type": "git",
-        "url": "https://github.com/amarbel-llc/tommy.git"
+        "url": "https://code.linenisgreat.com/tommy.git"
       }
     },
     "treefmt-nix": {
