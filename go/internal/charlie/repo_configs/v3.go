@@ -11,7 +11,7 @@ import (
 //go:generate tommy generate
 type V3 struct {
 	BlobStores       []blob_store_id.Id     `toml:"blob-stores"`
-	DefaultBlobStore blob_store_id.Id       `toml:"default-blob-store"`
+	DefaultBlobStore blob_store_id.Id       `toml:"default-blob-store,omitempty"`
 	Defaults         DefaultsV1             `toml:"defaults"`
 	FileExtensions   file_extensions.TOMLV1 `toml:"file-extensions"`
 	PrintOptions     options_print.V2       `toml:"cli-output"`

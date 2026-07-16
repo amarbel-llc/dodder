@@ -91,11 +91,16 @@ func (local *Repo) initDefaultTypeAndConfig(
 		return err
 	}
 
+	// The resolved default already reflects -blob_store-id when one was
+	// given: env_repo.Genesis pins it via SetBlobStoreOrder before this
+	// runs (amarbel-llc/dodder#365), so GetDefaultBlobStore() returns the
+	// SAME value an explicit override here would set. Deliberately not
+	// re-reading bigBang.BlobStoreId directly -- once #223 Phase 2 retargets
+	// the pin to a wrapping multi (not the raw named store), an explicit
+	// override here would silently put the raw (possibly-remote) store
+	// back into the config instead of the multi, re-introducing the bug
+	// this whole project fixes.
 	blobStoreId := local.GetEnvRepo().GetDefaultBlobStore().GetId()
-
-	if !bigBang.BlobStoreId.IsEmpty() {
-		blobStoreId = bigBang.BlobStoreId
-	}
 
 	blobStores := []blob_store_id.Id{blobStoreId}
 
@@ -106,6 +111,7 @@ func (local *Repo) initDefaultTypeAndConfig(
 	if configBlobId, configType, seededConfig, err = local.prepareDefaultConfig(
 		bigBang,
 		blobStores,
+		blobStoreId,
 		defaultTypeObjectId,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -402,6 +408,7 @@ func (local *Repo) prepareActionableCommonType(
 func (local *Repo) prepareDefaultConfig(
 	bigBang env_repo.BigBang,
 	blobStores []blob_store_id.Id,
+	defaultBlobStore blob_store_id.Id,
 	defaultTypeObjectId ids.TypeStruct,
 ) (blobId mad_domain_interfaces.MarklId, configType ids.Type, seeded bool, err error) {
 	if bigBang.ExcludeDefaultConfig {
@@ -413,6 +420,7 @@ func (local *Repo) prepareDefaultConfig(
 	if blobId, typedBlob, err = writeDefaultMutableConfig(
 		local,
 		blobStores,
+		defaultBlobStore,
 		defaultTypeObjectId,
 	); err != nil {
 		err = errors.Wrap(err)
@@ -429,9 +437,10 @@ func (local *Repo) prepareDefaultConfig(
 func writeDefaultMutableConfig(
 	repo *Repo,
 	blobStores []blob_store_id.Id,
+	defaultBlobStore blob_store_id.Id,
 	defaultType ids.TypeStruct,
 ) (blobId mad_domain_interfaces.MarklId, typedBlob repo_configs.TypedBlob, err error) {
-	typedBlob = repo_configs.DefaultOverlay(blobStores, defaultType)
+	typedBlob = repo_configs.DefaultOverlay(blobStores, defaultType, defaultBlobStore)
 
 	var blobWriter mad_domain_interfaces.BlobWriter
 

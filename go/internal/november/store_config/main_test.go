@@ -15,6 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
@@ -41,7 +42,7 @@ func TestBootstrapReadsConfigLogHead(t1 *testing.T) {
 		// swallows IsNotExist, so a blob that failed to load would silently
 		// leave defaults in place — asserting this value catches that.
 		distinctiveType := ids.MustTypeStruct("!custom-default-type")
-		typedBlob := repo_configs.DefaultOverlay(nil, distinctiveType)
+		typedBlob := repo_configs.DefaultOverlay(nil, distinctiveType, blob_store_id.Id{})
 
 		var blobDigest markl.Id
 
@@ -64,7 +65,7 @@ func TestBootstrapReadsConfigLogHead(t1 *testing.T) {
 		t.AssertNoError(
 			cfgLog.Append(
 				&blobDigest,
-				ids.MustType(ids.TypeTomlConfigV2),
+				ids.MustType(ids.TypeTomlConfigV3),
 				ids.NowTai(),
 			),
 		)

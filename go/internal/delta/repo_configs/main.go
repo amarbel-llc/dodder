@@ -81,14 +81,22 @@ func Default(defaultType ids.Type) Config {
 	}
 }
 
+// DefaultOverlay builds the config genesis writes. defaultBlobStore is the
+// repo's default blob store's own id -- ideally digest-bearing (FDR-0016
+// D1's multi, once amarbel-llc/dodder#223 Phase 2's core lands), but the
+// zero value is accepted for callers that don't have one yet (V3.
+// GetDefaultBlobStoreId() returns the zero value unset, same as V2's
+// silence on the question).
 func DefaultOverlay(
 	blobStores []blob_store_id.Id,
 	defaultType ids.TypeStruct,
+	defaultBlobStore blob_store_id.Id,
 ) TypedBlob {
 	return TypedBlob{
 		Type: ids.DefaultOrPanic(genres.Config).ToMadder(),
-		Blob: V2{
-			BlobStores: blobStores,
+		Blob: V3{
+			BlobStores:       blobStores,
+			DefaultBlobStore: defaultBlobStore,
 			Defaults: DefaultsV1{
 				Type: defaultType,
 				Tags: make([]ids.TagStruct, 0),

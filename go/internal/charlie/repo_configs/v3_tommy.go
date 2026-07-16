@@ -155,8 +155,12 @@ func (d *V3Document) Encode() ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("default-blob-store: %w", err)
 		}
-		if err := cst.SetAny(d.cstDoc.Root(), "default-blob-store", string(v)); err != nil {
-			return nil, fmt.Errorf("%w", err)
+		if len(v) > 0 {
+			if err := cst.SetAny(d.cstDoc.Root(), "default-blob-store", string(v)); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
+		} else {
+			cst.DeleteValue(d.cstDoc.Root(), "default-blob-store")
 		}
 	}
 	{
@@ -351,8 +355,12 @@ func EncodeV3From(data *V3, doc *document.Document, container *cst.Node) error {
 		if err != nil {
 			return fmt.Errorf("default-blob-store: %w", err)
 		}
-		if err := cst.SetAny(container, "default-blob-store", string(v)); err != nil {
-			return fmt.Errorf("%w", err)
+		if len(v) > 0 {
+			if err := cst.SetAny(container, "default-blob-store", string(v)); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		} else {
+			cst.DeleteValue(container, "default-blob-store")
 		}
 	}
 	{
