@@ -94,6 +94,7 @@
     tommy.inputs.conformist.follows = "treelint";
     madder.inputs.doppelgang.follows = "hyphence/doppelgang";
     hyphence.inputs.conformist.follows = "treelint";
+    bats.inputs.conformist.follows = "treelint";
   };
 
   outputs =

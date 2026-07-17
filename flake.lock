@@ -2,22 +2,24 @@
   "nodes": {
     "bats": {
       "inputs": {
+        "conformist": [
+          "treelint"
+        ],
         "igloo": [
           "igloo"
         ],
         "nixpkgs-master": [
           "nixpkgs-master"
         ],
-        "treefmt-nix": "treefmt-nix",
         "utils": [
           "utils"
         ]
       },
       "locked": {
-        "lastModified": 1784252875,
-        "narHash": "sha256-d+wWmM5DYZxWKlEwMsQjgFI6VyxtLpFgBaQWifsI/48=",
+        "lastModified": 1784284789,
+        "narHash": "sha256-+Idrh71mfOtQFiChCpu59GCEo4gIw1gg64LWOaRiu4Y=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/bats/archive/584562508c7c4e0b0e61ae92a9101f7f548dd0bb.tar.gz"
+        "url": "https://code.linenisgreat.com/bats/archive/524faca8837e626c0d588aa350cc31146bf37e22.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -234,10 +236,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784254836,
-        "narHash": "sha256-mVIM9kAk619Xv4Y0sMMU3OXBidD11guTf0uH6bc2qz8=",
+        "lastModified": 1784290382,
+        "narHash": "sha256-a1RqCFrvE7UcEyPjSO+aAbOaJ1nQ6zoxIsxXOIdvRMY=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/hyphence/archive/15b3b368d147ed33e358d5a6c81085dc52d14a7c.tar.gz"
+        "url": "https://code.linenisgreat.com/hyphence/archive/a8d9c8a2ac32e921d1e977bf984803d6f74f81d4.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -252,7 +254,7 @@
           "nixpkgs-master"
         ],
         "systems": "systems",
-        "treefmt-nix": "treefmt-nix_2"
+        "treefmt-nix": "treefmt-nix"
       },
       "locked": {
         "lastModified": 1783896868,
@@ -320,10 +322,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784255248,
-        "narHash": "sha256-0tBbhr5ALdxtm5hbZbi6GnRZD39wCmxaXQVCeU77VRk=",
+        "lastModified": 1784291150,
+        "narHash": "sha256-CNu6VY3aPINSjU7urGHH0dXoVgXDZQMccCy2r2E8Ht4=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/madder/archive/725011f01a675d7769b6e0be0274995388e6af01.tar.gz"
+        "url": "https://code.linenisgreat.com/madder/archive/5a25f1ba68776a8310c31e0cf962cc9696745b7d.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -387,10 +389,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784254433,
-        "narHash": "sha256-6oKbo88/toaSJv0HalleGsOFoBM2mTIkSjwfkiA3pW4=",
+        "lastModified": 1784290379,
+        "narHash": "sha256-sNCRFxsTiOBDGMbsc+C6Z5u2foJ9+59euPx5te/iKhU=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/piggy/archive/a963e31ad90399d8d7a14073a63d538019ba8ce4.tar.gz"
+        "url": "https://code.linenisgreat.com/piggy/archive/c397084850dc96a27418b46ac68adc8d89dddbf5.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -584,10 +586,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784253656,
-        "narHash": "sha256-HORBAH2lIgwJVrXErSCJvR5KIP6OaZIgPljdnJjqKbQ=",
+        "lastModified": 1784290362,
+        "narHash": "sha256-/edE4seI3C2u5Qawx9qa7hho/U0JOCtDcNre5OmLJBc=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/tommy/archive/3092ae77c4515aef212b4e2f43030d180fa50c4e.tar.gz"
+        "url": "https://code.linenisgreat.com/tommy/archive/470536b85c62643fe6906c3d35365ad2eecee745.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -595,27 +597,6 @@
       }
     },
     "treefmt-nix": {
-      "inputs": {
-        "nixpkgs": [
-          "bats",
-          "igloo"
-        ]
-      },
-      "locked": {
-        "lastModified": 1780220602,
-        "narHash": "sha256-eynAfOmbmxJnkp7YewvCEbShNnnYJ9gLLqkzsYtBPeM=",
-        "owner": "numtide",
-        "repo": "treefmt-nix",
-        "rev": "db947814a175b7ca6ded66e21383d938df01c227",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "treefmt-nix",
-        "type": "github"
-      }
-    },
-    "treefmt-nix_2": {
       "inputs": {
         "nixpkgs": [
           "igloo",
