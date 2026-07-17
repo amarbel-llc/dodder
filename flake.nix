@@ -77,8 +77,13 @@
       inputs.tap.follows = "tap";
     };
 
-    treelint = {
-      url = "github:amarbel-llc/treelint";
+    # conformist: the linter + formatter multiplexer (treefmt successor).
+    # Config is Nix-generated from ./conformist.nix (+ presets.eng) via
+    # conformist.lib.evalModule — see conformistEval below and
+    # conformist-nix(7). Replaces the retired treelint input (a stale
+    # pre-adoption placeholder) and the hand-written conformist.toml.
+    conformist = {
+      url = "https://code.linenisgreat.com/conformist/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -88,13 +93,13 @@
     igloo.inputs.nixpkgs-master.follows = "nixpkgs-master";
     tap.inputs.gomod2nix.follows = "purse-first/gomod2nix";
     madder.inputs.tap.follows = "tap";
-    madder.inputs.conformist.follows = "treelint";
-    piggy.inputs.conformist.follows = "treelint";
-    purse-first.inputs.conformist.follows = "treelint";
-    tommy.inputs.conformist.follows = "treelint";
+    madder.inputs.conformist.follows = "conformist";
+    piggy.inputs.conformist.follows = "conformist";
+    purse-first.inputs.conformist.follows = "conformist";
+    tommy.inputs.conformist.follows = "conformist";
     madder.inputs.doppelgang.follows = "hyphence/doppelgang";
-    hyphence.inputs.conformist.follows = "treelint";
-    bats.inputs.conformist.follows = "treelint";
+    hyphence.inputs.conformist.follows = "conformist";
+    bats.inputs.conformist.follows = "conformist";
   };
 
   outputs =
@@ -109,7 +114,7 @@
       hyphence,
       piggy,
       purse-first,
-      treelint,
+      conformist,
       ...
     }:
     let
@@ -145,6 +150,53 @@
 
         inherit (gomod.goPkgs) go-pkgs go-pkgs-test;
 
+        # The tommy TOML formatter lane ([formatter.tommy], `tommy fmt` over
+        # *.toml). Inlined here rather than in ./conformist.nix because it
+        # needs the `tommy` flake input, which a standalone module file can't
+        # see (same shape as madder's flake.nix). getExe' with an explicit
+        # binary name: tommy lacks meta.mainProgram.
+        conformistTommyModule =
+          { ... }:
+          {
+            settings.formatter.tommy = {
+              command = pkgs.lib.getExe' tommy.packages.${system}.default "tommy";
+              options = [ "fmt" ];
+              includes = [ "*.toml" ];
+            };
+          };
+
+        # conformist config, Nix-generated from ./conformist.nix merged with
+        # the eng-convention preset (conformist.lib.presets.eng). Backs
+        # `nix fmt` (build.wrapper) and the read-only formatting gate
+        # (checks.formatting = build.check, run by `just go/check-conformist`
+        # via the root `lint` recipe). Replaces the retired treelint-fmt
+        # wrapper + hand-written conformist.toml. See conformist-nix(7).
+        conformistEval = conformist.lib.evalModule pkgs {
+          imports = [
+            conformist.lib.presets.eng
+            conformistTommyModule
+            ./conformist.nix
+          ];
+          package = conformist.packages.${system}.default;
+        };
+
+        # Hook eval: the pre-commit / merge-repair wrappers. EXPLICITLY
+        # formatters-only (no presets.eng): the eng convention linters gate at
+        # `just lint`, not at authoring time (mirrors madder's split). The
+        # wrappers bake the generated config + the formatter toolchain as
+        # store paths and land on the devShell PATH as `conformist-pre-commit`
+        # / `conformist-repair`, so the sweatfile hook names inherited from
+        # eng resolve to THIS repo's formatter set — which is what retires
+        # conformist.toml's eng#222 pinning role (eng's cwd-aware catch-all
+        # wrapper can no longer be the one that runs here).
+        conformistHooksEval = conformist.lib.evalModule pkgs {
+          imports = [
+            conformistTommyModule
+            ./conformist.nix
+          ];
+          package = conformist.packages.${system}.default;
+        };
+
         result = import ./go/default.nix {
           nixpkgs = igloo;
           inherit
@@ -152,9 +204,15 @@
             tap
             tommy
             madder
-            treelint
             system
             ;
+          # Module-generated conformist wrappers for the devShell PATH: the
+          # config-baked `conformist` (manual runs inside the devShell shadow
+          # eng's cwd-aware catch-all wrapper) plus the two sweatfile hook
+          # names. See conformistEval / conformistHooksEval above.
+          conformistWrapper = conformistEval.config.build.wrapper;
+          conformistPreCommit = conformistHooksEval.config.build.preCommit;
+          conformistRepair = conformistHooksEval.config.build.repair;
           # Pivot self-consumption onto the published artifact: every
           # buildGoApplication in go/default.nix uses this as `src`,
           # so the same closure downstream consumers receive via
@@ -172,10 +230,21 @@
       {
         packages = result.packages // {
           inherit go-pkgs go-pkgs-test;
+          # Dogfood the hook wrappers: `nix build .#conformist-pre-commit`
+          # forces the hook-eval output to build and is the same wrapper the
+          # devShell puts on PATH (mirrors madder).
+          conformist-pre-commit = conformistHooksEval.config.build.preCommit;
+          conformist-repair = conformistHooksEval.config.build.repair;
         };
-        inherit (result) checks;
+        checks = result.checks // {
+          # Sandboxed read-only formatting gate: `conformist check` against a
+          # /nix/store snapshot of the tracked tree. Built by
+          # `just go/check-conformist` (root `lint` lane).
+          formatting = conformistEval.config.build.check self;
+        };
         devShells.default = result.devShells.default;
-        formatter = result.formatter;
+        # `nix fmt` runs the generated conformist wrapper (see conformistEval).
+        formatter = conformistEval.config.build.wrapper;
       }
     ))
     // {

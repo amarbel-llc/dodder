@@ -48,15 +48,16 @@ codemod-go-fix_redundant_import_aliases:
 files_go := "internal/ lib/ cmd/"
 
 # Format the whole repo via conformist (treefmt successor): goimports + gofumpt
-# for Go, nixfmt for *.nix, shfmt for shell, stylua for *.lua, rustfmt for *.rs.
-# Replaces the old direct goimports/gofumpt pair. Resolves the wrapped conformist
-# (which bundles those formatters on PATH) from the flake so it works regardless
-# of the dev-shell. Config lives in the repo-root conformist.toml.
+# for Go, nixfmt for *.nix, shfmt for shell, stylua for *.lua, rustfmt for *.rs,
+# tommy for *.toml. `nix fmt` runs the flake's module-generated wrapper, which
+# bakes the config and every formatter as store paths, so it works regardless
+# of the dev-shell. Config is Nix-generated from the repo-root conformist.nix
+# (see conformist-nix(7)); the retired hand-written conformist.toml is gone.
 codemod-go-fmt: codemod-go-fix_redundant_import_aliases
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths '..#treelint-fmt')
-  "$bin/bin/treelint-fmt"
+  cd "{{ justfile_directory() }}/.."
+  nix fmt
 
 # Reposition packages across NATO tiers based on their import graph. Runs
 # the dagnabit binary against ./lib and ./internal so packages with no
@@ -335,9 +336,10 @@ update: update-go
 #
 
 # The tommy/peg generators emit code that is not goimports/gofumpt-clean
-# (e.g. no blank line between top-level funcs), so treelint (via codemod-go-fmt)
-# runs afterward to canonicalize the generated output. Without this the
-# treelint check gate would fail after every build (which regenerates codegen).
+# (e.g. no blank line between top-level funcs), so conformist (via
+# codemod-go-fmt) runs afterward to canonicalize the generated output. Without
+# this the conformist check gate would fail after every build (which
+# regenerates codegen).
 build-go-generate: && codemod-go-fmt
   nix develop .. -c go generate ./lib/...
   nix develop .. -c go generate ./lib/0/...
@@ -429,24 +431,27 @@ check-go-defererr:
 check-go-versions:
   go run ./lib/alfa/analyzers/versions
 
-# Read-only formatting/lint gate via treelint. Exits non-zero if any file would
-# be reformatted (drift). Resolves the wrapped treelint from the flake so the
-# formatter binaries are always on PATH. Wired into the pre-merge lane via the
-# root `lint` recipe.
-check-treelint:
+# Read-only formatting/lint gate via conformist: builds the flake's
+# checks.formatting derivation (`conformist check` against a /nix/store
+# snapshot of the tracked tree, same Nix-generated config `nix fmt` uses,
+# plus the presets.eng convention linters). Exits non-zero if any file would
+# be reformatted (drift) or a linter finds an issue. Wired into the pre-merge
+# lane via the root `lint` recipe.
+check-conformist:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths '..#treelint-fmt')
-  "$bin/bin/treelint-fmt" check
+  nix build --no-link --print-build-logs \
+    "..#checks.$(nix eval --raw --impure --expr builtins.currentSystem).formatting"
 
 # Read-only shellcheck gate for tracked shell scripts (*.sh/*.bash). Lives
-# OUTSIDE conformist.toml on purpose: the shared eng conformist-repair /
-# -pre-commit hooks run a wrapper with no shellcheck on PATH, so a
-# [linter.shellcheck] lane there hard-fails at linter init and blocks the merge
-# (amarbel-llc/eng#222, dodder#323). Mirrors the retired treelint.toml linter's
-# scope: excludes go/vimdiff.bash (vendored upstream git-vimdiff harness) and the
-# frozen zz-tests_bats/previous_versions/** snapshots. Wired into the pre-merge
-# lane via the root `lint` recipe. Uses the dev-shell shellcheck (same build the
+# OUTSIDE the conformist config on purpose (a holdover from the conformist.toml
+# era, when the shared eng hooks' wrapper had no shellcheck on PATH —
+# amarbel-llc/eng#222, dodder#323; folding it into conformist.nix as a
+# [linter.shellcheck] lane is now possible and tracked as a followup). Mirrors
+# the retired treelint.toml linter's scope: excludes go/vimdiff.bash (vendored
+# upstream git-vimdiff harness) and the frozen
+# zz-tests_bats/previous_versions/** snapshots. Wired into the pre-merge lane
+# via the root `lint` recipe. Uses the dev-shell shellcheck (same build the
 # old linter drove).
 check-shellcheck:
   #!/usr/bin/env bash
@@ -461,7 +466,7 @@ check-shellcheck:
   fi
   shellcheck "${files[@]}"
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-treelint check-shellcheck test-go-unit
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-conformist check-shellcheck test-go-unit
 
 #   _____         _
 #  |_   _|__  ___| |_

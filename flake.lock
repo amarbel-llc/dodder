@@ -3,7 +3,7 @@
     "bats": {
       "inputs": {
         "conformist": [
-          "treelint"
+          "conformist"
         ],
         "igloo": [
           "igloo"
@@ -60,6 +60,29 @@
       }
     },
     "conformist": {
+      "inputs": {
+        "igloo": [
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "nixpkgs-master"
+        ],
+        "utils": [
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784310418,
+        "narHash": "sha256-XqxuDSgy6rZSvQOprEQeLGqzI/d/2evH1cf9Wc+D5i8=",
+        "type": "tarball",
+        "url": "https://code.linenisgreat.com/conformist/archive/9abf54eeb6df0d544de7602e6007391d3c28f0dc.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://code.linenisgreat.com/conformist/archive/master.tar.gz"
+      }
+    },
+    "conformist_2": {
       "inputs": {
         "igloo": [
           "tap",
@@ -219,7 +242,7 @@
           "bats"
         ],
         "conformist": [
-          "treelint"
+          "conformist"
         ],
         "doppelgang": "doppelgang",
         "igloo": [
@@ -289,7 +312,7 @@
           "bats"
         ],
         "conformist": [
-          "treelint"
+          "conformist"
         ],
         "crap": "crap",
         "doppelgang": [
@@ -370,7 +393,7 @@
           "bats"
         ],
         "conformist": [
-          "treelint"
+          "conformist"
         ],
         "igloo": [
           "igloo"
@@ -418,7 +441,7 @@
     "purse-first": {
       "inputs": {
         "conformist": [
-          "treelint"
+          "conformist"
         ],
         "gomod2nix": "gomod2nix",
         "igloo": [
@@ -444,7 +467,7 @@
     },
     "purse-first_2": {
       "inputs": {
-        "conformist": "conformist",
+        "conformist": "conformist_2",
         "gomod2nix": [
           "tap",
           "gomod2nix"
@@ -479,6 +502,7 @@
     "root": {
       "inputs": {
         "bats": "bats",
+        "conformist": "conformist",
         "hyphence": "hyphence",
         "igloo": "igloo",
         "madder": "madder",
@@ -487,7 +511,6 @@
         "purse-first": "purse-first",
         "tap": "tap",
         "tommy": "tommy",
-        "treelint": "treelint",
         "utils": "utils"
       }
     },
@@ -570,7 +593,7 @@
           "bats"
         ],
         "conformist": [
-          "treelint"
+          "conformist"
         ],
         "igloo": [
           "igloo"
@@ -614,32 +637,6 @@
       "original": {
         "owner": "numtide",
         "repo": "treefmt-nix",
-        "type": "github"
-      }
-    },
-    "treelint": {
-      "inputs": {
-        "igloo": [
-          "igloo"
-        ],
-        "nixpkgs-master": [
-          "nixpkgs-master"
-        ],
-        "utils": [
-          "utils"
-        ]
-      },
-      "locked": {
-        "lastModified": 1784252369,
-        "narHash": "sha256-2Sjoir0SEdW1iw8x7N3KO7uOi7Jc/71P5ajCVFfgbts=",
-        "owner": "amarbel-llc",
-        "repo": "treelint",
-        "rev": "255ce4249a043da02e57accb01f651b27f749978",
-        "type": "github"
-      },
-      "original": {
-        "owner": "amarbel-llc",
-        "repo": "treelint",
         "type": "github"
       }
     },

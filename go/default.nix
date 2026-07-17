@@ -4,8 +4,15 @@
   tap ? null,
   tommy,
   madder ? null,
-  treelint ? null,
   system,
+  # Module-generated conformist wrappers (flake.nix conformistEval /
+  # conformistHooksEval): the config-baked `conformist` plus the
+  # `conformist-pre-commit` / `conformist-repair` sweatfile hook wrappers.
+  # All three go on the devShell PATH. Null on the non-flake
+  # `import ./go/default.nix` path — the devShell then simply omits them.
+  conformistWrapper ? null,
+  conformistPreCommit ? null,
+  conformistRepair ? null,
   # Filtered Go source tree (test-superset shape) produced by
   # mkGoPkgs in go/gomod.nix and threaded through flake.nix. Every
   # buildGoApplication self-consumes this as `src`/`pwd` so dodder
@@ -341,57 +348,6 @@ let
       --replace-fail '@dodder@' '${dodder}/bin/dodder'
   '';
 
-  # conformist (the renamed treelint; treefmt successor) wrapped with the
-  # formatter binaries it drives on PATH, so `conformist` / `conformist
-  # check` resolve goimports (gotools) / gofumpt / nixfmt / shfmt / stylua /
-  # rustfmt without depending on the caller's shell. Mirrors
-  # amarbel-llc/purse-first's
-  # treelintFmt wrapper. The treelint flake input's `packages.default` now
-  # ships a `conformist` binary (the tool was renamed), so the wrapper execs
-  # `conformist`, not `treelint`; the wrapper name and `..#treelint-fmt`
-  # flake output are kept so the codemod-go-fmt (repair) and check-treelint
-  # (gate) justfile recipes that resolve it via `nix build '..#treelint-fmt'`
-  # are unaffected, and it stays the flake's `nix fmt` formatter.
-  # gofumpt/gotools are the same igloo `pkgs` builds the dev-shell carries,
-  # so the Go output matches the dev-loop formatter. null on the non-flake
-  # `import ./go/default.nix` path (treelint absent).
-  # tommy's conformist codegen linter driver ([linter.tommy-codegen]), owned by
-  # the tommy flake so the pinned tommy input resolves which tommy backs it (no
-  # per-repo driver duplication). It bakes that tommy in and skips when go is
-  # absent. Regenerates the *_tommy.go companions so they land in the
-  # `conformist --commit` chore; `just build-go-generate` remains the
-  # NATO-ordered regen path.
-  tommyCodegen = tommy.packages.${system}.conformist-tommy-codegen;
-
-  treelint-fmt =
-    if treelint == null then
-      null
-    else
-      pkgs.writeShellApplication {
-        name = "treelint-fmt";
-        runtimeInputs = [
-          treelint.packages.${system}.default
-          pkgs.gofumpt
-          pkgs.gotools
-          pkgs.nixfmt
-          pkgs.shfmt
-          pkgs.shellcheck
-          # stylua ([formatter.stylua], *.lua) + rustfmt ([formatter.rustfmt],
-          # *.rs): dodder OWNS conformist.toml (see amarbel-llc/eng#222) and
-          # explicitly adopts these two lanes, so the wrapper must carry the
-          # binaries the eng catch-all would otherwise have supplied.
-          pkgs.stylua
-          pkgs.rustfmt
-          # tommy (TOML formatter, [formatter.tommy]) + go + the codegen driver
-          # ([linter.tommy-codegen]), so the wrapper resolves the formatter and
-          # the codegen repair regen. go is needed by `tommy generate`'s
-          # go/packages analysis in repair mode.
-          tommy.packages.${system}.default
-          pkgs.go_1_26
-          tommyCodegen
-        ];
-        text = ''exec conformist "$@"'';
-      };
 in
 {
   packages = {
@@ -432,12 +388,10 @@ in
         madder-test-sftp-server = madder.packages.${system}.madder-test-sftp-server;
       }
   )
-  // (if bats == null then { } else { bats-libs = bats.packages.${system}.bats-libs; })
-  // (if treelint-fmt == null then { } else { inherit treelint-fmt; });
+  // (if bats == null then { } else { bats-libs = bats.packages.${system}.bats-libs; });
 
-  # `nix fmt` entry point: the wrapped treelint. Null on the non-flake
-  # import path (treelint absent); flake.nix always supplies treelint.
-  formatter = treelint-fmt;
+  # NB: no `formatter` attr here anymore — `nix fmt` is wired directly in
+  # flake.nix to the conformist module eval's build.wrapper.
 
   # Wired into the flake's `checks.<system>.*` so `nix flake check` runs
   # the sandboxed Go unit-test lane. Additional checks (e.g. the bats
@@ -502,9 +456,14 @@ in
     ++ pkgs.lib.optionals (madder != null) [
       madder.packages.${system}.default
     ]
-    ++ pkgs.lib.optionals (treelint != null) [
-      treelint.packages.${system}.default
-    ];
+    # The module-generated conformist wrappers (see the parameter docs at the
+    # top of this file). `conformist` here shadows eng's home-profile
+    # cwd-aware wrapper inside the devShell, so a manual `conformist` run
+    # always uses dodder's own config — the eng#222 protection the retired
+    # conformist.toml used to provide by its mere presence at the git root.
+    ++ pkgs.lib.optionals (conformistWrapper != null) [ conformistWrapper ]
+    ++ pkgs.lib.optionals (conformistPreCommit != null) [ conformistPreCommit ]
+    ++ pkgs.lib.optionals (conformistRepair != null) [ conformistRepair ];
 
     GOTOOLCHAIN = "local";
   };

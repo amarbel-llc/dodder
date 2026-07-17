@@ -21,11 +21,17 @@ default: lint build test
 #  |_____|_|_| |_|\__|
 #
 
-# Read-only formatting gate (treelint check). Runs first in the default lane
-# so a formatting drift fails fast, before the expensive build/test. This is
-# what the spinclass pre-merge hook (bare `just`) enforces.
-lint:
-  just go/check-treelint
+lint: lint-fmt lint-shell
+
+# Read-only formatting gate (conformist check via the flake's
+# checks.formatting). Runs first in the default lane so a formatting drift
+# fails fast, before the expensive build/test. This is what the spinclass
+# pre-merge hook (bare `just`) enforces.
+lint-fmt:
+  just go/check-conformist
+
+# Read-only shellcheck gate for tracked shell scripts (see go/check-shellcheck).
+lint-shell:
   just go/check-shellcheck
 
 #   ____        _ _     _
@@ -35,7 +41,12 @@ lint:
 #  |____/ \__,_|_|_|\__,_|
 #
 
-build:
+build: build-go
+
+# Codegen + formatting via the go/ justfile — the pre-merge gate's build step
+# (a debug binary for ad-hoc dev use comes from `just go/build-go-binary`; the
+# release artifact is the flake's default package).
+build-go:
   just go/build-go
 
 # Regenerate the dodder.net seed-set type files (FDR-0010 Phase 3) into
@@ -63,9 +74,10 @@ check:
 #    |_|\___||___/\__|
 #
 
-# Run all tests: unit + bats integration + fixture-generator smoke. The
-# bats lane builds dodder internally inside the nix sandbox, so no `build`
-# dep is needed for this path.
+# NB: the bats lane builds dodder internally inside the nix sandbox, so no
+# `build` dep is needed for the test aggregate below. (Detached comment on
+# purpose: aggregates carry no doc comment — conformist-justfile(7).)
+
 test: test-go test-bats test-bats-generate
 
 # Run unit tests only.

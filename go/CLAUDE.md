@@ -57,9 +57,10 @@ tier ordering).
 
 ### Code Quality
 
-- **Format**: `just codemod-go-fmt` (runs the conformist formatter: goimports +
-  gofumpt for Go, plus nixfmt / shfmt / stylua / rustfmt / tommy; config in the
-  repo-root `conformist.toml`)
+- **Format**: `just codemod-go-fmt` (runs `nix fmt`, the conformist formatter:
+  goimports + gofumpt for Go, plus nixfmt / shfmt / stylua / rustfmt / tommy;
+  config is Nix-generated from the repo-root `conformist.nix` — see
+  conformist-nix(7))
 - **Vulnerability Check**: `just check-go-vuln`
 - **Go Vet**: `just check-go-vet`
 - **Repool Analyzer**: `just check-go-repool` (detects leaked or discarded pool
