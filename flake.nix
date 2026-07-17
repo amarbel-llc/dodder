@@ -83,8 +83,7 @@
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
     };
-    igloo.inputs.treefmt-nix.follows = "bats/treefmt-nix";
-    tap.inputs.treefmt-nix.follows = "bats/treefmt-nix";
+    tap.inputs.treefmt-nix.follows = "igloo/treefmt-nix";
     utils.inputs.systems.follows = "igloo/systems";
     igloo.inputs.nixpkgs-master.follows = "nixpkgs-master";
     tap.inputs.gomod2nix.follows = "purse-first/gomod2nix";
