@@ -1,18 +1,18 @@
 {
   inputs = {
-    igloo.url = "git+https://code.linenisgreat.com/igloo.git";
+    igloo.url = "https://code.linenisgreat.com/igloo/archive/master.tar.gz";
     nixpkgs-master.url = "github:NixOS/nixpkgs/567a49d1913ce81ac6e9582e3553dd90a955875f";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
     bats = {
-      url = "git+https://code.linenisgreat.com/bats.git";
+      url = "https://code.linenisgreat.com/bats/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
     };
 
     tap = {
-      url = "git+https://code.linenisgreat.com/tap.git";
+      url = "https://code.linenisgreat.com/tap/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -20,7 +20,7 @@
     };
 
     purse-first = {
-      url = "git+https://code.linenisgreat.com/purse-first.git";
+      url = "https://code.linenisgreat.com/purse-first/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -30,7 +30,7 @@
     # consumes it too; madder.inputs.hyphence.follows below keeps both on the
     # same rev (RFC 0001 flake-input-go_mod bridge — see go/gomod.nix).
     hyphence = {
-      url = "git+https://code.linenisgreat.com/hyphence.git";
+      url = "https://code.linenisgreat.com/hyphence/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -42,7 +42,7 @@
       # tracks madder master; move it with `just go/update-flake-input madder`
       # (updates flake.lock + go.mod + gomod2nix in one shot) rather than
       # pinning a rev here.
-      url = "git+https://code.linenisgreat.com/madder.git";
+      url = "https://code.linenisgreat.com/madder/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -60,7 +60,7 @@
     # subPath). madder consumes it too; madder.inputs.piggy.follows
     # above keeps both on the same rev.
     piggy = {
-      url = "git+https://code.linenisgreat.com/piggy.git";
+      url = "https://code.linenisgreat.com/piggy/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
@@ -69,7 +69,7 @@
     };
 
     tommy = {
-      url = "git+https://code.linenisgreat.com/tommy.git";
+      url = "https://code.linenisgreat.com/tommy/archive/master.tar.gz";
       inputs.igloo.follows = "igloo";
       inputs.nixpkgs-master.follows = "nixpkgs-master";
       inputs.utils.follows = "utils";
