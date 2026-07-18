@@ -24,6 +24,17 @@ type OptionCommentWithApply interface {
 	ApplyToWriter(Options, *writer) error
 }
 
+// OptionCommentSettingsField marks an OptionComment as a `_`-reserved
+// document settings field (dodder#374, cutting-garden RFC 0015) rather than
+// a `%` comment. Implementing this is the only step needed to migrate an
+// OptionComment's write-side spelling -- Metadata.WriteTo checks it
+// generically, matching ReadFrom's already-generic prototype-keyed parsing,
+// so no new type-switch branch is needed per migrated setting.
+type OptionCommentSettingsField interface {
+	OptionComment
+	IsSettingsField() bool
+}
+
 // TODO add config to automatically add dry run if necessary
 func MakeOptionCommentSet(
 	elements map[string]OptionComment,
@@ -187,6 +198,10 @@ func (ocf *OptionCommentDryRun) Set(v string) (err error) {
 
 func (ocf *OptionCommentDryRun) String() string {
 	return fmt.Sprintf("%t", ocf.IsDryRun())
+}
+
+func (ocf *OptionCommentDryRun) IsSettingsField() bool {
+	return true
 }
 
 type OptionCommentUnknown struct {

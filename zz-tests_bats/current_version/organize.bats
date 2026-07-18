@@ -314,49 +314,66 @@ function organize_dry_run_writes_settings_field { # @test
 }
 
 function organize_dry_run_reads_settings_field { # @test
-  expected_show="$(mktemp)"
+  # No `-dry-run` on the CLI: the "dry-run" OptionComment prototype is not
+  # registered (organize_options.go's ApplyToOrganizeOptions early-return),
+  # so `- _dry-run=true` parses as an unregistered settings field and has
+  # no effect on the commit -- this proves the new syntax is accepted
+  # without erroring, using the exact same inputs/goldens as
+  # organize_simple_commit to prove it's a true no-op, not merely "didn't
+  # crash".
+  run_dodder checkout one/uno
+  assert_success
 
-  run_dodder show "${cmd_dodder_def[@]}" -format log :z,e,t
-  expected_show="$output"
-
-  run_dodder organize -dry-run -mode commit-directly :z,e,t <<-EOM
+  run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
 		- _dry-run=true
 		---
 
-		# new-etikett-for-all
+		# new-etikett-for-all %virtual_etikett
 		- [   !md   ]
-		- [one/dos  ] wow ok again
-		- [one/uno  ] wow the first
+		- [   tag  ]
+		- [   tag-1]
+		- [   tag-2]
+		- [   tag-3]
+		- [   tag-4]
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
+  assert_golden_unsorted organize_simple_commit
 
-  run_dodder show -format log :z,e,t
+  run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
-  assert_output_unsorted "$expected_show"
+  assert_golden_unsorted organize_simple_commit_log
 }
 
 function organize_dry_run_legacy_comment_alias_still_accepted { # @test
-  expected_show="$(mktemp)"
+  # Same reasoning as organize_dry_run_reads_settings_field, for the
+  # deprecated `% dry-run:true` comment spelling.
+  run_dodder checkout one/uno
+  assert_success
 
-  run_dodder show "${cmd_dodder_def[@]}" -format log :z,e,t
-  expected_show="$output"
-
-  run_dodder organize -dry-run -mode commit-directly :z,e,t <<-EOM
+  run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
 		% dry-run:true
 		---
 
-		# new-etikett-for-all
+		# new-etikett-for-all %virtual_etikett
 		- [   !md   ]
-		- [one/dos  ] wow ok again
-		- [one/uno  ] wow the first
+		- [   tag  ]
+		- [   tag-1]
+		- [   tag-2]
+		- [   tag-3]
+		- [   tag-4]
+		- [one/dos   !md tag-3 tag-4] wow ok again
+		- [one/uno   !md tag-3 tag-4] wow the first
 	EOM
   assert_success
+  assert_golden_unsorted organize_simple_commit
 
-  run_dodder show -format log :z,e,t
+  run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
-  assert_output_unsorted "$expected_show"
+  assert_golden_unsorted organize_simple_commit_log
 }
 
 function organize_with_type_output { # @test

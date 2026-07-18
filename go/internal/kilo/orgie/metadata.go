@@ -163,12 +163,14 @@ func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
 
 	for _, o := range metadata.OptionCommentSet.OptionComments {
 		// `_`-reserved settings fields (dodder#374, cutting-garden RFC
-		// 0015): behavior-affecting settings are written as `- _key=value`
-		// document fields, not `%` comments, so they aren't opaque per
-		// hyphence RFC 0001. Only dry-run is migrated so far; other
-		// OptionComments still use the comment spelling.
+		// 0015): an OptionComment implementing OptionCommentSettingsField is
+		// written as `- _key=value`, not a `%` comment, so it isn't opaque
+		// per hyphence RFC 0001. Everything else keeps the comment spelling.
+		// Migrating a setting is a one-line change on that OptionComment
+		// (implement IsSettingsField) -- this loop needs no new branch.
 		if ocwk, ok := o.(OptionCommentWithKey); ok {
-			if _, isDryRun := ocwk.OptionComment.(*OptionCommentDryRun); isDryRun {
+			if sf, ok := ocwk.OptionComment.(OptionCommentSettingsField); ok &&
+				sf.IsSettingsField() {
 				w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.OptionComment)
 				continue
 			}

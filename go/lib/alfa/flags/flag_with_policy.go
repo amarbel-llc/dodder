@@ -64,16 +64,15 @@ func SplitCommasAndTrim(value string) interfaces.Seq[string] {
 	}
 }
 
-func SplitCommasAndTrimAndMake[
+// setElementsFromTokens shares the tokenize -> Set -> yield loop between
+// SplitCommasAndTrimAndMake and SplitSpacesAndTrimAndMake, which otherwise
+// differ only in how `value` is tokenized.
+func setElementsFromTokens[
 	ELEMENT interfaces.Value,
 	ELEMENT_PTR interfaces.ValuePtr[ELEMENT],
-](value string) interfaces.SeqError[ELEMENT] {
+](tokens interfaces.Seq[string]) interfaces.SeqError[ELEMENT] {
 	return func(yield func(ELEMENT, error) bool) {
-		elements := strings.SplitSeq(value, ",")
-
-		for elementString := range elements {
-			elementString = strings.TrimSpace(elementString)
-
+		for elementString := range tokens {
 			var element ELEMENT
 
 			if err := ELEMENT_PTR(&element).Set(elementString); err != nil {
@@ -91,6 +90,13 @@ func SplitCommasAndTrimAndMake[
 	}
 }
 
+func SplitCommasAndTrimAndMake[
+	ELEMENT interfaces.Value,
+	ELEMENT_PTR interfaces.ValuePtr[ELEMENT],
+](value string) interfaces.SeqError[ELEMENT] {
+	return setElementsFromTokens[ELEMENT, ELEMENT_PTR](SplitCommasAndTrim(value))
+}
+
 // SplitSpacesAndTrimAndMake splits on whitespace runs (trellis/RFC 0015
 // conjunction terms), not commas — comma is disjunctive in trellis, so a
 // comma-separated split would silently misparse a heading's AND semantics.
@@ -98,21 +104,13 @@ func SplitSpacesAndTrimAndMake[
 	ELEMENT interfaces.Value,
 	ELEMENT_PTR interfaces.ValuePtr[ELEMENT],
 ](value string) interfaces.SeqError[ELEMENT] {
-	return func(yield func(ELEMENT, error) bool) {
+	tokens := func(yield func(string) bool) {
 		for _, elementString := range strings.Fields(value) {
-			var element ELEMENT
-
-			if err := ELEMENT_PTR(&element).Set(elementString); err != nil {
-				if !yield(element, err) {
-					return
-				}
-
-				continue
-			}
-
-			if !yield(element, nil) {
+			if !yield(elementString) {
 				return
 			}
 		}
 	}
+
+	return setElementsFromTokens[ELEMENT, ELEMENT_PTR](tokens)
 }
