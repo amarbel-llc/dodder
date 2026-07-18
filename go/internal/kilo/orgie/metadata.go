@@ -120,18 +120,38 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 	// `_`-reserved settings fields (dodder#374, cutting-garden RFC 0015):
 	// `- _key=value` is the settings-field spelling. `% key:value` (the
 	// OptionCommentSet path above) remains accepted as a deprecated
-	// alias during migration. Any other `-` line (no `=`, or an
-	// unreserved key) is unaffected and still parses as a tag.
+	// alias during migration.
+	//
+	// A key this build/context has no prototype for at all (e.g.
+	// `_dry-run=true` read without `-dry-run` on the CLI, so the
+	// "dry-run" prototype was never registered) is a legitimate,
+	// expected no-op -- exactly how an unregistered `%` comment has
+	// always behaved (OptionCommentSet.Set falls back to
+	// OptionCommentUnknown). That parity is intentional, not a gap: the
+	// prototype registry is inherently context-dependent, so a settings
+	// field this run doesn't recognize can't be distinguished from one
+	// it simply isn't active for.
+	//
+	// A key that IS registered but explicitly is not a settings field
+	// (e.g. the built-in "hide", whose Set() is an unimplemented stub)
+	// is different: routing it through OptionCommentSet.Set would hit
+	// that stub and surface an opaque, unrelated error. Reject it here
+	// instead by falling through to addTag(v), which gives the same
+	// clear "not a valid tag" diagnostic any other `=`-containing `-`
+	// line gets.
 	addTagOrSettingsField := func(v string) (err error) {
 		if key, value, ok := strings.Cut(v, "="); ok && strings.HasPrefix(key, "_") {
-			if err = metadata.OptionCommentSet.Set(
-				strings.TrimPrefix(key, "_") + ":" + value,
-			); err != nil {
-				err = errors.Wrap(err)
+			prototypeKey := strings.TrimPrefix(key, "_")
+			proto, registered := metadata.OptionCommentSet.GetPrototypeOptionComments()[prototypeKey]
+
+			if !registered || isSettingsField(proto) {
+				if err = metadata.OptionCommentSet.Set(prototypeKey + ":" + value); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
 				return err
 			}
-
-			return err
 		}
 
 		return addTag(v)
@@ -168,12 +188,10 @@ func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
 		// per hyphence RFC 0001. Everything else keeps the comment spelling.
 		// Migrating a setting is a one-line change on that OptionComment
 		// (implement IsSettingsField) -- this loop needs no new branch.
-		if ocwk, ok := o.(OptionCommentWithKey); ok {
-			if sf, ok := ocwk.OptionComment.(OptionCommentSettingsField); ok &&
-				sf.IsSettingsField() {
-				w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.OptionComment)
-				continue
-			}
+		if isSettingsField(o) {
+			ocwk := o.(OptionCommentWithKey)
+			w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.OptionComment)
+			continue
 		}
 
 		w.WriteFormat("%% %s", o)

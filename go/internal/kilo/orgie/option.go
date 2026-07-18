@@ -35,6 +35,24 @@ type OptionCommentSettingsField interface {
 	IsSettingsField() bool
 }
 
+// isSettingsField reports whether a single-wrapped OptionCommentWithKey
+// (from OptionCommentSet's prototype registry or OptionComments slice)
+// should use the `- _key=value` settings-field spelling rather than
+// `% key:value`. Shared by Metadata.ReadFrom (deciding whether a `-
+// _key=value` line is a recognized settings field or falls through to
+// ordinary tag parsing) and Metadata.WriteTo (deciding how to emit an
+// already-registered OptionComment), so the two directions can't drift.
+func isSettingsField(o OptionComment) bool {
+	ocwk, ok := o.(OptionCommentWithKey)
+	if !ok {
+		return false
+	}
+
+	sf, ok := ocwk.OptionComment.(OptionCommentSettingsField)
+
+	return ok && sf.IsSettingsField()
+}
+
 // TODO add config to automatically add dry run if necessary
 func MakeOptionCommentSet(
 	elements map[string]OptionComment,
@@ -97,6 +115,22 @@ func (ocs *OptionCommentSet) Set(v string) (err error) {
 	oc, ok := ocs.prototype[head]
 
 	if ok {
+		// ocs.prototype entries are already OptionCommentWithKey (see
+		// AddPrototype below); unwrap before cloning so
+		// CloneOptionComment() clones the actual registered comment
+		// (e.g. *OptionCommentDryRun) rather than cloning the wrapper
+		// itself, which would re-wrap on the next line and produce a
+		// double-wrapped OptionCommentWithKey{OptionComment:
+		// OptionCommentWithKey{...}}. That double-wrap broke both
+		// String() (rendering "key:key:value") and any interface
+		// assertion against the inner concrete type (e.g.
+		// OptionCommentSettingsField), since Go's embedded-interface
+		// promotion only forwards the embedded interface's own declared
+		// methods, not the wrapped-again value's extra methods.
+		if ocwk, isWrapped := oc.(OptionCommentWithKey); isWrapped {
+			oc = ocwk.OptionComment
+		}
+
 		oc = oc.CloneOptionComment()
 	} else {
 		oc = &OptionCommentUnknown{}
