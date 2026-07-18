@@ -144,8 +144,24 @@ Add a new object line. The organize system will create it on commit:
 
 ## Removing Objects
 
-Delete the object line from the document. The object will be removed from the
-result set (though not deleted from the store).
+Delete the object line from the document. This is **not** a no-op and does
+**not** delete the object from the store — it is a real metadata write: the
+tag(s) belonging to the query used to invoke **organize** (the document
+metadata's tag set, see **METADATA** above) are removed from the object, and
+the reduced tag set is committed as a new object version. For example, after
+`dodder organize tag-5`, deleting an object's line removes `tag-5` from that
+object; the object no longer matches that query on a subsequent `show`.
+
+Tags implied by headings or **-group-by** grouping are a separate mechanism
+(see **HEADINGS**) and are **not** affected by line deletion — an object that
+was nested under `# priority-1` keeps the `priority-1` tag even after its
+line is deleted, because only the document-level query-selection tags are
+removed, not the per-heading tag set.
+
+This is scoped to the tags declared at the document-metadata level; it says
+nothing about the grouped (**-group-by**) dimension specifically, and should
+not be read as "clears the object's group membership" or "removes it from
+dodder entirely."
 
 # INTERNAL AND EXTERNAL FORKS
 
