@@ -57,6 +57,28 @@ It uses the hyphence format (triple-hyphen delimiters):
 The type (`! task`) sets the default type for new objects. Tags
 (`- project-alpha`) are applied to all objects in the document.
 
+## Settings Fields
+
+Document-level, behavior-affecting settings are spelled as `_`-reserved
+metadata fields (cutting-garden RFC 0015), not comments — a leading
+underscore marks a field as document/operation-scoped rather than a tag or
+type applied to every object in the document:
+
+    ---
+    - _dry-run=true
+    ---
+
+**`_dry-run=true`** mirrors the **-dry-run** CLI flag: when active,
+**organize** parses and validates changes without writing them to the
+store. It is generated in output whenever **-dry-run** is passed on the
+command line, and can be set explicitly in a hand-edited document, though
+note that today this only takes effect when **organize** was already
+invoked with **-dry-run** on the command line (the field is not yet a way
+to activate dry-run mode from a cold start).
+
+The older comment spelling, **`% dry-run:true`**, is still accepted when
+reading a document (a deprecated alias), but is no longer generated.
+
 ## Headings
 
 Headings use markdown-style `#` syntax. Each heading level defines a tag scope:

@@ -2,6 +2,7 @@ package orgie
 
 import (
 	"io"
+	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -114,6 +115,27 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 	defer repool()
 
 	tagSet := ids.MakeTagSetMutable()
+	addTag := quiter.MakeFuncAddString(tagSet)
+
+	// `_`-reserved settings fields (dodder#374, cutting-garden RFC 0015):
+	// `- _key=value` is the settings-field spelling. `% key:value` (the
+	// OptionCommentSet path above) remains accepted as a deprecated
+	// alias during migration. Any other `-` line (no `=`, or an
+	// unreserved key) is unaffected and still parses as a tag.
+	addTagOrSettingsField := func(v string) (err error) {
+		if key, value, ok := strings.Cut(v, "="); ok && strings.HasPrefix(key, "_") {
+			if err = metadata.OptionCommentSet.Set(
+				strings.TrimPrefix(key, "_") + ":" + value,
+			); err != nil {
+				err = errors.Wrap(err)
+				return err
+			}
+
+			return err
+		}
+
+		return addTag(v)
+	}
 
 	if n, err = format.ReadLines(
 		bufferedReader,
@@ -121,7 +143,7 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 			ohio.MakeLineReaderKeyValues(
 				map[string]interfaces.FuncSetString{
 					"%": metadata.OptionCommentSet.Set,
-					"-": quiter.MakeFuncAddString(tagSet),
+					"-": addTagOrSettingsField,
 					"!": metadata.Type.Set,
 				},
 			),
@@ -140,6 +162,18 @@ func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
 	w := format.NewLineWriter()
 
 	for _, o := range metadata.OptionCommentSet.OptionComments {
+		// `_`-reserved settings fields (dodder#374, cutting-garden RFC
+		// 0015): behavior-affecting settings are written as `- _key=value`
+		// document fields, not `%` comments, so they aren't opaque per
+		// hyphence RFC 0001. Only dry-run is migrated so far; other
+		// OptionComments still use the comment spelling.
+		if ocwk, ok := o.(OptionCommentWithKey); ok {
+			if _, isDryRun := ocwk.OptionComment.(*OptionCommentDryRun); isDryRun {
+				w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.OptionComment)
+				continue
+			}
+		}
+
 		w.WriteFormat("%% %s", o)
 	}
 

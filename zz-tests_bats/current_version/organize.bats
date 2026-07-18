@@ -303,6 +303,62 @@ function organize_dry_run { # @test
   assert_output_unsorted "$expected_show"
 }
 
+function organize_dry_run_writes_settings_field { # @test
+  run_dodder organize -dry-run -mode output-only
+  assert_success
+  assert_output - <<-EOM
+		---
+		- _dry-run=true
+		---
+	EOM
+}
+
+function organize_dry_run_reads_settings_field { # @test
+  expected_show="$(mktemp)"
+
+  run_dodder show "${cmd_dodder_def[@]}" -format log :z,e,t
+  expected_show="$output"
+
+  run_dodder organize -dry-run -mode commit-directly :z,e,t <<-EOM
+		---
+		- _dry-run=true
+		---
+
+		# new-etikett-for-all
+		- [   !md   ]
+		- [one/dos  ] wow ok again
+		- [one/uno  ] wow the first
+	EOM
+  assert_success
+
+  run_dodder show -format log :z,e,t
+  assert_success
+  assert_output_unsorted "$expected_show"
+}
+
+function organize_dry_run_legacy_comment_alias_still_accepted { # @test
+  expected_show="$(mktemp)"
+
+  run_dodder show "${cmd_dodder_def[@]}" -format log :z,e,t
+  expected_show="$output"
+
+  run_dodder organize -dry-run -mode commit-directly :z,e,t <<-EOM
+		---
+		% dry-run:true
+		---
+
+		# new-etikett-for-all
+		- [   !md   ]
+		- [one/dos  ] wow ok again
+		- [one/uno  ] wow the first
+	EOM
+  assert_success
+
+  run_dodder show -format log :z,e,t
+  assert_success
+  assert_output_unsorted "$expected_show"
+}
+
 function organize_with_type_output { # @test
   run_dodder organize "${cmd_def_organize[@]}" -mode output-only !md:z
   assert_success
