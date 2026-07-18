@@ -73,6 +73,70 @@ func TestMetadataReadFromRejectsUnregisteredSettingsField(t1 *testing.T) {
 	}
 }
 
+// TestMetadataBaseDigestSettingsFieldRoundTrip pins the dodder#374(b)
+// `_base=@<digest>` settings field: it's registered unconditionally
+// (unlike `_dry-run`, which is only registered when -dry-run is active),
+// so it must round-trip through ReadFrom/WriteTo with no special setup.
+func TestMetadataBaseDigestSettingsFieldRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	const digest = "@blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd"
+
+	metadata := NewMetadata(ids.RepoId{})
+
+	_, err := metadata.ReadFrom(strings.NewReader("- _base=" + digest + "\n"))
+	t.AssertNoError(err)
+
+	var buf strings.Builder
+	_, err = metadata.WriteTo(&buf)
+	t.AssertNoError(err)
+
+	expected := "- _base=" + digest + "\n"
+
+	if buf.String() != expected {
+		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
+	}
+}
+
+// TestMetadataBaseDigestRejectsMalformedValue pins that `_base` validates
+// its value is actually digest-shaped rather than accepting an arbitrary
+// string -- `_base` is required on every organize document (dodder#374(b)
+// §8), so a malformed value must fail loudly at parse time, not surface
+// later as a confusing "undereferenceable" error.
+func TestMetadataBaseDigestRejectsMalformedValue(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	metadata := NewMetadata(ids.RepoId{})
+
+	_, err := metadata.ReadFrom(strings.NewReader("- _base=not-a-digest\n"))
+
+	if err == nil {
+		t.Fatalf("expected an error for a malformed _base value, got nil")
+	}
+}
+
+// TestMetadataAllowDeletionSettingsFieldRoundTrip pins the
+// dodder#374(b) `_allow-deletion=true` settings field, structurally
+// identical to `_dry-run` but also registered unconditionally.
+func TestMetadataAllowDeletionSettingsFieldRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	metadata := NewMetadata(ids.RepoId{})
+
+	_, err := metadata.ReadFrom(strings.NewReader("- _allow-deletion=true\n"))
+	t.AssertNoError(err)
+
+	var buf strings.Builder
+	_, err = metadata.WriteTo(&buf)
+	t.AssertNoError(err)
+
+	expected := "- _allow-deletion=true\n"
+
+	if buf.String() != expected {
+		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
+	}
+}
+
 // TestMetadataReadFromNoOpsOnEntirelyUnknownSettingsFieldKey pins the
 // complementary case: a `_`-prefixed key with NO prototype registered at
 // all (e.g. "dry-run" read without -dry-run on the CLI, so

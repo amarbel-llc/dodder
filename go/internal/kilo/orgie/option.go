@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 
 	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
@@ -71,6 +72,15 @@ func MakeOptionCommentSet(
 
 	ocs.AddPrototype("hide", optionCommentHide(""))
 	ocs.AddPrototype("", optionCommentHide(""))
+
+	// `_base`/`_allow-deletion` (dodder#374(b), cutting-garden RFC 0015):
+	// registered unconditionally, unlike `_dry-run` (which only becomes a
+	// registered prototype when the CLI's `-dry-run` flag is active,
+	// ApplyToOrganizeOptions). `_base` is required on every organize
+	// document and `_allow-deletion` must always be settable by hand --
+	// neither mirrors ambient CLI/config state the way dry-run does.
+	ocs.AddPrototype("base", &OptionCommentBaseDigest{})
+	ocs.AddPrototype("allow-deletion", &OptionCommentAllowDeletion{})
 
 	return ocs
 }
@@ -235,6 +245,75 @@ func (ocf *OptionCommentDryRun) String() string {
 }
 
 func (ocf *OptionCommentDryRun) IsSettingsField() bool {
+	return true
+}
+
+// OptionCommentBaseDigest is `- _base=@<digest>` (dodder#374(b),
+// cutting-garden RFC 0015 / hyphence RFC 0002's id-less, digest-valued
+// FieldRHS). Required on every organize document; see the plan's §8 for
+// the missing/undereferenceable error paths, which live in the
+// read/apply flow, not here -- this type is parsing only.
+type OptionCommentBaseDigest struct {
+	Id markl.Id
+}
+
+func (ocf *OptionCommentBaseDigest) CloneOptionComment() OptionComment {
+	clone := *ocf
+	return &clone
+}
+
+func (ocf *OptionCommentBaseDigest) Set(v string) (err error) {
+	if err = ocf.Id.Set(v); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	return err
+}
+
+func (ocf *OptionCommentBaseDigest) String() string {
+	// markl.Id.String() omits the leading "@" (it accepts "@..." on Set
+	// but doesn't echo it back on String) -- re-add it so WriteTo's
+	// output is the RFC-0002-shaped "- _base=@<digest>", not
+	// "- _base=<digest>".
+	return "@" + ocf.Id.String()
+}
+
+func (ocf *OptionCommentBaseDigest) IsSettingsField() bool {
+	return true
+}
+
+// OptionCommentAllowDeletion is `- _allow-deletion=true` (dodder#374(b)),
+// the first of the deletion gates -- see the plan's §7 for the other
+// three (deletion-set computation, post-editor confirmation, and
+// commit-directly's additional CLI flag), none of which live here.
+type OptionCommentAllowDeletion struct {
+	Value bool
+}
+
+func (ocf *OptionCommentAllowDeletion) CloneOptionComment() OptionComment {
+	clone := *ocf
+	return &clone
+}
+
+func (ocf *OptionCommentAllowDeletion) Set(v string) (err error) {
+	var boolValue values.Bool
+
+	if err = boolValue.Set(v); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	ocf.Value = boolValue.Bool()
+
+	return err
+}
+
+func (ocf *OptionCommentAllowDeletion) String() string {
+	return fmt.Sprintf("%t", ocf.Value)
+}
+
+func (ocf *OptionCommentAllowDeletion) IsSettingsField() bool {
 	return true
 }
 
