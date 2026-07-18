@@ -70,9 +70,16 @@ Headings use markdown-style `#` syntax. Each heading level defines a tag scope:
 Objects under `## tag-b` inherit both `tag-a` and `tag-b`. Heading depth
 corresponds to the number of `#` characters.
 
-Multiple tags on a heading are comma-separated:
+Multiple tags on a heading are space-separated, forming a conjunction (a
+ground trellis term — cutting-garden RFC 0015): every object under the
+heading carries all of the listed tags.
 
-    # tag-a, tag-b
+    # tag-a tag-b
+
+A comma in a heading is a parse error — comma is disjunctive elsewhere in
+the query grammar (`doddish`(7)), so a comma-separated heading would invert
+the intended AND semantics. There is no legacy acceptance of the older
+comma-separated spelling.
 
 ## Object Lines
 

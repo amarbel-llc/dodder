@@ -68,7 +68,7 @@ function organize_simple_commit { # @test
   assert_success
 
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
-		# new-etikett-for-all, %virtual_etikett
+		# new-etikett-for-all %virtual_etikett
 		- [   !md   ]
 		- [   tag  ]
 		- [   tag-1]
@@ -84,6 +84,16 @@ function organize_simple_commit { # @test
   run_dodder show -format log new-etikett-for-all:z,e,t
   assert_success
   assert_golden_unsorted organize_simple_commit_log
+}
+
+function organize_heading_comma_rejected { # @test
+  run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		# tag-a, tag-b
+		- [   !md   ]
+	EOM
+
+  assert_failure
+  assert_line --index 0 'not a valid tag: "tag-a,"'
 }
 
 function organize_simple_checkedout_matchesmutter { # @test

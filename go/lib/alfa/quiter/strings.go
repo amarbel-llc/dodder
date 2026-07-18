@@ -89,6 +89,12 @@ func StringCommaSeparated[ELEMENT interfaces.Stringer](
 	return StringDelimiterSeparated(", ", collections...)
 }
 
+func StringSpaceSeparated[ELEMENT interfaces.Stringer](
+	collections ...interfaces.Collection[ELEMENT],
+) string {
+	return StringDelimiterSeparated(" ", collections...)
+}
+
 func ReverseSortable(sortable sort.Interface) {
 	max := sortable.Len() / 2
 

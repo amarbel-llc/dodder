@@ -49,7 +49,7 @@ func (av writer) write(a *Assignment) (err error) {
 				tab_prefix[len(sharps)-1:],
 				sharps,
 				alignmentSpacing,
-				quiter.StringCommaSeparated(a.Transacted.GetMetadata().GetTags()),
+				quiter.StringSpaceSeparated(a.Transacted.GetMetadata().GetTags()),
 			),
 		)
 		av.WriteExactlyOneEmpty()

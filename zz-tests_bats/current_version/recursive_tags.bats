@@ -116,7 +116,7 @@ function recursive_tags_with_same_root { # @test
 	EOM
 
   run_dodder organize -mode commit-directly one/uno <<-EOM
-		# project-one-crit, project-one-general
+		# project-one-crit project-one-general
 		- [one/uno]
 	EOM
 

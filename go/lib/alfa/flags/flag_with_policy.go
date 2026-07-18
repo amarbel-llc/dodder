@@ -90,3 +90,29 @@ func SplitCommasAndTrimAndMake[
 		}
 	}
 }
+
+// SplitSpacesAndTrimAndMake splits on whitespace runs (trellis/RFC 0015
+// conjunction terms), not commas — comma is disjunctive in trellis, so a
+// comma-separated split would silently misparse a heading's AND semantics.
+func SplitSpacesAndTrimAndMake[
+	ELEMENT interfaces.Value,
+	ELEMENT_PTR interfaces.ValuePtr[ELEMENT],
+](value string) interfaces.SeqError[ELEMENT] {
+	return func(yield func(ELEMENT, error) bool) {
+		for _, elementString := range strings.Fields(value) {
+			var element ELEMENT
+
+			if err := ELEMENT_PTR(&element).Set(elementString); err != nil {
+				if !yield(element, err) {
+					return
+				}
+
+				continue
+			}
+
+			if !yield(element, nil) {
+				return
+			}
+		}
+	}
+}

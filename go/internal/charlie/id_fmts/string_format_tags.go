@@ -34,7 +34,11 @@ func (reader *tagsReader) ReadStringFormat(
 		return n, err
 	}
 
-	seq := flags.SplitCommasAndTrimAndMake[ids.TagStruct](readable.String())
+	// Headings are space-separated conjunction terms (cutting-garden RFC
+	// 0015 / trellis): comma is disjunctive elsewhere in the query
+	// grammar and is not accepted here, deliberately, with no legacy
+	// fallback (dodder#374).
+	seq := flags.SplitSpacesAndTrimAndMake[ids.TagStruct](readable.String())
 
 	for tag, iterr := range seq {
 		if errors.Is(iterr, ids.ErrEmptyTag) {
