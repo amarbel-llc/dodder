@@ -151,17 +151,35 @@ whether `!organize-base-v1` exists (`show '!organize-base-v1:t'`) and
 creates it if not, the same way a user would `dodder checkin` a new
 `.type` file. This defers the genesis-flag decision entirely and
 matches "organize is ephemeral action" (RFC 0015's own framing) better
-than baking a structural type into every fresh repo. **Recommend lazy
-creation; flagged as an open decision for review, not resolved here.**
+than baking a structural type into every fresh repo.
+
+**Resolved (pennywise/Sasha review, 2026-07-18): lazy creation,
+approved.** Implementation note from the review: generation already
+writes (the base blob itself), so the implicit type-create sits at the
+same point in the flow — make the check-then-create **idempotent, not
+racy**: if `!organize-base-v1` doesn't exist, attempt creation, but
+treat "already exists" (a concurrent `organize` invocation created it
+first) as success rather than an error, not a
+check-then-create-unconditionally sequence that assumes exclusive
+access.
 
 **Type-definition blob content** (`TomlV2`,
 `go/internal/alfa/type_blobs/toml_v2.go:9-24`):
 
 ```toml
-file-extension = "toml"
-vim-syntax-type = "toml"
+file-extension = "organize"
+vim-syntax-type = "markdown"
 binary = false
 ```
+
+**Amended per pennywise's 2026-07-18 review**: the base blob's content
+is the serialized organize/espalier form (§9), not TOML — the
+type-definition's `file-extension`/`vim-syntax-type` must describe
+that, not toml-for-non-toml. `organize` extension (matching the
+document format's own name) and `markdown`-ish syntax (headings +
+box-format object lines, closest existing highlighter) are reasonable
+defaults; exact values are a small, low-stakes implementation
+decision, not load-bearing for the rest of this plan.
 
 The base blob's own content format is **not** re-derived here — see
 §9 (espalier serialization checklist) for what it actually contains.
@@ -193,12 +211,41 @@ shown"), not field-projected into the index like `!task`.
 **Which store**: the repo's **default blob store**
 (`GetDefaultBlobStore()`), same as any other object's blob — not a
 separate "organize session" store. The base blob is content-addressed
-and immutable like every other dodder blob; no special lifecycle
-(expiry, cleanup) beyond normal blob-store GC semantics. It becomes
-reachable/referenced the moment it's written; whether it needs a
-referencing *object* (vs. a bare, unreferenced blob) to survive GC is
-an open question this plan flags rather than resolves (see Open
-Questions).
+and immutable like every other dodder blob, written as a **bare
+blob with no owning object** (no referencing object of type
+`organize-base-v1` or otherwise — see the GC discussion below).
+
+**Resolved (pennywise/Sasha review, 2026-07-18): bare blob,
+collectable, no owning object.** Creating a referencing object per
+organize session was rejected as polluting history with ephemera,
+against "organize is ephemeral action." A GC'd base is exactly the
+designed `ErrBaseUndereferenceable` path (§3 below) — regenerate and
+retry is the acceptable worst case, not a failure mode to engineer
+around.
+
+The review asked for one confirming research line before this is
+final: **does dodder's blob store actually collect unreferenced blobs
+today, and on what trigger?** Checked directly (`fsck.go:219-261`,
+`clean.go:113`, `oscar/store/reindex.go:32-229`, plus a targeted
+search for any `DeleteBlob`/`RemoveBlob`/`ExpireBlob`-shaped function
+across the whole `go/` tree): **no such mechanism exists.** `fsck` is
+verification-only (checks blob existence and reports dangling
+references, per issue #330's fix — never deletes).
+`clean` deletes checked-out **working-copy files**, never touches the
+content-addressed blob store. `reindex` rebuilds indexes from the
+inventory list, no reachability sweep. There is no mark-and-sweep, no
+scheduled or triggered blob deletion anywhere in dodder today. **In
+practice this means the risk window this plan was designed to guard
+against (§3's `ErrBaseUndereferenceable`) does not currently exist for
+locally-written blobs** — a base blob, once written, persists
+indefinitely until dodder gains an actual blob-GC feature. The design
+(bare blob, no owning object, loud rejection on
+undereferenceable-digest) is still correct and forward-compatible with
+a future GC landing; it just isn't exercised by anything that exists
+today. `ErrBaseUndereferenceable` remains worth implementing (a remote
+peer's copy of the repo, a blob store that was never synced, or manual
+blob-store surgery could still produce it) — the risk is real, just
+not GC-triggered under current dodder behavior.
 
 **Dereference at apply**: `-mode commit-directly` / `interactive`'s
 read path (`repo_actions/read_organize_file.go`,
@@ -282,14 +329,26 @@ document" for deletion-semantics purposes (RFC 0015: "moves and
 memberships changes ... computed structurally" against base, not
 guessed from what patch happens to still contain).
 
-Concretely: the base blob's serialized form (§9) needs to record
-*whether* grouping was used, not just the resulting tree shape (an
-ungrouped document that happens to have one flat "level" is
-structurally similar to a grouped document with the same tree
-collapsed) — this plan proposes the base blob explicitly carry the
-`-group-by` value(s) used at generation (empty/absent =
-ungrouped), rather than trying to infer grouped-ness from tree shape
-alone. Concrete field TBD in §9's checklist resolution.
+**Resolved per pennywise's 2026-07-18 review (OQ3)**: recorded as a
+`_`-framework settings field in the base blob's OWN metadata — the
+base blob is itself a hyphence document (type line `! organize-base-v1`
+last, per RFC 0001 canonical order), so its generation parameters are
+document-level settings fields, the exact same mechanism as `_base`/
+`_dry-run`/`_allow-deletion` on the organize document proper:
+
+```
+- _group-by="priority,w"
+```
+
+Single field, value quoted and comma-joined to preserve `-group-by`'s
+order (RFC 0001's order-independence rule for metadata lines forbids
+spreading an ordered list across repeated `_group-by=...` lines — a
+decoder is free to reorder metadata lines, so the ordering must live
+inside one field's value, not across lines). Absent = ungrouped, no
+new mechanism beyond what `_dry-run`/`_allow-deletion` already
+established. New `OptionCommentGroupBy` (`option.go`), string-valued
+(not bool like `_dry-run`/`_allow-deletion`), `IsSettingsField() →
+true`.
 
 ## 6. Deletion branch + unresolved intents
 
@@ -345,6 +404,20 @@ type UnresolvedIntent struct {
 }
 ```
 
+**Forward-compat note (pennywise's 2026-07-18 review)**: `Options
+[]string` is prose-only, fine for v1's structured-rejection output,
+but cutting-garden#147 is pushing toward typed error identities with
+stable identifiers rather than free-text options. Shape v1's output so
+that upgrade is additive, not breaking: keep `Options` as the
+human-readable rendering, but don't derive it by string-formatting
+inside the diff engine — build each option from a small internal enum/
+struct first (`type resolutionOption struct { Kind string; Label
+string }`-shaped, kinds like `"supply-replacement"`, `"skip"`,
+`"abort"`) and render `Options []string` from that at the output
+boundary. Adding a stable `Kind` identifier to `UnresolvedIntent`
+itself later is then a field addition, not a rewrite of how options
+get produced.
+
 Batchability (RFC 0015: "identical intent shapes are batchable — one
 prompt resolving the same question across N objects") is a
 presentation-layer concern for the eventual mergetool (out of scope,
@@ -386,6 +459,19 @@ unlike dry-run which mirrors a real CLI flag).
 substrate — it only ever means §6's tag-removal/membership-∅/
 unresolved-intent outcomes. This is the safe default; `_allow-deletion`
 is the opt-in escape hatch into actual object deletion.
+
+**`-dry-run` interaction (resolved, pennywise/Sasha review,
+2026-07-18): orthogonal, as this plan originally assumed.** `_base`
+presence-validation (§8), dereference (§3), and the full three-way
+diff (§4) always run regardless of `-dry-run` — dry-run skips only the
+**write** phase. This has a direct consequence for gate 3 above: the
+post-editor deletion confirmation is *also* skipped under `-dry-run`,
+since there's nothing to confirm when nothing will be written — but
+the deletion **set still computes and reports** (a dry-run apply shows
+what *would* be deleted, same as it shows what *would* be
+tagged/committed today). RFC 0015's invocation modes (interactive /
+commit-directly / output-only) are an orthogonal axis from
+`-dry-run`; this composes without special-casing.
 
 ## 8. Hard cutover UX
 
@@ -508,29 +594,33 @@ surrounding command/blob-store plumbing, using in-memory
 `Assignment`/`Metadata` fixtures rather than a full bats round trip
 for the pure-diff-logic cases.
 
-## Open Questions
+## Open Questions — all resolved (pennywise/Sasha review, 2026-07-18)
 
-1. **`organize-base-v1` creation**: lazy (first-use, §2) vs. a new
-   `BigBang.IncludeOrganizeBaseType` genesis flag. Recommend lazy;
-   not resolved here.
-2. **Base blob GC reachability**: does an unreferenced (no owning
-   object) base blob survive normal blob-store GC, or does writing it
-   need to also create a lightweight referencing object (of type
-   `organize-base-v1`) purely to keep it alive? Not resolved here —
-   depends on dodder's blob-store GC semantics, which this plan did
-   not research.
-3. **`-group-by` value recording in the base blob** (§5, §9): exact
-   field/format for recording "generated with `-group-by X,Y`" vs.
-   "generated flat" in the base blob's own structure, so grouped-
-   detection doesn't need tree-shape inference. Sketched, not
-   finalized.
-4. **`_base`/`_allow-deletion` interaction with `-dry-run`**: does a
-   dry-run apply still require/validate `_base`, or is dry-run
-   orthogonal (validate-without-writing applies to the *write* step,
-   not the *base-dereference-and-diff* step, so `_base` validation
-   presumably still happens)? Assumed orthogonal (validation always
-   happens; only the final write is skipped under `-dry-run`) but not
-   explicitly worked through against RFC 0015's Modes table.
+All four questions originally raised here were reviewed and ruled on
+in full; the resolutions are folded inline into their originating
+sections rather than repeated here:
+
+1. **`organize-base-v1` creation** — resolved in §2: lazy, idempotent
+   check-then-create.
+2. **Base blob GC reachability** — resolved in §3: bare blob, no
+   owning object; confirmed by direct research that dodder has no
+   blob-GC mechanism today, so the risk window is currently
+   theoretical (still worth implementing `ErrBaseUndereferenceable`
+   for non-GC undereferenceable cases).
+3. **`-group-by` value recording** — resolved in §5: a
+   `_group-by="priority,w"` settings field on the base blob's own
+   metadata, same mechanism as every other `_`-field this plan and
+   dodder#374(c) use.
+4. **`_base`/`-dry-run` interaction** — resolved in §7: orthogonal,
+   confirmed. Validation/diff always run; only the write (and its
+   dependent post-editor deletion confirmation) is skipped.
+
+Plan approved for implementation with these rulings plus two
+amendments (§2's type-definition content corrected to match the
+organize/espalier serialization rather than TOML; §6's
+`UnresolvedIntent.Options` given a forward-compat note for
+cutting-garden#147's typed error identities) — both folded into their
+sections above.
 
 ## See also
 
