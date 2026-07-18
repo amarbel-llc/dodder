@@ -14,8 +14,8 @@ promotion-criteria: |
   the repo mutable config and the workspace config, plus the version
   bumps and migration of the existing workspace `query` field into it.
   (Field lifting from a type's type-of remains explicitly deferred and
-  is NOT a blocker.) Promote to `experimental` once a projected `genre`
-  field exists on committed objects, `der show genre=zettel` returns the
+  is NOT a blocker.) Promote to `experimental` once a projected `_genre`
+  field exists on committed objects, `der show _genre=zettel` returns the
   same set as today's `der show :z`, the per-genre index partition is
   flattened, and id-syntax genre derivation (`ValidateSeqAndGetGenre`)
   is removed in favor of the field.
@@ -35,6 +35,14 @@ promotion-criteria: |
 > remains are schema/semantics sub-decisions. Field lifting is deferred.
 > Builds on the type-of chain (whose fixed point is FDR-0010's null type
 > `!`) and the fields infrastructure shipped on the mild-elm branch.
+>
+> **Field spelling (2026-07-18):** the projected field is spelled
+> `_genre`, not bare `genre`, aligning with cutting-garden RFC 0014's
+> trellis grammar, where framework-reserved virtual fields are
+> `_`-prefixed (`_genre`, `_body`, `_description`) and a leading
+> underscore is illegal for type-declared field names — this keeps bare
+> `genre` free for real per-type data (jira/caldav-style fields) and
+> keeps the trellis/doddish superset relationship exact. See dodder#373.
 
 ## Problem Statement
 
@@ -94,9 +102,9 @@ and field predicates already compose natively:
   free, no per-value duplication.
 - **`type` is already a (display-only) virtual field**
   (`fields.TypeType`, `go/internal/echo/object_metadata_fmt/fields.go:60-69`).
-  `genre` is its natural sibling.
+  `_genre` is its natural sibling.
 
-So the redesign is: **make `genre` a field** a type declares, and let
+So the redesign is: **make `_genre` a field** a type declares, and let
 queries discriminate genre with the field-match syntax that already
 exists. The standalone genre enum/bitfield/sigil-suffix grammar
 collapses into type + field.
@@ -115,15 +123,15 @@ chain (note → `!md` → `!toml-type-v2` → …) is the "what parses this
 blob" recursion, terminating at the null type `!` (FDR-0010) — raw bytes
 that need no parser.
 
-`genre` is one of the fields a type declares — a value the type asserts
-for **all** its instances (every `!md` note is `genre=zettel`,
+`_genre` is one of the fields a type declares — a value the type asserts
+for **all** its instances (every `!md` note is `_genre=zettel`,
 regardless of content), as distinct from per-instance content fields
 like `status` that a `fields-reader` extracts from each blob.
 
 ### Flat composition; field lifting deferred
 
 Field composition across types is **flat**: each type declares its own
-fields directly, including `genre`. `!task` and `!chore` each declare
+fields directly, including `_genre`. `!task` and `!chore` each declare
 their field set; there is no implicit inheritance from a shared base,
 and there are **no** root `!{zettel,tag,type,repo}` types — a genre
 value (`zettel`, `tag`, `type`, …) is a plain field value, not a
@@ -140,7 +148,7 @@ does not need it, because each type declares genre directly.
 Object-id syntax stops encoding genre. `ValidateSeqAndGetGenre` is
 removed; id shapes (`foo/bar`, `/repo`, `!md`, `@digest`) become naming
 conventions for *addressing* objects, not genre classifiers. An object's
-genre is read from its projected `genre` field. This dissolves today's
+genre is read from its projected `_genre` field. This dissolves today's
 chicken-and-egg (parse id → derive genre) — the id is just an address,
 and genre is data on the object. The `!`-prefix remains the identity
 sigil for addressing a type object (`!md`); it simply stops doubling as
@@ -188,8 +196,8 @@ Once **genre is a field**, both collapse into a single rule:
 The apparent "fallback vs AND" split is really **field cardinality**,
 not layering:
 
-- `genre` is single-valued (one type ⇒ one genre). A user's `genre=type`
-  (or `^genre=""`) *replaces* the repo's `genre=zettel` default on that
+- `_genre` is single-valued (one type ⇒ one genre). A user's `_genre=type`
+  (or `^_genre=""`) *replaces* the repo's `_genre=zettel` default on that
   field, yielding types (or everything) rather than the empty set. That
   *is* the fallback, derived for free.
 - `today` / `tag-5` are multi-valued tag constraints. A workspace scope
@@ -197,7 +205,7 @@ not layering:
   behavior.
 
 Single-valuedness is what licenses override-on-genre; the query engine
-needs to know which fields are single-valued (`genre` is, by construction).
+needs to know which fields are single-valued (`_genre` is, by construction).
 
 ### Unifying workspace and repo config
 
@@ -214,7 +222,7 @@ and applies the same override/accumulate merge:
 
 - Move the default query out of workspace-only into a shared
   config-overlay both blobs embed, so the **repo** mutable config sets
-  the base default query (`genre=zettel`), replacing the hardcoded
+  the base default query (`_genre=zettel`), replacing the hardcoded
   `BuilderOptionDefaultGenres`.
 - A **workspace** overlays it under the single-valued-override /
   multi-valued-accumulate rule above — the exact generalization of
@@ -226,10 +234,10 @@ provides the base, workspace overlays.
 
 ### Migration: version bump + `import` type-rewrite
 
-Existing objects derive genre from id syntax and carry no `genre` field;
+Existing objects derive genre from id syntax and carry no `_genre` field;
 removing `ValidateSeqAndGetGenre` requires the field. Migration is a
 **hard cutover behind a store-version bump** — no permanent id-shape
-fallback. The `genre` field is re-derived once and projected, and the
+fallback. The `_genre` field is re-derived once and projected, and the
 vehicle is the **`import` command extended with a type-rewriting map**:
 import can rewrite an object's type on the way in, and the rewritten /
 assigned type is what declares the genre that then projects into the
@@ -254,25 +262,25 @@ object; that is unaffected.)
 
 | Intent | Before | After |
 |---|---|---|
-| Zettels with a tag (explicit) | `der show tag:z` | `der show genre=zettel tag` |
+| Zettels with a tag (explicit) | `der show tag:z` | `der show _genre=zettel tag` |
 | Zettels with a tag (implicit) | `der show tag` | `der show tag` *(repo default query)* |
-| Tags with a tag | `der show tag:e` | `der show genre=tag tag` |
-| Types with a tag | `der show [!type tag]:t` | `der show genre=type tag` |
-| All objects with a tag | `der show tag:z,e,t,k` | `der show '^genre="" tag'` *(provisional)* |
+| Tags with a tag | `der show tag:e` | `der show _genre=tag tag` |
+| Types with a tag | `der show [!type tag]:t` | `der show _genre=type tag` |
+| All objects with a tag | `der show tag:z,e,t,k` | `der show '^_genre="" tag'` *(provisional)* |
 
-`^genre=""` is the provisional "any genre" form: it reads as "genre is
-not empty" (true for every object) and, being an explicit `genre`
-predicate, overrides the repo default `genre=zettel` on that
+`^_genre=""` is the provisional "any genre" form: it reads as "genre is
+not empty" (true for every object) and, being an explicit `_genre`
+predicate, overrides the repo default `_genre=zettel` on that
 single-valued field. It is unwieldy and overloaded; a terser dedicated
 token may replace it.
 
-Because `genre=…` is an ordinary predicate, the composition the suffix
+Because `_genre=…` is an ordinary predicate, the composition the suffix
 grammar could not express is native:
 
 ```
-der show 'genre=zettel | genre=tag' project    # zettels OR tags, tagged project
-der show 'genre=zettel & -archived'            # zettels not archived
-der show '^genre=type'                          # everything that is not a type
+der show '_genre=zettel | _genre=tag' project   # zettels OR tags, tagged project
+der show '_genre=zettel & -archived'             # zettels not archived
+der show '^_genre=type'                          # everything that is not a type
 ```
 
 ## Limitations / scope boundaries (intended)
@@ -295,9 +303,9 @@ der show '^genre=type'                          # everything that is not a type
    field), or whether the single model is enough.
 
 2. **Override semantics + single-valued field set.** The precise rule
-   for override across a boolean expression (e.g. `genre` mentioned in
+   for override across a boolean expression (e.g. `_genre` mentioned in
    only one branch of an `|`), and the exact set of single-valued fields
-   (`genre`, and any others). Must reproduce today's per-term
+   (`_genre`, and any others). Must reproduce today's per-term
    default-genre behavior.
 
 3. **Config schema + migration.** The shared config-overlay
@@ -306,8 +314,8 @@ der show '^genre=type'                          # everything that is not a type
    `workspace_config_blobs` version bumps; and migrating the existing
    workspace `query` field into the shared slot.
 
-4. **"Any genre" ergonomics.** `^genre=""` works but is unwieldy and
-   overloaded; is a terser dedicated token (e.g. `genre=*`) worth it,
+4. **"Any genre" ergonomics.** `^_genre=""` works but is unwieldy and
+   overloaded; is a terser dedicated token (e.g. `_genre=*`) worth it,
    and how does it interact with the override rule (Q2)?
 
 5. **(Deferred, non-blocking) field lifting.** How a type lifts fields
@@ -327,13 +335,13 @@ der show '^genre=type'                          # everything that is not a type
 | `go/internal/juliett/queries/build_state.go` | Default-genre fill (`:131-160`, `:366-368`); field-match parse (`:262-279`); genre-suffix parse (`:404-451`) retired. |
 | `go/internal/juliett/queries/builder.go` | `defaultQuery` parsed across all genres (`:223-236`) — becomes the layered default-query. |
 | `go/internal/juliett/queries/builder_options.go` | `BuilderOptionDefaultGenres` (replaced by config default-query); `builderOptionWorkspace` reading `GetDefaultQueryString` (`:82-86`). |
-| `go/internal/juliett/queries/exp_field.go` | `expField` — the composable predicate `genre=…` reuses. |
+| `go/internal/juliett/queries/exp_field.go` | `expField` — the composable predicate `_genre=…` reuses. |
 | `go/internal/charlie/repo_configs/` | Repo mutable config — gains the shared default-query overlay (base layer). |
 | `go/internal/echo/workspace_config_blobs/` | Workspace config — its `Query` field migrates into the shared overlay; overlays the repo default-query. |
 | `go/internal/mike/env_workspace/main.go` | Config merge (`:106-126`, Type-override/Tags-append) — extended to merge the default query. |
-| `go/internal/alfa/type_blobs/field_definition.go` | `FieldDefinition` — where a type's `genre` declaration attaches. |
-| `go/internal/0/fields/main.go` | `Field` value + `Kind`; the projected `genre` field's home. |
-| `go/internal/oscar/store/field_reader.go` / `field_writer.go` | Field projection at commit; where the type-asserted `genre` is written. |
+| `go/internal/alfa/type_blobs/field_definition.go` | `FieldDefinition` — where a type's `_genre` declaration attaches. |
+| `go/internal/0/fields/main.go` | `Field` value + `Kind`; the projected `_genre` field's home. |
+| `go/internal/oscar/store/field_reader.go` / `field_writer.go` | Field projection at commit; where the type-asserted `_genre` is written. |
 | dodder `import` command / `import_plan` | Gains the type-rewriting map that creates genre data during migration. |
 
 ## More Information
