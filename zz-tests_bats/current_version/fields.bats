@@ -185,7 +185,13 @@ function field_organize_mutation { # @test
   run_dodder init-workspace -experimental-repo=false
   create_task "my task" "todo"
 
+  base_line="$(get_organize_base '!task')"
+
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=done] my task
 	EOM
   assert_success
@@ -202,8 +208,14 @@ function field_organize_no_change { # @test
   run_dodder init-workspace -experimental-repo=false
   create_task "my task" "todo"
 
+  base_line="$(get_organize_base '!task')"
+
   # same field value — blob should not change
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=todo] my task
 	EOM
   assert_success
@@ -220,8 +232,14 @@ function field_organize_with_tag_and_field_change { # @test
   run_dodder init-workspace -experimental-repo=false
   create_task "my task" "todo"
 
+  base_line="$(get_organize_base '!task')"
+
   # change field AND add tag simultaneously
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		# urgent
 		- [one/uno !task status=in-progress] my task
 	EOM
@@ -239,8 +257,14 @@ function field_organize_description_and_field_change { # @test
   run_dodder init-workspace -experimental-repo=false
   create_task "my task" "todo"
 
+  base_line="$(get_organize_base '!task')"
+
   # change field AND description simultaneously
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=done] updated description
 	EOM
   assert_success
@@ -278,7 +302,13 @@ function field_persists_without_any_scripts { # @test
 	EOM
   assert_success
 
+  base_line="$(get_organize_base '!task')"
+
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=done] my task
 	EOM
   assert_success
@@ -305,7 +335,13 @@ function field_persists_with_reader_only_no_writer { # @test
   run_dodder init-workspace -experimental-repo=false
   create_task "my task" "todo"
 
+  base_line="$(get_organize_base '!task')"
+
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=done] my task
 	EOM
   assert_success
@@ -367,7 +403,13 @@ function field_full_task_organize_mutate_one_of_three { # @test
 	EOM
   assert_success
 
+  base_line="$(get_organize_base '!task')"
+
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=done priority=p2 due=20260415T120000Z] my task
 	EOM
   assert_success
@@ -468,8 +510,14 @@ function field_hook_mutation_is_idempotent { # @test
 	EOM
   assert_success
 
+  base_line="$(get_organize_base '!marker')"
+
   # re-commit with the same (already-touched) value via organize
   run_dodder organize -mode commit-directly '!marker' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !marker marker=touched] probe object
 	EOM
   assert_success
@@ -493,7 +541,13 @@ function field_full_task_organize_from_empty_blob { # @test
 	EOM
   assert_success
 
+  base_line="$(get_organize_base '!task')"
+
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=in_progress priority=p1 due=20260415T120000Z] my task
 	EOM
   assert_success

@@ -1014,7 +1014,13 @@ A narrow 3h sample showed only small isolated per-partition lag spikes — argui
 
     # Second version: add a meta-tag via organize, giving the tag a real
     # mother-sig chain (v1 -> v2) rather than a fresh/null one.
+    base_line="$(get_organize_base :e)"
+
     run_dodder organize -mode commit-directly :e <<-EOM
+			---
+			$base_line
+			---
+
 			# priority-2_want
 			- [widget-throughput_lag]
 		EOM

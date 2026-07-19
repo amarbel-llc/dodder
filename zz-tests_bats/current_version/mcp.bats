@@ -234,18 +234,34 @@ function mcp_organize_commit_applies_tag { # @test
   assert_success
 
   # Render the canonical organize buffer (same content organize_plan returns)
-  # and write the edited form — a new heading tag over the existing lines — to
-  # a file, then JSON-encode it for the tool argument using the dodder binary's
-  # own JSON checkin encoder is overkill; use printf + sed for the minimal
-  # escaping the buffer needs (no embedded quotes/backslashes in fixture text).
+  # and write the edited form — a new heading tag over the existing object
+  # lines — to a file, then JSON-encode it for the tool argument. The heading
+  # must be inserted into the BODY (after the closing `---` fence + its
+  # blank-line separator), not prepended before the whole buffer: the
+  # metadata fence (holding the now-mandatory `- _base=@digest` field, #374)
+  # must remain the first thing in the document, or the hyphence parser never
+  # reaches the `_base` field and organize_commit fails with "this organize
+  # document has no `_base` field". Use awk to splice the heading in right
+  # after the second `---` fence's blank line — the same position the CLI
+  # organize.bats heredocs use for tag headings (e.g. organize_simple_commit).
+  # Using the dodder binary's own JSON checkin encoder is overkill here; use
+  # printf + sed for the minimal escaping the buffer needs (no embedded
+  # quotes/backslashes in fixture text).
   run_dodder organize -mode output-only :z
   assert_success
 
   local edited="$BATS_TEST_TMPDIR/edited-organize"
-  {
-    echo "# mcp-applied"
-    printf '%s\n' "$output"
-  } >"$edited"
+  awk '
+    /^---$/ { fences++; print; next }
+    fences >= 2 && !inserted && $0 == "" {
+      print
+      print "# mcp-applied"
+      print ""
+      inserted = 1
+      next
+    }
+    { print }
+  ' <<<"$output" >"$edited"
 
   # Minimal JSON string encoding: escape backslashes, quotes, then turn
   # newlines into \n. The fixture buffer contains none of the former, so this

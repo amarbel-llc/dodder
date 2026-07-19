@@ -77,9 +77,16 @@ function last_organize { # @test
 
   function editor() {
     # shellcheck disable=SC2317
-    cat - >"$1" <<-EOM
-			- [!md !toml-type-v2 added-tag]
-		EOM
+    # Edit the existing object line in place rather than overwriting the
+    # file or appending a duplicate line: dodder#374(b) writes a real
+    # `_base` (and the object's current line) into the generated file
+    # before the editor runs, and organize can only commit a document
+    # carrying `_base` back. A second, duplicate `!md` line (from a naive
+    # append) is silently ignored by organize's diff, producing no
+    # change -- the editor must represent a user making an INCREMENTAL
+    # edit to the existing line, not replacing the file wholesale or
+    # adding a conflicting duplicate entry for the same object.
+    sed -i 's/\[!md !toml-type-v2\]/[!md !toml-type-v2 added-tag]/' "$1"
   }
 
   export -f editor
