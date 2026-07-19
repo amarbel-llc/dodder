@@ -4,10 +4,10 @@ go 1.26.2
 
 require (
 	code.linenisgreat.com/chrest/go v0.2.0
+	code.linenisgreat.com/hyphence/go v0.3.0
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
-	github.com/amarbel-llc/hyphence/go v0.2.0
-	github.com/amarbel-llc/madder/go v0.4.5-0.20260714015804-a00d07019f6f
+	github.com/amarbel-llc/madder/go v0.4.5-0.20260719151456-c52fe2e87c76
 	github.com/amarbel-llc/piggy/go v0.0.0-20260714014714-8bebeaa66dca
 	github.com/amarbel-llc/purse-first/libs/dewey v0.4.2-0.20260714012913-f3ad3d58f150
 	github.com/amarbel-llc/purse-first/libs/go-mcp v0.4.2-0.20260714012913-f3ad3d58f150

@@ -1,5 +1,5 @@
 // Package hyphence is dodder's facade over the external hyphence format
-// library (github.com/amarbel-llc/hyphence/go/hyphence), pre-filling madder's
+// library (code.linenisgreat.com/hyphence/go/hyphence), pre-filling madder's
 // TypeStruct / markl.Id into the library's four leading generic type
 // parameters (T, PT, D, PD). dodder's typed blobs are always keyed by a
 // madder TypeStruct and a madder markl.Id digest, so this exposes the same
@@ -15,7 +15,7 @@
 package hyphence
 
 import (
-	ext "github.com/amarbel-llc/hyphence/go/hyphence"
+	ext "code.linenisgreat.com/hyphence/go/hyphence"
 	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"

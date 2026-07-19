@@ -100,6 +100,12 @@
     madder.inputs.doppelgang.follows = "hyphence/doppelgang";
     hyphence.inputs.conformist.follows = "conformist";
     bats.inputs.conformist.follows = "conformist";
+    # hyphence's langlang subtree (rust guest-filter tooling) brings its own
+    # tap -> crane/rust-overlay chain, colliding with dodder's own tap input
+    # and doubling the lock (crane_2/rust-overlay_2). Collapse onto dodder's
+    # tap, mirroring madder's exact deep-follows shape (madder flake.nix).
+    hyphence.inputs.langlang.inputs.tap.inputs.crane.follows = "tap/crane";
+    hyphence.inputs.langlang.inputs.tap.inputs.rust-overlay.follows = "tap/rust-overlay";
   };
 
   outputs =

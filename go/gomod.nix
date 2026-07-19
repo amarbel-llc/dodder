@@ -78,7 +78,7 @@
       src = madder.packages.${system}.go-pkgs;
     };
     # hyphence scopes its go-pkgs at /go (like madder), so no subPath.
-    "github.com/amarbel-llc/hyphence/go" = {
+    "code.linenisgreat.com/hyphence/go" = {
       src = hyphence.packages.${system}.go-pkgs;
     };
     # piggy owns the markl-id framework (piggy#183 inversion). Its

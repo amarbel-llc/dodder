@@ -153,10 +153,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784295698,
-        "narHash": "sha256-vPPcxVmA+TF1F7ExS903/CwbXkMAG9D0y0NFd+ZEPgY=",
+        "lastModified": 1784310096,
+        "narHash": "sha256-zVSuo8c+ZYKmUlqQ4cQO3yCKGufqh3BUFIyDwpjx+Jc=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/crap/archive/d2b056789a8691d71220bad6e236fd3376582a00.tar.gz"
+        "url": "https://code.linenisgreat.com/crap/archive/99dce770201f9645359b298f215522259dcaf0ac.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -183,10 +183,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784253487,
-        "narHash": "sha256-a2gkjRf26ngCKPxj8dmXYpSHGBoqu24UU5C9x40uddU=",
+        "lastModified": 1784329312,
+        "narHash": "sha256-qMIV0bTIwjmHdK+vE6Hvi7WdHOoZvCMqe7sVn1ZTed0=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/doppelgang/archive/8e65f9f327f91b6ca3ea83846951a3065e85e714.tar.gz"
+        "url": "https://code.linenisgreat.com/doppelgang/archive/0e923b132af631a6c2d26f513d062d403c5ae0f6.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -248,6 +248,7 @@
         "igloo": [
           "igloo"
         ],
+        "langlang": "langlang",
         "nixpkgs-master": [
           "nixpkgs-master"
         ],
@@ -259,10 +260,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784293289,
-        "narHash": "sha256-WCMmyedlstajXfXcBFPd2I4baUigfk+jH+d3vakMqBw=",
+        "lastModified": 1784472777,
+        "narHash": "sha256-ZNEEa5V6o7d6SdpX0Ckpt9Bdl/1FErfL5AVwLPiYJMU=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/hyphence/archive/37054cbebdc7e56108051097e207faf78851eb0f.tar.gz"
+        "url": "https://code.linenisgreat.com/hyphence/archive/8b3c1b3be0ab2156207c062e7705951ac571e4b7.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -306,6 +307,40 @@
         "type": "github"
       }
     },
+    "langlang": {
+      "inputs": {
+        "bats": [
+          "hyphence",
+          "bats"
+        ],
+        "igloo": [
+          "hyphence",
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "hyphence",
+          "nixpkgs-master"
+        ],
+        "tap": "tap",
+        "utils": [
+          "hyphence",
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783344978,
+        "narHash": "sha256-6oSyTN563abHKnvaNmuhpodX6Xb0IGUfKWLWiyC5bXM=",
+        "owner": "amarbel-llc",
+        "repo": "langlang",
+        "rev": "5fbd00358572d7f0f34e20f00a05ee79e64ee04d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "langlang",
+        "type": "github"
+      }
+    },
     "madder": {
       "inputs": {
         "bats": [
@@ -345,10 +380,10 @@
         ]
       },
       "locked": {
-        "lastModified": 1784305817,
-        "narHash": "sha256-NwbcrbsP/WlgIb6mk8XfIp8oK0ar5vNbxrZW4/TGt+w=",
+        "lastModified": 1784474096,
+        "narHash": "sha256-39h35UvqwpHtOaww3FJe10QrmLLRVuMJl0NH5o5KDSw=",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/madder/archive/a223838cc164741e95e0698ecd61663a02cb058e.tar.gz"
+        "url": "https://code.linenisgreat.com/madder/archive/c52fe2e87c7623d1e806e80889ed11b21beba4e8.tar.gz"
       },
       "original": {
         "type": "tarball",
@@ -509,7 +544,7 @@
         "nixpkgs-master": "nixpkgs-master",
         "piggy": "piggy",
         "purse-first": "purse-first",
-        "tap": "tap",
+        "tap": "tap_2",
         "tommy": "tommy",
         "utils": "utils"
       }
@@ -551,6 +586,64 @@
       }
     },
     "tap": {
+      "inputs": {
+        "bats": [
+          "hyphence",
+          "bats"
+        ],
+        "crane": [
+          "tap",
+          "crane"
+        ],
+        "gomod2nix": [
+          "hyphence",
+          "purse-first",
+          "gomod2nix"
+        ],
+        "igloo": [
+          "hyphence",
+          "langlang",
+          "igloo"
+        ],
+        "nixpkgs-master": [
+          "hyphence",
+          "langlang",
+          "nixpkgs-master"
+        ],
+        "purse-first": [
+          "hyphence",
+          "purse-first"
+        ],
+        "rust-overlay": [
+          "tap",
+          "rust-overlay"
+        ],
+        "treefmt-nix": [
+          "hyphence",
+          "igloo",
+          "treefmt-nix"
+        ],
+        "utils": [
+          "hyphence",
+          "langlang",
+          "utils"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783344052,
+        "narHash": "sha256-ujU00AfXjb1R/rZ67eSA2RF9ROgaIB7m3NQ/4kOshyc=",
+        "owner": "amarbel-llc",
+        "repo": "tap",
+        "rev": "9ab6246c3faa5f36eb422050b48e875cd33e5e87",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amarbel-llc",
+        "repo": "tap",
+        "type": "github"
+      }
+    },
+    "tap_2": {
       "inputs": {
         "bats": [
           "bats"

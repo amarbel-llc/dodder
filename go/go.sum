@@ -2,6 +2,8 @@ c2sp.org/CCTV/age v0.0.0-20251208015420-e9274a7bdbfd h1:ZLsPO6WdZ5zatV4UfVpr7oAw
 c2sp.org/CCTV/age v0.0.0-20251208015420-e9274a7bdbfd/go.mod h1:SrHC2C7r5GkDk8R+NFVzYy/sdj0Ypg9htaPXQq5Cqeo=
 code.linenisgreat.com/chrest/go v0.2.0 h1:o5lIoM6m+Hws0ULs3iFT3tj2PJXiPsiapZP3ugw8088=
 code.linenisgreat.com/chrest/go v0.2.0/go.mod h1:3xI6Y3R4KV0YQ6Y90f/StWj/KxXh2FryH7JGg2wkatw=
+code.linenisgreat.com/hyphence/go v0.3.0 h1:FpQ0ROPDmTGyU1F4Pqnp11Hzj4IutDaVCaMJcr+e7sk=
+code.linenisgreat.com/hyphence/go v0.3.0/go.mod h1:i3VFG2dtPRi9a5i86CwRjOT3FXnCwmf2aNFp+mXfZuM=
 filippo.io/age v1.3.1 h1:hbzdQOJkuaMEpRCLSN1/C5DX74RPcNCk6oqhKMXmZi0=
 filippo.io/age v1.3.1/go.mod h1:EZorDTYUxt836i3zdori5IJX/v2Lj6kWFU0cfh6C0D4=
 filippo.io/edwards25519 v1.2.0 h1:crnVqOiS4jqYleHd9vaKZ+HKtHfllngJIiOpNpoJsjo=
@@ -14,10 +16,8 @@ github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/akutz/memconn v0.1.0 h1:NawI0TORU4hcOMsMr11g7vwlCdkYeLKXBcxWu2W/P8A=
 github.com/akutz/memconn v0.1.0/go.mod h1:Jo8rI7m0NieZyLI5e2CDlRdRqRRB4S7Xp77ukDjH+Fw=
-github.com/amarbel-llc/hyphence/go v0.2.0 h1:ePR9yMwweItA8bV82oTymivBu6hb4xG4z1DunNY8n6M=
-github.com/amarbel-llc/hyphence/go v0.2.0/go.mod h1:b3YPbL1BNkdt4doHdGz3g9I3KPWZUc9VW21LkH74aUI=
-github.com/amarbel-llc/madder/go v0.4.5-0.20260714015804-a00d07019f6f h1:HF4oSuaK9Y7/z/M/3FirKpcEl8KEBPQ+t4EMwSKDIwA=
-github.com/amarbel-llc/madder/go v0.4.5-0.20260714015804-a00d07019f6f/go.mod h1:7IQRVTlhc83+MVTK2S+2y3pDsCQOiWcbqFpTr1gUwk0=
+github.com/amarbel-llc/madder/go v0.4.5-0.20260719151456-c52fe2e87c76 h1:Omf/Gu2K5LuOWD7xwDqMJtioMrXste/56RzxJT6erYE=
+github.com/amarbel-llc/madder/go v0.4.5-0.20260719151456-c52fe2e87c76/go.mod h1:nXeF/Wn5J3iTe4uNT8AhI325p/dzyUQyo7X/nEthdt8=
 github.com/amarbel-llc/piggy/go v0.0.0-20260714014714-8bebeaa66dca h1:6ubdBBoC+NMZ7shnygEd8IO8cmlApDErfnWUQo5+wXI=
 github.com/amarbel-llc/piggy/go v0.0.0-20260714014714-8bebeaa66dca/go.mod h1:KR34AXASubIX4VLxJwP89kw18gbyp8kYXUzpfl25s9M=
 github.com/amarbel-llc/purse-first/libs/dewey v0.4.2-0.20260714012913-f3ad3d58f150 h1:Ybda8H6I+7RnVjJU72yhwkulDig6fk3y5CYVdBcl690=
