@@ -6,10 +6,12 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // OrganizeBaseTypeString is the envelope type-line value for a base
@@ -149,4 +151,140 @@ func WriteOrganizeBaseAndActivate(
 	ot.Metadata.OptionCommentSet.AddPrototypeAndOption("base", baseDigest)
 
 	return err
+}
+
+// DereferenceOrganizeBase resolves patch's `_base=@<digest>` field to
+// the base Text it points at (dodder#374(b) plan §3/§4): dereferences
+// the blob, splits its envelope (metadata: `_group-by`,
+// `! organize-base-v1`) from its body, and parses the body through the
+// exact same orgie.Text.ReadFrom used for patch -- no bespoke internal
+// format, per the excise-and-parse ruling. Does NOT mutate patch --
+// excising `_base` from the patch happens inside
+// orgie.ChangesFromResults (kilo tier, where the diff itself runs), not
+// here.
+//
+// Fails fast, before any diff computation: ErrOrganizeBaseMissing if
+// patch has no `_base` field at all (plan §8's cold-cutover), or
+// ErrBaseUndereferenceable if `_base` is present but its digest can't
+// be read back (plan §3).
+func DereferenceOrganizeBase(
+	repo *local_working_copy.Repo,
+	patch *orgie.Text,
+) (base *orgie.Text, wasGrouped bool, groupingTags ids.TagSlice, err error) {
+	oc, found := patch.Metadata.OptionCommentSet.GetByKey("base")
+	if !found {
+		err = errors.Wrap(orgie.ErrOrganizeBaseMissing{})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	ocwk, isKeyed := oc.(orgie.OptionCommentWithKey)
+	if !isKeyed {
+		err = errors.Wrap(orgie.ErrOrganizeBaseMissing{})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	baseDigest, isDigest := ocwk.OptionComment.(*orgie.OptionCommentBaseDigest)
+	if !isDigest {
+		err = errors.Wrap(orgie.ErrOrganizeBaseMissing{})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	digestString := baseDigest.Id.String()
+
+	blobReader, readerErr := repo.GetEnvRepo().GetDefaultBlobStore().MakeBlobReader(
+		baseDigest.Id,
+	)
+	if readerErr != nil {
+		err = errors.Wrap(orgie.ErrBaseUndereferenceable{
+			Digest: digestString,
+			Cause:  readerErr,
+		})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	defer errors.DeferredCloser(&err, blobReader)
+
+	var envelopeMetaBuf, bodyBuf bytes.Buffer
+
+	hr := hyphence.Reader{
+		Metadata: &envelopeMetaBuf,
+		Blob:     &bodyBuf,
+	}
+
+	if _, err = hr.ReadFrom(blobReader); err != nil {
+		err = errors.Wrap(orgie.ErrBaseUndereferenceable{
+			Digest: digestString,
+			Cause:  err,
+		})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	var envelopeMetadata orgie.Metadata
+	envelopeMetadata = orgie.NewMetadata(ids.RepoId{})
+
+	if _, err = envelopeMetadata.ReadFrom(&envelopeMetaBuf); err != nil {
+		err = errors.Wrap(orgie.ErrBaseUndereferenceable{
+			Digest: digestString,
+			Cause:  err,
+		})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	if groupBy, ok := envelopeMetadata.OptionCommentSet.GetByKey("group-by"); ok {
+		if ocwk, isKeyed := groupBy.(orgie.OptionCommentWithKey); isKeyed {
+			if gb, isGroupBy := ocwk.OptionComment.(*orgie.OptionCommentGroupBy); isGroupBy &&
+				gb.Value != "" {
+				wasGrouped = true
+
+				var tags []ids.TagStruct
+
+				for _, value := range strings.Split(gb.Value, ",") {
+					var tag ids.TagStruct
+
+					if err = tag.Set(value); err != nil {
+						err = errors.Wrap(orgie.ErrBaseUndereferenceable{
+							Digest: digestString,
+							Cause:  err,
+						})
+						return base, wasGrouped, groupingTags, err
+					}
+
+					tags = append(tags, tag)
+				}
+
+				groupingTags = collections_slice.MakeFromSlice(tags...)
+			}
+		}
+	}
+
+	// Mirrors ReadOrganizeFile.Run's exact scaffold
+	// (repo_actions/read_organize_file.go) so the base's own document
+	// metadata (query tags, -dry-run, etc, excised of nothing -- it's
+	// the OUTER document's rendering, one level of nesting in) parses
+	// through the identical path patch does.
+	baseFlags := orgie.MakeFlags()
+	ApplyToOrganizeOptions(repo, &baseFlags.Options)
+
+	baseTextOptions := baseFlags.GetOptionsWithMetadata(
+		repo.GetConfig().GetPrintOptions(),
+		repo.SkuFormatBoxCheckedOutNoColor(),
+		repo.GetStore().GetAbbrStore().GetAbbr(),
+		sku.ObjectFactory{},
+		orgie.NewMetadata(ids.RepoId{}),
+	)
+
+	if base, err = orgie.New(baseTextOptions); err != nil {
+		err = errors.Wrap(err)
+		return base, wasGrouped, groupingTags, err
+	}
+
+	if _, err = base.ReadFrom(&bodyBuf); err != nil {
+		err = errors.Wrap(orgie.ErrBaseUndereferenceable{
+			Digest: digestString,
+			Cause:  err,
+		})
+		return base, wasGrouped, groupingTags, err
+	}
+
+	return base, wasGrouped, groupingTags, err
 }

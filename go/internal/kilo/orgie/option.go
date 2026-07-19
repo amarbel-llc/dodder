@@ -103,6 +103,51 @@ func (ocs *OptionCommentSet) GetPrototypeOptionComments() PrototypeOptionComment
 	return ocs.prototype
 }
 
+// GetByKey returns the first active OptionComment registered under
+// key from OptionComments (the document's ACTIVE settings, not the
+// prototype registry), if any, without removing it.
+func (ocs *OptionCommentSet) GetByKey(key string) (found OptionComment, ok bool) {
+	for _, oc := range ocs.OptionComments {
+		ocwk, isKeyed := oc.(OptionCommentWithKey)
+		if !isKeyed || ocwk.Key != key {
+			continue
+		}
+
+		return oc, true
+	}
+
+	return found, false
+}
+
+// RemoveByKey removes and returns the first active OptionComment
+// registered under key from OptionComments (the document's ACTIVE
+// settings, not the prototype registry -- GetPrototypeOptionComments
+// is unaffected), if any. dodder#374(b) plan §4: patch's `_base` entry
+// must be dropped structurally before diffing against the base blob's
+// body, which never had one (rendered before `_base` was inserted) --
+// the dual of how WriteOrganizeBaseAndActivate ADDS it via
+// AddPrototypeAndOption. Confirmed structural, not string-level
+// surgery on raw text, per the 2026-07-19 review.
+func (ocs *OptionCommentSet) RemoveByKey(key string) (removed OptionComment, found bool) {
+	for i, oc := range ocs.OptionComments {
+		ocwk, ok := oc.(OptionCommentWithKey)
+		if !ok || ocwk.Key != key {
+			continue
+		}
+
+		removed = oc
+		found = true
+		ocs.OptionComments = append(
+			ocs.OptionComments[:i],
+			ocs.OptionComments[i+1:]...,
+		)
+
+		return removed, found
+	}
+
+	return removed, found
+}
+
 func (ocs *OptionCommentSet) AddPrototype(
 	key string,
 	o OptionComment,

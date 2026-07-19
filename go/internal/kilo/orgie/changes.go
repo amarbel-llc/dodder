@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
@@ -136,17 +137,26 @@ func (c Changes) String() string {
 	)
 }
 
-// orgie-extract: OrganizeResults (Before/After/Original) and
-// ChangesFromResults are the diff seam. Today drift between a plan and its
-// commit is invisible — Before is re-derived from the query at commit time. A
-// follow-up keys drift detection here on object signatures carried in the
-// organize text/JSON, so a commit can fail (or merge) when Original changed
-// since the plan.
-// TODO combine with above
+// OrganizeResults is the dodder#374(b) three-way apply seam. Before/Original
+// keep their pre-(b) field names for call-site compatibility, but as of the
+// _base-pinning cutover they carry different values than they used to:
+//
+//   - Before is now the DEREFERENCED BASE (repo_actions.DereferenceOrganizeBase's
+//     return value) -- what `organize` generated and the user was shown --
+//     not a freshly-regenerated organize file at commit time.
+//   - Original is now LIVE -- the store's current state, read at APPLY time
+//     (repo_actions is responsible for re-reading it fresh, not reusing the
+//     set collected at generation time), so drift between generation and
+//     apply is detectable (RFC 0015; see three_way.go's ComputeThreeWay).
+//   - WasGrouped/GroupingTags are DereferenceOrganizeBase's other two return
+//     values, threaded through so ChangesFromResults can dispatch removals
+//     correctly (three_way.go's DispatchRemoval).
 type OrganizeResults struct {
 	Before, After *Text
 	Original      sku.SkuTypeSet
 	QueryGroup    *queries.Query
+	WasGrouped    bool
+	GroupingTags  ids.TagSlice
 }
 
 func ChangesFrom(
@@ -169,42 +179,63 @@ func ChangesFrom(
 	return c, err
 }
 
+// ChangesFromResults is dodder#374(b) plan §4's "thin wrapper": it excises
+// `_base` from the patch (structural, matching what generation never wrote
+// in the first place -- see ExciseBaseField's sibling logic), then delegates
+// to ComputeThreeWay (three_way.go) for the base/patch/live diff, then
+// dispatches each removal (DispatchRemoval) to either a grouped-dimension
+// tag-clear or the ungrouped RemoveFromTransacted -- preserving the
+// pre-(b) behavior of adding removed-and-mutated objects back into Changed
+// so they're included in the commit plan.
+//
+// Kept kilo-tier (no repo access): base/live are supplied ALREADY resolved
+// by the sierra-tier caller (repo_actions), per OrganizeResults' doc comment
+// above -- this function does not itself dereference `_base` or query the
+// store.
 func ChangesFromResults(
 	po options_print.Options,
 	results OrganizeResults,
 ) (c Changes, err error) {
-	if err = applyToText(po, results.Before); err != nil {
+	results.After.Metadata.OptionCommentSet.RemoveByKey("base")
+
+	var threeWayResult ThreeWayResult
+
+	if threeWayResult, err = ComputeThreeWay(po, ThreeWayInputs{
+		Base:         results.Before,
+		Patch:        results.After,
+		Live:         results.Original,
+		WasGrouped:   results.WasGrouped,
+		GroupingTags: results.GroupingTags,
+	}); err != nil {
 		err = errors.Wrap(err)
 		return c, err
 	}
 
-	if c.Before, err = results.Before.GetSkus(results.Original); err != nil {
-		err = errors.Wrap(err)
-		return c, err
-	}
+	c = threeWayResult.Changes
 
-	if c.After, err = results.After.GetSkus(results.Original); err != nil {
-		err = errors.Wrap(err)
-		return c, err
-	}
+	for _, removal := range threeWayResult.Removals {
+		var unresolved *UnresolvedIntent
 
-	c.Changed = c.After.Clone()
-	c.Removed = c.Before.Clone()
-
-	for _, sk := range c.After.m {
-		if err = c.Removed.Del(sk.sku); err != nil {
+		if unresolved, err = DispatchRemoval(
+			removal,
+			results.WasGrouped,
+			results.GroupingTags,
+			results.Before.Metadata,
+		); err != nil {
 			err = errors.Wrap(err)
 			return c, err
 		}
-	}
 
-	for _, sk := range c.Removed.AllSkuAndIndex() {
-		if err = results.Before.RemoveFromTransacted(sk); err != nil {
-			err = errors.Wrap(err)
-			return c, err
+		if unresolved != nil {
+			// dodder#374(b) plan §6 scaffolding: dodder's only selection
+			// mechanism today is tags, which RemoveFromTransacted always
+			// resolves, so this is unreachable until a non-tag selection
+			// term exists. When it does, surface unresolved to the
+			// caller instead of silently dropping it.
+			continue
 		}
 
-		if err = c.Changed.Add(sk); err != nil {
+		if err = c.Changed.Add(removal.Object); err != nil {
 			err = errors.Wrap(err)
 			return c, err
 		}

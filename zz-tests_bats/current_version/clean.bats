@@ -184,7 +184,13 @@ function clean_hidden { # @test
   assert_output - <<-EOM
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
+  base_line="$(get_organize_base :z)"
+
   run_dodder organize -mode commit-directly :z <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno  !md zz-archive tag-3 tag-4] wow the first
 	EOM
   assert_success
@@ -226,7 +232,13 @@ function clean_hidden { # @test
 
 function clean_mode_blob_hidden { # @test
   prepare_checkouts
+  base_line="$(get_organize_base :z)"
+
   run_dodder organize -mode commit-directly :z <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno  !md zz-archive tag-3 tag-4] wow the first
 	EOM
   assert_success

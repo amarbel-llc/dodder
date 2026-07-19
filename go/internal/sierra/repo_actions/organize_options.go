@@ -2,6 +2,7 @@ package repo_actions
 
 import (
 	"fmt"
+	"sync"
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
@@ -43,10 +44,48 @@ func MakeOrganizeOptionsWithQueryGroup(
 	)
 }
 
+// LockAndCommitOrganizeResults is the single funnel all organize commit
+// paths go through (directly, or via OrganizeCommitFromReader) --
+// dodder#374(b) plan §4's base-dereference and live-requery happen HERE,
+// once, rather than in each of the CLI/MCP/Last/New call sites: results.After
+// (the patch) is authoritative for `_base` regardless of what the caller
+// populated results.Before/Original with at generation time, and
+// results.QueryGroup is always non-nil by this point (a real user query, or
+// Organize.RunWithSkuType's WithExternalLike(skus) fallback for the
+// Last/New flows), so re-running it against the live store is always
+// meaningful "live" input for orgie.ComputeThreeWay (three_way.go).
 func LockAndCommitOrganizeResults(
 	repo *local_working_copy.Repo,
 	results orgie.OrganizeResults,
 ) (changeResults orgie.Changes, err error) {
+	if results.Before, results.WasGrouped, results.GroupingTags, err = DereferenceOrganizeBase(
+		repo,
+		results.After,
+	); err != nil {
+		err = errors.Wrap(err)
+		return changeResults, err
+	}
+
+	live := sku.MakeSkuTypeSetMutable()
+
+	var lock sync.Mutex
+
+	if err = repo.GetStore().QueryTransactedAsSkuType(
+		results.QueryGroup,
+		func(sk sku.SkuType) (err error) {
+			lock.Lock()
+			defer lock.Unlock()
+
+			cloned, _ := sk.Clone() //repool:owned
+			return live.Add(cloned)
+		},
+	); err != nil {
+		err = errors.Wrap(err)
+		return changeResults, err
+	}
+
+	results.Original = live
+
 	if changeResults, err = orgie.ChangesFromResults(
 		repo.GetConfig().GetPrintOptions(),
 		results,

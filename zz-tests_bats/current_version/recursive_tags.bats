@@ -54,7 +54,13 @@ function recursive_tags_add_one_super_tags { # @test
 		          deleted [tag-3.tag]
 	EOM
 
+  base_line="$(get_organize_base)"
+
   run_dodder organize -mode commit-directly <<-EOM
+		---
+		$base_line
+		---
+
 		- [tag-3-sub]
 	EOM
 
@@ -98,7 +104,13 @@ function recursive_tags_add_one_super_tags { # @test
 }
 
 function recursive_tags_with_same_root { # @test
+  base_line="$(get_organize_base)"
+
   run_dodder organize -mode commit-directly <<-EOM
+		---
+		$base_line
+		---
+
 		- [project-one-crit priority-0_must]
 		- [project-one-general]
 	EOM
@@ -115,7 +127,13 @@ function recursive_tags_with_same_root { # @test
 		[project-one-crit priority-0_must]
 	EOM
 
+  base_line="$(get_organize_base one/uno)"
+
   run_dodder organize -mode commit-directly one/uno <<-EOM
+		---
+		$base_line
+		---
+
 		# project-one-crit project-one-general
 		- [one/uno]
 	EOM

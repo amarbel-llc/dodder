@@ -45,8 +45,11 @@ function mergetool_conflict_base {
 		not another one, conflict time
 	EOM
 
+  base_line="$(get_organize_base one/dos)"
+
   run_dodder organize -mode commit-directly one/dos <<-EOM
 		---
+		$base_line
 		! txt2
 		---
 

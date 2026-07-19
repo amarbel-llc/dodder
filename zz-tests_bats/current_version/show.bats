@@ -589,7 +589,13 @@ function show_builtin_type_md { # @test
 # bats file_tags=user_story:workspace
 
 function show_workspace_default { # @test
+  base_line="$(get_organize_base one/uno)"
+
   run_dodder organize -mode commit-directly one/uno <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !md tag-3 tag-4 tag-5] wow the first
 	EOM
   assert_success

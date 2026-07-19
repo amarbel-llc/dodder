@@ -40,7 +40,13 @@ function organize_empty { # @test
 }
 
 function organize_empty_commit { # @test
+  base_line="$(get_organize_base "${cmd_def_organize[@]}")"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly <<-EOM
+		---
+		$base_line
+		---
+
 		- test
 	EOM
 
@@ -70,7 +76,13 @@ function organize_simple_commit { # @test
   run_dodder checkout one/uno
   assert_success
 
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		$base_line
+		---
+
 		# new-etikett-for-all %virtual_etikett
 		- [   !md   ]
 		- [   tag  ]
@@ -106,7 +118,13 @@ function organize_simple_checkedout_matchesmutter { # @test
 		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		$base_line
+		---
+
 		# new-etikett-for-all
 		- [   !md   ]
 		- [   -tag  ]
@@ -150,7 +168,13 @@ function organize_simple_checkedout_merge_no_conflict { # @test
 		not another one, now with a different body
 	EOM
 
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		$base_line
+		---
+
 		# new-etikett-for-all
 		- [   !md   ]
 		- [one/dos   !md tag-3 tag-4] wow ok again
@@ -218,8 +242,11 @@ function organize_simple_checkedout_merge_conflict { # @test
 		not another one, conflict time
 	EOM
 
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
+		$base_line
 		- new-etikett-for-all
 		---
 
@@ -289,7 +316,13 @@ function organize_dry_run { # @test
   run_dodder show "${cmd_dodder_def[@]}" -format log :z,e,t
   expected_show="$output"
 
+  base_line="$(get_organize_base -dry-run :z,e,t)"
+
   run_dodder organize -dry-run -mode commit-directly :z,e,t <<-EOM
+		---
+		$base_line
+		---
+
 		# new-etikett-for-all
 		- [   !md   ]
 		- [   -tag  ]
@@ -329,8 +362,11 @@ function organize_dry_run_reads_settings_field { # @test
   run_dodder checkout one/uno
   assert_success
 
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
+		$base_line
 		- _dry-run=true
 		---
 
@@ -358,8 +394,11 @@ function organize_dry_run_legacy_comment_alias_still_accepted { # @test
   run_dodder checkout one/uno
   assert_success
 
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
+		$base_line
 		% dry-run:true
 		---
 
@@ -396,8 +435,11 @@ function organize_with_type_output { # @test
 }
 
 function organize_with_type_commit { # @test
+  base_line="$(get_organize_base !md:z)"
+
   run_dodder organize -mode commit-directly !md:z <<-EOM
 		---
+		$base_line
 		! txt
 		---
 
@@ -414,7 +456,12 @@ function organize_with_type_commit { # @test
 }
 
 function modify_description { # @test
+  base_line="$(get_organize_base :z,e,t)"
+
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		$base_line
+		---
 
 		- [   !md   ]
 		- [   tag  ]
@@ -439,7 +486,13 @@ function modify_description { # @test
 
 function add_named { # @test
   # TODO modify organize to not require query group or else accidentally output unchanged objektes
+  base_line="$(get_organize_base :e)"
+
   run_dodder organize -mode commit-directly :e <<-EOM
+		---
+		$base_line
+		---
+
 		# with-tag
 		- [added_tag]
 	EOM
@@ -510,9 +563,15 @@ function organize_v5_outputs_organize_two_tags { # @test
 		- [two/uno !md] wow
 	EOM
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" ok brown)"
+
   run_dodder organize "${cmd_def_organize[@]}" \
     -mode commit-directly \
     ok brown <<-EOM
+				---
+				$base_line
+				---
+
 			      # ok
 
 			- [two/uno !md] wow
@@ -693,8 +752,14 @@ function organize_v5_commits_organize_one_tags_group_by_two { # @test
   run_dodder new -edit=false "$to_add"
   assert_success
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" -group-by priority,w task)"
+
   expected_organize="$(mktemp)"
   {
+    echo "---"
+    echo "$base_line"
+    echo "---"
+    echo
     echo "# task"
     echo
     echo "## priority-1"
@@ -812,8 +877,14 @@ function organize_v5_commits_organize_one_tags_group_by_two_new_zettels { # @tes
   run_dodder new -edit=false "$to_add"
   assert_success
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" -group-by priority,w task)"
+
   expected_organize="$(mktemp)"
   {
+    echo "---"
+    echo "$base_line"
+    echo "---"
+    echo
     echo "# task"
     echo "- new zettel one"
     echo "## priority-1"
@@ -956,12 +1027,15 @@ function organize_v5_commits_no_changes { # @test
 
 	EOM
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" -group-by priority,w task)"
+
   run_dodder organize "${cmd_def_organize[@]}" \
     -mode commit-directly \
     -group-by priority,w task \
     <<-EOM
-			---
-			- task
+				---
+				$base_line
+				- task
 			---
 
 			           # priority
@@ -1033,8 +1107,14 @@ function organize_v5_commits_dependent_leaf { # @test
   run_dodder new -edit=false "$three"
   assert_success
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" -verbose -group-by priority,w task)"
+
   expected_organize="$(mktemp)"
   {
+    echo "---"
+    echo "$base_line"
+    echo "---"
+    echo
     echo "# task"
     echo "## priority-2"
     echo "### w-2022-07"
@@ -1078,8 +1158,13 @@ function organize_v5_zettels_in_correct_places { # @test
 }
 
 function organize_v5_tags_correct { # @test
+  base_line="$(get_organize_base "${cmd_def_organize[@]}")"
 
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly <<-EOM
+		---
+		$base_line
+		---
+
 		# test1
 		## -wow
 
@@ -1132,8 +1217,11 @@ function organize_remove_anchored_metadata { # @test
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" tag-3)"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly tag-3 <<-EOM
 		---
+		$base_line
 		- tag-3
 		---
 	EOM
@@ -1157,8 +1245,11 @@ function organize_update_checkout { # @test
 		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" :z)"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly :z <<-EOM
 		---
+		$base_line
 		- test
 		---
 
@@ -1185,7 +1276,13 @@ function organize_update_checkout_remove_tags { # @test
 		      checked out [one/dos.zettel @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
 	EOM
 
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" :z)"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly :z <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/dos  !md] wow ok again
 		- [one/uno  !md] wow the first
 	EOM
@@ -1203,8 +1300,11 @@ function organize_update_checkout_remove_tags { # @test
 }
 
 function create_structured_zettels { # @test
+  base_line="$(get_organize_base "${cmd_def_organize[@]}")"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly <<-EOM
 		---
+		$base_line
 		- test
 		---
 
@@ -1220,7 +1320,13 @@ function create_structured_zettels { # @test
 }
 
 function description_with_literal_characters { # @test
+  base_line="$(get_organize_base "${cmd_def_organize[@]}")"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly <<-EOM
+		---
+		$base_line
+		---
+
 		- [terb/ala !md payee] thoughts on quincey's contract / scope of work
 	EOM
   assert_success
@@ -1231,7 +1337,13 @@ function description_with_literal_characters { # @test
 
 # [hemp/mr !task project-2021-zit-bugs today zz-inbox] fix issue with `zit organize project-2021-zit` causing deltas
 function tags_with_extended_tags_noop { # @test
+  base_line="$(get_organize_base :z)"
+
   run_dodder organize -mode commit-directly :z <<-EOM
+		---
+		$base_line
+		---
+
 		# new-etikett-for-all
 		- [one/dos   !md tag-3 tag-4] wow ok again
 		- [one/uno   !md tag-3 tag-4] wow the first
@@ -1258,7 +1370,13 @@ function tags_with_extended_tags_noop { # @test
 		- [one/uno !md new-etikett-for-all tag-3 tag-4] wow the first
 	EOM
 
+  base_line="$(get_organize_base new:z)"
+
   run_dodder organize -mode commit-directly new:z <<-EOM
+		---
+		$base_line
+		---
+
 		# new
 
 		- [one/dos !md new-etikett-for-all tag-3 tag-4] wow ok again
@@ -1296,13 +1414,17 @@ function organize_new_objects_default_tags { # @test
 
   # shellcheck disable=SC2317
   function editor() (
-    echo "- new zettel object" >"$0"
+    # Append rather than overwrite: dodder#374(b) writes a real `_base`
+    # into the generated file before the editor runs, and organize can
+    # only commit a document carrying it back (the editor represents a
+    # user making an INCREMENTAL edit, not replacing the file wholesale).
+    echo "- new zettel object" >>"$0"
   )
 
   run_dodder organize
   assert_success
   assert_output - <<-EOM
-		[two/uno !md "new zettel object"]
+		[two/uno !md "new zettel object" zz-inbox]
 	EOM
 
   # shellcheck disable=SC2317

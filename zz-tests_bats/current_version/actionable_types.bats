@@ -633,7 +633,13 @@ function actionable_chore_recurrence_is_idempotent { # @test
   assert_success
 
   # re-commit the already-recurred (status=todo, due=2026-07-08) values
+  base_line="$(get_organize_base '!chore')"
+
   run_dodder organize -mode commit-directly '!chore' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !chore status=todo priority=p1 due=2026-07-08 recurrence=P1W] weekly chore
 	EOM
   assert_success
@@ -676,7 +682,13 @@ function actionable_field_writer_survives_quote_in_due { # @test
   # mutate `due` to a value containing a double-quote; the fields-writer
   # projects it back into the TOML blob via strenv(), so the yq parse is not
   # broken and the value round-trips.
+  base_line="$(get_organize_base '!task')"
+
   run_dodder organize -mode commit-directly '!task' <<-EOM
+		---
+		$base_line
+		---
+
 		- [one/uno !task status=todo priority=p1 due="he said \"hi\""] quote task
 	EOM
   assert_success

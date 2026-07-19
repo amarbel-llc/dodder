@@ -251,6 +251,24 @@ function get_konfig_sha() { echo -n "$FIXTURE_KONFIG_SHA"; }
 function get_type_blob_sha() { echo -n "$FIXTURE_TYPE_BLOB_SHA"; }
 function get_fixture_type_sig() { echo -n "$FIXTURE_TYPE_SIG"; }
 
+# Runs `organize -mode output-only` with the given flags/query and returns
+# just the `- _base=@digest` line from its output. dodder#374(b): a
+# `-mode commit-directly` patch must carry a real `_base` field pointing at
+# a blob already written to the store, so hand-authored commit-directly
+# heredocs need a REAL captured digest spliced in -- not a hardcoded one,
+# since the digest depends on fixture/store state at the point each test
+# calls it. Overwrites $output/$status; call before the real
+# commit-directly run whose output the test actually asserts on.
+function get_organize_base() {
+  # -mode must precede any positional query terms in "$@" -- dodder's flag
+  # parser stops at the first positional arg, so `organize :z -mode
+  # output-only` silently leaves -mode unset (falls back to interactive
+  # mode, hangs waiting for an editor) instead of erroring.
+  run_dodder organize -mode output-only "$@"
+  assert_success
+  echo "$output" | grep '_base='
+}
+
 run_find() {
   run find . \
     -maxdepth 2 \

@@ -39,8 +39,11 @@ function revert_refreshes_clean_checkout { # @test
   # Mutate one/dos (and one/uno) via organize, adding the tag 'test'.
   # organize refreshes the clean checkout, so one/dos.zettel now carries
   # 'test' on disk — the divergence we revert below.
+  base_line="$(get_organize_base "${cmd_def_organize[@]}" :z)"
+
   run_dodder organize "${cmd_def_organize[@]}" -mode commit-directly :z <<-EOM
 		---
+		$base_line
 		- test
 		---
 
