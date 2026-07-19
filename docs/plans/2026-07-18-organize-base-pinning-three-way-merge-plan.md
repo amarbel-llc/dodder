@@ -431,6 +431,36 @@ that way.
 
 ## 7. `_allow-deletion` gating
 
+**Out of scope for dodder (Sasha's ruling, 2026-07-19): skipped, not
+implemented.** RFC 0015's four-gate design below guards a *true
+substrate deletion* outcome — an object ceasing to exist, as would
+genuinely happen on a CalDAV/jira substrate when the last reference to
+an event/ticket vanishes from a document. Dodder has no such operation
+anywhere: confirmed by code search, `organize`'s §6 dispatch (grouped
+tag-clear / `RemoveFromTransacted`) only ever mutates an existing
+object's tags, and dodder has no hard-delete-an-object primitive at
+all (the dormant index is a soft, still-queryable-in-history hide, not
+a deletion). The nearest dodder concept to "this object should go
+away" is *archiving* (`zz-archive` tag, added by an unrelated
+field-value-keyed commit hook,
+`local_working_copy/embedded/actionable/actionable-common.lua:29-46`)
+— but archiving is not wired to organize's line-removal detection at
+all, and generalizing the gate to fire on "a §6 tag-clear leaves the
+object fully untagged" was considered and rejected as spiritually
+wrong: `_allow-deletion`'s actual intent is a safety rail against
+organize's casual, one-keystroke line-deletion silently escalating
+into an irreversible, substrate-level loss the user didn't mean to
+cause — and nothing §6 does in dodder ever has that character, no
+matter how many tags end up cleared. The `OptionCommentAllowDeletion`
+settings-field PARSING (below) stays, since RFC 0015 round-tripping
+(`- _allow-deletion=true` must parse without erroring, for
+cross-substrate document portability) is independent of dodder ever
+enforcing it — but gates 2-4 (deletion-set computation, confirmation
+prompt, `-confirm-deletion` CLI flag) are not built. Revisit if dodder
+ever grows a real delete-object operation, or if a shared
+substrate-agnostic apply engine needs the interface to exist uniformly
+across substrates.
+
 New `OptionCommentAllowDeletion` (`option.go`), structurally identical
 to `OptionCommentDryRun` (bool-valued, `IsSettingsField() → true`),
 registered unconditionally (not CLI-flag-gated like `-dry-run` — a

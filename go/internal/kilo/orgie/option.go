@@ -335,10 +335,16 @@ func (ocf *OptionCommentBaseDigest) IsSettingsField() bool {
 	return true
 }
 
-// OptionCommentAllowDeletion is `- _allow-deletion=true` (dodder#374(b)),
-// the first of the deletion gates -- see the plan's §7 for the other
-// three (deletion-set computation, post-editor confirmation, and
-// commit-directly's additional CLI flag), none of which live here.
+// OptionCommentAllowDeletion is `- _allow-deletion=true` (dodder#374(b)).
+// Parsing only -- kept for RFC 0015 cross-substrate document
+// portability (`- _allow-deletion=true` must round-trip without
+// erroring), but dodder does not enforce it: the plan's §7 gate exists
+// to guard true substrate deletion (an object ceasing to exist), and
+// dodder has no such operation anywhere -- organize's tag-clearing
+// (changes.go, three_way.go) only ever mutates an existing object's
+// tags. See the plan's §7 (2026-07-19 ruling) for the full rationale,
+// including why generalizing to "any tag-clear that fully untags an
+// object" was considered and rejected.
 type OptionCommentAllowDeletion struct {
 	Value bool
 }
