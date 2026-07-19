@@ -358,6 +358,7 @@ function status_conflict { # @test
 	EOM
   assert_success
   assert_output - <<-EOM
+		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[!txt2 !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again" new-etikett-for-all tag-3 tag-4]
 	EOM

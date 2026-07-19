@@ -51,5 +51,17 @@ func (cmd CreateOrganizeFile) Run() (results *orgie.Text, err error) {
 		return results, err
 	}
 
+	// dodder#374(b): every generated organize document gets `_base`
+	// pinned, mandatory with no legacy mode -- all three modes
+	// (interactive, commit-directly, output-only) funnel through here.
+	if err = WriteOrganizeBaseAndActivate(
+		cmd.repo,
+		results,
+		cmd.Options.GroupingTags,
+	); err != nil {
+		err = errors.Wrap(err)
+		return results, err
+	}
+
 	return results, err
 }

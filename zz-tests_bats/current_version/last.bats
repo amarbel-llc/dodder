@@ -90,6 +90,7 @@ function last_organize { # @test
   run_dodder last -organize
   assert_success
   assert_output - <<-EOM
+		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[!md @blake2b256-tugmx90k7ajv6atknze43ptgphz08x4f929c0f0n4y394nh5gh7qmau4w9 !toml-type-v2 added-tag]
 	EOM
 }

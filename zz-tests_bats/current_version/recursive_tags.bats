@@ -60,6 +60,7 @@ function recursive_tags_add_one_super_tags { # @test
 
   assert_success
   assert_output - <<-EOM
+		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[tag-3-sub]
 	EOM
 
@@ -105,6 +106,7 @@ function recursive_tags_with_same_root { # @test
 
   assert_success
   assert_output - <<-EOM
+		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[project-one-crit priority-0_must]
 		[project-one-general]
 	EOM

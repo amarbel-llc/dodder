@@ -82,6 +82,13 @@ func MakeOptionCommentSet(
 	ocs.AddPrototype("base", &OptionCommentBaseDigest{})
 	ocs.AddPrototype("allow-deletion", &OptionCommentAllowDeletion{})
 
+	// `_group-by` (dodder#374(b) OQ3 ruling): lives on the base blob's
+	// OWN envelope metadata, never the outer organize document's --
+	// registered here anyway (harmless no-op if it ever appears on an
+	// outer document) rather than giving the envelope its own
+	// constructor for one extra prototype.
+	ocs.AddPrototype("group-by", &OptionCommentGroupBy{})
+
 	return ocs
 }
 
@@ -314,6 +321,39 @@ func (ocf *OptionCommentAllowDeletion) String() string {
 }
 
 func (ocf *OptionCommentAllowDeletion) IsSettingsField() bool {
+	return true
+}
+
+// OptionCommentGroupBy is `- _group-by="tag1,tag2"` (dodder#374(b), OQ3
+// ruling): the base blob's own envelope metadata records the -group-by
+// value(s) used at generation (absent = ungrouped), so grouped-detection
+// (plan §5) reads it from the base blob's own structure rather than
+// inferring it from the patch. Value quoted and comma-joined (no spaces)
+// to preserve -group-by's order in one field -- RFC 0001's metadata
+// lines are order-independent across lines, so an ordered list can't be
+// spread across repeated `_group-by=...` lines.
+type OptionCommentGroupBy struct {
+	Value string
+}
+
+func (ocf *OptionCommentGroupBy) CloneOptionComment() OptionComment {
+	clone := *ocf
+	return &clone
+}
+
+func (ocf *OptionCommentGroupBy) Set(v string) (err error) {
+	v = strings.TrimPrefix(v, `"`)
+	v = strings.TrimSuffix(v, `"`)
+	ocf.Value = v
+
+	return err
+}
+
+func (ocf *OptionCommentGroupBy) String() string {
+	return fmt.Sprintf("%q", ocf.Value)
+}
+
+func (ocf *OptionCommentGroupBy) IsSettingsField() bool {
 	return true
 }
 

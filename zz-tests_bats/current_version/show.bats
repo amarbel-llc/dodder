@@ -595,6 +595,7 @@ function show_workspace_default { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 tag-5]
+		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 
   run_dodder init-workspace -experimental-repo=false -query tag-5
