@@ -47,18 +47,6 @@ func LockAndCommitOrganizeResults(
 	repo *local_working_copy.Repo,
 	results orgie.OrganizeResults,
 ) (changeResults orgie.Changes, err error) {
-	// dodder#374(b), 2026-07-18 ruling: materializing !organize-base-v1
-	// is a write-path concern -- interactive and commit-directly both
-	// funnel through here and already print commit confirmations for
-	// the objects they change, so the type's one-time creation print is
-	// consistent here. output-only never reaches this function, so it
-	// never pays for (or needs) the type object to exist -- see
-	// WriteOrganizeBaseAndActivate's doc comment.
-	if err = EnsureOrganizeBaseType(repo); err != nil {
-		err = errors.Wrap(err)
-		return changeResults, err
-	}
-
 	if changeResults, err = orgie.ChangesFromResults(
 		repo.GetConfig().GetPrintOptions(),
 		results,

@@ -46,7 +46,6 @@ function organize_empty_commit { # @test
 
   assert_success
   assert_output - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[two/uno !md "test"]
 	EOM
 }
@@ -409,7 +408,6 @@ function organize_with_type_commit { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!txt !toml-type-v2]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt "wow the first" tag-3 tag-4]
 	EOM
@@ -431,7 +429,6 @@ function modify_description { # @test
   assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again was modified" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first was modified too" tag-3 tag-4]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[tag]
 		[tag-1]
 		[tag-2]
@@ -449,7 +446,6 @@ function add_named { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[added_tag with-tag]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 }
 
@@ -524,7 +520,6 @@ function organize_v5_outputs_organize_two_tags { # @test
 
   assert_success
   assert_output - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[two/uno !md "wow" ok]
 	EOM
 
@@ -992,7 +987,6 @@ function organize_v5_commits_no_changes { # @test
 		[one/tres !md "two/dos" priority-1 task w-2022-07-07]
 		[two/dos !md "3" priority-1 task w-2022-07-07]
 		[two/uno !md "one/uno" priority-1 task w-2022-07-06]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 }
 
@@ -1094,7 +1088,6 @@ function organize_v5_tags_correct { # @test
   assert_success
 
   assert_output - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[two/uno !md "zettel bez" test1-wow]
 	EOM
 
@@ -1149,7 +1142,6 @@ function organize_remove_anchored_metadata { # @test
   assert_output_unsorted - <<-EOM
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-4]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-4]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 
   run_dodder show tag-3:z
@@ -1177,7 +1169,6 @@ function organize_update_checkout { # @test
   assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4 test]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 test]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 
   run_dodder status
@@ -1202,7 +1193,6 @@ function organize_update_checkout_remove_tags { # @test
   assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again"]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first"]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 
   run_dodder status
@@ -1224,7 +1214,6 @@ function create_structured_zettels { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		[!task !toml-type-v2]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[one/tres !task "second" tag-3 test]
 		[two/uno !md "first" test]
 	EOM
@@ -1236,7 +1225,6 @@ function description_with_literal_characters { # @test
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[terb/ala !md "thoughts on quincey's contract / scope of work" payee]
 	EOM
 }
@@ -1252,7 +1240,6 @@ function tags_with_extended_tags_noop { # @test
   assert_output_unsorted - <<-EOM
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" new-etikett-for-all tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" new-etikett-for-all tag-3 tag-4]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 	EOM
 
   run_dodder organize -mode output-only new:z <<-EOM
@@ -1315,7 +1302,6 @@ function organize_new_objects_default_tags { # @test
   run_dodder organize
   assert_success
   assert_output - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[two/uno !md "new zettel object"]
 	EOM
 

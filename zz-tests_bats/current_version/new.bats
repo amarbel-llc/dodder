@@ -343,7 +343,6 @@ function new_organize_imports_and_organizes { # @test
   assert_success
   assert_output - <<-EOM
 		[two/uno !md "organized"]
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[one/tres !md "organized"]
 	EOM
 }

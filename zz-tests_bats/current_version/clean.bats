@@ -189,7 +189,6 @@ function clean_hidden { # @test
 	EOM
   assert_success
   assert_output - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 zz-archive]
 	EOM
 
@@ -232,7 +231,6 @@ function clean_mode_blob_hidden { # @test
 	EOM
   assert_success
   assert_output - <<-EOM
-		[!organize-base-v1 @blake2b256-lqhf4jtsl2svtg9zz79gmng4rja3nn3k9fvkx8vqk3an6red0rxqw3u9ed !toml-type-v2]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4 zz-archive]
 	EOM
 

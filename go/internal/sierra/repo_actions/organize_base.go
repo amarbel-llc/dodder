@@ -5,109 +5,27 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
-	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
-	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
-// OrganizeBaseTypeString is the type string for the user-space
-// organize-base-v1 type (dodder#374(b) plan §2) -- a bare, opaque blob
-// type recording an organize session's generated ground form. Never a
-// builtin (docs/rfcs/0003-cutting-garden-receipt-ingest.md:85-86); the
-// definition here mirrors genesis's !md/!task pattern
-// (local_working_copy/genesis.go:195-246) but runs lazily from organize
-// itself rather than at genesis time.
+// OrganizeBaseTypeString is the envelope type-line value for a base
+// blob's own hyphence metadata (`! organize-base-v1`, dodder#374(b)
+// plan §2/§9) -- a plain, self-describing STRING inside the blob's
+// bytes, never a materialized dodder type object. Per the 2026-07-18
+// correction: an organize-base blob is never committed as, or
+// associated with, an actual dodder object -- it is a bare blob only
+// (writeBareBlob), so it never appears in `dodder show`, sync, or any
+// commit-confirmation output. There is deliberately no
+// EnsureOrganizeBaseType / type-registration mechanism; a prior
+// version of this file had one and it was removed (dodder#374 commit
+// history has the story) because materializing the type as a real
+// object broke exactly the "never appears for user output" property
+// this comment now states as the design invariant.
 const OrganizeBaseTypeString = "organize-base-v1"
-
-// EnsureOrganizeBaseType lazily and idempotently creates the
-// !organize-base-v1 type object if it doesn't already exist (plan §2,
-// OQ1: lazy creation, tolerant of a concurrent creator -- "already
-// exists" is success, not an error).
-func EnsureOrganizeBaseType(repo *local_working_copy.Repo) (err error) {
-	objectIdType := ids.MustTypeStruct(OrganizeBaseTypeString)
-
-	if _, err = repo.GetStore().ReadOneObjectId(objectIdType); err == nil {
-		return nil
-	} else if !errors.IsErrNotFound(err) {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	err = nil
-
-	tipe := ids.DefaultOrPanic(genres.Type)
-
-	// The base blob's content is the serialized organize/espalier form
-	// (plan §9), not TOML -- amended per review from the original
-	// toml-for-non-toml draft.
-	blob := type_blobs.TomlV2{
-		FileExtension: "organize",
-		VimSyntaxType: "markdown",
-	}
-
-	object, objectRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
-	defer objectRepool()
-
-	if err = object.GetObjectIdMutable().SetWithId(objectIdType); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	digest, _, err := repo.GetStore().GetTypedBlobStore().Type.SaveBlobText(
-		tipe,
-		&blob,
-	)
-	if err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	object.GetMetadataMutable().GetBlobDigestMutable().ResetWithMarklId(digest)
-	object.GetMetadataMutable().GetTypeMutable().ResetWithType(tipe)
-
-	builder := import_plan.MakeLocalBuilder()
-
-	if err = builder.AddObject(object, 0); err != nil {
-		err = errors.Wrap(err)
-		return err
-	}
-
-	plan, buildErr := builder.Build()
-	if buildErr != nil {
-		err = errors.Wrap(buildErr)
-		return err
-	}
-
-	plan.DefaultCommitOptions = sku.CommitOptions{
-		StoreOptions: sku.StoreOptions{
-			AddToInventoryList: true,
-			UpdateTai:          true,
-			RunHooks:           true,
-			Validate:           true,
-		},
-	}
-
-	if _, err = repo.ExecutePlan(plan); err != nil {
-		// Tolerate a concurrent creator: if the type now exists (another
-		// organize invocation raced us and won), treat this as success
-		// rather than surfacing the commit conflict (plan §2's
-		// idempotent-not-racy requirement).
-		if _, readErr := repo.GetStore().ReadOneObjectId(objectIdType); readErr == nil {
-			return nil
-		}
-
-		err = errors.Wrap(err)
-		return err
-	}
-
-	return err
-}
 
 // writeBareBlob writes content to the repo's default blob store with no
 // owning object (dodder#374(b) plan §3, OQ2: bare, collectable, no
@@ -156,16 +74,14 @@ func writeBareBlob(
 // before diffing against the base blob's body, so both sides of the
 // diff are parsed by the exact same Text.ReadFrom, never a bespoke
 // internal format.
-// Deliberately does NOT call EnsureOrganizeBaseType -- per the
-// 2026-07-18 ruling, materializing the !organize-base-v1 type object is
-// a write-path concern (interactive/commit-directly, which already
-// print commit confirmations and so pay for EnsureOrganizeBaseType's
-// one-time creation print consistently) rather than a shared-generation
-// concern. output-only writes the bare blob and never needs the type
-// object to exist -- the envelope's `! organize-base-v1` line is a
-// self-describing string, not a materialized reference anything
-// dereferences. Callers on the write-path modes call
-// EnsureOrganizeBaseType themselves before committing.
+//
+// The base blob is ALWAYS bare (writeBareBlob, no owning object) in
+// every mode -- output-only, commit-directly, and interactive alike.
+// Nothing ever materializes `! organize-base-v1` as a real dodder type
+// object (2026-07-18 correction): the envelope's type line is a plain
+// descriptive string inside the blob's own bytes, so an
+// organize-base blob never shows up in `dodder show`, sync, fsck, or
+// any commit-confirmation output, in any mode.
 func WriteOrganizeBaseAndActivate(
 	repo *local_working_copy.Repo,
 	ot *orgie.Text,

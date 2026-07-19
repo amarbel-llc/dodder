@@ -124,68 +124,71 @@ not assumed):
   shape itself and returns a clear parse error otherwise (mirroring
   `OptionCommentDryRun.Set`'s use of `values.Bool.Set` for validation).
 
-## 2. `organize-base-v1` as a dodder type
+## 2. `organize-base-v1` is a string, never a dodder type object
 
-**Confirmed (independent research, cross-checked against
-`docs/rfcs/0003-cutting-garden-receipt-ingest.md:85-86`, which states
-verbatim: "It is created as an ordinary type object and MUST NOT be
-added as a builtin — no change to `internal/bravo/ids/types_builtin.go`
-is required."):** `organize-base-v1` is a **user-space type object**,
-created the same way `!img`, `!pdf`, etc. are — a `.type` file checked
-in via `dodder checkin`, or (for a type dodder itself depends on
-structurally) via genesis, the same pattern `!task`/`!chore` use
-(`docs/plans/2026-04-06-task-type-genesis-and-haustoria-fields.md`,
-`local_working_copy/genesis.go:195-298`,
-`type_blobs.DefaultTaskType()`-style constructor). **No change to
-`go/internal/bravo/ids/types_builtin.go`.**
+**Superseded (2026-07-18, Sasha, direct correction to the session, after
+implementation had already landed the version below): organize-base
+blobs MUST NOT be committed as actual dodder objects. No type object
+is ever created.** The pennywise/Sasha review round that approved
+lazy, idempotent type creation (preserved below, struck through, for
+the historical record — it was implemented, shipped a real bug, and
+was then corrected) had accepted a bare *blob* with no owning object
+(OQ2) but still called for materializing `!organize-base-v1` as a real
+committed *type* object on first use. That type object is a real
+dodder object: it shows up in `dodder show`, gets synced by
+push/pull, and — critically — its commit unconditionally prints
+`commitFacilitator.ui.TransactedNew`'s confirmation line
+(`go/internal/oscar/store/mutating.go:393`), no matter which organize
+mode triggered it. The first fix attempt (below) only moved *when*
+that print fired (output-only skips it, interactive/commit-directly
+"pay for it" since they already print other confirmations) — treating
+the print as an acceptable cost of a real object existing. Correct
+framing: the print is a symptom; the actual defect is that an
+`organize-base-v1` object exists in the user's repo *at all* for
+something that is infrastructure, not content the user asked to keep.
 
-Genesis vs. ad-hoc creation: `organize-base-v1` is **not** needed by
-every dodder repo — a repo that never runs `organize` never needs the
-type. Following the `!task`/`!chore` precedent's *opt-in* posture
-(`BigBang.IncludeBuiltinActionableTypes`, default `false`), this plan
-proposes a symmetric `BigBang.IncludeOrganizeBaseType` flag (default
-`false`) rather than a hard genesis dependency, OR — simpler, avoiding
-a new genesis flag entirely — **lazy creation**: the first
-`dodder organize` invocation that needs to write a base blob checks
-whether `!organize-base-v1` exists (`show '!organize-base-v1:t'`) and
-creates it if not, the same way a user would `dodder checkin` a new
-`.type` file. This defers the genesis-flag decision entirely and
-matches "organize is ephemeral action" (RFC 0015's own framing) better
-than baking a structural type into every fresh repo.
+**Corrected model:** `organize-base-v1` is a **plain string**, used
+only as the type LINE inside a base blob's own hyphence envelope
+(`! organize-base-v1`, §9) — bytes inside an opaque blob, never parsed
+back into a dodder type reference by anything, never checked for
+existence, never committed. There is no `EnsureOrganizeBaseType`, no
+type-definition blob, no genesis/lazy-creation question (OQ1 is now
+moot — see below). The base blob itself is written as a **bare blob**
+(§3, unchanged) to the repo's real blob store — per Sasha's
+clarification, using the actual (madder-backed) blob store rather than
+a local tempfile is fine and desirable for durability, since a bare
+blob has no object-level footprint (no genre, no tags, no sync
+metadata, no commit-confirmation print) — the durability benefit was
+never in tension with "never appears as a dodder object"; the earlier
+version conflated "gets a real *type* object" with "the *bytes* live
+somewhere durable," and only the former was the actual problem.
 
-**Resolved (pennywise/Sasha review, 2026-07-18): lazy creation,
-approved.** Implementation note from the review: generation already
-writes (the base blob itself), so the implicit type-create sits at the
-same point in the flow — make the check-then-create **idempotent, not
-racy**: if `!organize-base-v1` doesn't exist, attempt creation, but
-treat "already exists" (a concurrent `organize` invocation created it
-first) as success rather than an error, not a
-check-then-create-unconditionally sequence that assumes exclusive
-access.
+**Historical record — struck-through original (pennywise/Sasha review,
+2026-07-18, later superseded above):**
 
-**Type-definition blob content** (`TomlV2`,
-`go/internal/alfa/type_blobs/toml_v2.go:9-24`):
+> ~~`organize-base-v1` is a **user-space type object**, created the
+> same way `!img`, `!pdf`, etc. are... this plan proposes... lazy
+> creation: the first `dodder organize` invocation that needs to write
+> a base blob checks whether `!organize-base-v1` exists and creates it
+> if not... idempotent, not racy: if `!organize-base-v1` doesn't
+> exist, attempt creation, but treat "already exists" as success
+> rather than an error.~~
+>
+> This was implemented (`EnsureOrganizeBaseType`,
+> `go/internal/sierra/repo_actions/organize_base.go`), wired into
+> `LockAndCommitOrganizeResults` so only interactive/commit-directly
+> paid the creation-print cost, verified against the full bats suite
+> (all green) — then reverted in full once Sasha flagged that a real
+> committed type object is the wrong shape regardless of which mode
+> triggers its creation or whether the print is "consistent" with
+> other output in that mode. dodder#374's commit history has both the
+> original implementation and the revert.
 
-```toml
-file-extension = "organize"
-vim-syntax-type = "markdown"
-binary = false
-```
-
-**Amended per pennywise's 2026-07-18 review**: the base blob's content
-is the serialized organize/espalier form (§9), not TOML — the
-type-definition's `file-extension`/`vim-syntax-type` must describe
-that, not toml-for-non-toml. `organize` extension (matching the
-document format's own name) and `markdown`-ish syntax (headings +
-box-format object lines, closest existing highlighter) are reasonable
-defaults; exact values are a small, low-stakes implementation
-decision, not load-bearing for the rest of this plan.
-
-The base blob's own content format is **not** re-derived here — see
-§9 (espalier serialization checklist) for what it actually contains.
-No `[[fields]]`, no `fields-reader`/`fields-writer` — the base blob is
-opaque, dereferenced whole (RFC 0015: "base ... what the user was
-shown"), not field-projected into the index like `!task`.
+The type-definition-blob-content sub-decision from the original
+version (`file-extension = "organize"`, `vim-syntax-type = "markdown"`)
+is moot along with it — there is no type-definition blob to author.
+The base blob's own content format is unchanged — see §9 (espalier
+serialization checklist).
 
 ## 3. Base blob lifecycle
 
@@ -600,8 +603,12 @@ All four questions originally raised here were reviewed and ruled on
 in full; the resolutions are folded inline into their originating
 sections rather than repeated here:
 
-1. **`organize-base-v1` creation** — resolved in §2: lazy, idempotent
-   check-then-create.
+1. **`organize-base-v1` creation** — **superseded, 2026-07-18 (Sasha,
+   direct correction).** Originally resolved as "lazy, idempotent
+   check-then-create" of a type object; that was implemented, shipped
+   a real bug (a committed dodder object for pure infrastructure), and
+   was fully reverted. Now moot: §2's corrected model has no type
+   object and nothing to lazily create.
 2. **Base blob GC reachability** — resolved in §3: bare blob, no
    owning object; confirmed by direct research that dodder has no
    blob-GC mechanism today, so the risk window is currently
