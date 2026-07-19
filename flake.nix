@@ -118,9 +118,17 @@
       ...
     }:
     let
-      # Burnt into binaries via the fork's auto-injected -ldflags.
-      # Single source of truth; `just bump-version` sed-rewrites this line.
-      dodderVersion = "0.2.15";
+      # eng-versioning(7): version.env at repo root is the single source of
+      # truth for the release version, burnt into binaries via the fork's
+      # auto-injected -ldflags. dodder's Go module lives in go/, so
+      # buildGoApplication's pwd is scoped there — its version.env auto-read
+      # (gomod2nix(7) VERSION AND COMMIT INJECTION) can't reach a repo-root
+      # file. Read it here instead and pass the value through explicitly,
+      # mirroring madder's flake.nix (same sub-directory-module shape).
+      # `just bump-version` sed-rewrites version.env, not this file.
+      dodderVersion = builtins.head (
+        builtins.match ".*DODDER_VERSION=([^\n]+).*" (builtins.readFile ./version.env)
+      );
       dodderCommit = self.shortRev or self.dirtyShortRev or "unknown";
     in
     (utils.lib.eachDefaultSystem (

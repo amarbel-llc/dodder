@@ -37,10 +37,10 @@
   # in dodder.
   madder-test-sftp-server-bin,
   batsSrc,
-  # Source-of-truth flake.nix, staged at stage/flake.nix so the
+  # Source-of-truth version.env, staged at stage/version.env so the
   # version-burnin test (current_version/version.bats) can `grep
-  # dodderVersion = ` against it via ${BATS_TEST_DIRNAME}/../../flake.nix.
-  flakeNixSrc,
+  # DODDER_VERSION` against it via ${BATS_TEST_DIRNAME}/../../version.env.
+  versionEnvSrc,
   # Worktree-root zz-pandoc-refs/ directory holding pandoc filter
   # scripts (currently just discover-refs.lua). Staged at
   # stage/zz-pandoc-refs/ so show_zettel_with_pandoc_discovered_*
@@ -152,8 +152,8 @@ let
         ];
       extraStagedFiles = [
         {
-          src = flakeNixSrc;
-          dest = "flake.nix";
+          src = versionEnvSrc;
+          dest = "version.env";
         }
         # show_zettel_with_pandoc_discovered_* call pandoc with a Lua
         # filter that lives in zz-pandoc-refs/ at the worktree root,

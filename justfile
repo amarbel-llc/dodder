@@ -622,25 +622,26 @@ tag version message:
   gum log --level info "Pushed $tag"
   git tag -v "$tag"
 
-# Sed-rewrite dodderVersion in flake.nix to the given semver. The
-# version string is burnt into the binary at build time via -ldflags
-# (see go/cmd/*/main.go and go/internal/victor/commands_dodder/version.go),
-# so flake.nix is the single source of truth. No-op if already at the
+# Sed-rewrite DODDER_VERSION in version.env to the given semver
+# (eng-versioning(7)). The version string is burnt into the binary at
+# build time via -ldflags (see go/cmd/*/main.go and
+# go/internal/uniform/commands_dodder/version.go), flake.nix reads
+# version.env as the single source of truth. No-op if already at the
 # target version. Usage: just bump-version 0.1.1
 [group('release')]
 bump-version new_version:
   #!/usr/bin/env bash
   set -euo pipefail
-  current=$(grep 'dodderVersion = ' flake.nix | sed 's/.*"\(.*\)".*/\1/')
+  current=$(grep '^export DODDER_VERSION=' version.env | cut -d= -f2)
   if [[ "$current" == "{{new_version}}" ]]; then
     gum log --level info "already at {{new_version}}"
     exit 0
   fi
-  sed -i.bak 's/dodderVersion = "'"$current"'"/dodderVersion = "{{new_version}}"/' flake.nix && rm flake.nix.bak
-  gum log --level info "bumped dodderVersion: $current → {{new_version}}"
+  sed -E -i "s/^(export DODDER_VERSION)=.*/\1={{new_version}}/" version.env
+  gum log --level info "bumped DODDER_VERSION: $current → {{new_version}}"
 
-# Cut a release: must be run on master. Bumps dodderVersion in
-# flake.nix, commits the bump with a changelog-style message built
+# Cut a release: must be run on master. Bumps DODDER_VERSION in
+# version.env, commits the bump with a changelog-style message built
 # from commits since the last go/v* tag, pushes master, then signs
 # and pushes the go/v{{version}} tag. The "go/v" prefix is added for
 # you, so pass the semver without it. Usage: just release 0.1.1
@@ -669,11 +670,11 @@ release version:
     msg="$header"
   fi
   just bump-version "{{version}}"
-  if ! git diff --quiet flake.nix; then
-    git add flake.nix
+  if ! git diff --quiet version.env; then
+    git add version.env
     git commit -m "chore: release go/v{{version}}"
     git push origin master
-    gum log --level info "pushed flake.nix bump to master"
+    gum log --level info "pushed version.env bump to master"
   fi
   just tag "{{version}}" "$msg"
 

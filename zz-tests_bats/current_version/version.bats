@@ -5,15 +5,16 @@ setup() {
 
 # bats file_tags=version
 
-# Covers the version-burnin wiring end-to-end: flake.nix defines
-# dodderVersion and dodderCommit, go/default.nix passes them via -ldflags,
-# each cmd/*/main.go declares the receiving vars, and `dodder version`
-# prints them via commands_dodder.SetVersion.
+# Covers the version-burnin wiring end-to-end: version.env at repo root
+# declares DODDER_VERSION, flake.nix reads it (dodderVersion) alongside
+# dodderCommit, go/default.nix passes them via -ldflags, each cmd/*/main.go
+# declares the receiving vars, and `dodder version` prints them via
+# commands_dodder.SetVersion.
 #
 # Devshell `go build` (what `just build` does) leaves the defaults
 # ("dev+unknown") because the fork's auto-ldflags only fire under
-# buildGoApplication. nix-built binaries must match flake.nix's
-# dodderVersion. Both states are valid; tests treat them distinctly.
+# buildGoApplication. nix-built binaries must match version.env's
+# DODDER_VERSION. Both states are valid; tests treat them distinctly.
 
 function version_prints_format { # @test
   run "$DODDER_BIN" version
@@ -23,22 +24,22 @@ function version_prints_format { # @test
   assert_output --regexp '^[^+]+\+[^+]+$'
 }
 
-function version_matches_flake_version_or_dev { # @test
+function version_matches_version_env_or_dev { # @test
   run "$DODDER_BIN" version
   assert_success
 
   if [[ $output == "dev+unknown" ]]; then
-    skip "devshell go-build (no ldflags); flake-version match enforced on nix builds"
+    skip "devshell go-build (no ldflags); version.env match enforced on nix builds"
   fi
 
   local got_version
   got_version="$(echo "$output" | head -n1 | cut -d+ -f1)"
 
-  local flake_version
-  flake_version="$(grep 'dodderVersion = ' "${BATS_TEST_DIRNAME}/../../flake.nix" | sed 's/.*"\(.*\)".*/\1/')"
+  local env_version
+  env_version="$(grep '^export DODDER_VERSION=' "${BATS_TEST_DIRNAME}/../../version.env" | cut -d= -f2)"
 
-  [[ $got_version == "$flake_version" ]] ||
-    fail "dodder version prefix '$got_version' does not match flake.nix dodderVersion '$flake_version'"
+  [[ $got_version == "$env_version" ]] ||
+    fail "dodder version prefix '$got_version' does not match version.env DODDER_VERSION '$env_version'"
 }
 
 function version_der_matches_dodder { # @test

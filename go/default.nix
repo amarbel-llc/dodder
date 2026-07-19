@@ -77,9 +77,9 @@ let
         # rebuilt locally — see haustoria_orgmode.bats for the
         # consumption site.
         madder-test-sftp-server-bin = madder.packages.${system}.madder-test-sftp-server;
-        # version.bats greps dodderVersion out of the source-of-truth
-        # flake.nix; stage it via extraStagedFiles inside the lane.
-        flakeNixSrc = ../flake.nix;
+        # version.bats greps DODDER_VERSION out of the source-of-truth
+        # version.env; stage it via extraStagedFiles inside the lane.
+        versionEnvSrc = ../version.env;
         # show.bats's pandoc-discover tests reference a worktree-root
         # script directory that lives outside zz-tests_bats/.
         pandocRefsSrc = ../zz-pandoc-refs;

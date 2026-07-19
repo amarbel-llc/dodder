@@ -71,16 +71,11 @@
     includes = [ "*.rs" ];
   };
 
-  # presets.eng enables the two eng-versioning(7) linters, but dodder has no
-  # version.env: the release version lives in flake.nix (dodderVersion, which
-  # `just bump-version` sed-rewrites) and version.bats greps it from there
-  # (staged into the bats lane via flakeNixSrc). Migrating to version.env
-  # means moving flake.nix + bump-version + go/bats.nix + version.bats
-  # together, so both linters are disabled until that lands (followup);
-  # left enabled they would fail on the missing version.env and on the
-  # flake.nix named-version-var pattern respectively.
-  linters.eng-versioning.enable = lib.mkForce false;
-  linters.eng-versioning-deprecated-file.enable = lib.mkForce false;
+  # eng-versioning(7): dodder's Go module lives in go/, not the tree root,
+  # so the linter's default key derivation (root go.mod/Cargo.toml) finds
+  # neither and would fail at eval time. Pin the key explicitly instead
+  # (dodder#371).
+  linters.eng-versioning.key = "DODDER_VERSION";
 
   # Three presets.eng justfile linters are disabled because bringing dodder's
   # justfile surface into conformance means RENAMING documented user-facing
