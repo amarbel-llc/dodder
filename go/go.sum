@@ -1,7 +1,7 @@
 c2sp.org/CCTV/age v0.0.0-20251208015420-e9274a7bdbfd h1:ZLsPO6WdZ5zatV4UfVpr7oAwLGRZ+sebTUruuM4Ra3M=
 c2sp.org/CCTV/age v0.0.0-20251208015420-e9274a7bdbfd/go.mod h1:SrHC2C7r5GkDk8R+NFVzYy/sdj0Ypg9htaPXQq5Cqeo=
-code.linenisgreat.com/chrest/go v0.2.0 h1:o5lIoM6m+Hws0ULs3iFT3tj2PJXiPsiapZP3ugw8088=
-code.linenisgreat.com/chrest/go v0.2.0/go.mod h1:3xI6Y3R4KV0YQ6Y90f/StWj/KxXh2FryH7JGg2wkatw=
+code.linenisgreat.com/chrest/go v0.4.0 h1:ecdfNPDw7BTMGl9Qm7ii9ViHsR/nIIMhazI16KrkAcM=
+code.linenisgreat.com/chrest/go v0.4.0/go.mod h1:7BOvh1xUwUbt/BNv7SGMa1uvr2gZ59D+Twil09AtVWw=
 code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9 h1:iVfOsxFwmib/hwvWMjoHGKbmbTHOfM8yWlUv7vminDA=
 code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9/go.mod h1:/c5ScMJSIbliSfj3R9IfVYql9PSMtFwNSgN8wvJQQc4=
 code.linenisgreat.com/madder/go v0.4.5-0.20260720184544-d463a948790d h1:WOJTXONer6NS986ERf+11T0h5vkVym1CQij3rGN6bJw=
@@ -28,10 +28,6 @@ github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/akutz/memconn v0.1.0 h1:NawI0TORU4hcOMsMr11g7vwlCdkYeLKXBcxWu2W/P8A=
 github.com/akutz/memconn v0.1.0/go.mod h1:Jo8rI7m0NieZyLI5e2CDlRdRqRRB4S7Xp77ukDjH+Fw=
-github.com/amarbel-llc/purse-first/libs/dewey v0.1.8 h1:vdSI99KvN/fnfkmHFhBV41FPXIQlgfikIrnZ1QYYzM8=
-github.com/amarbel-llc/purse-first/libs/dewey v0.1.8/go.mod h1:zhf7U0L8ZNAAwrSdWSHUDadxu0Q6NaY49tnK3MzRfjo=
-github.com/amarbel-llc/tommy v0.0.0-20260416172442-0769146d4d1e h1:dqDWgzSuI+njKyyLSBg2bfCLGol6tP4Xl8kiTU3OEh0=
-github.com/amarbel-llc/tommy v0.0.0-20260416172442-0769146d4d1e/go.mod h1:eAaOHBrPo/hzBU/CkWgXP67Qq6v5aMyVtiAZ3tYUuOc=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aws/aws-sdk-go-v2 v1.41.7 h1:DWpAJt66FmnnaRIOT/8ASTucrvuDPZASqhhLey6tLY8=
