@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"io"
 
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"github.com/DataDog/zstd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 
 // session wraps the byte stream of one transfer with buffered framing. It

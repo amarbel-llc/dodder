@@ -14,8 +14,8 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
 )
 
 func Genesis(

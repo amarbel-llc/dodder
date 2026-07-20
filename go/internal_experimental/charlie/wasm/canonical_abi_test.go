@@ -3,7 +3,7 @@ package wasm
 import (
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestWriteStringRoundTrip(t1 *testing.T) {

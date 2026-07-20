@@ -90,14 +90,14 @@
       src = tap.packages.${system}.go-pkgs;
       subPath = "go";
     };
-    "github.com/amarbel-llc/tommy" = {
+    "code.linenisgreat.com/tommy" = {
       src = tommy.packages.${system}.go-pkgs;
     };
-    "github.com/amarbel-llc/purse-first/libs/dewey" = {
+    "code.linenisgreat.com/purse-first/libs/dewey" = {
       src = purse-first.packages.${system}.go-pkgs;
       subPath = "libs/dewey";
     };
-    "github.com/amarbel-llc/purse-first/libs/go-mcp" = {
+    "code.linenisgreat.com/purse-first/libs/go-mcp" = {
       src = purse-first.packages.${system}.go-pkgs;
       subPath = "libs/go-mcp";
     };

@@ -6,8 +6,8 @@ import (
 	"net"
 	"testing"
 
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 	"github.com/DataDog/zstd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
 )
 
 // TestBlobStreamZstdRoundTrip verifies a zstd-compressed blob streams as

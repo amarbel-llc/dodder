@@ -5,7 +5,7 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (tridex *Tridex) MarshalBinary() (bs []byte, err error) {

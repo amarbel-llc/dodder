@@ -20,7 +20,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 type (

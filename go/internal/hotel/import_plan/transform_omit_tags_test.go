@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestOmitTagsTransformRemovesMatchingTags(t1 *testing.T) {

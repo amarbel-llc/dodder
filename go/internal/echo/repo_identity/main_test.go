@@ -11,7 +11,7 @@ import (
 	// dodder-* purposes deliberately stay unregistered here (see the
 	// StringWithFormat comment below).
 	_ "code.linenisgreat.com/piggy/go/pkgs/markl_registrations"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // A real ed25519 public key (bare `ed25519_pub-...` format-data form), lifted

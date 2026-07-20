@@ -7,7 +7,7 @@ import (
 
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 type spyBlobWriter struct {

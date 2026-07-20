@@ -5,7 +5,7 @@ package mcp_tool_perms
 import (
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // TestClassification locks the permission of every MCP tool. The MCP

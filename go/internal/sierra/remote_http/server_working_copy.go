@@ -16,8 +16,8 @@ import (
 	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
 	"code.linenisgreat.com/madder/go/pkgs/markl_io"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
 )
 
 func (server *Server) writeInventoryListTypedBlobLocalWorkingCopy(

@@ -14,8 +14,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/env_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/tag_blobs"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Tag struct {

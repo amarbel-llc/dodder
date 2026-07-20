@@ -3,7 +3,7 @@ package repo
 import (
 	"strings"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 //go:generate stringer -type=RemoteConnection

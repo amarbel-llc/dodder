@@ -1,6 +1,6 @@
 package command_components_dodder
 
-import "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+import "code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 
 type Checkout struct {
 	Delete   bool

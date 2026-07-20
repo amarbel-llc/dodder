@@ -6,8 +6,8 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"filippo.io/age"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

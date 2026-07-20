@@ -22,7 +22,7 @@ package repo_id
 
 import (
 	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // DefaultName is the name of the implicit repo selected when no -repo_id

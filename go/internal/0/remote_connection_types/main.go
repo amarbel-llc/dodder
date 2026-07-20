@@ -3,7 +3,7 @@ package remote_connection_types
 import (
 	"strings"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 //go:generate stringer -type=Type

@@ -106,7 +106,7 @@ explore-drop-http-statuses-fork:
   cd ..
 
   dodder_hs='code.linenisgreat.com/dodder/go/lib/0/http_statuses'
-  dewey_hs='github.com/amarbel-llc/purse-first/libs/dewey/0/http_statuses'
+  dewey_hs='code.linenisgreat.com/purse-first/libs/dewey/0/http_statuses'
 
   echo "==> rewriting http_statuses imports in all *.go files under go/"
   find go -name '*.go' -type f \
@@ -177,7 +177,7 @@ explore-drop-thyme-fork:
   cd ..
 
   dodder_thyme='code.linenisgreat.com/dodder/go/lib/echo/thyme'
-  dewey_thyme='github.com/amarbel-llc/purse-first/libs/dewey/echo/thyme'
+  dewey_thyme='code.linenisgreat.com/purse-first/libs/dewey/echo/thyme'
 
   echo "==> rewriting thyme imports in all *.go files under go/"
   find go -name '*.go' -type f \
@@ -200,9 +200,9 @@ explore-drop-dewey-vendored-forks:
   cd ..
 
   dodder_errors='code.linenisgreat.com/dodder/go/lib/bravo/errors'
-  dewey_errors='github.com/amarbel-llc/purse-first/libs/dewey/bravo/errors'
+  dewey_errors='code.linenisgreat.com/purse-first/libs/dewey/bravo/errors'
   dodder_sf='code.linenisgreat.com/dodder/go/lib/0/stack_frame'
-  dewey_sf='github.com/amarbel-llc/purse-first/libs/dewey/0/stack_frame'
+  dewey_sf='code.linenisgreat.com/purse-first/libs/dewey/0/stack_frame'
 
   echo "==> rewriting imports in all *.go files under go/"
   find go -name '*.go' -type f \

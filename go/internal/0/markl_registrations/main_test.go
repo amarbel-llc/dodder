@@ -8,7 +8,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/markl_registrations"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // Relocated from madder's internal/charlie/markl_registrations tests

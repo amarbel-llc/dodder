@@ -3,7 +3,7 @@ package remote_http
 import (
 	"net/http"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 var DefaultRoundTripper http.RoundTripper

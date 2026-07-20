@@ -3,7 +3,7 @@ package unicorn
 import (
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestExtractUniqueComponents(t1 *testing.T) {

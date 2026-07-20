@@ -11,7 +11,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_json_fmt"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 	"github.com/gorilla/mux"
 
 	// Side-effect: register format-purpose pairs (matches production

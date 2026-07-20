@@ -2,7 +2,7 @@ package ids
 
 import (
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type (

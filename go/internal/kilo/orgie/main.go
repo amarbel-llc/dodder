@@ -18,8 +18,8 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/format"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/format"
 )
 
 type Text struct {

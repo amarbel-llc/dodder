@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
 )
 
 type Lock struct {

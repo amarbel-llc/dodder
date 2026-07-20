@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 type PageConfig struct {

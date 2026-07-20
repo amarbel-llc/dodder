@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func ExecCommand(c string, args ...[]string) *exec.Cmd {

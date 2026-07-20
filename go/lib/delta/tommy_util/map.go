@@ -4,8 +4,8 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/amarbel-llc/tommy/pkg/cst"
-	"github.com/amarbel-llc/tommy/pkg/document"
+	"code.linenisgreat.com/tommy/pkg/cst"
+	"code.linenisgreat.com/tommy/pkg/document"
 )
 
 func DocumentToMap(doc *document.Document) map[string]any {

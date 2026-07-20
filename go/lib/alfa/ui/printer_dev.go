@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/stack_frame"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/stack_frame"
 )
 
 type devPrinter struct {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/cmp"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/cmp"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestMain(m *testing.M) {

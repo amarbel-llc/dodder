@@ -4,15 +4,15 @@ go 1.26.2
 
 require (
 	code.linenisgreat.com/chrest/go v0.2.0
-	code.linenisgreat.com/hyphence/go v0.3.0
-	code.linenisgreat.com/madder/go v0.4.5-0.20260720110107-3b9fcba5ddae
-	code.linenisgreat.com/piggy/go v0.0.0-20260719231529-e5adf0d2047c
+	code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9
+	code.linenisgreat.com/madder/go v0.4.5-0.20260720162024-c2d4d389e726
+	code.linenisgreat.com/piggy/go v0.0.0-20260720155209-77cfdea0031e
+	code.linenisgreat.com/purse-first/libs/dewey v0.5.0
+	code.linenisgreat.com/purse-first/libs/go-mcp v0.5.0
+	code.linenisgreat.com/tommy v0.5.0
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
-	github.com/amarbel-llc/purse-first/libs/dewey v0.4.2-0.20260714012913-f3ad3d58f150
-	github.com/amarbel-llc/purse-first/libs/go-mcp v0.4.2-0.20260714012913-f3ad3d58f150
 	github.com/amarbel-llc/tap/go v0.1.16-0.20260708132417-4531c9f064d4
-	github.com/amarbel-llc/tommy v0.4.8-0.20260714013639-d9d65588e4af
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
@@ -36,6 +36,8 @@ require (
 	filippo.io/edwards25519 v1.2.0 // indirect
 	filippo.io/hpke v0.4.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
+	github.com/amarbel-llc/purse-first/libs/dewey v0.1.8 // indirect
+	github.com/amarbel-llc/tommy v0.0.0-20260416172442-0769146d4d1e // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.41.7 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.10 // indirect

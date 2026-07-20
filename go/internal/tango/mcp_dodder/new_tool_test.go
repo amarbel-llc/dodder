@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // TestNewToolCLIArgsForcesNonInteractive pins the #233 fix: every

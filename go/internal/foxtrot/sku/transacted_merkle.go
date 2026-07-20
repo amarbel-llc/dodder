@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/object_fmt_digest"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (transacted *Transacted) SetMother(mother *Transacted) (err error) {

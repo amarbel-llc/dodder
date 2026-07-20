@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 const RingBufferDefaultSize = 4096

@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/type_blobs"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // expectedSeedTypeCount pins the Group 3 triage result: 57 types classified

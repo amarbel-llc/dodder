@@ -1,7 +1,7 @@
 package collections_map
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Map[KEY comparable, VALUE any] map[KEY]VALUE

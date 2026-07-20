@@ -5,7 +5,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/piggy/go/pkgs/agent"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // TODO-P2 consolidate info-ssh_agent and info-pivy_agent into

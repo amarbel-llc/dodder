@@ -1,8 +1,8 @@
 package ids
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_value"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/collections_value"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type (

@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/command_components"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type LocalWorkingCopy struct {

@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"code.linenisgreat.com/dodder/go/internal/kilo/orgie"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // TODO support using query results for organize population

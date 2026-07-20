@@ -17,8 +17,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
 	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
 	"code.linenisgreat.com/madder/go/pkgs/fd"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
 )
 
 // TODO move to store_fs

@@ -5,7 +5,7 @@ package store
 import (
 	"testing"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestParseReferenceOutputEmpty(t1 *testing.T) {

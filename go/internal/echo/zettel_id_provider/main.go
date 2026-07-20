@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
 )
 
 type provider []string

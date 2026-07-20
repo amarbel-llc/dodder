@@ -7,9 +7,9 @@ import (
 	mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"
 	"code.linenisgreat.com/madder/go/pkgs/madder_env"
 	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/debug"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/xdg"
 )
 
 // configFor returns the env_dir.Config dodder injects into all

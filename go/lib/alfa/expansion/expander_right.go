@@ -3,7 +3,7 @@ package expansion
 import (
 	"regexp"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type expanderRight struct {

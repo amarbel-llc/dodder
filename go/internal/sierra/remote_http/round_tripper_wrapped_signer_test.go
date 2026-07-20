@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/http_statuses"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/http_statuses"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // These tests cover the response-body verification path of

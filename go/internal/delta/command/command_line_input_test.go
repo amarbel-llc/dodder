@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/0/collections_slice"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // Regression for #182: LastCompleteArg decremented argc for an in-progress

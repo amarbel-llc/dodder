@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/caldav"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestStatusValueRoundTrip(t1 *testing.T) {

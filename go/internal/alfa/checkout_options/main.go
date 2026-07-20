@@ -2,7 +2,7 @@ package checkout_options
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Options struct {

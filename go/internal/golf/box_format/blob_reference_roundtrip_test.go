@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // makeSignedObjectWithBlobReferences builds a signed type object shaped like

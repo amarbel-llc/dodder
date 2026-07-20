@@ -1,6 +1,6 @@
 package inventory_list_store
 
-import "github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+import "code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 
 type (
 	pkgErrDisamb struct{}

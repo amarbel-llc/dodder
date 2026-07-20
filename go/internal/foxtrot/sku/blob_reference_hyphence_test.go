@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_fmt_hyphence"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // blobRefStrings collects one canonical string per blob reference (alias,

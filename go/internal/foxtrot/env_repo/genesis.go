@@ -17,9 +17,9 @@ import (
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
 	mad_directory_layout "code.linenisgreat.com/madder/go/pkgs/directory_layout"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
 )
 
 func (env *Env) Genesis(bigBang BigBang) {

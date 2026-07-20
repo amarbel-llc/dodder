@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestDefaultWithPandocFormatter(t1 *testing.T) {

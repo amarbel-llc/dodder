@@ -2,7 +2,7 @@ package commands_dodder
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	gomcp_command "github.com/amarbel-llc/purse-first/libs/go-mcp/command"
+	gomcp_command "code.linenisgreat.com/purse-first/libs/go-mcp/command"
 )
 
 func init() {

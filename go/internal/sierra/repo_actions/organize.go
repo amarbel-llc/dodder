@@ -15,7 +15,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/0/vim_cli_options_builder"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter_set"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // TODO migrate over to Organize2

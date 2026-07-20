@@ -10,8 +10,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/echo/command_components"
 	"code.linenisgreat.com/dodder/go/internal/sierra/remote_proto"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // ProtoHandshakeProtocolName is advertised in field 5 of the handshake

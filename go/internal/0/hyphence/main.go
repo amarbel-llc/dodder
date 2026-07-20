@@ -18,7 +18,7 @@ import (
 	ext "code.linenisgreat.com/hyphence/go/hyphence"
 	mad_ids "code.linenisgreat.com/madder/go/pkgs/ids"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // Five-parameter generics, pre-filled with

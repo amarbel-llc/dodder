@@ -1,7 +1,7 @@
 package domain_interfaces
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 // TODO combine with config_immutable.StoreVersion and make a sealed struct

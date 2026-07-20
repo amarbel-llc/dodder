@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // TestSeedFieldsRoundTrip pins that the public seed fields (RepoId,

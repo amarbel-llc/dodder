@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 func TestWriter1(t1 *testing.T) {

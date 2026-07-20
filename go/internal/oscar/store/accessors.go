@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/india/inventory_list_store"
 	"code.linenisgreat.com/dodder/go/internal/india/typed_blob_store"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/thyme"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/thyme"
 )
 
 func (store *Store) GetTypedBlobStore() typed_blob_store.Stores {

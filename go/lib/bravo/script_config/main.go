@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/0/equality"
 	"code.linenisgreat.com/dodder/go/lib/0/reset"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 //go:generate tommy generate

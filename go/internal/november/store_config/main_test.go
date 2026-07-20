@@ -16,8 +16,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // TestBootstrapReadsConfigLogHead is a diagnostic: it appends a config

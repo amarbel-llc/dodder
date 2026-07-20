@@ -6,7 +6,7 @@
 
 **Architecture:** New `mcp_dodder` package in `internal/hotel/` mirroring `mcp_madder/`. Same Bridge + LimitingWriter pattern. Three read-only tools. New `dodder mcp` and `dodder install-mcp` commands.
 
-**Tech Stack:** Go, `go-mcp` library (`github.com/amarbel-llc/purse-first/libs/go-mcp`), JSON-RPC 2.0 over stdio.
+**Tech Stack:** Go, `go-mcp` library (`code.linenisgreat.com/purse-first/libs/go-mcp`), JSON-RPC 2.0 over stdio.
 
 **Rollback:** Purely additive — revert the commit to remove.
 
@@ -329,9 +329,9 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	"github.com/amarbel-llc/purse-first/libs/go-mcp/protocol"
-	"github.com/amarbel-llc/purse-first/libs/go-mcp/server"
-	"github.com/amarbel-llc/purse-first/libs/go-mcp/transport"
+	"code.linenisgreat.com/purse-first/libs/go-mcp/protocol"
+	"code.linenisgreat.com/purse-first/libs/go-mcp/server"
+	"code.linenisgreat.com/purse-first/libs/go-mcp/transport"
 )
 
 const defaultMaxBytes = 100_000
@@ -583,7 +583,7 @@ package commands_dodder
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/golf/command"
-	gomcp_command "github.com/amarbel-llc/purse-first/libs/go-mcp/command"
+	gomcp_command "code.linenisgreat.com/purse-first/libs/go-mcp/command"
 )
 
 func init() {

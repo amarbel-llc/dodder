@@ -8,8 +8,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	golf_tb "code.linenisgreat.com/dodder/go/internal/alfa/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
-	"github.com/amarbel-llc/tommy/pkg/cst"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/tommy/pkg/cst"
 )
 
 type TypedBlob = hyphence.TypedBlob[Blob]

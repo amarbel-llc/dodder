@@ -11,7 +11,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/object_probe_index"
 	"code.linenisgreat.com/dodder/go/lib/alfa/collections_map"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 type probeIndex struct {

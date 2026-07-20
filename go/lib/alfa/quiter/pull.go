@@ -3,7 +3,7 @@ package quiter
 import (
 	"iter"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func Pull[ELEMENT any](

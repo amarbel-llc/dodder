@@ -2,7 +2,7 @@ package repo_actions
 
 import (
 	"code.linenisgreat.com/dodder/go/lib/alfa/editor"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 type OpenEditor struct {

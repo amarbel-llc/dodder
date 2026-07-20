@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // Scanner provides a convenient interface for reading data such as

@@ -1,7 +1,7 @@
 package import_plan
 
 import (
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (plan *Plan) BloblessTypes() []string {

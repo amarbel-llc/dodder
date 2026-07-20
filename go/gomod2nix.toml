@@ -7,18 +7,33 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/hyphence/go']
-    version = 'v0.3.0'
-    hash = 'sha256-O6G/2ZXT7JfOrKZISKoxpGTThHG/vQh5JQIfL/ImGoE='
+    version = 'v0.3.1-0.20260720154720-ea7f1e0933f9'
+    hash = 'sha256-HMeJOBTmoABNHhQho2KUazvLAhDvdWCba8ZvMtKiEv8='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/madder/go']
-    version = 'v0.4.5-0.20260720110107-3b9fcba5ddae'
-    hash = 'sha256-pE5abwpLtbZcaQX/JUBQKfun0CZlZSvSyy/4BFtdc0k='
+    version = 'v0.4.5-0.20260720162024-c2d4d389e726'
+    hash = 'sha256-dhJv4IiVooykDVNmhpNJxCe7dJtKqOvX/+JeJ/97WOg='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/piggy/go']
-    version = 'v0.0.0-20260719231529-e5adf0d2047c'
-    hash = 'sha256-yGDxPSG24fmICY0FjT3yJilXaCmDPhkt7jtrN7sBQto='
+    version = 'v0.0.0-20260720155209-77cfdea0031e'
+    hash = 'sha256-HGekZfv1QS5BGlIlU+eJpTDQBd+7HqXNFJZWV/cpo7c='
+    goVersion = '1.26'
+
+  [mod.'code.linenisgreat.com/purse-first/libs/dewey']
+    version = 'v0.5.0'
+    hash = 'sha256-WaAb5xVdkek2jtlcD8y+99VuZyAoCVzezyIrs5X9Mbg='
+    goVersion = '1.26'
+
+  [mod.'code.linenisgreat.com/purse-first/libs/go-mcp']
+    version = 'v0.5.0'
+    hash = 'sha256-dX5SW7t2TrvJjQvzsZB+Yue9mD2yJosBN8fPWWC819c='
+    goVersion = '1.26'
+
+  [mod.'code.linenisgreat.com/tommy']
+    version = 'v0.5.0'
+    hash = 'sha256-Stc6rRy+e/nVDkH7Ykww3NxBR/KeAy+UXDt13peknDg='
     goVersion = '1.26'
 
   [mod.'filippo.io/age']
@@ -46,13 +61,8 @@ schema = 3
     hash = 'sha256-WOs/RQYjQbn41ui8ztHgWSd4jxydE+fvIrl/0dmHD9Y='
 
   [mod.'github.com/amarbel-llc/purse-first/libs/dewey']
-    version = 'v0.4.2-0.20260714012913-f3ad3d58f150'
-    hash = 'sha256-YzusBrshwv1Lq9qrPlDQ++w4Jf9tej7cMeXOx+Ou0t8='
-    goVersion = '1.26'
-
-  [mod.'github.com/amarbel-llc/purse-first/libs/go-mcp']
-    version = 'v0.4.2-0.20260714012913-f3ad3d58f150'
-    hash = 'sha256-XhMWIb22Rg/NS2NRQvCBGNa5AHrn15v4k/p0AeCkRT8='
+    version = 'v0.1.8'
+    hash = 'sha256-dNrByOns78mIRKUK9003JKK0p3L3UmYeZjRYt3J/huM='
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/tap/go']
@@ -61,8 +71,8 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/tommy']
-    version = 'v0.4.8-0.20260714013639-d9d65588e4af'
-    hash = 'sha256-1/DWglceWoHKH2TiYaFUCz0woJJvJsH+F3PVkJlXWBw='
+    version = 'v0.0.0-20260416172442-0769146d4d1e'
+    hash = 'sha256-88+1qOvA2msOfTHNXOn+X9tVAW9Y2k+r0s676k8Y2o8='
     goVersion = '1.26'
 
   [mod.'github.com/atotto/clipboard']

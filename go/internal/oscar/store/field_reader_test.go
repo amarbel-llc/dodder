@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/alfa/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // makeRequiredURLTypeBlob returns a synthetic TomlV2 shaped like !bookmark:

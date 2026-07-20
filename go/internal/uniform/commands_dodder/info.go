@@ -17,9 +17,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_configs"
 	mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/env_vars"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/env_vars"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type Info struct{}

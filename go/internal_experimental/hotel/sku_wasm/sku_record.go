@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 
 	"code.linenisgreat.com/dodder/go/internal_experimental/charlie/wasm"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 // SkuRecordSize is the byte size of the flat SKU record layout:

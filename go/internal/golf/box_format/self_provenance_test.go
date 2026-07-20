@@ -13,7 +13,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/ui"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
 // makeSignedObject builds a fully-signed zettel using a freshly-generated

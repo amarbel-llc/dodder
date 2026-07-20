@@ -10,7 +10,7 @@ import (
 	"code.linenisgreat.com/chrest/go/pkgs/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/kilo/store_workspace"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
 func (store *Store) Initialize(esi store_workspace.Supplies) (err error) {

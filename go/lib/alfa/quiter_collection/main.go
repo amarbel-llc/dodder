@@ -3,7 +3,7 @@ package quiter_collection
 import (
 	"iter"
 
-	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 func Equals[ELEMENT interfaces.Stringer](
