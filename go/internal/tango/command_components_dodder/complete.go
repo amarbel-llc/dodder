@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/sku_fmt"
 	pkg_query "code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/values"
 )

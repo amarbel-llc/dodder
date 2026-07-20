@@ -3,7 +3,7 @@ package command_components_dodder
 import (
 	"fmt"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_dir"
@@ -12,11 +12,11 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_stores"
-	"github.com/amarbel-llc/madder/go/pkgs/directory_layout"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_configs"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
+	"code.linenisgreat.com/madder/go/pkgs/blob_stores"
+	"code.linenisgreat.com/madder/go/pkgs/directory_layout"
+	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"

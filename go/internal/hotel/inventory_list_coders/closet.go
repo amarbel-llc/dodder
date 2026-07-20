@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
@@ -13,9 +13,9 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/box_format"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/madder/go/pkgs/markl_io"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	mad_ids "code.linenisgreat.com/madder/go/pkgs/ids"
+	"code.linenisgreat.com/madder/go/pkgs/markl_io"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"

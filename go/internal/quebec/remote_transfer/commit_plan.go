@@ -10,8 +10,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/oscar/env_box"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )

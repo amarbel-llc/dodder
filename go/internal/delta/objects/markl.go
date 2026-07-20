@@ -1,7 +1,7 @@
 package objects
 
 import (
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 )
 
 func (metadata *metadata) GetBlobDigest() mad_domain_interfaces.MarklId {

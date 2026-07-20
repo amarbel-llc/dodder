@@ -2,8 +2,8 @@ package object_metadata_fmt_hyphence
 
 import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"
 )
 
 type Factory struct {

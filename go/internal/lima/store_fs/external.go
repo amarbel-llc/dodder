@@ -4,7 +4,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
-	"github.com/amarbel-llc/madder/go/pkgs/fd"
+	"code.linenisgreat.com/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

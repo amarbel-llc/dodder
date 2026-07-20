@@ -1,6 +1,6 @@
 package env_ui
 
-import mad_env_ui "github.com/amarbel-llc/madder/go/pkgs/env_ui"
+import mad_env_ui "code.linenisgreat.com/madder/go/pkgs/env_ui"
 
 type OptionsGetter interface {
 	GetEnvOptions() Options

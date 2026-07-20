@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"io"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
@@ -18,7 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/stream_index"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"

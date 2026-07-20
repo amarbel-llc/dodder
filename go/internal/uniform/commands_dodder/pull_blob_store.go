@@ -8,7 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
+	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )

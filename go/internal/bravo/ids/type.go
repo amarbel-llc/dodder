@@ -6,7 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/doddish"
 	"code.linenisgreat.com/dodder/go/internal/0/domain_interfaces"
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
+	mad_ids "code.linenisgreat.com/madder/go/pkgs/ids"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

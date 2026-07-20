@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/0/checkout_mode"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
@@ -16,7 +16,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/lima/store_fs"
 	"code.linenisgreat.com/dodder/go/lib/charlie/comments"
-	"github.com/amarbel-llc/madder/go/pkgs/fd"
+	"code.linenisgreat.com/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/files"
 )

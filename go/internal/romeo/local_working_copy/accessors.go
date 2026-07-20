@@ -17,8 +17,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
 	"code.linenisgreat.com/dodder/go/internal/oscar/store"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
 )
 
 func (local *Repo) GetEnv() env_ui.Env {

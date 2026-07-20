@@ -9,8 +9,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/echo/object_metadata_box_builder"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/madder/go/pkgs/fd"
+	mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"
+	"code.linenisgreat.com/madder/go/pkgs/fd"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )

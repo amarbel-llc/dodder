@@ -1,8 +1,8 @@
 package repo_blobs
 
 import (
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 )
 
 //go:generate tommy generate

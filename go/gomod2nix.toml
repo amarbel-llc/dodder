@@ -11,6 +11,16 @@ schema = 3
     hash = 'sha256-O6G/2ZXT7JfOrKZISKoxpGTThHG/vQh5JQIfL/ImGoE='
     goVersion = '1.26'
 
+  [mod.'code.linenisgreat.com/madder/go']
+    version = 'v0.4.5-0.20260720110107-3b9fcba5ddae'
+    hash = 'sha256-pE5abwpLtbZcaQX/JUBQKfun0CZlZSvSyy/4BFtdc0k='
+    goVersion = '1.26'
+
+  [mod.'code.linenisgreat.com/piggy/go']
+    version = 'v0.0.0-20260719231529-e5adf0d2047c'
+    hash = 'sha256-yGDxPSG24fmICY0FjT3yJilXaCmDPhkt7jtrN7sBQto='
+    goVersion = '1.26'
+
   [mod.'filippo.io/age']
     version = 'v1.3.1'
     hash = 'sha256-Qs/q3zQYV0PukABBPf/aU5V1oOhw95NG6K301VYJk8A='
@@ -34,16 +44,6 @@ schema = 3
   [mod.'github.com/akutz/memconn']
     version = 'v0.1.0'
     hash = 'sha256-WOs/RQYjQbn41ui8ztHgWSd4jxydE+fvIrl/0dmHD9Y='
-
-  [mod.'github.com/amarbel-llc/madder/go']
-    version = 'v0.4.5-0.20260719151456-c52fe2e87c76'
-    hash = 'sha256-F2fk6Z8P1Q4gUFdZp8a/dGtGzVCLHwYSP6ChE3Qzlfk='
-    goVersion = '1.26'
-
-  [mod.'github.com/amarbel-llc/piggy/go']
-    version = 'v0.0.0-20260714014714-8bebeaa66dca'
-    hash = 'sha256-dlh8MB+/GYWR7INuBIZ0+znxEEznD5cCDYeb5hsAY4s='
-    goVersion = '1.26'
 
   [mod.'github.com/amarbel-llc/purse-first/libs/dewey']
     version = 'v0.4.2-0.20260714012913-f3ad3d58f150'

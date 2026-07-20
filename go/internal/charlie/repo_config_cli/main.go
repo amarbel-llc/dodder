@@ -7,7 +7,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_tools"
 	"code.linenisgreat.com/dodder/go/internal/bravo/descriptions"
 	"code.linenisgreat.com/dodder/go/lib/charlie/config_cli"
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 

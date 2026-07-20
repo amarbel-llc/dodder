@@ -21,7 +21,7 @@
 package repo_id
 
 import (
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

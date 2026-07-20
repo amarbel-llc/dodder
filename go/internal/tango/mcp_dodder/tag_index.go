@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"code.linenisgreat.com/dodder/go/lib/alfa/expansion"
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 )
 
 type tagSummary struct {

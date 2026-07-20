@@ -21,18 +21,18 @@ import (
 	// the madder-* purposes dodder mints too (gen, markl_age_id) and
 	// the legacy zit/dodder-repo-private_key-v1 → ed25519_sec
 	// purpose-id aliases for pre-rename on-disk key files (madder#167).
-	_ "github.com/amarbel-llc/madder/go/pkgs/markl_registrations"
+	_ "code.linenisgreat.com/madder/go/pkgs/markl_registrations"
 	// The age and agent blank imports swap the real age/pivy-backed
 	// implementations over piggy's erroring core stubs at their inits
 	// (idempotent). The SSH signing formats stay stubs here —
 	// connecting a signer is a consumer-side call (see
 	// genesis_config_blobs' agent.RegisterSSHEd25519Format usage).
-	_ "github.com/amarbel-llc/piggy/go/pkgs/age"
-	_ "github.com/amarbel-llc/piggy/go/pkgs/agent"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	_ "code.linenisgreat.com/piggy/go/pkgs/age"
+	_ "code.linenisgreat.com/piggy/go/pkgs/agent"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 
 	// Core format registrations plus the piggy-* purposes.
-	_ "github.com/amarbel-llc/piggy/go/pkgs/markl_registrations"
+	_ "code.linenisgreat.com/piggy/go/pkgs/markl_registrations"
 )
 
 // The dodder-owned purpose registrations, copied opt-for-opt from the

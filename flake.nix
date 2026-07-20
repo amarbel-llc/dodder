@@ -56,7 +56,7 @@
     # The markl-id framework home (piggy#183 ownership inversion),
     # sourced via goFlakeInputs so a piggy bump only touches flake.lock
     # — no go.mod / gomod2nix.toml lockstep edits. Its go-pkgs producer
-    # is scoped to go/ (module github.com/amarbel-llc/piggy/go, no
+    # is scoped to go/ (module code.linenisgreat.com/piggy/go, no
     # subPath). madder consumes it too; madder.inputs.piggy.follows
     # above keeps both on the same rev.
     piggy = {
@@ -106,6 +106,12 @@
     # tap, mirroring madder's exact deep-follows shape (madder flake.nix).
     hyphence.inputs.langlang.inputs.tap.inputs.crane.follows = "tap/crane";
     hyphence.inputs.langlang.inputs.tap.inputs.rust-overlay.follows = "tap/rust-overlay";
+    # piggy's own langlang pin (piggy#183's markl-id framework pulls in the
+    # same langlang subtree hyphence does) is bit-identical to hyphence's —
+    # collapse onto hyphence's copy rather than deep-following piggy's
+    # separately, mirroring madder's exact fix (madder flake.nix, go-module
+    # rename playbook wave 2 / piggy+madder leg).
+    piggy.inputs.langlang.follows = "hyphence/langlang";
   };
 
   outputs =

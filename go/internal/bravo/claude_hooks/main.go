@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/mcp_tool_perms"
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 )
 
 // hookInput carries the subset of Claude Code's hook-event payload the

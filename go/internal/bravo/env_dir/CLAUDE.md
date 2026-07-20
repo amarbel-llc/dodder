@@ -13,8 +13,8 @@ For everything else — types (`Env`, `RelativePath`, `TemporaryFS`,
 errors (`ErrBlobMissing`, `IsErrBlobAlreadyExists`) — import the
 madder packages directly:
 
-- `mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"`
-- `mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"`
+- `mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"`
+- `mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"`
 
 The previous alias-forwarding `main.go` was deleted; no code outside
 this package should reference an `env_dir.X` symbol other than the

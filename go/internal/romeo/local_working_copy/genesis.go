@@ -12,8 +12,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/pool"
 )

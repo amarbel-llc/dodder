@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"strings"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
 	"code.linenisgreat.com/dodder/go/internal/alfa/store_version"
@@ -15,8 +15,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/charlie/repo_config_cli"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_configs"
+	mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/env_vars"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"

@@ -1,9 +1,9 @@
 package env_repo
 
 import (
-	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_configs"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

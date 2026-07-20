@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"code.linenisgreat.com/dodder/go/internal/0/dodder_env"
-	mad_env_dir "github.com/amarbel-llc/madder/go/pkgs/env_dir"
-	"github.com/amarbel-llc/madder/go/pkgs/madder_env"
-	"github.com/amarbel-llc/madder/go/pkgs/scoped_id"
+	mad_env_dir "code.linenisgreat.com/madder/go/pkgs/env_dir"
+	"code.linenisgreat.com/madder/go/pkgs/madder_env"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/debug"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/xdg"

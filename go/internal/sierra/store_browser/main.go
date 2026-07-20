@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"sync"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/chrest/go/pkgs/browser_items"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"
@@ -21,7 +21,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/mike/env_workspace"
 	"code.linenisgreat.com/dodder/go/internal/november/store_config"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/collections_value"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"

@@ -131,7 +131,7 @@ explore-drop-bravo-markl-fork:
   cd ..
 
   dodder_markl='code.linenisgreat.com/dodder/go/internal/bravo/markl'
-  madder_markl='github.com/amarbel-llc/madder/go/pkgs/markl'
+  madder_markl='code.linenisgreat.com/madder/go/pkgs/markl'
 
   echo "==> rewriting bravo/markl imports in all *.go files under go/"
   find go -name '*.go' -type f \
@@ -155,7 +155,7 @@ explore-drop-charlie-fd-fork:
   cd ..
 
   dodder_fd='code.linenisgreat.com/dodder/go/internal/charlie/fd'
-  madder_fd='github.com/amarbel-llc/madder/go/pkgs/fd'
+  madder_fd='code.linenisgreat.com/madder/go/pkgs/fd'
 
   echo "==> rewriting charlie/fd imports in all *.go files under go/"
   find go -name '*.go' -type f \
@@ -253,7 +253,7 @@ update-flake-input input:
   git add ../flake.lock
   # If the input is a Go module, update go.mod to match the locked rev.
   # Some monorepos publish their Go module from a subdirectory (e.g.
-  # github.com/amarbel-llc/madder/go) — read go.mod to find the exact
+  # code.linenisgreat.com/madder/go) — read go.mod to find the exact
   # module path that contains amarbel-llc/{{input}} and pass that to
   # `go get`. Falls back to the bare path when no longer-form match is
   # found. For goFlakeInputs-bridged inputs (madder, hyphence, piggy,

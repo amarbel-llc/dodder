@@ -3,7 +3,7 @@ package sku
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/external_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 

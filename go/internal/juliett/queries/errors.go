@@ -3,7 +3,7 @@ package queries
 import (
 	"fmt"
 
-	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
+	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

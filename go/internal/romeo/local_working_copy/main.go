@@ -18,8 +18,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/oscar/env_box"
 	"code.linenisgreat.com/dodder/go/internal/oscar/store"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 )
 

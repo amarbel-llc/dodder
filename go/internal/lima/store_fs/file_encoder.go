@@ -3,7 +3,7 @@ package store_fs
 import (
 	"io"
 
-	mad_domain_interfaces "github.com/amarbel-llc/madder/go/pkgs/domain_interfaces"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 
 	"code.linenisgreat.com/dodder/go/internal/0/filesystem_ops"
 	"code.linenisgreat.com/dodder/go/internal/alfa/checkout_options"

@@ -9,8 +9,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	mad_blob_io "github.com/amarbel-llc/madder/go/pkgs/blob_io"
-	env_local "github.com/amarbel-llc/madder/go/pkgs/env_local"
+	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
+	env_local "code.linenisgreat.com/madder/go/pkgs/env_local"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/errors"
 	tap "github.com/amarbel-llc/tap/go/pkgs/writer"
 )

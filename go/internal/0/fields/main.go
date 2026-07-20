@@ -1,6 +1,6 @@
 package fields
 
-import "github.com/amarbel-llc/piggy/go/pkgs/markl"
+import "code.linenisgreat.com/piggy/go/pkgs/markl"
 
 type Type byte
 

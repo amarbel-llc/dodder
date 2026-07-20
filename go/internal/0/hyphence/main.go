@@ -9,15 +9,15 @@
 // madder extracted hyphence into a standalone repo and dropped its pre-filled
 // facade in madder go/v0.4.0 (madder #253). Recreating the facade here keeps
 // dodder's ~26 consumer call sites unchanged — they only swap the import path
-// from github.com/amarbel-llc/madder/go/pkgs/hyphence to this package.
+// from code.linenisgreat.com/madder/go/pkgs/hyphence to this package.
 //
 // Generic type aliases require Go 1.24+ (dodder is on 1.26).
 package hyphence
 
 import (
 	ext "code.linenisgreat.com/hyphence/go/hyphence"
-	mad_ids "github.com/amarbel-llc/madder/go/pkgs/ids"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	mad_ids "code.linenisgreat.com/madder/go/pkgs/ids"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"github.com/amarbel-llc/purse-first/libs/dewey/pkgs/interfaces"
 )
 

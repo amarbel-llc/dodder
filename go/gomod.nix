@@ -74,7 +74,7 @@
   #   - purse-first publishes a full-repo go-pkgs, so consumers slice
   #     into the relevant library subdirectory.
   goFlakeInputs = {
-    "github.com/amarbel-llc/madder/go" = {
+    "code.linenisgreat.com/madder/go" = {
       src = madder.packages.${system}.go-pkgs;
     };
     # hyphence scopes its go-pkgs at /go (like madder), so no subPath.
@@ -83,7 +83,7 @@
     };
     # piggy owns the markl-id framework (piggy#183 inversion). Its
     # go-pkgs producer is scoped to go/ (module root, no subPath).
-    "github.com/amarbel-llc/piggy/go" = {
+    "code.linenisgreat.com/piggy/go" = {
       src = piggy.packages.${system}.go-pkgs;
     };
     "github.com/amarbel-llc/tap/go" = {

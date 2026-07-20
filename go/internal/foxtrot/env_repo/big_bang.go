@@ -3,9 +3,9 @@ package env_repo
 import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_configs"
-	"github.com/amarbel-llc/madder/go/pkgs/blob_store_id"
-	"github.com/amarbel-llc/piggy/go/pkgs/markl"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_configs"
+	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 )
 
 // Config used to initialize a repo for the first time
