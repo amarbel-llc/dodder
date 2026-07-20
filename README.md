@@ -247,7 +247,7 @@ The Go source is organized into NATO-phonetic dependency tiers (`alfa`,
 `bravo`, `charlie`, …) where each tier may only depend on tiers below it,
 enforcing a unidirectional, circular-dependency-free graph. This tiering is
 computed and maintained by **dagnabit** — see its implementation in the
-[purse-first](https://github.com/amarbel-llc/purse-first) project for how the
+[purse-first](https://code.linenisgreat.com/purse-first) project for how the
 levels are derived and packages repositioned.
 
 ## License

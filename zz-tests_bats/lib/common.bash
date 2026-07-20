@@ -157,7 +157,7 @@ function run_dodder {
   # in a sub-CWD doesn't discover a fixture's `.dodder/` / `.madder/`
   # parked in $BATS_TEST_TMPDIR by setup. Without this, the fresh init
   # silently split-brains its writes across CWD's and the parent's
-  # stores. See https://github.com/amarbel-llc/dodder/issues/40.
+  # stores. See https://code.linenisgreat.com/dodder/issues/40.
   #
   # `DODDER_CEILING_DIRECTORIES` itself is already set by the outer just
   # recipe (typically to /build or the worktree root) to bound the

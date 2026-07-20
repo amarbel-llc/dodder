@@ -180,7 +180,7 @@ fixtures) - Adding new tests - Refactoring helpers
   `fmt.Fprintf`/`strings.Builder`.
 
 - **Adding or changing metadata fields requires binary codec updates
-  ([#38](https://github.com/amarbel-llc/dodder/issues/38)).** Any field added to
+  ([#38](https://code.linenisgreat.com/dodder/issues/38)).** Any field added to
   `objects.metadata`, `containedObject`, or `blobReferenceEntry` is NOT
   automatically serialized. Without encoder/decoder support in
   `india/stream_index`, the field will be populated during commit but silently
@@ -188,7 +188,7 @@ fixtures) - Adding new tests - Refactoring helpers
   `go/internal/india/stream_index/CLAUDE.md` for the 4-file checklist.
 
 - **Hyphence format requires a blank line between closing `---` and blob body
-  ([#41](https://github.com/amarbel-llc/dodder/issues/41)).** Without it, the
+  ([#41](https://code.linenisgreat.com/dodder/issues/41)).** Without it, the
   parser silently drops the blob content, resulting in objects committed without
   a blob digest. This applies to `.type` files, `.zettel` files, and heredocs in
   BATS tests.

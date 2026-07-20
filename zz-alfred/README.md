@@ -39,7 +39,7 @@ zettels.
 Every action now targets the repo by id: search + `edit` read from it, and the
 write actions (`der new`, `zn`, Move-to-Dodder) create against it via
 `-ephemeral` (see also
-[dodder#340](https://github.com/amarbel-llc/dodder/issues/340)).
+[dodder#340](https://code.linenisgreat.com/dodder/issues/340)).
 
 ## Triggers
 
