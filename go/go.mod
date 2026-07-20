@@ -5,14 +5,14 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.2.0
 	code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9
-	code.linenisgreat.com/madder/go v0.4.5-0.20260720162024-c2d4d389e726
+	code.linenisgreat.com/madder/go v0.4.5-0.20260720184544-d463a948790d
 	code.linenisgreat.com/piggy/go v0.0.0-20260720155209-77cfdea0031e
 	code.linenisgreat.com/purse-first/libs/dewey v0.5.0
 	code.linenisgreat.com/purse-first/libs/go-mcp v0.5.0
+	code.linenisgreat.com/tap/go v0.2.0
 	code.linenisgreat.com/tommy v0.5.0
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
-	github.com/amarbel-llc/tap/go v0.1.16-0.20260708132417-4531c9f064d4
 	github.com/brandondube/tai v0.1.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0

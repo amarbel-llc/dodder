@@ -86,7 +86,7 @@
     "code.linenisgreat.com/piggy/go" = {
       src = piggy.packages.${system}.go-pkgs;
     };
-    "github.com/amarbel-llc/tap/go" = {
+    "code.linenisgreat.com/tap/go" = {
       src = tap.packages.${system}.go-pkgs;
       subPath = "go";
     };

@@ -23,7 +23,7 @@ import (
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
-	tap "github.com/amarbel-llc/tap/go/pkgs/writer"
+	tap "code.linenisgreat.com/tap/go/pkgs/writer"
 )
 
 func init() {
