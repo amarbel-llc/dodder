@@ -92,6 +92,7 @@
     utils.inputs.systems.follows = "igloo/systems";
     igloo.inputs.nixpkgs-master.follows = "nixpkgs-master";
     tap.inputs.gomod2nix.follows = "purse-first/gomod2nix";
+    tap.inputs.purse-first.follows = "purse-first";
     madder.inputs.tap.follows = "tap";
     madder.inputs.conformist.follows = "conformist";
     piggy.inputs.conformist.follows = "conformist";
