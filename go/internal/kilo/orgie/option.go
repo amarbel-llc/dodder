@@ -2,6 +2,7 @@ package orgie
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
@@ -393,8 +394,15 @@ func (ocf *OptionCommentGroupBy) CloneOptionComment() OptionComment {
 }
 
 func (ocf *OptionCommentGroupBy) Set(v string) (err error) {
-	v = strings.TrimPrefix(v, `"`)
-	v = strings.TrimSuffix(v, `"`)
+	// strconv.Unquote (not a manual TrimPrefix/TrimSuffix) so this is the
+	// true inverse of String()'s %q below -- a value containing a literal
+	// `"` or `\` round-trips correctly, matching the established pattern
+	// for quoted hyphence field values (object_metadata_fmt_hyphence's
+	// text_parser2.go).
+	if unquoted, unquoteErr := strconv.Unquote(v); unquoteErr == nil {
+		v = unquoted
+	}
+
 	ocf.Value = v
 
 	return err

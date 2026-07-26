@@ -196,6 +196,10 @@ func ChangesFromResults(
 	po options_print.Options,
 	results OrganizeResults,
 ) (c Changes, err error) {
+	// `_base` is expected to always be present on results.After here --
+	// generation always writes it (organize_base.go) and callers are
+	// required to reject an apply with it missing before reaching this
+	// function -- so the found bool is intentionally discarded.
 	results.After.Metadata.OptionCommentSet.RemoveByKey("base")
 
 	var threeWayResult ThreeWayResult

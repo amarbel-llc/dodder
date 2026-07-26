@@ -219,8 +219,7 @@ func DereferenceOrganizeBase(
 		return base, wasGrouped, groupingTags, err
 	}
 
-	var envelopeMetadata orgie.Metadata
-	envelopeMetadata = orgie.NewMetadata(ids.RepoId{})
+	envelopeMetadata := orgie.NewMetadata(ids.RepoId{})
 
 	if _, err = envelopeMetadata.ReadFrom(&envelopeMetaBuf); err != nil {
 		err = errors.Wrap(orgie.ErrBaseUndereferenceable{

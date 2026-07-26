@@ -124,9 +124,7 @@ func ComputeThreeWay(
 	}
 
 	// Drift: live vs base, for objects both Patch and Base agree exist.
-	for _, patchEntry := range patchSkus.m {
-		key := keyer.GetKey(patchEntry.sku)
-
+	for key, patchEntry := range patchSkus.m {
 		baseEntry, inBase := baseSkus.m[key]
 		if !inBase {
 			continue // creation/adoption, not drift
@@ -157,12 +155,16 @@ func ComputeThreeWay(
 			baseEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
 		)
 
+		if !patchTouched {
+			continue // liveDrifted is only ever consulted when patchTouched
+		}
+
 		liveDrifted := !quiter_set.Equals(
 			liveObject.GetSkuExternal().GetMetadata().GetTags(),
 			baseEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
 		)
 
-		if patchTouched && liveDrifted {
+		if liveDrifted {
 			result.Conflicts = append(
 				result.Conflicts,
 				ConflictedObject{Object: patchEntry.sku},
