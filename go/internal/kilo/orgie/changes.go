@@ -151,6 +151,17 @@ func (c Changes) String() string {
 //   - WasGrouped/GroupingTags are DereferenceOrganizeBase's other two return
 //     values, threaded through so ChangesFromResults can dispatch removals
 //     correctly (three_way.go's DispatchRemoval).
+//
+// This new meaning only holds for callers that route through
+// repo_actions.PrepareOrganizeResultsForApply (LockAndCommitOrganizeResults,
+// checkin.go's runOrganize). The legacy repo_actions.Organize struct
+// (checkout.go/clean.go's `-organize` flag, organize_remote.go's pre-pull
+// narrowing) still populates Before/Original directly from the same
+// generation-time query snapshot, with no `_base` dereference or live
+// requery -- for those callers ComputeThreeWay's Base and Live are the same
+// snapshot by construction, so conflict detection is a structural no-op
+// (never fires, same as pre-(b)); this is a known, deliberately unaddressed
+// gap in this feature's scope, not a regression.
 type OrganizeResults struct {
 	Before, After *Text
 	Original      sku.SkuTypeSet

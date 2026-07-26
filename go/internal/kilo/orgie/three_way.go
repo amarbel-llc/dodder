@@ -150,18 +150,18 @@ func ComputeThreeWay(
 			continue
 		}
 
-		patchTouched := !quiter_set.Equals(
-			patchEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
-			baseEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
-		)
+		baseTags := baseEntry.sku.GetSkuExternal().GetMetadata().GetTags()
 
-		if !patchTouched {
-			continue // liveDrifted is only ever consulted when patchTouched
+		if quiter_set.Equals(
+			patchEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
+			baseTags,
+		) {
+			continue // liveDrifted is only ever consulted when patch touched this object
 		}
 
 		liveDrifted := !quiter_set.Equals(
 			liveObject.GetSkuExternal().GetMetadata().GetTags(),
-			baseEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
+			baseTags,
 		)
 
 		if liveDrifted {
