@@ -349,7 +349,22 @@ function checkin_explicit_organize_include_untracked_fs_blob_change_description(
 		  - [test.md some_tag] a different description
 	EOM
 
-  export EDITOR="bash -c 'cat desired_end_state.md >\$0'"
+  function editor() {
+    # shellcheck disable=SC2317
+    base_line="$(grep '_base=' "$1")"
+    {
+      echo "---"
+      echo "$base_line"
+      echo "---"
+      echo
+      cat desired_end_state.md
+    } >"$1"
+  }
+
+  export -f editor
+
+  # shellcheck disable=SC2016
+  export EDITOR='bash -c "editor $0"'
   run_dodder checkin -organize test.md </dev/null
   assert_success
   assert_output - <<-EOM
@@ -445,8 +460,10 @@ function checkin_explicit_workspace_delete_files { # @test
 
   function editor() {
     # shellcheck disable=SC2317
+    base_line="$(grep '_base=' "$1")"
     cat - >"$1" <<-EOM
 			---
+			$base_line
 			% instructions: to prevent an object from being checked in, delete it entirely
 			% delete:true delete once checked in
 			- today

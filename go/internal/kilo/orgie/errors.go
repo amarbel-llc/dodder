@@ -2,6 +2,7 @@ package orgie
 
 import (
 	"fmt"
+	"strings"
 
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
@@ -84,3 +85,41 @@ func (err ErrBaseUndereferenceable) Is(target error) bool {
 func (err ErrBaseUndereferenceable) GetErrorType() pkgErrDisamb {
 	return pkgErrDisamb{}
 }
+
+// ErrConflicts is dodder#374(b) plan §4: one or more objects changed both
+// in the patch and independently in the live store since `_base` was
+// generated, on tags ComputeThreeWay's conservative object-level pass
+// can't prove are the same edit -- "v1 rejects loudly (mergetool
+// deferred)" rather than silently picking a side. ObjectIds is the
+// conflicted set, for a caller to report or (eventually) hand to an
+// interactive resolver.
+type ErrConflicts struct {
+	ObjectIds []string
+}
+
+func (err ErrConflicts) Error() string {
+	return fmt.Sprintf(
+		"%d object(s) changed both in your edit and in the store since "+
+			"this document was generated, and can't be merged "+
+			"automatically:\n  %s\n\n"+
+			"Regenerate with `dodder organize <your original query>` and "+
+			"re-apply your edits.",
+		len(err.ObjectIds),
+		strings.Join(err.ObjectIds, "\n  "),
+	)
+}
+
+func (err ErrConflicts) Is(target error) bool {
+	_, ok := target.(ErrConflicts)
+	return ok
+}
+
+func (err ErrConflicts) GetErrorType() pkgErrDisamb {
+	return pkgErrDisamb{}
+}
+
+var (
+	_ error = ErrOrganizeBaseMissing{}
+	_ error = ErrBaseUndereferenceable{}
+	_ error = ErrConflicts{}
+)

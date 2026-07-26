@@ -297,6 +297,41 @@ can proceed without `base`.
   `RemoveFromTransacted` already does. It becomes one execution path
   within the new deletion-branch logic (§6), invoked conditionally
   instead of unconditionally.
+
+**Implementation notes (2026-07-19, found while writing (b)-8's test
+suite):**
+
+- The "loud-rejection conflict" above was initially computed
+  (`ThreeWayResult.Conflicts`) but not actually surfaced --
+  `ChangesFromResults` discarded it (`c = threeWayResult.Changes`
+  silently dropped `.Conflicts`). Fixed: a new `ErrConflicts` error
+  type (`errors.go`) is returned when `len(Conflicts) > 0`, before any
+  removal dispatch runs.
+- Drift detection needs one more exclusion beyond "fields the patch
+  also touches": an object whose live representation has
+  `checked_out_state.Untracked` (the store query resolved the key to
+  a synthesized "this external id exists on disk" placeholder --
+  e.g. `- [1.md]`, a not-yet-created zettel -- not a genuine prior
+  commit) must never be flagged as drifted, no matter how much its
+  (empty) tags differ from base's proposal. base's tags for such an
+  object are organize's PROPOSAL for the new zettel (e.g. workspace
+  default tags), never actually written to the store -- there is no
+  real "previous version" to have drifted from, the same way a
+  brand-new file has no git diff base to be "modified" relative to.
+- A 6th call path existed beyond the 5 originally audited for the
+  `_base`-dereference/live-requery wiring:
+  `checkin -organize`/`add -organize` (which share `Organize2`,
+  `repo_actions/organize2.go`) call `orgie.ChangesFromResults`
+  directly rather than through `LockAndCommitOrganizeResults`, since
+  `checkin.go`'s `runOrganize` folds organize's changes into one
+  larger unified commit rather than committing them separately. Fixed
+  by extracting `LockAndCommitOrganizeResults`'s dereference+requery
+  step into `PrepareOrganizeResultsForApply` (`organize_options.go`),
+  which `checkin.go` now calls before its own `ChangesFromResults`
+  call -- same base/live semantics, without taking over checkin's
+  commit execution. `Organize2.Run` never sets `QueryGroup` (unlike
+  `Organize.RunWithSkuType`'s `WithExternalLike` fallback); checkin's
+  own selection query is the natural stand-in.
 - **Composition with dodder#374(a)/(c)/(d)**: no conflict. (a)'s
   space-separated headings and (c)'s `_dry-run`/`_base` settings-field
   parsing both operate one layer below this (`Metadata.ReadFrom`,

@@ -139,7 +139,12 @@ function workspace_add_yes_organize { # @test
 
   function editor() {
     # shellcheck disable=SC2317
+    base_line="$(grep '_base=' "$1")"
     cat - >"$1" <<-EOM
+			---
+			$base_line
+			---
+
 			# tag-two
 
 			- [1.md]
@@ -174,7 +179,12 @@ function workspace_add_yes_organize_omit_one { # @test
 
   function editor() {
     # shellcheck disable=SC2317
+    base_line="$(grep '_base=' "$1")"
     cat - >"$1" <<-EOM
+			---
+			$base_line
+			---
+
 			# tag-two
 
 			- [1.md]

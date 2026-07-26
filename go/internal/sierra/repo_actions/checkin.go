@@ -117,6 +117,20 @@ func (op Checkin) runOrganize(
 		return err
 	}
 
+	// Organize2.Run never sets QueryGroup (unlike Organize.RunWithSkuType's
+	// WithExternalLike(skus) fallback) -- checkin's own selection query is
+	// the natural stand-in: it's exactly what PrepareOrganizeResultsForApply
+	// needs to re-run for a genuine "live" input (dodder#374(b) plan §4).
+	organizeResults.QueryGroup = query
+
+	if organizeResults, err = PrepareOrganizeResultsForApply(
+		op.repo,
+		organizeResults,
+	); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
 	var changes orgie.Changes
 
 	if changes, err = orgie.ChangesFromResults(

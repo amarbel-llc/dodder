@@ -211,6 +211,18 @@ func ChangesFromResults(
 		return c, err
 	}
 
+	if len(threeWayResult.Conflicts) > 0 {
+		objectIds := make([]string, len(threeWayResult.Conflicts))
+
+		for i, conflict := range threeWayResult.Conflicts {
+			objectIds[i] = conflict.Object.GetSkuExternal().GetObjectId().String()
+		}
+
+		err = errors.Wrap(ErrConflicts{ObjectIds: objectIds})
+
+		return c, err
+	}
+
 	c = threeWayResult.Changes
 
 	for _, removal := range threeWayResult.Removals {

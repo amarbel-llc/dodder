@@ -44,26 +44,35 @@ func MakeOrganizeOptionsWithQueryGroup(
 	)
 }
 
-// LockAndCommitOrganizeResults is the single funnel all organize commit
-// paths go through (directly, or via OrganizeCommitFromReader) --
-// dodder#374(b) plan §4's base-dereference and live-requery happen HERE,
-// once, rather than in each of the CLI/MCP/Last/New call sites: results.After
-// (the patch) is authoritative for `_base` regardless of what the caller
-// populated results.Before/Original with at generation time, and
-// results.QueryGroup is always non-nil by this point (a real user query, or
-// Organize.RunWithSkuType's WithExternalLike(skus) fallback for the
-// Last/New flows), so re-running it against the live store is always
-// meaningful "live" input for orgie.ComputeThreeWay (three_way.go).
-func LockAndCommitOrganizeResults(
+// PrepareOrganizeResultsForApply resolves results.Before/Original/
+// WasGrouped/GroupingTags in place from results.After's real `_base` field
+// and a fresh live requery -- dodder#374(b) plan §4's base-dereference and
+// live-requery step. Extracted from LockAndCommitOrganizeResults so a
+// caller with its OWN commit-plan construction (checkin.go's runOrganize,
+// which folds organize's changes into one larger unified checkin commit
+// rather than committing them separately) can get genuine base/live
+// semantics for orgie.ChangesFromResults without also taking
+// LockAndCommitOrganizeResults's own commit execution.
+//
+// results.After (the patch) is authoritative for `_base` regardless of
+// what the caller populated results.Before/Original with at generation
+// time, and results.QueryGroup must be non-nil (a real user query, the
+// query a command like checkin/last/new already selected its objects
+// with, or Organize.RunWithSkuType's WithExternalLike(skus) fallback) --
+// re-running it against the live store is always meaningful "live" input
+// for orgie.ComputeThreeWay (three_way.go).
+func PrepareOrganizeResultsForApply(
 	repo *local_working_copy.Repo,
 	results orgie.OrganizeResults,
-) (changeResults orgie.Changes, err error) {
-	if results.Before, results.WasGrouped, results.GroupingTags, err = DereferenceOrganizeBase(
+) (out orgie.OrganizeResults, err error) {
+	out = results
+
+	if out.Before, out.WasGrouped, out.GroupingTags, err = DereferenceOrganizeBase(
 		repo,
-		results.After,
+		out.After,
 	); err != nil {
 		err = errors.Wrap(err)
-		return changeResults, err
+		return out, err
 	}
 
 	live := sku.MakeSkuTypeSetMutable()
@@ -71,7 +80,7 @@ func LockAndCommitOrganizeResults(
 	var lock sync.Mutex
 
 	if err = repo.GetStore().QueryTransactedAsSkuType(
-		results.QueryGroup,
+		out.QueryGroup,
 		func(sk sku.SkuType) (err error) {
 			lock.Lock()
 			defer lock.Unlock()
@@ -81,10 +90,28 @@ func LockAndCommitOrganizeResults(
 		},
 	); err != nil {
 		err = errors.Wrap(err)
-		return changeResults, err
+		return out, err
 	}
 
-	results.Original = live
+	out.Original = live
+
+	return out, err
+}
+
+// LockAndCommitOrganizeResults is the single funnel most organize commit
+// paths go through (directly, or via OrganizeCommitFromReader) --
+// PrepareOrganizeResultsForApply happens HERE, once, rather than in each
+// of the CLI/MCP/Last/New call sites. checkin.go's runOrganize is the one
+// caller that needs base/live resolution WITHOUT this function's own
+// commit execution -- it calls PrepareOrganizeResultsForApply directly.
+func LockAndCommitOrganizeResults(
+	repo *local_working_copy.Repo,
+	results orgie.OrganizeResults,
+) (changeResults orgie.Changes, err error) {
+	if results, err = PrepareOrganizeResultsForApply(repo, results); err != nil {
+		err = errors.Wrap(err)
+		return changeResults, err
+	}
 
 	if changeResults, err = orgie.ChangesFromResults(
 		repo.GetConfig().GetPrintOptions(),

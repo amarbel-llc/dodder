@@ -2,6 +2,7 @@ package orgie
 
 import (
 	"code.linenisgreat.com/dodder/go/internal/0/options_print"
+	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
@@ -134,6 +135,21 @@ func ComputeThreeWay(
 		liveObject, inLive := inputs.Live.Get(key)
 		if !inLive {
 			continue // gone from the store entirely -- a different failure mode than drift
+		}
+
+		if liveObject.GetState() == checked_out_state.Untracked {
+			// Nothing has ever actually been committed for this key --
+			// the query resolved it to a synthesized "this external id
+			// exists on disk" placeholder (e.g. `- [1.md]`, an
+			// untracked-fs-blob candidate a NEW zettel gets created
+			// from), not a real prior committed record. base's own tags
+			// here are organize's PROPOSAL for the new object (e.g.
+			// workspace default tags), never actually written to the
+			// store -- there is no real "previous version" to have
+			// drifted from, the same way a brand-new file has no git
+			// diff base to be "modified" relative to. Drift/conflict is
+			// only meaningful against a genuine prior commit.
+			continue
 		}
 
 		patchTouched := !quiter_set.Equals(
