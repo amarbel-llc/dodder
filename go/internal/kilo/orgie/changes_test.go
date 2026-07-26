@@ -26,6 +26,10 @@ func TestChangesFromResultsSurfacesConflictAsError(t1 *testing.T) {
 		liveUno.GetSkuExternal().GetMetadataMutable(),
 		ids.MakeTagSetMutable(mustTag("tag-c")),
 	)
+	if err := liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc"); err != nil {
+		t1.Fatalf("failed to set description: %v", err)
+	}
+
 	live := makeLiveSet(liveUno)
 
 	_, err := ChangesFromResults(options_print.Options{}, OrganizeResults{
@@ -60,6 +64,11 @@ func TestChangesFromResultsNoErrorWhenNoConflict(t1 *testing.T) {
 		liveUno.GetSkuExternal().GetMetadataMutable(),
 		ids.MakeTagSetMutable(mustTag("tag-a")),
 	)
+
+	if err := liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc"); err != nil {
+		t1.Fatalf("failed to set description: %v", err)
+	}
+
 	live := makeLiveSet(liveUno)
 
 	_, err := ChangesFromResults(options_print.Options{}, OrganizeResults{

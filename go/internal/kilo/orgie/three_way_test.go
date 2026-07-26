@@ -240,10 +240,17 @@ func TestComputeThreeWayNoConflictWhenLiveMatchesBase(t1 *testing.T) {
 	base := mustParseText("- [one/uno tag-a] desc\n")
 	patch := mustParseText("- [one/uno tag-b] desc\n")
 
+	// live must match base on every patchable aspect (tags AND
+	// description AND type), not just tags, so this fixture genuinely
+	// represents "live is unchanged from base" post-generalization
+	// (2026-07-26 review: drift scope covers all patchable aspects).
 	liveUno := makeThreeWayTestObject("one/uno")
 	objects.SetTags(
 		liveUno.GetSkuExternal().GetMetadataMutable(),
 		ids.MakeTagSetMutable(mustTag("tag-a")),
+	)
+	errors.PanicIfError(
+		liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc"),
 	)
 	live := makeLiveSet(liveUno)
 
@@ -305,11 +312,138 @@ func TestComputeThreeWayConflictWhenBothPatchAndLiveDrift(t1 *testing.T) {
 	base := mustParseText("- [one/uno tag-a] desc\n")
 	patch := mustParseText("- [one/uno tag-b] desc\n")
 
+	// Isolate tag drift specifically -- match base's description so
+	// the conflict this test asserts is attributable to tags alone,
+	// not incidentally also to a description mismatch.
 	liveUno := makeThreeWayTestObject("one/uno")
 	objects.SetTags(
 		liveUno.GetSkuExternal().GetMetadataMutable(),
 		ids.MakeTagSetMutable(mustTag("tag-c")),
 	)
+	errors.PanicIfError(
+		liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc"),
+	)
+	live := makeLiveSet(liveUno)
+
+	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{
+		Base:  base,
+		Patch: patch,
+		Live:  live,
+	})
+	t.AssertNoError(err)
+
+	if len(result.Conflicts) != 1 {
+		t1.Fatalf("expected exactly 1 conflict, got %d: %#v", len(result.Conflicts), result.Conflicts)
+	}
+
+	conflictedId := result.Conflicts[0].Object.GetSkuExternal().GetObjectId().String()
+	if conflictedId != "one/uno" {
+		t1.Errorf("expected conflicted object \"one/uno\", got %q", conflictedId)
+	}
+}
+
+// TestComputeThreeWayConflictWhenDescriptionDriftsOnTouchedObject mirrors
+// TestComputeThreeWayConflictWhenBothPatchAndLiveDrift for description
+// instead of tags (2026-07-26 review: drift scope must cover every
+// patchable aspect, not just tags -- Changes.Changed clones the whole
+// patch sku, description included, so the guard must match). Patch edits
+// the description; live independently drifted the description to a
+// different value; tags are untouched on both sides -- must conflict.
+func TestComputeThreeWayConflictWhenDescriptionDriftsOnTouchedObject(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	base := mustParseText("- [one/uno tag-a] desc-base\n")
+	patch := mustParseText("- [one/uno tag-a] desc-patch\n")
+
+	liveUno := makeThreeWayTestObject("one/uno")
+	objects.SetTags(
+		liveUno.GetSkuExternal().GetMetadataMutable(),
+		ids.MakeTagSetMutable(mustTag("tag-a")),
+	)
+
+	if err := liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc-live"); err != nil {
+		t1.Fatalf("failed to set description: %v", err)
+	}
+
+	live := makeLiveSet(liveUno)
+
+	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{
+		Base:  base,
+		Patch: patch,
+		Live:  live,
+	})
+	t.AssertNoError(err)
+
+	if len(result.Conflicts) != 1 {
+		t1.Fatalf("expected exactly 1 conflict, got %d: %#v", len(result.Conflicts), result.Conflicts)
+	}
+
+	conflictedId := result.Conflicts[0].Object.GetSkuExternal().GetObjectId().String()
+	if conflictedId != "one/uno" {
+		t1.Errorf("expected conflicted object \"one/uno\", got %q", conflictedId)
+	}
+}
+
+// TestComputeThreeWayNoConflictWhenDescriptionDriftsOnUntouchedObject is
+// the negative-case sibling: live's description drifted from base, but
+// patch never touched this object at all (tags AND description both
+// match base) -- the "patch touched it" gate must stay false, so drift
+// is silently merged (idempotent), not flagged. Matches the intent
+// TestComputeThreeWayNoConflictWhenLiveMatchesBase already pins for
+// tags, now covering description.
+func TestComputeThreeWayNoConflictWhenDescriptionDriftsOnUntouchedObject(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	base := mustParseText("- [one/uno tag-a] desc-base\n")
+	patch := mustParseText("- [one/uno tag-a] desc-base\n")
+
+	liveUno := makeThreeWayTestObject("one/uno")
+	objects.SetTags(
+		liveUno.GetSkuExternal().GetMetadataMutable(),
+		ids.MakeTagSetMutable(mustTag("tag-a")),
+	)
+
+	if err := liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc-live"); err != nil {
+		t1.Fatalf("failed to set description: %v", err)
+	}
+
+	live := makeLiveSet(liveUno)
+
+	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{
+		Base:  base,
+		Patch: patch,
+		Live:  live,
+	})
+	t.AssertNoError(err)
+
+	if len(result.Conflicts) != 0 {
+		t1.Errorf("expected no conflicts (patch never touched this object), got %#v", result.Conflicts)
+	}
+}
+
+// TestComputeThreeWayConflictWhenTypeDriftsOnTouchedObject is the type
+// sibling of the description tests above -- same rationale, cheap to
+// add since Type is on the same aspect set patchableAspectsEqual checks.
+func TestComputeThreeWayConflictWhenTypeDriftsOnTouchedObject(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	base := mustParseText("- [one/uno !type-a tag-a] desc\n")
+	patch := mustParseText("- [one/uno !type-b tag-a] desc\n")
+
+	liveUno := makeThreeWayTestObject("one/uno")
+	objects.SetTags(
+		liveUno.GetSkuExternal().GetMetadataMutable(),
+		ids.MakeTagSetMutable(mustTag("tag-a")),
+	)
+
+	if err := liveUno.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc"); err != nil {
+		t1.Fatalf("failed to set description: %v", err)
+	}
+
+	if err := liveUno.GetSkuExternal().GetMetadataMutable().GetTypeMutable().SetType("type-c"); err != nil {
+		t1.Fatalf("failed to set type: %v", err)
+	}
+
 	live := makeLiveSet(liveUno)
 
 	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{

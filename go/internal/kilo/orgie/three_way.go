@@ -78,6 +78,34 @@ type ThreeWayResult struct {
 	Conflicts []ConflictedObject
 }
 
+// patchableAspectsEqual reports whether a and b agree on every aspect
+// organize's apply path can actually write -- tags, description, and
+// type (RFC 0015 §Delta: "drift on fields the patch also touches ⇒
+// conflict", ALL fields, not just tags). Changes.Changed
+// (three_way.go's caller) clones the WHOLE patch sku, description and
+// type included, so the drift gate/guard below must compare the same
+// aspect set Changed writes or the guard doesn't actually cover what
+// gets applied -- a description edited in the patch could silently
+// overwrite an out-of-band live description change with no conflict
+// raised, the unsafe direction (data loss), unlike the object-level-
+// vs-per-tag granularity ConflictedObject's doc comment already
+// covers (which over-reports, safely). Found in review 2026-07-26.
+//
+// Deliberately object-level, not per-aspect: this only answers
+// "did ANYTHING patchable differ", not which aspect. Per-aspect
+// discrimination (e.g. patch and live touched different aspects of
+// the same object, no true conflict) is the same out-of-scope-for-v1
+// granularity call ConflictedObject's doc comment makes for tags,
+// now extended uniformly to description and type.
+func patchableAspectsEqual(a, b sku.SkuType) bool {
+	aMeta := a.GetSkuExternal().GetMetadata()
+	bMeta := b.GetSkuExternal().GetMetadata()
+
+	return quiter_set.Equals(aMeta.GetTags(), bMeta.GetTags()) &&
+		aMeta.GetDescription().String() == bMeta.GetDescription().String() &&
+		aMeta.GetType().String() == bMeta.GetType().String()
+}
+
 // ComputeThreeWay is the dodder#374(b) plan §5 engine: patch - base =
 // structural intent (moves, edits, creations -- reusing Text.GetSkus,
 // the same machinery the old two-input diff used, just fed Base
@@ -150,19 +178,11 @@ func ComputeThreeWay(
 			continue
 		}
 
-		baseTags := baseEntry.sku.GetSkuExternal().GetMetadata().GetTags()
-
-		if quiter_set.Equals(
-			patchEntry.sku.GetSkuExternal().GetMetadata().GetTags(),
-			baseTags,
-		) {
+		if patchableAspectsEqual(patchEntry.sku, baseEntry.sku) {
 			continue // liveDrifted is only ever consulted when patch touched this object
 		}
 
-		liveDrifted := !quiter_set.Equals(
-			liveObject.GetSkuExternal().GetMetadata().GetTags(),
-			baseTags,
-		)
+		liveDrifted := !patchableAspectsEqual(liveObject, baseEntry.sku)
 
 		if liveDrifted {
 			result.Conflicts = append(
