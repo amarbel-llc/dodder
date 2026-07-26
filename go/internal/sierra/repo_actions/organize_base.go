@@ -143,7 +143,13 @@ func WriteOrganizeBaseAndActivate(
 
 	baseDigest := &orgie.OptionCommentBaseDigest{}
 
-	if err = baseDigest.Id.Set("@" + digest.String()); err != nil {
+	// digest.String() alone, NOT "@"+digest.String() -- markl.Id.Set's
+	// wire form is `[purpose@]<digest>` (splits on the first `@`), so a
+	// leading `@` with nothing before it is an EMPTY PURPOSE, which the
+	// underlying library now rejects, not a "bare digest" marker. The
+	// `@` in `_base=@<digest>` is OptionCommentBaseDigest's own display
+	// convention (String() below), never passed through to Id.Set.
+	if err = baseDigest.Id.Set(digest.String()); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

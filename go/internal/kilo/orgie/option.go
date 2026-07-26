@@ -316,6 +316,16 @@ func (ocf *OptionCommentBaseDigest) CloneOptionComment() OptionComment {
 }
 
 func (ocf *OptionCommentBaseDigest) Set(v string) (err error) {
+	// Strip the leading "@" before delegating -- it's this type's own
+	// display convention (String() below), not something markl.Id.Set
+	// understands. markl.Id.Set's wire form is `[purpose@]<digest>`
+	// (splits on the first "@"), so passing "@<digest>" through
+	// unstripped is read as an EMPTY PURPOSE, which the library rejects
+	// ("invalid bare purpose"). Confirmed against a real failure this
+	// caused in WriteOrganizeBaseAndActivate (organize_base.go) after a
+	// markl dependency bump tightened this validation.
+	v = strings.TrimPrefix(v, "@")
+
 	if err = ocf.Id.Set(v); err != nil {
 		err = errors.Wrap(err)
 		return err
@@ -325,10 +335,11 @@ func (ocf *OptionCommentBaseDigest) Set(v string) (err error) {
 }
 
 func (ocf *OptionCommentBaseDigest) String() string {
-	// markl.Id.String() omits the leading "@" (it accepts "@..." on Set
-	// but doesn't echo it back on String) -- re-add it so WriteTo's
+	// markl.Id.String() never includes "@" -- re-add it so WriteTo's
 	// output is the RFC-0002-shaped "- _base=@<digest>", not
-	// "- _base=<digest>".
+	// "- _base=<digest>". Set (above) strips it back off before
+	// delegating to markl.Id.Set, which treats a leading "@" as a
+	// (rejected, empty) purpose delimiter, not a bare-digest marker.
 	return "@" + ocf.Id.String()
 }
 

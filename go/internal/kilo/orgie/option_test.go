@@ -80,7 +80,7 @@ func TestMetadataReadFromRejectsUnregisteredSettingsField(t1 *testing.T) {
 func TestMetadataBaseDigestSettingsFieldRoundTrip(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
-	const digest = "@blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd"
+	const digest = "@blake2b256-9j5cj9mjnk43k9rq4k2h3lezpl2sn3ura7cf8pa58cgfujw6nwgst7gtwz"
 
 	metadata := NewMetadata(ids.RepoId{})
 
