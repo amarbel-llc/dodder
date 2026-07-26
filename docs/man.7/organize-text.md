@@ -79,6 +79,28 @@ to activate dry-run mode from a cold start).
 The older comment spelling, **`% dry-run:true`**, is still accepted when
 reading a document (a deprecated alias), but is no longer generated.
 
+**`_base=@digest`** pins the document to the exact ground form **organize**
+generated it from, and is **mandatory** — every document **organize**
+outputs carries one, and applying edits without one fails:
+
+    ---
+    - _base=@blake2b256-zv8eh9jh32rtkg62ukpfjkxtzxn9mc9m7aqzs296gnkw0x75a24q69c7ux
+    ---
+
+Organize documents are ephemeral action, not durable artifacts: edits can
+only be applied against the exact document **organize** generated, never a
+hand-authored one that omits `_base`, and never a stale copy from an
+earlier session. A document missing `_base` entirely fails immediately
+with an error naming the regeneration command to run
+(`dodder organize <your original query>`); a `_base` present but pointing
+at a digest that can no longer be read back (e.g. copy-pasted from a
+different repo, or referencing a blob that was never synced) fails the
+same way, naming the unreadable digest.
+
+Do not hand-author or edit the `_base` line — treat it as opaque,
+generated content. See **CONFLICTS** below for what happens when the
+store has changed since `_base` was generated.
+
 ## Headings
 
 Headings use markdown-style `#` syntax. Each heading level defines a tag scope:
@@ -174,23 +196,50 @@ Add a new object line. The organize system will create it on commit:
 ## Removing Objects
 
 Delete the object line from the document. This is **not** a no-op and does
-**not** delete the object from the store — it is a real metadata write: the
-tag(s) belonging to the query used to invoke **organize** (the document
-metadata's tag set, see **METADATA** above) are removed from the object, and
-the reduced tag set is committed as a new object version. For example, after
-`dodder organize tag-5`, deleting an object's line removes `tag-5` from that
-object; the object no longer matches that query on a subsequent `show`.
+**not** delete the object from the store — it is always a metadata write,
+never a store deletion — but exactly *which* tags get removed depends on
+whether the document was generated with **-group-by**:
 
-Tags implied by headings or **-group-by** grouping are a separate mechanism
-(see **HEADINGS**) and are **not** affected by line deletion — an object that
-was nested under `# priority-1` keeps the `priority-1` tag even after its
-line is deleted, because only the document-level query-selection tags are
-removed, not the per-heading tag set.
+**Ungrouped document** (no **-group-by**)
+:   The tag(s) belonging to the query used to invoke **organize** (the
+    document metadata's tag set, see **METADATA** above) are removed from
+    the object, and the reduced tag set is committed as a new object
+    version. For example, after `dodder organize tag-5`, deleting an
+    object's line removes `tag-5` from that object; the object no longer
+    matches that query on a subsequent `show`. Tags implied by headings
+    are a separate mechanism (see **HEADINGS**) and are **not** affected —
+    an object nested under `# priority-1` keeps the `priority-1` tag even
+    after its line is deleted, because only the document-level
+    query-selection tags are removed, not the per-heading tag set.
 
-This is scoped to the tags declared at the document-metadata level; it says
-nothing about the grouped (**-group-by**) dimension specifically, and should
-not be read as "clears the object's group membership" or "removes it from
-dodder entirely."
+**Grouped document** (generated with **-group-by**)
+:   Deletion instead empties the grouped dimension only — only the
+    **-group-by**-matching tag(s) the object had are cleared, never the
+    invoking query's selection tags. For example, after
+    `dodder organize -group-by priority task`, deleting an object's line
+    removes its `priority-*` tag but leaves `task` and every other tag
+    untouched.
+
+Neither case ever deletes the object or removes it from dodder entirely —
+only the specific tag(s) described above are cleared.
+
+## Conflicts
+
+Between generating a document and applying it, the object(s) it references
+may have changed independently in the store — someone else ran
+`dodder organize` or `checkin` against the same objects in the meantime.
+Applying compares three states: **base** (what `_base` points to, what you
+were shown), **patch** (your edited document), and **live** (the store's
+current state). If the same object was touched both in your edit and in
+the live store since `_base` was generated, the apply is rejected loudly
+rather than silently picking a side or merging:
+
+    N object(s) changed both in your edit and in the store since this
+    document was generated, and can't be merged automatically
+
+Regenerate with `dodder organize <your original query>` and re-apply your
+edits against the fresh document. There is no interactive conflict
+resolver yet — a rejected apply always requires regenerating from scratch.
 
 # INTERNAL AND EXTERNAL FORKS
 
