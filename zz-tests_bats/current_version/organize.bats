@@ -1628,3 +1628,57 @@ function organize_dot_operator_workspace_delete_files { # @test
 		          deleted [2.md]
 	EOM
 }
+
+# bats file_tags=user_story:organize
+function organize_base_undereferenceable_rejected { # @test
+  # A real, properly-checksummed digest (organize_v5_outputs_organize_one_tag's,
+  # a different test's isolated blob store) -- syntactically valid, but
+  # never written to THIS test's fresh store, so it's semantically
+  # undereferenceable. A single flipped character breaks the digest's own
+  # checksum, so a hand-mutated string fails at parse time instead.
+  run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		- _base=@blake2b256-fvyc8xcw02mxglel3u2x2t3rlpfp7vzpf08tdxdxp0j5rm7e68wqxxy798
+		---
+
+		- [one/dos  !md tag-3 tag-4] wow ok again
+		- [one/uno  !md tag-3 tag-4] wow the first
+	EOM
+
+  assert_failure
+  assert_line --index 0 --partial 'could not be dereferenced'
+  assert_line --index 0 --partial 'blake2b256-fvyc8xcw02mxglel3u2x2t3rlpfp7vzpf08tdxdxp0j5rm7e68wqxxy798'
+}
+
+# dodder#374(b) plan §4: patch and live BOTH independently changed the same
+# object's tags away from base -- must reject loudly (ErrConflicts), not
+# silently commit over the drift. Simulated single-process by capturing a
+# real _base, then using a SEPARATE organize commit to change one/dos's
+# tags in the live store BEFORE applying the original (now-stale) base's
+# patch, which touches one/dos's tags differently.
+function organize_base_live_conflict_rejected { # @test
+  base_line="$(get_organize_base :z,e,t)"
+
+  run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		$(get_organize_base :z,e,t)
+		---
+
+		- [one/dos  !md tag-3 tag-4 drifted-live] wow ok again
+		- [one/uno  !md tag-3 tag-4] wow the first
+	EOM
+  assert_success
+
+  run_dodder organize -mode commit-directly :z,e,t <<-EOM
+		---
+		$base_line
+		---
+
+		- [one/dos  !md tag-3 tag-4 drifted-patch] wow ok again
+		- [one/uno  !md tag-3 tag-4] wow the first
+	EOM
+
+  assert_failure
+  assert_line --index 0 --partial "changed both in your edit and in the store"
+  assert_line --index 1 --partial 'one/dos'
+}
