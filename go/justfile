@@ -355,16 +355,24 @@ build-go-generate: && codemod-go-fmt
 # check-grammar resolves it. -go-package matches the package clause
 # `main.go` already declares; -disable-builtins -disable-spaces match
 # check-grammar's validation flags (org-mode's whitespace is semantic).
+# langlang embeds whatever string is passed to -grammar verbatim into
+# main.go's "// Source File: ..." header, with no flag to suppress it
+# -- an absolute path there would pin the committed file to whichever
+# worktree/checkout last regenerated it, making check-grammar-drift
+# fail forever in every OTHER checkout (including the pre-merge hook's
+# own detached build worktree, confirmed the hard way: dodder#378's
+# first merge attempt failed on exactly this). `cd`ing into the grammar's
+# own directory and passing the bare filename keeps the header identical
+# across every checkout.
 build-go-generate-grammar:
   #!/usr/bin/env bash
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths '..#langlang')
-  peg="{{ justfile_directory() }}/internal/0/orgmode_peg/orgmode.peg"
-  out="{{ justfile_directory() }}/internal/0/orgmode_peg/main.go"
+  cd "{{ justfile_directory() }}/internal/0/orgmode_peg"
   "$bin/bin/langlang" \
-    -grammar "$peg" \
+    -grammar orgmode.peg \
     -output-language go \
-    -output-path "$out" \
+    -output-path main.go \
     -go-package orgmode_peg \
     -disable-builtins -disable-spaces
 
@@ -377,21 +385,30 @@ build-go-generate-grammar:
 # caveat build-go-generate's own comment documents for go:generate
 # codegen), so the scratch copy goes through the same two formatters
 # conformist's Go lane runs (goimports + gofumpt) before comparing --
-# otherwise every run would show a spurious formatting-only diff.
+# otherwise every run would show a spurious formatting-only diff. The
+# grammar is copied into the scratch dir and referenced by its bare
+# filename (not an absolute path) so the generated "// Source File:
+# ..." header matches build-go-generate-grammar's own invocation --
+# see that recipe's comment for why an absolute path there breaks this
+# check in every checkout but the one that last ran it.
 check-grammar-drift:
   #!/usr/bin/env bash
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths '..#langlang')
-  peg="{{ justfile_directory() }}/internal/0/orgmode_peg/orgmode.peg"
-  committed="{{ justfile_directory() }}/internal/0/orgmode_peg/main.go"
+  dir="{{ justfile_directory() }}/internal/0/orgmode_peg"
+  committed="$dir/main.go"
   scratch=$(mktemp -d)
   trap 'rm -rf "$scratch"' EXIT
-  "$bin/bin/langlang" \
-    -grammar "$peg" \
-    -output-language go \
-    -output-path "$scratch/main.go" \
-    -go-package orgmode_peg \
-    -disable-builtins -disable-spaces
+  cp "$dir/orgmode.peg" "$scratch/orgmode.peg"
+  (
+    cd "$scratch"
+    "$bin/bin/langlang" \
+      -grammar orgmode.peg \
+      -output-language go \
+      -output-path main.go \
+      -go-package orgmode_peg \
+      -disable-builtins -disable-spaces
+  )
   nix develop .. -c goimports -w "$scratch/main.go"
   nix develop .. -c gofumpt -w "$scratch/main.go"
   if ! diff -q "$committed" "$scratch/main.go" >/dev/null; then
