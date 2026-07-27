@@ -541,6 +541,10 @@
         "conformist": "conformist",
         "hyphence": "hyphence",
         "igloo": "igloo_2",
+        "langlang": [
+          "hyphence",
+          "langlang"
+        ],
         "madder": "madder",
         "nixpkgs-master": "nixpkgs-master",
         "piggy": "piggy",

@@ -113,6 +113,14 @@
     # separately, mirroring madder's exact fix (madder flake.nix, go-module
     # rename playbook wave 2 / piggy+madder leg).
     piggy.inputs.langlang.follows = "hyphence/langlang";
+    # dodder#378: expose langlang as `inputs.langlang` (consumed below as
+    # the `packages.langlang` output -- see outputs.packages, `--inputs-from`
+    # does not work for a follows-based indirect input like this one,
+    # confirmed empirically). Reuses the ALREADY collapsed hyphence/piggy
+    # node above rather than declaring an independent `url`-based input,
+    # which would reintroduce the exact tap/crane/rust-overlay diamond
+    # the two lines above this exist to collapse.
+    langlang.follows = "hyphence/langlang";
   };
 
   outputs =
@@ -128,6 +136,7 @@
       piggy,
       purse-first,
       conformist,
+      langlang,
       ...
     }:
     let
@@ -256,6 +265,17 @@
           # devShell puts on PATH (mirrors madder).
           conformist-pre-commit = conformistHooksEval.config.build.preCommit;
           conformist-repair = conformistHooksEval.config.build.repair;
+          # dodder#378: re-exposed as a real dodder package (NOT resolved
+          # via `nix build --inputs-from`, which the check-go-repool/
+          # -seqerror/-defererr recipes use for purse-first#foo -- that
+          # mechanism does not work for `langlang`, since it's a
+          # FOLLOWS-based (indirect) top-level input, not a direct one;
+          # `--inputs-from` failed with "cannot find flake 'flake:langlang'
+          # in the flake registries" against the collapsed node, confirmed
+          # empirically this session). `go/justfile`'s check-grammar /
+          # test-grammar-vectors resolve this directly instead:
+          # `nix build --no-link --print-out-paths '../..#langlang'`.
+          langlang = langlang.packages.${system}.default;
         };
         checks = result.checks // {
           # Sandboxed read-only formatting gate: `conformist check` against a

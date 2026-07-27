@@ -171,14 +171,16 @@ func copyFile(srcPath, destPath string, mode os.FileMode) (n int64, err error) {
 		return 0, err
 	}
 
-	defer src.Close()
+	defer errors.DeferredCloser(&err, src)
 
 	dest, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, mode)
 	if err != nil {
 		return 0, err
 	}
 
-	defer dest.Close()
+	defer errors.DeferredCloser(&err, dest)
 
-	return io.Copy(dest, src)
+	n, err = io.Copy(dest, src)
+
+	return n, err
 }

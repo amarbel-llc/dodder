@@ -198,7 +198,11 @@ func makeLuaBlobRead(
 			return 0
 		}
 
-		defer reader.Close()
+		defer func() {
+			if closeErr := reader.Close(); closeErr != nil {
+				ls.RaiseError("closing blob reader: %s", closeErr)
+			}
+		}()
 
 		body, err := io.ReadAll(reader)
 		if err != nil {
@@ -224,7 +228,11 @@ func makeLuaBlobWrite(
 			return 0
 		}
 
-		defer writer.Close()
+		defer func() {
+			if closeErr := writer.Close(); closeErr != nil {
+				ls.RaiseError("closing blob writer: %s", closeErr)
+			}
+		}()
 
 		if _, err = writer.Write([]byte(body)); err != nil {
 			ls.RaiseError("writing blob: %s", err)

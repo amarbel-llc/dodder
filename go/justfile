@@ -410,26 +410,58 @@ check-go-vuln:
 check-go-vet:
   go vet -tags test,debug ./... || true
 
+# --inputs-from '..' (ONE level up from go/), NOT '../..': confirmed
+# empirically (dodder#378 investigation) that '../..' walks past this
+# worktree's own root onto '.worktrees/' (no flake.nix there), and nix's
+# upward-search then lands on the MAIN checkout's flake.nix instead of
+# this worktree's -- these three recipes were silently building their
+# vet tools against master's purse-first pin, not this worktree's,
+# whenever the two diverge. '..' matches check-conformist's own
+# long-proven-correct idiom (`..#checks.....formatting` below).
 check-go-repool:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths --inputs-from '../..' 'purse-first#repool')
+  bin=$(nix build --no-link --print-out-paths --inputs-from '..' 'purse-first#repool')
   go vet -tags test,debug -vettool="$bin/bin/repool" ./... || true
 
 check-go-seqerror:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths --inputs-from '../..' 'purse-first#seqerror')
+  bin=$(nix build --no-link --print-out-paths --inputs-from '..' 'purse-first#seqerror')
   go vet -tags test,debug -vettool="$bin/bin/seqerror" ./...
 
 check-go-defererr:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths --inputs-from '../..' 'purse-first#defererr')
+  bin=$(nix build --no-link --print-out-paths --inputs-from '..' 'purse-first#defererr')
   go vet -tags test,debug -vettool="$bin/bin/defererr" ./...
 
 check-go-versions:
   go run ./lib/alfa/analyzers/versions
+
+# Read-only grammar-validation gate (dodder#378): confirms
+# orgmode_peg/orgmode.peg itself still parses under langlang, via a
+# hermetically-resolved langlang binary. Resolved via the repo's OWN
+# `packages.langlang` output (flake.nix) using `..` (ONE level up from
+# go/, matching check-conformist's proven `..#checks.....` idiom) --
+# see the check-go-repool/-seqerror/-defererr comment above for why `..`
+# and not `../..` (the SAME upward-search-lands-on-the-main-checkout bug
+# those three recipes had, found and fixed while investigating why
+# langlang couldn't be resolved via the `--inputs-from '../..'` pattern
+# this recipe originally copied from them).
+# -disable-builtins -disable-spaces together (org-mode's whitespace is
+# semantic; either flag alone silently injects space-skipping). Safe to
+# rely on -grammar-ast's exit code here -- langlang#26's "always exits
+# 0" bug is specific to -input mode (parsing a document against a
+# grammar), not -grammar-ast (parsing the grammar file itself) --
+# that's what test-grammar-vectors below is for.
+check-grammar:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#langlang')
+  peg="{{ justfile_directory() }}/internal/0/orgmode_peg/orgmode.peg"
+  "$bin/bin/langlang" -grammar "$peg" -grammar-ast -disable-builtins -disable-spaces >/dev/null
+  echo "check-grammar: ok ($peg parses under langlang)"
 
 # Read-only formatting/lint gate via conformist: builds the flake's
 # checks.formatting derivation (`conformist check` against a /nix/store
@@ -466,7 +498,7 @@ check-shellcheck:
   fi
   shellcheck "${files[@]}"
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-conformist check-shellcheck test-go-unit
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-conformist check-shellcheck check-grammar test-go-unit
 
 #   _____         _
 #  |_   _|__  ___| |_
