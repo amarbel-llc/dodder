@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	"code.linenisgreat.com/dodder/go/internal/bravo/checked_out_state"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
@@ -94,6 +96,44 @@ func PrepareOrganizeResultsForApply(
 	}
 
 	out.Original = live
+
+	// dodder#374(b) followup: a Base/Patch-touched object can fall out
+	// of the tag-based query above (dodder's only selection mechanism
+	// is tags, so a concurrent tag edit is enough) without ceasing to
+	// exist -- dodder has no hard-delete. This ID-based fallback lets
+	// ComputeThreeWay's live-drift check (three_way.go) still compare
+	// against the object's true current state instead of silently
+	// skipping it. Mirrors organize.go:93-96's established
+	// Transacted->SkuType conversion idiom.
+	out.FetchLiveById = func(
+		objectId *ids.ObjectId,
+	) (sku.SkuType, bool, error) {
+		// store.ReadOneObjectId special-cases an empty objectId (e.g. a
+		// still-unassigned id for a brand-new zettel proposal in Base)
+		// by returning (nil, nil) -- no error, but also no object
+		// (oscar/store/reader.go:150-152). Must be treated the same as
+		// IsErrNotFound below, or CloneSkuTypeFromTransacted panics on
+		// a nil src.
+		transacted, err := repo.GetStore().ReadOneObjectId(objectId)
+		if err != nil {
+			if errors.IsErrNotFound(err) {
+				return nil, false, nil
+			}
+
+			return nil, false, errors.Wrap(err)
+		}
+
+		if transacted == nil {
+			return nil, false, nil
+		}
+
+		cloned, _ := sku.CloneSkuTypeFromTransacted( //repool:owned
+			transacted,
+			checked_out_state.Internal,
+		)
+
+		return cloned, true, nil
+	}
 
 	return out, err
 }

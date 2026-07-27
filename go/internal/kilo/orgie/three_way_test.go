@@ -462,3 +462,119 @@ func TestComputeThreeWayConflictWhenTypeDriftsOnTouchedObject(t1 *testing.T) {
 		t1.Errorf("expected conflicted object \"one/uno\", got %q", conflictedId)
 	}
 }
+
+// TestComputeThreeWayFallbackFetchDetectsDriftWhenObjectFallsOutOfLiveQuery
+// pins the dodder#374(b) followup: an object touched by both Base and
+// Patch, absent from the pre-resolved Live set (as if it fell out of the
+// organize session's tag-based query between generation and apply --
+// dodder's only selection mechanism is tags, so this is the realistic
+// cause, not deletion; dodder has no hard-delete), must still get a
+// live-drift comparison via FetchLiveById rather than being silently
+// skipped.
+func TestComputeThreeWayFallbackFetchDetectsDriftWhenObjectFallsOutOfLiveQuery(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	base := mustParseText("- [one/uno tag-a] desc-base\n")
+	patch := mustParseText("- [one/uno tag-b] desc-base\n")
+
+	live := makeLiveSet() // empty -- object fell out of the live query
+
+	fetched := makeThreeWayTestObject("one/uno")
+	objects.SetTags(
+		fetched.GetSkuExternal().GetMetadataMutable(),
+		ids.MakeTagSetMutable(mustTag("tag-c")), // drifted from base's tag-a
+	)
+	errors.PanicIfError(
+		fetched.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc-base"),
+	)
+
+	var fetchCalled bool
+
+	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{
+		Base:  base,
+		Patch: patch,
+		Live:  live,
+		FetchLiveById: func(objectId *ids.ObjectId) (sku.SkuType, bool, error) {
+			fetchCalled = true
+			return fetched, true, nil
+		},
+	})
+	t.AssertNoError(err)
+
+	if !fetchCalled {
+		t1.Fatalf("expected FetchLiveById to be called")
+	}
+
+	if len(result.Conflicts) != 1 {
+		t1.Fatalf("expected exactly 1 conflict, got %d: %#v", len(result.Conflicts), result.Conflicts)
+	}
+
+	conflictedId := result.Conflicts[0].Object.GetSkuExternal().GetObjectId().String()
+	if conflictedId != "one/uno" {
+		t1.Errorf("expected conflicted object \"one/uno\", got %q", conflictedId)
+	}
+}
+
+// TestComputeThreeWayFallbackFetchNoConflictWhenLiveMatchesBase is the
+// negative sibling: FetchLiveById returns an object matching base on
+// every patchable aspect, so no drift is detected -- the fallback must
+// not over-trigger just because it was consulted.
+func TestComputeThreeWayFallbackFetchNoConflictWhenLiveMatchesBase(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	base := mustParseText("- [one/uno tag-a] desc-base\n")
+	patch := mustParseText("- [one/uno tag-b] desc-base\n")
+
+	live := makeLiveSet() // empty -- object fell out of the live query
+
+	fetched := makeThreeWayTestObject("one/uno")
+	objects.SetTags(
+		fetched.GetSkuExternal().GetMetadataMutable(),
+		ids.MakeTagSetMutable(mustTag("tag-a")), // matches base
+	)
+	errors.PanicIfError(
+		fetched.GetSkuExternal().GetMetadataMutable().GetDescriptionMutable().Set("desc-base"),
+	)
+
+	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{
+		Base:  base,
+		Patch: patch,
+		Live:  live,
+		FetchLiveById: func(objectId *ids.ObjectId) (sku.SkuType, bool, error) {
+			return fetched, true, nil
+		},
+	})
+	t.AssertNoError(err)
+
+	if len(result.Conflicts) != 0 {
+		t1.Errorf("expected no conflicts (live matches base), got %#v", result.Conflicts)
+	}
+}
+
+// TestComputeThreeWayFallbackFetchSkipsWhenGenuinelyNeverCommitted covers
+// FetchLiveById's other outcome: (nil, false, nil), meaning the object
+// really was never committed (e.g. still a pending new-object proposal).
+// Must behave exactly like the no-fallback-configured case: skip, no
+// conflict, no error.
+func TestComputeThreeWayFallbackFetchSkipsWhenGenuinelyNeverCommitted(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	base := mustParseText("- [one/uno tag-a] desc-base\n")
+	patch := mustParseText("- [one/uno tag-b] desc-base\n")
+
+	live := makeLiveSet() // empty
+
+	result, err := ComputeThreeWay(options_print.Options{}, ThreeWayInputs{
+		Base:  base,
+		Patch: patch,
+		Live:  live,
+		FetchLiveById: func(objectId *ids.ObjectId) (sku.SkuType, bool, error) {
+			return nil, false, nil
+		},
+	})
+	t.AssertNoError(err)
+
+	if len(result.Conflicts) != 0 {
+		t1.Errorf("expected no conflicts (never committed), got %#v", result.Conflicts)
+	}
+}

@@ -29,6 +29,22 @@ type ThreeWayInputs struct {
 	Live         sku.SkuTypeSet
 	WasGrouped   bool
 	GroupingTags ids.TagSlice
+
+	// FetchLiveById is an optional fallback for the live-drift check
+	// below: when a key touched by both Base and Patch isn't in the
+	// pre-resolved Live set (e.g. it fell out of the organize session's
+	// tag-based query between generation and apply -- dodder's only
+	// selection mechanism is tags, so a concurrent tag edit on an
+	// object that still fully exists is enough), this is consulted
+	// instead of blindly skipping the drift check. nil preserves the
+	// original "continue" (skip) behavior -- existing unit tests and
+	// the legacy repo_actions.Organize path (OrganizeResults' own doc
+	// comment, checkout.go/clean.go's -organize flag,
+	// organize_remote.go) are unaffected. Kept kilo-tier per
+	// ChangesFromResults' no-repo-access constraint: sierra-tier
+	// PrepareOrganizeResultsForApply is the only place this gets
+	// populated.
+	FetchLiveById func(objectId *ids.ObjectId) (sku.SkuType, bool, error)
 }
 
 // RemovalIntent is one object present in Base, absent from Patch --
@@ -178,7 +194,21 @@ func ComputeThreeWay(
 
 		liveObject, inLive := inputs.Live.Get(key)
 		if !inLive {
-			continue // gone from the store entirely -- a different failure mode than drift
+			if inputs.FetchLiveById == nil {
+				continue // no fallback configured -- same as before
+			}
+
+			var fetchErr error
+			if liveObject, inLive, fetchErr = inputs.FetchLiveById(
+				baseEntry.sku.GetSkuExternal().GetObjectId(),
+			); fetchErr != nil {
+				err = errors.Wrap(fetchErr)
+				return result, err
+			}
+
+			if !inLive {
+				continue // genuinely never committed (e.g. a still-pending new-object proposal)
+			}
 		}
 
 		if liveObject.GetState() == checked_out_state.Untracked {

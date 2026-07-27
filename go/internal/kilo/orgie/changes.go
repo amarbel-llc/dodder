@@ -161,13 +161,23 @@ func (c Changes) String() string {
 // requery -- for those callers ComputeThreeWay's Base and Live are the same
 // snapshot by construction, so conflict detection is a structural no-op
 // (never fires, same as pre-(b)); this is a known, deliberately unaddressed
-// gap in this feature's scope, not a regression.
+// gap in this feature's scope, not a regression (reviewed and confirmed
+// unnecessary for those three callers: all read-only filtering or
+// idempotent checked-out-state deletion, never a tag/description commit).
+//
+// FetchLiveById (optional) is PrepareOrganizeResultsForApply's ID-based
+// fallback for ComputeThreeWay's live-drift check, threaded through
+// unchanged -- see ThreeWayInputs' own doc comment (three_way.go) for why
+// this exists and why it's a plain closure rather than repo/store access
+// gained here. Only PrepareOrganizeResultsForApply-routed callers set it;
+// the legacy repo_actions.Organize path above leaves it nil.
 type OrganizeResults struct {
 	Before, After *Text
 	Original      sku.SkuTypeSet
 	QueryGroup    *queries.Query
 	WasGrouped    bool
 	GroupingTags  ids.TagSlice
+	FetchLiveById func(objectId *ids.ObjectId) (sku.SkuType, bool, error)
 }
 
 func ChangesFrom(
@@ -216,11 +226,12 @@ func ChangesFromResults(
 	var threeWayResult ThreeWayResult
 
 	if threeWayResult, err = ComputeThreeWay(po, ThreeWayInputs{
-		Base:         results.Before,
-		Patch:        results.After,
-		Live:         results.Original,
-		WasGrouped:   results.WasGrouped,
-		GroupingTags: results.GroupingTags,
+		Base:          results.Before,
+		Patch:         results.After,
+		Live:          results.Original,
+		WasGrouped:    results.WasGrouped,
+		GroupingTags:  results.GroupingTags,
+		FetchLiveById: results.FetchLiveById,
 	}); err != nil {
 		err = errors.Wrap(err)
 		return c, err
