@@ -21,7 +21,7 @@ default: lint build test
 #  |_____|_|_| |_|\__|
 #
 
-lint: lint-fmt lint-shell
+lint: lint-fmt lint-shell lint-grammar
 
 # Read-only formatting gate (conformist check via the flake's
 # checks.formatting). Runs first in the default lane so a formatting drift
@@ -33,6 +33,17 @@ lint-fmt:
 # Read-only shellcheck gate for tracked shell scripts (see go/check-shellcheck).
 lint-shell:
   just go/check-shellcheck
+
+# Read-only grammar-validation + codegen-drift gate for orgmode.peg
+# (dodder#378, see go/check-grammar and go/check-grammar-drift). NOTE:
+# `go/check` (vuln/vet/repool/seqerror/etc, the `check` recipe below)
+# is a SEPARATE, non-gating aggregate that this pre-merge `lint` lane
+# never calls -- these two recipes need their own explicit wiring here
+# to actually be part of what `just`/the pre-merge hook enforces,
+# same as lint-fmt/lint-shell above.
+lint-grammar:
+  just go/check-grammar
+  just go/check-grammar-drift
 
 #   ____        _ _     _
 #  | __ ) _   _(_) | __| |
@@ -78,11 +89,18 @@ check:
 # `build` dep is needed for the test aggregate below. (Detached comment on
 # purpose: aggregates carry no doc comment — conformist-justfile(7).)
 
-test: test-go test-bats test-bats-generate
+test: test-go test-grammar test-bats test-bats-generate
 
 # Run unit tests only.
 test-go *flags:
   just go/test-go-unit {{flags}}
+
+# Runs the grammar-vectors harness with a hermetically-resolved
+# langlang (dodder#378, see go/test-grammar-vectors). Separate from
+# test-go since it needs its own nix-resolved binary, not just the
+# devshell's `go test`.
+test-grammar:
+  just go/test-grammar-vectors
 
 # Run the full bats integration suite inside the nix sandbox.
 # Wraps `pkgs.testers.batsLane` from amarbel-llc/bats; binaries are
