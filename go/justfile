@@ -346,10 +346,65 @@ build-go-generate: && codemod-go-fmt
   nix develop .. -c go generate ./internal/...
   nix develop .. -c go generate ./internal/0/...
 
+# dodder#378: regenerates orgmode_peg/main.go from orgmode_peg/
+# orgmode.peg via the pinned langlang (replaces the prior ad-hoc
+# generation from a scratch /tmp path). Mutates the working tree --
+# not folded into build-go-generate's `go generate ./...` calls because
+# langlang isn't wired onto the devshell's own PATH (a broader change
+# than this one codegen step warrants); resolved the same way
+# check-grammar resolves it. -go-package matches the package clause
+# `main.go` already declares; -disable-builtins -disable-spaces match
+# check-grammar's validation flags (org-mode's whitespace is semantic).
+build-go-generate-grammar:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#langlang')
+  peg="{{ justfile_directory() }}/internal/0/orgmode_peg/orgmode.peg"
+  out="{{ justfile_directory() }}/internal/0/orgmode_peg/main.go"
+  "$bin/bin/langlang" \
+    -grammar "$peg" \
+    -output-language go \
+    -output-path "$out" \
+    -go-package orgmode_peg \
+    -disable-builtins -disable-spaces
+
+# dodder#378: read-only drift gate -- regenerates main.go into a
+# scratch copy and diffs against the committed version without
+# touching the working tree. Fails if orgmode.peg and the committed
+# main.go have diverged (the latent risk dodder#378's own issue body
+# flags: a hand-generated file from a /tmp source with nothing to
+# catch drift). Raw langlang output isn't goimports/gofumpt-clean (same
+# caveat build-go-generate's own comment documents for go:generate
+# codegen), so the scratch copy goes through the same two formatters
+# conformist's Go lane runs (goimports + gofumpt) before comparing --
+# otherwise every run would show a spurious formatting-only diff.
+check-grammar-drift:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#langlang')
+  peg="{{ justfile_directory() }}/internal/0/orgmode_peg/orgmode.peg"
+  committed="{{ justfile_directory() }}/internal/0/orgmode_peg/main.go"
+  scratch=$(mktemp -d)
+  trap 'rm -rf "$scratch"' EXIT
+  "$bin/bin/langlang" \
+    -grammar "$peg" \
+    -output-language go \
+    -output-path "$scratch/main.go" \
+    -go-package orgmode_peg \
+    -disable-builtins -disable-spaces
+  nix develop .. -c goimports -w "$scratch/main.go"
+  nix develop .. -c gofumpt -w "$scratch/main.go"
+  if ! diff -q "$committed" "$scratch/main.go" >/dev/null; then
+    echo "orgmode_peg/main.go is stale relative to orgmode.peg -- run 'just go/build-go-generate-grammar', review, and commit" >&2
+    diff -u "$committed" "$scratch/main.go" || true
+    exit 1
+  fi
+  echo "check-grammar-drift: ok (main.go matches orgmode.peg regeneration)"
+
 # Regenerate codegen and commit in one step
-commit-codegen: build-go-generate
+commit-codegen: build-go-generate build-go-generate-grammar
   #! /usr/bin/env fish
-  set -l changed (git diff --name-only -- '*.go' | grep -E '_tommy\.go$|_string\.go$|_stringer\.go$')
+  set -l changed (git diff --name-only -- '*.go' | grep -E '_tommy\.go$|_string\.go$|_stringer\.go$|orgmode_peg/main\.go$')
   if test -z "$changed"
     echo "no codegen changes"
     return 0
@@ -463,6 +518,17 @@ check-grammar:
   "$bin/bin/langlang" -grammar "$peg" -grammar-ast -disable-builtins -disable-spaces >/dev/null
   echo "check-grammar: ok ($peg parses under langlang)"
 
+# dodder#378: runs the grammar-vectors harness (orgmode_peg/
+# grammar_vectors_test.go) with a hermetically-resolved langlang on
+# PATH via LANGLANG_BIN -- the harness itself skips (not fails) when
+# LANGLANG_BIN is unset, so a bare `go test ./...` outside this recipe
+# stays green.
+test-grammar-vectors:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths '..#langlang')
+  LANGLANG_BIN="$bin/bin/langlang" go test -tags test,debug -v ./internal/0/orgmode_peg/... -run 'TestGrammarVectors'
+
 # Read-only formatting/lint gate via conformist: builds the flake's
 # checks.formatting derivation (`conformist check` against a /nix/store
 # snapshot of the tracked tree, same Nix-generated config `nix fmt` uses,
@@ -498,7 +564,7 @@ check-shellcheck:
   fi
   shellcheck "${files[@]}"
 
-check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-conformist check-shellcheck check-grammar test-go-unit
+check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-defererr check-go-versions check-conformist check-shellcheck check-grammar check-grammar-drift test-grammar-vectors test-go-unit
 
 #   _____         _
 #  |_   _|__  ___| |_
