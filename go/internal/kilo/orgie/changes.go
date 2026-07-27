@@ -221,7 +221,7 @@ func ChangesFromResults(
 	// generation always writes it (organize_base.go) and callers are
 	// required to reject an apply with it missing before reaching this
 	// function -- so the found bool is intentionally discarded.
-	results.After.Metadata.OptionCommentSet.RemoveByKey("base")
+	results.After.Metadata.SettingSet.RemoveByKey("base")
 
 	var threeWayResult ThreeWayResult
 

@@ -59,8 +59,8 @@ func writeBareBlob(
 // generation sequence (per the 2026-07-18 review's excise-and-parse
 // ruling), with no circularity by construction:
 //
-//  1. ot's Metadata has no `_base` OptionComment active yet (only the
-//     prototype is registered, from MakeOptionCommentSet) -- render the
+//  1. ot's Metadata has no `_base` Setting active yet (only the
+//     prototype is registered, from MakeSettingSet) -- render the
 //     complete outer document text as-is; it has no `_base` line.
 //  2. Wrap that rendered text as the base blob's BODY, under an envelope
 //     whose metadata carries only `_group-by="..."` (present iff
@@ -110,9 +110,9 @@ func WriteOrganizeBaseAndActivate(
 			values = append(values, tag.String())
 		}
 
-		envelopeMetadata.OptionCommentSet.AddPrototypeAndOption(
+		envelopeMetadata.SettingSet.AddPrototypeAndOption(
 			"group-by",
-			&orgie.OptionCommentGroupBy{Value: strings.Join(values, ",")},
+			&orgie.SettingGroupBy{Value: strings.Join(values, ",")},
 		)
 	}
 
@@ -141,20 +141,20 @@ func WriteOrganizeBaseAndActivate(
 		return err
 	}
 
-	baseDigest := &orgie.OptionCommentBaseDigest{}
+	baseDigest := &orgie.SettingBaseDigest{}
 
 	// digest.String() alone, NOT "@"+digest.String() -- markl.Id.Set's
 	// wire form is `[purpose@]<digest>` (splits on the first `@`), so a
 	// leading `@` with nothing before it is an EMPTY PURPOSE, which the
 	// underlying library now rejects, not a "bare digest" marker. The
-	// `@` in `_base=@<digest>` is OptionCommentBaseDigest's own display
+	// `@` in `_base=@<digest>` is SettingBaseDigest's own display
 	// convention (String() below), never passed through to Id.Set.
 	if err = baseDigest.Id.Set(digest.String()); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}
 
-	ot.Metadata.OptionCommentSet.AddPrototypeAndOption("base", baseDigest)
+	ot.Metadata.SettingSet.AddPrototypeAndOption("base", baseDigest)
 
 	return err
 }
@@ -177,19 +177,19 @@ func DereferenceOrganizeBase(
 	repo *local_working_copy.Repo,
 	patch *orgie.Text,
 ) (base *orgie.Text, wasGrouped bool, groupingTags ids.TagSlice, err error) {
-	oc, found := patch.Metadata.OptionCommentSet.GetByKey("base")
+	oc, found := patch.Metadata.SettingSet.GetByKey("base")
 	if !found {
 		err = errors.Wrap(orgie.ErrOrganizeBaseMissing{})
 		return base, wasGrouped, groupingTags, err
 	}
 
-	ocwk, isKeyed := oc.(orgie.OptionCommentWithKey)
+	ocwk, isKeyed := oc.(orgie.SettingWithKey)
 	if !isKeyed {
 		err = errors.Wrap(orgie.ErrOrganizeBaseMissing{})
 		return base, wasGrouped, groupingTags, err
 	}
 
-	baseDigest, isDigest := ocwk.OptionComment.(*orgie.OptionCommentBaseDigest)
+	baseDigest, isDigest := ocwk.Setting.(*orgie.SettingBaseDigest)
 	if !isDigest {
 		err = errors.Wrap(orgie.ErrOrganizeBaseMissing{})
 		return base, wasGrouped, groupingTags, err
@@ -235,9 +235,9 @@ func DereferenceOrganizeBase(
 		return base, wasGrouped, groupingTags, err
 	}
 
-	if groupBy, ok := envelopeMetadata.OptionCommentSet.GetByKey("group-by"); ok {
-		if ocwk, isKeyed := groupBy.(orgie.OptionCommentWithKey); isKeyed {
-			if gb, isGroupBy := ocwk.OptionComment.(*orgie.OptionCommentGroupBy); isGroupBy &&
+	if groupBy, ok := envelopeMetadata.SettingSet.GetByKey("group-by"); ok {
+		if ocwk, isKeyed := groupBy.(orgie.SettingWithKey); isKeyed {
+			if gb, isGroupBy := ocwk.Setting.(*orgie.SettingGroupBy); isGroupBy &&
 				gb.Value != "" {
 				wasGrouped = true
 

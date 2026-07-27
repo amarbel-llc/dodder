@@ -29,9 +29,9 @@ func (cmd Query) RunOrganizeAgainstRemote(
 		local,
 		orgie.Metadata{
 			RepoId: qg.RepoId,
-			OptionCommentSet: orgie.MakeOptionCommentSet(
+			SettingSet: orgie.MakeSettingSet(
 				nil,
-				&orgie.OptionCommentUnknown{
+				&orgie.SettingUnknown{
 					Value: instructions,
 				},
 			),

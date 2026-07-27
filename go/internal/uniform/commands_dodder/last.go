@@ -111,7 +111,7 @@ func (cmd Last) runLocalWorkingCopy(localWorkingCopy *local_working_copy.Repo) {
 		opOrganize := repo_actions.MakeOrganize(
 			localWorkingCopy,
 			orgie.Metadata{
-				OptionCommentSet: orgie.MakeOptionCommentSet(nil),
+				SettingSet: orgie.MakeSettingSet(nil),
 			},
 		)
 

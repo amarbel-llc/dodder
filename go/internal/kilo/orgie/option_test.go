@@ -20,11 +20,11 @@ func (c *testMutableConfigDryRun) SetDryRun(v bool) {
 	c.dryRun = v
 }
 
-// TestMetadataSettingsFieldReadWriteRoundTrip pins the OptionCommentSet.Set
+// TestMetadataSettingsFieldReadWriteRoundTrip pins the SettingSet.Set
 // double-wrap fix: before the fix, a registered settings field consumed via
 // ReadFrom (e.g. the legacy `% dry-run:true` comment) was wrapped in
-// OptionCommentWithKey twice, which broke both String() (rendering
-// "dry-run:dry-run:true") and the OptionCommentSettingsField interface
+// SettingWithKey twice, which broke both String() (rendering
+// "dry-run:dry-run:true") and the SettingAsField interface
 // assertion WriteTo uses to choose the `- _key=value` spelling (Go's
 // embedded-interface promotion does not forward methods beyond what the
 // embedded interface itself declares, so the doubly-wrapped value silently
@@ -33,9 +33,9 @@ func TestMetadataSettingsFieldReadWriteRoundTrip(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
 	metadata := NewMetadata(ids.RepoId{})
-	metadata.OptionCommentSet.AddPrototype(
+	metadata.SettingSet.AddPrototype(
 		"dry-run",
-		&OptionCommentDryRun{MutableConfigDryRun: &testMutableConfigDryRun{}},
+		&SettingDryRun{MutableConfigDryRun: &testMutableConfigDryRun{}},
 	)
 
 	_, err := metadata.ReadFrom(strings.NewReader("% dry-run:true\n"))
@@ -55,7 +55,7 @@ func TestMetadataSettingsFieldReadWriteRoundTrip(t1 *testing.T) {
 // TestMetadataReadFromRejectsUnregisteredSettingsField pins the ReadFrom
 // regression fix: a `- key=value` line is only treated as a settings field
 // when `key` is BOTH `_`-prefixed AND resolves to a registered prototype
-// implementing OptionCommentSettingsField. Before the fix, any `_`-prefixed
+// implementing SettingAsField. Before the fix, any `_`-prefixed
 // `=`-containing line -- including one matching a real but non-settings-
 // field prototype like the built-in "hide" -- was silently absorbed as an
 // "unknown option comment" with no error and no tag added, instead of

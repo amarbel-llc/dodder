@@ -61,12 +61,12 @@ func (mr *metadataReader) ReadFrom(r io.Reader) (n int64, err error) {
 		return n, err
 	}
 
-	ocs := mr.OptionComments
+	ocs := mr.Settings
 
 	for _, oc := range ocs {
-		if ocwa, ok := oc.(OptionCommentWithApply); ok {
+		if ocwa, ok := oc.(SettingWithApply); ok {
 			if err = ocwa.ApplyToReader(mr.Options, &mr.reader); err != nil {
-				err = errors.Wrapf(err, "OptionComment: %s", oc)
+				err = errors.Wrapf(err, "Setting: %s", oc)
 				return n, err
 			}
 		}
@@ -123,12 +123,12 @@ func (ot Text) WriteTo(out io.Writer) (n int64, err error) {
 		options:              ot.Options,
 	}
 
-	ocs := ot.OptionComments
+	ocs := ot.Settings
 
 	for _, oc := range ocs {
-		if ocwa, ok := oc.(OptionCommentWithApply); ok {
+		if ocwa, ok := oc.(SettingWithApply); ok {
 			if err = ocwa.ApplyToWriter(ot.Options, &aw); err != nil {
-				err = errors.Wrapf(err, "OptionComment: %s", oc)
+				err = errors.Wrapf(err, "Setting: %s", oc)
 				return n, err
 			}
 		}

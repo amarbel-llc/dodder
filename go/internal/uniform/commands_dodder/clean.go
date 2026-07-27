@@ -134,9 +134,9 @@ func (c Clean) runOrganize(
 		u,
 		orgie.Metadata{
 			RepoId: qg.RepoId,
-			OptionCommentSet: orgie.MakeOptionCommentSet(
+			SettingSet: orgie.MakeSettingSet(
 				nil,
-				&orgie.OptionCommentUnknown{
+				&orgie.SettingUnknown{
 					Value: "instructions: to clean an object, delete it entirely",
 				},
 			),

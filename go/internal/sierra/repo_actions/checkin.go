@@ -82,7 +82,7 @@ func (op Checkin) runOrganize(
 	query *queries.Query,
 	results sku.SkuTypeSetMutable,
 ) (err error) {
-	flagDelete := orgie.OptionCommentBooleanFlag{
+	flagDelete := orgie.SettingBooleanFlag{
 		Value:   &op.Delete,
 		Comment: "delete once checked in",
 	}
@@ -93,16 +93,16 @@ func (op Checkin) runOrganize(
 			TagSet: op.Proto.Metadata.GetTags(),
 			Type:   op.Proto.Metadata.GetType().ToType(),
 			RepoId: query.RepoId,
-			OptionCommentSet: orgie.MakeOptionCommentSet(
-				map[string]orgie.OptionComment{
+			SettingSet: orgie.MakeSettingSet(
+				map[string]orgie.Setting{
 					"delete": flagDelete,
 				},
-				&orgie.OptionCommentUnknown{
+				&orgie.SettingUnknown{
 					Value: "instructions: to prevent an object from being checked in, delete it entirely",
 				},
-				orgie.OptionCommentWithKey{
-					Key:           "delete",
-					OptionComment: flagDelete,
+				orgie.SettingWithKey{
+					Key:     "delete",
+					Setting: flagDelete,
 				},
 			),
 		},

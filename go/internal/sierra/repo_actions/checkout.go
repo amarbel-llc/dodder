@@ -155,10 +155,10 @@ func (op Checkout) runOrganize(
 		op.repo,
 		orgie.Metadata{
 			RepoId: qgOriginal.RepoId,
-			OptionCommentSet: orgie.MakeOptionCommentSet(
-				// TODO add other OptionComments
+			SettingSet: orgie.MakeSettingSet(
+				// TODO add other Settings
 				nil,
-				&orgie.OptionCommentUnknown{
+				&orgie.SettingUnknown{
 					Value: "instructions: to prevent an object from being checked out, delete it entirely",
 				},
 			),

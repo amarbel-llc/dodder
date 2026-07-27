@@ -23,20 +23,20 @@ type TagSetGetter interface {
 
 func NewMetadata(repoId ids.RepoId) Metadata {
 	return Metadata{
-		RepoId:           repoId,
-		TagSet:           ids.MakeTagSetFromSlice(),
-		OptionCommentSet: MakeOptionCommentSet(nil),
+		RepoId:     repoId,
+		TagSet:     ids.MakeTagSetFromSlice(),
+		SettingSet: MakeSettingSet(nil),
 	}
 }
 
-func NewMetadataWithOptionCommentLookup(
+func NewMetadataWithSettingLookup(
 	repoId ids.RepoId,
-	elements map[string]OptionComment,
+	elements map[string]Setting,
 ) Metadata {
 	return Metadata{
-		RepoId:           repoId,
-		TagSet:           ids.MakeTagSetFromSlice(),
-		OptionCommentSet: MakeOptionCommentSet(elements),
+		RepoId:     repoId,
+		TagSet:     ids.MakeTagSetFromSlice(),
+		SettingSet: MakeSettingSet(elements),
 	}
 }
 
@@ -44,7 +44,7 @@ func NewMetadataWithOptionCommentLookup(
 type Metadata struct {
 	ids.TagSet
 	Matchers interfaces.Set[sku.Query] // TODO remove
-	OptionCommentSet
+	SettingSet
 	Type   ids.TypeStruct
 	RepoId ids.RepoId
 }
@@ -60,7 +60,7 @@ func (metadata *Metadata) SetFromObjectMetadata(
 	metadata.TagSet = ids.CloneTagSet(otherMetadata.GetTags())
 
 	for comment := range otherMetadata.GetIndex().GetComments() {
-		if err = metadata.OptionCommentSet.Set(comment); err != nil {
+		if err = metadata.SettingSet.Set(comment); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}
@@ -103,7 +103,7 @@ func (metadata Metadata) HasMetadataContent() bool {
 		return true
 	}
 
-	if len(metadata.OptionCommentSet.OptionComments) > 0 {
+	if len(metadata.SettingSet.Settings) > 0 {
 		return true
 	}
 
@@ -119,22 +119,22 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 
 	// `_`-reserved settings fields (dodder#374, cutting-garden RFC 0015):
 	// `- _key=value` is the settings-field spelling. `% key:value` (the
-	// OptionCommentSet path above) remains accepted as a deprecated
+	// SettingSet path above) remains accepted as a deprecated
 	// alias during migration.
 	//
 	// A key this build/context has no prototype for at all (e.g.
 	// `_dry-run=true` read without `-dry-run` on the CLI, so the
 	// "dry-run" prototype was never registered) is a legitimate,
 	// expected no-op -- exactly how an unregistered `%` comment has
-	// always behaved (OptionCommentSet.Set falls back to
-	// OptionCommentUnknown). That parity is intentional, not a gap: the
+	// always behaved (SettingSet.Set falls back to
+	// SettingUnknown). That parity is intentional, not a gap: the
 	// prototype registry is inherently context-dependent, so a settings
 	// field this run doesn't recognize can't be distinguished from one
 	// it simply isn't active for.
 	//
 	// A key that IS registered but explicitly is not a settings field
 	// (e.g. the built-in "hide", whose Set() is an unimplemented stub)
-	// is different: routing it through OptionCommentSet.Set would hit
+	// is different: routing it through SettingSet.Set would hit
 	// that stub and surface an opaque, unrelated error. Reject it here
 	// instead by falling through to addTag(v), which gives the same
 	// clear "not a valid tag" diagnostic any other `=`-containing `-`
@@ -142,10 +142,10 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 	addTagOrSettingsField := func(v string) (err error) {
 		if key, value, ok := strings.Cut(v, "="); ok && strings.HasPrefix(key, "_") {
 			prototypeKey := strings.TrimPrefix(key, "_")
-			proto, registered := metadata.OptionCommentSet.GetPrototypeOptionComments()[prototypeKey]
+			proto, registered := metadata.SettingSet.GetPrototypeSettings()[prototypeKey]
 
 			if !registered || isSettingsField(proto) {
-				if err = metadata.OptionCommentSet.Set(prototypeKey + ":" + value); err != nil {
+				if err = metadata.SettingSet.Set(prototypeKey + ":" + value); err != nil {
 					err = errors.Wrap(err)
 					return err
 				}
@@ -162,7 +162,7 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 		ohio.MakeLineReaderRepeat(
 			ohio.MakeLineReaderKeyValues(
 				map[string]interfaces.FuncSetString{
-					"%": metadata.OptionCommentSet.Set,
+					"%": metadata.SettingSet.Set,
 					"-": addTagOrSettingsField,
 					"!": metadata.Type.Set,
 				},
@@ -181,16 +181,16 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
 	w := format.NewLineWriter()
 
-	for _, o := range metadata.OptionCommentSet.OptionComments {
+	for _, o := range metadata.SettingSet.Settings {
 		// `_`-reserved settings fields (dodder#374, cutting-garden RFC
-		// 0015): an OptionComment implementing OptionCommentSettingsField is
+		// 0015): a Setting implementing SettingAsField is
 		// written as `- _key=value`, not a `%` comment, so it isn't opaque
 		// per hyphence RFC 0001. Everything else keeps the comment spelling.
-		// Migrating a setting is a one-line change on that OptionComment
+		// Migrating a setting is a one-line change on that Setting
 		// (implement IsSettingsField) -- this loop needs no new branch.
 		if isSettingsField(o) {
-			ocwk := o.(OptionCommentWithKey)
-			w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.OptionComment)
+			ocwk := o.(SettingWithKey)
+			w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.Setting)
 			continue
 		}
 

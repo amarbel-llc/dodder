@@ -231,7 +231,7 @@ func ApplyToOrganizeOptions(
 
 	oo.AddPrototypeAndOption(
 		"dry-run",
-		&orgie.OptionCommentDryRun{
+		&orgie.SettingDryRun{
 			MutableConfigDryRun: repo.GetConfigPtr(),
 		},
 	)

@@ -429,14 +429,14 @@ func (cmd *New) runInWorkspace(req command.Request, args []string) {
 	}
 
 	if cmd.Organize {
-		// orgie.Metadata's embedded OptionCommentSet must be built via
-		// MakeOptionCommentSet — a zero value leaves its prototype map nil and
+		// orgie.Metadata's embedded SettingSet must be built via
+		// MakeSettingSet — a zero value leaves its prototype map nil and
 		// GetOptions panics ("Metadata not initalized"). Every other organize
 		// caller (last.go, clean.go, checkin.go) does this; #345.
 		opOrganize := repo_actions.MakeOrganize(
 			repo,
 			orgie.Metadata{
-				OptionCommentSet: orgie.MakeOptionCommentSet(nil),
+				SettingSet: orgie.MakeSettingSet(nil),
 			},
 		)
 

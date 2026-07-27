@@ -207,9 +207,9 @@ func (op Organize) RunWithSkuType(
 
 		organizeResults.After, err = readOrganizeTextOp.Run(
 			reopened,
-			orgie.NewMetadataWithOptionCommentLookup(
+			orgie.NewMetadataWithSettingLookup(
 				organizeResults.Before.GetRepoId(),
-				op.GetPrototypeOptionComments(),
+				op.GetPrototypeSettings(),
 			),
 		)
 
