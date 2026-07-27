@@ -97,12 +97,30 @@ type ThreeWayResult struct {
 // the same object, no true conflict) is the same out-of-scope-for-v1
 // granularity call ConflictedObject's doc comment makes for tags,
 // now extended uniformly to description and type.
+//
+// Descriptions compare via StringWithoutNewlines(), not String():
+// box_format's writer (checked_out.go, transacted.go) renders a
+// multi-paragraph description into the compact box-format trailer via
+// Description.StringWithoutNewlines() (replaces embedded "\n" with a
+// space) -- a real, established lossy transform for THIS rendering
+// path, not something new here. Base is always reconstructed by
+// parsing that rendered text (DereferenceOrganizeBase -> Text.ReadFrom),
+// so a multi-paragraph description survives Base only with its
+// paragraph breaks already collapsed to spaces. Live is queried fresh
+// from the store and keeps real newlines. Comparing raw String()
+// treated that formatting-only difference as content drift -- a false
+// ErrConflicts on every apply touching an object with a multi-paragraph
+// description, found via zz-tests_bats/pull.bats's
+// pull_tag_with_mother_sig_history_signature_survives (2026-07-26).
+// Normalizing both sides through the same lossy transform makes the
+// comparison apples-to-apples again without weakening genuine content
+// drift detection.
 func patchableAspectsEqual(a, b sku.SkuType) bool {
 	aMeta := a.GetSkuExternal().GetMetadata()
 	bMeta := b.GetSkuExternal().GetMetadata()
 
 	return quiter_set.Equals(aMeta.GetTags(), bMeta.GetTags()) &&
-		aMeta.GetDescription().String() == bMeta.GetDescription().String() &&
+		aMeta.GetDescription().StringWithoutNewlines() == bMeta.GetDescription().StringWithoutNewlines() &&
 		aMeta.GetType().String() == bMeta.GetType().String()
 }
 
