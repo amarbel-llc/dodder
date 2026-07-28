@@ -166,17 +166,34 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 		return addTag(v)
 	}
 
+	dataPlaneReader := ohio.MakeLineReaderKeyValues(
+		map[string]interfaces.FuncSetString{
+			"-": addTagOrSettingsField,
+			"!": metadata.Type.Set,
+		},
+	)
+
+	// ohio.MakeLineReaderKeyValues dispatches by looking up the exact
+	// text before a line's FIRST SPACE as a map key -- not a prefix
+	// match on "%". A `%:<name> = value` directive's first space falls
+	// AFTER the name (before "="), so ohio's lookup can never represent
+	// a `%:` family for any directive name, ever (confirmed against
+	// ohio/line_reader.go). Short-circuiting on the raw "%" prefix
+	// BEFORE ohio sees the line -- rather than changing ohio itself,
+	// a general-purpose lib/alfa primitive with other consumers -- keeps
+	// this entirely dodder-local. "-"/"!" lines are unaffected: same
+	// ohio call, just with "%" dropped from its map.
+	combined := func(line string) (err error) {
+		if strings.HasPrefix(line, "%") {
+			return metadata.readOperationalPlaneLine(line)
+		}
+
+		return dataPlaneReader(line)
+	}
+
 	if n, err = format.ReadLines(
 		bufferedReader,
-		ohio.MakeLineReaderRepeat(
-			ohio.MakeLineReaderKeyValues(
-				map[string]interfaces.FuncSetString{
-					"%": metadata.SettingSet.Set,
-					"-": addTagOrSettingsField,
-					"!": metadata.Type.Set,
-				},
-			),
-		),
+		ohio.MakeLineReaderRepeat(combined),
 	); err != nil {
 		err = errors.Wrap(err)
 		return n, err
@@ -185,6 +202,54 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 	metadata.TagSet = ids.CloneTagSet(tagSet)
 
 	return n, err
+}
+
+// readOperationalPlaneLine dispatches one raw "%"-prefixed line (leading
+// "%" INCLUDED) -- cutting-garden RFC 0015 (merged, ruled 2026-07-28):
+// the character adjacent to "%" is the ENTIRE distinction between the
+// operational plane's two shapes:
+//
+//   - ":" (colon, no space) -- a semantic directive, routed through
+//     SetDirective against the prototype registry (SettingSet.Set's
+//     colon-splitting logic doesn't apply here at all; a directive's
+//     own separator is "=", not ":" -- the colon was already consumed
+//     as the "%:" sigil).
+//   - " " (space) -- inert prose, never parsed for structure, recorded
+//     via AddInertProse for round-trip fidelity only.
+//
+// `% dry-run:<value>` is the ONE pre-RFC-0015 legacy comment alias kept
+// for back-compat -- dry-run had no settings-field spelling before
+// dodder#374(c) existed, so it's a narrow, named exception, not a
+// general "any % line might be key:value" rule (which is what the
+// pre-RFC-0015 SettingSet.Set path did for every "%" line, and which
+// silently discarded genuine prose containing a colon, e.g.
+// "% meeting at 3:00" -- a latent bug this design doesn't repeat).
+func (metadata *Metadata) readOperationalPlaneLine(line string) (err error) {
+	rest := strings.TrimPrefix(line, "%")
+
+	if strings.HasPrefix(rest, ":") {
+		if err = metadata.SettingSet.SetDirective(rest[1:]); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		return err
+	}
+
+	prose := strings.TrimPrefix(rest, " ")
+
+	if legacyKey, legacyValue, ok := strings.Cut(prose, ":"); ok && legacyKey == "dry-run" {
+		if err = metadata.SettingSet.setDirectiveLegacyAlias("dry-run = " + legacyValue); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+
+		return err
+	}
+
+	metadata.SettingSet.AddInertProse(prose)
+
+	return err
 }
 
 func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
@@ -223,6 +288,21 @@ func (metadata Metadata) writeTo(w1 io.Writer, includeOperationalPlane bool) (n 
 		}
 
 		if !includeOperationalPlane {
+			continue
+		}
+
+		// Operational-plane items split into two write-side shapes by
+		// the per-INSTANCE IsDirective marker (SettingWithKey's doc
+		// comment explains why this can't be a per-TYPE distinction):
+		// IsDirective -- came through setDirective (RFC 0015's `%:name
+		// = value` syntax or its `% dry-run:true` legacy alias) -- is a
+		// "%:key = value" directive; everything else (AddInertProse's
+		// unwrapped prose, OR a not-yet-migrated legacy keyed comment
+		// like checkin's "delete" flag, still constructed via the old
+		// AddPrototypeAndOption path until piece 4) keeps the
+		// pre-RFC-0015 "% text" / "% key:value" spelling unchanged.
+		if ocwk, isKeyed := o.(SettingWithKey); isKeyed && ocwk.IsDirective {
+			w.WriteFormat("%%:%s = %s", ocwk.Key, ocwk.Setting)
 			continue
 		}
 

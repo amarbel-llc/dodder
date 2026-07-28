@@ -217,10 +217,119 @@ func (ocs *SettingSet) Set(v string) (err error) {
 	return err
 }
 
+// SetDirective resolves a `%:`-directive's text (everything after the
+// colon, e.g. "dry-run = true" or "checkin/delete = true") against the
+// SAME prototype map Set() uses for `%`-comments and `- _key = value`
+// data-plane fields -- cutting-garden RFC 0015 (merged): "not resolved
+// by orgie itself" for a namespaced directive is satisfied by WHO
+// registers the prototype (the driving command, via RegisterNamespaced),
+// not WHERE it's stored, so no separate registry is needed. Presence-
+// only booleans (bare "%:dry-run", no "=") default to "true". An
+// unrecognized name is an error (ErrUnrecognizedDirective), not a silent
+// SettingUnknown fallback: directives are behavior-bearing by
+// construction, so silently ignoring one would silently skip behavior
+// the user asked for -- prose (AddInertProse) is the only operational-
+// plane shape that's silently tolerant when unrecognized. The ONE
+// exception is setDirectiveLegacyAlias (below), used ONLY for the
+// pre-RFC-0015 `% key:value` back-compat shim, which predates the
+// error-on-unrecognized rule and must keep its original tolerance.
+func (ocs *SettingSet) SetDirective(directiveText string) (err error) {
+	return ocs.setDirective(directiveText, false)
+}
+
+// setDirectiveLegacyAlias resolves the pre-RFC-0015 `% key:value`
+// comment spelling (e.g. `% dry-run:true`, reformatted by
+// Metadata.readOperationalPlaneLine into "key = value" before reaching
+// here) with the SAME tolerance the original SettingSet.Set always had:
+// an unrecognized name silently falls back to an inert placeholder
+// instead of erroring (dodder's existing "a settings field this run
+// doesn't recognize can't be distinguished from one it simply isn't
+// active for" contract -- e.g. `% dry-run:true` read in a context
+// without -dry-run on the CLI, so "dry-run" was never registered, is a
+// legitimate no-op, pinned at the bats level by
+// organize_dry_run_legacy_comment_alias_still_accepted). This is
+// deliberately NOT the same tolerance as a genuine new `%:` directive
+// (SetDirective, strict per RFC 0015) -- the legacy alias exists purely
+// to tolerate old documents gracefully, a dodder-local migration
+// concern the RFC doesn't govern.
+func (ocs *SettingSet) setDirectiveLegacyAlias(directiveText string) (err error) {
+	return ocs.setDirective(directiveText, true)
+}
+
+func (ocs *SettingSet) setDirective(
+	directiveText string,
+	tolerateUnrecognized bool,
+) (err error) {
+	name, value, hasValue := strings.Cut(directiveText, "=")
+	name = strings.TrimSpace(name)
+
+	if hasValue {
+		value = strings.TrimSpace(value)
+	} else {
+		value = "true"
+	}
+
+	oc, ok := ocs.prototype[name]
+
+	if ok {
+		if ocwk, isWrapped := oc.(SettingWithKey); isWrapped {
+			oc = ocwk.Setting
+		}
+
+		oc = oc.CloneSetting()
+	} else if tolerateUnrecognized {
+		oc = &SettingUnknown{}
+	} else {
+		err = errors.Wrap(ErrUnrecognizedDirective{Name: name})
+		return err
+	}
+
+	oc = SettingWithKey{
+		Key:         name,
+		Setting:     oc,
+		IsDirective: true,
+	}
+
+	if err = oc.Set(value); err != nil {
+		err = errors.Wrap(err)
+		return err
+	}
+
+	ocs.Settings = append(ocs.Settings, oc)
+
+	return err
+}
+
+// AddInertProse records a bare `% <text>` line (cutting-garden RFC 0015,
+// merged) -- inert by construction, never parsed for structure, kept
+// only for round-trip fidelity. Deliberately stored UNWRAPPED (not
+// SettingWithKey, which has no meaningful "key" for free text) so
+// writeTo can distinguish "has a key -> directive" from "no key ->
+// prose" by type shape alone; SettingUnknown.String() returns its
+// Value verbatim, so "%% %s" renders exactly "% <text>" back out.
+func (ocs *SettingSet) AddInertProse(text string) {
+	ocs.Settings = append(ocs.Settings, &SettingUnknown{Value: text})
+}
+
 // TODO add support for ApplyTo*
 type SettingWithKey struct {
 	Key string
 	Setting
+
+	// IsDirective marks this INSTANCE (not Setting type -- the same
+	// concrete type, e.g. SettingBooleanFlag, is used both by genuine
+	// %: directives and by not-yet-migrated legacy %-comments like
+	// checkin's "delete" flag) as constructed via setDirective (RFC
+	// 0015's `%:name = value` syntax or its `% dry-run:true` legacy
+	// alias), as opposed to the pre-RFC-0015 Set() path (data-plane
+	// `- _key = value` fields and legacy `% key:value` comments not yet
+	// migrated to the new syntax, e.g. checkin's "delete" flag until
+	// piece 4 migrates it). Distinguishes writeTo's two operational-
+	// plane write forms ("%:key = value" vs "% key:value") per
+	// instance. Zero value (false) preserves the pre-existing "%
+	// key:value" spelling for every construction site that doesn't set
+	// it explicitly.
+	IsDirective bool
 }
 
 func (ocf SettingWithKey) CloneSetting() Setting {

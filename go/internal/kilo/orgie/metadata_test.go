@@ -32,13 +32,11 @@ func TestMetadataWriteDataPlaneToSkipsOperationalPlane(t1 *testing.T) {
 	))
 	metadata.SettingSet.AddPrototypeAndOption("base", baseDigest)
 
-	// Operational-plane item: SettingUnknown implements no SettingAsField
-	// method at all, so isSettingsField(o) is false for it -- exactly the
-	// "not a settings field" case the data-plane filter must skip.
-	metadata.SettingSet.AddPrototypeAndOption(
-		"note",
-		&SettingUnknown{Value: "prose comment"},
-	)
+	// Operational-plane item: AddInertProse stores an unwrapped
+	// SettingUnknown (no SettingAsField, no SettingWithKey), so
+	// isSettingsField(o) is false for it -- exactly the "not a settings
+	// field" case the data-plane filter must skip.
+	metadata.SettingSet.AddInertProse("prose comment")
 
 	var fullBuf, dataPlaneBuf strings.Builder
 
@@ -55,7 +53,7 @@ func TestMetadataWriteDataPlaneToSkipsOperationalPlane(t1 *testing.T) {
 		t1.Errorf("expected full render to contain the data-plane _base field, got %q", full)
 	}
 
-	if !strings.Contains(full, "note:prose comment") {
+	if !strings.Contains(full, "% prose comment") {
 		t1.Errorf("expected full render to contain the operational-plane comment, got %q", full)
 	}
 

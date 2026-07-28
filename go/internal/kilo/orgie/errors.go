@@ -118,8 +118,41 @@ func (err ErrConflicts) GetErrorType() pkgErrDisamb {
 	return pkgErrDisamb{}
 }
 
+// ErrUnrecognizedDirective is cutting-garden RFC 0015 (merged): an
+// unrecognized BARE `%:<name>` directive (no harness prototype nor
+// driving-command namespace claims it) is an error -- unlike unrecognized
+// PROSE (`% <text>`, always fine) or an unrecognized `- _key = value`
+// data-plane field (a legitimate, context-dependent no-op, per
+// addTagOrSettingsField's own doc comment). Directives are behavior-
+// bearing by construction (the RFC's own "% MUST NOT carry behavior"
+// retraction), so silently ignoring an unrecognized one would silently
+// skip behavior the user asked for.
+type ErrUnrecognizedDirective struct {
+	Name string
+}
+
+func (err ErrUnrecognizedDirective) Error() string {
+	return fmt.Sprintf(
+		"unrecognized directive `%%:%s` -- no harness directive or "+
+			"driving-command namespace recognizes it. If this was meant as "+
+			"a plain comment, use `%% %s` (space, not colon) instead.",
+		err.Name,
+		err.Name,
+	)
+}
+
+func (err ErrUnrecognizedDirective) Is(target error) bool {
+	_, ok := target.(ErrUnrecognizedDirective)
+	return ok
+}
+
+func (err ErrUnrecognizedDirective) GetErrorType() pkgErrDisamb {
+	return pkgErrDisamb{}
+}
+
 var (
 	_ error = ErrOrganizeBaseMissing{}
 	_ error = ErrBaseUndereferenceable{}
 	_ error = ErrConflicts{}
+	_ error = ErrUnrecognizedDirective{}
 )
