@@ -547,11 +547,21 @@ check-grammar:
 # PATH via LANGLANG_BIN -- the harness itself skips (not fails) when
 # LANGLANG_BIN is unset, so a bare `go test ./...` outside this recipe
 # stays green.
+#
+# `go` itself lives in the dev-shell and is absent from an ambient PATH,
+# so the test invocation wraps in `nix develop .. -c` like
+# build-go-generate does. Invoked bare it passed interactively inside a
+# dev-shell and failed with `go: command not found` (exit 127) under the
+# pre-merge gate, which reaches it via the root `test` -> `test-grammar`.
+# LANGLANG_BIN stays a command prefix: `nix develop` inherits the
+# caller's environment, so it still reaches the inner `go test`.
+#
+# run the grammar-vectors harness against a hermetically-resolved langlang
 test-grammar-vectors:
   #!/usr/bin/env bash
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths '..#langlang')
-  LANGLANG_BIN="$bin/bin/langlang" go test -tags test,debug -v ./internal/0/orgmode_peg/... -run 'TestGrammarVectors'
+  LANGLANG_BIN="$bin/bin/langlang" nix develop .. -c go test -tags test,debug -v ./internal/0/orgmode_peg/... -run 'TestGrammarVectors'
 
 # Read-only formatting/lint gate via conformist: builds the flake's
 # checks.formatting derivation (`conformist check` against a /nix/store
