@@ -41,9 +41,16 @@ show-go-package_deps package:
 #   \____\___/ \__,_|\___|_| |_| |_|\___/ \__,_|
 #
 
+# The script shells out to goimports, which lives in the dev-shell (gotools)
+# and is absent from an ambient PATH — so this wraps in `nix develop .. -c`
+# like build-go-generate does. Invoked bare it passed interactively inside a
+# dev-shell and failed with `goimports: command not found` (exit 127) under
+# the pre-merge gate, which reaches it via build-go -> build-go-generate ->
+# codemod-go-fmt.
+#
 # removes redundant go import aliases
 codemod-go-fix_redundant_import_aliases:
-  ./bin/fix_redundant_import_alisas.bash
+  nix develop .. -c ./bin/fix_redundant_import_alisas.bash
 
 files_go := "internal/ lib/ cmd/"
 
