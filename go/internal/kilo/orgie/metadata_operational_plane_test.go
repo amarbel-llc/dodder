@@ -61,6 +61,42 @@ func TestMetadataReadFromDirectivePresenceOnlyDefaultsTrue(t1 *testing.T) {
 	}
 }
 
+// TestMetadataReadFromParsesNamespacedDirectiveRoundTrip pins RFC 0015's
+// namespace-optional routing (piece 3): a `%:<command>/<name>`
+// directive resolves against a prototype the DRIVING COMMAND registers
+// via RegisterNamespaced (checkin.go's real future call site, e.g.
+// `%:checkin/delete = true`), not a bare harness-level name -- reusing
+// the SAME flat SettingSet.prototype map SetDirective already resolves
+// bare directives against, keyed here under "namespace/name".
+func TestMetadataReadFromParsesNamespacedDirectiveRoundTrip(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	var flagValue bool
+
+	metadata := NewMetadata(ids.RepoId{})
+	metadata.SettingSet.RegisterNamespaced(
+		"checkin", "delete",
+		SettingBooleanFlag{Value: &flagValue},
+	)
+
+	_, err := metadata.ReadFrom(strings.NewReader("%:checkin/delete = true\n"))
+	t.AssertNoError(err)
+
+	if !flagValue {
+		t1.Errorf("expected flagValue to be true after parsing %%:checkin/delete = true")
+	}
+
+	var buf strings.Builder
+	_, err = metadata.WriteTo(&buf)
+	t.AssertNoError(err)
+
+	expected := "%:checkin/delete = true\n"
+
+	if buf.String() != expected {
+		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
+	}
+}
+
 // TestSettingSetSetDirectiveRejectsUnrecognizedName pins RFC 0015's
 // unrecognized-bare-directive rule at the SettingSet level directly
 // (bypassing ReadFrom's ohio-driven line dispatch, which re-wraps

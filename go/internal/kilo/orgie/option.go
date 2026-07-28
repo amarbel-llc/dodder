@@ -172,6 +172,26 @@ func (ocs *SettingSet) AddPrototypeAndOption(
 	return o
 }
 
+// RegisterNamespaced registers a driving-command directive prototype
+// under the "<namespace>/<name>" key convention -- cutting-garden RFC
+// 0015 (merged): a namespaced `%:<command>/<name>` directive (e.g.
+// `%:checkin/delete = true`) routes to the driving command, external
+// to orgie's own harness-level directives. Reuses the SAME flat
+// SettingSet.prototype map AddPrototype already populates for bare
+// harness directives (dry-run, allow-deletion) and data-plane fields
+// (base, group-by) -- no separate registry type. RFC 0015's "not
+// resolved by orgie itself" is satisfied entirely by WHO calls this
+// (the driving command, e.g. checkin.go, before running organize -- not
+// orgie itself), not by WHERE the prototype is stored: setDirective's
+// lookup (option.go) doesn't distinguish a namespaced key from a bare
+// one, it just resolves whatever string the parsed directive name is.
+func (ocs *SettingSet) RegisterNamespaced(
+	namespace, name string,
+	o Setting,
+) Setting {
+	return ocs.AddPrototype(namespace+"/"+name, o)
+}
+
 func (ocs *SettingSet) Set(v string) (err error) {
 	head, tail, _ := strings.Cut(v, ":")
 
