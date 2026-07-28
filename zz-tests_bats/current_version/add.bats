@@ -299,7 +299,7 @@ function add_organize { # @test
 		---
 		% instructions: to prevent an object from being checked in, delete it entirely
 		% delete:true delete once checked in
-		- _base=@blake2b256-ucc9y3kv7dmxss2zz7r9tf57x2crgxkuste0gkdmcdgtjct3xxzq0rjrmr
+		- _base = @blake2b256-4xd84xc5tuke4s9hzquaq2w57lqtmfegnurzkdvjcvskwv2e3u7q38jjh0
 		- zz-inbox-2022-11-14
 		---
 

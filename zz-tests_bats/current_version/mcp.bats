@@ -238,7 +238,7 @@ function mcp_organize_commit_applies_tag { # @test
   # lines — to a file, then JSON-encode it for the tool argument. The heading
   # must be inserted into the BODY (after the closing `---` fence + its
   # blank-line separator), not prepended before the whole buffer: the
-  # metadata fence (holding the now-mandatory `- _base=@digest` field, #374)
+  # metadata fence (holding the now-mandatory `- _base = @digest` field, #374)
   # must remain the first thing in the document, or the hyphence parser never
   # reaches the `_base` field and organize_commit fails with "this organize
   # document has no `_base` field". Use awk to splice the heading in right

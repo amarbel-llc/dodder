@@ -118,12 +118,20 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 	addTag := quiter.MakeFuncAddString(tagSet)
 
 	// `_`-reserved settings fields (dodder#374, cutting-garden RFC 0015):
-	// `- _key=value` is the settings-field spelling. `% key:value` (the
-	// SettingSet path above) remains accepted as a deprecated
-	// alias during migration.
+	// `- _key = value` is the settings-field spelling (spaced `=` is
+	// normative per RFC 0015's merged two-plane revision -- ruled
+	// 2026-07-28 to apply uniformly, no exemption for already-shipped
+	// `_base`/`_group-by`). `% key:value` (the SettingSet path above)
+	// remains accepted as a deprecated alias during migration.
+	//
+	// TrimSpace on both the key and value halves accepts the spaced form
+	// unconditionally and the pre-RFC-0015 unspaced form for free (a
+	// no-op trim when there's no whitespace to remove) -- no separate
+	// legacy-vs-new branch needed for spacing specifically, unlike the
+	// colon-vs-equals `%` legacy alias above.
 	//
 	// A key this build/context has no prototype for at all (e.g.
-	// `_dry-run=true` read without `-dry-run` on the CLI, so the
+	// `_dry-run = true` read without `-dry-run` on the CLI, so the
 	// "dry-run" prototype was never registered) is a legitimate,
 	// expected no-op -- exactly how an unregistered `%` comment has
 	// always behaved (SettingSet.Set falls back to
@@ -141,7 +149,8 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 	// line gets.
 	addTagOrSettingsField := func(v string) (err error) {
 		if key, value, ok := strings.Cut(v, "="); ok && strings.HasPrefix(key, "_") {
-			prototypeKey := strings.TrimPrefix(key, "_")
+			prototypeKey := strings.TrimSpace(strings.TrimPrefix(key, "_"))
+			value = strings.TrimSpace(value)
 			proto, registered := metadata.SettingSet.GetPrototypeSettings()[prototypeKey]
 
 			if !registered || isSettingsField(proto) {
@@ -206,7 +215,10 @@ func (metadata Metadata) writeTo(w1 io.Writer, includeOperationalPlane bool) (n 
 		// (implement IsSettingsField) -- this loop needs no new branch.
 		if isSettingsField(o) {
 			ocwk := o.(SettingWithKey)
-			w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.Setting)
+			// Spaced "=" per RFC 0015's merged two-plane revision
+			// (ruled 2026-07-28: normative for ALL metadata lines,
+			// no exemption for _base/_group-by).
+			w.WriteFormat("- _%s = %s", ocwk.Key, ocwk.Setting)
 			continue
 		}
 

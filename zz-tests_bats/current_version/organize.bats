@@ -34,7 +34,7 @@ function organize_empty { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		---
-		- _base=@blake2b256-zv8eh9jh32rtkg62ukpfjkxtzxn9mc9m7aqzs296gnkw0x75a24q69c7ux
+		- _base = @blake2b256-zv8eh9jh32rtkg62ukpfjkxtzxn9mc9m7aqzs296gnkw0x75a24q69c7ux
 		---
 	EOM
 }
@@ -304,7 +304,7 @@ function organize_hides_hidden_tags_from_organize { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-5kymcp7uprl0rjsnuvq3t5qhjrmwrucljha6q39nkyyx7artyr9s37dem5
+		- _base = @blake2b256-5kymcp7uprl0rjsnuvq3t5qhjrmwrucljha6q39nkyyx7artyr9s37dem5
 		- project-2021-dodder
 		---
 	EOM
@@ -345,8 +345,8 @@ function organize_dry_run_writes_settings_field { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _dry-run=true
-		- _base=@blake2b256-6su4h534a24xm4jnt62rgrh6zq8g2f5dwfg9petuuwgung8sp3fqzk9c6d
+		- _dry-run = true
+		- _base = @blake2b256-dmrwuzavwg493zhn83gma3uq9g2l67ea47hzvj2hklsxx0gwglxqc2plvq
 		---
 	EOM
 }
@@ -354,7 +354,7 @@ function organize_dry_run_writes_settings_field { # @test
 function organize_dry_run_reads_settings_field { # @test
   # No `-dry-run` on the CLI: the "dry-run" OptionComment prototype is not
   # registered (organize_options.go's ApplyToOrganizeOptions early-return),
-  # so `- _dry-run=true` parses as an unregistered settings field and has
+  # so `- _dry-run = true` parses as an unregistered settings field and has
   # no effect on the commit -- this proves the new syntax is accepted
   # without erroring, using the exact same inputs/goldens as
   # organize_simple_commit to prove it's a true no-op, not merely "didn't
@@ -367,7 +367,7 @@ function organize_dry_run_reads_settings_field { # @test
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
 		$base_line
-		- _dry-run=true
+		- _dry-run = true
 		---
 
 		# new-etikett-for-all %virtual_etikett
@@ -425,7 +425,7 @@ function organize_with_type_output { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-lpduzwgyl0jnlp0nwejzmznvx4zprwzf5tkl0hy8329pryk5qnwslk2r4f
+		- _base = @blake2b256-lpduzwgyl0jnlp0nwejzmznvx4zprwzf5tkl0hy8329pryk5qnwslk2r4f
 		! md
 		---
 
@@ -526,7 +526,7 @@ function organize_v5_outputs_organize_one_tag { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-fvyc8xcw02mxglel3u2x2t3rlpfp7vzpf08tdxdxp0j5rm7e68wqxxy798
+		- _base = @blake2b256-fvyc8xcw02mxglel3u2x2t3rlpfp7vzpf08tdxdxp0j5rm7e68wqxxy798
 		- ok
 		---
 
@@ -555,7 +555,7 @@ function organize_v5_outputs_organize_two_tags { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-9cze5mr4256l6p7j3dqga49ur70cyd6qmq4y866fqp9hx53rgams0xfprg
+		- _base = @blake2b256-9cze5mr4256l6p7j3dqga49ur70cyd6qmq4y866fqp9hx53rgams0xfprg
 		- brown
 		- ok
 		---
@@ -617,7 +617,7 @@ function organize_v5_outputs_organize_one_tags_group_by_one { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-eaasjnndwmlncr45kj9smcl0wj74q37usmcjznddw4mkaej9w2gssaya83
+		- _base = @blake2b256-a7hdgxn59vpt9pe5gmramnwvr6rxz4q0w5w2aml28kchpn39025s6spaav
 		- task
 		---
 
@@ -695,7 +695,7 @@ function organize_v5_outputs_organize_two_zettels_one_tags_group_by_one { # @tes
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-k67xwcltcjgdpk9su856afvucck8fmeytvp88gymdspln8hqw3hqhfqefq
+		- _base = @blake2b256-l8l5k2gk82h6zzcaqvq00whx95yl9nlvh6sgctkst5ahrd0muwcs5gmfsd
 		- task
 		---
 
@@ -1010,7 +1010,7 @@ function organize_v5_commits_no_changes { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-qvewk59y024k6pk8w6a4fhnklnq66qv9htzhj7ymungx00eqmyfsxduy83
+		- _base = @blake2b256-s9xm4jmselq7tv0un5wf22k02ed0rj338jv6hpx7qav7s4uy587sc30efl
 		- task
 		---
 
@@ -1149,7 +1149,7 @@ function organize_v5_zettels_in_correct_places { # @test
   # TODO add prefix joints
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-8mllnlfgau5z02tmtwgv43n7ztydx685w6hdlflejtchrmdyv0eqakq5e4
+		- _base = @blake2b256-pvcux92mnft4809gutluzcfq900wwujvlmh38q5erhvucwg62avsltt8pw
 		- inventory-pipe_shelves-atheist_shoes_box-jabra_yellow_box_2
 		---
 
@@ -1362,7 +1362,7 @@ function tags_with_extended_tags_noop { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-ykzsf2sy54smw6088w25gmk589r7527872zvj782zjtgwqlk7gpsvpyj3s
+		- _base = @blake2b256-ykzsf2sy54smw6088w25gmk589r7527872zvj782zjtgwqlk7gpsvpyj3s
 		- new
 		---
 
@@ -1407,7 +1407,7 @@ function organize_new_objects_default_tags { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-jfus89fgwrg9k7rarnf2pmcjgxgwdguqttqtxnwfp6uq6jvdd9psuyeegj
+		- _base = @blake2b256-jfus89fgwrg9k7rarnf2pmcjgxgwdguqttqtxnwfp6uq6jvdd9psuyeegj
 		- zz-inbox
 		---
 	EOM
@@ -1482,7 +1482,7 @@ function organize_output_only_fs_blobs() { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-k2s2uu7jaez682lrd6la400lxw42n359rep4qq5r39ljlaes6jsqw2vq2c
+		- _base = @blake2b256-k2s2uu7jaez682lrd6la400lxw42n359rep4qq5r39ljlaes6jsqw2vq2c
 		---
 
 		- [test.md]
@@ -1499,7 +1499,7 @@ function organize_untracked_fs_blob_with_spaces() { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		---
-		- _base=@blake2b256-t2r82rd89fjvsh84zsfljj5uzv2u3luakykfrj9jzx2jcj25v4rs5ga25e
+		- _base = @blake2b256-t2r82rd89fjvsh84zsfljj5uzv2u3luakykfrj9jzx2jcj25v4rs5ga25e
 		---
 
 		- ["test with spaces.txt"]
@@ -1560,7 +1560,7 @@ function organize_default_tags_workspace { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-6yq0ud3suprkvxt5x6wwy0ar9wrmm7qr72uagalr623e9v73m9jqev72vt
+		- _base = @blake2b256-6flvx8cqykyz60zr9uqaxmh4dhg560xk93783uath3mh5n8xfnlsrqj4jr
 		- today
 		---
 
@@ -1638,7 +1638,7 @@ function organize_base_undereferenceable_rejected { # @test
   # checksum, so a hand-mutated string fails at parse time instead.
   run_dodder organize -mode commit-directly :z,e,t <<-EOM
 		---
-		- _base=@blake2b256-fvyc8xcw02mxglel3u2x2t3rlpfp7vzpf08tdxdxp0j5rm7e68wqxxy798
+		- _base = @blake2b256-fvyc8xcw02mxglel3u2x2t3rlpfp7vzpf08tdxdxp0j5rm7e68wqxxy798
 		---
 
 		- [one/dos  !md tag-3 tag-4] wow ok again

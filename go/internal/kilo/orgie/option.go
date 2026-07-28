@@ -301,7 +301,7 @@ func (ocf *SettingDryRun) IsSettingsField() bool {
 	return true
 }
 
-// SettingBaseDigest is `- _base=@<digest>` (dodder#374(b),
+// SettingBaseDigest is `- _base = @<digest>` (dodder#374(b),
 // cutting-garden RFC 0015 / hyphence RFC 0002's id-less, digest-valued
 // FieldRHS). Required on every organize document; see the plan's §8 for
 // the missing/undereferenceable error paths, which live in the
@@ -336,8 +336,8 @@ func (ocf *SettingBaseDigest) Set(v string) (err error) {
 
 func (ocf *SettingBaseDigest) String() string {
 	// markl.Id.String() never includes "@" -- re-add it so WriteTo's
-	// output is the RFC-0002-shaped "- _base=@<digest>", not
-	// "- _base=<digest>". Set (above) strips it back off before
+	// output is the RFC-0002-shaped "- _base = @<digest>", not
+	// "- _base = <digest>". Set (above) strips it back off before
 	// delegating to markl.Id.Set, which treats a leading "@" as a
 	// (rejected, empty) purpose delimiter, not a bare-digest marker.
 	return "@" + ocf.Id.String()
@@ -347,9 +347,9 @@ func (ocf *SettingBaseDigest) IsSettingsField() bool {
 	return true
 }
 
-// SettingAllowDeletion is `- _allow-deletion=true` (dodder#374(b)).
+// SettingAllowDeletion is `- _allow-deletion = true` (dodder#374(b)).
 // Parsing only -- kept for RFC 0015 cross-substrate document
-// portability (`- _allow-deletion=true` must round-trip without
+// portability (`- _allow-deletion = true` must round-trip without
 // erroring), but dodder does not enforce it: the plan's §7 gate exists
 // to guard true substrate deletion (an object ceasing to exist), and
 // dodder has no such operation anywhere -- organize's tag-clearing
@@ -387,7 +387,7 @@ func (ocf *SettingAllowDeletion) IsSettingsField() bool {
 	return true
 }
 
-// SettingGroupBy is `- _group-by="tag1,tag2"` (dodder#374(b), OQ3
+// SettingGroupBy is `- _group-by = "tag1,tag2"` (dodder#374(b), OQ3
 // ruling): the base blob's own envelope metadata records the -group-by
 // value(s) used at generation (absent = ungrouped), so grouped-detection
 // (plan §5) reads it from the base blob's own structure rather than

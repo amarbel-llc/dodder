@@ -87,7 +87,7 @@ function workspace_organize { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-p3u45j3q3yfyerv48knu7k476uufanvnzgr3yxgehhnf3433kagskrrtjd
+		- _base = @blake2b256-p3u45j3q3yfyerv48knu7k476uufanvnzgr3yxgehhnf3433kagskrrtjd
 		- tag-3
 		---
 	EOM
@@ -96,7 +96,7 @@ function workspace_organize { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-y7gw8xlxm794s05c7dxyn78lv9e6rvqvc72uch7yc94q8sl45t3slualxm
+		- _base = @blake2b256-y7gw8xlxm794s05c7dxyn78lv9e6rvqvc72uch7yc94q8sl45t3slualxm
 		- tag-3
 		---
 
@@ -108,7 +108,7 @@ function workspace_organize { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _base=@blake2b256-3le2pgux5ymzq3wl72qelxl5q7zaqzacqlhktvzm69pc0w6g95js7t26sj
+		- _base = @blake2b256-3le2pgux5ymzq3wl72qelxl5q7zaqzacqlhktvzm69pc0w6g95js7t26sj
 		- tag-3
 		---
 
@@ -139,7 +139,7 @@ function workspace_add_yes_organize { # @test
 
   function editor() {
     # shellcheck disable=SC2317
-    base_line="$(grep '_base=' "$1")"
+    base_line="$(grep '_base = ' "$1")"
     cat - >"$1" <<-EOM
 			---
 			$base_line
@@ -179,7 +179,7 @@ function workspace_add_yes_organize_omit_one { # @test
 
   function editor() {
     # shellcheck disable=SC2317
-    base_line="$(grep '_base=' "$1")"
+    base_line="$(grep '_base = ' "$1")"
     cat - >"$1" <<-EOM
 			---
 			$base_line

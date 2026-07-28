@@ -51,7 +51,7 @@ func TestMetadataWriteDataPlaneToSkipsOperationalPlane(t1 *testing.T) {
 	full := fullBuf.String()
 	dataPlane := dataPlaneBuf.String()
 
-	if !strings.Contains(full, "_base=") {
+	if !strings.Contains(full, "_base =") {
 		t1.Errorf("expected full render to contain the data-plane _base field, got %q", full)
 	}
 
@@ -59,7 +59,7 @@ func TestMetadataWriteDataPlaneToSkipsOperationalPlane(t1 *testing.T) {
 		t1.Errorf("expected full render to contain the operational-plane comment, got %q", full)
 	}
 
-	if !strings.Contains(dataPlane, "_base=") {
+	if !strings.Contains(dataPlane, "_base =") {
 		t1.Errorf("expected data-plane render to contain the _base field, got %q", dataPlane)
 	}
 

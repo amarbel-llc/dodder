@@ -351,7 +351,7 @@ function checkin_explicit_organize_include_untracked_fs_blob_change_description(
 
   function editor() {
     # shellcheck disable=SC2317
-    base_line="$(grep '_base=' "$1")"
+    base_line="$(grep '_base = ' "$1")"
     {
       echo "---"
       echo "$base_line"
@@ -460,7 +460,7 @@ function checkin_explicit_workspace_delete_files { # @test
 
   function editor() {
     # shellcheck disable=SC2317
-    base_line="$(grep '_base=' "$1")"
+    base_line="$(grep '_base = ' "$1")"
     cat - >"$1" <<-EOM
 			---
 			$base_line

@@ -63,11 +63,11 @@ func writeBareBlob(
 //     prototype is registered, from MakeSettingSet) -- render the
 //     complete outer document text as-is; it has no `_base` line.
 //  2. Wrap that rendered text as the base blob's BODY, under an envelope
-//     whose metadata carries only `_group-by="..."` (present iff
+//     whose metadata carries only `_group-by = "..."` (present iff
 //     groupingTags is non-empty) and `! organize-base-v1` last. Write
 //     the envelope+body as a bare blob (writeBareBlob), obtain its
 //     digest.
-//  3. Activate `_base=@<digest>` on ot's Metadata (AddPrototypeAndOption,
+//  3. Activate `_base = @<digest>` on ot's Metadata (AddPrototypeAndOption,
 //     overwriting the empty prototype with the real value) so the next
 //     WriteTo -- the one the caller actually presents/embeds -- includes
 //     it.
@@ -152,7 +152,7 @@ func WriteOrganizeBaseAndActivate(
 	// wire form is `[purpose@]<digest>` (splits on the first `@`), so a
 	// leading `@` with nothing before it is an EMPTY PURPOSE, which the
 	// underlying library now rejects, not a "bare digest" marker. The
-	// `@` in `_base=@<digest>` is SettingBaseDigest's own display
+	// `@` in `_base = @<digest>` is SettingBaseDigest's own display
 	// convention (String() below), never passed through to Id.Set.
 	if err = baseDigest.Id.Set(digest.String()); err != nil {
 		err = errors.Wrap(err)
@@ -164,7 +164,7 @@ func WriteOrganizeBaseAndActivate(
 	return err
 }
 
-// DereferenceOrganizeBase resolves patch's `_base=@<digest>` field to
+// DereferenceOrganizeBase resolves patch's `_base = @<digest>` field to
 // the base Text it points at (dodder#374(b) plan §3/§4): dereferences
 // the blob, splits its envelope (metadata: `_group-by`,
 // `! organize-base-v1`) from its body, and parses the body through the

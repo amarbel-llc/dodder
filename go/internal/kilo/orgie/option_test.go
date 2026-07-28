@@ -45,7 +45,9 @@ func TestMetadataSettingsFieldReadWriteRoundTrip(t1 *testing.T) {
 	_, err = metadata.WriteTo(&buf)
 	t.AssertNoError(err)
 
-	expected := "- _dry-run=true\n"
+	// Spaced "=" per RFC 0015's merged two-plane revision (ruled
+	// 2026-07-28: normative for all metadata lines).
+	expected := "- _dry-run = true\n"
 
 	if buf.String() != expected {
 		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
@@ -66,7 +68,7 @@ func TestMetadataReadFromRejectsUnregisteredSettingsField(t1 *testing.T) {
 
 	metadata := NewMetadata(ids.RepoId{})
 
-	_, err := metadata.ReadFrom(strings.NewReader("- _hide=true\n"))
+	_, err := metadata.ReadFrom(strings.NewReader("- _hide = true\n"))
 
 	if err == nil {
 		t.Fatalf("expected an error for \"_hide=true\" (registered as \"hide\", but not a settings field), got nil")
@@ -84,14 +86,17 @@ func TestMetadataBaseDigestSettingsFieldRoundTrip(t1 *testing.T) {
 
 	metadata := NewMetadata(ids.RepoId{})
 
-	_, err := metadata.ReadFrom(strings.NewReader("- _base=" + digest + "\n"))
+	_, err := metadata.ReadFrom(strings.NewReader("- _base = " + digest + "\n"))
 	t.AssertNoError(err)
 
 	var buf strings.Builder
 	_, err = metadata.WriteTo(&buf)
 	t.AssertNoError(err)
 
-	expected := "- _base=" + digest + "\n"
+	// Spaced "=" per RFC 0015's merged two-plane revision (ruled
+	// 2026-07-28: normative for all metadata lines, no exemption for
+	// already-shipped _base/_group-by).
+	expected := "- _base = " + digest + "\n"
 
 	if buf.String() != expected {
 		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
@@ -108,7 +113,7 @@ func TestMetadataBaseDigestRejectsMalformedValue(t1 *testing.T) {
 
 	metadata := NewMetadata(ids.RepoId{})
 
-	_, err := metadata.ReadFrom(strings.NewReader("- _base=not-a-digest\n"))
+	_, err := metadata.ReadFrom(strings.NewReader("- _base = not-a-digest\n"))
 
 	if err == nil {
 		t.Fatalf("expected an error for a malformed _base value, got nil")
@@ -123,14 +128,16 @@ func TestMetadataAllowDeletionSettingsFieldRoundTrip(t1 *testing.T) {
 
 	metadata := NewMetadata(ids.RepoId{})
 
-	_, err := metadata.ReadFrom(strings.NewReader("- _allow-deletion=true\n"))
+	_, err := metadata.ReadFrom(strings.NewReader("- _allow-deletion = true\n"))
 	t.AssertNoError(err)
 
 	var buf strings.Builder
 	_, err = metadata.WriteTo(&buf)
 	t.AssertNoError(err)
 
-	expected := "- _allow-deletion=true\n"
+	// Spaced "=" per RFC 0015's merged two-plane revision (ruled
+	// 2026-07-28: normative for all metadata lines).
+	expected := "- _allow-deletion = true\n"
 
 	if buf.String() != expected {
 		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
@@ -151,10 +158,40 @@ func TestMetadataReadFromNoOpsOnEntirelyUnknownSettingsFieldKey(t1 *testing.T) {
 
 	metadata := NewMetadata(ids.RepoId{})
 
-	_, err := metadata.ReadFrom(strings.NewReader("- _dry-run=true\n"))
+	_, err := metadata.ReadFrom(strings.NewReader("- _dry-run = true\n"))
 	t.AssertNoError(err)
 
 	if metadata.TagSet.Len() != 0 {
 		t.Errorf("expected no tags, got: %s", metadata.TagSet)
+	}
+}
+
+// TestMetadataSettingsFieldReadFromAcceptsUnspacedLegacyForm pins that
+// ReadFrom still accepts the pre-RFC-0015 unspaced form (`- _key=value`,
+// no whitespace around "=") -- TrimSpace on both the key and value halves
+// (metadata.go's addTagOrSettingsField) accepts the new spaced form
+// unconditionally and the old unspaced form for free (a no-op trim when
+// there's no whitespace to remove), so this is read-side back-compat
+// verified explicitly rather than assumed.
+func TestMetadataSettingsFieldReadFromAcceptsUnspacedLegacyForm(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	const digest = "@blake2b256-9j5cj9mjnk43k9rq4k2h3lezpl2sn3ura7cf8pa58cgfujw6nwgst7gtwz"
+
+	metadata := NewMetadata(ids.RepoId{})
+
+	_, err := metadata.ReadFrom(strings.NewReader("- _base=" + digest + "\n"))
+	t.AssertNoError(err)
+
+	var buf strings.Builder
+	_, err = metadata.WriteTo(&buf)
+	t.AssertNoError(err)
+
+	// Written form is always the new spaced canonical spelling,
+	// regardless of which spelling was read.
+	expected := "- _base = " + digest + "\n"
+
+	if buf.String() != expected {
+		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
 	}
 }

@@ -65,7 +65,7 @@ type ErrBaseUndereferenceable struct {
 
 func (err ErrBaseUndereferenceable) Error() string {
 	return fmt.Sprintf(
-		"this organize document's `_base=@%s` field could not be "+
+		"this organize document's `_base = @%s` field could not be "+
 			"dereferenced (%s).\n\n"+
 			"organize documents are ephemeral action, not durable artifacts -- "+
 			"edits can only be applied against the exact document `organize` "+

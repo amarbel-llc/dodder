@@ -252,7 +252,7 @@ function get_type_blob_sha() { echo -n "$FIXTURE_TYPE_BLOB_SHA"; }
 function get_fixture_type_sig() { echo -n "$FIXTURE_TYPE_SIG"; }
 
 # Runs `organize -mode output-only` with the given flags/query and returns
-# just the `- _base=@digest` line from its output. dodder#374(b): a
+# just the `- _base = @digest` line from its output. dodder#374(b): a
 # `-mode commit-directly` patch must carry a real `_base` field pointing at
 # a blob already written to the store, so hand-authored commit-directly
 # heredocs need a REAL captured digest spliced in -- not a hardcoded one,
@@ -266,7 +266,9 @@ function get_organize_base() {
   # mode, hangs waiting for an editor) instead of erroring.
   run_dodder organize -mode output-only "$@"
   assert_success
-  echo "$output" | grep '_base='
+  # RFC 0015 (merged, ruled 2026-07-28): spaced "=" is normative --
+  # "_base = " (trailing space), not "_base=".
+  echo "$output" | grep '_base = '
 }
 
 run_find() {
