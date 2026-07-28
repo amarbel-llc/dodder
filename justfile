@@ -32,7 +32,7 @@ lint: lint-fmt lint-shell lint-grammar
 lint-fmt:
   just go/check-conformist
 
-# Read-only shellcheck gate for tracked shell scripts (see go/check-shellcheck).
+# read-only shellcheck gate for tracked shell scripts (see go/check-shellcheck)
 lint-shell:
   just go/check-shellcheck
 
@@ -80,7 +80,7 @@ generate-seed-types:
 #   \____|_| |_|\___|\___|_|\_\
 #
 
-# Run all static checks: vuln, vet, repool, seqerror.
+# run all static checks: vuln, vet, repool, seqerror
 check:
   just go/check
 
@@ -97,7 +97,7 @@ check:
 
 test: test-go test-grammar test-bats test-bats-generate
 
-# Run unit tests only.
+# run unit tests only
 test-go *flags:
   just go/test-go-unit {{flags}}
 
@@ -211,7 +211,7 @@ debug-test-bats-sftp madder_path="" *targets:
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     just zz-tests_bats/test-targets-no-sandbox {{targets}}
 
-# Run bats with race-instrumented binary to detect data races in pool reuse.
+# run bats with race-instrumented binary to detect data races in pool reuse
 test-bats-race:
   just go/test-bats-race
 
@@ -363,7 +363,7 @@ explore-haustoria-init:
   echo "  cd $base/workspace && dodder status"
   echo "  cd $base/workspace && dodder new -type '!task' 'buy groceries'"
 
-# Show haustoria status for the explore workspace.
+# show haustoria status for the explore workspace
 [group('explore')]
 explore-haustoria-status:
   #!/usr/bin/env bash
@@ -445,7 +445,7 @@ explore-mcp-init:
   echo "symlink) and then reconnect; .mcp.json doesn't need editing."
   echo "Cleanup: rm -rf .dodder .mcp.json result .tmp/yin .tmp/yang"
 
-# Run a dodder command in the live CalDAV workspace.
+# run a dodder command in the live CalDAV workspace
 [group('explore')]
 explore-live *args:
   #!/usr/bin/env bash
@@ -642,7 +642,7 @@ explore-dlv-trace func_regexp stack='80' query='ach/ab':
   bin=$(nix build --no-link --print-out-paths .#dodder-debug-dwarf)
   dlv trace --exec "$bin/bin/dodder" --stack {{stack}} '{{func_regexp}}' -- show {{query}}
 
-# Debug a specific bats test file with --no-tempdir-cleanup for inspection.
+# debug a specific bats test file with --no-tempdir-cleanup for inspection
 [group('explore')]
 explore-bats-debug *targets:
   #!/usr/bin/env bash
