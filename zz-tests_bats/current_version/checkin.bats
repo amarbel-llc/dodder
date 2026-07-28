@@ -465,7 +465,7 @@ function checkin_explicit_workspace_delete_files { # @test
 			---
 			$base_line
 			% instructions: to prevent an object from being checked in, delete it entirely
-			% delete:true delete once checked in
+			%:checkin/delete = true delete once checked in
 			- today
 			---
 

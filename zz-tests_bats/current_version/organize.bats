@@ -345,20 +345,20 @@ function organize_dry_run_writes_settings_field { # @test
   assert_success
   assert_output - <<-EOM
 		---
-		- _dry-run = true
-		- _base = @blake2b256-dmrwuzavwg493zhn83gma3uq9g2l67ea47hzvj2hklsxx0gwglxqc2plvq
+		%:dry-run = true
+		- _base = @blake2b256-4gw5j67ch4476ezcks4yrya9s5rjv4ga05jtrn7ujrgg6etz3pksfg04cz
 		---
 	EOM
 }
 
 function organize_dry_run_reads_settings_field { # @test
-  # No `-dry-run` on the CLI: the "dry-run" OptionComment prototype is not
+  # No `-dry-run` on the CLI: the "dry-run" Setting prototype is not
   # registered (organize_options.go's ApplyToOrganizeOptions early-return),
-  # so `- _dry-run = true` parses as an unregistered settings field and has
-  # no effect on the commit -- this proves the new syntax is accepted
-  # without erroring, using the exact same inputs/goldens as
-  # organize_simple_commit to prove it's a true no-op, not merely "didn't
-  # crash".
+  # so a stray `- _dry-run = true` (pre-RFC-0015 data-plane spelling) is an
+  # entirely-unrecognized key and has no effect on the commit -- proves the
+  # old spelling is still a harmless no-op when unrecognized, using the
+  # exact same inputs/goldens as organize_simple_commit to prove it's a
+  # true no-op, not merely "didn't crash".
   run_dodder checkout one/uno
   assert_success
 

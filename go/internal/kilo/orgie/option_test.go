@@ -45,9 +45,10 @@ func TestMetadataSettingsFieldReadWriteRoundTrip(t1 *testing.T) {
 	_, err = metadata.WriteTo(&buf)
 	t.AssertNoError(err)
 
-	// Spaced "=" per RFC 0015's merged two-plane revision (ruled
-	// 2026-07-28: normative for all metadata lines).
-	expected := "- _dry-run = true\n"
+	// RFC 0015 piece 4: dry-run is operational-plane, so it renders as
+	// "%:dry-run = true" -- not the pre-RFC-0015 data-plane
+	// "- _dry-run = true" spelling.
+	expected := "%:dry-run = true\n"
 
 	if buf.String() != expected {
 		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
@@ -121,26 +122,61 @@ func TestMetadataBaseDigestRejectsMalformedValue(t1 *testing.T) {
 }
 
 // TestMetadataAllowDeletionSettingsFieldRoundTrip pins the
-// dodder#374(b) `_allow-deletion=true` settings field, structurally
-// identical to `_dry-run` but also registered unconditionally.
+// dodder#374(b) `allow-deletion` settings field, structurally similar
+// to `dry-run` and also registered unconditionally. RFC 0015 piece 4
+// reclassifies it to the operational plane: `%:allow-deletion = true`,
+// not the pre-RFC-0015 data-plane `- _allow-deletion = true` spelling.
 func TestMetadataAllowDeletionSettingsFieldRoundTrip(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
 	metadata := NewMetadata(ids.RepoId{})
 
-	_, err := metadata.ReadFrom(strings.NewReader("- _allow-deletion = true\n"))
+	_, err := metadata.ReadFrom(strings.NewReader("%:allow-deletion = true\n"))
 	t.AssertNoError(err)
 
 	var buf strings.Builder
 	_, err = metadata.WriteTo(&buf)
 	t.AssertNoError(err)
 
-	// Spaced "=" per RFC 0015's merged two-plane revision (ruled
-	// 2026-07-28: normative for all metadata lines).
-	expected := "- _allow-deletion = true\n"
+	expected := "%:allow-deletion = true\n"
 
 	if buf.String() != expected {
 		t.Errorf("\nexpected: %q\n  actual: %q", expected, buf.String())
+	}
+}
+
+// TestMetadataReadFromRejectsLegacyDryRunDataPlaneSyntax pins RFC 0015
+// piece 4's reclassification from the read side: once "dry-run" is
+// registered (mirroring ApplyToOrganizeOptions's real -dry-run-active
+// case), the pre-RFC-0015 data-plane spelling `- _dry-run = true` must
+// error -- SettingDryRun no longer implements SettingAsField, so this
+// is the same "registered but not a settings field" case
+// TestMetadataReadFromRejectsUnregisteredSettingsField pins for "hide".
+func TestMetadataReadFromRejectsLegacyDryRunDataPlaneSyntax(t1 *testing.T) {
+	metadata := NewMetadata(ids.RepoId{})
+	metadata.SettingSet.AddPrototype(
+		"dry-run",
+		&SettingDryRun{MutableConfigDryRun: &testMutableConfigDryRun{}},
+	)
+
+	_, err := metadata.ReadFrom(strings.NewReader("- _dry-run = true\n"))
+
+	if err == nil {
+		t1.Fatalf("expected an error for legacy data-plane \"- _dry-run = true\", got nil")
+	}
+}
+
+// TestMetadataReadFromRejectsLegacyAllowDeletionDataPlaneSyntax is the
+// same regression pin as above for "allow-deletion", which (unlike
+// "dry-run") is registered unconditionally by MakeSettingSet, so no
+// manual registration is needed here.
+func TestMetadataReadFromRejectsLegacyAllowDeletionDataPlaneSyntax(t1 *testing.T) {
+	metadata := NewMetadata(ids.RepoId{})
+
+	_, err := metadata.ReadFrom(strings.NewReader("- _allow-deletion = true\n"))
+
+	if err == nil {
+		t1.Fatalf("expected an error for legacy data-plane \"- _allow-deletion = true\", got nil")
 	}
 }
 

@@ -65,3 +65,36 @@ func TestMetadataWriteDataPlaneToSkipsOperationalPlane(t1 *testing.T) {
 		t1.Errorf("expected data-plane render to OMIT the operational-plane comment, got %q", dataPlane)
 	}
 }
+
+// TestMetadataWriteDataPlaneToOmitsRealDryRunAndAllowDeletion is piece
+// 4's own explicit verification from the RFC 0015 plan: with the two
+// REAL reclassified fields active (not the synthetic Setting the test
+// above uses), a data-plane-only render must not mention either --
+// confirms piece 1's filter and piece 4's reclassification compose
+// correctly, rather than assuming it from each piece's own unit tests.
+func TestMetadataWriteDataPlaneToOmitsRealDryRunAndAllowDeletion(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	metadata := NewMetadata(ids.RepoId{})
+	metadata.SettingSet.AddPrototypeAndDirectiveOption(
+		"dry-run",
+		&SettingDryRun{MutableConfigDryRun: &testMutableConfigDryRun{dryRun: true}},
+	)
+
+	_, err := metadata.ReadFrom(strings.NewReader("%:allow-deletion = true\n"))
+	t.AssertNoError(err)
+
+	var dataPlaneBuf strings.Builder
+	_, err = metadata.WriteDataPlaneTo(&dataPlaneBuf)
+	t.AssertNoError(err)
+
+	dataPlane := dataPlaneBuf.String()
+
+	if strings.Contains(dataPlane, "dry-run") {
+		t1.Errorf("expected data-plane render to OMIT dry-run, got %q", dataPlane)
+	}
+
+	if strings.Contains(dataPlane, "allow-deletion") {
+		t1.Errorf("expected data-plane render to OMIT allow-deletion, got %q", dataPlane)
+	}
+}

@@ -74,11 +74,12 @@ func MakeSettingSet(
 	ocs.AddPrototype("hide", settingHide(""))
 	ocs.AddPrototype("", settingHide(""))
 
-	// `_base`/`_allow-deletion` (dodder#374(b), cutting-garden RFC 0015):
-	// registered unconditionally, unlike `_dry-run` (which only becomes a
+	// `base` (data plane) / `allow-deletion` (operational plane, RFC
+	// 0015's merged two-plane revision) -- both registered
+	// unconditionally, unlike `dry-run` (which only becomes a
 	// registered prototype when the CLI's `-dry-run` flag is active,
 	// ApplyToOrganizeOptions). `_base` is required on every organize
-	// document and `_allow-deletion` must always be settable by hand --
+	// document and `%:allow-deletion` must always be settable by hand --
 	// neither mirrors ambient CLI/config state the way dry-run does.
 	ocs.AddPrototype("base", &SettingBaseDigest{})
 	ocs.AddPrototype("allow-deletion", &SettingAllowDeletion{})
@@ -172,6 +173,35 @@ func (ocs *SettingSet) AddPrototypeAndOption(
 	return o
 }
 
+// AddPrototypeAndDirectiveOption is AddPrototypeAndOption's operational-
+// plane sibling: registers o as BOTH the prototype for key and an
+// immediately-active Setting, marked IsDirective so it renders with
+// the "%:key = value" spelling (RFC 0015) rather than the pre-RFC-0015
+// "% key:value" spelling AddPrototypeAndOption still produces for
+// not-yet-migrated legacy comments. For directives whose generation-
+// time activation doesn't come from parsing text -- e.g. SettingDryRun
+// reads its display value dynamically from a live config pointer at
+// String() time, not from a parsed value string -- so setDirective's
+// parse-driven construction doesn't apply; this mirrors
+// AddPrototypeAndOption's exact no-clone semantics (the caller's
+// freshly-constructed Setting is used directly, not cloned), just with
+// IsDirective set.
+func (ocs *SettingSet) AddPrototypeAndDirectiveOption(
+	key string,
+	o Setting,
+) Setting {
+	wrapped := SettingWithKey{
+		Key:         key,
+		Setting:     o,
+		IsDirective: true,
+	}
+
+	ocs.prototype[key] = wrapped
+	ocs.Settings = append(ocs.Settings, wrapped)
+
+	return wrapped
+}
+
 // RegisterNamespaced registers a driving-command directive prototype
 // under the "<namespace>/<name>" key convention -- cutting-garden RFC
 // 0015 (merged): a namespaced `%:<command>/<name>` directive (e.g.
@@ -190,6 +220,20 @@ func (ocs *SettingSet) RegisterNamespaced(
 	o Setting,
 ) Setting {
 	return ocs.AddPrototype(namespace+"/"+name, o)
+}
+
+// RegisterNamespacedAndActivate is RegisterNamespaced's immediately-
+// active sibling, mirroring AddPrototypeAndDirectiveOption's register-
+// and-activate shape with the namespace/name split for call-site
+// readability -- checkin.go's real call site for its "delete" flag,
+// which needs both a registered prototype (so a user-edited
+// `%:checkin/delete = true` line resolves on re-read) and immediate
+// generation-time activation (so it's shown in the buffer).
+func (ocs *SettingSet) RegisterNamespacedAndActivate(
+	namespace, name string,
+	o Setting,
+) Setting {
+	return ocs.AddPrototypeAndDirectiveOption(namespace+"/"+name, o)
 }
 
 func (ocs *SettingSet) Set(v string) (err error) {
@@ -426,9 +470,16 @@ func (ocf *SettingDryRun) String() string {
 	return fmt.Sprintf("%t", ocf.IsDryRun())
 }
 
-func (ocf *SettingDryRun) IsSettingsField() bool {
-	return true
-}
+// SettingDryRun does NOT implement SettingAsField (unlike SettingBaseDigest/
+// SettingGroupBy below): cutting-garden RFC 0015's merged two-plane
+// revision (ruled 2026-07-28) reclassifies `_dry-run` from the data
+// plane (`- _dry-run = true`) to an OPERATIONAL-plane directive
+// (`%:dry-run = true`) -- it configures how the apply behaves, not
+// what the document is, so it belongs on the plane that's stripped
+// from the base blob. Activated via AddPrototypeAndDirectiveOption
+// (organize_options.go's ApplyToOrganizeOptions), not
+// AddPrototypeAndOption, so its generation-time activation is also
+// marked IsDirective and renders with the "%:" spelling.
 
 // SettingBaseDigest is `- _base = @<digest>` (dodder#374(b),
 // cutting-garden RFC 0015 / hyphence RFC 0002's id-less, digest-valued
@@ -476,16 +527,20 @@ func (ocf *SettingBaseDigest) IsSettingsField() bool {
 	return true
 }
 
-// SettingAllowDeletion is `- _allow-deletion = true` (dodder#374(b)).
-// Parsing only -- kept for RFC 0015 cross-substrate document
-// portability (`- _allow-deletion = true` must round-trip without
-// erroring), but dodder does not enforce it: the plan's §7 gate exists
-// to guard true substrate deletion (an object ceasing to exist), and
-// dodder has no such operation anywhere -- organize's tag-clearing
-// (changes.go, three_way.go) only ever mutates an existing object's
-// tags. See the plan's §7 (2026-07-19 ruling) for the full rationale,
-// including why generalizing to "any tag-clear that fully untags an
-// object" was considered and rejected.
+// SettingAllowDeletion is `%:allow-deletion = true` (dodder#374(b);
+// re-spelled from the data-plane `- _allow-deletion = true` by
+// cutting-garden RFC 0015's merged two-plane revision, ruled
+// 2026-07-28 -- it's a mutation-permitting directive, not a document
+// field, so it belongs on the operational plane, stripped from the
+// base blob). Parsing only -- kept for RFC 0015 cross-substrate
+// document portability (`%:allow-deletion = true` must round-trip
+// without erroring), but dodder does not enforce it: the plan's §7
+// gate exists to guard true substrate deletion (an object ceasing to
+// exist), and dodder has no such operation anywhere -- organize's
+// tag-clearing (changes.go, three_way.go) only ever mutates an
+// existing object's tags. See the plan's §7 (2026-07-19 ruling) for
+// the full rationale, including why generalizing to "any tag-clear
+// that fully untags an object" was considered and rejected.
 type SettingAllowDeletion struct {
 	Value bool
 }
@@ -512,9 +567,12 @@ func (ocf *SettingAllowDeletion) String() string {
 	return fmt.Sprintf("%t", ocf.Value)
 }
 
-func (ocf *SettingAllowDeletion) IsSettingsField() bool {
-	return true
-}
+// No IsSettingsField() -- see the type's own doc comment: reclassified
+// to the operational plane by RFC 0015's merged revision. Activated
+// only by reading a user-authored `%:allow-deletion = true` line
+// (setDirective, which marks IsDirective), never auto-activated at
+// generation the way SettingDryRun sometimes is, so no
+// AddPrototypeAndDirectiveOption call site is needed for this type.
 
 // SettingGroupBy is `- _group-by = "tag1,tag2"` (dodder#374(b), OQ3
 // ruling): the base blob's own envelope metadata records the -group-by

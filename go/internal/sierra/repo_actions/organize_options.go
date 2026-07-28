@@ -229,7 +229,11 @@ func ApplyToOrganizeOptions(
 		return
 	}
 
-	oo.AddPrototypeAndOption(
+	// AddPrototypeAndDirectiveOption, not AddPrototypeAndOption: RFC
+	// 0015's merged two-plane revision reclassifies `_dry-run` to the
+	// operational plane -- renders as "%:dry-run = true", not the
+	// pre-RFC-0015 "- _dry-run = true" data-plane spelling.
+	oo.SettingSet.AddPrototypeAndDirectiveOption(
 		"dry-run",
 		&orgie.SettingDryRun{
 			MutableConfigDryRun: repo.GetConfigPtr(),

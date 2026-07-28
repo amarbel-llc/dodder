@@ -87,24 +87,27 @@ func (op Checkin) runOrganize(
 		Comment: "delete once checked in",
 	}
 
+	settingSet := orgie.MakeSettingSet(
+		nil,
+		&orgie.SettingUnknown{
+			Value: "instructions: to prevent an object from being checked in, delete it entirely",
+		},
+	)
+
+	// RegisterNamespacedAndActivate, not a bare "delete" key: cutting-
+	// garden RFC 0015 (merged) migrates checkin's delete flag to a
+	// namespaced operational-plane directive, "%:checkin/delete = true",
+	// routed to checkin specifically rather than orgie's own bare
+	// harness directives (dry-run, allow-deletion).
+	settingSet.RegisterNamespacedAndActivate("checkin", "delete", flagDelete)
+
 	opOrganize := MakeOrganize2(
 		op.repo,
 		orgie.Metadata{
-			TagSet: op.Proto.Metadata.GetTags(),
-			Type:   op.Proto.Metadata.GetType().ToType(),
-			RepoId: query.RepoId,
-			SettingSet: orgie.MakeSettingSet(
-				map[string]orgie.Setting{
-					"delete": flagDelete,
-				},
-				&orgie.SettingUnknown{
-					Value: "instructions: to prevent an object from being checked in, delete it entirely",
-				},
-				orgie.SettingWithKey{
-					Key:     "delete",
-					Setting: flagDelete,
-				},
-			),
+			TagSet:     op.Proto.Metadata.GetTags(),
+			Type:       op.Proto.Metadata.GetType().ToType(),
+			RepoId:     query.RepoId,
+			SettingSet: settingSet,
 		},
 	)
 
