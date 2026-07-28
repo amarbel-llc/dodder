@@ -106,6 +106,22 @@ func (t *Text) ReadFrom(r io.Reader) (n int64, err error) {
 }
 
 func (ot Text) WriteTo(out io.Writer) (n int64, err error) {
+	return ot.writeTo(out, ot.Metadata)
+}
+
+// WriteDataPlaneTo renders the document with its metadata restricted to
+// the DATA plane (see Metadata.WriteDataPlaneTo) -- used by
+// repo_actions.WriteOrganizeBaseAndActivate to generate the
+// organize-base-v1 base blob body, whose digest must not depend on the
+// operational plane (cutting-garden RFC 0015, merged).
+func (ot Text) WriteDataPlaneTo(out io.Writer) (n int64, err error) {
+	return ot.writeTo(out, dataPlaneOnlyMetadata{ot.Metadata})
+}
+
+func (ot Text) writeTo(
+	out io.Writer,
+	metadataWriter hyphence.MetadataWriterTo,
+) (n int64, err error) {
 	if !ot.Options.wasMade {
 		panic("options not initialized")
 	}
@@ -143,7 +159,7 @@ func (ot Text) WriteTo(out io.Writer) (n int64, err error) {
 		Blob: lw,
 	}
 
-	mw.Metadata = ot.Metadata
+	mw.Metadata = metadataWriter
 
 	if n, err = mw.WriteTo(out); err != nil {
 		err = errors.Wrap(err)

@@ -91,7 +91,12 @@ func WriteOrganizeBaseAndActivate(
 ) (err error) {
 	var bodyBuf bytes.Buffer
 
-	if _, err = ot.WriteTo(&bodyBuf); err != nil {
+	// WriteDataPlaneTo, not WriteTo: the base blob's digest must depend
+	// only on the document's data plane (`-`/`!` lines), never the
+	// operational plane (`%`/`%:`) -- cutting-garden RFC 0015 (merged).
+	// A document generated with or without operational directives must
+	// produce the same base.
+	if _, err = ot.WriteDataPlaneTo(&bodyBuf); err != nil {
 		err = errors.Wrap(err)
 		return err
 	}

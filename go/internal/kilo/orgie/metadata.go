@@ -179,6 +179,22 @@ func (metadata *Metadata) ReadFrom(reader io.Reader) (n int64, err error) {
 }
 
 func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
+	return metadata.writeTo(w1, true)
+}
+
+// WriteDataPlaneTo renders only the DATA plane (`-`/`!` lines) --
+// cutting-garden RFC 0015 (merged): the organize-base-v1 base blob's
+// digest must depend only on the document's data plane, never the
+// operational plane (`%`/`%:`), so a document generated with or without
+// operational directives produces the same base. Used exclusively by
+// base-blob generation (repo_actions.WriteOrganizeBaseAndActivate);
+// normal document rendering (what the user is shown/edits) stays on
+// WriteTo, which keeps interleaving both planes as before.
+func (metadata Metadata) WriteDataPlaneTo(w1 io.Writer) (n int64, err error) {
+	return metadata.writeTo(w1, false)
+}
+
+func (metadata Metadata) writeTo(w1 io.Writer, includeOperationalPlane bool) (n int64, err error) {
 	w := format.NewLineWriter()
 
 	for _, o := range metadata.SettingSet.Settings {
@@ -191,6 +207,10 @@ func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
 		if isSettingsField(o) {
 			ocwk := o.(SettingWithKey)
 			w.WriteFormat("- _%s=%s", ocwk.Key, ocwk.Setting)
+			continue
+		}
+
+		if !includeOperationalPlane {
 			continue
 		}
 
@@ -207,11 +227,25 @@ func (metadata Metadata) WriteTo(w1 io.Writer) (n int64, err error) {
 		w.WriteFormat("! %s", tString)
 	}
 
-	if metadata.Matchers != nil {
+	if includeOperationalPlane && metadata.Matchers != nil {
 		for _, c := range quiter.SortedStrings(metadata.Matchers) {
 			w.WriteFormat("%% Matcher:%s", c)
 		}
 	}
 
 	return w.WriteTo(w1)
+}
+
+// dataPlaneOnlyMetadata adapts Metadata.WriteDataPlaneTo to
+// hyphence.MetadataWriterTo (io.WriterTo + HasMetadataContent) so
+// Text.WriteDataPlaneTo (main.go) can swap it in for hyphence.Writer's
+// Metadata field without duplicating Text.WriteTo's body. HasMetadataContent
+// is promoted from the embedded Metadata unchanged -- plane filtering only
+// affects WHICH lines render, not whether there's content to report.
+type dataPlaneOnlyMetadata struct {
+	Metadata
+}
+
+func (m dataPlaneOnlyMetadata) WriteTo(w io.Writer) (int64, error) {
+	return m.Metadata.WriteDataPlaneTo(w)
 }
