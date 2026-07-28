@@ -27,6 +27,8 @@ lint: lint-fmt lint-shell lint-grammar
 # checks.formatting). Runs first in the default lane so a formatting drift
 # fails fast, before the expensive build/test. This is what the spinclass
 # pre-merge hook (bare `just`) enforces.
+#
+# check formatting read-only via the flake's checks.formatting
 lint-fmt:
   just go/check-conformist
 
@@ -57,6 +59,8 @@ build: build-go
 # Codegen + formatting via the go/ justfile — the pre-merge gate's build step
 # (a debug binary for ad-hoc dev use comes from `just go/build-go-binary`; the
 # release artifact is the flake's default package).
+#
+# run codegen and formatting via the go/ justfile
 build-go:
   just go/build-go
 
@@ -64,6 +68,8 @@ build-go:
 # zz-seed/types/ from the table in go/cmd/dodder-gen_seed_types/table.go.
 # Deterministic and idempotent (stable ordering, no timestamps; stale files
 # pruned) — review the diff and commit. Agent dev-loop: seed-set table edits.
+#
+# regenerate the dodder.net seed-set type files into zz-seed/types/
 generate-seed-types:
   cd go && go run ./cmd/dodder-gen_seed_types -dir ../zz-seed/types
 
@@ -108,6 +114,8 @@ test-grammar:
 # No fixture-generation step: fixtures are committed under
 # zz-tests_bats/previous_versions/v*/ and the lane consumes them
 # directly. To regenerate, run `just test-bats-update-fixtures`.
+#
+# run the full bats integration suite inside the nix sandbox
 test-bats:
   nix build .#bats-default --no-link --print-build-logs
 
@@ -118,6 +126,8 @@ test-bats:
 # store/CLI change that breaks generation (e.g. FDR-0020 making config
 # non-queryable) fails here instead of silently bitrotting until the next
 # manual `test-bats-update-fixtures`. See #272.
+#
+# build the fixtures-current derivation to smoke-test the fixture generator
 test-bats-generate:
   nix build .#fixtures-current --no-link --print-build-logs
 
@@ -125,6 +135,8 @@ test-bats-generate:
 # The tag is the file_tags value from `# bats file_tags=foo`
 # directives. Tags with embedded `:` are quoted into the flake
 # attribute path automatically.
+#
+# run a per-tag bats lane
 test-bats-tags *tags:
   nix build '.#bats-{{tags}}' --no-link --print-build-logs
 
@@ -135,6 +147,8 @@ test-bats-tags *tags:
 # `test-bats-tags <tag>` (faster, hermetic) instead. The debug-tagged
 # dodder binary is resolved through the flake so this recipe doesn't
 # need `just build` first.
+#
+# run a single bats test file (or list of files) via the legacy batman path
 test-bats-targets *targets:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -151,6 +165,8 @@ test-bats-targets *targets:
 # the standard current_version files are hermetic via tmpdir/XDG pinning, so
 # they run correctly without the sandbox. The merge-hook nix lane stays the
 # authoritative gate.
+#
+# run bats targets via the batman path with the bats sandbox disabled
 test-bats-targets-no-sandbox *targets:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -174,6 +190,8 @@ test-bats-targets-no-sandbox *targets:
 # flake.lock rev -- used for adding temporary diagnostic
 # fmt.Fprintf(os.Stderr, ...) instrumentation directly into madder's
 # blob store code without needing to file/push/re-bump anything first.
+#
+# run bats targets with MADDER_TEST_SFTP_SERVER built and exported
 [group('debug')]
 debug-test-bats-sftp madder_path="" *targets:
   #!/usr/bin/env bash
@@ -199,6 +217,8 @@ test-bats-race:
 
 # Force-regenerate fixtures inside the nix sandbox, then materialize
 # the result into the worktree. Review the diff and commit.
+#
+# force-regenerate bats fixtures and materialize them into the worktree
 test-bats-update-fixtures:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -228,6 +248,8 @@ test-bats-update-fixtures:
 # `just test-bats-update-goldens current_version/show.bats
 # previous_versions/main.bats`) to scope the regen. Review the diff and commit
 # the goldens alongside the converted assertions.
+#
+# regenerate golden files for approval-testing assertions
 test-bats-update-goldens *targets="current_version/*.bats":
   #!/usr/bin/env bash
   set -euo pipefail
@@ -241,6 +263,8 @@ test-bats-update-goldens *targets="current_version/*.bats":
 
 # Snapshot current test suite for future reference.
 # Run BEFORE bumping VCurrent in store_version/main.go.
+#
+# snapshot the current bats test suite as a previous_versions/ entry
 test-bats-snapshot-version:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -271,6 +295,8 @@ test-bats-snapshot-version:
 
 # Start a local Radicale CalDAV server for haustoria prototyping.
 # Data stored in /tmp/radicale-dodder/. Runs in foreground (Ctrl-C to stop).
+#
+# start a local Radicale CalDAV server for haustoria prototyping
 [group('explore')]
 explore-radicale:
   #!/usr/bin/env bash
@@ -303,6 +329,8 @@ explore-radicale:
 # Create a haustoria workspace pointing at local Radicale.
 # Requires Radicale running (just explore-radicale) and env vars set.
 # Creates a parent repo + workspace in /tmp/dodder-haustoria-explore/.
+#
+# create a haustoria workspace pointing at local Radicale
 [group('explore')]
 explore-haustoria-init:
   #!/usr/bin/env bash
@@ -351,6 +379,8 @@ live_workspace := env("HOME") / "workspaces/dodder-haustoria-caldav/workspace"
 # session's Claude Code picks up `dodder mcp` as an MCP server.
 # Refuses to overwrite an existing .dodder/ in $PWD — clear it first
 # if you want to re-init.
+#
+# init a CWD-scoped dodder repo and wire .mcp.json for `dodder mcp`
 [group('explore')]
 explore-mcp-init:
   #!/usr/bin/env bash
@@ -436,6 +466,8 @@ _require-nvim:
 # Set up a throwaway dodder repo + workspace at /tmp/dodder-nvim-explore/
 # with a couple of example zettels, for the other explore-nvim-* recipes to
 # open in Neovim. Re-run any time to reset back to a clean slate.
+#
+# set up a throwaway dodder repo + workspace for the explore-nvim-* recipes
 [group('explore')]
 explore-nvim-init:
   #!/usr/bin/env bash
@@ -498,6 +530,8 @@ explore-nvim-init:
 # loaded, demonstrating hyphence highlighting and live body-language
 # injection (the dodder CLI is on PATH, so injection.lua's async resolver
 # round-trips for real).
+#
+# open the example zettels in Neovim with dodder.nvim loaded
 [group('explore')]
 explore-nvim-hyphence: _require-nvim
   #!/usr/bin/env bash
@@ -518,6 +552,8 @@ explore-nvim-hyphence: _require-nvim
 # Open the explore workspace's .dodder-workspace file in Neovim, showing the
 # injection path that forces the body language to TOML unconditionally (no
 # dodder CLI round-trip needed for this one).
+#
+# open the explore workspace's .dodder-workspace file in Neovim
 [group('explore')]
 explore-nvim-workspace: _require-nvim
   #!/usr/bin/env bash
@@ -533,6 +569,8 @@ explore-nvim-workspace: _require-nvim
 
 # Run `dodder organize` for real against the explore workspace and open the
 # resulting organize-text buffer in Neovim.
+#
+# open a real organize-text buffer from the explore workspace in Neovim
 [group('explore')]
 explore-nvim-organize: _require-nvim
   #!/usr/bin/env bash
@@ -553,6 +591,8 @@ explore-nvim-organize: _require-nvim
 
 # Open the standalone doddish query-language example in Neovim. No dodder
 # repo or workspace needed -- doddish highlighting is purely syntactic.
+#
+# open the standalone doddish query-language example in Neovim
 [group('explore')]
 explore-nvim-doddish: _require-nvim
   #!/usr/bin/env bash
@@ -567,6 +607,8 @@ explore-nvim-doddish: _require-nvim
 # Open :checkhealth dodder in a scratch Neovim session -- verifies the
 # dodder binary, the three compiled parsers, and the shipped queries all
 # resolve. Good first check before the other explore-nvim-* recipes.
+#
+# run `:checkhealth dodder` in a scratch Neovim session
 [group('explore')]
 explore-nvim-checkhealth: _require-nvim
   #!/usr/bin/env bash
@@ -591,6 +633,8 @@ explore-nvim-checkhealth: _require-nvim
 # Examples:
 #   just explore-dlv-trace 'remoteSftp.*\.initialize$'   # who dials SFTP
 #   just explore-dlv-trace '\.HasBlob$' 0                # probe order/results
+#
+# trace madder/dodder functions with dlv while running `dodder show`
 [group('explore')]
 explore-dlv-trace func_regexp stack='80' query='ach/ab':
   #!/usr/bin/env bash
@@ -619,6 +663,8 @@ explore-bats-debug *targets:
 
 # Tag a Go module release. The "go/v" prefix is added for you, so pass
 # the semver without it. Usage: just tag 0.1.0 "feat: something"
+#
+# tag a Go module release
 [group('release')]
 tag version message:
   #!/usr/bin/env bash
@@ -646,6 +692,8 @@ tag version message:
 # go/internal/uniform/commands_dodder/version.go), flake.nix reads
 # version.env as the single source of truth. No-op if already at the
 # target version. Usage: just bump-version 0.1.1
+#
+# rewrite DODDER_VERSION in version.env to the given semver
 [group('release')]
 bump-version new_version:
   #!/usr/bin/env bash
@@ -666,6 +714,8 @@ bump-version new_version:
 #
 # Use `just tag <version> <message>` directly if you want to
 # control the commit message yourself without bumping.
+#
+# cut a release: bump version.env, commit, push master, then sign and push the tag
 [group('release')]
 release version:
   #!/usr/bin/env bash
@@ -702,6 +752,8 @@ release version:
 # piggy's registration packages; `dodder gen` additionally mints madder-*
 # purposes (proving dodder inherits them from madder's now-madder-only
 # registrations). Runs entirely in a throwaway temp dir with CWD-scoped repos.
+#
+# run the duplicate-registration runtime proof for the madder#255 cutover
 [group('debug')]
 debug-cutover-smoke:
   #!/usr/bin/env bash
@@ -735,6 +787,8 @@ debug-cutover-smoke:
 # rsync_dot_net (2 !bookmark objects there are remote-only) with no visible
 # progress from outside the process — run this interactively instead so the
 # per-object commit lines and blob_store status lines stream live.
+#
+# import the live default repo's export into the dodder-migration-staging repo
 [group('debug')]
 debug-import-staging-baseline:
   #!/usr/bin/env bash
@@ -757,6 +811,8 @@ debug-import-staging-baseline:
 # This recipe is still useful for catching OTHER corruption classes
 # (bit-rot, storage corruption, unrelated digest mismatches). No query
 # means all genres/sigils (latest + history + hidden). Read-only.
+#
+# run a read-only full-repo signature audit via `fsck -recompute`
 [group('debug')]
 debug-fsck-full-repo-audit repo_id="default":
   #!/usr/bin/env bash
@@ -775,6 +831,8 @@ debug-fsck-full-repo-audit repo_id="default":
 # exercises the box_format archive encoder + doddish scanner decoder
 # round-trip, i.e. the exact code path the bug lived in. Read-only
 # against the source repo; writes only to a throwaway .tmp/ scratch repo.
+#
+# audit the repo by exporting every object and re-importing into a fresh repo
 [group('debug')]
 debug-export-import-audit repo_id="default":
   #!/usr/bin/env bash
@@ -807,6 +865,8 @@ debug-export-import-audit repo_id="default":
 # ambient XDG-user home repo IS named "default" (the repo this session's
 # investigation targeted) -- there is no flag to pick a different home
 # repo name; it's whatever $XDG_DATA_HOME/dodder resolves to.
+#
+# reproduce the repo-backed-workspace + pull failure against the home repo
 [group('debug')]
 debug-pull-home-repo-repro:
   #!/usr/bin/env bash
