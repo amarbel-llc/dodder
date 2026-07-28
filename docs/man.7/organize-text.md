@@ -59,16 +59,46 @@ The type (`! task`) sets the default type for new objects. Tags
 
 ## Settings Fields
 
-Document-level, behavior-affecting settings are spelled as `_`-reserved
-metadata fields (cutting-garden RFC 0015), not comments — a leading
-underscore marks a field as document/operation-scoped rather than a tag or
-type applied to every object in the document:
+Document metadata lines split into two strictly separated planes (cutting-
+garden RFC 0015's merged two-plane model):
+
+**`-` lines are the DATA plane.** Content-addressed: they project into the
+document's `_base` ground blob. `_`-reserved names (`_base`, `_group-by`)
+are framework fields on this plane — a leading underscore marks a field as
+document/operation-scoped rather than a tag or type applied to every object
+in the document.
+
+**`%` / `%:` lines are the OPERATIONAL plane.** Never content-addressed,
+stripped from `_base` entirely. Two shapes, distinguished by the character
+immediately adjacent to `%`:
+
+**`% <prose>`** (space after `%`)
+:   Inert. No behavior, ever — a plain comment.
+
+**`%:<directive>[ = value]`** (colon immediately adjacent to `%`, no
+space)
+:   A semantic, behavior-bearing directive. Boolean directives may be
+    presence-only (`%:dry-run`, same as `%:dry-run = true`) or explicit.
+    Routing is namespace-optional: a bare `%:<name>` is a directive of the
+    organize harness itself (e.g. `%:dry-run`, `%:allow-deletion`); a
+    namespaced `%:<command>/<name>` (e.g. `%:checkin/delete = true`) routes
+    to the driving command external to organize — **checkin -organize**
+    generates its "delete once checked in" instruction this way.
+
+Whitespace around `=` is normative on every metadata line, spaced or not:
 
     ---
-    - _dry-run=true
+    - _base = @blake2b256-zv8eh9jh32rtkg62ukpfjkxtzxn9mc9m7aqzs296gnkw0x75a24q69c7ux
+    %:dry-run = true
+    %:allow-deletion = true
+    %:checkin/delete = true delete once checked in
     ---
 
-**`_dry-run=true`** mirrors the **-dry-run** CLI flag: when active,
+(`_group-by = "tag1,tag2"` also exists on this plane, but records on the
+`_base` blob's own envelope metadata rather than the outer document you
+edit — it is not something you will normally see or hand-author here.)
+
+**`%:dry-run = true`** mirrors the **-dry-run** CLI flag: when active,
 **organize** parses and validates changes without writing them to the
 store. It is generated in output whenever **-dry-run** is passed on the
 command line, and can be set explicitly in a hand-edited document, though
@@ -77,15 +107,22 @@ invoked with **-dry-run** on the command line (the field is not yet a way
 to activate dry-run mode from a cold start).
 
 The older comment spelling, **`% dry-run:true`**, is still accepted when
-reading a document (a deprecated alias), but is no longer generated.
+reading a document (a deprecated alias), but is no longer generated. The
+even older data-plane spelling, **`- _dry-run = true`**, predates RFC
+0015's two-plane revision and is no longer accepted once "dry-run" is a
+registered directive (it errors); it silently no-ops only when "dry-run"
+is entirely unregistered (i.e. **-dry-run** was never passed).
 
-**`_base=@digest`** pins the document to the exact ground form **organize**
-generated it from, and is **mandatory** — every document **organize**
-outputs carries one, and applying edits without one fails:
+**`%:allow-deletion = true`** permits a delete-shaped edit to apply.
+Parsing only today — dodder has no operation that actually enforces this
+gate, since organize's tag-clearing (see **Removing Objects** below) only
+ever mutates an existing object's tags, never deletes it from the store.
 
-    ---
-    - _base=@blake2b256-zv8eh9jh32rtkg62ukpfjkxtzxn9mc9m7aqzs296gnkw0x75a24q69c7ux
-    ---
+**`_base = @digest`** pins the document to the exact ground form
+**organize** generated it from, and is **mandatory** — every document
+**organize** outputs carries one, and applying edits without one fails.
+Unlike the fields above, `_base` stays on the DATA plane (it is not
+stripped from itself).
 
 Organize documents are ephemeral action, not durable artifacts: edits can
 only be applied against the exact document **organize** generated, never a
