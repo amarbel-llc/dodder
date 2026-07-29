@@ -152,11 +152,6 @@ func ComputeThreeWay(
 	po options_print.Options,
 	inputs ThreeWayInputs,
 ) (result ThreeWayResult, err error) {
-	if err = applyToText(po, inputs.Base); err != nil {
-		err = errors.Wrap(err)
-		return result, err
-	}
-
 	var baseSkus, patchSkus SkuMapWithOrder
 
 	if baseSkus, err = inputs.Base.GetSkus(inputs.Live); err != nil {

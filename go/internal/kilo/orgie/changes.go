@@ -281,24 +281,3 @@ func ChangesFromResults(
 
 	return c, err
 }
-
-func applyToText(
-	po options_print.Options,
-	t *Text,
-) (err error) {
-	if po.BoxPrintTagsAlways {
-		return err
-	}
-
-	for el := range t.Options.Skus.All() {
-		sk := el.GetSkuExternal()
-
-		if sk.GetMetadata().GetDescription().IsEmpty() {
-			continue
-		}
-
-		sk.GetMetadataMutable().ResetTags()
-	}
-
-	return err
-}
