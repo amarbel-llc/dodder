@@ -16,6 +16,8 @@ import (
 	mad_blob_store_env "code.linenisgreat.com/madder/go/pkgs/blob_store_env"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
 	mad_directory_layout "code.linenisgreat.com/madder/go/pkgs/directory_layout"
+	mad_ids "code.linenisgreat.com/madder/go/pkgs/ids"
+	"code.linenisgreat.com/madder/go/pkgs/scoped_id"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
@@ -112,7 +114,7 @@ func (env *Env) Genesis(bigBang BigBang) {
 
 	env.writeInventoryListLog()
 	env.writeConfig(bigBang)
-	env.writeBlobStoreConfigIfNecessary(bigBang, env.blobStoreEnv.BlobStore)
+	multiId := env.writeBlobStoreConfigIfNecessary(bigBang, env.blobStoreEnv.BlobStore)
 	env.writeBlobStoreConfigInit(bigBang, env.blobStoreEnv.BlobStore)
 
 	// Re-make the blob_store_env now that the on-disk config exists,
@@ -121,16 +123,28 @@ func (env *Env) Genesis(bigBang BigBang) {
 	// re-running env_dir.initializeXDG.
 	env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(env.blobStoreEnv.Env)
 
-	// Pin the caller-supplied store as the default for every write the
+	// Pin the repo's default store as the default for every write the
 	// rest of Genesis (and callers building on top of it, e.g.
 	// local_working_copy.Genesis's pandoc tool blobs) makes from here
 	// on. Without this, MakeBlobStoreEnv's own default-selection
 	// (madder's BlobStoreEnv.setupStores, an alphabetical sort of every
-	// store discovered in the XDG scope) silently wins instead, so
-	// writes land in whatever store happens to sort first rather than
-	// the one -blob_store-id named (amarbel-llc/dodder#365).
-	if !bigBang.BlobStoreId.IsEmpty() {
-		env.SetBlobStoreOrder([]blob_store_id.Id{bigBang.BlobStoreId})
+	// store discovered in the XDG scope) silently wins instead
+	// (amarbel-llc/dodder#365).
+	//
+	// BlobStoreConfigInit is init-workspace's pointer-store flow (#200) --
+	// explicitly out of scope for FDR-0016 D1's multi-authoring below, so
+	// it keeps pinning directly to the caller-named store (the pointer
+	// writeBlobStoreConfigInit just installed), not a wrapping multi.
+	// Every other genesis pins to multiId, the write_through multi
+	// writeBlobStoreConfigIfNecessary just authored (#223): the bootstrap
+	// config read never needs to dial a remote, since the multi's
+	// write-store is always the local write-store.
+	if bigBang.BlobStoreConfigInit != nil {
+		if !bigBang.BlobStoreId.IsEmpty() {
+			env.SetBlobStoreOrder([]blob_store_id.Id{bigBang.BlobStoreId})
+		}
+	} else {
+		env.SetBlobStoreOrder([]blob_store_id.Id{multiId})
 	}
 
 	env.genesisObjectIds(bigBang)
@@ -183,53 +197,207 @@ func (env *Env) writeConfig(bigBang BigBang) {
 	}
 }
 
-// writeBlobStoreConfigIfNecessary writes the initial blob store
-// config to disk when the genesis bigBang did not specify a
-// pre-existing blob store id. Moved here from the deleted
-// env_repo/blob_store.go: it operates on the env_repo (uses
-// env.MakeDirs / env.Cancel) and on madder's directory_layout, so
-// belonging to env_repo as a method is the natural home.
+// storeNameLocal is the shared, XDG-scoped local write-store every repo's
+// default multi wraps (FDR-0016 D1 decision #4). Only the multi itself is
+// repo-scoped (see writeDefaultMulti); the underlying local store is
+// reused across every repo in the same scope, matching how the
+// pre-multi default store was already shared (FDR-0019).
+const storeNameLocal = "default-local"
+
+// writeBlobStoreConfigIfNecessary authors the repo's default blob store as
+// a mode="write_through" madder multi (FDR-0016 D1, dodder#223): the
+// write-store is always the shared local store, so the bootstrap config
+// read (store_config/persist.go's GetLocalReadBlobStore) never needs to
+// dial out. The caller-named -blob_store-id store, when given, is added
+// as a read-only fallback, not a mirror target -- write_through has no
+// cross-member hash-type-agreement requirement (unlike mirror, see
+// madder#268), so this also supports a legacy single-hash remote whose
+// native hash type differs from the local store's. This deviates from
+// this package's earlier "mirror" implementation in favor of FDR-0016
+// D1's originally-written design; see the FDR's "Chosen mechanism"
+// section for the rationale and the alternatives considered instead.
+// Runs on every genesis, not just when -blob_store-id names a remote.
+//
+// Returns the zero Id when bigBang.BlobStoreConfigInit is set: that's
+// init-workspace's pointer-store flow (#200), which installs its own
+// not-yet-existing store via writeBlobStoreConfigInit right after this
+// call -- explicitly out of scope here (see Genesis's SetBlobStoreOrder
+// comment for how the caller keeps that path pinned directly, no multi).
 func (env *Env) writeBlobStoreConfigIfNecessary(
 	bigBang BigBang,
 	directoryLayout mad_directory_layout.BlobStore,
-) {
+) (multiId blob_store_id.Id) {
+	if bigBang.BlobStoreConfigInit != nil {
+		return multiId
+	}
+
+	localId, localDigest := env.ensureLocalWriteStore(bigBang, directoryLayout)
+	writeStore := localId.WithDigest(localDigest)
+
+	var readStores []blob_store_id.Id
+
 	if !bigBang.BlobStoreId.IsEmpty() {
-		return
+		namedDigest := env.ensureBlobStoreDigest(bigBang.BlobStoreId)
+		readStores = append(
+			readStores,
+			bigBang.BlobStoreId.WithDigest(namedDigest),
+		)
 	}
 
-	blobStoreConfigPath := mad_directory_layout.GetDefaultBlobStore(
-		directoryLayout,
-	).GetConfig()
+	return env.writeDefaultMulti(bigBang, directoryLayout, writeStore, readStores)
+}
 
-	// FDR-0019: named repos share the default (madder) blob store, so
-	// the config may already exist when a second named repo is
-	// initialized in the same scope. Reuse it rather than failing the
-	// exclusive write below. Legacy single-repo inits never hit this
-	// path — their blob store tree is unique per repo.
-	if files.Exists(blobStoreConfigPath) {
-		return
+// ensureLocalWriteStore creates (or reuses) storeNameLocal, returning its
+// bare id and Phase-1 (FDR-0008) digest. FDR-0019: named repos share the
+// default blob store namespace, so the config may already exist when a
+// second named repo is initialized in the same scope -- read its digest
+// back rather than re-minting, matching the reuse behavior
+// writeBlobStoreConfigIfNecessary always had for the pre-multi "default"
+// store.
+func (env *Env) ensureLocalWriteStore(
+	bigBang BigBang,
+	directoryLayout mad_directory_layout.BlobStore,
+) (id blob_store_id.Id, digest markl.Id) {
+	path := mad_directory_layout.GetBlobStorePath(directoryLayout, storeNameLocal)
+	configPath := path.GetConfig()
+	id = path.GetId()
+
+	if files.Exists(configPath) {
+		existing, err := hyphence.DecodeFromFile(blob_store_configs.Coder, configPath)
+		if err != nil {
+			env.Cancel(err)
+			return id, digest
+		}
+
+		return id, existing.BlobDigest
 	}
 
-	blobStoreConfigDir := filepath.Dir(blobStoreConfigPath)
-
-	if err := env.MakeDirs(blobStoreConfigDir); err != nil {
+	if err := env.MakeDirs(filepath.Dir(configPath)); err != nil {
 		env.Cancel(err)
-		return
+		return id, digest
 	}
 
 	blobStoreConfig := bigBang.TypedBlobStoreConfig
 
-	if err := hyphence.EncodeToFile(
-		blob_store_configs.Coder,
-		&blob_store_configs.TypedConfig{
-			Type: blobStoreConfig.Type,
-			Blob: blobStoreConfig.Blob,
-		},
-		blobStoreConfigPath,
-	); err != nil {
-		env.Cancel(err)
-		return
+	typedConfig := &blob_store_configs.TypedConfig{
+		Type: blobStoreConfig.Type,
+		Blob: blobStoreConfig.Blob,
 	}
+
+	file, err := files.CreateExclusiveWriteOnly(configPath)
+	if err != nil {
+		env.Cancel(err)
+		return id, digest
+	}
+
+	defer errors.ContextMustClose(env, file)
+
+	if _, err = blob_store_configs.EncodeWithDigest(typedConfig, file); err != nil {
+		env.Cancel(err)
+		return id, digest
+	}
+
+	return id, typedConfig.BlobDigest
+}
+
+// ensureBlobStoreDigest returns id's config's Phase-1 (FDR-0008) digest,
+// minting one in place if the store predates that requirement (a legacy
+// store, e.g. an existing SFTP remote named via -blob_store-id). madder's
+// own `config-pin_digest` does the equivalent from its own CLI; dodder
+// can't call it directly (no shared internal write helper -- see
+// go/internal/foxtrot/env_repo/CLAUDE.md), so this hand-rolls the same
+// chmod/truncate-rewrite dance purse-first/dewey's files package exposes.
+//
+// Resolves id's on-disk location via env.blobStoreEnv.GetBlobStore --
+// the same scope-aware (CWD + XDG, two-phase-discovery) lookup Genesis's
+// own pre-flight existence check already uses -- rather than deriving a
+// path from a single directoryLayout. id is caller-supplied
+// (-blob_store-id) and can live in a different scope than the repo's
+// own: a `.`-scoped repo naming a bare/XDG-scoped store, for instance.
+// A fixed directoryLayout previously always resolved to the REPO's own
+// scope, so the store's config could go unfound even though it exists
+// (the pre-flight check, using the correct lookup, had already
+// confirmed that).
+func (env *Env) ensureBlobStoreDigest(id blob_store_id.Id) markl.Id {
+	store := env.blobStoreEnv.GetBlobStore(id)
+	configPath := store.Path.GetConfig()
+
+	if !store.Config.BlobDigest.IsNull() {
+		return store.Config.BlobDigest
+	}
+
+	if err := files.SetAllowUserChanges(configPath); err != nil {
+		env.Cancel(err)
+		return markl.Id{}
+	}
+
+	typedConfig := &blob_store_configs.TypedConfig{
+		Type: store.Config.Type,
+		Blob: store.Config.Blob,
+	}
+
+	file, err := files.OpenExclusiveWriteOnlyTruncate(configPath)
+	if err != nil {
+		env.Cancel(err)
+		return markl.Id{}
+	}
+
+	defer errors.ContextMustClose(env, file)
+
+	if _, err = blob_store_configs.EncodeWithDigest(typedConfig, file); err != nil {
+		env.Cancel(err)
+		return markl.Id{}
+	}
+
+	return typedConfig.BlobDigest
+}
+
+// writeDefaultMulti authors the repo's default blob store as a
+// mode="write_through" madder multi (FDR-0016 D1) whose write-store is
+// writeStore (always the shared local store) and whose read-stores are
+// readStores (the caller-named -blob_store-id store, if any), named
+// "default-<repo-id>" so repos sharing an XDG scope don't collide on a
+// single flat "default" multi (#223 decision #4: only the multi is
+// repo-scoped; storeNameLocal above stays scope-shared).
+func (env *Env) writeDefaultMulti(
+	bigBang BigBang,
+	directoryLayout mad_directory_layout.BlobStore,
+	writeStore blob_store_id.Id,
+	readStores []blob_store_id.Id,
+) (multiId blob_store_id.Id) {
+	name := "default-" + scoped_id.EffectiveName(bigBang.RepoId)
+	path := mad_directory_layout.GetBlobStorePath(directoryLayout, name)
+	configPath := path.GetConfig()
+	multiId = path.GetId()
+
+	if err := env.MakeDirs(filepath.Dir(configPath)); err != nil {
+		env.Cancel(err)
+		return multiId
+	}
+
+	typedConfig := &blob_store_configs.TypedConfig{
+		Type: mad_ids.GetOrPanic(mad_ids.TypeTomlBlobStoreConfigMultiV0).TypeStruct,
+		Blob: &blob_store_configs.TomlMultiV0{
+			Mode:       "write_through",
+			WriteStore: writeStore,
+			ReadStores: readStores,
+		},
+	}
+
+	file, err := files.CreateExclusiveWriteOnly(configPath)
+	if err != nil {
+		env.Cancel(err)
+		return multiId
+	}
+
+	defer errors.ContextMustClose(env, file)
+
+	if _, err = blob_store_configs.EncodeWithDigest(typedConfig, file); err != nil {
+		env.Cancel(err)
+		return multiId
+	}
+
+	return multiId
 }
 
 // writeBlobStoreConfigInit writes the caller-supplied

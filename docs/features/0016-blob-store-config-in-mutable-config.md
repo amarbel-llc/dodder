@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: exploring
 date: 2026-05-31
 promotion-criteria: |
   Blocked until madder FDR-0009 ("multi-store as a bonafide config
@@ -56,6 +56,62 @@ open verifications, and the remaining phases live in
 [dodder #223](https://code.linenisgreat.com/dodder/issues/223)** — start
 there. The sections below predate this revision and describe the
 abandoned seed-store framing; they are retained for history.
+
+## Implementation note (2026-08-02): mirror considered and reverted
+
+While implementing dodder#223 Phase 2, genesis was briefly changed to
+author the default multi as `mode = "mirror"` (every write lands in
+both the local write-store and the caller-named `-blob_store-id`
+store) rather than this FDR's originally written `write_through`
+design above. The reasoning at the time: `-blob_store-id <remote>`
+likely means the user wants content actually replicated there, which
+`write_through`'s read-only fallback role doesn't provide.
+
+That deviation reintroduced a real blocker: mirror mode requires every
+member to write the identical digest, which requires the identical
+hash type (recently made a loud, enforced error rather than a silent
+corruption/crash by madder#268). A local default store defaulting to
+blake2b256 can then never mirror a legacy single-hash remote (e.g. a
+pre-existing rsync.net-style sha256 store) — which is the literal
+original real-world case that motivated this whole investigation
+(dodder#365/#366). `write_through` has no such constraint: each
+member (write-store or read-store) uses its own native hash type
+independently, with no cross-member agreement at all.
+
+Genesis has been reverted to `write_through` (this FDR's original D1
+design, local as `write_store`, caller-named store(s) as
+`read_stores`) for this reason. Options considered for the
+cross-hash-type case, captured here in case this needs revisiting:
+
+- **A. `write_through`, local as write-store, remote(s) as read-only
+  fallback (chosen).** No cross-member hash-type constraint; also the
+  design this FDR originally specified. Tradeoff: genesis's own new
+  writes, and this repo's writes generally, land ONLY in the local
+  write-store — a caller-named remote never receives new content
+  automatically (it's a fallback for existing/historical content, not
+  a live replication target). Ongoing replication to a remote, if
+  wanted, would be a separate feature (e.g. `push`), not something the
+  default-store construction itself provides.
+- **B. Hybrid: `mirror` when hash types already match, `write_through`
+  when they don't.** Rejected — in the mismatched branch, local must
+  still be the write-store (else the bootstrap-config-read guarantee
+  breaks again), which makes that branch identical to option A. The
+  only thing a hybrid buys is keeping mirror's "both stores get every
+  write" behavior for the matching-hash-type case, at the cost of two
+  different behaviors an operator has to understand depending on which
+  remote they picked.
+- **C. Let the shared local write-store adopt a mirrored remote's hash
+  type.** Rejected — `default-local` is XDG-scope-shared across repos
+  (D1 decision #4 above); making its hash type follow whichever remote
+  a repo happens to name would risk collisions for other repos in the
+  same scope wanting a different type. Would require either per-repo
+  local stores (reverses D1 decision #4) or hash-type-suffixed shared
+  stores (`default-local-sha256`, …) — the most invasive option, for
+  the least benefit.
+- **D. Reject the combination outright**, clear dodder-side error at
+  genesis time. Simplest, but directly fails the original motivating
+  case (dodder#365/#366) — a repo whose only blob store is a legacy
+  single-hash remote would simply be unsupported.
 
 ## Problem Statement
 

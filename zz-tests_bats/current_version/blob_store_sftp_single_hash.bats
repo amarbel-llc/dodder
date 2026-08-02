@@ -36,15 +36,23 @@ function sftp_single_hash_remote_blob_store_id_pins_default_store { # @test
   # in rsync-mimic specifically, verified by direct filesystem
   # inspection of both stores.
   #
-  # Deliberately stops at write-routing and does NOT attempt to read
-  # the repo back (no `dodder last`/`cat-object`): a repo whose only
-  # configured blob store is remote can't currently read its own
-  # bootstrap config back at all (config-bootstrap reads are
-  # restricted to local-typed stores by design -- see
-  # store_config/persist.go's loadMutableConfigBlob comment). That is
-  # a separate, much larger, already-tracked gap: amarbel-llc/dodder#223
-  # (FDR-0016 D1, multi-default with a local write-store). Not this
-  # test's concern -- see #223 for a concrete repro of that gap.
+  # Also proves #223 (FDR-0016 D1) is fixed: genesis now always wraps
+  # -blob_store-id in a write_through multi whose write-store is the
+  # shared local store and whose read-stores are the caller-named
+  # store(s), so the bootstrap config read (store_config/persist.go's
+  # loadMutableConfigBlob, restricted to local-typed stores by design)
+  # can always find the local write-store -- it never needs to dial the
+  # remote just to read the repo's own config back. See sibling test
+  # sftp_single_hash_remote_blob_store_id_read_back_works below for the
+  # decisive read-back check.
+  #
+  # write_through (rather than mirror) is FDR-0016 D1's originally
+  # written design; it also has no cross-member hash-type-agreement
+  # requirement (unlike mirror, madder#268), so a legacy single-hash
+  # remote whose native hash type differs from the local default (as
+  # here: sha256 vs. blake2b256) is fully supported. The tradeoff:
+  # genesis writes land ONLY in the local write-store -- rsync-mimic,
+  # as a read-only fallback, receives no new content from genesis.
   #
   # The SFTP flavor here isn't essential to the #365 bug -- it's what
   # the original real-world report happened to hit -- but it's kept as
@@ -119,12 +127,80 @@ function sftp_single_hash_remote_blob_store_id_pins_default_store { # @test
   assert_success
   assert_output ""
 
-  # Decisive check #2: genesis writes DID land in rsync-mimic (the
-  # store actually named via -blob_store-id), not nowhere -- real
-  # committed blob content beyond the remote's own blob_store-config
-  # and any leaked SFTP mover temp files (amarbel-llc/dodder#366).
+  # Decisive check #2: rsync-mimic (the store named via -blob_store-id)
+  # must receive NO genesis writes either -- under the write_through
+  # design (FDR-0016 D1), a caller-named remote is a read-only
+  # fallback, not a mirror target; only the shared local write-store
+  # receives new content. No committed blob content beyond the
+  # remote's own blob_store-config and any leaked SFTP mover temp
+  # files (amarbel-llc/dodder#366).
   run find "$remote_root" -mindepth 1 -type f \
     -not -name 'blob_store-config' -not -name 'tmp_*'
   assert_success
+  assert_output ""
+
+  # Decisive check #3: genesis writes DID land somewhere real -- the
+  # shared local write-store ("default-local"), not nowhere and not
+  # either of the two competing stores above.
+  run find "$XDG_DATA_HOME/madder/blob_stores/default-local" \
+    -mindepth 1 -not -name 'blob_store-config'
+  assert_success
   refute_output ""
+}
+
+function sftp_single_hash_remote_blob_store_id_read_back_works { # @test
+  # The decisive #223 (FDR-0016 D1) check: a repo genesis'd with
+  # -blob_store-id pointing at a remote-only store must be able to read
+  # its own bootstrap config back, with no local fallback store
+  # configured by the caller. Before #223 landed, this failed outright --
+  # store_config/persist.go's loadMutableConfigBlob only reads via
+  # GetLocalReadBlobStore(), which categorically excludes remote-typed
+  # stores, and the repo's only configured store WAS the remote. Setup
+  # mirrors sftp_single_hash_remote_blob_store_id_pins_default_store
+  # above (a single-hash sha256 SFTP remote), minus the competing
+  # harvest-sha256 store, which isn't needed for this check.
+  run_madder init -hash_type-id sha256 -encryption none harvest-sha256
+  assert_success
+
+  local remote_root="$BATS_TEST_TMPDIR/sftp-remote-legacy"
+  mkdir -p "$remote_root"
+  grep -v '^@ ' "$XDG_DATA_HOME/madder/blob_stores/harvest-sha256/blob_store-config" \
+    >"$remote_root/blob_store-config"
+  echo 'single_hash = true' >>"$remote_root/blob_store-config"
+
+  run_madder init-sftp-explicit \
+    -host 127.0.0.1 \
+    -port "$SFTP_PORT" \
+    -user testuser \
+    -password anything \
+    -remote-path "$remote_root" \
+    -known-hosts-file "$SFTP_KNOWN_HOSTS" \
+    rsync-mimic-readback
+  assert_success
+
+  # CWD-scoped, and specifically named "default": a bare (XDG
+  # user-scoped) repo-id has no CWD binding, so a later bare `dodder
+  # last`/`show` (no -repo_id) can't auto-discover it. Every bare
+  # subsequent-command example across the whole bats suite uses
+  # `.default` specifically -- bare commands assume that name for
+  # CWD-scoped discovery rather than reading back whatever name init
+  # was actually given, so this test follows the same convention
+  # instead of introducing untested territory.
+  run_dodder init \
+    -yin-default -yang-default \
+    -hash_type-id blake2b256 \
+    -blob_store-id rsync-mimic-readback \
+    .default
+  assert_success
+
+  # The read-back itself: `last` decodes the config it just bootstrapped
+  # from (persist.go's loadMutableConfigBlob), and `show` proves an
+  # actual object round-trips through the store, not just an in-memory
+  # default. Neither dials the remote -- both are served by the multi's
+  # local write-store.
+  run_dodder last
+  assert_success
+
+  run_dodder show :z
+  assert_success
 }
