@@ -25,15 +25,19 @@ engines whose disagreements produced a family of real bugs (#359, #283,
 stays. What changed:
 
 - **The resolution engine is no longer specified here.** madder — which
-  owns `scoped_id`, `env_dir`, and `directory_layout` — gets a normative
-  engine FDR (number pending; being drafted in a parallel session)
-  defining the single resolver: one id, one physical location, for every
-  command; init distinguished only by being allowed to find nothing at
-  the resolved location and create there (at `$PWD` for CWD scope —
-  multi-dot `..name` is addressing-only); a fail-fast error contract;
-  and the retirement of implicit ancestor union-merge in favor of
-  explicit digest-pinned multi blob-store configs. This FDR is the
-  **dodder policy layer** over that engine: repo auto-discovery,
+  owns `scoped_id`, `env_dir`, and `directory_layout` — has a normative
+  engine FDR: **madder FDR-0010** (scoped-id resolution,
+  `docs/features/0010-scoped-id-resolution.md`) defining the single
+  resolver `Resolve(id, cwd, env) -> Location`: one id, one physical
+  location, for every command; only `.`-prefixed CWD ids walk up
+  (store-aware, deepest-first, match-ranked — today's
+  `ResolveNthAncestorMatch` semantics, adopted as the one CWD walk);
+  init distinguished only by being allowed to find nothing at the
+  resolved location and create there (at `$PWD` for CWD scope —
+  multi-dot `..name` is addressing-only, rejected at init); a fail-fast
+  error contract; and the retirement of implicit ancestor union-merge
+  in favor of explicit digest-pinned multi blob-store configs. This FDR
+  is the **dodder policy layer** over that engine: repo auto-discovery,
   `repos/<name>/` nesting, and the `/name` remote-first reservation.
 - **Auto-id resolution is now specified as hybrid discovery** (see the
   grammar table and "Resolution semantics" below), replacing both the
@@ -114,8 +118,8 @@ Two repos with the same name in different scopes (`notes` vs
 ### Resolution semantics (normative, this revision)
 
 The engine — how an id maps to a physical location — is specified by
-madder's one-resolver FDR (number pending) and summarized here only as
-far as dodder policy depends on it:
+madder FDR-0010 (scoped-id resolution) and summarized here only as far
+as dodder policy depends on it:
 
 - **One resolver, one answer.** Every dodder command resolves a repo id
   through the same function; the same id names the same physical
@@ -147,9 +151,11 @@ far as dodder policy depends on it:
 - **No implicit union-merge.** An id resolves to exactly one store or
   repo. Multi-store read/write behavior exists only via explicit
   digest-pinned multi blob-store configs (FDR-0016's write_through
-  multis); ancestor stores are never implicitly visible. A repo's
-  default blob store comes from its own config (repo_configs V3's
-  pinned id) — blob-side "default" needs no discovery at all.
+  multis); ancestor stores are never implicitly visible to reads or
+  writes — listing/completion may still enumerate them (enumeration is
+  not resolution; madder FDR-0010's framing). A repo's default blob
+  store comes from its own config (repo_configs V3's pinned id) —
+  blob-side "default" needs no discovery at all.
 - **Legacy layouts get diagnosis, not compat.** The resolver carries no
   legacy branches (#363 stands). A legacy flat tree produces the
   specific error naming `migrate-repo-layout`; conformance fixtures
@@ -177,7 +183,11 @@ madder engine FDR carries the engine-level list.
 3. **A third, walk-up-immune resolution exists** (`init-workspace`'s
    home-parent lookup, the `MakeWithHomeAndInitialize` lineage), which
    can disagree with the walk-up-sensitive paths about where `default`
-   physically is — the #359 incident.
+   physically is — the #359 incident. (madder's own twin of this bug,
+   madder#227, is fixed point-wise — unprefixed init is home-pinned —
+   but the structural shape, a separate constructor rather than a
+   branch of one resolver, remains and is what #359 tracks on the
+   dodder side.)
 4. **Blob-store discovery union-merges every ancestor `.madder/`**
    (`FindAllCwdOverridePaths`, two-phase `MakeBlobStores`), so which
    physical store serves a read depends on which discovery path ran
@@ -439,10 +449,15 @@ Deferred (tracked follow-ups):
 
 ## More Information
 
-- **madder engine FDR (number pending)** — the normative one-resolver
-  specification this revision layers policy over, plus the
-  engine-level conformance suite. Fill in the number/link once the
-  parallel madder drafting session lands it.
+- **madder FDR-0010 (scoped-id resolution)** — the normative
+  one-resolver specification this revision layers policy over
+  (`docs/features/0010-scoped-id-resolution.md` in madder), plus the
+  engine-level conformance suite (Go `resolution_conformance_test.go`
+  in `scoped_id`/`env_dir`, bats `resolution_conformance.bats`) whose
+  expected-fail cases are each annotated to the divergence they
+  document. madder's legacy-layout error-contract composes with the
+  open madder#175 (legacy-rename error UX); madder issues live on
+  code.linenisgreat.com (Forgejo), not the GitHub mirror.
 - Issues #359, #283, #341, #196 — the resolver-disagreement bug family
   motivating the revision; #383 — the exhaustive id-resolution audit.
 - FDR-0016 (blob-store config in mutable config) — the explicit
