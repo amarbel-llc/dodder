@@ -375,9 +375,12 @@ func (env *Env) writeDefaultMulti(
 		return multiId
 	}
 
+	// TomlMultiV1 (madder FDR-0010 M1): EncodeWithDigest below mints the
+	// uuidv7 instance-id into the config body via SetInstanceId, so the
+	// multi's FDR-0008 digest is instance-unique from creation.
 	typedConfig := &blob_store_configs.TypedConfig{
-		Type: mad_ids.GetOrPanic(mad_ids.TypeTomlBlobStoreConfigMultiV0).TypeStruct,
-		Blob: &blob_store_configs.TomlMultiV0{
+		Type: mad_ids.GetOrPanic(mad_ids.TypeTomlBlobStoreConfigMultiV1).TypeStruct,
+		Blob: &blob_store_configs.TomlMultiV1{
 			Mode:       "write_through",
 			WriteStore: writeStore,
 			ReadStores: readStores,
