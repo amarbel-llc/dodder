@@ -41,12 +41,28 @@ model is:
    wire-format change. The pin/reference currency stays `name@digest`;
    CLI references may abbreviate the digest by shortest distinct prefix
    (dodder's zettel-id abbreviation precedent).
-4. **Digest mismatches become diagnosable.** When a `name@digest`
-   reference resolves to an instance whose current digest differs,
-   compare uuids: same uuid → "same instance, config evolved" (re-pin
-   candidate, warnable); different uuid → "wrong instance" (hard error —
-   the dodder#359 class). One ambiguous failure becomes two precise ones;
-   this composes with madder FDR-0010's fail-fast error contract.
+4. **Digest mismatches become diagnosable — where the pinned uuid is
+   obtainable.** When a `name@digest` reference resolves to an instance
+   whose current digest differs, compare uuids: same uuid → "same
+   instance, config evolved" (re-pin candidate, warnable); different
+   uuid → "wrong instance" (hard error — the dodder#359 class). One
+   ambiguous failure becomes two precise ones; this composes with
+   madder FDR-0010's fail-fast error contract.
+
+   *Well-definedness caveat (flagged from the madder FDR-0010
+   amendment work):* a bare `name@digest` carries no uuid, and a digest
+   is not locally invertible to one — the comparison needs the *pinned*
+   instance's uuid from somewhere. Chosen resolution, keeping the
+   digest-only currency decided above: diagnosis applies **where the
+   pinned config is recoverable** — the primary case being multi
+   members, whose pinned configs are present at resolve time
+   (FDR-0009) — and degrades to a plain digest-mismatch hard error
+   (no uuid comparison, still fail-fast) where it is not. Two
+   alternatives are recorded, not adopted: uuid-bearing references (a
+   documented superset of the digest currency — would change the
+   currency decision; revisit at implementation if the degraded case
+   proves common, e.g. for receipts) and a digest→uuid history record
+   (new machinery; not justified yet).
 5. **Terminology.** The scoped human handle is the **name** (repo name,
    blob store name; the scope prefix is part of the name grammar, per
    madder FDR-0010 / dodder FDR-0019). The uuid is the **id**. Today's
