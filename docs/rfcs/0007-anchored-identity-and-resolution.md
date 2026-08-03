@@ -15,8 +15,10 @@ superseded sections are kept for the record with notes; the confirmed
 model is:
 
 1. **Identity is a uuid (uuidv7), for both madder blob stores and dodder
-   repos.** Rendered as a markl id (`uuidv7-<payload>`; format
-   registration belongs in piggy's markl_registrations). Neither prior
+   repos.** Rendered as a markl id (`uuidv7-<payload>`; markl format
+   registrations live in the repo that defines the format — here madder,
+   which introduces the uuidv7 identity format — not centrally in
+   piggy). Neither prior
    anchor works alone: a dodder repo pubkey can legitimately back more
    than one repo (YubiKey slot reuse — this RFC's own finding), and a
    madder config digest collides for identically-configured stores.
@@ -77,7 +79,7 @@ hardware-backed key (a YubiKey PIV slot) can legitimately back more than one
 logical repo.
 
 This document proposes a shared pattern across three repos —
-`amarbel-llc/piggy`, `amarbel-llc/madder`, and `amarbel-llc/dodder` — of
+`code.linenisgreat.com/piggy`, `code.linenisgreat.com/madder`, and `code.linenisgreat.com/dodder` — of
 **content-anchored local identity**, **local scope as a resolver to that
 identity, never the identity itself**, and a **global registry** (spinclass-
 style locally, PAPI-backed across hosts) that lets any code path discover
@@ -96,7 +98,7 @@ up.
 
 ## Motivating incident
 
-[dodder#359](https://github.com/amarbel-llc/dodder/issues/359): a blob store
+[dodder#359](https://code.linenisgreat.com/dodder/issues/359): a blob store
 named `default` resolved to two different, independent physical directories
 depending on which madder resolution mechanism a given dodder code path
 used:
@@ -117,7 +119,7 @@ individually intentional (madder's own code comments distinguish them,
 citing madder#153); the bug is that nothing detects the divergence.
 
 This surfaced during a live repair (rewriting a corrupted config_log blob,
-[dodder#358](https://github.com/amarbel-llc/dodder/issues/358)) where the
+[dodder#358](https://code.linenisgreat.com/dodder/issues/358)) where the
 repair write landed in the ancestor-walk store and `init-workspace`
 subsequently couldn't find it.
 
@@ -382,14 +384,14 @@ distinction and breaks legitimate cwd-scoped-store UX).
 
 ## References
 
-- [dodder#358](https://github.com/amarbel-llc/dodder/issues/358) — the
+- [dodder#358](https://code.linenisgreat.com/dodder/issues/358) — the
   corrupted config blob that motivated the repair which surfaced this
-- [dodder#359](https://github.com/amarbel-llc/dodder/issues/359) — the
+- [dodder#359](https://code.linenisgreat.com/dodder/issues/359) — the
   concrete store-divergence incident
-- [dodder#360](https://github.com/amarbel-llc/dodder/issues/360) — capture
+- [dodder#360](https://code.linenisgreat.com/dodder/issues/360) — capture
   issue for this design exploration
 - [FDR-0015 — Multi-Store Blob Lookup](../features/0015-multi-store-blob-lookup.md)
 - [FDR-0021 — Pubkey-Anchored Repo Identity](../features/0021-pubkey-anchored-repo-identity.md)
-- `piggy-piv-slots(7)` (`amarbel-llc/piggy`, `doc/piggy-piv-slots.7.scd`)
+- `piggy-piv-slots(7)` (`code.linenisgreat.com/piggy`, `doc/piggy-piv-slots.7.scd`)
 - spinclass `docs/features/0001-worktree-local-session-state.md` (proposed)
   and `docs/features/0003-per-worktree-madder-blob-store.md` (accepted)

@@ -3,7 +3,7 @@ status: proposed
 date: 2026-05-31
 promotion-criteria: |
   Blocked until madder FDR-0009 ("multi-store as a bonafide config
-  type", umbrella amarbel-llc/madder#217) ships. Promote to
+  type", umbrella code.linenisgreat.com/madder/issues/217) ships. Promote to
   `experimental` once: (1) dodder's mutable repo config owns its
   blob-store configuration end to end — the store set + order (already
   present), the default store, and the digest-bearing id of the store
@@ -53,7 +53,7 @@ first persisted-reference call site (madder #220).
 
 **The full, current implementation plan, the rejection rationale, the
 open verifications, and the remaining phases live in
-[dodder #223](https://github.com/amarbel-llc/dodder/issues/223)** — start
+[dodder #223](https://code.linenisgreat.com/dodder/issues/223)** — start
 there. The sections below predate this revision and describe the
 abandoned seed-store framing; they are retained for history.
 
@@ -149,7 +149,7 @@ mutation of the immutable seed.
 
 This is **one half of a cross-repo move**; the other half is madder
 FDR-0009 "multi-store as a bonafide config type" (umbrella
-amarbel-llc/madder#217). FDR-0009 adds the
+code.linenisgreat.com/madder/issues/217). FDR-0009 adds the
 `!toml-blob_store_config-multi-v0` hyphence-typed config so a repo can
 have a multi-default store configured *in madder* (read fallback as
 config, resolved by madder), retiring per-command fallback and runtime
@@ -157,7 +157,8 @@ Multi-building.
 
 - madder FDR-0009 is **proposed**, not shipped.
 - FDR-0009 depends on madder FDR-0008 Phase 2 (digest-bearing
-  blob-store-ids, amarbel-llc/madder#198) — which is **done**.
+  blob-store-ids, code.linenisgreat.com/madder/issues/198) — which is
+  **done**.
 - Therefore this dodder FDR is **proposed and sequenced after**
   FDR-0009. The dodder design cannot be finalized until FDR-0009's
   shape lands (it determines how much topology is madder's multi-config
