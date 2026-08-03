@@ -261,7 +261,7 @@ update-flake-input input:
   # If the input is a Go module, update go.mod to match the locked rev.
   # Some monorepos publish their Go module from a subdirectory (e.g.
   # code.linenisgreat.com/madder/go) — read go.mod to find the exact
-  # module path that contains amarbel-llc/{{input}} and pass that to
+  # module path that contains linenisgreat.com/{{input}} and pass that to
   # `go get`. Falls back to the bare path when no longer-form match is
   # found. For goFlakeInputs-bridged inputs (madder, hyphence, piggy,
   # tap, tommy, purse-first) the nix build ignores this go.mod rev and
@@ -270,8 +270,16 @@ update-flake-input input:
   # the vestigial shadow rev aligned for the bare-`go test` /
   # devshell-`go build` escape hatches (see resync-flake-go).
   rev=$(jq -r '.nodes["{{input}}"].locked.rev // empty' ../flake.lock)
+  if [[ -z "${rev}" ]]; then
+    # Tarball-type inputs (code.linenisgreat.com host migration) carry no
+    # .locked.rev -- only .locked.url, whose filename is the commit hash
+    # (.../archive/<hash>.tar.gz).
+    url=$(jq -r '.nodes["{{input}}"].locked.url // empty' ../flake.lock)
+    rev="${url##*/}"
+    rev="${rev%.tar.gz}"
+  fi
   if [[ -n "${rev}" ]]; then
-    mod_path=$(awk '/^[[:space:]]*github\.com\/amarbel-llc\/{{input}}([\/].*)?[[:space:]]/ { print $1; exit }' go.mod)
+    mod_path=$(awk '/^[[:space:]]*code\.linenisgreat\.com\/{{input}}([\/].*)?[[:space:]]/ { print $1; exit }' go.mod)
     if [[ -n "${mod_path}" ]]; then
       mod_before=$(grep -E "^[[:space:]]*${mod_path}[[:space:]]" go.mod || true)
       GOPROXY=direct go get "${mod_path}@${rev}"
@@ -307,16 +315,24 @@ update-flake-input input:
 # paths match what nix ships.
 #
 # Run this after any bulk flake.lock refresh. The bridged set is derived
-# from go.mod — each github.com/amarbel-llc/<name>/... require whose
-# <name> matches a flake input in flake.lock; amarbel-llc deps with no
-# matching flake input are skipped (not bridged).
+# from go.mod — each code.linenisgreat.com/<name>/... require whose
+# <name> matches a flake input in flake.lock; linenisgreat.com deps with
+# no matching flake input are skipped (not bridged).
 resync-flake-go:
   #!/usr/bin/env bash
   set -euo pipefail
   changed=0
   while read -r mod_path; do
-    input=$(sed -E 's#^github\.com/amarbel-llc/([^/]+).*#\1#' <<<"${mod_path}")
+    input=$(sed -E 's#^code\.linenisgreat\.com/([^/]+).*#\1#' <<<"${mod_path}")
     rev=$(jq -r --arg i "${input}" '.nodes[$i].locked.rev // empty' ../flake.lock)
+    if [[ -z "${rev}" ]]; then
+      # Tarball-type inputs (code.linenisgreat.com host migration) carry no
+      # .locked.rev -- only .locked.url, whose filename is the commit hash
+      # (.../archive/<hash>.tar.gz).
+      url=$(jq -r --arg i "${input}" '.nodes[$i].locked.url // empty' ../flake.lock)
+      rev="${url##*/}"
+      rev="${rev%.tar.gz}"
+    fi
     if [[ -z "${rev}" ]]; then
       echo "skip ${mod_path} (no flake input '${input}' in flake.lock)"
       continue
@@ -324,7 +340,7 @@ resync-flake-go:
     echo "resync ${mod_path} -> ${input}@${rev}"
     GOPROXY=direct go get "${mod_path}@${rev}"
     changed=1
-  done < <(awk '/^[[:space:]]*github\.com\/amarbel-llc\// { print $1 }' go.mod)
+  done < <(awk '/^[[:space:]]*code\.linenisgreat\.com\// { print $1 }' go.mod)
   if [[ "${changed}" == "1" ]]; then
     go mod tidy
     gomod2nix
