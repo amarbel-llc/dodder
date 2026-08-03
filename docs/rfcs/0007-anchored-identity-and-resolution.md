@@ -1,9 +1,67 @@
 ---
 date: 2026-07-12
-status: draft
+revised: 2026-08-03
+status: proposed
 ---
 
 # Anchored Identity and Resolution for Repos and Blob Stores
+
+## Revision (2026-08-03): unified uuid identity — confirmed direction
+
+A design review with Sasha (in the context of the one-resolver redesign,
+madder FDR-0010 / dodder FDR-0019 revision) confirmed a simpler, symmetric
+identity model that supersedes parts of the exploration below. The
+superseded sections are kept for the record with notes; the confirmed
+model is:
+
+1. **Identity is a uuid (uuidv7), for both madder blob stores and dodder
+   repos.** Rendered as a markl id (`uuidv7-<payload>`; format
+   registration belongs in piggy's markl_registrations). Neither prior
+   anchor works alone: a dodder repo pubkey can legitimately back more
+   than one repo (YubiKey slot reuse — this RFC's own finding), and a
+   madder config digest collides for identically-configured stores.
+2. **The uuid lives inside the config** — madder: the blob_store-config
+   (next additive config version); dodder: the immutable genesis config,
+   alongside the pubkey (identity must survive `edit-config`). Minted
+   once at init/genesis, immutable thereafter. **Every config format a
+   uuid lands in gets a version bump.** Existing instances get an
+   explicit mint/migration command (`config-pin_digest` is the shape
+   precedent) — never lazy minting, since silently rewriting a config
+   invalidates existing digest pins as a side effect.
+3. **The config digest inherits the uuid's entropy.** Two
+   identically-configured instances now produce different digests, so
+   FDR-0008 digest pinning becomes true *instance* pinning with zero
+   wire-format change. The pin/reference currency stays `name@digest`;
+   CLI references may abbreviate the digest by shortest distinct prefix
+   (dodder's zettel-id abbreviation precedent).
+4. **Digest mismatches become diagnosable.** When a `name@digest`
+   reference resolves to an instance whose current digest differs,
+   compare uuids: same uuid → "same instance, config evolved" (re-pin
+   candidate, warnable); different uuid → "wrong instance" (hard error —
+   the dodder#359 class). One ambiguous failure becomes two precise ones;
+   this composes with madder FDR-0010's fail-fast error contract.
+5. **Terminology.** The scoped human handle is the **name** (repo name,
+   blob store name; the scope prefix is part of the name grammar, per
+   madder FDR-0010 / dodder FDR-0019). The uuid is the **id**. Today's
+   `-repo_id`/`-blob_store-id` surfaces denote *names* under this
+   terminology; renaming/aliasing those surfaces is deferred work.
+6. **Trust is v2.** A piggy/PAPI identity signing the uuid (references
+   become digest+sig) is the deferred trust layer. This supersedes the
+   "signed discriminator" mechanism below: the discriminator *is* the
+   uuid, unsigned at v1; its signing is the v2 upgrade. The
+   hardware-sealed-key option remains the stronger, further-deferred
+   tier.
+7. **The name grammar gets a PEG + test vectors.** The scoped-name
+   grammar (scope prefix + name + `@<markl-id>` pin production) is
+   formalized as a `.peg` colocated with madder's `scoped_id` parser,
+   with a vectors corpus and grammar-vectors test — following piggy's
+   `internal/bravo/markl/marklid.peg` and hyphence's
+   `testdata/rfc_vectors.txt` conventions.
+
+The registry layer (per-host index, PAPI-backed cross-host registration)
+and the domain-trust extension below remain **open exploration** — the
+2026-08-03 review decided the identity anchor and pin semantics, not the
+registry.
 
 ## Abstract
 
@@ -157,6 +215,14 @@ storage isolation) that happen to both be spinclass concerns.
 
 ## Repo identity: revised direction (signed discriminator over hardware-sealed key)
 
+> **Superseded (2026-08-03)** by the unified uuid model in the Revision
+> section above: the discriminator is now the uuid (in the immutable
+> genesis config, unsigned at v1); signing it with a piggy/PAPI identity
+> is the v2 trust layer. This section is retained as the record of how
+> the direction evolved — its analysis of why an unattested value
+> suffices for bookkeeping but not trust still applies, and is exactly
+> why signing is v2 rather than dropped.
+
 The original proposal (provision a fresh, hardware-sealed, F9-attested
 ed25519 identity per repo via a piggy retired PIV slot) is a *strictly
 stronger* guarantee than what FDR-0021 actually needs, at meaningfully
@@ -289,9 +355,12 @@ distinction and breaks legitimate cwd-scoped-store UX).
 
 - **Slot exhaustion** (if the hardware-sealed-key option is ever revisited):
   a YubiKey has only 20 retired slots.
-- **Migration**: existing repos/stores that already share an identity (like
-  the repo this session repaired) need a transition path — this proposal
-  describes *new* genesis/init behavior, not a retrofit.
+- **Migration** — *answered 2026-08-03*: explicit mint only. A
+  `config-pin_digest`-shaped command mints a uuid into an existing
+  config (with the accompanying config-version bump); no lazy minting.
+  Remaining sub-question: sequencing for instances whose configs are
+  already digest-pinned by references (mint invalidates those pins by
+  design — the re-pin flow needs tooling).
 - **Registry schema and location**, including how it avoids inheriting the
   XDG/ceiling-directory ambiguity it's meant to resolve (see Composition
   risk above).

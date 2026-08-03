@@ -464,6 +464,13 @@ Deferred (tracked follow-ups):
   write_through multi mechanism that replaces implicit ancestor-store
   visibility; FDR-0015's implicit sibling-wrap is slated for
   supersession once the engine spec is accepted.
+- RFC-0007 (anchored identity, revised 2026-08-03) and FDR-0021
+  (revised same date) — the identity layer under this FDR's names: a
+  uuid (uuidv7) inside each config is the instance identity ("id");
+  the scoped handle this FDR specifies is the "name"; config digests
+  inherit the uuid's entropy so `name@digest` pins are instance pins,
+  and digest mismatches are diagnosable (same uuid = config drift,
+  different uuid = wrong instance).
 - FDR-0003 (repo disambiguation) — introduced location-only
   `-repo_id`; this FDR supersedes its "one repo per location"
   constraint while preserving its reservation of `/name` for remote

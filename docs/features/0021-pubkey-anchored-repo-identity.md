@@ -1,6 +1,7 @@
 ---
 status: proposed
 date: 2026-06-28
+revised: 2026-08-03
 promotion-criteria: the repo public key is the sole absolute repo identity
   — the remote-sync handshake and object provenance key off it, not a human
   name; the location+xdg-scope id and the in-graph repo-genre object are both
@@ -14,6 +15,35 @@ promotion-criteria: the repo public key is the sole absolute repo identity
 ---
 
 # Repo Identity: Pubkey-Anchored, Resolver-Addressed
+
+## Revision note (2026-08-03): pubkey demoted to the trust layer
+
+RFC-0007's investigation invalidated this FDR's central premise: the
+pubkey is **not** collision-proof as a sole identity, because a
+hardware-backed key (a YubiKey PIV slot) can legitimately back more than
+one logical repo. The confirmed model (RFC-0007's Revision section is
+the normative statement; summary here):
+
+- **The absolute identity is a repo uuid (uuidv7, markl-formatted)** in
+  the immutable genesis config, alongside the pubkey — minted at
+  genesis, immutable, requiring a genesis-config version bump. Existing
+  repos get an explicit mint/migration command; never lazy minting.
+- **The pubkey becomes the v2 trust layer**: it *signs* the uuid
+  (references upgrade from digest pins to digest+sig), attesting "the
+  key holder claims this repo identity" — which is what a pubkey can
+  actually promise. Handshake and provenance ultimately key off the
+  uuid, with the signature as the attestation over it.
+- **This FDR's resolver framing survives unchanged**: the
+  location+scope handle (now termed the repo **name**, per the revised
+  FDR-0019 terminology) and the in-graph repo object both remain
+  resolvers — they now resolve to the uuid rather than to the pubkey.
+- **The big open question below ("how do the three handles reconcile")
+  is substantially closed**: all handles resolve to one uuid; the
+  config-seed standalone id's deprecation stands as written.
+
+The body below is retained as originally written; read "pubkey" as
+"identity anchor" through the lens of this note, with the uuid in that
+role and the pubkey as its attestor.
 
 ## Problem Statement
 
