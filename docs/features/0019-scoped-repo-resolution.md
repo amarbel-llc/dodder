@@ -1,18 +1,52 @@
 ---
-status: proposed
+status: exploring
 date: 2026-06-07
-promotion-criteria: repo-id grammar (name + scope prefix + dot-depth)
-  parses and round-trips in madder env_dir with dodder consuming it;
-  on-disk layout matches madder's scoped layout (repos/<name>/ under
-  each scope) with legacy single-repo trees migratable to the
-  `repos/default/` layout via `dodder migrate-repo-layout`; all BATS
-  tests pass with the new resolution; new tests cover user-scoped
-  named repos, two same-named CWD repos disambiguated by dot-depth,
-  and MCP repo_id addressing; MCP resource URIs accept the repo
-  segment and the CWD-auto sugar
+revised: 2026-08-03
+promotion-criteria: resolution conforms to madder's normative
+  one-resolver engine FDR (single id -> location function shared by
+  every command path); the conformance suite — madder's engine suite
+  plus dodder-side bats — passes using non-`default` repo names
+  throughout; auto-id hybrid discovery (solo repo wins, `default`
+  tiebreak, loud error on unresolved ambiguity) is implemented and
+  tested; resolution errors satisfy the fail-fast error contract
+  (state what was asked, what was searched, what was found, what to
+  do); legacy layouts produce the specific migration-pointing errors
 ---
 
 # Scoped Repo Resolution
+
+## Revision note (2026-08-03): one-resolver redesign
+
+This FDR was revised in place after a design review confirmed that its
+original resolution prose had diverged from the implementation — and
+that the implementation itself comprises several independent resolution
+engines whose disagreements produced a family of real bugs (#359, #283,
+#341, #196; audit umbrella #383). The grammar below is unchanged and
+stays. What changed:
+
+- **The resolution engine is no longer specified here.** madder — which
+  owns `scoped_id`, `env_dir`, and `directory_layout` — gets a normative
+  engine FDR (number pending; being drafted in a parallel session)
+  defining the single resolver: one id, one physical location, for every
+  command; init distinguished only by being allowed to find nothing at
+  the resolved location and create there (at `$PWD` for CWD scope —
+  multi-dot `..name` is addressing-only); a fail-fast error contract;
+  and the retirement of implicit ancestor union-merge in favor of
+  explicit digest-pinned multi blob-store configs. This FDR is the
+  **dodder policy layer** over that engine: repo auto-discovery,
+  `repos/<name>/` nesting, and the `/name` remote-first reservation.
+- **Auto-id resolution is now specified as hybrid discovery** (see the
+  grammar table and "Resolution semantics" below), replacing both the
+  original prose ("nearest CWD-scoped repo on the walk-up" — which
+  implied discovery the implementation never performed) and the actual
+  implemented behavior (substitute the literal name `default`, then
+  resolve that fixed name — `repo_id.EffectiveName`). Neither prior
+  reading survives: the prose overclaimed, the code under-delivered,
+  and the divergence went unnoticed because every bats test uses the
+  name `default`, on which the two readings coincide.
+- **Known divergences of the current implementation from this revision
+  are documented explicitly** (see "Known divergences") rather than
+  living as internal footnotes.
 
 ## Problem Statement
 
@@ -40,7 +74,7 @@ charset is `[a-zA-Z0-9_-]+`, identical to madder blob-store ids.
 
 | Form | Scope | Resolution |
 |---|---|---|
-| *(empty)* | Auto | Nearest CWD-scoped repo on the walk-up; otherwise the user-scoped repo named `default` |
+| *(empty)* | Auto | Hybrid discovery: nearest scope containing any repo; solo repo wins regardless of name; multiple repos → `default` if present, else error listing candidates. See "Resolution semantics". |
 | `name` | XDG user | `$XDG_DATA_HOME/dodder/repos/<name>/` |
 | `.name` | CWD | Nearest ancestor `.dodder/` tree containing a repo named `name` |
 | `..name` | CWD (depth 1) | Second-nearest ancestor `.dodder/` tree containing a repo named `name` |
@@ -76,6 +110,78 @@ One deliberate divergence from madder's grammar:
 
 Two repos with the same name in different scopes (`notes` vs
 `.notes`) are different repos at different filesystem locations.
+
+### Resolution semantics (normative, this revision)
+
+The engine — how an id maps to a physical location — is specified by
+madder's one-resolver FDR (number pending) and summarized here only as
+far as dodder policy depends on it:
+
+- **One resolver, one answer.** Every dodder command resolves a repo id
+  through the same function; the same id names the same physical
+  location in every command class. There is no init-time vs.
+  operate-time divergence: `init` uses the same resolved answer and is
+  distinguished only by being allowed to find nothing there and create.
+  For CWD scope, `init` creates at `$PWD` — you `cd` to where you want
+  the repo (git's model). Multi-dot `..name` is an addressing-only
+  spelling; init never derives a creation location from dot-depth.
+- **Auto (empty id) is hybrid discovery.** Resolution proceeds:
+  1. Walk CWD ancestors (ceiling-bounded) to the nearest scope
+     containing any repo. Within that scope: exactly one repo → it wins,
+     regardless of its name; several repos → the one named `default`
+     wins if present; several repos, none named `default` → **error**,
+     listing the candidate ids so the user can pass `-repo_id`.
+  2. If no CWD scope holds any repo, apply the same rule to the XDG
+     user scope.
+  3. If neither scope holds any repo → error stating both scopes were
+     searched and suggesting `dodder init`.
+
+  This preserves every previously-working workflow (`default` still
+  wins wherever it won before) while fixing the naming trap: a solo
+  CWD repo named anything is reachable by bare commands.
+- **Fail-fast error contract.** A resolution miss or ambiguity errors
+  at resolve time — never silently falls back beyond the two auto
+  steps above, never writes to a store other than the one resolved.
+  Every resolution error states: the id asked for, the scopes/paths
+  searched, what was found, and what to do next.
+- **No implicit union-merge.** An id resolves to exactly one store or
+  repo. Multi-store read/write behavior exists only via explicit
+  digest-pinned multi blob-store configs (FDR-0016's write_through
+  multis); ancestor stores are never implicitly visible. A repo's
+  default blob store comes from its own config (repo_configs V3's
+  pinned id) — blob-side "default" needs no discovery at all.
+- **Legacy layouts get diagnosis, not compat.** The resolver carries no
+  legacy branches (#363 stands). A legacy flat tree produces the
+  specific error naming `migrate-repo-layout`; conformance fixtures
+  assert those exact errors. Migration tooling gaps are filed as
+  issues, not folded into resolution.
+
+### Known divergences (current implementation vs. this revision)
+
+Documented so conformance work has a precise starting inventory; the
+madder engine FDR carries the engine-level list.
+
+1. **Auto-id substitutes a fixed name instead of discovering.**
+   `repo_id.EffectiveName` (delegating to madder `scoped_id`) maps the
+   empty id to the literal name `default` and resolves that — no
+   discovery of what actually exists. A CWD repo with any other name is
+   invisible to bare commands. Masked by the test corpus's universal
+   use of the name `default`.
+2. **Init and operate resolve `..name` differently.** Literal-init
+   paths (genesis, `MakeEnvRepo`) root at the literal Nth parent;
+   operate paths (`MakeOperateEnvDir` → `ResolveNthAncestorMatch`)
+   resolve the Nth *matching* ancestor. They coincide only when no
+   non-matching `.dodder/` sits between matches. Under this revision
+   the split dissolves: init creates at `$PWD`, `..name` is
+   addressing-only.
+3. **A third, walk-up-immune resolution exists** (`init-workspace`'s
+   home-parent lookup, the `MakeWithHomeAndInitialize` lineage), which
+   can disagree with the walk-up-sensitive paths about where `default`
+   physically is — the #359 incident.
+4. **Blob-store discovery union-merges every ancestor `.madder/`**
+   (`FindAllCwdOverridePaths`, two-phase `MakeBlobStores`), so which
+   physical store serves a read depends on which discovery path ran
+   (#196, #341).
 
 ### On-Disk Layout
 
@@ -204,12 +310,21 @@ MCP, addressing a sibling repo without restarting the server:
   config's repo id, remotes, and `-kasten` continue to use the
   existing object-genre type. This FDR only changes the *location*
   selector (`env_dir.RepoId`).
-- **One `default` per scope is still special.** Empty-id resolution
-  needs a deterministic target; `default` is it. Renaming the
-  default repo means updating `DODDER_REPO_ID` or passing ids
-  explicitly.
+- **`default` is the ambiguity tiebreaker, not the only auto target.**
+  Under hybrid discovery a solo repo of any name resolves bare;
+  `default` only decides among several repos in one scope. A scope
+  holding several repos none of which is named `default` requires an
+  explicit id (the error lists the candidates).
 
 ## Implementation Status
+
+Everything below landed against this FDR's **pre-revision** semantics
+(fixed-`default` auto, the init/operate split). The grammar, layout,
+listing, and MCP work all survive the revision unchanged; the
+resolution behaviors do not — conformance against the revised
+"Resolution semantics" is pending and tracked by the madder engine
+FDR's suite plus #383's audit. This list is kept as the historical
+record of what exists, not as a claim of conformance.
 
 Landed (master):
 
@@ -317,13 +432,23 @@ Deferred (tracked follow-ups):
 
 | Lever | Current | Rationale | Change signal |
 |---|---|---|---|
-| Auto-resolution order | CWD walk-up, then user `default` | Matches today's empty-id behavior; least surprise | Users routinely shadowed by unexpected ancestor repos |
+| Auto-resolution order | Hybrid discovery: CWD walk-up (solo wins, `default` tiebreak, error on unresolved ambiguity), then the same rule at XDG user (spec; impl still substitutes the fixed name `default` — see Known divergences) | Fixes the named-solo-repo trap while preserving every workflow where `default` already won | Ambiguity errors prove too noisy in practice, or solo-wins surprises users with unexpected ancestor repos |
 | Legacy tree handling | Explicit migration only (`migrate-repo-layout`); a distinct error names the command when a legacy tree is detected | Read-in-place would add a permanent compat check to every repo-open path for a case the explicit migration already fixes in one command (#363) | Read-in-place demand becomes common enough to justify the ongoing complexity |
 | MCP repo cache | Fresh repo built per call (no cache); `dodder.mcp.open_repo` stats-me timer tracks build duration | No lock-holding or index staleness; matches the bridge's per-call repo build | The timer shows open-repo build dominating MCP latency — then memoize one env per repo-id |
 | Dot-depth in completions | Nearest cwd (`.name`) + user (`name`) only; multi-dot `..name` resolves but isn't yet offered (#282) | Resolution shipped first; completion ergonomics split out to stay focused | #282 lands — then offer `..name` up to the ceiling |
 
 ## More Information
 
+- **madder engine FDR (number pending)** — the normative one-resolver
+  specification this revision layers policy over, plus the
+  engine-level conformance suite. Fill in the number/link once the
+  parallel madder drafting session lands it.
+- Issues #359, #283, #341, #196 — the resolver-disagreement bug family
+  motivating the revision; #383 — the exhaustive id-resolution audit.
+- FDR-0016 (blob-store config in mutable config) — the explicit
+  write_through multi mechanism that replaces implicit ancestor-store
+  visibility; FDR-0015's implicit sibling-wrap is slated for
+  supersession once the engine spec is accepted.
 - FDR-0003 (repo disambiguation) — introduced location-only
   `-repo_id`; this FDR supersedes its "one repo per location"
   constraint while preserving its reservation of `/name` for remote
