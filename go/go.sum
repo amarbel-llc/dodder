@@ -4,8 +4,8 @@ code.linenisgreat.com/chrest/go v0.4.0 h1:ecdfNPDw7BTMGl9Qm7ii9ViHsR/nIIMhazI16K
 code.linenisgreat.com/chrest/go v0.4.0/go.mod h1:7BOvh1xUwUbt/BNv7SGMa1uvr2gZ59D+Twil09AtVWw=
 code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9 h1:iVfOsxFwmib/hwvWMjoHGKbmbTHOfM8yWlUv7vminDA=
 code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9/go.mod h1:/c5ScMJSIbliSfj3R9IfVYql9PSMtFwNSgN8wvJQQc4=
-code.linenisgreat.com/madder/go v0.4.5-0.20260720184544-d463a948790d h1:WOJTXONer6NS986ERf+11T0h5vkVym1CQij3rGN6bJw=
-code.linenisgreat.com/madder/go v0.4.5-0.20260720184544-d463a948790d/go.mod h1:b8+fk6081wZXkFvEyjI+KHHDgk2RFapAW7d4cp+Cn5A=
+code.linenisgreat.com/madder/go v0.4.6-0.20260803194847-325de6b44527 h1:WplX+m+RdhbIok/LNZ4PTfpuuwHhMZtbZ4Ei0AjPBWo=
+code.linenisgreat.com/madder/go v0.4.6-0.20260803194847-325de6b44527/go.mod h1:hXiMarRtTaRPZVp5mraLlf63f/dyHS4qKWWX6iH52Z8=
 code.linenisgreat.com/piggy/go v0.0.0-20260720155209-77cfdea0031e h1:afcPD4YiDv2EjF2V8o5IqOk9+MToUdF3RNU8tzoZGdw=
 code.linenisgreat.com/piggy/go v0.0.0-20260720155209-77cfdea0031e/go.mod h1:SvQcD+AKbeY0YJUYUrTRUyDYtV3JGFZLzcZXJSsyAUk=
 code.linenisgreat.com/purse-first/libs/dewey v0.5.0 h1:+sd1CsNmJqPOv0K8D/qHdN62vLngYMUohHE0h52uJZU=
