@@ -23,13 +23,18 @@ model is:
    than one repo (YubiKey slot reuse — this RFC's own finding), and a
    madder config digest collides for identically-configured stores.
 2. **The uuid lives inside the config** — madder: the blob_store-config
-   (next additive config version); dodder: the immutable genesis config,
+   (next config version); dodder: the immutable genesis config,
    alongside the pubkey (identity must survive `edit-config`). Minted
    once at init/genesis, immutable thereafter. **Every config format a
-   uuid lands in gets a version bump.** Existing instances get an
-   explicit mint/migration command (`config-pin_digest` is the shape
-   precedent) — never lazy minting, since silently rewriting a config
-   invalidates existing digest pins as a side effect.
+   uuid lands in gets a version bump, as a hard cut** — the new
+   versions are not additive-compat with the old. Existing instances
+   migrate by **copy, never in place**: a migration command creates a
+   *new* store with the new config flavor (minting its uuid) and
+   populates it with the old store's objects; the old store is left
+   untouched and the user deletes it when satisfied — the
+   `migrate-repo-layout` precedent (dodder#363: pure copy, source
+   never modified). The same pattern applies to dodder repos, but
+   sequenced *after* madder proves it. Never lazy minting.
 3. **The config digest inherits the uuid's entropy.** Two
    identically-configured instances now produce different digests, so
    FDR-0008 digest pinning becomes true *instance* pinning with zero
@@ -357,12 +362,15 @@ distinction and breaks legitimate cwd-scoped-store UX).
 
 - **Slot exhaustion** (if the hardware-sealed-key option is ever revisited):
   a YubiKey has only 20 retired slots.
-- **Migration** — *answered 2026-08-03*: explicit mint only. A
-  `config-pin_digest`-shaped command mints a uuid into an existing
-  config (with the accompanying config-version bump); no lazy minting.
-  Remaining sub-question: sequencing for instances whose configs are
-  already digest-pinned by references (mint invalidates those pins by
-  design — the re-pin flow needs tooling).
+- **Migration** — *answered 2026-08-03*: hard cut + copy-migration.
+  The new config versions are a clean break; a migration command
+  builds a *new* store/repo with the new flavor and populates it from
+  the old one's objects (old instance untouched, user-deletable — the
+  `migrate-repo-layout` copy precedent). No in-place rewriting, no
+  lazy minting. This also dissolves the re-pin sub-question: existing
+  digest pins stay coherent against the old instance; migration points
+  references at the new instance as part of the copy. dodder repos
+  follow after madder proves the pattern.
 - **Registry schema and location**, including how it avoids inheriting the
   XDG/ceiling-directory ambiguity it's meant to resolve (see Composition
   risk above).
