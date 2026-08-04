@@ -19,7 +19,8 @@ function show_config_head { # @test
 
   run_dodder show-config
   assert_success
-  assert_output 'blob-stores = [".default"]
+  assert_output 'blob-stores = [".default-default"]
+default-blob-store = ".default-default"
 
 [defaults]
 type = "!md"

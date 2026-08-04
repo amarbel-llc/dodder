@@ -11,7 +11,7 @@ function cat_ids { # @test
   run_dodder_init_disable_age
   assert_success
 
-  run_madder cat-ids .default
+  run_madder cat-ids .default-local
   assert_success
   assert_output --partial "$(get_konfig_sha)"
 }
@@ -20,7 +20,7 @@ function cat_ids_format_hex { # @test
   run_dodder_init_disable_age
   assert_success
 
-  run_madder cat-ids --format=hex .default
+  run_madder cat-ids --format=hex .default-local
   assert_success
   # every ID line should be hash-type prefix + hex characters
   while IFS= read -r line; do
@@ -33,11 +33,11 @@ function cat_ids_format_blech32 { # @test
   assert_success
 
   # blech32 is the default, explicit flag should produce same output
-  run_madder cat-ids .default
+  run_madder cat-ids .default-local
   assert_success
   default_output="$output"
 
-  run_madder cat-ids --format=blech32 .default
+  run_madder cat-ids --format=blech32 .default-local
   assert_success
   assert_output "$default_output"
 }
@@ -47,12 +47,12 @@ function encode_ids { # @test
   assert_success
 
   # get native IDs (filter out summary line)
-  run_madder cat-ids .default
+  run_madder cat-ids .default-local
   assert_success
   native_ids="$(echo "$output" | grep '^blake2b256-' | sort)"
 
   # get hex IDs, extract just the hex portion, pipe through encode-ids
-  run_madder cat-ids --format=hex .default
+  run_madder cat-ids --format=hex .default-local
   assert_success
   hex_only="$(echo "$output" | grep '^blake2b256-' | sed 's/^blake2b256-//')"
 

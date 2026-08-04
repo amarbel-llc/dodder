@@ -40,7 +40,7 @@ function write_blob_one_file { # @test
   assert_success
   assert_output "$(printf "%s\n" wow)"
 
-  run_madder cat-ids .default
+  run_madder cat-ids .default-local
   assert_success
   assert_output --partial "blake2b256-40mtcwggatwwql4pp9ty93nyugn3r3ppvzs48uza0ze9zltneh3qez5yrs"
 }

@@ -93,6 +93,28 @@ func (cmd InfoRepo) Run(req command.Request) {
 		defaultBlobStore.Config.Blob,
 	)
 
+	// Under the write_through multi default (FDR-0016 D1 / dodder#223),
+	// the default store's own config is pure routing (mode + digest-pinned
+	// member refs) and carries none of the storage-facing keys
+	// (encryption, compression-type, hash_type-id, ...) these queries ask
+	// about. Delegate: merge the write store's key-values underneath the
+	// multi's own, so `info-repo encryption` keeps answering for the
+	// store writes actually land in. The multi's own keys win on
+	// collision.
+	if multi, ok := defaultBlobStore.Config.Blob.(blob_store_configs.ConfigMulti); ok {
+		if writeStoreId := multi.GetWriteStore(); !writeStoreId.IsEmpty() {
+			writeStore := env.GetEnvBlobStore().GetBlobStore(writeStoreId)
+
+			for key, value := range blob_store_configs.ConfigKeyValues(
+				writeStore.Config.Blob,
+			) {
+				if _, exists := configKVs[key]; !exists {
+					configKVs[key] = value
+				}
+			}
+		}
+	}
+
 	for _, arg := range rest {
 		switch strings.ToLower(arg) {
 		case "config-immutable":
@@ -142,9 +164,7 @@ func (cmd InfoRepo) Run(req command.Request) {
 		default:
 			value, ok := configKVs[arg]
 			if !ok {
-				allKeys := allAvailableKeys(
-					defaultBlobStore.Config.Blob,
-				)
+				allKeys := allAvailableKeys(configKVs)
 
 				errors.ContextCancelWithBadRequestf(
 					env,
@@ -180,11 +200,18 @@ func (cmd InfoRepo) printRepos(req command.Request) {
 	}
 }
 
-func allAvailableKeys(config blob_store_configs.Config) []string {
-	configKeys := blob_store_configs.ConfigKeyNames(config)
-	allKeys := make([]string, 0, len(repoSpecialKeys)+len(configKeys))
+// allAvailableKeys takes the already-merged key-values map (the default
+// store's own keys plus, for a multi default, its write store's — see
+// the delegation in run) so the error listing matches what is actually
+// queryable.
+func allAvailableKeys(configKVs map[string]string) []string {
+	allKeys := make([]string, 0, len(repoSpecialKeys)+len(configKVs))
 	allKeys = append(allKeys, repoSpecialKeys...)
-	allKeys = append(allKeys, configKeys...)
+
+	for key := range configKVs {
+		allKeys = append(allKeys, key)
+	}
+
 	sort.Strings(allKeys)
 
 	return allKeys
@@ -197,9 +224,28 @@ func (cmd InfoRepo) Complete(
 ) {
 	env := cmd.MakeEnvRepo(req, false)
 	defaultBlobStore := env.GetDefaultBlobStore()
-	keys := allAvailableKeys(defaultBlobStore.Config.Blob)
 
-	for _, key := range keys {
+	configKVs := blob_store_configs.ConfigKeyValues(
+		defaultBlobStore.Config.Blob,
+	)
+
+	// Mirror run's multi delegation so completion offers the same keys
+	// the query path answers.
+	if multi, ok := defaultBlobStore.Config.Blob.(blob_store_configs.ConfigMulti); ok {
+		if writeStoreId := multi.GetWriteStore(); !writeStoreId.IsEmpty() {
+			writeStore := env.GetEnvBlobStore().GetBlobStore(writeStoreId)
+
+			for key, value := range blob_store_configs.ConfigKeyValues(
+				writeStore.Config.Blob,
+			) {
+				if _, exists := configKVs[key]; !exists {
+					configKVs[key] = value
+				}
+			}
+		}
+	}
+
+	for _, key := range allAvailableKeys(configKVs) {
 		envLocal.GetUI().Print(key)
 	}
 }

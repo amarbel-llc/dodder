@@ -59,7 +59,7 @@ function blob_store_sync_cross_hash_multi_hash_destination { # @test
   assert_success
 
   # sync from default to sha256 store
-  run_madder sync .default .sha256
+  run_madder sync .default-local .sha256
   assert_success
 
   # verify the blob exists in the sha256 store under both digests
@@ -86,10 +86,10 @@ function blob_store_sync_cross_hash_second_sync_skips { # @test
   assert_success
 
   # first sync
-  run_madder sync .default .sha256
+  run_madder sync .default-local .sha256
   assert_success
 
   # second sync should skip already-synced blobs
-  run_madder sync .default .sha256
+  run_madder sync .default-local .sha256
   assert_success
 }

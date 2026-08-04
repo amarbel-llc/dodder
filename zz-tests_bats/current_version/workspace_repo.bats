@@ -354,8 +354,10 @@ function workspace_repo_init_pointer_parent_missing_blob_store { # @test
   bootstrap_parent "$parent"
   parent_path="$(realpath "$parent")"
 
-  # Remove the parent's default blob store after bootstrap.
-  rm -rf "$parent_path/.madder/local/share/blob_stores/default"
+  # Remove the parent's physical write store after bootstrap
+  # (default-local -- the store the parent-pointer probe checks under
+  # the write_through multi default, FDR-0016 D1 / #223).
+  rm -rf "$parent_path/.madder/local/share/blob_stores/default-local"
 
   mkdir -p workspace
   pushd workspace || exit 1
@@ -848,7 +850,7 @@ function workspace_repo_implicit_parent_write_roundtrip { # @test
   assert_success
   # Output is "<object-id> <blob-digest>"; take the digest field.
   blob_sha="${output##* }"
-  run_madder cat default "$blob_sha"
+  run_madder cat default-local "$blob_sha"
   assert_success
   # madder cat prints a "switched to blob-store-id" status line first.
   assert_output - <<-EOM

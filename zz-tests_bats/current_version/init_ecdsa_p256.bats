@@ -56,7 +56,7 @@ function init_with_ecdsa_p256_ssh_key { # @test
   # signed config entry.
   run_dodder show-config -history
   assert_success
-  assert_output --regexp '\[konfig @.+ !toml-config-v2\]'
+  assert_output --regexp '\[konfig @.+ !toml-config-v3\]'
 
   # `last` decodes the most recent inventory list entry, which
   # includes full signature verification

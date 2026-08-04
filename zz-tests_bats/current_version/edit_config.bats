@@ -83,7 +83,8 @@ function edit_config_show_config_roundtrips { # @test
   run_dodder show-config
   assert_success
   assert_output - <<-EOM
-		blob-stores = [".default"]
+		blob-stores = [".default-default"]
+		default-blob-store = ".default-default"
 
 		[defaults]
 		type = "!md"
@@ -153,7 +154,7 @@ function konfig_blob_fresh_init_is_bare_toml { # @test
   [[ -n $digest ]] || fail "could not parse digest from: $output"
 
   blob_path="$BATS_TEST_TMPDIR/konfig-blob.bin"
-  run_madder cat .default "$digest"
+  run_madder cat .default-local "$digest"
   assert_success
   printf '%s\n' "$output" >"$blob_path"
 
