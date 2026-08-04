@@ -33,6 +33,28 @@ var CoderPrivate = hyphence.CoderToTypedBlob[ConfigPrivate]{
 					return doc.Encode()
 				},
 			},
+			ids.TypeTomlConfigImmutableV3: hyphence.CoderTommy[
+				ConfigPrivate,
+				*ConfigPrivate,
+			]{
+				Decode: func(b []byte) (ConfigPrivate, error) {
+					doc, err := genesis_config_blobs.DecodeTomlV3Private(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg ConfigPrivate) ([]byte, error) {
+					doc, err := genesis_config_blobs.DecodeTomlV3Private(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := cfg.(*TomlV3Private); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
+				},
+			},
 		},
 	),
 }
@@ -58,6 +80,28 @@ var CoderPublic = hyphence.CoderToTypedBlob[ConfigPublic]{
 						return nil, err
 					}
 					if v, ok := cfg.(*TomlV2Public); ok {
+						*doc.Data() = *v
+					}
+					return doc.Encode()
+				},
+			},
+			ids.TypeTomlConfigImmutableV3: hyphence.CoderTommy[
+				ConfigPublic,
+				*ConfigPublic,
+			]{
+				Decode: func(b []byte) (ConfigPublic, error) {
+					doc, err := genesis_config_blobs.DecodeTomlV3Public(b)
+					if err != nil {
+						return nil, err
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(cfg ConfigPublic) ([]byte, error) {
+					doc, err := genesis_config_blobs.DecodeTomlV3Public(nil)
+					if err != nil {
+						return nil, err
+					}
+					if v, ok := cfg.(*TomlV3Public); ok {
 						*doc.Data() = *v
 					}
 					return doc.Encode()

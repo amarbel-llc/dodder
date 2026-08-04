@@ -17,13 +17,13 @@ var (
 	_ = strings.Contains
 )
 
-type TomlV2PrivateDocument struct {
-	data   TomlV2Private
+type TomlV3PrivateDocument struct {
+	data   TomlV3Private
 	cstDoc *document.Document
 	model  *cst.Value
 }
 
-func DecodeTomlV2Private(input []byte) (*TomlV2PrivateDocument, error) {
+func DecodeTomlV3Private(input []byte) (*TomlV3PrivateDocument, error) {
 	doc, err := document.Parse(input)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func DecodeTomlV2Private(input []byte) (*TomlV2PrivateDocument, error) {
 		return nil, err
 	}
 
-	d := &TomlV2PrivateDocument{
+	d := &TomlV3PrivateDocument{
 		cstDoc: doc,
 		model:  model,
 	}
@@ -72,14 +72,22 @@ func DecodeTomlV2Private(input []byte) (*TomlV2PrivateDocument, error) {
 			_vObjectSigType.MarkConsumed()
 		}
 	}
+	if _vInstanceId, _ok := model.Get("instance-id"); _ok && _vInstanceId.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vInstanceId.Leaf); _xok {
+			if err := d.data.InstanceId.UnmarshalText([]byte(_x)); err != nil {
+				return nil, fmt.Errorf("instance-id: %w", err)
+			}
+			_vInstanceId.MarkConsumed()
+		}
+	}
 	return d, nil
 }
 
-func (d *TomlV2PrivateDocument) Data() *TomlV2Private {
+func (d *TomlV3PrivateDocument) Data() *TomlV3Private {
 	return &d.data
 }
 
-func (d *TomlV2PrivateDocument) Encode() ([]byte, error) {
+func (d *TomlV3PrivateDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PrivateKey.MarshalText()
 		if err != nil {
@@ -113,33 +121,46 @@ func (d *TomlV2PrivateDocument) Encode() ([]byte, error) {
 			return nil, fmt.Errorf("%w", err)
 		}
 	}
+	{
+		v, err := d.data.InstanceId.MarshalText()
+		if err != nil {
+			return nil, fmt.Errorf("instance-id: %w", err)
+		}
+		if len(v) > 0 {
+			if err := cst.SetAny(d.cstDoc.Root(), "instance-id", string(v)); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
+		} else {
+			cst.DeleteValue(d.cstDoc.Root(), "instance-id")
+		}
+	}
 	return d.cstDoc.Bytes(), nil
 }
 
-func (d *TomlV2PrivateDocument) Undecoded() []string {
+func (d *TomlV3PrivateDocument) Undecoded() []string {
 	if d.model == nil {
 		return nil
 	}
 	return d.model.Undecoded()
 }
 
-func (d *TomlV2PrivateDocument) Comment(key string) string {
+func (d *TomlV3PrivateDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
 
-func (d *TomlV2PrivateDocument) SetComment(key, comment string) {
+func (d *TomlV3PrivateDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
 
-func (d *TomlV2PrivateDocument) InlineComment(key string) string {
+func (d *TomlV3PrivateDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
 
-func (d *TomlV2PrivateDocument) SetInlineComment(key, comment string) {
+func (d *TomlV3PrivateDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
 
-func DecodeTomlV2PrivateInto(data *TomlV2Private, sub *cst.Value) error {
+func DecodeTomlV3PrivateInto(data *TomlV3Private, sub *cst.Value) error {
 	if _vPrivateKey, _ok := sub.Get("private-key"); _ok && _vPrivateKey.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractString(_vPrivateKey.Leaf); _xok {
 			if err := data.PrivateKey.UnmarshalText([]byte(_x)); err != nil {
@@ -174,10 +195,18 @@ func DecodeTomlV2PrivateInto(data *TomlV2Private, sub *cst.Value) error {
 			_vObjectSigType.MarkConsumed()
 		}
 	}
+	if _vInstanceId, _ok := sub.Get("instance-id"); _ok && _vInstanceId.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vInstanceId.Leaf); _xok {
+			if err := data.InstanceId.UnmarshalText([]byte(_x)); err != nil {
+				return fmt.Errorf("instance-id: %w", err)
+			}
+			_vInstanceId.MarkConsumed()
+		}
+	}
 	return nil
 }
 
-func EncodeTomlV2PrivateFrom(data *TomlV2Private, doc *document.Document, container *cst.Node) error {
+func EncodeTomlV3PrivateFrom(data *TomlV3Private, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PrivateKey.MarshalText()
 		if err != nil {
@@ -211,16 +240,29 @@ func EncodeTomlV2PrivateFrom(data *TomlV2Private, doc *document.Document, contai
 			return fmt.Errorf("%w", err)
 		}
 	}
+	{
+		v, err := data.InstanceId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("instance-id: %w", err)
+		}
+		if len(v) > 0 {
+			if err := cst.SetAny(container, "instance-id", string(v)); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		} else {
+			cst.DeleteValue(container, "instance-id")
+		}
+	}
 	return nil
 }
 
-type TomlV2PublicDocument struct {
-	data   TomlV2Public
+type TomlV3PublicDocument struct {
+	data   TomlV3Public
 	cstDoc *document.Document
 	model  *cst.Value
 }
 
-func DecodeTomlV2Public(input []byte) (*TomlV2PublicDocument, error) {
+func DecodeTomlV3Public(input []byte) (*TomlV3PublicDocument, error) {
 	doc, err := document.Parse(input)
 	if err != nil {
 		return nil, err
@@ -230,7 +272,7 @@ func DecodeTomlV2Public(input []byte) (*TomlV2PublicDocument, error) {
 		return nil, err
 	}
 
-	d := &TomlV2PublicDocument{
+	d := &TomlV3PublicDocument{
 		cstDoc: doc,
 		model:  model,
 	}
@@ -269,14 +311,22 @@ func DecodeTomlV2Public(input []byte) (*TomlV2PublicDocument, error) {
 			_vObjectSigType.MarkConsumed()
 		}
 	}
+	if _vInstanceId, _ok := model.Get("instance-id"); _ok && _vInstanceId.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vInstanceId.Leaf); _xok {
+			if err := d.data.InstanceId.UnmarshalText([]byte(_x)); err != nil {
+				return nil, fmt.Errorf("instance-id: %w", err)
+			}
+			_vInstanceId.MarkConsumed()
+		}
+	}
 	return d, nil
 }
 
-func (d *TomlV2PublicDocument) Data() *TomlV2Public {
+func (d *TomlV3PublicDocument) Data() *TomlV3Public {
 	return &d.data
 }
 
-func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
+func (d *TomlV3PublicDocument) Encode() ([]byte, error) {
 	{
 		v, err := d.data.PublicKey.MarshalText()
 		if err != nil {
@@ -310,33 +360,46 @@ func (d *TomlV2PublicDocument) Encode() ([]byte, error) {
 			return nil, fmt.Errorf("%w", err)
 		}
 	}
+	{
+		v, err := d.data.InstanceId.MarshalText()
+		if err != nil {
+			return nil, fmt.Errorf("instance-id: %w", err)
+		}
+		if len(v) > 0 {
+			if err := cst.SetAny(d.cstDoc.Root(), "instance-id", string(v)); err != nil {
+				return nil, fmt.Errorf("%w", err)
+			}
+		} else {
+			cst.DeleteValue(d.cstDoc.Root(), "instance-id")
+		}
+	}
 	return d.cstDoc.Bytes(), nil
 }
 
-func (d *TomlV2PublicDocument) Undecoded() []string {
+func (d *TomlV3PublicDocument) Undecoded() []string {
 	if d.model == nil {
 		return nil
 	}
 	return d.model.Undecoded()
 }
 
-func (d *TomlV2PublicDocument) Comment(key string) string {
+func (d *TomlV3PublicDocument) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
 
-func (d *TomlV2PublicDocument) SetComment(key, comment string) {
+func (d *TomlV3PublicDocument) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
 
-func (d *TomlV2PublicDocument) InlineComment(key string) string {
+func (d *TomlV3PublicDocument) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
 
-func (d *TomlV2PublicDocument) SetInlineComment(key, comment string) {
+func (d *TomlV3PublicDocument) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
 
-func DecodeTomlV2PublicInto(data *TomlV2Public, sub *cst.Value) error {
+func DecodeTomlV3PublicInto(data *TomlV3Public, sub *cst.Value) error {
 	if _vPublicKey, _ok := sub.Get("public-key"); _ok && _vPublicKey.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractString(_vPublicKey.Leaf); _xok {
 			if err := data.PublicKey.UnmarshalText([]byte(_x)); err != nil {
@@ -371,10 +434,18 @@ func DecodeTomlV2PublicInto(data *TomlV2Public, sub *cst.Value) error {
 			_vObjectSigType.MarkConsumed()
 		}
 	}
+	if _vInstanceId, _ok := sub.Get("instance-id"); _ok && _vInstanceId.Kind == cst.VLeaf {
+		if _x, _xok := cst.ExtractString(_vInstanceId.Leaf); _xok {
+			if err := data.InstanceId.UnmarshalText([]byte(_x)); err != nil {
+				return fmt.Errorf("instance-id: %w", err)
+			}
+			_vInstanceId.MarkConsumed()
+		}
+	}
 	return nil
 }
 
-func EncodeTomlV2PublicFrom(data *TomlV2Public, doc *document.Document, container *cst.Node) error {
+func EncodeTomlV3PublicFrom(data *TomlV3Public, doc *document.Document, container *cst.Node) error {
 	{
 		v, err := data.PublicKey.MarshalText()
 		if err != nil {
@@ -406,6 +477,19 @@ func EncodeTomlV2PublicFrom(data *TomlV2Public, doc *document.Document, containe
 	if data.ObjectSigType != "" || cst.HasValue(container, "object-sig-type") {
 		if err := cst.SetAny(container, "object-sig-type", data.ObjectSigType); err != nil {
 			return fmt.Errorf("%w", err)
+		}
+	}
+	{
+		v, err := data.InstanceId.MarshalText()
+		if err != nil {
+			return fmt.Errorf("instance-id: %w", err)
+		}
+		if len(v) > 0 {
+			if err := cst.SetAny(container, "instance-id", string(v)); err != nil {
+				return fmt.Errorf("%w", err)
+			}
+		} else {
+			cst.DeleteValue(container, "instance-id")
 		}
 	}
 	return nil

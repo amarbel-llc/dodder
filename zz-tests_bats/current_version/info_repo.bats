@@ -29,7 +29,7 @@ function info_config_immutable { # @test
 
   assert_output --regexp - <<-EOM
 		---
-		! toml-config-immutable-v2
+		! toml-config-immutable-v3
 		---
 
 		public-key = "dodder-repo-public_key-v1.*"
@@ -37,6 +37,7 @@ function info_config_immutable { # @test
 		id = ""
 		inventory_list-type = "!inventory_list-v2"
 		object-sig-type = "dodder-object-sig-v3"
+		instance-id = "uuidv7-.*"
 	EOM
 }
 

@@ -34,6 +34,7 @@ func (cmd InfoRepo) GetDescription() command.Description {
 var repoSpecialKeys = []string{
 	"config-immutable",
 	"id",
+	"instance-id",
 	"pubkey",
 	"repos",
 	"seckey",
@@ -142,6 +143,17 @@ func (cmd InfoRepo) Run(req command.Request) {
 			env.GetUI().Print(
 				configPublicBlob.GetPublicKey().StringWithFormat(),
 			)
+
+		case "instance-id":
+			// The repo's uuidv7 instance identity (RFC-0007). Legacy
+			// (pre-V3) genesis configs carry none and print an empty
+			// line — they gain a uuid only via copy-migration.
+			if withId, ok := configPublicBlob.(genesis_configs.ConfigInstanceId); ok &&
+				!withId.GetInstanceId().IsNull() {
+				env.GetUI().Print(withId.GetInstanceId().StringWithFormat())
+			} else {
+				env.GetUI().Print("")
+			}
 
 		case "seckey":
 			env.Cancel(errors.Err405MethodNotAllowed)

@@ -6,14 +6,17 @@ import (
 	genesis_config_blobs "code.linenisgreat.com/dodder/go/internal/bravo/genesis_config_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
+	"code.linenisgreat.com/madder/go/pkgs/markl_registrations"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
 type (
-	Config        = genesis_config_blobs.Config
-	ConfigPublic  = genesis_config_blobs.ConfigPublic
-	ConfigPrivate = genesis_config_blobs.ConfigPrivate
+	Config           = genesis_config_blobs.Config
+	ConfigPublic     = genesis_config_blobs.ConfigPublic
+	ConfigPrivate    = genesis_config_blobs.ConfigPrivate
+	ConfigInstanceId = genesis_config_blobs.ConfigInstanceId
 
 	ConfigPrivateMutable interface {
 		interfaces.CommandComponentWriter
@@ -41,15 +44,25 @@ func DefaultWithVersion(
 	storeVersion store_version.Version,
 	inventoryListTypeString string,
 ) *TypedConfigPrivateMutable {
+	// The repo's uuidv7 instance identity (RFC-0007) is minted here, in
+	// the one funnel every fresh genesis config passes through — the
+	// dodder analogue of madder's EncodeWithDigest minting (FDR-0010).
+	// Configs decoded from disk never pass through this constructor, so
+	// a legacy V2 config is never lazy-minted; legacy repos gain a uuid
+	// only via copy-migration.
+	instanceId, err := markl_registrations.MintInstanceId()
+	errors.PanicIfError(err)
+
 	return &TypedConfigPrivateMutable{
 		Type: ids.GetOrPanic(
-			ids.TypeTomlConfigImmutableV2,
+			ids.TypeTomlConfigImmutableV3,
 		).TypeStruct.ToMadder(),
-		Blob: &TomlV2Private{
-			TomlV2Common: TomlV2Common{
+		Blob: &TomlV3Private{
+			TomlV3Common: TomlV3Common{
 				StoreVersion:      storeVersion,
 				InventoryListType: inventoryListTypeString,
 				ObjectSigType:     markl.PurposeObjectSigV3,
+				InstanceId:        instanceId,
 			},
 		},
 	}
