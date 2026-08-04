@@ -307,13 +307,19 @@ function run_dodder_init_disable_age_xdg {
   # digest is read from the config log via `show-config -history`
   # rather than init's object output. The config blob is the same one
   # the log root entry points at.
+  #
+  # The store queried is default-local, the scope-shared local WRITE
+  # store: under the write_through multi default (FDR-0016 D1, #223),
+  # no store is literally named "default" anymore -- the repo's default
+  # is a routing multi (interim name default-<repo>) whose writes all
+  # land in default-local, so that is where the blob physically lives.
   local konfig_sha
   run_dodder show-config -history
   assert_success
   konfig_sha="$(echo "$output" | grep -oE 'konfig @blake2b256-[[:alnum:]]+' | grep -oE 'blake2b256-[[:alnum:]]+' | head -1)"
   [[ -n $konfig_sha ]] || fail "could not extract konfig sha from show-config -history output: $output"
 
-  run_madder cat default "$konfig_sha"
+  run_madder cat default-local "$konfig_sha"
   assert_success
   assert_output
 

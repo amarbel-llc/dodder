@@ -322,9 +322,20 @@ func (cmd *ParentBackedWorkspace) SetupParentPointerBlobStore(
 		XDGUtilityNameMadder,
 	)
 
+	// default-local is the parent's scope-shared local WRITE store: under
+	// the write_through multi default (FDR-0016 D1, #223), no store is
+	// literally named "default" anymore -- the parent's default is a
+	// routing multi whose writes all land in default-local, so that is
+	// where the parent's blobs physically live. A TomlPointerV1 BasePath
+	// is a filesystem path, so it could only ever reach the parent's
+	// local physical store -- pointing at the multi's config dir instead
+	// would resolve the multi's member references in the WORKSPACE's
+	// scope, not the parent's (the #359 cross-env class). The
+	// pin-over-name end-state (RFC-0007 addendum 2026-08-04) replaces
+	// this path-join with resolving the parent's own config pin.
 	parentBlobStoreBasePath := filepath.Join(
 		parentMadderEnv.GetXDG().Data.ActualValue,
-		"blob_stores", "default",
+		"blob_stores", "default-local",
 	)
 
 	if !files.Exists(parentBlobStoreBasePath) {
