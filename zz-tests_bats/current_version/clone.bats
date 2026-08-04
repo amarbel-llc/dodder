@@ -135,7 +135,7 @@ function clone_direct_seeds_config_from_source { # @test
     assert_success
     # edit-config prints the appended config entry as commit
     # confirmation (#266); the blob digest is content-addressed.
-    assert_output '[konfig @blake2b256-0rc375uej7v4jjqv6xv3ywtc5nfc7cs5vmyh77wghcy3day0676q2ngalx !toml-config-v2]'
+    assert_output '[konfig @blake2b256-5083zuxek3tmr5tr3mfk4w3ta05dxqumatjjdzeup5rkme03ktrsqa9aaj !toml-config-v3]'
 
     run_dodder show-config
     assert_success

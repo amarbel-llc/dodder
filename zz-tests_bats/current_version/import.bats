@@ -24,6 +24,14 @@ setup() {
   run_dodder init-workspace -experimental-repo=false
 
   create_test_zettels
+
+  # Under the write_through multi default (FDR-0016 D1 / #223), the
+  # caller-named store is a read-only fallback -- the zettel blobs above
+  # land in the repo's write store (.default-local), NOT in shared. The
+  # import tests use shared as their named copy SOURCE, so populate it
+  # explicitly.
+  run_madder sync .default-local shared
+  assert_success
 }
 
 teardown() {
