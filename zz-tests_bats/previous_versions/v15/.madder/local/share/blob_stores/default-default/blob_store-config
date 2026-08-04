@@ -1,0 +1,8 @@
+---
+! toml-blob_store_config-multi-v1
+@ blake2b256-mlw9da59sxgj923lnuvf8ndgadwkvu6amvm739pvpk346k0tkvmswk2ql8
+---
+
+mode = "write_through"
+write-store = ".default-local@blake2b256-qmmqqvc79y7mzkz4z6m09keg077cjsmld66wu7mn73kam9y02zds8yzqu5"
+instance-id = "uuidv7-qx0ueg20c9lgrz3ewy902l6ntynlffh0"

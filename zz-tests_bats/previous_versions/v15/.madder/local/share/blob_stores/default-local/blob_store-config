@@ -1,0 +1,9 @@
+---
+! toml-blob_store_config-v4
+@ blake2b256-qmmqqvc79y7mzkz4z6m09keg077cjsmld66wu7mn73kam9y02zds8yzqu5
+---
+
+hash_buckets = [2]
+hash_type-id = "blake2b256"
+compression-type = "zstd"
+instance-id = "uuidv7-qx0ueg20c9asl9763pmlecga05rd9x2q"
