@@ -854,7 +854,7 @@ function workspace_repo_implicit_parent_write_roundtrip { # @test
   assert_success
   # madder cat prints a "switched to blob-store-id" status line first.
   assert_output - <<-EOM
-		switched to blob-store-id: default
+		switched to blob-store-id: default-local
 		workspace zettel body
 	EOM
 

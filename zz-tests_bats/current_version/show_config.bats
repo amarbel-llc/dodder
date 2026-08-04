@@ -88,6 +88,6 @@ function show_config_after_edit_config_roundtrips { # @test
   # show-config -history (no -repo_id -> empty handle) renders the bare
   # `ed25519_pub-...` self form, not the `dodder-repo-public_key-v1@...`
   # purpose-prefixed form a foreign object keeps.
-  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v3\]$'
   assert_line --index 1 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-mother-sig-v3@ed25519_sig-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
 }
