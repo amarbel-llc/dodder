@@ -364,6 +364,21 @@ func (cmd Clone) seedConfigFromDirectSource(
 		return
 	}
 
+	seedConfigLogFromLocalSource(req, local, source)
+}
+
+// seedConfigLogFromLocalSource appends a locally-opened source repo's
+// current config as a new entry on the destination's config log, signed
+// by the destination's own key (shared by clone's direct transfer and
+// init-from's copy-migration). The source's config TOML blob is copied
+// into the destination's default blob store first (content-addressed, so
+// the digest is preserved). A no-op edit (source digest equals the
+// destination's current head) is skipped.
+func seedConfigLogFromLocalSource(
+	req command.Request,
+	local *local_working_copy.Repo,
+	source *local_working_copy.Repo,
+) {
 	sourceSku := source.GetConfigStore().GetConfig().GetSku()
 
 	var sourceDigest markl.Id

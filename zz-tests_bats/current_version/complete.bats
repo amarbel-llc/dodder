@@ -133,6 +133,7 @@ function complete_subcmd { # @test
 		^info-workspace[[:space:]]+display workspace configuration$
 		^init[[:space:]]+initialize a new repository$
 		^init-default[[:space:]]+initialize a repository with sensible defaults$
+		^init-from[[:space:]]+create a new repo copy-migrated from an existing local repo \(fresh instance identity, same keys; source untouched\)$
 		^init-workspace[[:space:]]+initialize a workspace directory$
 		^init-workspace-default[[:space:]]+initialize a workspace with default ignore patterns$
 		^install-mcp[[:space:]]+install MCP server configuration$
