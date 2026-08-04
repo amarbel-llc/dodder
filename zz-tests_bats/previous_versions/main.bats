@@ -46,7 +46,8 @@ function migration_reindex { # @test
   # so show-config now reads the migrated config straight from the log.
   run_dodder show-config
   assert_success
-  assert_output 'blob-stores = [".default"]
+  assert_output 'blob-stores = [".default-default"]
+default-blob-store = ".default-default"
 
 [defaults]
 type = "!md"
@@ -92,7 +93,7 @@ merge = ["vimdiff"]'
   # #294/FDR-0021 T4: the konfig is SELF provenance, so show-config -history
   # (no -repo_id -> empty handle) renders the bare `ed25519_pub-...` form, not
   # the foreign `dodder-repo-public_key-v1@...` purpose-prefixed form.
-  assert_line --index 0 --regexp "^\[konfig @$(get_konfig_sha) [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v2\]\$"
+  assert_line --index 0 --regexp "^\[konfig @$(get_konfig_sha) [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v3\]\$"
   [ "${#lines[@]}" -eq 1 ]
 
   history_after_first_reindex="$output"

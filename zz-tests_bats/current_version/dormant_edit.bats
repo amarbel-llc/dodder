@@ -24,7 +24,7 @@ function dormant_edit_and_change { # @test
   export EDITOR="bash -c 'echo \"# dormant-edit smoke comment\" >> \"\$0\"'"
   run_dodder dormant-edit
   assert_success
-  assert_output '[konfig @blake2b256-7yf9a4qdhfc7a4alp0ywdd82e2wuarw23muggjffcpuxp6uyqr0se5a3hj !toml-config-v2]'
+  assert_output '[konfig @blake2b256-8eahj7wj6tydf9tzf2m0vrtqq4h7ltvtrhk6w0c2e3uxj8fxzvaq6cd4kj !toml-config-v3]'
 
   # The change is observed through show-config (the config read
   # surface); the legacy `show :konfig` query is removed in a later task.
@@ -43,8 +43,8 @@ function dormant_edit_and_change { # @test
   assert_equal "${#lines[@]}" 2
   # #294/FDR-0021 T4: the konfig is SELF provenance, so show-config -history
   # (empty handle) renders the bare `ed25519_pub-...` self form.
-  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
-  assert_line --index 1 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-mother-sig-v3@ed25519_sig-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v3\]$'
+  assert_line --index 1 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-mother-sig-v3@ed25519_sig-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v3\]$'
 }
 
 function dormant_edit_and_dont_change { # @test
@@ -61,5 +61,5 @@ function dormant_edit_and_dont_change { # @test
   run_dodder show-config -history
   assert_success
   assert_equal "${#lines[@]}" 1
-  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v2\]$'
+  assert_line --index 0 --regexp '^\[konfig @blake2b256-[a-z0-9]+ [0-9.]+ ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !toml-config-v3\]$'
 }

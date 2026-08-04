@@ -385,7 +385,8 @@ function show_konfig_query_errors { # @test
 function show_config_empty_log { # @test
   run_dodder show-config
   assert_success
-  assert_output 'blob-stores = [".default"]
+  assert_output 'blob-stores = [".default-default"]
+default-blob-store = ".default-default"
 
 [defaults]
 type = "!md"

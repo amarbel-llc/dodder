@@ -26,7 +26,10 @@ function deinit_force() { # @test
 		not in a dodder directory
 	EOM
 
-  run_dodder_init -blob_store-id .default .default
+  # Reuse the physical write store that survives deinit: under the
+  # write_through multi default no store is named .default anymore;
+  # .default-local is where the previous repo's blobs live.
+  run_dodder_init -blob_store-id .default-local .default
 
   run_dodder last
   assert_success

@@ -30,19 +30,22 @@ function blob_store_sync_twice { # @test
   # (madder-sync(1)).
   run_madder sync -format ndjson
   assert_success
-  assert_line "Successes: 28, Failures: 0, Ignored: 0, Total: 28"
-  # 1 summary line + 28 JSON lines, one per blob in the v15 fixture's
-  # default store (pandoc tools default-on since #208 add the two pandoc type
-  # blobs plus the nine tool blobs: three lua filters + the
-  # edit/render/html/html-partial/gdoc/beamer defaults).
+  # Under the write_through multi default (#223) the no-arg sync's
+  # destination set includes default-local alongside the freshly-made
+  # `test` store: the 28 fixture blobs transfer into `test` (28
+  # successes) and are already present in default-local (28 ignored),
+  # doubling the total. Only transfers emit ndjson records, so lines
+  # stay 1 summary + 28 records (pandoc tools default-on since #208:
+  # two pandoc type blobs plus the nine tool blobs).
+  assert_line "Successes: 28, Failures: 0, Ignored: 28, Total: 56"
   [[ ${#lines[@]} -eq 29 ]] ||
     fail "sync 1: expected 29 output lines, got ${#lines[@]}: ${output}"
 
   run_madder sync -format ndjson
   assert_success
-  assert_line "Successes: 0, Failures: 0, Ignored: 28, Total: 28"
-  [[ ${#lines[@]} -eq 29 ]] ||
-    fail "sync 2: expected 29 output lines, got ${#lines[@]}: ${output}"
+  assert_line "Successes: 0, Failures: 0, Ignored: 56, Total: 56"
+  [[ ${#lines[@]} -eq 1 ]] ||
+    fail "sync 2: expected 1 output line, got ${#lines[@]}: ${output}"
 }
 
 function blob_store_sync_cross_hash_multi_hash_destination { # @test
