@@ -53,7 +53,8 @@ function generate { # @test
   run_dodder show-config
   assert_success
   assert_output - <<-EOM
-		blob-stores = [".default"]
+		blob-stores = [".default-default"]
+		default-blob-store = ".default-default"
 
 		[defaults]
 		type = "!md"
