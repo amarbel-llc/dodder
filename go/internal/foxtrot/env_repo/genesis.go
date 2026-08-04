@@ -375,6 +375,16 @@ func (env *Env) writeDefaultMulti(
 		return multiId
 	}
 
+	// Reuse an existing multi config (e.g. re-init after deinit, which
+	// removes the repo tree but leaves blob stores behind) instead of
+	// failing CreateExclusiveWriteOnly below -- mirroring
+	// ensureLocalWriteStore's reuse of a surviving default-local.
+	// Tradeoff (same as the local store's): a re-init naming a DIFFERENT
+	// -blob_store-id keeps the surviving multi's member set.
+	if files.Exists(configPath) {
+		return multiId
+	}
+
 	// TomlMultiV1 (madder FDR-0010 M1): EncodeWithDigest below mints the
 	// uuidv7 instance-id into the config body via SetInstanceId, so the
 	// multi's FDR-0008 digest is instance-unique from creation.

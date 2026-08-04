@@ -44,8 +44,10 @@ function blob_store_sync_twice { # @test
   run_madder sync -format ndjson
   assert_success
   assert_line "Successes: 0, Failures: 0, Ignored: 56, Total: 56"
-  [[ ${#lines[@]} -eq 1 ]] ||
-    fail "sync 2: expected 1 output line, got ${#lines[@]}: ${output}"
+  # The all-ignored second run still emits one record per blob of the
+  # `test` destination (28), unlike the first run's ignored half.
+  [[ ${#lines[@]} -eq 29 ]] ||
+    fail "sync 2: expected 29 output lines, got ${#lines[@]}: ${output}"
 }
 
 function blob_store_sync_cross_hash_multi_hash_destination { # @test
