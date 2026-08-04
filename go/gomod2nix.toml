@@ -12,8 +12,8 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/madder/go']
-    version = 'v0.4.6-0.20260803194847-325de6b44527'
-    hash = 'sha256-WiOl79fMFDjtOa1CMmEACTlvJnPiIL4qSczG+9pyZn8='
+    version = 'v0.4.6-0.20260804120852-1401a4a90675'
+    hash = 'sha256-Dn3O/7AbtVAlT6VpREtk04xY5fyDg+SBXA+cBwhVTsE='
     goVersion = '1.26.1'
 
   [mod.'code.linenisgreat.com/piggy/go']

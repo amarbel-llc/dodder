@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	code.linenisgreat.com/chrest/go v0.4.0
 	code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9
-	code.linenisgreat.com/madder/go v0.4.6-0.20260803194847-325de6b44527
+	code.linenisgreat.com/madder/go v0.4.6-0.20260804120852-1401a4a90675
 	code.linenisgreat.com/piggy/go v0.0.0-20260720155209-77cfdea0031e
 	code.linenisgreat.com/purse-first/libs/dewey v0.5.0
 	code.linenisgreat.com/purse-first/libs/go-mcp v0.5.0
