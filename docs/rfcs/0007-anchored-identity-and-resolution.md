@@ -113,10 +113,67 @@ and found, composing two pieces:
   semantics + conformance vectors for the `_` scope belong to madder
   FDR-0010.
 
-The registry layer (per-host index, PAPI-backed cross-host registration)
-and the domain-trust extension below remain **open exploration** — the
-2026-08-03 review decided the identity anchor and pin semantics, not the
-registry.
+### Addendum (2026-08-04): registry v1 scoped — spinclass-pattern index + list surfaces
+
+The per-host registry layer is now scoped (Sasha's direction), lifting
+spinclass's verified mechanism (`internal/session/session.go`: index
+entries at `$XDG_STATE_HOME/spinclass/index/<sha256(abs-path)[:8]>.json`,
+written as symlinks via the TOCTOU-safe symlink-then-rename dance;
+dangling symlinks classified rather than erroring; GC with retention)
+into madder and dodder:
+
+- **Registration at creation.** madder registers every blob store at
+  init time (`init`, `init-*`, `init-from`, dodder-genesis-authored
+  stores — the store-creation funnel): a symlink at
+  `$XDG_STATE_HOME/madder/index/<sha256(store-abs-path)[:8]>` pointing
+  at the store's `blob_store-config`. dodder does the same for repos at
+  genesis: `$XDG_STATE_HOME/dodder/index/<key>` → the repo's
+  `repos/<name>/` tree. All scopes register uniformly; cwd-scoped
+  instances are the ones this buys global visibility for.
+  Registration is **best-effort**: a failure warns, never fails the
+  init. (spinclass uses XDG *state* home, which is also the right
+  category semantically — a rebuildable index, not data; noting that
+  the direction said `~/.local/share`, this scopes to
+  `$XDG_STATE_HOME` = `~/.local/state` for spinclass parity unless
+  overruled.)
+- **Advisory in v1.** The index feeds *listing only*; resolution is
+  untouched (that correctness belongs to the one-resolver work, madder
+  FDR-0010). This is deliberately the review's "on-demand visibility
+  first" option: divergence becomes *visible* — two same-named stores
+  with different pins sit side by side in one table — without adding a
+  mandatory check to any resolution path.
+- **`madder list -all`.** Lists every registered store host-wide (plus
+  the current scope's discovered stores): NAME (scoped spelling), PIN
+  (config digest, shortest-distinct-prefix abbreviated), ID (uuid,
+  abbreviated), TYPE (local/multi/sftp/…), LOCATION (`~`-relative
+  path), with dangling entries marked stale. Without `-all`, today's
+  current-scope view. Rendered as a charmbracelet/lipgloss table
+  (already a direct dependency), matching the clown/posh/spinclass
+  `list` idiom.
+- **`dodder repos-list`.** New command, same table shape for repos:
+  NAME (`.name`/`name` spelling), PUBKEY (abbreviated), LOCATION —
+  plus ID once the repo uuid lands (the dodder half of the identity
+  wave). Eventually supersedes `info-repo repos` as the listing
+  surface.
+- **Staleness/GC.** A dangling index symlink (store/repo deleted or
+  moved externally) lists as stale; a GC pass with retention prunes,
+  mirroring spinclass's tombstone GC. No tombstones in v1 — deleted
+  stores need no post-mortem record (unlike sessions).
+- **Sandbox composition** (the earlier review's flagged risk —
+  "the registry must not inherit the XDG ambiguity it resolves"):
+  registration and listing address `$XDG_STATE_HOME` as an absolute
+  path with **no walk-up and no ceiling involvement**, and test
+  sandboxes redirect the XDG env wholesale, so bats lanes get an
+  isolated index for free. The risk dissolves by construction.
+- **Shared implementation**: the index write/read/GC helper is a
+  candidate for dewey (both repos consume it; the review already
+  identified dewey as the dependency-safe home); or duplicated
+  spinclass-style if the abstraction feels premature.
+
+The PAPI-backed **cross-host** registration and the domain-trust
+extension below remain **open exploration** — the 2026-08-03 review
+decided the identity anchor and pin semantics, and this addendum
+scopes only the per-host index; nothing cross-host is committed.
 
 ## Abstract
 
