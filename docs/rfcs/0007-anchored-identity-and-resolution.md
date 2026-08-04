@@ -81,6 +81,38 @@ model is:
    `internal/bravo/markl/marklid.peg` and hyphence's
    `testdata/rfc_vectors.txt` conventions.
 
+### Addendum (2026-08-04): default-store end-state — pin lookups + private nested stores
+
+A follow-on decision settles how a repo's default blob store is named
+and found, composing two pieces:
+
+- **Pin over name (now).** No dodder code path asks madder for a store
+  by the literal name `default`. "This repo's default store" is
+  answered by the repo config's digest-pinned reference
+  (`<name>@<digest>`, repo_configs V3), verified on resolution via the
+  mismatch-diagnosis semantics above. The name becomes a directory
+  label, never a lookup key.
+- **Private nested stores (end-state).** The repo-owned routing config
+  (the default multi, or a pointer) lives in the repo's own nested
+  blob namespace (madder#240's `repos/<name>/` blob-XDG nesting) and
+  is named with the **`_` scope prefix**: `_default`. The leading
+  underscore is already a scope prefix in madder's landed
+  `scoped_id.peg` (`UnknownName <- '_' Name`, currently mapped to
+  LocationTypeUnknown with no filesystem meaning) — this assigns it
+  semantics: the **private scope**, resolvable only within the owning
+  repo's context, unaddressable from outside. Two repos in one XDG
+  scope then each own their private `_default` with zero collision
+  (retiring the interim `default-<repo_id>` naming), while the
+  scope-shared local write-store stays in the flat public namespace,
+  referenced from the multi by digest pin. The multi/pointer is pure
+  routing — digest-pinned references resolving outside the nested
+  directory — so nesting copies no content. The auto/zero id
+  (Unknown scope, empty name) does not collide with private ids
+  (Unknown scope, non-empty name); the LocationType deserves a rename
+  from Unknown to Private at implementation time. Normative resolver
+  semantics + conformance vectors for the `_` scope belong to madder
+  FDR-0010.
+
 The registry layer (per-host index, PAPI-backed cross-host registration)
 and the domain-trust extension below remain **open exploration** — the
 2026-08-03 review decided the identity anchor and pin semantics, not the
