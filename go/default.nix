@@ -202,7 +202,8 @@ let
 
   # dodder-clown-plugin stages a clown plugin (see clown-plugin-protocol(7)
   # / clown-json(5)) that exposes dodder's MCP server and ships user-facing
-  # skills (onboarding, usage, zettel IDs, blob stores). The clown plugin
+  # skills (onboarding, usage, zettel IDs; blob stores are documented in
+  # blob-store(7), not a skill). The clown plugin
   # protocol disallows `${...}` expansion in stdioServers.command, so the
   # binary path is baked in at build time via Nix substitution: the
   # source-controlled `clown.json.in` uses an `@dodder@` placeholder
