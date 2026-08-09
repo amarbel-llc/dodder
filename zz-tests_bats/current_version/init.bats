@@ -279,11 +279,11 @@ function init_blob_store_id_no_stray_default_store { # @test
   # the SAME storage as `cmd.BigBang.BlobStoreId` via Go's field
   # promotion -- not a separate, unwired field. This test validates the
   # actual mechanism directly instead of arguing from the struct
-  # declarations: if the flag really reached BigBang.BlobStoreId, genesis
-  # should skip creating a local "default" blob store entirely
-  # (env_repo/genesis.go's writeBlobStoreConfigIfNecessary early-returns
-  # when BlobStoreId is non-empty) and all bootstrap content should
-  # resolve cleanly through the named store alone.
+  # declarations. Under the write_through multi default (FDR-0016 D1,
+  # #223) the observable is: a flag that reaches BigBang.BlobStoreId
+  # lands in the multi's read-stores (writeBlobStoreConfigIfNecessary),
+  # and no stray store named "default" is created -- only the multi
+  # (default-<repo>) and the shared write store (default-local).
   set_xdg "$BATS_TEST_TMPDIR"
 
   run_madder init shared
