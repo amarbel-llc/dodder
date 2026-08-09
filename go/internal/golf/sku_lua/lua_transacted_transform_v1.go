@@ -87,16 +87,34 @@ func FromLuaTableTransformV1(
 
 	tagsTable.ForEach(
 		func(key, value lua.LValue) {
-			var tag ids.TagStruct
-
-			if err = tag.Set(key.String()); err != nil {
-				err = errors.Wrap(err)
-				panic(err)
+			if err != nil {
+				return
 			}
 
-			errors.PanicIfError(object.GetMetadataMutable().AddTagPtr(tag))
+			// `= false` is the other natural Lua set-removal idiom
+			// besides `= nil` (which ForEach never even visits); treat
+			// it as absent rather than re-adding the tag
+			if boolValue, isBool := value.(lua.LBool); isBool && !bool(boolValue) {
+				return
+			}
+
+			var tag ids.TagStruct
+
+			if tagErr := tag.Set(key.String()); tagErr != nil {
+				err = errors.Wrapf(tagErr, "invalid tag %q", key.String())
+				return
+			}
+
+			if addErr := object.GetMetadataMutable().AddTagPtr(tag); addErr != nil {
+				err = errors.Wrapf(addErr, "adding tag %q", key.String())
+				return
+			}
 		},
 	)
+
+	if err != nil {
+		return fieldsChanged, err
+	}
 
 	fieldsChanged = writeFieldsBack(object, luaTable.Fields)
 

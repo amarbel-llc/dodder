@@ -77,7 +77,10 @@ local list = dodder.list()
 for object in list:each() do
   if object.Kennung == "one/uno" then
     object.Typ = "task2"
-    object.Etiketten["drop_me"] = nil
+    -- assigning false must remove like assigning nil does (the two
+    -- natural Lua set-removal idioms); ForEach visits false values,
+    -- so the write-back filters them
+    object.Etiketten["drop_me"] = false
   end
 
   if object.Kennung == "two/dos" then

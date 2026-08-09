@@ -586,9 +586,12 @@ hidden zettels)
 
 The script receives `dodder.list()` — a list handle with `each()`,
 `remove(object)`, and `add()` — and must return that handle. Object handles
-carry `Gattung`, `Kennung`, `Typ`, `Etiketten` (tag name → true),
-`Fields`, and `Blob` (the blob digest). A `blobs` global offers
-`blobs.read(digest)` and `blobs.write(bytes)` for raw blob content.
+carry `Gattung`, `Kennung`, `Typ` (with its `!` prefix when reading;
+writing accepts either form), `Etiketten` (tag name → true; assign `nil`
+or `false` to remove), `Fields`, and `Blob` (the blob digest). A `blobs`
+global offers `blobs.read(digest)` and `blobs.write(bytes)` for raw blob
+content. Note that the script itself always runs — under `-dry_run` no
+objects are committed, but `blobs.write` still stores blob content.
 
 ```bash
 dodder transform -dry_run -script cleanup.lua
@@ -599,8 +602,8 @@ dodder transform -script cleanup.lua tag-legacy:z
 -- cleanup.lua: retype legacy tasks and drop a dead tag
 local list = dodder.list()
 for object in list:each() do
-  if object.Typ == "task-legacy" then
-    object.Typ = "task"
+  if object.Typ == "!task-legacy" then
+    object.Typ = "!task"
   end
   object.Etiketten["newsblur"] = nil
 end

@@ -65,12 +65,21 @@ function transform_dry_run_does_not_commit { # @test
 
   run_dodder transform -dry_run -script t.lua
   assert_success
-  # the TAP version header is the quiet validation pass announcing itself
-  assert_output - <<-EOM
-		selected 3 object(s)
+  # the TAP version header is the quiet validation pass announcing itself;
+  # the per-entry plan listing carries fixture signatures (regenerated with
+  # fixtures) so those lines are matched structurally, the summary exactly
+  assert_output --regexp - <<-'EOM'
+		selected 3 object\(s\)
 		TAP version 14
-		plan: 3 entries
-		  import: 3
+		import[[:blank:]]Type[[:blank:]].+!toml-type-v2@.+
+		import[[:blank:]]Zettel[[:blank:]].+Zettel one/dos .+"wow ok again".+
+		import[[:blank:]]Zettel[[:blank:]].+Zettel one/uno .+"wow the first".+
+		╭────────────────┬─────────────╮
+		│ classification │       count │
+		├────────────────┼─────────────┤
+		│ import         │           3 │
+		│ committable    │ 3 \(1 types\) │
+		╰────────────────┴─────────────╯
 		dry run: not committed
 	EOM
 

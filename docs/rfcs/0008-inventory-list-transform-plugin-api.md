@@ -38,8 +38,8 @@ Flags:
 |---|---|---|
 | `-script <path>` | — | Load the Lua script from a local file. Mutually exclusive with `-script-digest`. |
 | `-script-digest <markl-id>` | — | Load the Lua script from a stored blob, addressed by markl id via the multi-store read fallback (`GetReadBlobStore`). No dedicated script type object is required; how the blob got stored (e.g. `dodder new` with any type, `madder write`) is out of scope. Mutually exclusive with `-script`. |
-| `-dry_run` | `false` | Build and validate the output plan; report it; do not call `ExecutePlan`. |
-| `-skip_validation` | `false` | Skip the fsck-style validation pass on the transform's output. For staged, intentionally-inconsistent intermediate migration passes. |
+| `-dry_run` | `false` | Build and validate the output plan; report it (per-entry listing plus summary); do not call `ExecutePlan`. The script itself still executes, so `blobs.write` persists blob content even under `-dry_run` (blobs are content-addressed; unreferenced ones are garbage). |
+| `-skip_validation` | `false` | Skip the fsck-style validation pass on the transform's output, and tolerate edge-expansion failures (dangling references) when building the input list. For staged, intentionally-inconsistent intermediate migration passes. |
 | `-no_new_objects` | `false` | Reject any output object whose object id is not present in the input list. |
 
 Query args select the starting object set exactly as in `export`/`show`
@@ -65,8 +65,13 @@ code required — everything else is additive.
 
 The script source (`-script` file or `-script-digest` blob) is compiled
 into a bare `lua.VMPoolBuilder` — deliberately without the module searcher
-the tag-filter VMs get, so a transform script has no `require()` at all:
-the strictest sandbox variant (no file I/O, no network, no module loading).
+the tag-filter VMs get, so a transform script has no stored-module
+`require()`. **Caution:** this is NOT a sandbox. gopher-lua's default
+state opens the full stdlib (`io`, `os`, `package`), so a transform script
+— like every other Lua surface sharing the VM pool (hooks, tag filters,
+exec-lua) — can read and write files and run processes. Treat a transform
+script with the same trust as a shell script; restricting the stdlib
+across the VM pool is tracked as followup work.
 
 Two globals are registered via the builder's apply hook before the script
 chunk executes:
@@ -130,6 +135,14 @@ return list
 Mutation is in-place on the handle. Objects added mid-iteration (§3.3) are
 visited by the running iterator; removed objects are skipped.
 
+Tag removal accepts both natural Lua set idioms: `= nil` and `= false`.
+Assigning an empty string to `Kennung` or `Typ` is a no-op — the
+projection cannot distinguish "left alone" from "cleared", so clearing an
+object's type or blanking its id to request re-allocation is not
+expressible (only `list:add` creates allocation candidates). `Blob` is the
+one field where `""` explicitly clears, because write-back compares
+against the current digest.
+
 #### 3.3 List membership
 
 `list:remove(object)` drops an object from the output list (equivalent to
@@ -151,7 +164,11 @@ repo's proto-zettel default type at commit.
 The script MUST `return` the handle produced by `dodder.list()`; anything
 else aborts the command before any plan is built. The Go side then reads
 the output set back off the retained per-object projections — membership
-from the remove/add bookkeeping, mutations via §3.5.
+from the remove/add bookkeeping, mutations via §3.5. An output set naming
+the same object id more than once (a script reassigning one handle's
+`Kennung` onto another object's id) is always rejected, independent of
+`-no_new_objects` — committing it would silently collapse two objects'
+updates into last-write-wins revisions of one.
 
 #### 3.5 Write-back: `FromLuaTableTransformV1`
 
@@ -202,9 +219,10 @@ digest/sig pair would verify trivially, a freshly added object's null
 digest/sig would fail spuriously, and mutated metadata's probes are
 legitimately absent from the stream index. The transform therefore invokes
 the shared core with those checks disabled, leaving the candidate-relevant
-safety net the FDR actually motivated: **blob presence** for every blob
-digest a script assigned, and **dangling blob-reference detection** (#330
-semantics) across the multi-store read view. `fsck` itself is unchanged and
+safety net the FDR actually motivated: **full content verification of each
+object's blob digest** (the blob must exist and re-hash to its digest) and
+**dangling blob-reference detection** (#330 semantics, presence checks)
+across the multi-store read view. `fsck` itself is unchanged and
 still runs the full check set. Any validation failure is reported (TAP
 not-ok lines) and the command exits without calling `ExecutePlan`, whether
 or not `-dry_run` was also set.

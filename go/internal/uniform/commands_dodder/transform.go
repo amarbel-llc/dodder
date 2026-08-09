@@ -4,9 +4,10 @@ import (
 	"io"
 	"os"
 	"slices"
-	"sort"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
+	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
+	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
@@ -120,10 +121,33 @@ func (cmd Transform) Run(req command.Request) {
 
 	defer errors.ContextMustClose(localWorkingCopy, scriptReader)
 
-	list, err := localWorkingCopy.MakeExpandedInventoryList(queryGroup)
+	list, skippedEdges, err := localWorkingCopy.MakeExpandedInventoryList(
+		queryGroup,
+	)
 	if err != nil {
 		localWorkingCopy.Cancel(errors.Wrap(err))
 		return
+	}
+
+	if len(skippedEdges) > 0 {
+		// A mid-migration repo (the -skip_validation use case) may hold
+		// dangling references that make expansion partially fail; refusing
+		// to open it would deadlock the staged-migration workflow the flag
+		// exists for.
+		if cmd.SkipValidation {
+			localWorkingCopy.GetUI().Printf(
+				"warning: edge traversal had %d failure(s); continuing due to -skip_validation",
+				len(skippedEdges),
+			)
+		} else {
+			errors.ContextCancelWithErrorf(
+				localWorkingCopy,
+				"edge traversal had %d failure(s): %s",
+				len(skippedEdges),
+				skippedEdges[0],
+			)
+			return
+		}
 	}
 
 	var objects []*sku.Transacted
@@ -159,8 +183,12 @@ func (cmd Transform) Run(req command.Request) {
 		return
 	}
 
-	// the script chunk executes here, during VM preparation; its return
-	// value lands in vm.Top
+	// The script chunk has usually already executed inside Build()'s trial
+	// VM (which validated its return is a table); this Get normally hands
+	// that same VM back. If the pool's trial VM was GC-evicted in between,
+	// a fresh VM is prepared and the chunk executes again — see the
+	// script-execution-semantics followup issue. Either way, the effective
+	// return value lands in vm.Top and binding tracks the returned VM.
 	vm, vmRepool := vmPool.GetWithRepool()
 	defer vmRepool()
 
@@ -182,9 +210,31 @@ func (cmd Transform) Run(req command.Request) {
 		return
 	}
 
-	if cmd.NoNewObjects {
-		for _, object := range outputs {
-			if _, ok := inputIds[object.GetObjectId().String()]; !ok {
+	// A script reassigning one handle's Kennung onto another object's id
+	// would otherwise commit two revisions onto one object (last write
+	// wins) while the other object's update silently vanishes — always an
+	// error, independent of -no_new_objects. Added objects (empty id,
+	// allocated later) are exempt.
+	seenOutputIds := make(map[string]struct{}, len(outputs))
+
+	for _, object := range outputs {
+		idString := object.GetObjectId().String()
+
+		if idString != "" {
+			if _, dupe := seenOutputIds[idString]; dupe {
+				errors.ContextCancelWithErrorf(
+					localWorkingCopy,
+					"output contains %q more than once",
+					object.GetObjectId(),
+				)
+				return
+			}
+
+			seenOutputIds[idString] = struct{}{}
+		}
+
+		if cmd.NoNewObjects {
+			if _, ok := inputIds[idString]; !ok {
 				errors.ContextCancelWithErrorf(
 					localWorkingCopy,
 					"-no_new_objects: output object %q is not present in the input list",
@@ -346,28 +396,29 @@ func (cmd Transform) validate(
 	return true
 }
 
+// printPlanSummary renders the plan via import's existing formatters
+// (classification-count table + error tree; per-entry listing under
+// -dry_run so a migration can be audited before committing).
 func (cmd Transform) printPlanSummary(
 	localWorkingCopy *local_working_copy.Repo,
 	plan *import_plan.Plan,
 ) {
-	localWorkingCopy.GetUI().Printf("plan: %d entries", len(plan.Entries))
-
-	counts := plan.CountByClassification()
-	classifications := make([]string, 0, len(counts))
-
-	for classification := range counts {
-		classifications = append(classifications, string(classification))
+	if cmd.DryRun {
+		plan.FormatObjects(localWorkingCopy.GetEnv().GetUIFile())
 	}
 
-	sort.Strings(classifications)
+	printOptions := localWorkingCopy.GetConfig().GetPrintOptions().
+		WithPrintSigs(true)
+	colorOptions := env_ui.FormatColorOptionsOut(localWorkingCopy, printOptions)
 
-	for _, classification := range classifications {
-		localWorkingCopy.GetUI().Printf(
-			"  %s: %d",
-			classification,
-			counts[import_plan.Classification(classification)],
-		)
-	}
+	boxFormatter := localWorkingCopy.StringFormatWriterSkuBoxTransacted(
+		printOptions,
+		colorOptions,
+		string_format_writer.CliFormatTruncation66CharEllipsis,
+	)
+
+	boxFormatter.SetAbbr(plan.Abbr)
+	plan.FormatSummary(localWorkingCopy.GetEnv().GetUIFile(), boxFormatter)
 }
 
 func makeLuaBlobRead(
