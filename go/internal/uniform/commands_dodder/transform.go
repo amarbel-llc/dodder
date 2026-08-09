@@ -11,7 +11,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/internal/golf/object_finalizer"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
@@ -330,7 +329,6 @@ func (cmd Transform) validate(
 		tw,
 		quiter.MakeSeqErrorFromSeq(slices.Values(candidates)),
 		seqVerificationOptions{
-			Verify:     object_finalizer.VerifyOptions{},
 			SkipProbes: true,
 			QuietOk:    true,
 		},

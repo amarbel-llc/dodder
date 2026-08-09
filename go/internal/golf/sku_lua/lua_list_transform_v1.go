@@ -28,7 +28,6 @@ type listTransformEntryV1 struct {
 	object  *sku.Transacted
 	table   *LuaTableV1
 	removed bool
-	added   bool
 }
 
 // MakeListTransformV1 projects objects into per-object LuaTableV1 handles
@@ -44,10 +43,11 @@ func MakeListTransformV1(
 		tablePool:     MakeLuaTablePoolV1(vm),
 		handle:        vm.NewTable(),
 		handleToIndex: make(map[*lua.LTable]int, len(objects)),
+		repools:       make([]func(), 0, len(objects)),
 	}
 
 	for _, object := range objects {
-		binding.appendObject(object, false)
+		binding.appendObject(object)
 	}
 
 	vm.SetField(binding.handle, "each", vm.NewFunction(binding.luaEach))
@@ -59,7 +59,6 @@ func MakeListTransformV1(
 
 func (binding *ListTransformV1) appendObject(
 	object *sku.Transacted,
-	added bool,
 ) (table *LuaTableV1) {
 	table, repool := binding.tablePool.GetWithRepool() //repool:owned
 	binding.repools = append(binding.repools, repool)
@@ -82,7 +81,6 @@ func (binding *ListTransformV1) appendObject(
 	binding.entries = append(binding.entries, listTransformEntryV1{
 		object: object,
 		table:  table,
-		added:  added,
 	})
 
 	return table
@@ -211,7 +209,7 @@ func (binding *ListTransformV1) luaAdd(luaState *lua.LState) int {
 	object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned ownership transfers to the output list
 	object.GetObjectIdMutable().SetGenre(genres.Zettel)
 
-	table := binding.appendObject(object, true)
+	table := binding.appendObject(object)
 
 	luaState.Push(table.Transacted)
 	return 1
