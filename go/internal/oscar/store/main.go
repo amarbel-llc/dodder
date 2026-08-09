@@ -88,11 +88,13 @@ func (store *Store) Initialize(
 	// A prior Initialize() (e.g. Repo.Reset() re-initializing the same
 	// Store) may have already opened a working list. Close it before
 	// replacing it, or its blob writer's temp file is orphaned on the
-	// blob store (amarbel-llc/dodder#366) -- it is always empty at this
-	// point since nothing has been added to it yet by the caller that
-	// triggered re-initialization.
+	// blob store (amarbel-llc/dodder#366). Every reachable Reset today
+	// happens before Lock, so the list is empty here -- CloseEmpty
+	// enforces that instead of trusting it: a future call site that
+	// Resets with pending Adds fails loudly rather than silently
+	// dropping records from inventory-list history (dodder#369).
 	if store.workingList != nil {
-		if err = store.workingList.Close(); err != nil {
+		if err = store.workingList.CloseEmpty(); err != nil {
 			err = errors.Wrap(err)
 			return err
 		}

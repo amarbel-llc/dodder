@@ -276,9 +276,11 @@ type TomlV2Common struct {
 called exactly once when the caller is done with the element. Two tools
 enforce this:
 
-1.  **Static analyzer** (`just check-go-repool`): CFG-based `go vet` checker in
-    `lib/alfa/analyzers/repool/`. Detects discarded repool functions (blank `_`
-    without `//repool:owned`) and repool variables not called on all code paths.
+1.  **Static analyzer** (`just check-go-repool`): CFG-based `go vet` checker
+    (the analyzer implementation migrated to the purse-first facades; the just
+    recipe remains the entry point). Detects discarded repool functions (blank
+    `_` without `//repool:owned`) and repool variables not called on all code
+    paths.
 
 2.  **Runtime debug poisoning** (`repool_debug.go`, build tag `debug`): Wraps
     every repool function with an `atomic.Bool` guard that panics on

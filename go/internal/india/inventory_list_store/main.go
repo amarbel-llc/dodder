@@ -160,8 +160,10 @@ func (store *Store) Create(
 	if openList.Len() == 0 {
 		// an Add that failed after opening the blob writer can leave an
 		// open writer behind an empty list; close before discarding
-		// (issue #366)
-		if err = openList.Close(); err != nil {
+		// (issue #366). CloseEmpty rather than Close: this is a discard
+		// site, and the Len guard above makes the emptiness invariant
+		// explicit (dodder#369).
+		if err = openList.CloseEmpty(); err != nil {
 			err = errors.Wrap(err)
 			return object, err
 		}

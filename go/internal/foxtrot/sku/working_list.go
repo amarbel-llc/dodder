@@ -154,6 +154,28 @@ func (list *WorkingList) writeObject(
 	return n, err
 }
 
+// CloseEmpty closes a working list that MUST hold no pending records:
+// the discard path for lists being replaced or abandoned
+// (store.Initialize's re-initialization guard,
+// inventory_list_store.Create's empty-list early return) — as opposed
+// to Close, which is also the finalize path for sealing a non-empty
+// list's blob. A pending Add reaching a discard site would be silently
+// lost: the object stays durable in the stream index but is never
+// recorded in any inventory list, invisible to history and sync
+// (dodder#369). Error loudly instead of trusting call sites to uphold
+// the emptiness invariant by convention.
+func (list *WorkingList) CloseEmpty() (err error) {
+	if count := list.Len(); count > 0 {
+		err = errors.Errorf(
+			"refusing to discard working list with %d pending record(s): closing here would silently drop them from inventory-list history (dodder#369)",
+			count,
+		)
+		return err
+	}
+
+	return list.Close()
+}
+
 func (list *WorkingList) Close() (err error) {
 	if !list.lock.TryLock() {
 		err = errors.Errorf("trying to close open list while lock is acquired")
