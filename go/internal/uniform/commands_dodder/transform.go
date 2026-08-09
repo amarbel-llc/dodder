@@ -186,8 +186,9 @@ func (cmd Transform) Run(req command.Request) {
 	// The script chunk has usually already executed inside Build()'s trial
 	// VM (which validated its return is a table); this Get normally hands
 	// that same VM back. If the pool's trial VM was GC-evicted in between,
-	// a fresh VM is prepared and the chunk executes again — see the
-	// script-execution-semantics followup issue. Either way, the effective
+	// a fresh VM is prepared and the chunk executes again — see
+	// https://code.linenisgreat.com/linenisgreat/dodder/issues/390
+	// (single-run execution semantics). Either way, the effective
 	// return value lands in vm.Top and binding tracks the returned VM.
 	vm, vmRepool := vmPool.GetWithRepool()
 	defer vmRepool()

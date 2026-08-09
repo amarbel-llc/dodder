@@ -71,7 +71,7 @@ state opens the full stdlib (`io`, `os`, `package`), so a transform script
 — like every other Lua surface sharing the VM pool (hooks, tag filters,
 exec-lua) — can read and write files and run processes. Treat a transform
 script with the same trust as a shell script; restricting the stdlib
-across the VM pool is tracked as followup work.
+across the VM pool is tracked as issue #389.
 
 Two globals are registered via the builder's apply hook before the script
 chunk executes:

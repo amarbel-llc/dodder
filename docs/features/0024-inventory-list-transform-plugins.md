@@ -138,7 +138,7 @@ revision of this record claimed the VM pool sandboxes scripts; the
 implementation review found that no VM-pool surface restricts gopher-lua's
 default stdlib — `io`/`os`/`package` are open — so transform scripts must
 be trusted like shell scripts. Restricting the stdlib across all Lua
-surfaces is tracked as followup work; see RFC-0008 §2.)
+surfaces is tracked as issue #389; see RFC-0008 §2.)
 
 ## Examples
 
