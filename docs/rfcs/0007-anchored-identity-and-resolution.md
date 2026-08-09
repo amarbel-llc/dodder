@@ -170,6 +170,21 @@ into madder and dodder:
   identified dewey as the dependency-safe home); or duplicated
   spinclass-style if the abstraction feels premature.
 
+**Implementation status (2026-08-09): landed on both sides.** madder
+shipped registry v1 (`go/internal/bravo/registry`, registration in the
+store-creation funnel, `list -all`, `registry-gc`) at madder `a99649f`;
+madder FDR-0010 gained a "Registry v1 (advisory host-wide index)"
+section citing this addendum as origin. dodder shipped the twin the
+same day: `go/internal/bravo/registry` (same primitive, `Utility =
+"dodder"`; entries symlink to a repo's `config-seed`), best-effort
+registration in `env_repo.Genesis`'s `writeConfig` funnel (covers
+`init`, `init-from`, `clone`, `init-workspace`), `dodder repos-list`
+(NAME/PUBKEY/ID/LOCATION — the repo uuid landed with config-immutable
+v3, so ID ships from day one), and `dodder registry-gc`. The two
+registry packages are deliberately identical modulo the Utility var;
+dewey extraction remains open. `info-repo repos` stays as the
+current-scope discovery listing; `repos-list` is the host-wide view.
+
 The PAPI-backed **cross-host** registration and the domain-trust
 extension below remain **open exploration** — the 2026-08-03 review
 decided the identity anchor and pin semantics, and this addendum

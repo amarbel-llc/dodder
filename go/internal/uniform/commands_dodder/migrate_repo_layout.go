@@ -57,6 +57,21 @@ var (
 func (cmd MigrateRepoLayout) GetDescription() command.Description {
 	return command.Description{
 		Short: "copy a legacy flat .dodder tree into the repos/<name>/ nested layout (FDR-0019); never modifies -source",
+		Long: "Copy a legacy flat .dodder tree (pre-FDR-0019, no repos/<name>/ " +
+			"nesting) into the current nested layout. The current binary " +
+			"cannot open a flat tree — every repo-opening command fails " +
+			"against one with an error naming this command; there is " +
+			"deliberately no read-in-place fallback (#363), so this explicit " +
+			"migration is the only path forward for a legacy tree. Pure " +
+			"filesystem copy: each XDG category root (cache, config, " +
+			"local/share, local/state, local/runtime) found under -source is " +
+			"copied to -dest/<category>/repos/<name>/. -source is strictly " +
+			"read-only and left untouched; -dest must not already exist; a " +
+			"sibling .madder/ tree is never touched (the madder blob env " +
+			"stays flat per FDR-0019). No dodder object-model parsing " +
+			"happens — verify the result afterward with a real invocation " +
+			"against -dest (e.g. `dodder show`) before treating -source as " +
+			"disposable.",
 	}
 }
 

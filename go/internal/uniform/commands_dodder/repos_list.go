@@ -18,6 +18,11 @@ import (
 type scopedRepo struct {
 	Name  string
 	IsCwd bool
+
+	// Dir is the repo's directory (<data>/repos/<name>), carried so the
+	// host-wide listing (`repos-list`) can dedup a live repo against its
+	// registry index entry and decode its config-seed off disk.
+	Dir string
 }
 
 // Spelling is the -repo_id token that addresses this repo from anywhere.
@@ -64,13 +69,19 @@ func listScopedRepos(req command.Request) ([]scopedRepo, error) {
 
 	var repos []scopedRepo
 
-	activeNames, err := readRepoNames(active.GetXDG().Data.ActualValue)
+	activeDataDir := active.GetXDG().Data.ActualValue
+
+	activeNames, err := readRepoNames(activeDataDir)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, name := range activeNames {
-		repos = append(repos, scopedRepo{Name: name, IsCwd: activeIsCwd})
+		repos = append(repos, scopedRepo{
+			Name:  name,
+			IsCwd: activeIsCwd,
+			Dir:   filepath.Join(activeDataDir, "repos", name),
+		})
 	}
 
 	if activeIsCwd {
@@ -81,13 +92,19 @@ func listScopedRepos(req command.Request) ([]scopedRepo, error) {
 			"",
 		)
 
-		userNames, err := readRepoNames(user.GetXDG().Data.ActualValue)
+		userDataDir := user.GetXDG().Data.ActualValue
+
+		userNames, err := readRepoNames(userDataDir)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, name := range userNames {
-			repos = append(repos, scopedRepo{Name: name, IsCwd: false})
+			repos = append(repos, scopedRepo{
+				Name:  name,
+				IsCwd: false,
+				Dir:   filepath.Join(userDataDir, "repos", name),
+			})
 		}
 	}
 

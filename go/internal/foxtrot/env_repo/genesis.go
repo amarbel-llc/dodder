@@ -7,6 +7,7 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/bravo/registry"
 	"code.linenisgreat.com/dodder/go/internal/charlie/genesis_configs"
 	"code.linenisgreat.com/dodder/go/internal/delta/zettel_id_log"
 	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
@@ -187,13 +188,41 @@ func (env Env) writeInventoryListLog() {
 }
 
 func (env *Env) writeConfig(bigBang BigBang) {
+	configSeedPath := env.GetPathConfigSeed().String()
+
 	if err := hyphence.EncodeToFile(
 		genesis_configs.CoderPrivate,
 		&env.config,
-		env.GetPathConfigSeed().String(),
+		configSeedPath,
 	); err != nil {
 		env.Cancel(err)
 		return
+	}
+
+	registerRepoBestEffort(configSeedPath)
+}
+
+// registerRepoBestEffort records a just-genesis'd repo in the per-host
+// registry index ($XDG_STATE_HOME/dodder/index), so `dodder repos-list`
+// can enumerate repos host-wide regardless of the XDG scope or cwd that
+// created them (RFC-0007 registry v1; twin of madder's blob-store
+// registration in command_components.InitBlobStore). Best-effort by
+// contract: a failure warns on stderr and never fails the genesis.
+// Advisory only — the index feeds listing, never repo resolution
+// (FDR-0019). Sits in writeConfig's funnel, so every creation path
+// (init, init-from, clone, init-workspace) registers uniformly.
+func registerRepoBestEffort(configSeedPath string) {
+	abs, err := filepath.Abs(configSeedPath)
+	if err == nil {
+		err = registry.Register(filepath.Dir(abs), abs)
+	}
+
+	if err != nil {
+		ui.Err().Printf(
+			"warning: repo registry registration failed for %s: %v",
+			configSeedPath,
+			err,
+		)
 	}
 }
 
