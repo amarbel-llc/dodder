@@ -1,12 +1,16 @@
 ---
-status: draft
-date: 2026-07-12
+status: experimental
+date: 2026-08-09
 promotion-criteria: a list-in/list-out Lua transform command exists and can
   (a) mutate an object's type, not just its tags/fields, (b) read and write
   raw blob content by digest, returning a usable markl id, and (c) validate
   its output against fsck's verification logic before any commit, with a
   working dry-run mode; at least one real bulk-migration script (a tag/type
   cleanup pass over a personal repo) has been run successfully end to end.
+promotion-status: the `transform` command (implemented 2026-08-09 per
+  RFC-0008) satisfies (a), (b), and (c); the real bulk-migration run over a
+  personal repo is still outstanding and rides the personal-data program
+  (dodder#16), which is this feature's first consumer.
 ---
 
 # Inventory-List Transform Plugins
@@ -70,9 +74,11 @@ renamed, or decide that dropping one object means three others become
 orphaned and should be dropped too. None of that is expressible as an
 isolated per-object callback. The list-transform script receives a complete
 list (the query's matches plus their full transitive closure — types, tags,
-and other referenced objects, via the existing but currently
-pull-path-only `expandEdges` traversal,
-`go/internal/romeo/local_working_copy/expand_edges.go:11`) and returns
+and other referenced objects, via the previously pull-path-only
+`expandEdges` traversal, now also driven locally by
+`MakeExpandedInventoryList`,
+`go/internal/romeo/local_working_copy/op_make_expanded_inventory_list.go`)
+and returns
 a complete list. What comes back can differ arbitrarily from what went in:
 objects can be mutated, dropped, or newly created.
 
@@ -134,16 +140,17 @@ property worth keeping for a plugin that gets raw blob-write power.
 
 ## Examples
 
-Illustrative, not final syntax (see RFC-0008 for the concrete API):
+In the shipped surface (see RFC-0008 for the concrete API; object handles
+use the existing V1 projection's field names):
 
 ```lua
 -- tag/type cleanup pass (no blob access needed)
 local list = dodder.list()
 for object in list:each() do
-  if object.type == "!task-legacy" then
-    object.type = "!task"
+  if object.Typ == "!task-legacy" then
+    object.Typ = "!task"
   end
-  object.tags:remove("newsblur")
+  object.Etiketten["newsblur"] = nil
 end
 return list
 ```
@@ -154,16 +161,16 @@ return list
 -- rehash-specific API)
 local list = dodder.list()
 for object in list:each() do
-  local bytes = dodder.blobs.read(object.blob_digest)
-  local new_digest = dodder.blobs.write(bytes)  -- store configured for blake3
-  object.blob_digest = new_digest
+  local bytes = blobs.read(object.Blob)
+  object.Blob = blobs.write(bytes)  -- store configured for blake3
 end
 return list
 ```
 
 ## Open Questions
 
-- Exact CLI command name and flag surface — see RFC-0008.
+- ~~Exact CLI command name and flag surface~~ — resolved: `transform`; see
+  RFC-0008 for the shipped surface.
 - Whether the strict "no new objects" mode (rejecting output objects absent
   from the input) needs finer granularity than a single on/off flag (e.g.
   allowed for one genre but not another).

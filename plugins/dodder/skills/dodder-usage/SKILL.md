@@ -358,6 +358,8 @@ dodder repo-fsck                   # verify repository-level integrity
 dodder find-missing sha1 sha2      # check if blob SHAs exist in the store
 dodder revert one/uno              # revert object to previous version
 dodder revert -last                # revert all changes from last inventory list
+dodder transform -script f.lua     # bulk-rewrite queried objects via a Lua script
+dodder transform -dry_run -script f.lua  # report the rewrite plan without committing
 dodder info store-version          # show current store version
 dodder info compression-type       # show blob compression type
 dodder info age-encryption         # show encryption status
@@ -373,6 +375,11 @@ manual edits to the store.
 
 `fsck` verifies that every object's metadata, digest, and blob content are
 consistent. It reports errors but does not modify data.
+
+`transform` runs a Lua script over the queried objects as one batch (see the
+commands reference for the script surface). Use `-dry_run` first; the output
+is validated against the store's blob-integrity checks before anything
+commits.
 
 ## Repository Initialization
 

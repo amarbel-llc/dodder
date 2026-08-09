@@ -146,7 +146,6 @@ function complete_subcmd { # @test
 		^new[[:space:]]+create new zettels$
 		^organize[[:space:]]+organize objects with a text editor$
 		^peek-zettel-ids[[:space:]]+preview available zettel ids$
-		^prototype-lua-transform[[:space:]]+PROTOTYPE: run a Lua list-in/list-out transform over queried objects \(dry-run only\)$
 		^pull[[:space:]]+pull objects from a remote repository$
 		^pull-blob-store[[:space:]]+pull blobs from a remote blob store$
 		^push[[:space:]]+push objects to a remote repository$
@@ -163,6 +162,7 @@ function complete_subcmd { # @test
 		^show[[:space:]]+display objects from the store$
 		^show-config[[:space:]]+read the repository configuration log$
 		^status[[:space:]]+show workspace object state$
+		^transform[[:space:]]+run a Lua list-in/list-out transform over queried objects and commit the result$
 		^update[[:space:]]+update type lock signatures$
 		^version[[:space:]]+print dodder build version and commit$
 	EOM

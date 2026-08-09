@@ -562,6 +562,51 @@ Verify repository-level integrity.
 dodder repo-fsck
 ```
 
+### transform
+
+Run a Lua script over the queried objects (plus their transitive closure of
+types, tags, and referenced objects) as one list-in/list-out batch, then
+commit the result. The bulk-rewrite tool for tag/type cleanups and
+migrations. Original revisions stay reachable — dodder's store is
+append-only, so a transform commits new revisions rather than rewriting
+history.
+
+**Positional arguments:** Optional query arguments (default: latest +
+hidden zettels)
+
+**Key flags:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-script` | `""` | Path to the Lua transform script |
+| `-script-digest` | `""` | Load the script from a stored blob by markl id instead |
+| `-dry_run` | `false` | Build, validate, and report the plan without committing |
+| `-skip_validation` | `false` | Skip the fsck-style output validation (for staged multi-pass migrations) |
+| `-no_new_objects` | `false` | Reject output objects whose id is not in the input list |
+
+The script receives `dodder.list()` — a list handle with `each()`,
+`remove(object)`, and `add()` — and must return that handle. Object handles
+carry `Gattung`, `Kennung`, `Typ`, `Etiketten` (tag name → true),
+`Fields`, and `Blob` (the blob digest). A `blobs` global offers
+`blobs.read(digest)` and `blobs.write(bytes)` for raw blob content.
+
+```bash
+dodder transform -dry_run -script cleanup.lua
+dodder transform -script cleanup.lua tag-legacy:z
+```
+
+```lua
+-- cleanup.lua: retype legacy tasks and drop a dead tag
+local list = dodder.list()
+for object in list:each() do
+  if object.Typ == "task-legacy" then
+    object.Typ = "task"
+  end
+  object.Etiketten["newsblur"] = nil
+end
+return list
+```
+
 ### find-missing
 
 Check whether blob SHAs exist in the store.

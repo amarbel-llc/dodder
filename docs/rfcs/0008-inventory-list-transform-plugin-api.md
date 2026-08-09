@@ -1,6 +1,6 @@
 ---
-date: 2026-07-12
-status: draft
+date: 2026-08-09
+status: experimental
 ---
 
 # Inventory-List Transform Plugin API
@@ -8,9 +8,9 @@ status: draft
 ## Abstract
 
 This document specifies the concrete interface for the list-in/list-out
-Lua transform mechanism proposed in FDR-0024: a new CLI command, a new Lua
-global exposing a mutable object list, a new Lua global exposing raw blob
-read/write, a new write-back path (distinct from RFC-0006's hook write-back)
+Lua transform mechanism proposed in FDR-0024: the `transform` CLI command,
+a Lua global exposing a mutable object list, a Lua global exposing raw blob
+read/write, a write-back path (distinct from RFC-0006's hook write-back)
 that additionally supports type mutation, and the validation/commit
 pipeline tying them together. It reuses the existing Lua VM pool
 (`go/lib/alfa/lua/vm_pool.go`), the existing `sku_lua` object projection
@@ -20,17 +20,16 @@ new VM infrastructure, no new commit machinery, no new consistency-checking
 logic — only new bindings and a new command wiring existing pieces together
 in a new order.
 
+Implemented 2026-08-09; this revision describes the shipped surface. The
+original draft's open choices (command name, handle shape, exact validation
+scope) are resolved below, with deviations from the draft called out where
+the implementation taught us the draft was wrong.
+
 ## Command
 
-A new subcommand, name TBD at implementation time (candidates:
-`transform`, `rewrite` — avoid `filter-repo`/`filter-branch` as literal
-names since dodder's content-addressed, append-only model means nothing is
-destructively rewritten in place the way git's history is; original objects
-remain reachable after a transform produces new revisions).
-
 ```
-dodder <cmd> -script <path> [query args...]
-dodder <cmd> -script-digest <markl-id> [query args...]
+dodder transform -script <path> [query args...]
+dodder transform -script-digest <markl-id> [query args...]
 ```
 
 Flags:
@@ -38,151 +37,190 @@ Flags:
 | Flag | Default | Meaning |
 |---|---|---|
 | `-script <path>` | — | Load the Lua script from a local file. Mutually exclusive with `-script-digest`. |
-| `-script-digest <markl-id>` | — | Load the Lua script from a stored blob (a new `!lua-transform-v1` type object, mirroring `exec-lua`'s existing `!lua-tag-v1/v2` model). Mutually exclusive with `-script`. |
+| `-script-digest <markl-id>` | — | Load the Lua script from a stored blob, addressed by markl id via the multi-store read fallback (`GetReadBlobStore`). No dedicated script type object is required; how the blob got stored (e.g. `dodder new` with any type, `madder write`) is out of scope. Mutually exclusive with `-script`. |
 | `-dry_run` | `false` | Build and validate the output plan; report it; do not call `ExecutePlan`. |
 | `-skip_validation` | `false` | Skip the fsck-style validation pass on the transform's output. For staged, intentionally-inconsistent intermediate migration passes. |
 | `-no_new_objects` | `false` | Reject any output object whose object id is not present in the input list. |
 
 Query args select the starting object set exactly as in `export`/`show`
-(reuses the existing query builder — no new query syntax).
+(reuses the existing query builder — no new query syntax). Defaults: genre
+zettels, sigils latest + hidden (dormant objects are included so cleanup
+passes reach them; history is opt-in via `+`).
 
 ## Pipeline
 
 ### 1. Build the expanded input list
 
-`local_working_copy.Repo.MakeInventoryList(query)`
-(`go/internal/romeo/local_working_copy/op_make_inventory_list.go:10`) builds
-the query-matched set but does not include the transitive closure. A new
-entry point, `MakeExpandedInventoryList(query)`, additionally runs the
-existing (currently private, pull-path-only) `expandEdges`
-(`go/internal/romeo/local_working_copy/expand_edges.go:11`) against it,
-using the same `sku.EdgeExplorer`/`maxEdgeExpansionDepth` (5) semantics
-already in place for pull. This is the *only* structural change to existing
-non-plugin code required by this design — everything else is additive.
+`local_working_copy.Repo.MakeExpandedInventoryList(query)`
+(`go/internal/romeo/local_working_copy/op_make_expanded_inventory_list.go`)
+builds the query-matched set via the existing `MakeInventoryList` and then
+runs the previously pull-path-only `expandEdges`
+(`go/internal/romeo/local_working_copy/expand_edges.go`) against it, driven
+by `store.MakeEdgeExplorer` over the local object and blob stores, with the
+same `sku.EdgeExplorer`/`maxEdgeExpansionDepth` (5) semantics already in
+place for pull. This was the only structural change to existing non-plugin
+code required — everything else is additive.
 
 ### 2. Load and invoke the script
 
 The script source (`-script` file or `-script-digest` blob) is compiled
-into the existing `lua.VMPool`
-(`go/lib/alfa/lua/vm_pool.go`, `SetReader`/`SetCompiled`), exactly as
-`exec-lua` already does (`go/internal/sierra/repo_actions/exec_lua.go:14-46`)
-for its own script source. A VM is obtained via `PoolPtr.GetWithRepool()`.
+into a bare `lua.VMPoolBuilder` — deliberately without the module searcher
+the tag-filter VMs get, so a transform script has no `require()` at all:
+the strictest sandbox variant (no file I/O, no network, no module loading).
 
-Before invocation, two new Lua globals are registered via
-`vm.SetGlobal(name, vm.NewFunction(...))` — the same registration pattern
-`dodder_advance_date` already uses
-(`go/internal/hotel/tag_blobs/lua_v1.go:36-53`):
+Two globals are registered via the builder's apply hook before the script
+chunk executes:
 
-- `dodder` — the object-list binding (below).
-- `blobs` — the blob FFI (below).
+- `dodder` — carries `list()`, the object-list binding (§3).
+- `blobs` — the blob FFI (§4).
 
-The script is expected to `return` a list value (see §3.4); the VM's
-return value is read back on the Go side after `PCall` completes.
+The script chunk executes during VM preparation (the pool's `PrepareVM`
+compiles and `PCall`s it); its `return` value is read back on the Go side
+from `vm.Top` and MUST be the handle produced by `dodder.list()` (§3.4).
 
 ### 3. The `dodder` list binding
 
-#### 3.1 Constructing the input list handle
+Backed by `sku_lua.ListTransformV1`
+(`go/internal/golf/sku_lua/lua_list_transform_v1.go`).
 
-`dodder.list()` returns a Lua table wrapping the Go-side
-`sku.HeapTransacted` built in step 1. Each element is projected via the
-*existing* read-side projection, unchanged:
-`sku_lua.ToLuaTableV1`/`ToLuaTableV2`
-(`go/internal/golf/sku_lua/lua_transacted_v1.go:18-61`,
-`lua_transacted_v2.go`) — `Gattung`/genre, `Kennung`/id, `Typ`/`Type`,
-`Etiketten`/tags, `EtikettenImplicit`/implicit tags, `Fields`.
+#### 3.1 The list handle
 
-#### 3.2 Iteration
+`dodder.list()` returns the list handle — a Lua table with `each`,
+`remove`, and `add` methods. Every call returns the same handle; the list
+identity is the invocation's input set, not a fresh copy per call.
 
-`list:each()` returns an iterator over per-object Lua table handles (same
-shape as an individual object's projection above), suitable for a `for
-object in list:each() do ... end` loop. Mutation is in-place on the handle
-(`object.type = "..."`, `object.tags:remove(...)`, `object.tags:add(...)`,
-`object.fields.<name> = "..."` — matching the existing field-write pattern
-in `FromLuaTableV1`/`writeFieldsBack`).
+Each element is projected via the *existing* read-side projection,
+unchanged: `sku_lua.ToLuaTableV1`
+(`go/internal/golf/sku_lua/lua_transacted_v1.go`). V1, not V2, because only
+V1 projects the metadata index fields (`Fields`), which transform scripts
+need for field rewriting. An object handle therefore has the established V1
+shape: `Gattung` (genre), `Kennung` (object id), `Typ` (type), `Etiketten`
+(tags table: name → true), `EtikettenImplicit`, `Fields` (name → value) —
+plus one transform-only addition: `Blob`, the object's blob digest as a
+markl id string. `Blob` is projected by the list binding, not by
+`ToLuaTableV1` itself, so hook scripts never see a blob mutation surface
+(the RFC-0006 Phase 2 gate, issue #319, stays intact). Assigning
+`object.Blob = blobs.write(...)` is how a script points an object at a blob
+it rewrote — the composition the FDR's hash-migration story depends on. An
+empty string clears the digest.
+
+The draft's illustrative lowercase surface (`object.type`,
+`object.tags:remove(...)`) was NOT adopted: the normative rule "reuse the
+existing projection unchanged" won, keeping transform scripts and RFC-0006
+hook scripts in one dialect.
+
+#### 3.2 Iteration and mutation
+
+```lua
+local list = dodder.list()
+
+for object in list:each() do
+  if object.Typ == "!task-legacy" then
+    object.Typ = "!task"
+  end
+
+  object.Etiketten["newsblur"] = nil     -- remove a tag
+  object.Etiketten["migrated"] = true    -- add a tag
+  object.Fields.status = "done"          -- rewrite a projected field
+end
+
+return list
+```
+
+Mutation is in-place on the handle. Objects added mid-iteration (§3.3) are
+visited by the running iterator; removed objects are skipped.
 
 #### 3.3 List membership
 
-`list:remove(object)` drops an object from the list (equivalent to
-`ObjectTransform` returning `keep = false`).
-`list:add(prototype)` creates a new object not present in the input,
-returning a handle for further mutation. New objects need id allocation —
-this reuses `import_plan.MakeAllocateZettelIdTransform`'s existing pattern
+`list:remove(object)` drops an object from the output list (equivalent to
+`ObjectTransform` returning `keep = false`; the object simply gets no new
+revision — nothing is deleted from the store). Passing a table that is not
+an object handle from this list raises a Lua error.
+
+`list:add()` creates a new zettel object not present in the input and
+returns its handle for mutation. The draft's `prototype` argument was
+dropped: the returned handle is itself the mutation surface. The object id
+is left empty; allocation happens Go-side at plan build via the existing
+`import_plan.MakeAllocateZettelIdTransform`
 (`go/internal/hotel/import_plan/transform_allocate_zettel_id.go`) rather
-than inventing new allocation logic.
+than new allocation logic. New objects without a scripted `Typ` receive the
+repo's proto-zettel default type at commit.
 
 #### 3.4 Return value
 
-The script's `return`ed value must be a `dodder.list()`-produced handle
-(the same one passed in, or a fresh one built via repeated `list:add`) —
-the Go side reads it back into a `sku.HeapTransacted` (or directly into a
-new `import_plan.MakeLocalBuilder()` + `AddObject` sequence, mirroring the
-established local-plan pattern already used by
-`checkin_haustoria.go:44-49`, `remote_add.go:86-91`).
+The script MUST `return` the handle produced by `dodder.list()`; anything
+else aborts the command before any plan is built. The Go side then reads
+the output set back off the retained per-object projections — membership
+from the remove/add bookkeeping, mutations via §3.5.
 
-#### 3.5 Write-back: a new function, not `FromLuaTableV1`
+#### 3.5 Write-back: `FromLuaTableTransformV1`
 
-`FromLuaTableV1`/its V2 equivalent remain exactly as they are today
-(`lua_transacted_v1.go:68-121`) — hook-scoped, restricted, unchanged. A
-**new** function (name TBD, e.g. `FromLuaTableTransformV1`, living in a new
-file in `sku_lua` or a new package if keeping hook and transform write-back
-cleanly separated is preferred at implementation time) performs the same
-tags/fields write-back plus, additionally, `Typ`/`Type` write-back via
+`FromLuaTableV1`/its V2 equivalent remain exactly as they are today —
+hook-scoped, restricted, unchanged. The transform write-back is
+`sku_lua.FromLuaTableTransformV1`
+(`go/internal/golf/sku_lua/lua_transacted_transform_v1.go`): the same
+genre/id/tags/fields write-back plus, additionally, `Typ` write-back via
 `object.GetMetadataMutable().GetTypeMutable().ResetWithType(...)` (the
-existing mutator, already used elsewhere, e.g.
-`go/internal/india/config_log/main.go`'s `Append`). Blob digest write-back
-(§4) is handled separately, not through this table projection, since blob
-content and blob digest are handled via the FFI directly.
+existing mutator) and `Blob` write-back (§3.1) via the metadata's mutable
+blob digest. Blob *content* still moves exclusively through the FFI (§4);
+the `Blob` field carries only the digest.
 
 ### 4. The `blobs` FFI
 
 Two functions, registered as Lua globals under a `blobs` table:
 
 - `blobs.read(markl_id_string) -> bytes` — wraps
-  `mad_domain_interfaces.BlobStore.MakeBlobReader(digest)` +
-  `io.ReadAll`, returning the raw bytes as a Lua string. Errors (blob not
-  found, read failure) raise a Lua error via `luaState.RaiseError()`
-  (matching `lua_v1.go:46`'s existing error-raising pattern).
+  `GetReadBlobStore().MakeBlobReader(digest)` + `io.ReadAll` (multi-store
+  read fallback, per FDR-0015), returning the raw bytes as a Lua string.
+  Errors (blob not found, read failure) raise a Lua error via
+  `RaiseError`.
 - `blobs.write(bytes) -> markl_id_string` — wraps
-  `MakeBlobWriter(nil)` + `Write` + `GetMarklId()` (the exact sequence this
-  session's `reconcile_blob_to_store.go` already used directly against the
-  real repo, including the established defer-only-close pattern —
-  `defer errors.DeferredCloser(&err, writer)`, no separate explicit
-  `Close()` call, per the double-close bug found and fixed earlier this
-  session in that same throwaway command). Returns the digest as a string
-  in the same format `object.blob_digest`/markl `.String()` already
-  produces, so it round-trips directly into a Lua-side assignment like
-  `object.blob_digest = new_digest`.
+  `GetDefaultBlobStore().MakeBlobWriter(nil)` + `Write` + `GetMarklId()`.
+  Returns the digest as a string in the same format markl `.String()`
+  produces, so it round-trips into blob-reference fields and future
+  digest-bearing assignments.
 
-Both operate against the target blob store resolved the same way other
-write-capable commands resolve it today (the repo's default blob store for
-writes; read side uses the existing multi-store fallback,
-`GetReadBlobStore()`) — no new store-resolution logic.
+Both resolve their stores the same way other commands do — no new
+store-resolution logic.
 
 ### 5. Validation
 
 Unless `-skip_validation` is set, after the script returns and the
 resulting objects are built into an `import_plan.Plan` via `Build()`, the
-plan's entries are wrapped as an `interfaces.SeqError[*sku.Transacted]` —
-the same wrapping `export.go` already does via
-`quiter.MakeSeqErrorFromSeq(list.All())` — and run through fsck's existing
-`runVerification` logic
-(`go/internal/uniform/commands_dodder/fsck.go`): object digest presence,
-signature integrity, stream-index probe verification, blob presence, and
-dangling blob-reference detection. Any verification failure is reported
-and the command exits without calling `ExecutePlan`, whether or not
-`-dry_run` was also set.
+plan's committable entries are wrapped as an
+`interfaces.SeqError[*sku.Transacted]` and run through fsck's verification
+core, extracted as `runSeqVerification`
+(`go/internal/uniform/commands_dodder/fsck.go`) and shared by both
+commands.
+
+**Deviation from the draft.** The draft listed object digest presence,
+signature integrity, and stream-index probe verification among the checks.
+Those describe *committed* state and are wrong for candidates: the commit
+path resets the object digest and the inventory-list flush re-signs every
+object (`FinalizeAndSignOverwrite`), so a mutated candidate's stale
+digest/sig pair would verify trivially, a freshly added object's null
+digest/sig would fail spuriously, and mutated metadata's probes are
+legitimately absent from the stream index. The transform therefore invokes
+the shared core with those checks disabled, leaving the candidate-relevant
+safety net the FDR actually motivated: **blob presence** for every blob
+digest a script assigned, and **dangling blob-reference detection** (#330
+semantics) across the multi-store read view. `fsck` itself is unchanged and
+still runs the full check set. Any validation failure is reported (TAP
+not-ok lines) and the command exits without calling `ExecutePlan`, whether
+or not `-dry_run` was also set.
 
 ### 6. Dry run and commit
 
-`-dry_run` means: perform steps 1–5, print a summary of the resulting plan
-(counts by `Classification`, per FDR-0002/FDR-0006's existing
-classification vocabulary — `ClassificationImport`,
-`ClassificationResolveTaiReassign`, etc.), and stop. Without `-dry_run`,
-proceed to `local.ExecutePlan(plan)`
-(`go/internal/romeo/local_working_copy/execute_plan.go:9-51`) exactly as
-it exists today — lock, all-or-nothing commit per entry, unlock. No
-changes to `ExecutePlan` itself; dry-run is purely "don't call it," since
-it has no dry-run mode of its own to thread through.
+`-dry_run` means: perform steps 1–5, print the plan summary (entry count
+plus counts by `Classification`, per FDR-0002/FDR-0006's existing
+classification vocabulary), then `dry run: not committed`. Without
+`-dry_run`, proceed to `local.ExecutePlan(plan)`
+(`go/internal/romeo/local_working_copy/execute_plan.go`) exactly as it
+exists today — lock, commit per entry, unlock — with
+`GetStoreOptionsUpdate` commit options (tai update, hooks, validation; no
+proto application onto existing objects) and the proto zettel supplied for
+mother-less (added) objects only. No changes to `ExecutePlan` itself;
+dry-run is purely "don't call it."
 
 ## Non-goals
 
@@ -197,6 +235,10 @@ it has no dry-run mode of its own to thread through.
 - **A general `ObjectTransform`-compatible adapter** making list-transform
   scripts reusable in per-object contexts (noted as an open question in
   FDR-0024) is not designed here.
+- **A dedicated stored-script type** (the draft's `!lua-transform-v1`
+  sketch) was not introduced; `-script-digest` addresses blobs directly by
+  markl id. A convention type can be layered on later without changing this
+  API.
 
 ## References
 
@@ -204,3 +246,4 @@ it has no dry-run mode of its own to thread through.
 - [RFC-0006 — Hook Commit-Time Mutation](0006-hook-commit-time-mutation.md)
 - [FDR-0006 — Two-Stage Commit](../features/0006-two-stage-commit.md)
 - [FDR-0002 — Two-Phase Import](../features/0002-two-phase-import.md)
+- [FDR-0015 — Multi-Store Blob Lookup](../features/0015-multi-store-blob-lookup.md)

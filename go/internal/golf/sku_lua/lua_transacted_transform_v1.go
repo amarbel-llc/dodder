@@ -8,46 +8,9 @@ import (
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 )
 
-// PROTOTYPE (FDR-0024 / RFC-0008): list-in/list-out projection and
-// write-back for the inventory-list transform plugin mechanism. This is
-// exploratory code to validate the design, not a finished implementation --
-// see docs/features/0024-inventory-list-transform-plugins.md and
-// docs/rfcs/0008-inventory-list-transform-plugin-api.md.
-
-// ToLuaArrayV1 projects objects into a Lua array table (1-indexed) of
-// per-object tables, reusing ToLuaTableV1's per-object read-side projection
-// unchanged. Returns the array plus the individual *LuaTableV1 handles (same
-// order) -- the caller must retain these to later read mutations back via
-// FromLuaTableTransformV1, since the array itself only exposes each
-// element's merged Transacted table, not the Fields handle write-back needs
-// directly.
-func ToLuaArrayV1(
-	vm *lua.VM,
-	tablePool LuaTablePoolV1,
-	objects []*sku.Transacted,
-) (array *lua.LTable, tables []*LuaTableV1, repoolAll func()) {
-	array = vm.NewTable()
-	tables = make([]*LuaTableV1, 0, len(objects))
-	repools := make([]func(), 0, len(objects))
-
-	for i, object := range objects {
-		table, repool := tablePool.GetWithRepool() //repool:owned
-		repools = append(repools, repool)
-
-		ToLuaTableV1(object, vm.LState, table)
-
-		array.RawSetInt(i+1, table.Transacted)
-		tables = append(tables, table)
-	}
-
-	repoolAll = func() {
-		for _, repool := range repools {
-			repool()
-		}
-	}
-
-	return array, tables, repoolAll
-}
+// FDR-0024 / RFC-0008: write-back for the inventory-list transform plugin
+// mechanism. The read-side projection is ToLuaTableV1, unchanged; the list
+// handle lives in lua_list_transform_v1.go.
 
 // FromLuaTableTransformV1 mirrors FromLuaTableV1 (genre, id, tags, fields
 // write-back) but additionally writes back Typ/Type. This is safe in the
@@ -92,6 +55,24 @@ func FromLuaTableTransformV1(
 		object.GetMetadataMutable().GetTypeMutable().ResetWithType(
 			typeStruct.ToType(),
 		)
+	}
+
+	// Blob write-back: the "Blob" field is projected only by the transform
+	// list binding (absent in the hook context, where GetField yields nil).
+	// An empty string clears the blob digest.
+	if blobValue := luaState.GetField(transacted, "Blob"); blobValue != lua.LNil {
+		blobString := blobValue.String()
+
+		if blobString != object.GetBlobDigest().String() {
+			blobDigestMutable := object.GetMetadataMutable().GetBlobDigestMutable()
+
+			if blobString == "" {
+				blobDigestMutable.Reset()
+			} else if err = blobDigestMutable.Set(blobString); err != nil {
+				err = errors.Wrapf(err, "invalid Blob digest %q", blobString)
+				return fieldsChanged, err
+			}
+		}
 	}
 
 	tags := luaState.GetField(transacted, "Etiketten")

@@ -162,11 +162,45 @@ func (cmd Fsck) runVerification(
 	tw *tap.Writer,
 	seq interfaces.SeqError[*sku.Transacted],
 ) {
+	runSeqVerification(
+		repo,
+		tw,
+		seq,
+		seqVerificationOptions{
+			Verify:     cmd.VerifyOptions,
+			SkipProbes: cmd.SkipProbes,
+			SkipBlobs:  cmd.SkipBlobs,
+			Recompute:  cmd.Recompute,
+		},
+	)
+}
+
+// seqVerificationOptions parameterizes runSeqVerification so both fsck (full
+// committed-store verification) and transform (candidate output validation,
+// RFC-0008 §5) drive the same loop. QuietOk suppresses per-object ok lines
+// for callers that only report failures.
+type seqVerificationOptions struct {
+	Verify     object_finalizer.VerifyOptions
+	SkipProbes bool
+	SkipBlobs  bool
+	Recompute  bool
+	QuietOk    bool
+}
+
+// runSeqVerification is fsck's verification core: it walks seq and checks
+// each object per options, reporting via tw. Returns the error count so
+// callers besides fsck can gate on failures.
+func runSeqVerification(
+	repo *local_working_copy.Repo,
+	tw *tap.Writer,
+	seq interfaces.SeqError[*sku.Transacted],
+	options seqVerificationOptions,
+) (errorCountResult uint32) {
 	var count atomic.Uint32
 	var errorCount atomic.Uint32
 
 	finalizer := object_finalizer.Builder().
-		WithVerifyOptions(cmd.VerifyOptions).
+		WithVerifyOptions(options.Verify).
 		Build()
 
 	defaultDigestType := repo.GetEnvRepo().GetObjectDigestType()
@@ -192,13 +226,15 @@ func (cmd Fsck) runVerification(
 				desc := sku.StringMetadataTaiMerkle(object)
 				var objectErrors []error
 
-				if err := markl.AssertIdIsNotNull(
-					object.GetObjectDigest(),
-				); err != nil {
-					objectErrors = append(objectErrors, err)
+				if options.Verify.ObjectDigestPresent {
+					if err := markl.AssertIdIsNotNull(
+						object.GetObjectDigest(),
+					); err != nil {
+						objectErrors = append(objectErrors, err)
+					}
 				}
 
-				if cmd.Recompute {
+				if options.Recompute {
 					// recompute-for-verification of an existing signed
 					// object: derive the digest purpose per object so
 					// v2- and v3-signed objects both verify
@@ -216,7 +252,7 @@ func (cmd Fsck) runVerification(
 					}
 				}
 
-				if !cmd.SkipProbes {
+				if !options.SkipProbes {
 					if err := repo.GetStore().GetStreamIndex().VerifyObjectProbes(
 						object,
 					); err != nil {
@@ -224,7 +260,7 @@ func (cmd Fsck) runVerification(
 					}
 				}
 
-				if !cmd.SkipBlobs {
+				if !options.SkipBlobs {
 					blobDigest := object.GetBlobDigest()
 					if !blobDigest.IsNull() {
 						if err := blob_stores.VerifyBlob(
@@ -262,7 +298,9 @@ func (cmd Fsck) runVerification(
 				}
 
 				if len(objectErrors) == 0 {
-					tw.Ok(desc)
+					if !options.QuietOk {
+						tw.Ok(desc)
+					}
 				} else {
 					diag := tap_diagnostics.FromError(objectErrors[0])
 					if len(objectErrors) > 1 {
@@ -290,10 +328,16 @@ func (cmd Fsck) runVerification(
 	); err != nil {
 		tw.BailOut("%s", err)
 		repo.Cancel(err)
-		return
+		errorCountResult = errorCount.Load()
+		return errorCountResult
 	}
 
-	tw.Plan()
+	if !options.QuietOk {
+		tw.Plan()
+	}
+
+	errorCountResult = errorCount.Load()
+	return errorCountResult
 }
 
 func (cmd Fsck) runV14IndexTrial(
