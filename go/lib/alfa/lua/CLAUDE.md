@@ -29,12 +29,13 @@ plus a selective `openSafeLibs` call (`stdlib.go`). The sandbox is applied in
 
 **Blocked (never opened):** `io`, `os`, `coroutine`, `channel`, `debug`.
 
-`io` and `os` are set to diagnostic proxy tables whose `__index` **and**
-`__newindex` metamethods both raise an actionable error message instead of the
-generic "attempt to index nil" Lua produces for absent globals. `__newindex` is
-required so a script cannot re-enable a blocked global by assigning through it
-(`io.open = fn`), which would otherwise raw-set the key and shadow `__index`.
-The `os` proxy names `dodder_today()` as the replacement for `os.date("!%Y-%m-%d")`.
+All five blocked globals (`io`, `os`, `coroutine`, `channel`, `debug`) are set
+to diagnostic proxy tables whose `__index` **and** `__newindex` metamethods both
+raise an actionable error message instead of the generic "attempt to index nil"
+Lua produces for absent globals. `__newindex` is required so a script cannot
+re-enable a blocked global by assigning through it (`io.open = fn`), which would
+otherwise raw-set the key and shadow `__index`. The `os` proxy names
+`dodder_today()` as the replacement for `os.date("!%Y-%m-%d")`.
 
 ### Repool re-arming
 
@@ -42,7 +43,8 @@ The `os` proxy names `dodder_today()` as the replacement for `os.date("!%Y-%m-%d
 (a `sync.Pool`) hands the same `LState` back on the next borrow. The repool
 closure therefore re-runs `applySandboxRestrictions` (the overwritable-global
 subset of the guards: the `dofile`/`loadfile`/`load`/`loadstring` stubs, the
-`io`/`os` proxies, and `dodder_today`) so a script that clobbered one of them
+`io`/`os`/`coroutine`/`channel`/`debug` proxies, and `dodder_today`) so a script
+that clobbered one of them
 cannot leak that mutation into the next script sharing the VM slot. The
 filesystem-searcher block lives in `openSafeLibs`, **not**
 `applySandboxRestrictions`: `PrepareVM` inserts the custom searcher at

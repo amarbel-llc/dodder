@@ -57,12 +57,12 @@ func openSafeLibs(ls *lua.LState) {
 // applySandboxRestrictions (re-)installs the sandbox guards that live in the
 // global environment and that a running script could therefore overwrite: the
 // hard-error stubs for the filesystem-escaping base functions, the diagnostic
-// proxies for the never-opened io/os globals, and the dodder_today builtin. It
-// is idempotent and order-independent, so the VM pool re-runs it on every
-// repool: a script that reassigned dofile, clobbered the io/os proxy, or
-// shadowed dodder_today cannot leak that mutation into the next borrow of the
-// same pooled VM. It deliberately does not touch package.loaders — see
-// openSafeLibs.
+// proxies for the never-opened io/os/coroutine/channel/debug globals, and the
+// dodder_today builtin. It is idempotent and order-independent, so the VM pool
+// re-runs it on every repool: a script that reassigned dofile, clobbered a
+// blocked-global proxy, or shadowed dodder_today cannot leak that mutation into
+// the next borrow of the same pooled VM. It deliberately does not touch
+// package.loaders — see openSafeLibs.
 func applySandboxRestrictions(ls *lua.LState) {
 	// dofile/loadfile/load/loadstring are opened by OpenBase but give arbitrary
 	// code-execution paths. Replace them with stubs that raise a clear error.
@@ -73,14 +73,18 @@ func applySandboxRestrictions(ls *lua.LState) {
 		}))
 	}
 
-	// Install diagnostic proxy tables for io and os so that scripts indexing
-	// into or assigning through them (os.date, io.open = ...) receive an
-	// actionable error message rather than the generic "attempt to index a nil
-	// value" Lua produces for nil globals.
+	// Install diagnostic proxy tables for the never-opened globals so that
+	// scripts indexing into or assigning through them (os.date, io.open = ...)
+	// receive an actionable error message rather than the generic "attempt to
+	// index a nil value" Lua produces for nil globals. os carries an extra hint
+	// toward its supported replacement; io/coroutine/channel/debug share a
+	// uniform message (dodder#391 extended these past just io/os).
 	setBlockedGlobalProxy(ls, "os",
 		"os is not available in dodder Lua scripts; use dodder_today() for the current date")
-	setBlockedGlobalProxy(ls, "io",
-		"io is not available in dodder Lua scripts")
+	for _, name := range []string{"io", "coroutine", "channel", "debug"} {
+		setBlockedGlobalProxy(ls, name,
+			name+" is not available in dodder Lua scripts")
+	}
 
 	// dodder_today() is the sandbox's supported replacement for
 	// os.date("!%Y-%m-%d") — the os proxy message above names it. It needs only

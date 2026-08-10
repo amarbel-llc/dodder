@@ -32,10 +32,15 @@ func TestVMPoolSandbox_BlockedGlobals(t1 *testing.T) {
 		}
 	}
 
-	// io and os must raise errors when indexed (diagnostic proxy, not nil).
+	// Every never-opened global must raise an actionable error when indexed
+	// (diagnostic proxy, not a bare nil-index) — io/os plus coroutine/channel/
+	// debug (dodder#391).
 	for _, script := range []string{
 		"io.open('/tmp/x', 'r')",
 		"os.date('!%Y-%m-%d')",
+		"coroutine.create(function() end)",
+		"channel.make()",
+		"debug.getinfo(1)",
 	} {
 		if err := vm.DoString(script); err == nil {
 			t.Errorf("expected %q to fail in sandbox", script)
