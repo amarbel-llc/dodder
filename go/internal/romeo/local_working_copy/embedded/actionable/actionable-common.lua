@@ -15,7 +15,7 @@
 local P = {}
 
 local function today()
-	return os.date("!%Y-%m-%d")
+	return dodder_today()
 end
 
 local function archive(kinder)

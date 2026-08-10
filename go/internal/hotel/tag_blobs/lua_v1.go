@@ -1,6 +1,8 @@
 package tag_blobs
 
 import (
+	"time"
+
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/lib/0/iso_duration"
@@ -30,11 +32,17 @@ func MakeLuaSelfApplyV1(
 // registerDateHelpers exposes the date math the hook VM needs but gopher-lua
 // lacks. dodder_advance_date(date, duration) advances a YYYY-MM-DD date by an
 // ISO-8601 duration (the PnY nM nW nD subset) and returns the advanced
-// YYYY-MM-DD string; on a bad date or duration it raises a lua error. The
-// on_commit_fields recurrence hook uses it to roll an actionable object's `due`
-// forward when a recurring task is completed.
+// YYYY-MM-DD string; on a bad date or duration it raises a lua error.
+// dodder_today() returns the current UTC date as a YYYY-MM-DD string; it
+// replaces os.date("!%Y-%m-%d") which is no longer available in the sandboxed VM.
 func registerDateHelpers(vm *lua.VM) {
 	vm.SetGlobal("dodder_advance_date", vm.NewFunction(luaAdvanceDate))
+	vm.SetGlobal("dodder_today", vm.NewFunction(luaTodayDate))
+}
+
+func luaTodayDate(ls *lua.LState) int {
+	ls.Push(lua.LString(time.Now().UTC().Format("2006-01-02")))
+	return 1
 }
 
 func luaAdvanceDate(luaState *lua.LState) int {

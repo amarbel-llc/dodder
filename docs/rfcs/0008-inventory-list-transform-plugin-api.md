@@ -66,12 +66,11 @@ code required — everything else is additive.
 The script source (`-script` file or `-script-digest` blob) is compiled
 into a bare `lua.VMPoolBuilder` — deliberately without the module searcher
 the tag-filter VMs get, so a transform script has no stored-module
-`require()`. **Caution:** this is NOT a sandbox. gopher-lua's default
-state opens the full stdlib (`io`, `os`, `package`), so a transform script
-— like every other Lua surface sharing the VM pool (hooks, tag filters,
-exec-lua) — can read and write files and run processes. Treat a transform
-script with the same trust as a shell script; restricting the stdlib
-across the VM pool is tracked as issue #389.
+`require()`. Scripts execute inside the VM pool sandbox (issue #389,
+`go/lib/alfa/lua/stdlib.go`): `io`, `os`, `dofile`, `loadfile`, `load`,
+and `loadstring` are blocked; `require()` outside preloaded modules fails
+with an actionable error. See §"Lua Sandbox Migration Note" for migration
+guidance.
 
 Two globals are registered via the builder's apply hook before the script
 chunk executes:
@@ -257,6 +256,24 @@ dry-run is purely "don't call it."
   sketch) was not introduced; `-script-digest` addresses blobs directly by
   markl id. A convention type can be layered on later without changing this
   API.
+
+## Lua Sandbox Migration Note
+
+Lua scripts running in the VM pool (commit hooks and, once implemented,
+list-transform scripts) execute inside a sandbox that blocks `io`, `os`,
+and several dangerous base-library functions. Scripts written before the
+sandbox was hardened (issue #389) may need small updates:
+
+| Removed | Replacement |
+|---------|-------------|
+| `os.date("!%Y-%m-%d")` | `dodder_today()` — Go-side global, returns current UTC date as `YYYY-MM-DD` |
+| Any `os.*` access | Blocked; proxy raises `os is not available in dodder Lua scripts; use dodder_today() for the current date` |
+| Any `io.*` access | Blocked; proxy raises `io is not available in dodder Lua scripts` |
+| `dofile`, `loadfile`, `load`, `loadstring` | Blocked; no replacement — arbitrary code execution from the filesystem is not permitted |
+| `require("anything-not-preloaded")` | Blocked; only the `der`/`dodder`/`zit` module aliases and explicitly preloaded modules are reachable |
+
+`dodder_advance_date(date, duration)` (ISO-8601 duration math) was already
+available before the sandbox hardening and is unaffected.
 
 ## References
 

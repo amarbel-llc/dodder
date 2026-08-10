@@ -47,7 +47,7 @@ tier ordering).
 
 - **Always use `ui.MakeT(t1)` in tests** --- never use bare `*testing.T`. The
   `ui.T` wrapper is part of the test infrastructure. Import is
-  `code.linenisgreat.com/purse-first/libs/dewey/charlie/ui`. Helpers take
+  `code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui`. Helpers take
   `*ui.T`; callers pass `&t` because `MakeT` returns a value.
 - **Tests require the `test` build tag** --- this is why `just` recipes must be
   used instead of bare `go test`. The recipes pass `-tags test,debug`.

@@ -133,12 +133,15 @@ in whatever language they chose, for every script. The explicit goal is
 that a transform script should focus on the transform, not on plumbing. An
 embedded Lua plugin, using the existing VM pool
 (`go/lib/alfa/lua/vm_pool.go`) and native Go-backed bindings for the object
-list and blob store, gives scripts that plumbing for free. (An earlier
-revision of this record claimed the VM pool sandboxes scripts; the
-implementation review found that no VM-pool surface restricts gopher-lua's
-default stdlib — `io`/`os`/`package` are open — so transform scripts must
-be trusted like shell scripts. Restricting the stdlib across all Lua
-surfaces is tracked as issue #389; see RFC-0008 §2.)
+list and blob store, gives scripts that plumbing for free. It also inherits
+the VM pool's existing sandboxing — a real security property worth keeping
+for a plugin that gets raw blob-write power. The sandbox allowlist
+(see `go/lib/alfa/lua/CLAUDE.md`) admits only: `base` (minus
+`dofile`/`loadfile`/`load`/`loadstring`), `package` (preload searcher only;
+filesystem searcher blocked), `string`, `table`, and `math`. `io`, `os`,
+`coroutine`, `channel`, and `debug` are never opened; `require()` outside
+the preloaded `der`/`dodder`/`zit` module aliases fails with an actionable
+error.
 
 ## Examples
 

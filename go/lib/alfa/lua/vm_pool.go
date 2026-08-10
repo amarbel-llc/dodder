@@ -127,8 +127,9 @@ func (sp *VMPool) SetCompiled(
 	sp.PoolPtr = pool.Make(
 		func() (vm *VM) {
 			vm = &VM{
-				LState: lua.NewState(),
+				LState: lua.NewState(lua.Options{SkipOpenLibs: true}),
 			}
+			openSafeLibs(vm.LState)
 
 			if err := sp.PrepareVM(vm, apply); err != nil {
 				panic(errors.Wrap(err))
