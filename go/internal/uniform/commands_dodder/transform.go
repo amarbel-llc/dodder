@@ -165,7 +165,7 @@ func (cmd Transform) Run(req command.Request) {
 
 	var binding *sku_lua.ListTransformV1
 
-	vmPool, err := (&lua.VMPoolBuilder{}).WithReader(
+	vm, err := (&lua.VMPoolBuilder{}).WithReader(
 		scriptReader,
 	).WithApply(func(vm *lua.VM) error {
 		binding = sku_lua.MakeListTransformV1(vm, objects)
@@ -177,21 +177,18 @@ func (cmd Transform) Run(req command.Request) {
 		vm.SetGlobal("blobs", blobsTable)
 
 		return nil
-	}).Build()
+	}).BuildSingleVM()
 	if err != nil {
 		localWorkingCopy.Cancel(errors.Wrap(err))
 		return
 	}
 
-	// The script chunk has usually already executed inside Build()'s trial
-	// VM (which validated its return is a table); this Get normally hands
-	// that same VM back. If the pool's trial VM was GC-evicted in between,
-	// a fresh VM is prepared and the chunk executes again — see
-	// https://code.linenisgreat.com/linenisgreat/dodder/issues/390
-	// (single-run execution semantics). Either way, the effective
-	// return value lands in vm.Top and binding tracks the returned VM.
-	vm, vmRepool := vmPool.GetWithRepool()
-	defer vmRepool()
+	// Single-run semantics (dodder#390): BuildSingleVM compiled the script and
+	// executed the chunk exactly once during preparation, leaving the returned
+	// dodder.list() handle in vm.Top. We hold this one explicitly-owned VM for
+	// the whole run and Close it at the end — no pool, no repool, so the chunk
+	// cannot run a second time and blobs.write cannot fire twice.
+	defer vm.LState.Close()
 
 	if binding != nil {
 		defer binding.Repool()

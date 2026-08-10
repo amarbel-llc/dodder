@@ -95,6 +95,52 @@ func (vpb *VMPoolBuilder) Build() (vmp *VMPool, err error) {
 	return vmp, err
 }
 
+// BuildSingleVM constructs a single, caller-owned VM instead of a pool: it
+// compiles the script once, creates one sandboxed LState, and runs the
+// module preload, searcher, apply hook, and the compiled chunk exactly once
+// (via PrepareVM), leaving the chunk's return value in vm.Top. The caller owns
+// the returned VM and MUST Close it when done.
+//
+// This is the single-run path for one-shot batch callers (the transform
+// command, dodder#390): the chunk executes exactly once, with no sync.Pool
+// borrow/repool and therefore none of the trial-VM/GC re-execution window the
+// pooled Build path has. The pool (Build) remains the right choice for the
+// repeated per-object tag-filter workload it was designed for.
+func (vpb *VMPoolBuilder) BuildSingleVM() (vm *VM, err error) {
+	compiled := vpb.compiled
+
+	if compiled == nil {
+		if vpb.scriptReader == nil {
+			err = errors.ErrorWithStackf("no script, reader, or compiled set")
+			return vm, err
+		}
+
+		if compiled, err = CompileReader(vpb.scriptReader); err != nil {
+			err = errors.Wrap(err)
+			return vm, err
+		}
+	}
+
+	vmp := &VMPool{
+		Require:  vpb.proto.Require,
+		Searcher: vpb.proto.Searcher,
+		compiled: compiled,
+	}
+
+	vm = &VM{
+		LState: lua.NewState(lua.Options{SkipOpenLibs: true}),
+	}
+	openSafeLibs(vm.LState)
+
+	if err = vmp.PrepareVM(vm, vpb.apply); err != nil {
+		vm.LState.Close()
+		err = errors.Wrap(err)
+		return nil, err
+	}
+
+	return vm, err
+}
+
 func MakeVMPoolWithSearcher(
 	script string,
 	searcher LGFunction,
