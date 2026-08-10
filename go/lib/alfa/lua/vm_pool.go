@@ -139,6 +139,13 @@ func (sp *VMPool) SetCompiled(
 		},
 		func(vm *VM) {
 			vm.SetTop(0)
+			// The pool (sync.Pool) hands the same LState back on the next
+			// borrow, so re-arm the sandbox: without this, a script that
+			// overwrote dofile or the io/os proxy would leak that mutation
+			// into the next script sharing this VM slot. Cheap (a handful of
+			// SetGlobal calls) and unconditional — sandbox integrity is an
+			// invariant, not a per-borrow policy knob.
+			applySandboxRestrictions(vm.LState)
 		},
 	)
 

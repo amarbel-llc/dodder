@@ -43,7 +43,11 @@ function lua_sandbox_blocks_io_access { # @test
 
 	EOM
   assert_failure
-  assert_output --regexp 'io is not available in dodder Lua scripts'
+  # The full output is dodder's error-context tree (dynamic signature,
+  # timestamp, tai, and code locations); assert only the static actionable
+  # message line the sandbox raises. The ":3:" is the hook chunk's fixed line 3
+  # (the io.open call).
+  assert_line ':3: io is not available in dodder Lua scripts'
 }
 
 # A type whose on_commit_fields hook calls os.date must fail at commit time
@@ -72,5 +76,7 @@ function lua_sandbox_blocks_os_access { # @test
 
 	EOM
   assert_failure
-  assert_output --regexp 'dodder_today'
+  # As above: assert only the static actionable message line, which must point
+  # the script author at dodder_today() as the os.date replacement.
+  assert_line ':3: os is not available in dodder Lua scripts; use dodder_today() for the current date'
 }

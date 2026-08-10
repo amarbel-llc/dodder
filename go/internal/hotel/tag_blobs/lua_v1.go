@@ -1,8 +1,6 @@
 package tag_blobs
 
 import (
-	"time"
-
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/lib/0/iso_duration"
@@ -29,20 +27,18 @@ func MakeLuaSelfApplyV1(
 	}
 }
 
-// registerDateHelpers exposes the date math the hook VM needs but gopher-lua
-// lacks. dodder_advance_date(date, duration) advances a YYYY-MM-DD date by an
-// ISO-8601 duration (the PnY nM nW nD subset) and returns the advanced
-// YYYY-MM-DD string; on a bad date or duration it raises a lua error.
-// dodder_today() returns the current UTC date as a YYYY-MM-DD string; it
-// replaces os.date("!%Y-%m-%d") which is no longer available in the sandboxed VM.
+// registerDateHelpers exposes the dodder-specific date math a VM's scripts may
+// need but gopher-lua lacks. dodder_advance_date(date, duration) advances a
+// YYYY-MM-DD date by an ISO-8601 duration (the PnY nM nW nD subset) and returns
+// the advanced YYYY-MM-DD string; on a bad date or duration it raises a lua
+// error. It needs the dodder iso_duration package, so it is registered per-VM
+// here rather than in the lua package's sandbox setup.
+//
+// dodder_today() (the os.date("!%Y-%m-%d") replacement) is NOT registered here:
+// it needs only the time stdlib, so the lua package installs it in every
+// sandboxed VM via applySandboxRestrictions — see go/lib/alfa/lua/stdlib.go.
 func registerDateHelpers(vm *lua.VM) {
 	vm.SetGlobal("dodder_advance_date", vm.NewFunction(luaAdvanceDate))
-	vm.SetGlobal("dodder_today", vm.NewFunction(luaTodayDate))
-}
-
-func luaTodayDate(ls *lua.LState) int {
-	ls.Push(lua.LString(time.Now().UTC().Format("2006-01-02")))
-	return 1
 }
 
 func luaAdvanceDate(luaState *lua.LState) int {

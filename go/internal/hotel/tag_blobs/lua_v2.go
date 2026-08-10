@@ -21,6 +21,7 @@ func MakeLuaSelfApplyV2(
 		selfTable, _ := sku_lua.MakeLuaTablePoolV2(vm).GetWithRepool() //repool:owned
 		sku_lua.ToLuaTableV2(self, vm.LState, selfTable)
 		vm.SetGlobal("Self", selfTable.Transacted)
+		registerDateHelpers(vm)
 		return err
 	}
 }
