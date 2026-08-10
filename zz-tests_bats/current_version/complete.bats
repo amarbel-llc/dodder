@@ -134,6 +134,7 @@ function complete_subcmd { # @test
 		^init[[:space:]]+initialize a new repository$
 		^init-default[[:space:]]+initialize a repository with sensible defaults$
 		^init-from[[:space:]]+create a new repo copy-migrated from an existing local repo \(fresh instance identity, same keys; source untouched\)$
+		^init-from-lists[[:space:]]+consolidate N inventory-list files into a fresh repo through a Lua transform \(fresh keypair, full re-sign\)$
 		^init-workspace[[:space:]]+initialize a workspace directory$
 		^init-workspace-default[[:space:]]+initialize a workspace with default ignore patterns$
 		^install-mcp[[:space:]]+install MCP server configuration$

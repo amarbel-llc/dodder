@@ -7,17 +7,70 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_transfers"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
+	"code.linenisgreat.com/madder/go/pkgs/blob_stores"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
 	tap "code.linenisgreat.com/tap/go/pkgs/writer"
 )
+
+// makeTransformScriptReader opens the transform script from either a local file
+// (-script) or a stored blob addressed by markl id (-script-digest, via the
+// multi-store read fallback). The two are mutually exclusive and one is
+// required. Shared by every transform-pipeline consumer.
+func makeTransformScriptReader(
+	repo *local_working_copy.Repo,
+	scriptPath string,
+	scriptDigest string,
+) (readCloser io.ReadCloser, err error) {
+	switch {
+	case scriptPath != "" && scriptDigest != "":
+		err = errors.ErrorWithStackf(
+			"-script and -script-digest are mutually exclusive",
+		)
+		return readCloser, err
+
+	case scriptPath != "":
+		if readCloser, err = files.Open(scriptPath); err != nil {
+			err = errors.Wrapf(err, "opening -script %q", scriptPath)
+			return readCloser, err
+		}
+
+		return readCloser, err
+
+	case scriptDigest != "":
+		var id markl.Id
+
+		if err = id.Set(scriptDigest); err != nil {
+			err = errors.Wrapf(err, "invalid -script-digest %q", scriptDigest)
+			return readCloser, err
+		}
+
+		if readCloser, err = repo.GetEnvRepo().GetReadBlobStore().MakeBlobReader(
+			&id,
+		); err != nil {
+			err = errors.Wrapf(err, "reading -script-digest %q", scriptDigest)
+			return readCloser, err
+		}
+
+		return readCloser, err
+
+	default:
+		err = errors.ErrorWithStackf(
+			"one of -script or -script-digest is required",
+		)
+		return readCloser, err
+	}
+}
 
 // transformPipeline is the source-agnostic core of the FDR-0024/RFC-0008
 // transform mechanism, shared by its consumers (dodder#392): `transform`
@@ -39,6 +92,46 @@ type transformPipeline struct {
 	dryRun         bool
 	skipValidation bool
 	noNewObjects   bool
+
+	// disallowDuplicateObjectIds rejects a script whose output names the same
+	// object id more than once. `transform` sets it (its query source yields
+	// one latest version per id, so two same-id outputs mean the script merged
+	// two objects onto one id, silently losing one under last-write-wins). The
+	// inventory-list consumers (init-from-lists, clone -script) leave it OFF:
+	// a history union carries many (id,tai) versions per id BY DESIGN, and
+	// ruled fork-resolution is a deliberate same-id merge (dodder#392) — the
+	// import builder's within-batch (id,tai) reassign guards the genuine
+	// last-write-wins hazard instead. Do not "fix" this asymmetry.
+	disallowDuplicateObjectIds bool
+
+	// extraReadStores are read-only blob stores consulted ahead of the repo's
+	// own read view (and, under -dry_run, ahead of the staging store) by the
+	// blobs.read FFI and dry-run validation. init-from-lists passes its
+	// -blob-source stores here so the script can read source blobs and a dry
+	// run can validate against them. A real run does NOT validate against these
+	// — it copies referenced blobs into the target first (see
+	// copyReferencedBlobsBeforeCommit) and validates the target. Empty for
+	// `transform`.
+	extraReadStores []blob_stores.BlobStoreInitialized
+
+	// copyReferencedBlobsBeforeCommit copies every blob referenced by the
+	// committable output (each object's own Blob plus its field-level
+	// file<@digest references), if missing from the write store, out of the
+	// read view before the real commit. The inventory-list consumers set it so
+	// the target is SELF-CONTAINED: source blobs resolve via -blob-source during
+	// the run but are duplicated into the newborn, so the consolidation survives
+	// deleting the (large) legacy sources — the program's terminal step
+	// (dodder#392). Skipped under -dry_run (nothing commits; the overlay serves
+	// validation) and a no-op for `transform` (its blobs are already local).
+	copyReferencedBlobsBeforeCommit bool
+
+	// commit commits the built plan into the target repo and returns the number
+	// of objects committed. `transform` uses ExecutePlan (its objects are
+	// locally-authored and sealed under this repo's key at the working-list
+	// flush). The inventory-list consumers use remote_transfer.CommitPlan with
+	// OverwriteSignatures so foreign objects are re-signed under the newborn's
+	// key — ExecutePlan does NOT re-sign (dodder#392).
+	commit func(*import_plan.Plan) (int, error)
 }
 
 func (p transformPipeline) run() error {
@@ -64,6 +157,15 @@ func (p transformPipeline) run() error {
 	var onStaged func(digest string)
 	var validationReadStore mad_domain_interfaces.BlobStore
 
+	// -blob-source read-only stores (init-from-lists consolidation) are
+	// consulted ahead of the repo's own read view by the blobs.read FFI, so the
+	// script can read source blobs. A real run's validation reads the target
+	// instead (the referenced blobs are copied in before commit — see below);
+	// only a dry run validates against this overlay (set in the dry-run branch).
+	if len(p.extraReadStores) > 0 {
+		readStore = envRepo.MakeReadBlobStoreWithOverlay(p.extraReadStores...)
+	}
+
 	if p.dryRun {
 		stagingStore, dir, err := envRepo.MakeDiscardableStagingBlobStore()
 		if err != nil {
@@ -72,11 +174,15 @@ func (p transformPipeline) run() error {
 
 		// Blobs staged by blobs.write live only in the staging store, so both
 		// the blobs.read FFI and the output validation must read through an
-		// overlay that consults staging before the real read view — otherwise
-		// an object whose Blob was rewritten to a staged digest would fail
-		// validation, defeating a dry run of the very migrations this exists
-		// for.
-		overlay := envRepo.MakeReadBlobStoreWithOverlay(stagingStore)
+		// overlay that consults staging (then any -blob-source stores) before
+		// the real read view — otherwise an object whose Blob was rewritten to
+		// a staged digest would fail validation, defeating a dry run of the
+		// very migrations this exists for.
+		overlays := append(
+			[]blob_stores.BlobStoreInitialized{stagingStore},
+			p.extraReadStores...,
+		)
+		overlay := envRepo.MakeReadBlobStoreWithOverlay(overlays...)
 
 		stagingDir = dir
 		writeStore = stagingStore
@@ -134,7 +240,7 @@ func (p transformPipeline) run() error {
 	for _, object := range outputs {
 		idString := object.GetObjectId().String()
 
-		if idString != "" {
+		if p.disallowDuplicateObjectIds && idString != "" {
 			if _, dupe := seenOutputIds[idString]; dupe {
 				return errors.ErrorWithStackf(
 					"output contains %q more than once",
@@ -183,6 +289,24 @@ func (p transformPipeline) run() error {
 		return errors.ErrorWithStackf("transform plan has errors")
 	}
 
+	// Self-containment (dodder#392): before committing foreign objects, copy
+	// every referenced blob missing from the write store out of the read view
+	// (which includes -blob-source) so the target survives deleting the sources.
+	// This makes store.Commit resolve every blob natively from the target and
+	// lets validation read the target rather than the overlay. Skipped under
+	// -dry_run (nothing commits; the overlay serves validation) and a no-op for
+	// `transform` (its blobs are already local).
+	if p.copyReferencedBlobsBeforeCommit && !p.dryRun {
+		if err := copyReferencedBlobsIntoWriteStore(
+			envRepo,
+			plan,
+			readStore,
+			p.skipValidation,
+		); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+
 	if !p.skipValidation {
 		if err := p.validate(plan, validationReadStore); err != nil {
 			return err
@@ -197,12 +321,74 @@ func (p transformPipeline) run() error {
 		return nil
 	}
 
-	results, err := repo.ExecutePlan(plan)
+	committed, err := p.commit(plan)
 	if err != nil {
 		return errors.Wrap(err)
 	}
 
-	repo.GetUI().Printf("committed %d object(s)", results.Len())
+	repo.GetUI().Printf("committed %d object(s)", committed)
+
+	return nil
+}
+
+// copyReferencedBlobsIntoWriteStore streams every blob the committable output
+// references — each object's own Blob plus its field-level file<@digest
+// references — from src into the target repo's default (write) store, if not
+// already present. This makes a consolidation self-contained: the referenced
+// blobs are duplicated into the newborn so it survives deleting the -blob-source
+// stores (dodder#392). Copies are content-addressed and skipped when present,
+// so re-runs are cheap. When tolerateMissing is set (-skip_validation, staged
+// intermediate passes) a blob absent from every source is skipped rather than
+// erroring.
+func copyReferencedBlobsIntoWriteStore(
+	envRepo env_repo.Env,
+	plan *import_plan.Plan,
+	src mad_domain_interfaces.BlobStore,
+	tolerateMissing bool,
+) error {
+	blobImporter := blob_transfers.MakeBlobImporter(
+		envRepo.GetEnvBlobStore(),
+		src,
+		blob_stores.MakeBlobStoreMap(envRepo.GetDefaultBlobStore()),
+	)
+
+	copyOne := func(
+		blobId mad_domain_interfaces.MarklId,
+		object *sku.Transacted,
+	) error {
+		if err := blobImporter.ImportBlobIfNecessary(blobId, object); err != nil {
+			if tolerateMissing {
+				return nil
+			}
+
+			return errors.Wrapf(err, "copying referenced blob %s", blobId)
+		}
+
+		return nil
+	}
+
+	for i := range plan.Entries {
+		entry := &plan.Entries[i]
+
+		if !entry.Classification.IsCommittable() {
+			continue
+		}
+
+		object := entry.GetObject()
+		metadata := object.GetMetadata()
+
+		if blobDigest := metadata.GetBlobDigest(); !blobDigest.IsNull() {
+			if err := copyOne(blobDigest, object); err != nil {
+				return err
+			}
+		}
+
+		for refDigest := range metadata.AllBlobReferences() {
+			if err := copyOne(refDigest, object); err != nil {
+				return err
+			}
+		}
+	}
 
 	return nil
 }

@@ -74,28 +74,48 @@ func (env Env) MakeDiscardableStagingBlobStore() (
 	return store, dir, err
 }
 
-// MakeReadBlobStoreWithOverlay returns a read view that consults overlay first
-// and then the repo's normal read stores (default + fallbacks). It is the read
-// half of the -dry_run containment (dodder#390): pointing both the blobs.read
-// FFI and the transform's output validation at this view lets a dry run read
-// back blobs its blobs.write calls only staged — so read-your-writes holds and
-// validation of an object whose Blob was rewritten to a staged digest passes —
-// without the overlay store ever being written to by the real read path. It
-// mirrors makeReadBlobStore's multi construction, with overlay as the
-// (never-read-past) write target so it is tried first.
+// MakeReadBlobStoreWithOverlay returns a read view that consults the given
+// overlays first, in order, and then the repo's normal read stores (default +
+// fallbacks). At least one overlay must be given.
+//
+// It is the read half of the -dry_run containment (dodder#390): pointing both
+// the blobs.read FFI and the transform's output validation at this view lets a
+// dry run read back blobs its blobs.write calls only staged — so read-your-
+// writes holds and validation of an object whose Blob was rewritten to a staged
+// digest passes — without an overlay store ever being written to by the real
+// read path. dodder#392's init-from-lists also passes its read-only
+// -blob-source stores here (ahead of the staging store under -dry_run), so a
+// consolidation resolves source blobs it never copied into the newborn.
+//
+// It mirrors makeReadBlobStore's multi construction, with the first overlay as
+// the (never-read-past) write target so the overlays are tried first.
 func (env Env) MakeReadBlobStoreWithOverlay(
-	overlay blob_stores.BlobStoreInitialized,
+	overlays ...blob_stores.BlobStoreInitialized,
 ) mad_domain_interfaces.BlobStore {
 	defaultStore := env.blobStoreEnv.GetDefaultBlobStore()
 	defaultId := defaultStore.Path.GetId().String()
-	overlayId := overlay.Path.GetId().String()
 
-	readStores := make([]blob_stores.BlobStoreInitialized, 0)
+	overlayIds := make(map[string]struct{}, len(overlays))
+	for _, overlay := range overlays {
+		overlayIds[overlay.Path.GetId().String()] = struct{}{}
+	}
+
+	// The multi reads its write target first, then its Read stores in order:
+	// [overlays[0], overlays[1:]…, default, remaining fallbacks].
+	readStores := make(
+		[]blob_stores.BlobStoreInitialized,
+		0,
+		len(overlays)+1,
+	)
+	readStores = append(readStores, overlays[1:]...)
 	readStores = append(readStores, defaultStore)
 
 	for _, store := range env.blobStoreEnv.GetBlobStoresSorted() {
 		id := store.Path.GetId().String()
-		if id == defaultId || id == overlayId {
+		if id == defaultId {
+			continue
+		}
+		if _, isOverlay := overlayIds[id]; isOverlay {
 			continue
 		}
 
@@ -104,7 +124,7 @@ func (env Env) MakeReadBlobStoreWithOverlay(
 
 	multi, err := blob_stores.
 		NewMulti(env.GetActiveContext()).
-		WriteTo(overlay).
+		WriteTo(overlays[0]).
 		Read(readStores...).
 		ReadFill(false).
 		Build()

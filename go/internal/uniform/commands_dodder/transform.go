@@ -1,18 +1,14 @@
 package commands_dodder
 
 import (
-	"io"
-
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
-	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
-	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
-	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
 
@@ -108,7 +104,11 @@ func (cmd Transform) Run(req command.Request) {
 		),
 	)
 
-	scriptReader, err := cmd.makeScriptReader(localWorkingCopy)
+	scriptReader, err := makeTransformScriptReader(
+		localWorkingCopy,
+		cmd.Script,
+		cmd.ScriptDigest,
+	)
 	if err != nil {
 		localWorkingCopy.Cancel(err)
 		return
@@ -161,59 +161,23 @@ func (cmd Transform) Run(req command.Request) {
 		dryRun:         cmd.DryRun,
 		skipValidation: cmd.SkipValidation,
 		noNewObjects:   cmd.NoNewObjects,
+		// transform's query source yields one latest version per id, so a
+		// same-id output means the script merged two objects — reject it.
+		disallowDuplicateObjectIds: true,
+		// transform's objects are locally-authored; ExecutePlan seals them
+		// under this repo's key at the working-list flush (no re-sign needed).
+		commit: func(plan *import_plan.Plan) (int, error) {
+			results, err := localWorkingCopy.ExecutePlan(plan)
+			if err != nil {
+				return 0, err
+			}
+
+			return results.Len(), nil
+		},
 	}
 
 	if err := pipeline.run(); err != nil {
 		localWorkingCopy.Cancel(err)
 		return
-	}
-}
-
-func (cmd Transform) makeScriptReader(
-	localWorkingCopy *local_working_copy.Repo,
-) (readCloser io.ReadCloser, err error) {
-	switch {
-	case cmd.Script != "" && cmd.ScriptDigest != "":
-		err = errors.ErrorWithStackf(
-			"-script and -script-digest are mutually exclusive",
-		)
-		return readCloser, err
-
-	case cmd.Script != "":
-		if readCloser, err = files.Open(cmd.Script); err != nil {
-			err = errors.Wrapf(err, "opening -script %q", cmd.Script)
-			return readCloser, err
-		}
-
-		return readCloser, err
-
-	case cmd.ScriptDigest != "":
-		var id markl.Id
-
-		if err = id.Set(cmd.ScriptDigest); err != nil {
-			err = errors.Wrapf(
-				err,
-				"invalid -script-digest %q",
-				cmd.ScriptDigest,
-			)
-			return readCloser, err
-		}
-
-		if readCloser, err = localWorkingCopy.GetEnvRepo().GetReadBlobStore().MakeBlobReader(
-			&id,
-		); err != nil {
-			err = errors.Wrapf(
-				err,
-				"reading -script-digest %q",
-				cmd.ScriptDigest,
-			)
-			return readCloser, err
-		}
-
-		return readCloser, err
-
-	default:
-		err = errors.ErrorWithStackf("one of -script or -script-digest is required")
-		return readCloser, err
 	}
 }
