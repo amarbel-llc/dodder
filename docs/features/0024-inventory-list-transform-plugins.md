@@ -131,10 +131,12 @@ script in any language operate on the serialized inventory-list text format
 would have to hand-roll inventory-list parsing and blob access themselves,
 in whatever language they chose, for every script. The explicit goal is
 that a transform script should focus on the transform, not on plumbing. An
-embedded Lua plugin, using the existing VM pool
-(`go/lib/alfa/lua/vm_pool.go`) and native Go-backed bindings for the object
-list and blob store, gives scripts that plumbing for free. It also inherits
-the VM pool's existing sandboxing — a real security property worth keeping
+embedded Lua plugin, using the existing Lua VM machinery
+(`go/lib/alfa/lua/`; the transform holds one VM for the batch pass rather
+than borrowing from the pool — see RFC-0008 and #390) and native Go-backed
+bindings for the object list and blob store, gives scripts that plumbing
+for free. It also inherits that machinery's existing sandboxing — a real
+security property worth keeping
 for a plugin that gets raw blob-write power. The sandbox allowlist
 (see `go/lib/alfa/lua/CLAUDE.md`) admits only: `base` (minus
 `dofile`/`loadfile`/`load`/`loadstring`), `package` (preload searcher only;

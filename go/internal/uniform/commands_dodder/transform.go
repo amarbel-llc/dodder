@@ -10,7 +10,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
-	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
@@ -19,6 +18,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
@@ -163,6 +163,42 @@ func (cmd Transform) Run(req command.Request) {
 
 	envRepo := localWorkingCopy.GetEnvRepo()
 
+	// Wire the blob FFI. A real run writes to the default store and reads
+	// through the multi-store view. A dry run (dodder#390) must not touch the
+	// real store, so blobs.write goes to a discardable staging store and
+	// blobs.read overlays that staging store over the real read view
+	// (preserving read-your-writes within the run); staged digests are recorded
+	// so the summary can surface what landed and where.
+	writeStore := mad_domain_interfaces.BlobStore(envRepo.GetDefaultBlobStore())
+	readStore := mad_domain_interfaces.BlobStore(envRepo.GetReadBlobStore())
+
+	var stagingDir string
+	var stagedDigests []string
+	var onStaged func(digest string)
+	var validationReadStore mad_domain_interfaces.BlobStore
+
+	if cmd.DryRun {
+		stagingStore, dir, stagingErr := envRepo.MakeDiscardableStagingBlobStore()
+		if stagingErr != nil {
+			localWorkingCopy.Cancel(errors.Wrap(stagingErr))
+			return
+		}
+
+		// Blobs staged by blobs.write live only in the staging store, so both
+		// the blobs.read FFI and the output validation must read through an
+		// overlay that consults staging before the real read view — otherwise
+		// an object whose Blob was rewritten to a staged digest would fail
+		// validation, defeating a dry run of the very migrations this exists
+		// for.
+		overlay := envRepo.MakeReadBlobStoreWithOverlay(stagingStore)
+
+		stagingDir = dir
+		writeStore = stagingStore
+		readStore = overlay
+		validationReadStore = overlay
+		onStaged = func(digest string) { stagedDigests = append(stagedDigests, digest) }
+	}
+
 	var binding *sku_lua.ListTransformV1
 
 	vm, err := (&lua.VMPoolBuilder{}).WithReader(
@@ -172,8 +208,8 @@ func (cmd Transform) Run(req command.Request) {
 		binding.RegisterGlobals()
 
 		blobsTable := vm.NewTable()
-		vm.SetField(blobsTable, "read", vm.NewFunction(makeLuaBlobRead(envRepo)))
-		vm.SetField(blobsTable, "write", vm.NewFunction(makeLuaBlobWrite(envRepo)))
+		vm.SetField(blobsTable, "read", vm.NewFunction(makeLuaBlobRead(readStore)))
+		vm.SetField(blobsTable, "write", vm.NewFunction(makeLuaBlobWrite(writeStore, onStaged)))
 		vm.SetGlobal("blobs", blobsTable)
 
 		return nil
@@ -278,7 +314,7 @@ func (cmd Transform) Run(req command.Request) {
 	}
 
 	if !cmd.SkipValidation {
-		if !cmd.validate(localWorkingCopy, plan) {
+		if !cmd.validate(localWorkingCopy, plan, validationReadStore) {
 			return
 		}
 	}
@@ -286,6 +322,7 @@ func (cmd Transform) Run(req command.Request) {
 	cmd.printPlanSummary(localWorkingCopy, plan)
 
 	if cmd.DryRun {
+		cmd.reportStagedBlobs(localWorkingCopy, stagingDir, stagedDigests)
 		localWorkingCopy.GetUI().Printf("dry run: not committed")
 		return
 	}
@@ -357,6 +394,7 @@ func (cmd Transform) makeScriptReader(
 func (cmd Transform) validate(
 	localWorkingCopy *local_working_copy.Repo,
 	plan *import_plan.Plan,
+	readBlobStore mad_domain_interfaces.BlobStore,
 ) (ok bool) {
 	var candidates []*sku.Transacted
 
@@ -377,8 +415,9 @@ func (cmd Transform) validate(
 		tw,
 		quiter.MakeSeqErrorFromSeq(slices.Values(candidates)),
 		seqVerificationOptions{
-			SkipProbes: true,
-			QuietOk:    true,
+			SkipProbes:    true,
+			QuietOk:       true,
+			ReadBlobStore: readBlobStore,
 		},
 	)
 
@@ -419,8 +458,42 @@ func (cmd Transform) printPlanSummary(
 	plan.FormatSummary(localWorkingCopy.GetEnv().GetUIFile(), boxFormatter)
 }
 
+// reportStagedBlobs surfaces what a dry run's blobs.write calls staged and
+// where, so the results can be inspected before a real run. The staging
+// directory is always safe to delete. When nothing was staged the empty run
+// directory is removed so repeated dry runs don't litter the cache.
+func (cmd Transform) reportStagedBlobs(
+	localWorkingCopy *local_working_copy.Repo,
+	stagingDir string,
+	stagedDigests []string,
+) {
+	if stagingDir == "" {
+		return
+	}
+
+	if len(stagedDigests) == 0 {
+		// nothing landed; best-effort so no empty run dir is left behind
+		_ = os.Remove(stagingDir)
+		return
+	}
+
+	localWorkingCopy.GetUI().Printf(
+		"dry run: staged %d blob(s) under %s (safe to delete)",
+		len(stagedDigests),
+		stagingDir,
+	)
+
+	for _, digest := range stagedDigests {
+		localWorkingCopy.GetUI().Printf("  staged blob %s", digest)
+	}
+}
+
+// makeLuaBlobRead reads a blob by digest from readStore. A real run passes the
+// multi-store read view; a dry run passes an overlay that consults the staging
+// store before that view, so blobs.write output earlier in the same run is
+// readable back (the overlay handles the fallback internally).
 func makeLuaBlobRead(
-	envRepo env_repo.Env,
+	readStore mad_domain_interfaces.BlobStore,
 ) lua.LGFunction {
 	return func(luaState *lua.LState) int {
 		digestString := luaState.ToString(1)
@@ -432,7 +505,7 @@ func makeLuaBlobRead(
 			return 0
 		}
 
-		reader, err := envRepo.GetReadBlobStore().MakeBlobReader(&id)
+		reader, err := readStore.MakeBlobReader(&id)
 		if err != nil {
 			luaState.RaiseError("reading blob %q: %s", digestString, err)
 			return 0
@@ -456,13 +529,19 @@ func makeLuaBlobRead(
 	}
 }
 
+// makeLuaBlobWrite writes a blob to writeStore and returns its digest. On a real
+// run writeStore is the default store and onStaged is nil. Under -dry_run
+// writeStore is a discardable staging store (never the repo's real store) and
+// onStaged records each digest so the dry-run summary can surface what was
+// staged.
 func makeLuaBlobWrite(
-	envRepo env_repo.Env,
+	writeStore mad_domain_interfaces.BlobStore,
+	onStaged func(digest string),
 ) lua.LGFunction {
 	return func(luaState *lua.LState) int {
 		body := luaState.ToString(1)
 
-		writer, err := envRepo.GetDefaultBlobStore().MakeBlobWriter(nil)
+		writer, err := writeStore.MakeBlobWriter(nil)
 		if err != nil {
 			luaState.RaiseError("opening blob writer: %s", err)
 			return 0
@@ -479,7 +558,13 @@ func makeLuaBlobWrite(
 			return 0
 		}
 
-		luaState.Push(lua.LString(writer.GetMarklId().String()))
+		digest := writer.GetMarklId().String()
+
+		if onStaged != nil {
+			onStaged(digest)
+		}
+
+		luaState.Push(lua.LString(digest))
 
 		return 1
 	}

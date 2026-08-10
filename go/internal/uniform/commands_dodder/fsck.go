@@ -20,6 +20,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/madder/go/pkgs/blob_stores"
+	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
@@ -185,6 +186,11 @@ type seqVerificationOptions struct {
 	SkipBlobs  bool
 	Recompute  bool
 	QuietOk    bool
+	// ReadBlobStore overrides the blob read view used for content and
+	// blob-reference verification. nil uses the repo's normal read view; the
+	// transform command passes a staging overlay under -dry_run so a
+	// dry-run's staged blobs verify (dodder#390).
+	ReadBlobStore mad_domain_interfaces.BlobStore
 }
 
 // runSeqVerification is fsck's verification core: it walks seq and checks
@@ -204,7 +210,11 @@ func runSeqVerification(
 		Build()
 
 	defaultDigestType := repo.GetEnvRepo().GetObjectDigestType()
-	readBlobStore := repo.GetEnvRepo().GetReadBlobStore()
+
+	readBlobStore := options.ReadBlobStore
+	if readBlobStore == nil {
+		readBlobStore = repo.GetEnvRepo().GetReadBlobStore()
+	}
 
 	if err := errors.RunChildContextWithPrintTicker(
 		repo,

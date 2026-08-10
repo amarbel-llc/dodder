@@ -38,7 +38,7 @@ Flags:
 |---|---|---|
 | `-script <path>` | — | Load the Lua script from a local file. Mutually exclusive with `-script-digest`. |
 | `-script-digest <markl-id>` | — | Load the Lua script from a stored blob, addressed by markl id via the multi-store read fallback (`GetReadBlobStore`). No dedicated script type object is required; how the blob got stored (e.g. `dodder new` with any type, `madder write`) is out of scope. Mutually exclusive with `-script`. |
-| `-dry_run` | `false` | Build and validate the output plan; report it (per-entry listing plus summary); do not call `ExecutePlan`. The script itself still executes, so `blobs.write` persists blob content even under `-dry_run` (blobs are content-addressed; unreferenced ones are garbage). |
+| `-dry_run` | `false` | Build and validate the output plan; report it (per-entry listing plus summary); do not call `ExecutePlan`. The script still executes, but `blobs.write` is contained (#390): its output goes to a discardable, run-stamped staging store under the repo's cache tree, never the real blob store, and `blobs.read` overlays that staging store over the real read view so read-your-writes holds within the run. The dry-run summary reports the staging location and the digests staged there; that directory is always safe to delete. |
 | `-skip_validation` | `false` | Skip the fsck-style validation pass on the transform's output, and tolerate edge-expansion failures (dangling references) when building the input list. For staged, intentionally-inconsistent intermediate migration passes. |
 | `-no_new_objects` | `false` | Reject any output object whose object id is not present in the input list. |
 
@@ -78,9 +78,17 @@ chunk executes:
 - `dodder` — carries `list()`, the object-list binding (§3).
 - `blobs` — the blob FFI (§4).
 
-The script chunk executes during VM preparation (the pool's `PrepareVM`
-compiles and `PCall`s it); its `return` value is read back on the Go side
-from `vm.Top` and MUST be the handle produced by `dodder.list()` (§3.4).
+The transform builds a single, explicitly-owned VM
+(`VMPoolBuilder.BuildSingleVM`) rather than borrowing from the pool: the
+chunk is compiled once and `PCall`ed exactly once during VM preparation,
+and its `return` value is read back on the Go side from `vm.Top` and MUST
+be the handle produced by `dodder.list()` (§3.4). Single-run execution is
+deliberate (#390): the pooled path is `sync.Pool`-backed, so a chunk run in
+a trial VM could execute a second time if that VM were evicted before its
+first borrow, firing non-idempotent side effects (chiefly `blobs.write`)
+twice; one owned VM removes that window structurally. The pool is unchanged
+and remains in use for the repeated per-object tag-filter workload it was
+built for.
 
 ### 3. The `dodder` list binding
 
@@ -196,8 +204,12 @@ Two functions, registered as Lua globals under a `blobs` table:
   produces, so it round-trips into blob-reference fields and future
   digest-bearing assignments.
 
-Both resolve their stores the same way other commands do — no new
-store-resolution logic.
+On a real run both resolve their stores the same way other commands do — no
+new store-resolution logic: `blobs.write` targets the default store and
+`blobs.read` the multi-store read view. Under `-dry_run` (§6) the FFI is
+rebound to a staging overlay — writes go to a discardable staging store and
+reads consult it before the real read view — so the real store is never
+written yet read-your-writes still holds within the run.
 
 ### 5. Validation
 
@@ -230,7 +242,10 @@ or not `-dry_run` was also set.
 
 `-dry_run` means: perform steps 1–5, print the plan summary (entry count
 plus counts by `Classification`, per FDR-0002/FDR-0006's existing
-classification vocabulary), then `dry run: not committed`. Without
+classification vocabulary), surface any blobs `blobs.write` staged (their
+count and the run-stamped staging directory, which is always safe to
+delete — see §4 and `env_repo.MakeDiscardableStagingBlobStore`), then
+`dry run: not committed`. Without
 `-dry_run`, proceed to `local.ExecutePlan(plan)`
 (`go/internal/romeo/local_working_copy/execute_plan.go`) exactly as it
 exists today — lock, commit per entry, unlock — with

@@ -294,3 +294,66 @@ function transform_script_digest_loads_stored_script { # @test
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" from-stored-script tag-3 tag-4]
 	EOM
 }
+
+# dodder#390: under -dry_run, blobs.write must NOT reach the repo's real blob
+# store — it lands in a discardable staging store, whose location and staged
+# digests the summary surfaces, and the object is never committed.
+function transform_dry_run_stages_blob_without_writing_real_store { # @test
+  cat >t.lua <<-'EOM'
+		local list = dodder.list()
+
+		for object in list:each() do
+		  if object.Kennung == "one/uno" then
+		    object.Blob = blobs.write("dry run staged content\n")
+		  end
+		end
+
+		return list
+	EOM
+
+  run_dodder transform -dry_run -script t.lua
+  assert_success
+  # the run-stamped staging path is dynamic, hence --regexp
+  assert_output --regexp 'dry run: staged 1 blob\(s\) under .+/transform-dry_run/run-[^ ]+ \(safe to delete\)'
+  assert_output --regexp 'dry run: not committed'
+
+  digest="$(echo "$output" | grep -oE 'staged blob blake2b256-[a-z0-9]+' | grep -oE 'blake2b256-[a-z0-9]+' | head -n1)"
+  [ -n "$digest" ]
+
+  # the staged blob reached no real store (multi-store cat cannot find it)
+  run_madder cat "$digest"
+  assert_failure
+
+  # and one/uno was not committed — it still points at its original blob
+  run_dodder show one/uno
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+}
+
+# dodder#390: a digest blobs.write produced earlier in a dry run must be
+# readable back within the same run (the staging store overlays the real read
+# view). The in-script assert fails the command if read-your-writes is broken.
+function transform_dry_run_blob_write_is_readable_within_the_run { # @test
+  cat >t.lua <<-'EOM'
+		local list = dodder.list()
+
+		for object in list:each() do
+		  if object.Kennung == "one/uno" then
+		    local digest = blobs.write("staged then read back\n")
+		    assert(
+		      blobs.read(digest) == "staged then read back\n",
+		      "read-your-writes within a dry run must return the staged bytes"
+		    )
+		    object.Blob = digest
+		  end
+		end
+
+		return list
+	EOM
+
+  run_dodder transform -dry_run -script t.lua
+  assert_success
+  assert_output --regexp 'dry run: staged 1 blob\(s\) under .+/transform-dry_run/run-[^ ]+ \(safe to delete\)'
+}

@@ -138,6 +138,14 @@ func (vpb *VMPoolBuilder) BuildSingleVM() (vm *VM, err error) {
 		return nil, err
 	}
 
+	// Match Build()'s trial-VM check: the chunk must return a table. Callers
+	// (the transform command) layer stricter checks on vm.Top on top of this.
+	if _, err = vm.GetTopTableOrError(); err != nil {
+		vm.LState.Close()
+		err = errors.Wrap(err)
+		return nil, err
+	}
+
 	return vm, err
 }
 
