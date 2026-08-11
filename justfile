@@ -788,17 +788,92 @@ debug-cutover-smoke:
 # progress from outside the process — run this interactively instead so the
 # per-object commit lines and blob_store status lines stream live.
 #
-# import the live default repo's export into the dodder-migration-staging repo
-[group('debug')]
-debug-import-staging-baseline:
+# Phase 1 of the take4 consolidation (execution plan:
+# ~/.claude/plans/bright-soaring-fiddle.md, top section): export the live
+# default repo's full history via BOTH the index path (`export`) and the
+# log path (`export-inventory_lists`, dodder board task #8) into the
+# take4 work dir, then print per-file object-line counts. The two-path
+# comparison is a free index-health check on the consolidation's primary
+# source: the log path is authoritative, so an index-path shortfall means
+# the index is silently incomplete. Read-only against the live repo.
+[group('consolidate')]
+consolidate-export-baseline:
   #!/usr/bin/env bash
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug)
   export PATH="$bin/bin:$PATH"
-  sp=/home/sasha/workspaces/dodder-migration-staging
-  dodder import -verbose -repo_id dodder-migration-staging -plan-format summary "$sp/default-repo.export.inventory_list"
-  echo "==> done, staging repo object count:"
-  dodder show -repo_id dodder-migration-staging '+?z,t,k,e' | wc -l
+  work=/home/sasha/workspaces/take4/exports
+  mkdir -p "$work"
+  # -repo_id default on every invocation: the worktree contains a stray
+  # explore-recipe .dodder/, and the cwd walk-up would silently resolve
+  # to that toy repo instead of the live XDG-user default. An explicit
+  # XDG-user bare name is scope-pinned (FDR-0019 / #294) and immune to
+  # the override. The identity header makes the output self-identify
+  # which repo was actually exported.
+  echo "==> exporting from repo:"
+  dodder info-repo -repo_id default pubkey instance-id store-version
+  echo "==> index-path export: dodder export '+?z,t,k,e'"
+  dodder export -repo_id default '+?z,t,k,e' > "$work/default.index-path.inventory_list"
+  echo "==> log-path export (list objects only)"
+  dodder export-inventory_lists -repo_id default > "$work/default.log-path.lists-only.inventory_list"
+  echo "==> log-path export (contents)"
+  dodder export-inventory_lists -repo_id default -contents > "$work/default.log-path.contents.inventory_list"
+  echo "==> object-line counts ('[' lines; log-contents includes the :b list objects themselves, the index path does not)"
+  for f in "$work"/default.*.inventory_list; do
+    printf '%8d %s\n' "$(grep -c '^\[' "$f" || true)" "$f"
+  done
+
+# Checksum the migration2 workbench export files so the take4 union input
+# manifest can exclude content-duplicate files and the known-empty one.
+# CONTENT-normalized: sums only the object lines (leading '['), because
+# the hyphence metadata header can differ between exports of identical
+# content and would make a raw byte sum diverge spuriously. Read-only;
+# consolidation Phase 1.
+[group('consolidate')]
+consolidate-checksum-workbench:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd /home/sasha/workspaces/dodder_migration2
+  for f in ./*.inventory_list ./*.inventory_list-v2 dodder-val/*.inventory_list; do
+    # (grep || true): an empty/object-less file is data, not an error.
+    # Two sums: ordered (byte content of object lines) and sorted
+    # (order-insensitive set identity) — same sorted sum with different
+    # ordered sums means a reordered export of the same object set.
+    ordered=$( (grep '^\[' "$f" || true) | b2sum | cut -d' ' -f1)
+    sorted=$( (grep '^\[' "$f" || true) | sort | b2sum | cut -d' ' -f1)
+    count=$( (grep -c '^\[' "$f" || true) )
+    printf 'ordered=%.16s sorted=%.16s %8d  %s\n' "$ordered" "$sorted" "$count" "$f"
+  done | sort -k2
+
+# Characterize the differences between the same-count-different-set
+# workbench export variants (nov10 base/abc/d; oct19 a/b/c/base) found by
+# consolidate-checksum-workbench: per pair, how many object lines are
+# unique to each side, with truncated samples. Distinguishes benign
+# encoding drift (e.g. signature wire-form changes between export runs —
+# would spuriously fork the take4 union) from genuinely different object
+# sets. Read-only; consolidation Phase 1.
+[group('consolidate')]
+consolidate-diff-variants:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd /home/sasha/workspaces/dodder_migration2
+  tmp=$(mktemp)
+  trap 'rm -f "$tmp"' EXIT
+  pair() {
+    echo "=== $1 vs $2"
+    comm -3 <(grep '^\[' "$1" | sort) <(grep '^\[' "$2" | sort) > "$tmp" || true
+    left=$( (grep -c '^\[' "$tmp" || true) )
+    right=$( (grep -c $'^\t' "$tmp" || true) )
+    echo "unique-to-first: $left   unique-to-second: $right"
+    echo "--- first-side samples:"
+    (grep '^\[' "$tmp" || true) | head -2 | cut -c1-300
+    echo "--- second-side samples:"
+    (grep $'^\t' "$tmp" || true) | head -2 | cut -c2-300
+  }
+  pair inventory_lists-2025-11-10-a.inventory_list-v2 inventory_lists-2025-11-10.inventory_list-v2
+  pair inventory_lists-2025-11-10-a.inventory_list-v2 inventory_lists-2025-11-10-d.inventory_list-v2
+  pair objects-2025-10-19-a.inventory_list-v2 objects-2025-10-19.inventory_list-v2
+  pair objects-2025-10-19-c.inventory_list-v2 objects-2025-10-19.inventory_list-v2
 
 # Read-only full-repo signature audit via fsck -recompute. NOTE: this
 # does NOT detect the description-newline-collapse bug class (dodder#TBD,

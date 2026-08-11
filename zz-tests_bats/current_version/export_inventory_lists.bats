@@ -66,6 +66,81 @@ function export_inventory_lists_contents { # @test
 	EOM
 }
 
+function export_inventory_lists_tolerates_missing_list_blob { # @test
+  run_dodder_init_disable_age
+
+  {
+    echo "---"
+    echo "# first"
+    echo "- tag-a"
+    echo "! md"
+    echo "---"
+    echo
+    echo "body one"
+  } >first_zettel
+  run_dodder new -edit=false first_zettel
+  assert_success
+
+  # Manufacture the hole class found in the live default repo (take4
+  # pathology P9): snapshot the store's files, make one more commit,
+  # and delete exactly the files that commit added — which includes its
+  # inventory-list blob. Layout-agnostic: on-disk names are hex of the
+  # raw digest bytes, so they can never be derived from the base32
+  # markl id in shell.
+  find .madder -type f | sort >"$BATS_TEST_TMPDIR/store-before"
+
+  {
+    echo "---"
+    echo "# second"
+    echo "- tag-b"
+    echo "! md"
+    echo "---"
+    echo
+    echo "body two"
+  } >second_zettel
+  run_dodder new -edit=false second_zettel
+  assert_success
+
+  find .madder -type f | sort >"$BATS_TEST_TMPDIR/store-after"
+  comm -13 "$BATS_TEST_TMPDIR/store-before" "$BATS_TEST_TMPDIR/store-after" >"$BATS_TEST_TMPDIR/new-files"
+  [[ -s "$BATS_TEST_TMPDIR/new-files" ]] || fail "second commit added no files under .madder"
+  while read -r f; do
+    rm -f "$f"
+    [[ ! -e $f ]] || fail "still exists after rm: $f"
+  done <"$BATS_TEST_TMPDIR/new-files"
+
+  # Default posture: reject-and-report, failing on the missing blob
+  # specifically (not some unrelated error).
+  run_dodder export-inventory_lists -contents
+  assert_failure
+  assert_output --regexp 'does not exist locally'
+  plain_output="$output"
+
+  # Diagnose resurrection: nothing may have re-created the deleted
+  # files between the failing run and the tolerant run.
+  while read -r f; do
+    [[ ! -e $f ]] || fail "deleted blob resurrected by the failing export run: $f"
+  done <"$BATS_TEST_TMPDIR/new-files"
+
+  # Recovery posture: loud per-hole report on stderr, export continues.
+  # Three lists in the log (genesis + two zettel commits); the third's
+  # blob is gone, so its member is absent: 3 list objects + genesis's 3
+  # members + the first zettel = 7 lines.
+  run_dodder export-inventory_lists -contents -tolerate-missing-blobs
+  assert_success
+  if ! grep -q 'HOLE: list' <<<"$output"; then
+    fail "no HOLE report in tolerant run.
+=== tolerant output:
+$output
+=== plain (failing) run output was:
+$plain_output
+=== deleted files were:
+$(cat "$BATS_TEST_TMPDIR/new-files")"
+  fi
+  assert_output --regexp '1 missing list blob\(s\) tolerated; the exported stream is INCOMPLETE for those lists'
+  [[ $(grep -c '^\[' <<<"$output") -eq 7 ]] || fail "expected 7 object lines, got: $(grep -c '^\[' <<<"$output")"
+}
+
 function export_inventory_lists_survives_cache_wipe { # @test
   run_dodder_init_disable_age
   create_test_zettels

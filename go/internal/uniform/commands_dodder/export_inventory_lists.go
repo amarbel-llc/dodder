@@ -5,6 +5,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
+	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	mad_blob_io "code.linenisgreat.com/madder/go/pkgs/blob_io"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
@@ -27,7 +29,8 @@ func init() {
 type ExportInventoryLists struct {
 	command_components_dodder.LocalWorkingCopy
 
-	Contents bool
+	Contents             bool
+	TolerateMissingBlobs bool
 }
 
 var (
@@ -63,6 +66,14 @@ func (cmd *ExportInventoryLists) SetFlagDefinitions(
 		false,
 		"also emit each list's decoded member objects (full object history)",
 	)
+	flagSet.BoolVar(
+		&cmd.TolerateMissingBlobs,
+		"tolerate-missing-blobs",
+		false,
+		"with -contents: report a list whose blob is missing on stderr and "+
+			"keep exporting instead of aborting (recovery posture: the stream "+
+			"is explicitly incomplete for the reported lists)",
+	)
 }
 
 func (cmd ExportInventoryLists) Run(req command.Request) {
@@ -78,8 +89,28 @@ func (cmd ExportInventoryLists) Run(req command.Request) {
 		// Each list object is yielded first, then its members — both come
 		// from the log + blob store only.
 		seq = func(yield func(*sku.Transacted, error) bool) {
+			var missing int
+
 			for objectWithList, iterErr := range inventoryListStore.AllInventoryListObjectsAndContents() {
 				if iterErr != nil {
+					// A list blob missing from every configured store is a
+					// real recovery scenario (a hole in the repo's own
+					// history); with the flag set it is reported loudly and
+					// the export continues — the stream stays complete for
+					// every OTHER list, and the caller cross-fills the hole
+					// from another source (e.g. the index-path `export`).
+					if cmd.TolerateMissingBlobs &&
+						mad_blob_io.IsErrBlobMissing(iterErr) {
+						missing++
+						ui.Err().Printf(
+							"HOLE: list %s: %s (continuing per -tolerate-missing-blobs)",
+							sku.String(objectWithList.List),
+							iterErr,
+						)
+
+						continue
+					}
+
 					if !yield(nil, errors.Wrap(iterErr)) {
 						return
 					}
@@ -90,6 +121,13 @@ func (cmd ExportInventoryLists) Run(req command.Request) {
 				if !yield(objectWithList.Object, nil) {
 					return
 				}
+			}
+
+			if missing > 0 {
+				ui.Err().Printf(
+					"%d missing list blob(s) tolerated; the exported stream is INCOMPLETE for those lists",
+					missing,
+				)
 			}
 		}
 	} else {
