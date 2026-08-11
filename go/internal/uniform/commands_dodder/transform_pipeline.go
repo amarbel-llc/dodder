@@ -12,6 +12,8 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/golf/blob_transfers"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
+	"code.linenisgreat.com/dodder/go/internal/papa/repo"
+	"code.linenisgreat.com/dodder/go/internal/quebec/remote_transfer"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
 	"code.linenisgreat.com/dodder/go/lib/alfa/quiter"
@@ -331,6 +333,47 @@ func (p transformPipeline) run() error {
 	return nil
 }
 
+// makeReSigningCommit returns a pipeline commit that imports the plan through
+// remote_transfer.CommitPlan with OverwriteSignatures, re-signing every object
+// under `local`'s own key (FinalizeAndSignOverwrite). The inventory-list
+// consumers (init-from-lists, clone -script) share it: their source objects are
+// foreign (list files, a pull stream) and MUST be re-signed under the
+// newborn/clone key — ExecutePlan preserves foreign signatures, and a script
+// that modified an object invalidates its remote signature anyway (dodder#392).
+func makeReSigningCommit(
+	local *local_working_copy.Repo,
+) func(*import_plan.Plan) (int, error) {
+	return func(plan *import_plan.Plan) (int, error) {
+		importer := local.MakeImporter(
+			repo.ImporterOptions{
+				OverwriteSignatures: true,
+				CheckedOutPrinter:   local.PrinterCheckedOutConflictsForRemoteTransfers(),
+			},
+			sku.GetStoreOptionsImport(),
+		)
+
+		if err := remote_transfer.CommitPlan(
+			local,
+			local,
+			local,
+			importer,
+			plan,
+		); err != nil {
+			return 0, err
+		}
+
+		committed := 0
+
+		for i := range plan.Entries {
+			if plan.Entries[i].Classification.IsCommittable() {
+				committed++
+			}
+		}
+
+		return committed, nil
+	}
+}
+
 // copyReferencedBlobsIntoWriteStore streams every blob the committable output
 // references — each object's own Blob plus its field-level file<@digest
 // references — from src into the target repo's default (write) store, if not
@@ -352,10 +395,40 @@ func copyReferencedBlobsIntoWriteStore(
 		blob_stores.MakeBlobStoreMap(envRepo.GetDefaultBlobStore()),
 	)
 
-	copyOne := func(
-		blobId mad_domain_interfaces.MarklId,
-		object *sku.Transacted,
-	) error {
+	for i := range plan.Entries {
+		entry := &plan.Entries[i]
+
+		if !entry.Classification.IsCommittable() {
+			continue
+		}
+
+		if err := copyObjectReferencedBlobs(
+			&blobImporter,
+			entry.GetObject(),
+			tolerateMissing,
+		); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// copyObjectReferencedBlobs copies one object's own Blob plus its field-level
+// file<@digest references into the write store via blobImporter, if missing.
+// Content-addressed, so present blobs are skipped and re-runs are cheap. When
+// tolerateMissing is set (-skip_validation, staged intermediate passes) a blob
+// absent from the source is skipped rather than erroring. Shared by the
+// pipeline's post-plan self-containment pass (copyReferencedBlobsIntoWriteStore)
+// and clone -script's pre-transform blob copy (dodder#392).
+func copyObjectReferencedBlobs(
+	blobImporter *blob_transfers.BlobImporter,
+	object *sku.Transacted,
+	tolerateMissing bool,
+) error {
+	metadata := object.GetMetadata()
+
+	copyOne := func(blobId mad_domain_interfaces.MarklId) error {
 		if err := blobImporter.ImportBlobIfNecessary(blobId, object); err != nil {
 			if tolerateMissing {
 				return nil
@@ -367,26 +440,15 @@ func copyReferencedBlobsIntoWriteStore(
 		return nil
 	}
 
-	for i := range plan.Entries {
-		entry := &plan.Entries[i]
-
-		if !entry.Classification.IsCommittable() {
-			continue
+	if blobDigest := metadata.GetBlobDigest(); !blobDigest.IsNull() {
+		if err := copyOne(blobDigest); err != nil {
+			return err
 		}
+	}
 
-		object := entry.GetObject()
-		metadata := object.GetMetadata()
-
-		if blobDigest := metadata.GetBlobDigest(); !blobDigest.IsNull() {
-			if err := copyOne(blobDigest, object); err != nil {
-				return err
-			}
-		}
-
-		for refDigest := range metadata.AllBlobReferences() {
-			if err := copyOne(refDigest, object); err != nil {
-				return err
-			}
+	for refDigest := range metadata.AllBlobReferences() {
+		if err := copyOne(refDigest); err != nil {
+			return err
 		}
 	}
 

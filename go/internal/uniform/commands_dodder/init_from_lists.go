@@ -4,9 +4,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
-	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
-	"code.linenisgreat.com/dodder/go/internal/papa/repo"
-	"code.linenisgreat.com/dodder/go/internal/quebec/remote_transfer"
 	"code.linenisgreat.com/dodder/go/internal/romeo/local_working_copy"
 	"code.linenisgreat.com/dodder/go/internal/tango/command_components_dodder"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
@@ -188,7 +185,7 @@ func (cmd *InitFromLists) Run(req command.Request) {
 		// ExecutePlan preserves foreign signatures; CommitPlan with
 		// OverwriteSignatures resets sig/pubkey/digest and re-signs
 		// (FinalizeAndSignOverwrite) under the newborn's genesis key.
-		commit: cmd.makeReSigningCommit(local),
+		commit: makeReSigningCommit(local),
 	}
 
 	if err := pipeline.run(); err != nil {
@@ -246,38 +243,4 @@ func (cmd InitFromLists) readUnion(
 	}
 
 	return objects, err
-}
-
-func (cmd InitFromLists) makeReSigningCommit(
-	local *local_working_copy.Repo,
-) func(*import_plan.Plan) (int, error) {
-	return func(plan *import_plan.Plan) (int, error) {
-		importer := local.MakeImporter(
-			repo.ImporterOptions{
-				OverwriteSignatures: true,
-				CheckedOutPrinter:   local.PrinterCheckedOutConflictsForRemoteTransfers(),
-			},
-			sku.GetStoreOptionsImport(),
-		)
-
-		if err := remote_transfer.CommitPlan(
-			local,
-			local,
-			local,
-			importer,
-			plan,
-		); err != nil {
-			return 0, err
-		}
-
-		committed := 0
-
-		for i := range plan.Entries {
-			if plan.Entries[i].Classification.IsCommittable() {
-				committed++
-			}
-		}
-
-		return committed, nil
-	}
 }

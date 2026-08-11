@@ -6,6 +6,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/command"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/golf/blob_transfers"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
 	"code.linenisgreat.com/dodder/go/internal/juliett/queries"
 	"code.linenisgreat.com/dodder/go/internal/papa/repo"
@@ -37,6 +38,9 @@ type Clone struct {
 	command_components_dodder.RemoteTransfer
 	command_components_dodder.Query
 	Organize bool
+
+	Script       string
+	ScriptDigest string
 }
 
 var (
@@ -74,10 +78,39 @@ func (cmd *Clone) SetFlagDefinitions(
 		false,
 		"open organize to filter which objects get cloned before pulling",
 	)
+
+	flagDefinitions.StringVar(
+		&cmd.Script,
+		"script",
+		"",
+		"path to a Lua list-in/list-out transform applied to the pulled objects before commit; the clone is born already rewritten and re-signed under its own key (direct transfer only; mutually exclusive with -script-digest)",
+	)
+
+	flagDefinitions.StringVar(
+		&cmd.ScriptDigest,
+		"script-digest",
+		"",
+		"markl id of a stored blob containing the Lua transform script (direct transfer only; mutually exclusive with -script)",
+	)
 }
 
 func (cmd Clone) Run(req command.Request) {
 	cmd.SetLocationFromPositionalRequired(req, "new repo id")
+
+	// clone -script buffers the pull stream and runs the transform pipeline in
+	// place of a direct-commit import. That interception only exists for the
+	// direct (local-path) transport today; the networked receive paths (drtp,
+	// legacy HTTP) commit as they stream and would need restructuring to buffer,
+	// deferred to a followup (dodder#393). Validate before genesis so a rejected
+	// invocation leaves no half-created repo behind.
+	scriptSet := cmd.Script != "" || cmd.ScriptDigest != ""
+
+	if scriptSet && !cmd.IsDirectTransfer() {
+		req.Cancel(errors.BadRequestf(
+			"clone -script is only supported for direct (local-path) transfer; networked -script is deferred (dodder#393)",
+		))
+		return
+	}
 
 	local := cmd.OnTheFirstDay(req)
 
@@ -132,7 +165,13 @@ func (cmd Clone) Run(req command.Request) {
 
 	var networkConfigDescriptor remote_proto.ConfigDescriptor
 
-	if useProto {
+	if scriptSet {
+		// Direct transfer only (validated above): buffer the pulled objects and
+		// run the transform pipeline instead of a direct-commit import.
+		if err := cmd.runScriptedClone(req, local, remote, queryGroup); err != nil {
+			req.Cancel(err)
+		}
+	} else if useProto {
 		conn, client := cmd.MakeProtoConnectionFromObject(req, local, remoteObject)
 
 		var fetchErr error
@@ -170,6 +209,89 @@ func (cmd Clone) Run(req command.Request) {
 		// seeds from it (RFC 0005 §HTTP Backend Transport).
 		cmd.seedConfigFromHTTPSource(req, local, remote)
 	}
+}
+
+// runScriptedClone is the clone -script consumer of the transform pipeline
+// (dodder#392): buffer the source's queried objects, run one Lua transform over
+// them, and commit the result re-signed under the clone's own key — a clone
+// born already rewritten (tag cleanup, fork resolution, hash migration) rather
+// than pulled verbatim and corrected after.
+//
+// Direct transfer only (the caller validates): the source is a local repo whose
+// inventory list and blob stores are readable in-process. The networked
+// transports commit as they stream and are deferred (dodder#393).
+func (cmd Clone) runScriptedClone(
+	req command.Request,
+	local *local_working_copy.Repo,
+	remote repo.Repo,
+	queryGroup *queries.Query,
+) error {
+	source, ok := remote.(*local_working_copy.Repo)
+	if !ok {
+		return errors.ErrorWithStackf(
+			"clone -script expected a local source repo, got %T",
+			remote,
+		)
+	}
+
+	scriptReader, err := makeTransformScriptReader(
+		local,
+		cmd.Script,
+		cmd.ScriptDigest,
+	)
+	if err != nil {
+		return err
+	}
+
+	defer errors.ContextMustClose(local, scriptReader)
+
+	list, err := source.MakeInventoryList(queryGroup)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	var objects []*sku.Transacted
+
+	for object := range list.All() {
+		cloned, _ := object.CloneTransacted() //repool:owned
+		objects = append(objects, cloned)
+	}
+
+	local.GetUI().Printf("cloning %d object(s) through transform", len(objects))
+
+	// Copy every source blob the buffered objects reference into the clone's own
+	// store BEFORE the transform, so the script reads and the commit resolves
+	// blobs natively from the clone and the clone is self-contained. Done as a
+	// pre-copy rather than init-from-lists' read overlay because the source and
+	// clone share an XDG namespace: overlaying the source's stores would put the
+	// clone's own write store in the read list, which MakeReadBlobStoreWithOverlay
+	// rejects.
+	blobImporter := blob_transfers.MakeBlobImporter(
+		local.GetEnvRepo().GetEnvBlobStore(),
+		source.GetEnvRepo().GetReadBlobStore(),
+		blob_stores.MakeBlobStoreMap(local.GetEnvRepo().GetDefaultBlobStore()),
+	)
+
+	for _, object := range objects {
+		if err := copyObjectReferencedBlobs(&blobImporter, object, false); err != nil {
+			return err
+		}
+	}
+
+	pipeline := transformPipeline{
+		repo:         local,
+		scriptReader: scriptReader,
+		objects:      objects,
+		// A clone carries the source's full history — many (id,tai) versions per
+		// id by design — so do NOT reject duplicate object ids (dodder#392).
+		disallowDuplicateObjectIds: false,
+		// A transformed object cannot keep its source signature, and clone
+		// already re-signs everything under the clone's own key — same commit
+		// path as init-from-lists.
+		commit: makeReSigningCommit(local),
+	}
+
+	return pipeline.run()
 }
 
 // seedConfigFromHTTPSource seeds the clone's config log from an HTTP-backend
