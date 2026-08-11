@@ -56,19 +56,7 @@ function clone_script_transforms_and_resigns { # @test
   assert_success
 }
 
-# dodder#393 / dodder#396: -script buffers the pulled objects, which the direct
-# and HTTP transports support (both implement the repo.Repo buffering surface).
-# Over the websocket protocol it commits inline and is rejected before any dial —
-# validated before genesis, so no half-created repo is left.
-function clone_script_websocket_rejected { # @test
-  run_clone_default_with \
-    -remote-connection-type url-websocket \
-    -script /dev/null \
-    .default \
-    toml-repo-uri-v0 \
-    "http://127.0.0.1:1" \
-    +zettel,typ,etikett
-
-  assert_failure
-  assert_output --partial 'clone -script is not supported over the websocket protocol'
-}
+# NOTE: clone -script now works over EVERY transport — direct and HTTP here,
+# drtp/websocket via the staging mode (dodder#396, covered by
+# clone_script_over_websocket in serve_proto.bats). There is no longer a
+# websocket-rejection path to assert.

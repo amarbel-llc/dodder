@@ -241,6 +241,57 @@ function clone_over_websocket { # @test
 	EOM
 }
 
+# clone_script_over_websocket (dodder#396) exercises clone -script over the drtp
+# websocket transport. FetchToBuffer's staging mode buffers the streamed objects
+# — their blobs already landing in the clone's store — instead of committing them
+# inline; the transform then tags every object "cloned" and commits the result
+# re-signed under the clone's own key. A clean fsck proves the clone is
+# self-contained (every referenced blob arrived in the stream and resolves
+# locally).
+function clone_script_over_websocket { # @test
+  bootstrap_them
+  start_proto_server them -public
+
+  export DODDER_XDG_UTILITY_OVERRIDE="$us_home"
+  export MADDER_XDG_UTILITY_OVERRIDE="$us_home"
+
+  mkdir -p us
+  pushd us || exit 1
+
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+
+		for object in l:each() do
+		  object.Etiketten["cloned"] = true
+		end
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder clone \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -remote-connection-type url-websocket \
+    -script "$script" \
+    .default \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" cloned tag]
+	EOM
+
+  run_dodder fsck
+  assert_success
+}
+
 # clone_over_websocket_default_query_transfers_metadata_blob_reference is the
 # drtp twin of blob_ref_transfer.bats's default-query clone test (#329): the
 # DEFAULT clone query resolves to the inventory-list genre, so the sender's

@@ -137,6 +137,7 @@ func (server *Server) serveSession(s *session) (err error) {
 			want,
 			sku.GetStoreOptionsRemoteTransfer(),
 			nil,
+			nil,
 		); err != nil {
 			s.writeError(err.Error(), 500)
 			err = errors.Wrap(err)

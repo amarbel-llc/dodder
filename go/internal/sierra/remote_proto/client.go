@@ -66,6 +66,29 @@ func (client *Client) Fetch(
 	query string,
 	options repo.ImporterOptions,
 ) (descriptor ConfigDescriptor, err error) {
+	return client.fetch(conn, query, options, nil)
+}
+
+// FetchToBuffer is the staging variant of Fetch (clone -script, dodder#396):
+// it returns the fetched objects buffered instead of importing them, so a
+// transform can rewrite and re-sign them. The closure's blobs still stream into
+// the local store during the fetch, so the buffered objects' blob references
+// resolve locally; the config descriptor is captured as by Fetch.
+func (client *Client) FetchToBuffer(
+	conn io.ReadWriteCloser,
+	query string,
+	options repo.ImporterOptions,
+) (objects []*sku.Transacted, descriptor ConfigDescriptor, err error) {
+	descriptor, err = client.fetch(conn, query, options, &objects)
+	return objects, descriptor, err
+}
+
+func (client *Client) fetch(
+	conn io.ReadWriteCloser,
+	query string,
+	options repo.ImporterOptions,
+	bufferedObjectsOut *[]*sku.Transacted,
+) (descriptor ConfigDescriptor, err error) {
 	s := makeSession(conn)
 	defer errors.DeferredCloser(&err, s)
 
@@ -107,6 +130,7 @@ func (client *Client) Fetch(
 		want,
 		sku.GetStoreOptionsImport(),
 		&configFrame,
+		bufferedObjectsOut,
 	); err != nil {
 		err = errors.Wrap(err)
 		return descriptor, err

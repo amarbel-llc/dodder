@@ -98,21 +98,11 @@ func (cmd Clone) Run(req command.Request) {
 	cmd.SetLocationFromPositionalRequired(req, "new repo id")
 
 	// clone -script buffers the pulled objects and runs the transform pipeline
-	// in place of a direct-commit import. This works for any transport whose
-	// remote implements the repo.Repo buffering surface (MakeInventoryList +
-	// GetBlobStore) — direct (local-path) and legacy HTTP both do. The
-	// drtp/websocket transport commits inline as it streams (client.Fetch →
-	// receiveClosure) and exposes no such surface, so it is rejected; buffering
-	// it is a followup (dodder#396). Validate before genesis so a rejected
-	// invocation leaves no half-created repo behind.
+	// in place of a direct-commit import — the clone is born already rewritten
+	// (dodder#392). It works over every transport: direct and HTTP buffer through
+	// the repo.Repo interface (MakeInventoryList + GetBlobStore), while
+	// drtp/websocket buffers via client.FetchToBuffer's staging mode (dodder#396).
 	scriptSet := cmd.Script != "" || cmd.ScriptDigest != ""
-
-	if scriptSet && cmd.IsWebSocketProtocol() {
-		req.Cancel(errors.BadRequestf(
-			"clone -script is not supported over the websocket protocol; use direct or HTTP transfer (proto support: dodder#396)",
-		))
-		return
-	}
 
 	local := cmd.OnTheFirstDay(req)
 
@@ -167,10 +157,34 @@ func (cmd Clone) Run(req command.Request) {
 
 	var networkConfigDescriptor remote_proto.ConfigDescriptor
 
-	if scriptSet {
-		// Direct or HTTP (proto rejected above): buffer the pulled objects and
-		// run the transform pipeline instead of a direct-commit import.
-		if err := cmd.runScriptedClone(req, local, remote, queryGroup); err != nil {
+	if scriptSet && useProto {
+		// drtp/websocket scripted clone (dodder#396): fetch the objects into a
+		// buffer instead of committing inline (the stream still lands their blobs
+		// in the clone's store), then transform and commit re-signed. The config
+		// descriptor is captured for seeding exactly as the non-scripted proto
+		// clone does.
+		conn, client := cmd.MakeProtoConnectionFromObject(req, local, remoteObject)
+
+		objects, descriptor, fetchErr := client.FetchToBuffer(
+			conn,
+			queryGroup.String(),
+			cmd.WithPrintCopies(true),
+		)
+		if fetchErr != nil {
+			req.Cancel(fetchErr)
+		} else {
+			networkConfigDescriptor = descriptor
+
+			// Blobs already streamed into the clone, so no pre-copy is needed —
+			// run the transform directly over the buffered objects.
+			if err := cmd.runTransformOverBuffer(local, objects); err != nil {
+				req.Cancel(err)
+			}
+		}
+	} else if scriptSet {
+		// Direct or HTTP: buffer the pulled objects (and pre-copy their blobs)
+		// and run the transform pipeline instead of a direct-commit import.
+		if err := cmd.runScriptedClone(local, remote, queryGroup); err != nil {
 			req.Cancel(err)
 		}
 	} else if useProto {
@@ -213,34 +227,19 @@ func (cmd Clone) Run(req command.Request) {
 	}
 }
 
-// runScriptedClone is the clone -script consumer of the transform pipeline
-// (dodder#392): buffer the source's queried objects, run one Lua transform over
-// them, and commit the result re-signed under the clone's own key — a clone
-// born already rewritten (tag cleanup, fork resolution, hash migration) rather
-// than pulled verbatim and corrected after.
-//
-// It works against the repo.Repo INTERFACE, so it serves any transport whose
-// remote can buffer: direct (local-path) and legacy HTTP both implement
-// MakeInventoryList (the object set) and GetBlobStore (the read source for the
-// blob pre-copy). The drtp/websocket transport commits inline as it streams and
-// exposes neither, so the caller rejects it (dodder#396).
+// runScriptedClone is the direct/HTTP clone -script consumer: buffer the
+// source's queried objects and pre-copy every referenced blob into the clone,
+// then hand off to the shared transform tail. It works against the repo.Repo
+// INTERFACE, so both the direct (*local_working_copy.Repo) and legacy-HTTP
+// (remote_http) clients serve it — MakeInventoryList gives the object set,
+// GetBlobStore the read source for the pre-copy. The drtp/websocket transport
+// uses FetchToBuffer instead (its stream lands the blobs locally), so it needs
+// no pre-copy and skips straight to runTransformOverBuffer.
 func (cmd Clone) runScriptedClone(
-	req command.Request,
 	local *local_working_copy.Repo,
 	remote repo.Repo,
 	queryGroup *queries.Query,
 ) error {
-	scriptReader, err := makeTransformScriptReader(
-		local,
-		cmd.Script,
-		cmd.ScriptDigest,
-	)
-	if err != nil {
-		return err
-	}
-
-	defer errors.ContextMustClose(local, scriptReader)
-
 	list, err := remote.MakeInventoryList(queryGroup)
 	if err != nil {
 		return errors.Wrap(err)
@@ -252,8 +251,6 @@ func (cmd Clone) runScriptedClone(
 		cloned, _ := object.CloneTransacted() //repool:owned
 		objects = append(objects, cloned)
 	}
-
-	local.GetUI().Printf("cloning %d object(s) through transform", len(objects))
 
 	// Copy every source blob the buffered objects reference into the clone's own
 	// store BEFORE the transform, so the script reads and the commit resolves
@@ -275,6 +272,32 @@ func (cmd Clone) runScriptedClone(
 			return err
 		}
 	}
+
+	return cmd.runTransformOverBuffer(local, objects)
+}
+
+// runTransformOverBuffer runs the transform pipeline over an already-buffered,
+// blobs-already-local object set and commits it re-signed under the clone's own
+// key. It is the shared tail of every clone -script transport: direct/HTTP
+// (runScriptedClone, after MakeInventoryList + blob pre-copy) and drtp/websocket
+// (FetchToBuffer, whose stream already landed the blobs locally). dodder#392,
+// dodder#396.
+func (cmd Clone) runTransformOverBuffer(
+	local *local_working_copy.Repo,
+	objects []*sku.Transacted,
+) error {
+	scriptReader, err := makeTransformScriptReader(
+		local,
+		cmd.Script,
+		cmd.ScriptDigest,
+	)
+	if err != nil {
+		return err
+	}
+
+	defer errors.ContextMustClose(local, scriptReader)
+
+	local.GetUI().Printf("cloning %d object(s) through transform", len(objects))
 
 	pipeline := transformPipeline{
 		repo:         local,

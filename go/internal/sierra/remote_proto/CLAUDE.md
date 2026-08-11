@@ -29,6 +29,11 @@ transport so it can ride a websocket.
   driving `store.MakeEdgeExplorer` to compute the transitive closure.
 - `transfer.go` — `sendClosure` (sender) / `receiveClosure` (receiver). The
   sender streams blobs first, then the object batch, then a completion ack.
+  `receiveClosure` has an opt-in staging mode (`bufferedObjectsOut`): when set
+  it decodes the object batch into a buffer for `clone -script` to transform
+  and re-sign instead of importing it inline, skipping the merge negotiator
+  (a fresh clone has no history). Blobs still stream to the local store, so
+  every non-scripted receiver passes nil and is unaffected (dodder#396).
 - `server.go` / `client.go` — repo-backed wrappers. `Server.ServeConn` runs
   one session; `Client.Fetch` / `Client.Push` initiate one.
 - `transport_websocket.go` — `Server.Serve` (HTTP listener, `/drtp` upgrade,

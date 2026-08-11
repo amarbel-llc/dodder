@@ -427,6 +427,13 @@ func sendObjects(
 // descriptor if the sender sends a drtp-config-v1 frame. A clone passes a
 // non-nil pointer to capture the source's config-log head for seeding;
 // every other receiver (pull, push) passes nil and the frame is discarded.
+// bufferedObjectsOut, when non-nil, switches the receiver into staging mode
+// (clone -script, dodder#396): the objects frame is decoded into the buffer
+// for a transform to rewrite and re-sign instead of being imported inline.
+// Blobs still stream into the local store, so the buffered objects' blob
+// references resolve locally; a fresh clone has no history to merge, so the
+// negotiator and inline import are skipped. Every non-scripted receiver
+// passes nil for the ordinary import path.
 func receiveClosure(
 	env env_ui.Env,
 	s *session,
@@ -434,6 +441,7 @@ func receiveClosure(
 	want control,
 	storeOptions sku.StoreOptions,
 	configDescriptorOut *control,
+	bufferedObjectsOut *[]*sku.Transacted,
 ) (err error) {
 	// Read have-checks span every read store (FDR-0015) so blobs already
 	// held in an ancestor/XDG store are not re-requested; writes still land
@@ -555,6 +563,24 @@ func receiveClosure(
 			if payload, err = readFramePayload(s.reader, length); err != nil {
 				err = errors.Wrap(err)
 				return err
+			}
+
+			// Staging mode (clone -script, dodder#396): buffer the objects for a
+			// transform to rewrite and re-sign instead of importing them inline.
+			// The batch's blobs already streamed into the local store above, and
+			// a fresh clone has no local history, so the merge negotiator and the
+			// import are both skipped.
+			if bufferedObjectsOut != nil {
+				if err = decodeObjectsIntoBuffer(
+					dst,
+					payload,
+					bufferedObjectsOut,
+				); err != nil {
+					err = errors.Wrap(err)
+					return err
+				}
+
+				continue
 			}
 
 			// #299: the sender ships each object's full history in this batch
@@ -753,6 +779,35 @@ func addObjectsToNegotiator(
 		}
 
 		negotiator.AddRemoteObject(object)
+	}
+
+	return err
+}
+
+// decodeObjectsIntoBuffer decodes the transferred object batch into out,
+// cloning each object so it outlives the decode iteration. It is the staging
+// receive mode's substitute for importObjects (clone -script, dodder#396): the
+// buffered objects are handed to the transform pipeline to rewrite and re-sign
+// instead of being committed inline. The batch's blobs already streamed into
+// the local store, so the buffered objects' blob references resolve locally.
+func decodeObjectsIntoBuffer(
+	dst *local_working_copy.Repo,
+	payload []byte,
+	out *[]*sku.Transacted,
+) (err error) {
+	seq := dst.GetInventoryListCoderCloset().AllDecodedObjectsFromStream(
+		bytes.NewReader(payload),
+		nil,
+	)
+
+	for object, iterErr := range seq {
+		if iterErr != nil {
+			err = errors.Wrap(iterErr)
+			return err
+		}
+
+		cloned, _ := object.CloneTransacted() //repool:owned
+		*out = append(*out, cloned)
 	}
 
 	return err

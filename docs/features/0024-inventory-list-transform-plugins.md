@@ -201,9 +201,9 @@ re-signed under the new repo's key, since a transformed object cannot keep
 its source signature) and make the result self-contained (every referenced
 source blob is copied into the new repo, so it survives deleting the
 sources). RFC-0008 §7 gives the concrete surface. `clone -script` works over
-the direct and legacy-HTTP transports (both buffer through the `repo.Repo`
-interface); the drtp/websocket transport commits inline and is deferred
-(dodder#396).
+every transport — direct and legacy HTTP buffer through the `repo.Repo`
+interface, and drtp/websocket buffers through a staging mode in the receive
+core (dodder#396).
 
 ## Open Questions
 

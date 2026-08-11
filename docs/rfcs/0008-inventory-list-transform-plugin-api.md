@@ -328,13 +328,14 @@ dodder clone -direct <path> -script <path> <repo-id> [query args...]
 `init-from-lists` genesises a fresh repo (fresh keypair, fresh instance
 identity, end-state config, `ExcludeDefaultType`) and consolidates N
 inventory-list files through one transform — git-filter-branch into a fresh
-repo. `clone -script` adds the transform to clone's existing genesis+pull. It
-works over any transport whose remote implements the `repo.Repo` buffering
-surface (`MakeInventoryList` for the object set + `GetBlobStore` for the
-blob pre-copy) — **direct (local-path) and legacy HTTP**. The drtp/websocket
-transport commits inline as it streams (`client.Fetch` → `receiveClosure`)
-and exposes neither, so it is rejected up front; buffering it is deferred
-(dodder#396). Both reuse the same `-script`/`-script-digest` and validation
+repo. `clone -script` adds the transform to clone's existing genesis+pull, and
+works over **every transport**. Direct (local-path) and legacy HTTP buffer
+through the `repo.Repo` surface (`MakeInventoryList` for the object set +
+`GetBlobStore` for the blob pre-copy); the drtp/websocket transport buffers
+through `client.FetchToBuffer`'s staging mode — `receiveClosure` decodes the
+objects frame into a buffer instead of importing inline, and since its blobs
+already stream into the clone's store, no pre-copy is needed there
+(dodder#396). All reuse the same `-script`/`-script-digest` and validation
 surface described above.
 
 ## Non-goals
