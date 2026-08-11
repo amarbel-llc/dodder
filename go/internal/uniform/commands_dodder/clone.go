@@ -97,17 +97,19 @@ func (cmd *Clone) SetFlagDefinitions(
 func (cmd Clone) Run(req command.Request) {
 	cmd.SetLocationFromPositionalRequired(req, "new repo id")
 
-	// clone -script buffers the pull stream and runs the transform pipeline in
-	// place of a direct-commit import. That interception only exists for the
-	// direct (local-path) transport today; the networked receive paths (drtp,
-	// legacy HTTP) commit as they stream and would need restructuring to buffer,
-	// deferred to a followup (dodder#393). Validate before genesis so a rejected
+	// clone -script buffers the pulled objects and runs the transform pipeline
+	// in place of a direct-commit import. This works for any transport whose
+	// remote implements the repo.Repo buffering surface (MakeInventoryList +
+	// GetBlobStore) — direct (local-path) and legacy HTTP both do. The
+	// drtp/websocket transport commits inline as it streams (client.Fetch →
+	// receiveClosure) and exposes no such surface, so it is rejected; buffering
+	// it is a followup (dodder#396). Validate before genesis so a rejected
 	// invocation leaves no half-created repo behind.
 	scriptSet := cmd.Script != "" || cmd.ScriptDigest != ""
 
-	if scriptSet && !cmd.IsDirectTransfer() {
+	if scriptSet && cmd.IsWebSocketProtocol() {
 		req.Cancel(errors.BadRequestf(
-			"clone -script is only supported for direct (local-path) transfer; networked -script is deferred (dodder#393)",
+			"clone -script is not supported over the websocket protocol; use direct or HTTP transfer (proto support: dodder#396)",
 		))
 		return
 	}
@@ -166,7 +168,7 @@ func (cmd Clone) Run(req command.Request) {
 	var networkConfigDescriptor remote_proto.ConfigDescriptor
 
 	if scriptSet {
-		// Direct transfer only (validated above): buffer the pulled objects and
+		// Direct or HTTP (proto rejected above): buffer the pulled objects and
 		// run the transform pipeline instead of a direct-commit import.
 		if err := cmd.runScriptedClone(req, local, remote, queryGroup); err != nil {
 			req.Cancel(err)
@@ -217,23 +219,17 @@ func (cmd Clone) Run(req command.Request) {
 // born already rewritten (tag cleanup, fork resolution, hash migration) rather
 // than pulled verbatim and corrected after.
 //
-// Direct transfer only (the caller validates): the source is a local repo whose
-// inventory list and blob stores are readable in-process. The networked
-// transports commit as they stream and are deferred (dodder#393).
+// It works against the repo.Repo INTERFACE, so it serves any transport whose
+// remote can buffer: direct (local-path) and legacy HTTP both implement
+// MakeInventoryList (the object set) and GetBlobStore (the read source for the
+// blob pre-copy). The drtp/websocket transport commits inline as it streams and
+// exposes neither, so the caller rejects it (dodder#396).
 func (cmd Clone) runScriptedClone(
 	req command.Request,
 	local *local_working_copy.Repo,
 	remote repo.Repo,
 	queryGroup *queries.Query,
 ) error {
-	source, ok := remote.(*local_working_copy.Repo)
-	if !ok {
-		return errors.ErrorWithStackf(
-			"clone -script expected a local source repo, got %T",
-			remote,
-		)
-	}
-
 	scriptReader, err := makeTransformScriptReader(
 		local,
 		cmd.Script,
@@ -245,7 +241,7 @@ func (cmd Clone) runScriptedClone(
 
 	defer errors.ContextMustClose(local, scriptReader)
 
-	list, err := source.MakeInventoryList(queryGroup)
+	list, err := remote.MakeInventoryList(queryGroup)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -261,14 +257,16 @@ func (cmd Clone) runScriptedClone(
 
 	// Copy every source blob the buffered objects reference into the clone's own
 	// store BEFORE the transform, so the script reads and the commit resolves
-	// blobs natively from the clone and the clone is self-contained. Done as a
-	// pre-copy rather than init-from-lists' read overlay because the source and
-	// clone share an XDG namespace: overlaying the source's stores would put the
-	// clone's own write store in the read list, which MakeReadBlobStoreWithOverlay
-	// rejects.
+	// blobs natively from the clone and the clone is self-contained. A pre-copy
+	// rather than init-from-lists' read overlay: the source and clone can share
+	// an XDG namespace, and overlaying the source's stores would put the clone's
+	// own write store in the read list, which MakeReadBlobStoreWithOverlay
+	// rejects. remote.GetBlobStore() is the source's own read view (direct) or
+	// the read-only HTTP blob wrapper (HTTP) — either resolves every referenced
+	// blob by digest.
 	blobImporter := blob_transfers.MakeBlobImporter(
 		local.GetEnvRepo().GetEnvBlobStore(),
-		source.GetEnvRepo().GetReadBlobStore(),
+		remote.GetBlobStore(),
 		blob_stores.MakeBlobStoreMap(local.GetEnvRepo().GetDefaultBlobStore()),
 	)
 

@@ -56,9 +56,10 @@ function clone_script_transforms_and_resigns { # @test
   assert_success
 }
 
-# dodder#392 / dodder#393: -script buffers the pull stream, which only the
-# direct transport supports today. Over the websocket protocol it is rejected
-# before any dial — validated before genesis, so no half-created repo is left.
+# dodder#393 / dodder#396: -script buffers the pulled objects, which the direct
+# and HTTP transports support (both implement the repo.Repo buffering surface).
+# Over the websocket protocol it commits inline and is rejected before any dial —
+# validated before genesis, so no half-created repo is left.
 function clone_script_websocket_rejected { # @test
   run_clone_default_with \
     -remote-connection-type url-websocket \
@@ -69,5 +70,5 @@ function clone_script_websocket_rejected { # @test
     +zettel,typ,etikett
 
   assert_failure
-  assert_output --partial 'clone -script is only supported for direct'
+  assert_output --partial 'clone -script is not supported over the websocket protocol'
 }

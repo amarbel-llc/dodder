@@ -58,6 +58,50 @@ function clone_history_zettel_type_tag_port { # @test
   try_add_new_after_clone
 }
 
+# clone_script_over_http (dodder#393) exercises clone -script over the HTTP
+# transport. The pipeline works against the repo.Repo interface, so the
+# remote_http client (MakeInventoryList + GetBlobStore) buffers exactly like a
+# direct source: the clone is born rewritten (every object tagged "cloned"),
+# re-signed under the clone's own key, and self-contained — a clean fsck (which
+# reads only the clone's stores) proves every referenced blob, streamed over
+# HTTP, was copied in.
+function clone_script_over_http { # @test
+  them="them"
+  bootstrap "$them"
+
+  start_server them
+
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+
+		for object in l:each() do
+		  object.Etiketten["cloned"] = true
+		end
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  run_clone_default_with \
+    -script "$script" \
+    .default \
+    toml-repo-uri-v0 \
+    "http://${server_addr}" \
+    +zettel,typ,etikett
+
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" cloned this_is_the_first this_is_the_second]
+		[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" cloned tag]
+	EOM
+
+  run_dodder fsck
+  assert_success
+}
+
 # clone_over_http_seeds_config_from_source exercises RFC 0005 §HTTP Backend
 # Transport: the source edits its config to a distinctive marker and serves
 # it over HTTP; a clone over http:// fetches the source's config descriptor
