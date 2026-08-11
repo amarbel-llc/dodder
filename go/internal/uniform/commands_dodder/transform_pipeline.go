@@ -2,8 +2,8 @@ package commands_dodder
 
 import (
 	"io"
+	"iter"
 	"os"
-	"slices"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -140,11 +140,6 @@ func (p transformPipeline) run() error {
 	repo := p.repo
 	envRepo := repo.GetEnvRepo()
 
-	inputIds := make(map[string]struct{}, len(p.objects))
-	for _, object := range p.objects {
-		inputIds[object.GetObjectId().String()] = struct{}{}
-	}
-
 	// Wire the blob FFI. A real run writes to the default store and reads
 	// through the multi-store view. A dry run (dodder#390) must not touch the
 	// real store, so blobs.write goes to a discardable staging store and
@@ -158,15 +153,6 @@ func (p transformPipeline) run() error {
 	var stagedDigests []string
 	var onStaged func(digest string)
 	var validationReadStore mad_domain_interfaces.BlobStore
-
-	// -blob-source read-only stores (init-from-lists consolidation) are
-	// consulted ahead of the repo's own read view by the blobs.read FFI, so the
-	// script can read source blobs. A real run's validation reads the target
-	// instead (the referenced blobs are copied in before commit — see below);
-	// only a dry run validates against this overlay (set in the dry-run branch).
-	if len(p.extraReadStores) > 0 {
-		readStore = envRepo.MakeReadBlobStoreWithOverlay(p.extraReadStores...)
-	}
 
 	if p.dryRun {
 		stagingStore, dir, err := envRepo.MakeDiscardableStagingBlobStore()
@@ -191,6 +177,13 @@ func (p transformPipeline) run() error {
 		readStore = overlay
 		validationReadStore = overlay
 		onStaged = func(digest string) { stagedDigests = append(stagedDigests, digest) }
+	} else if len(p.extraReadStores) > 0 {
+		// -blob-source read-only stores (init-from-lists consolidation) are
+		// consulted ahead of the repo's own read view by the blobs.read FFI, so
+		// the script can read source blobs. A real run's validation reads the
+		// target instead — the referenced blobs are copied in before commit (see
+		// copyReferencedBlobsBeforeCommit) — so validationReadStore stays nil.
+		readStore = envRepo.MakeReadBlobStoreWithOverlay(p.extraReadStores...)
 	}
 
 	var binding *sku_lua.ListTransformV1
@@ -232,35 +225,8 @@ func (p transformPipeline) run() error {
 		return errors.Wrap(err)
 	}
 
-	// A script reassigning one handle's Kennung onto another object's id would
-	// otherwise commit two revisions onto one object (last write wins) while
-	// the other object's update silently vanishes — always an error,
-	// independent of -no_new_objects. Added objects (empty id, allocated later)
-	// are exempt.
-	seenOutputIds := make(map[string]struct{}, len(outputs))
-
-	for _, object := range outputs {
-		idString := object.GetObjectId().String()
-
-		if p.disallowDuplicateObjectIds && idString != "" {
-			if _, dupe := seenOutputIds[idString]; dupe {
-				return errors.ErrorWithStackf(
-					"output contains %q more than once",
-					object.GetObjectId(),
-				)
-			}
-
-			seenOutputIds[idString] = struct{}{}
-		}
-
-		if p.noNewObjects {
-			if _, ok := inputIds[idString]; !ok {
-				return errors.ErrorWithStackf(
-					"-no_new_objects: output object %q is not present in the input list",
-					object.GetObjectId(),
-				)
-			}
-		}
+	if err := p.checkOutputIds(outputs); err != nil {
+		return err
 	}
 
 	builder := import_plan.MakeLocalBuilder()
@@ -333,6 +299,79 @@ func (p transformPipeline) run() error {
 	return nil
 }
 
+// checkOutputIds enforces the two id-level output guards, doing nothing (and
+// allocating nothing) when neither is active — the common path for the large
+// history imports the inventory-list consumers drive. disallowDuplicateObjectIds
+// rejects a script that names one object id more than once (which would commit
+// two revisions onto one object under last-write-wins while the other's update
+// silently vanishes); noNewObjects rejects an output id absent from the input.
+// Added objects (empty id, allocated later) are exempt from both.
+func (p transformPipeline) checkOutputIds(outputs []*sku.Transacted) error {
+	if !p.disallowDuplicateObjectIds && !p.noNewObjects {
+		return nil
+	}
+
+	var inputIds map[string]struct{}
+
+	if p.noNewObjects {
+		inputIds = make(map[string]struct{}, len(p.objects))
+		for _, object := range p.objects {
+			inputIds[object.GetObjectId().String()] = struct{}{}
+		}
+	}
+
+	var seenOutputIds map[string]struct{}
+
+	if p.disallowDuplicateObjectIds {
+		seenOutputIds = make(map[string]struct{}, len(outputs))
+	}
+
+	for _, object := range outputs {
+		idString := object.GetObjectId().String()
+
+		if p.disallowDuplicateObjectIds && idString != "" {
+			if _, dupe := seenOutputIds[idString]; dupe {
+				return errors.ErrorWithStackf(
+					"output contains %q more than once",
+					object.GetObjectId(),
+				)
+			}
+
+			seenOutputIds[idString] = struct{}{}
+		}
+
+		if p.noNewObjects {
+			if _, ok := inputIds[idString]; !ok {
+				return errors.ErrorWithStackf(
+					"-no_new_objects: output object %q is not present in the input list",
+					object.GetObjectId(),
+				)
+			}
+		}
+	}
+
+	return nil
+}
+
+// committableObjects lazily yields each committable entry's object from the
+// plan — no backing slice. Shared by validation and the self-containment copy
+// so the "skip non-committable entries" walk lives in one place.
+func committableObjects(plan *import_plan.Plan) iter.Seq[*sku.Transacted] {
+	return func(yield func(*sku.Transacted) bool) {
+		for i := range plan.Entries {
+			entry := &plan.Entries[i]
+
+			if !entry.Classification.IsCommittable() {
+				continue
+			}
+
+			if !yield(entry.GetObject()) {
+				return
+			}
+		}
+	}
+}
+
 // makeReSigningCommit returns a pipeline commit that imports the plan through
 // remote_transfer.CommitPlan with OverwriteSignatures, re-signing every object
 // under `local`'s own key (FinalizeAndSignOverwrite). The inventory-list
@@ -362,15 +401,7 @@ func makeReSigningCommit(
 			return 0, err
 		}
 
-		committed := 0
-
-		for i := range plan.Entries {
-			if plan.Entries[i].Classification.IsCommittable() {
-				committed++
-			}
-		}
-
-		return committed, nil
+		return plan.CommittableCount(), nil
 	}
 }
 
@@ -395,16 +426,10 @@ func copyReferencedBlobsIntoWriteStore(
 		blob_stores.MakeBlobStoreMap(envRepo.GetDefaultBlobStore()),
 	)
 
-	for i := range plan.Entries {
-		entry := &plan.Entries[i]
-
-		if !entry.Classification.IsCommittable() {
-			continue
-		}
-
+	for object := range committableObjects(plan) {
 		if err := copyObjectReferencedBlobs(
 			&blobImporter,
-			entry.GetObject(),
+			object,
 			tolerateMissing,
 		); err != nil {
 			return err
@@ -467,24 +492,12 @@ func (p transformPipeline) validate(
 	plan *import_plan.Plan,
 	readBlobStore mad_domain_interfaces.BlobStore,
 ) error {
-	var candidates []*sku.Transacted
-
-	for i := range plan.Entries {
-		entry := &plan.Entries[i]
-
-		if !entry.Classification.IsCommittable() {
-			continue
-		}
-
-		candidates = append(candidates, entry.GetObject())
-	}
-
 	tw := tap.NewWriter(os.Stdout)
 
 	errorCount := runSeqVerification(
 		p.repo,
 		tw,
-		quiter.MakeSeqErrorFromSeq(slices.Values(candidates)),
+		quiter.MakeSeqErrorFromSeq(committableObjects(plan)),
 		seqVerificationOptions{
 			SkipProbes:    true,
 			QuietOk:       true,
