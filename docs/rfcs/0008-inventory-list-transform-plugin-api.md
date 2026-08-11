@@ -254,6 +254,86 @@ proto application onto existing objects) and the proto zettel supplied for
 mother-less (added) objects only. No changes to `ExecutePlan` itself;
 dry-run is purely "don't call it."
 
+## 7. Pipeline generalization: three sources (dodder#392)
+
+Everything from the VM onward — script invocation, output read-back,
+duplicate check, plan build, validation, dry-run/commit — is indifferent to
+where the input objects came from. dodder#392 extracts steps 2–6 as a
+source-agnostic `transformPipeline`
+(`go/internal/uniform/commands_dodder/transform_pipeline.go`) and hangs
+three consumers off it, differing only in how they produce the input list,
+which repo they target, and how they commit.
+
+| Consumer | Source of objects | Target | Commit |
+|---|---|---|---|
+| `transform` | query + `expandEdges` over this repo | this repo | `ExecutePlan` (locally-authored; sealed under this repo's key at the working-list flush) |
+| `init-from-lists` | union of N inventory-list files | a FRESH repo | `CommitPlan` + `OverwriteSignatures` (re-sign under the newborn's key) |
+| `clone -script` | the source repo's pulled objects | a FRESH repo (the clone) | `CommitPlan` + `OverwriteSignatures` (re-sign under the clone's key) |
+
+### 7.1 The two commit paths
+
+`transform`'s objects are already this repo's own, so `ExecutePlan` seals
+them under this repo's key at the inventory-list flush with nothing foreign
+to reconcile. The two new consumers import FOREIGN objects (list files,
+another repo's stream) into a fresh repo and MUST re-sign every object under
+the new repo's key: `remote_transfer.CommitPlan` with
+`ImporterOptions.OverwriteSignatures` resets each object's sig/pubkey/digest
+and re-signs via `FinalizeAndSignOverwrite`. `ExecutePlan` does NOT re-sign,
+so it is wrong for a foreign source.
+
+`clone -script` follows clone's existing signing model unchanged: a plain
+clone already re-signs everything under the clone's own key (the same
+`CommitPlan`/`OverwriteSignatures` path), so a scripted clone introduces no
+new signing policy — and a transformed object cannot keep its source
+signature anyway, its content having changed. Remote-signature preservation
+stays the standing pre-existing TODO's concern, out of scope here.
+
+### 7.2 Duplicate-object-id handling
+
+`transform`'s query source yields one latest version per id, so two same-id
+outputs mean the script merged two objects onto one id (silent
+last-write-wins) — rejected (§3.4). The inventory-list consumers leave that
+rejection OFF: a history union/clone carries many `(id, tai)` versions per
+id BY DESIGN, and ruled fork-resolution is a deliberate same-id merge. The
+import builder's within-batch `(id, tai)` reassign guards the genuine
+last-write-wins hazard instead. `init-from-lists` additionally collapses
+exact `(id, tai, digest)` duplicates across its input lists before the
+script sees them, so passing the same list twice equals passing it once.
+
+### 7.3 Source blobs and self-containment
+
+A fresh repo's own store starts empty, but the transform's objects reference
+blobs that live only in the source. Both fresh-repo consumers make the
+result SELF-CONTAINED — every referenced blob is duplicated into the new
+repo so it survives deleting the (often large) sources:
+
+- `init-from-lists` reads source blobs from read-only `-blob-source` stores
+  overlaid ahead of the newborn's read view (so `blobs.read` resolves them),
+  then copies every referenced blob into the newborn before commit.
+- `clone -script` pre-copies every referenced source blob into the clone
+  before the transform. The source and clone share an XDG namespace, so an
+  overlay would place the clone's own write store in its read list, which
+  `MakeReadBlobStoreWithOverlay` rejects; a pre-copy sidesteps that.
+
+A post-copy `fsck` against the new repo alone — with the sources detached —
+is the self-containment proof, asserted in both commands' e2e tests.
+
+### 7.4 New command surface
+
+```
+dodder init-from-lists -script <path> [-blob-source <store>...] <repo-id> <list-path>...
+dodder clone -direct <path> -script <path> <repo-id> [query args...]
+```
+
+`init-from-lists` genesises a fresh repo (fresh keypair, fresh instance
+identity, end-state config, `ExcludeDefaultType`) and consolidates N
+inventory-list files through one transform — git-filter-branch into a fresh
+repo. `clone -script` adds the transform to clone's existing genesis+pull; it
+is **direct (local-path) transfer only** — the networked receive paths
+(drtp, legacy HTTP) commit as they stream and are deferred (dodder#393).
+Both reuse the same `-script`/`-script-digest` and validation surface
+described above.
+
 ## Non-goals
 
 - **Hash-algorithm migration (blake3)** is explicitly not designed here.

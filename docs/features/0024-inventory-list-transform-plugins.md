@@ -174,6 +174,36 @@ end
 return list
 ```
 
+## Pluggable source: one transform, three sources (dodder#392)
+
+The list-in/list-out shape is indifferent to where the input list comes
+from. Once the `transform` command existed, the same machinery generalized —
+with no change to the script contract — to two more sources, because
+"rewrite this graph in bulk" is the same operation whether the graph comes
+from a query, a pile of archived inventory-list files, or another repo's
+history:
+
+- **`transform`** — the query source: rewrite this repo's own objects in
+  place.
+- **`init-from-lists`** — the inventory-list-union source: consolidate N
+  archived inventory-list files into a FRESH repo through one transform.
+  This is `git filter-branch` into a fresh repo — the history is born
+  already rewritten (tag cleanup, fork resolution, hash migration in a
+  single pass) and re-signed under the newborn's key, instead of carrying
+  legacy mess plus correction commits. Distinct from `init-from`
+  (copy-migration: same keypair, single source, signatures preserved).
+- **`clone -script`** — the pull-stream source: clone another repo and apply
+  the transform in the same pass, so the clone is born rewritten rather than
+  pulled verbatim and corrected after.
+
+The two fresh-repo consumers share a re-signing commit (foreign objects are
+re-signed under the new repo's key, since a transformed object cannot keep
+its source signature) and make the result self-contained (every referenced
+source blob is copied into the new repo, so it survives deleting the
+sources). RFC-0008 §7 gives the concrete surface. `clone -script` over a
+networked transport is deferred (dodder#393); it is direct-transfer only
+today.
+
 ## Open Questions
 
 - ~~Exact CLI command name and flag surface~~ — resolved: `transform`; see

@@ -42,9 +42,10 @@ func init() {
 // identity"; init-from-lists answers "consolidate these histories into a clean
 // new one." A failed run is disposable — delete the newborn and re-run.
 //
-// Source blobs are read (never copied into the newborn) from the read-only
-// -blob-source stores; the newborn's own store receives only what the
-// script/import writes.
+// Source blobs resolve from the read-only -blob-source stores during the run,
+// and every blob the committed objects reference is copied into the newborn
+// before commit — so the consolidation is self-contained and survives deleting
+// the (often large) -blob-source stores (dodder#392).
 type InitFromLists struct {
 	command_components_dodder.Genesis
 	command_components_dodder.InventoryLists
