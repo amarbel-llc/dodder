@@ -816,8 +816,8 @@ consolidate-export-baseline:
   dodder export -repo_id default '+?z,t,k,e' > "$work/default.index-path.inventory_list"
   echo "==> log-path export (list objects only)"
   dodder export-inventory_lists -repo_id default > "$work/default.log-path.lists-only.inventory_list"
-  echo "==> log-path export (contents)"
-  dodder export-inventory_lists -repo_id default -contents > "$work/default.log-path.contents.inventory_list"
+  echo "==> log-path export (contents; tolerant — the live repo has at least one missing list blob, take4 pathology P9)"
+  dodder export-inventory_lists -repo_id default -contents -tolerate-missing-blobs > "$work/default.log-path.contents.inventory_list"
   echo "==> object-line counts ('[' lines; log-contents includes the :b list objects themselves, the index path does not)"
   for f in "$work"/default.*.inventory_list; do
     printf '%8d %s\n' "$(grep -c '^\[' "$f" || true)" "$f"
@@ -874,6 +874,83 @@ consolidate-diff-variants:
   pair inventory_lists-2025-11-10-a.inventory_list-v2 inventory_lists-2025-11-10-d.inventory_list-v2
   pair objects-2025-10-19-a.inventory_list-v2 objects-2025-10-19.inventory_list-v2
   pair objects-2025-10-19-c.inventory_list-v2 objects-2025-10-19.inventory_list-v2
+
+# Probe every LOCAL madder store for the take4 P9 missing list-blob
+# digests via `madder cat` (real markl decoding + store routing — the
+# on-disk hex filenames cannot be globbed from base32 ids, which
+# invalidated the earlier take3 glob "check"). Starts with a POSITIVE
+# CONTROL (a digest from a list the export successfully read must be
+# FOUND, else the probe methodology itself is broken and the run
+# aborts). Answers "are the 88 actually gone?" with per-store evidence.
+# Read-only; consolidation P9 verification.
+[group('consolidate')]
+consolidate-probe-missing-list-blobs:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  command -v madder >/dev/null || { echo "madder not on PATH (devshell expected to provide it)"; exit 1; }
+  work=/home/sasha/workspaces/take4
+  digests="$work/missing-list-blobs.txt"
+  stores=(dodder-v8-take3 default hardware-pihole-zz-inbox maneater moxy-async nebulous)
+  # Control comes from the READABLE era, which is entirely @sha256-
+  # digests (the missing 88 are ALL the @blake2b256- ones — a perfect
+  # hash-format partition, itself the key P9 finding). (|| true):
+  # head-of-pipeline SIGPIPE under pipefail would silently kill the
+  # script; emptiness is checked explicitly.
+  control=$(grep -o '@sha256-[a-z0-9]*' "$work/exports/default.log-path.lists-only.inventory_list" | tr -d '@' | head -1 || true)
+  [[ -n $control ]] || { echo "no readable-list control digest derivable — aborting"; exit 1; }
+  echo "==> positive control: $control"
+  control_hits=""
+  for s in "${stores[@]}"; do
+    if madder cat "$s" "$control" >/dev/null 2>&1; then control_hits+=" $s"; fi
+  done
+  [[ -n $control_hits ]] || { echo "CONTROL NOT FOUND IN ANY STORE — probe methodology broken, aborting"; exit 1; }
+  echo "==> control found in:$control_hits — probe is sound"
+  echo "==> probing 88 missing digests across: ${stores[*]}"
+  found=0; gone=0
+  while read -r d; do
+    hits=""
+    for s in "${stores[@]}"; do
+      if madder cat "$s" "$d" >/dev/null 2>&1; then hits+=" $s"; fi
+    done
+    if [[ -n $hits ]]; then
+      echo "FOUND $d in:$hits"; found=$((found+1))
+    else
+      echo "missing-local $d"; gone=$((gone+1))
+    fi
+  done <"$digests"
+  echo "==> summary: $found found locally, $gone missing from all local stores"
+
+# Snapshot the live default repo's dodder XDG trees — ABOVE ALL the
+# cache-category stream index, which is the ONLY remaining local carrier
+# of the member states from the 88 P9-holed inventory lists (a stray
+# `reindex` would rebuild it from the holed log and destroy them). Copies
+# into a timestamped dir under the take4 work area, which the circus
+# restic tier (provisioned 2026-08-10) picks up on its next snapshot —
+# so this also promotes the at-risk states into off-host backup.
+# Read-only w.r.t. the live trees; NOT crash-consistent if dodder writes
+# concurrently (acceptable: rerun when in doubt).
+[group('consolidate')]
+consolidate-backup-live-index:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  stamp=$(date +%Y%m%d-%H%M%S)
+  dest=/home/sasha/workspaces/take4/live-repo-backup/$stamp
+  mkdir -p "$dest"
+  cp -a /home/sasha/.cache/dodder "$dest/cache-dodder"
+  cp -a /home/sasha/.local/share/dodder "$dest/share-dodder"
+  cp -a /home/sasha/.local/state/dodder "$dest/state-dodder"
+  cp -a /home/sasha/.config/dodder "$dest/config-dodder"
+  {
+    echo "created: $stamp"
+    echo "host: $(hostname)"
+    echo "purpose: take4 P9 — preserve the stream index (sole carrier of the 88 holed lists' member states) + repo metadata trees"
+    echo
+    du -sh "$dest"/*
+    echo
+    echo "file counts:"
+    for d in "$dest"/*/; do printf '%8d %s\n' "$(find "$d" -type f | wc -l)" "$d"; done
+  } | tee "$dest/MANIFEST"
+  echo "==> backup complete: $dest"
 
 # Read-only full-repo signature audit via fsck -recompute. NOTE: this
 # does NOT detect the description-newline-collapse bug class (dodder#TBD,
