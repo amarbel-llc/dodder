@@ -818,6 +818,8 @@ consolidate-export-baseline:
   dodder export-inventory_lists -repo_id default > "$work/default.log-path.lists-only.inventory_list"
   echo "==> log-path export (contents; tolerant — the live repo has at least one missing list blob, take4 pathology P9)"
   dodder export-inventory_lists -repo_id default -contents -tolerate-missing-blobs > "$work/default.log-path.contents.inventory_list"
+  echo "==> raw index dump (below the query layer; the P9 sole-carrier census)"
+  dodder export-index -repo_id default > "$work/default.index-raw.inventory_list"
   echo "==> object-line counts ('[' lines; log-contents includes the :b list objects themselves, the index path does not)"
   for f in "$work"/default.*.inventory_list; do
     printf '%8d %s\n' "$(grep -c '^\[' "$f" || true)" "$f"
@@ -951,6 +953,131 @@ consolidate-backup-live-index:
     for d in "$dest"/*/; do printf '%8d %s\n' "$(find "$d" -type f | wc -l)" "$d"; done
   } | tee "$dest/MANIFEST"
   echo "==> backup complete: $dest"
+
+# Raw READ-ONLY reconnaissance of the rsync.net account (user zh3447 per
+# the rsync_dot_net blob_store-config): list the account root, the
+# Library/Madder store tree (dodder's own miss there proves nothing —
+# the store config says hash=sha256 so blake2b256 lookups miss by
+# construction, madder routing issue), any blake2b256/ format dir, and
+# the .zfs snapshot directory rsync.net exposes. Every step tolerant:
+# a missing path is a finding, not an error. P9 remote probe.
+[group('consolidate')]
+consolidate-probe-rsyncnet:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  r() {
+    echo "==> ssh zh3447@zh3447.rsync.net -- $*"
+    # -F /dev/null: the SYSTEM ssh config pins IdentityFile to the
+    # root-owned circus backup key (unreadable as user, and it blocks
+    # agent auth); bypass all config and authenticate via the agent,
+    # pointing known-hosts at the user file that already trusts the host.
+    ssh -F /dev/null \
+      -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts \
+      -o BatchMode=yes -o ConnectTimeout=15 \
+      zh3447@zh3447.rsync.net "$@" 2>&1 || echo "(exit $?)"
+    echo
+  }
+  r ls -la
+  r ls -la Library
+  r ls -la Library/Madder
+  r ls Library/Madder/blake2b256
+  r ls Library/Madder/sha256
+  r ls .zfs/snapshot
+  r df -h .
+
+# Content-level sweep of rsync.net's Library/Madder for the 88 P9
+# digests. The July-11 cross-hash sync re-keyed blake2b256 content under
+# sha256 names with the aliases silently dropped (remoteSftp implements
+# no BlobForeignDigestAdder), so presence is only decidable by CONTENT:
+# list the remote tree, download small candidates (single-object list
+# blobs are tiny), write raw + zstd-decompressed variants into a local
+# throwaway blake2b256 store, then ask that store for each of the 88
+# original ids — the store is the canonical hasher, no hand-rolled
+# markl decoding. Writes only to take4 work area + the scratch store.
+[group('consolidate')]
+consolidate-rsyncnet-sweep:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  command -v madder >/dev/null || { echo "madder not on PATH"; exit 1; }
+  work=/home/sasha/workspaces/take4/rsync-sweep
+  digests=/home/sasha/workspaces/take4/missing-list-blobs.txt
+  mkdir -p "$work/blobs"
+  sshcmd="ssh -F /dev/null -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts -o BatchMode=yes -o ConnectTimeout=15"
+  echo "==> phase 1: listing remote tree"
+  rsync -e "$sshcmd" --list-only -r zh3447@zh3447.rsync.net:Library/Madder/ > "$work/listing.txt"
+  echo "listing entries: $(wc -l < "$work/listing.txt")"
+  # Candidates: regular files in bucket dirs, 50..8192 bytes, no tmp_.
+  awk '$1 ~ /^-/ { size=$2; gsub(",","",size); path=$NF; if (size+0 >= 50 && size+0 <= 8192 && path ~ /^[0-9a-f][0-9a-f]\// && path !~ /tmp_/) print path }' "$work/listing.txt" > "$work/candidates.txt"
+  echo "candidates (50B..8KB): $(wc -l < "$work/candidates.txt")"
+  [[ -s "$work/candidates.txt" ]] || { echo "no candidates — sweep conclusively empty"; exit 0; }
+  echo "==> phase 2: downloading candidates"
+  rsync -e "$sshcmd" -r --files-from="$work/candidates.txt" zh3447@zh3447.rsync.net:Library/Madder/ "$work/blobs/"
+  echo "downloaded: $(find "$work/blobs" -type f | wc -l)"
+  echo "==> phase 3: writing raw + decompressed variants into scratch store"
+  madder init take4-sweep-scratch >/dev/null 2>&1 || echo "(scratch store init skipped — may already exist)"
+  have_zstd=0; command -v zstd >/dev/null && have_zstd=1
+  [[ $have_zstd -eq 1 ]] || echo "WARNING: zstd not on PATH — compressed variants not hashed"
+  age_count=0; raw_count=0; dec_count=0
+  while read -r f; do
+    if head -c 20 "$f" 2>/dev/null | grep -q 'age-encryption.org'; then
+      age_count=$((age_count+1)); continue
+    fi
+    madder write take4-sweep-scratch "$f" >/dev/null 2>&1 && raw_count=$((raw_count+1))
+    if [[ $have_zstd -eq 1 ]] && [[ $(head -c 4 "$f" | od -An -tx1 | tr -d ' \n') == 28b52ffd ]]; then
+      if zstd -d -q -c "$f" > "$f.dec" 2>/dev/null; then
+        madder write take4-sweep-scratch "$f.dec" >/dev/null 2>&1 && dec_count=$((dec_count+1))
+      fi
+    fi
+  done < <(find "$work/blobs" -type f ! -name '*.dec')
+  echo "hashed: raw=$raw_count decompressed=$dec_count age-encrypted-skipped=$age_count"
+  echo "==> phase 4: membership check — asking the scratch store for the 88 original ids"
+  found=0; gone=0
+  while read -r d; do
+    if madder cat take4-sweep-scratch "$d" >/dev/null 2>&1; then
+      echo "RECOVERED $d"; found=$((found+1))
+    else
+      gone=$((gone+1))
+    fi
+  done <"$digests"
+  echo "==> sweep verdict: $found of 88 recoverable from rsync.net content; $gone not present among candidates"
+
+# madder-cat probe of the rsync_dot_net store for the P9 digests:
+# control (sha256-era, known-synced content) + a 10-digest sample of
+# the missing 88. madder's READ path constructs the remote path from
+# the requested id, so this tests presence under id-derived naming
+# without needing a local bech32 decoder. Each call dials SFTP — sample
+# first, full sweep only if the control behaves. P9 remote probe.
+[group('consolidate')]
+consolidate-probe-rsyncnet-madder:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  command -v madder >/dev/null || { echo "madder not on PATH"; exit 1; }
+  work=/home/sasha/workspaces/take4
+  control=$(grep -o '@sha256-[a-z0-9]*' "$work/exports/default.log-path.lists-only.inventory_list" | tr -d '@' | head -1 || true)
+  echo "==> control (sha256 era): $control"
+  if madder cat rsync_dot_net "$control" >/dev/null 2>&1; then
+    echo "control: FOUND via rsync_dot_net — read path + sync coverage confirmed for the sha256 era"
+  else
+    echo "control: NOT FOUND via rsync_dot_net — either the era was never synced or the read path is format-confused; sample results below are NOT conclusive"
+  fi
+  # blake2b256 FORMAT control: the pandoc-defaults seed type blob exists
+  # in every store; if blake2b256 reads work against this sha256-native
+  # remote at all, this resolves — otherwise every blake2b256 miss below
+  # is a format-routing artifact, not evidence of absence.
+  b2control=blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d
+  if madder cat rsync_dot_net "$b2control" >/dev/null 2>&1; then
+    echo "blake2b256 control: FOUND — blake2b256 remote reads work; misses below are real absence"
+  else
+    echo "blake2b256 control: NOT FOUND — blake2b256 remote reads unproven (format-routing may mask presence); misses below are NOT conclusive"
+  fi
+  echo "==> sampling missing digests:"
+  { head -5 "$work/missing-list-blobs.txt"; tail -5 "$work/missing-list-blobs.txt"; } | while read -r d; do
+    if madder cat rsync_dot_net "$d" >/dev/null 2>&1; then
+      echo "FOUND  $d"
+    else
+      echo "miss   $d"
+    fi
+  done
 
 # Read-only full-repo signature audit via fsck -recompute. NOTE: this
 # does NOT detect the description-newline-collapse bug class (dodder#TBD,
