@@ -268,7 +268,7 @@ func (cmd Clone) runScriptedClone(
 	)
 
 	for _, object := range objects {
-		if err := copyObjectReferencedBlobs(&blobImporter, object, false); err != nil {
+		if err := blobImporter.ImportObjectBlobClosure(object, false); err != nil {
 			return err
 		}
 	}

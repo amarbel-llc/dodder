@@ -418,6 +418,17 @@ func (importer importer) importNewObject(
 	return err
 }
 
+// ImportBlobIfNecessary copies object's own blob and, when a remote blob store
+// is present, its field-level blob references into the local store. This is the
+// receive-side twin of the transform pipeline's
+// blob_transfers.BlobImporter.ImportObjectBlobClosure (dodder#392): the two
+// share the "own blob + AllBlobReferences" shape but keep divergent policies —
+// this path gates references on remoteBlobStore (drtp pre-streams its whole
+// closure, so the receiver has no source) and skips only not-found reference
+// errors, whereas the pipeline always copies references and fails on any miss.
+// Unifying them onto a generalized ImportObjectBlobClosure is a deliberate
+// followup (dodder#394), left undone here to avoid changing this critical
+// transfer path.
 func (importer importer) ImportBlobIfNecessary(
 	object *sku.Transacted,
 ) (err error) {

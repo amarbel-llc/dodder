@@ -43,6 +43,52 @@ type Counts struct {
 	Total     int
 }
 
+// ImportObjectBlobClosure copies an object's full blob closure into the
+// importer's destination store(s): the object's own blob (when non-null) plus
+// every field-level blob reference. Content-addressed, so blobs already present
+// are skipped and re-runs are cheap. When tolerateMissing is set, a blob absent
+// from the source is skipped rather than erroring (for staged, intentionally
+// incomplete migration passes).
+//
+// This is the transform pipeline's self-containment copy (dodder#392): every
+// referenced blob is duplicated into the target so it survives deleting the
+// source. remote_transfer's receive path has a parallel but policy-divergent
+// copy of the same closure (references gated on a remote store being present,
+// and only not-found errors skipped — dodder#325) that could migrate onto a
+// generalized form of this method later (dodder#394).
+func (blobImporter *BlobImporter) ImportObjectBlobClosure(
+	object *sku.Transacted,
+	tolerateMissing bool,
+) (err error) {
+	metadata := object.GetMetadata()
+
+	copyOne := func(blobId mad_domain_interfaces.MarklId) error {
+		if err := blobImporter.ImportBlobIfNecessary(blobId, object); err != nil {
+			if tolerateMissing {
+				return nil
+			}
+
+			return errors.Wrapf(err, "copying referenced blob %s", blobId)
+		}
+
+		return nil
+	}
+
+	if blobDigest := metadata.GetBlobDigest(); !blobDigest.IsNull() {
+		if err = copyOne(blobDigest); err != nil {
+			return err
+		}
+	}
+
+	for refDigest := range metadata.AllBlobReferences() {
+		if err = copyOne(refDigest); err != nil {
+			return err
+		}
+	}
+
+	return err
+}
+
 func (blobImporter *BlobImporter) ImportBlobIfNecessary(
 	blobId mad_domain_interfaces.MarklId,
 	object *sku.Transacted,

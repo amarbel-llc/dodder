@@ -427,52 +427,10 @@ func copyReferencedBlobsIntoWriteStore(
 	)
 
 	for object := range committableObjects(plan) {
-		if err := copyObjectReferencedBlobs(
-			&blobImporter,
+		if err := blobImporter.ImportObjectBlobClosure(
 			object,
 			tolerateMissing,
 		); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// copyObjectReferencedBlobs copies one object's own Blob plus its field-level
-// file<@digest references into the write store via blobImporter, if missing.
-// Content-addressed, so present blobs are skipped and re-runs are cheap. When
-// tolerateMissing is set (-skip_validation, staged intermediate passes) a blob
-// absent from the source is skipped rather than erroring. Shared by the
-// pipeline's post-plan self-containment pass (copyReferencedBlobsIntoWriteStore)
-// and clone -script's pre-transform blob copy (dodder#392).
-func copyObjectReferencedBlobs(
-	blobImporter *blob_transfers.BlobImporter,
-	object *sku.Transacted,
-	tolerateMissing bool,
-) error {
-	metadata := object.GetMetadata()
-
-	copyOne := func(blobId mad_domain_interfaces.MarklId) error {
-		if err := blobImporter.ImportBlobIfNecessary(blobId, object); err != nil {
-			if tolerateMissing {
-				return nil
-			}
-
-			return errors.Wrapf(err, "copying referenced blob %s", blobId)
-		}
-
-		return nil
-	}
-
-	if blobDigest := metadata.GetBlobDigest(); !blobDigest.IsNull() {
-		if err := copyOne(blobDigest); err != nil {
-			return err
-		}
-	}
-
-	for refDigest := range metadata.AllBlobReferences() {
-		if err := copyOne(refDigest); err != nil {
 			return err
 		}
 	}

@@ -17,3 +17,6 @@ Handles copying blobs between different blob stores with progress tracking and v
 - Multi-store import support
 - Progress reporting with time-based UI updates
 - Copy result delegation for tracking missing blobs
+- Object blob-closure copy (`ImportObjectBlobClosure`: an object's own blob plus
+  its field-level blob references), used by the transform pipeline's
+  self-containment copy (dodder#392)
