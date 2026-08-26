@@ -99,6 +99,7 @@
     purse-first.inputs.conformist.follows = "conformist";
     tommy.inputs.conformist.follows = "conformist";
     madder.inputs.doppelgang.follows = "hyphence/doppelgang";
+    madder.inputs.langlang.follows = "hyphence/langlang";
     hyphence.inputs.conformist.follows = "conformist";
     bats.inputs.conformist.follows = "conformist";
     # hyphence's langlang subtree (rust guest-filter tooling) brings its own
@@ -107,9 +108,7 @@
     # tap, mirroring madder's exact deep-follows shape (madder flake.nix).
     hyphence.inputs.langlang.inputs.tap.inputs.crane.follows = "tap/crane";
     hyphence.inputs.langlang.inputs.tap.inputs.rust-overlay.follows = "tap/rust-overlay";
-    hyphence.inputs.piggy.inputs.jcardsim.follows = "piggy/jcardsim";
-    hyphence.inputs.piggy.inputs.oracle-javacard-sdks.follows = "piggy/oracle-javacard-sdks";
-    hyphence.inputs.piggy.inputs.pivapplet.follows = "piggy/pivapplet";
+    hyphence.inputs.piggy.follows = "piggy";
     # piggy's own langlang pin (piggy#183's markl-id framework pulls in the
     # same langlang subtree hyphence does) is bit-identical to hyphence's —
     # collapse onto hyphence's copy rather than deep-following piggy's
