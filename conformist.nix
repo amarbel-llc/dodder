@@ -13,7 +13,7 @@
 # conformist-repair) and the bare `conformist` all resolve to this repo's
 # module-generated wrappers on the devShell PATH, which bake this config plus
 # the formatter toolchain as store paths.
-{ pkgs, lib, ... }:
+{ pkgs, ... }:
 {
   # Go: goimports (priority 1) runs before gofumpt (priority 2) so gofumpt
   # re-canonicalizes the import-grouped output — the same chain the old
@@ -88,22 +88,28 @@
   # (dodder#371).
   linters.eng-versioning.key = "DODDER_VERSION";
 
-  # Three presets.eng justfile linters are disabled because bringing dodder's
-  # justfile surface into conformance means RENAMING documented user-facing
-  # recipes, which is a workflow migration (followup), not a formatting fix:
+  # NOTE: dodder's justfile conventions are currently NOT enforced at all.
+  # The seven justfile linters left conformist (they now ship from just-us as
+  # lib.conformistPresets.justfile), and dodder does not import that preset
+  # yet — fleet adoption is being designed in papi/bold-mulberry. The three
+  # per-linter `lib.mkForce false` overrides that used to sit here were
+  # dropped with the linters themselves; they named options that no longer
+  # exist and failed eval outright.
+  #
+  # For whoever wires up just-us here: three of the seven will still fail,
+  # and the reasons were deliberate, not oversights.
   #   - justfile-recipe-names / justfile-leaf-noun: `check` and
   #     `generate-seed-types` don't start with a known eng verb (`check` would
-  #     become validate/verify-*), and `check` is a bare-verb leaf;
+  #     become validate/verify-*), and `check` is a bare-verb leaf. Bringing
+  #     these into conformance means RENAMING documented user-facing recipes,
+  #     which is a workflow migration, not a formatting fix.
   #   - justfile-task-hierarchy: the seven test-bats-* dev-loop utilities
   #     (tags/targets/race/update-fixtures/update-goldens/snapshot-version/
   #     targets-no-sandbox) are deliberate orphans — several are mutating
   #     regen tools that must NOT run from any aggregate.
   # The other four (justfile-default, justfile-aggregate-comments,
-  # justfile-recipe-descriptions, justfile-debug-recipes) stay enabled and
-  # pass.
-  linters.justfile-recipe-names.enable = lib.mkForce false;
-  linters.justfile-leaf-noun.enable = lib.mkForce false;
-  linters.justfile-task-hierarchy.enable = lib.mkForce false;
+  # justfile-recipe-descriptions, justfile-debug-recipes) passed when they
+  # were last enforced.
 
   # NOTE: no shellcheck lane here, mirroring the retired conformist.toml:
   # `just go/check-shellcheck` remains the standalone gate (dodder#323) with
@@ -131,5 +137,23 @@
     # break migration conformance (previous_versions/main.bats) and fixture
     # hashes.
     "zz-tests_bats/previous_versions/**"
+  ];
+
+  # conformist-git(7) MERGE DRIVERS. presets.eng binds flake.lock by default;
+  # a definition here REPLACES that default, so flake.lock is restated. The
+  # rest are this repo's generated sources, named explicitly (never a glob
+  # that could also match a hand-written sibling) so only files a generator
+  # owns go through the stamp-resolving driver. The merge.<name>.driver
+  # registration is the per-machine half, in eng home/git.nix.
+  linters.git-merge-drivers.entries = [
+    {
+      pattern = "flake.lock";
+      driver = "conformist-flake-lock";
+      when-file = "flake.nix";
+    }
+    {
+      pattern = "*_tommy.go";
+      driver = "conformist-codegen-header";
+    }
   ];
 }
