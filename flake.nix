@@ -106,9 +106,8 @@
     # tap -> crane/rust-overlay chain, colliding with dodder's own tap input
     # and doubling the lock (crane_2/rust-overlay_2). Collapse onto dodder's
     # tap, mirroring madder's exact deep-follows shape (madder flake.nix).
-    hyphence.inputs.langlang.inputs.tap.inputs.crane.follows = "tap/crane";
-    hyphence.inputs.langlang.inputs.tap.inputs.rust-overlay.follows = "tap/rust-overlay";
     hyphence.inputs.piggy.follows = "piggy";
+    hyphence.inputs.langlang.inputs.tap.follows = "tap";
     # piggy's own langlang pin (piggy#183's markl-id framework pulls in the
     # same langlang subtree hyphence does) is bit-identical to hyphence's —
     # collapse onto hyphence's copy rather than deep-following piggy's
