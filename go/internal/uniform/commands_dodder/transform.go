@@ -47,7 +47,12 @@ func (cmd *Transform) GetArgs() []command.ArgGroup {
 
 func (cmd Transform) GetDescription() command.Description {
 	return command.Description{
-		Short: "run a Lua list-in/list-out transform over queried objects and commit the result",
+		Short: "run a Lua transform over queried objects and commit the result",
+		Long: "Run a Lua list-in/list-out transform script over the objects " +
+			"matched by the query and commit the resulting object list back " +
+			"to the store. The script is given either by path (-script) or as " +
+			"a stored blob (-script-digest). Use -dry_run to build and " +
+			"validate the output plan without committing.",
 	}
 }
 

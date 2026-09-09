@@ -81,7 +81,12 @@ func (cmd *InitFromLists) GetArgs() []command.ArgGroup {
 
 func (cmd InitFromLists) GetDescription() command.Description {
 	return command.Description{
-		Short: "consolidate N inventory-list files into a fresh repo through a Lua transform (fresh keypair, full re-sign)",
+		Short: "consolidate inventory-list files into a fresh repo via a Lua transform",
+		Long: "Union the object graphs of N inventory-list files, run them " +
+			"through a Lua list-in/list-out transform, and commit the result " +
+			"into a freshly initialized repository. The new repo is born with " +
+			"a fresh keypair and every object is fully re-signed under it; " +
+			"blobs are resolved read-only from the -blob-source stores.",
 	}
 }
 

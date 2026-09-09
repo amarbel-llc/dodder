@@ -67,7 +67,12 @@ func (cmd *InitFrom) GetArgs() []command.ArgGroup {
 
 func (cmd InitFrom) GetDescription() command.Description {
 	return command.Description{
-		Short: "create a new repo copy-migrated from an existing local repo (fresh instance identity, same keys; source untouched)",
+		Short: "create a new repo copy-migrated from an existing local repo",
+		Long: "Create a new local repository by copy-migrating the objects of an " +
+			"existing local repository named by -from. The new repo gets a " +
+			"fresh instance identity but keeps the source's keypair, in-graph " +
+			"repo id, and type choices. The source repository is never " +
+			"modified.",
 	}
 }
 

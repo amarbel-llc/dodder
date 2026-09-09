@@ -56,9 +56,10 @@ var (
 
 func (cmd MigrateRepoLayout) GetDescription() command.Description {
 	return command.Description{
-		Short: "copy a legacy flat .dodder tree into the repos/<name>/ nested layout (FDR-0019); never modifies -source",
+		Short: "copy a legacy flat .dodder tree into the nested repos/<name>/ layout",
 		Long: "Copy a legacy flat .dodder tree (pre-FDR-0019, no repos/<name>/ " +
-			"nesting) into the current nested layout. The current binary " +
+			"nesting) into the current nested layout described by FDR-0019. " +
+			"-source is never modified. The current binary " +
 			"cannot open a flat tree — every repo-opening command fails " +
 			"against one with an error naming this command; there is " +
 			"deliberately no read-in-place fallback (#363), so this explicit " +

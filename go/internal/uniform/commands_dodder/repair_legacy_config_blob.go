@@ -50,7 +50,13 @@ var _ interfaces.CommandComponentWriter = (*RepairLegacyConfigBlob)(nil)
 
 func (cmd RepairLegacyConfigBlob) GetDescription() command.Description {
 	return command.Description{
-		Short: "ONE-TIME: repair a header-corrupted legacy (pre-config_log) config blob and bootstrap config_log",
+		Short: "repair a header-corrupted legacy config blob and bootstrap config_log",
+		Long: "ONE-TIME repair for repositories created before config_log " +
+			"existed. Reads the legacy config object from the stream-index " +
+			"cache, repairs a header-corrupted config blob, and bootstraps a " +
+			"config_log from the repaired state. Use -dry_run to detect and " +
+			"verify without writing anything. Not needed on repositories that " +
+			"already have a config_log.",
 	}
 }
 

@@ -32,7 +32,14 @@ var _ command.CommandWithArgs = (*ReconcileBlobToStore)(nil)
 
 func (cmd ReconcileBlobToStore) GetDescription() command.Description {
 	return command.Description{
-		Short: "TEMPORARY workaround (dodder#359): copy one blob by digest into an explicitly-addressed destination store",
+		Short: "copy one blob by digest into an explicitly-addressed destination store",
+		Long: "TEMPORARY workaround for dodder#359. Copy a single blob, named " +
+			"by its markl digest, from the repo's blob store into a " +
+			"destination store addressed explicitly by base path and config " +
+			"path, bypassing the normal store resolution. This command exists " +
+			"only until the underlying resolution divergence is fixed (see " +
+			"docs/rfcs/0007-anchored-identity-and-resolution.md) and will be " +
+			"removed afterward.",
 	}
 }
 
