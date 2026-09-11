@@ -1040,6 +1040,100 @@ consolidate-rsyncnet-sweep:
     fi
   done <"$digests"
   echo "==> sweep verdict: $found of 88 recoverable from rsync.net content; $gone not present among candidates"
+  # Methodology control: the pandoc-defaults seed blob is small,
+  # blake2b256-identified, and in every local store — any full
+  # cross-hash sync carried its content, so a working sweep round-trip
+  # (remote bytes → scratch store → blake2b256 identity) must find it.
+  b2control=blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d
+  if madder cat take4-sweep-scratch "$b2control" >/dev/null 2>&1; then
+    echo "sweep control: FOUND — round-trip methodology validated; the 88-miss is real absence among candidates"
+  else
+    echo "sweep control: NOT FOUND — either the sync never carried this blob or the round-trip is broken; verdict NOT conclusive"
+  fi
+
+# Discriminate the sweep-control failure without any hashing: fetch the
+# control blob's actual CONTENT from a local store and byte-compare it
+# (cmp) against every same-sized downloaded candidate. Content found =>
+# the round-trip (madder write id computation) is broken; content absent
+# from candidates AND no same-size file in the full remote listing =>
+# the sync never carried it and the sweep verdict stands. P9.
+[group('consolidate')]
+consolidate-sweep-verify-control:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  command -v madder >/dev/null || { echo "madder not on PATH"; exit 1; }
+  work=/home/sasha/workspaces/take4/rsync-sweep
+  b2control=blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d
+  tmp=$(mktemp)
+  trap 'rm -f "$tmp"' EXIT
+  madder cat default "$b2control" > "$tmp" 2>/dev/null || madder cat dodder-v8-take3 "$b2control" > "$tmp"
+  size=$(wc -c < "$tmp")
+  echo "==> control content size: $size bytes"
+  echo "==> same-size files in the FULL remote listing:"
+  awk -v s="$size" '$1 ~ /^-/ { sz=$2; gsub(",","",sz); if (sz+0 == s) print }' "$work/listing.txt" | head -20
+  echo "==> gathering same-size files (downloaded candidates + direct fetch of any outside the sweep band):"
+  sshcmd="ssh -F /dev/null -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts -o BatchMode=yes -o ConnectTimeout=15"
+  fetch=$work/control-fetch
+  mkdir -p "$fetch"
+  awk -v s="$size" '$1 ~ /^-/ { sz=$2; gsub(",","",sz); if (sz+0 == s) print $NF }' "$work/listing.txt" > "$fetch/paths.txt"
+  echo "same-size remote files: $(wc -l < "$fetch/paths.txt")"
+  rsync -e "$sshcmd" -r --files-from="$fetch/paths.txt" zh3447@zh3447.rsync.net:Library/Madder/ "$fetch/blobs/" 2>/dev/null || true
+  hit=""
+  while read -r f; do
+    if cmp -s "$tmp" "$f"; then hit="$f"; break; fi
+  done < <(find "$fetch/blobs" "$work/blobs" -type f ! -name '*.dec' -size "${size}c" 2>/dev/null)
+  if [[ -n $hit ]]; then
+    echo "CONTENT FOUND remotely at $hit — sync DID carry blake2b256-store content"
+    echo "==> completing round-trip validation: writing it to scratch and reading back by blake2b256 id"
+    madder write take4-sweep-scratch "$hit" >/dev/null 2>&1 || true
+    if madder cat take4-sweep-scratch "$b2control" >/dev/null 2>&1; then
+      echo "round-trip VALID — scratch-store methodology sound; the 88-miss within the sweep band is real absence"
+    else
+      echo "round-trip BROKEN — madder write did not produce the expected blake2b256 identity; ALL sweep verdicts invalid, investigate id computation"
+    fi
+  else
+    echo "content not on the remote at size $size — the sync never carried this blob; the sync's source did not include blake2b256-native content (weakens the premise that the 88 could be there at all)"
+  fi
+
+# READ-ONLY recon of hardware-pihole (tailnet): connectivity, then
+# locate any madder blob-store trees so the P9 content sweep can be
+# pointed at them. Tries the plain ssh config first, then the
+# config-bypass variant if identity pinning interferes. P9 last probe.
+[group('consolidate')]
+consolidate-probe-pihole-recon:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  echo "==> network diagnostics:"
+  echo "tailscale binary: $(command -v tailscale || echo MISSING)"
+  tailscale status 2>&1 | head -15 || true
+  echo "--- name resolution attempts:"
+  getent hosts hardware-pihole.finch-carp.ts.net || echo "(ts.net name: no)"
+  getent hosts hardware-pihole || echo "(bare name: no)"
+  getent hosts hardware-pihole.local || echo "(.local: no)"
+  ip=$(tailscale status 2>/dev/null | awk '/pihole/ {print $1; exit}')
+  host=${ip:-hardware-pihole.finch-carp.ts.net}
+  echo "==> target: $host"
+  try() {
+    echo "==> ssh $* -- probing"
+    ssh -o BatchMode=yes -o ConnectTimeout=10 "$@" 'echo "connected as $(whoami)@$(hostname)"' 2>&1
+  }
+  ok=""
+  if try "$host"; then ok="$host"; fi
+  if [[ -z $ok ]]; then
+    if try -F /dev/null -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts "sasha@$host"; then ok="-F /dev/null -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts sasha@$host"; fi
+  fi
+  if [[ -z $ok ]]; then
+    if try -F /dev/null -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts "pi@$host"; then ok="-F /dev/null -o UserKnownHostsFile=/home/sasha/.config/ssh/known_hosts pi@$host"; fi
+  fi
+  [[ -n $ok ]] || { echo "no ssh route to $host worked"; exit 1; }
+  echo "==> working route: ssh $ok"
+  # shellcheck disable=SC2086
+  r() { echo "==> $*"; ssh -o BatchMode=yes -o ConnectTimeout=10 $ok "$@" 2>&1 || echo "(exit $?)"; echo; }
+  r 'ls -la ~'
+  r 'ls -la ~/.local/share/madder/blob_stores 2>/dev/null || echo no-user-madder'
+  r 'ls -la /var/lib/madder 2>/dev/null || echo no-var-lib-madder'
+  r 'find / -maxdepth 4 -name "blob_store-config" -o -maxdepth 4 -name "*.dodder-blob_store-config" 2>/dev/null | head -20'
+  r 'command -v b2sum zstd madder; df -h ~'
 
 # madder-cat probe of the rsync_dot_net store for the P9 digests:
 # control (sha256-era, known-synced content) + a 10-digest sample of
