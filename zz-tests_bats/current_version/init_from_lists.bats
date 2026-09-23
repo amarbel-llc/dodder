@@ -119,3 +119,34 @@ function init_from_lists_union_collapses_exact_duplicates { # @test
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
 	EOM
 }
+
+# dodder#392: -plan-only builds and reports the plan's classification without
+# committing. It reports the union, prints the dry-run marker, and leaves the
+# freshly genesised repo empty (nothing imported, no source blobs copied) —
+# the fast feedback loop for iterating a consolidation transform and the
+# Gate-1 classification surface for the take4 personal-data consolidation.
+function init_from_lists_plan_only_reports_without_committing { # @test
+  cat >s.lua <<-'EOM'
+		return dodder.list()
+	EOM
+  script="$(realpath s.lua)"
+
+  mkdir consolidated
+  cd consolidated || exit 1
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -plan-only \
+    -script "$script" \
+    -blob-source shared \
+    .default \
+    "$list"
+  assert_success
+  assert_line 'union of 1 list(s): 6 object(s)'
+  assert_line 'dry run: not committed'
+
+  # Nothing was committed: the newborn holds no zettels.
+  run_dodder show :z
+  assert_success
+  assert_output ''
+}

@@ -152,7 +152,8 @@ test-bats-tags *tags:
 test-bats-targets *targets:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -170,7 +171,8 @@ test-bats-targets *targets:
 test-bats-targets-no-sandbox *targets:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -253,7 +255,8 @@ test-bats-update-fixtures:
 test-bats-update-goldens *targets="current_version/*.bats":
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_UPDATE_GOLDENS=1 \
@@ -268,7 +271,8 @@ test-bats-update-goldens *targets="current_version/*.bats":
 test-bats-snapshot-version:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   v="v$(dodder info store-version)"
   dest="zz-tests_bats/previous_versions/$v"
@@ -335,7 +339,8 @@ explore-radicale:
 explore-haustoria-init:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
 
   if [[ -z "${CALDAV_URL:-}" ]]; then
@@ -368,7 +373,8 @@ explore-haustoria-init:
 explore-haustoria-status:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   cd /tmp/dodder-haustoria-explore/workspace
   dodder status
@@ -451,7 +457,8 @@ explore-live *args:
   #!/usr/bin/env bash
   set -euo pipefail
   source "$HOME/.secrets.env"
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   cd "{{live_workspace}}"
   dodder {{args}}
@@ -472,7 +479,8 @@ _require-nvim:
 explore-nvim-init:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
 
   rm -rf "{{nvim_explore_dir}}"
@@ -647,7 +655,8 @@ explore-dlv-trace func_regexp stack='80' query='ach/ab':
 explore-bats-debug *targets:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -758,7 +767,8 @@ release version:
 debug-cutover-smoke:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   base=$(mktemp -d)
   trap 'rm -rf "$base"' EXIT
@@ -800,7 +810,8 @@ debug-cutover-smoke:
 consolidate-export-baseline:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   work=/home/sasha/workspaces/take4/exports
   mkdir -p "$work"
@@ -1173,6 +1184,249 @@ consolidate-probe-rsyncnet-madder:
     fi
   done
 
+# Take4 consolidation Phase-2 grounding (#16): dump the assigned-type,
+# type-definition-id, and tag token vocabulary of each union-input file
+# plus the live default export, then diff the vintage union against live.
+# The vintage-minus-live diffs ARE the raw cleanup inventory that
+# tags-cleanup.lua's rules are derived from: P1 fused key/sig/type tokens
+# show up as anomalous long type tokens containing "dodder-repo-", P7
+# botched tags show up as vintage-only tag tokens, and the historical
+# rename/drop candidates (t-from-pb->zz-pinboard, !task-cancelled,
+# newsblur*, !lua/!md naming) are exactly the vintage-only tokens.
+# Read-only over the raw list files; writes only vocabulary tables under
+# take4/vocabulary/. This is a deliberately approximate hand-parse of a
+# format with known pathologies (P1) -- the authoritative, parser-
+# validated vocabulary comes from the follow-up real scratch run
+# (init-from-lists into a disposable repo, then query-type/tag queries).
+[group('consolidate')]
+consolidate-union-vocabulary:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mig=/home/sasha/workspaces/dodder_migration2
+  out=/home/sasha/workspaces/take4/vocabulary
+  live=/home/sasha/workspaces/take4/exports/default.log-path.contents.inventory_list
+  mkdir -p "$out"
+  vintages=(
+    "$mig/dodder-val/cat2-primary-only.inventory_list"
+    "$mig/dodder-val/cat2-secondary-importable.inventory_list"
+    "$mig/objects-2025-10-19-a.inventory_list-v2"
+    "$mig/inventory_lists-2025-11-10-a.inventory_list-v2"
+    "$mig/objects-2025-09-19.inventory_list-v2"
+    "$mig/il.inventory_list"
+    "$mig/inventory_lists-2026-03-13.inventory_list-v2"
+    "$mig/inventory_lists-2025-10-19.inventory_list-v2"
+  )
+  # extract MODE FILE -> one token per line.
+  #   types:    the object's assigned type (first !-token at field >=2)
+  #   typedefs: the object's own id when it names a type (!-token at field 1)
+  #   tags:     trailing bare tokens after the type (quoted desc removed)
+  extract() {
+    awk -v mode="$1" '
+      /^\[/ {
+        line=$0
+        sub(/^\[/,"",line); sub(/\][ \t]*$/,"",line)
+        if (mode=="tags") gsub(/"[^"]*"/,"",line)
+        n=split(line,t," ")
+        ti=0
+        for(i=2;i<=n;i++){ if(substr(t[i],1,1)=="!"){ti=i;break} }
+        if(mode=="typedefs"){
+          if(substr(t[1],1,1)=="!"){ x=t[1]; sub(/@.*/,"",x); print x }
+          next
+        }
+        if(mode=="types"){
+          if(ti>0){ x=t[ti]; sub(/@.*/,"",x); print x } else { print "(none)" }
+          next
+        }
+        if(mode=="tags"){
+          if(ti==0) next
+          for(i=ti+1;i<=n;i++){
+            tok=t[i]
+            if(tok=="") continue
+            c=substr(tok,1,1)
+            if(c=="@"||c=="!") continue
+            if(index(tok,"@")>0) continue
+            print tok
+          }
+        }
+      }
+    ' "$2"
+  }
+  for f in "$live" "${vintages[@]}"; do
+    [[ -f $f ]] || { echo "MISSING input: $f" >&2; continue; }
+    b=$(basename "$f")
+    extract types    "$f" | sort | uniq -c | sort -rn > "$out/$b.types.txt"
+    extract typedefs "$f" | sort | uniq -c | sort -rn > "$out/$b.typedefs.txt"
+    extract tags     "$f" | sort | uniq -c | sort -rn > "$out/$b.tags.txt"
+    printf '== %-52s %4s types  %4s typedefs  %6s tags\n' \
+      "$b" "$(wc -l <"$out/$b.types.txt")" \
+      "$(wc -l <"$out/$b.typedefs.txt")" "$(wc -l <"$out/$b.tags.txt")"
+  done
+  : >"$out/_vintage.types.raw"; : >"$out/_vintage.tags.raw"
+  for f in "${vintages[@]}"; do
+    [[ -f $f ]] || continue
+    extract types "$f" >>"$out/_vintage.types.raw"
+    extract tags  "$f" >>"$out/_vintage.tags.raw"
+  done
+  sort -u "$out/_vintage.types.raw" >"$out/_vintage.types.set"; rm -f "$out/_vintage.types.raw"
+  sort -u "$out/_vintage.tags.raw"  >"$out/_vintage.tags.set";  rm -f "$out/_vintage.tags.raw"
+  extract types "$live" | sort -u >"$out/_live.types.set"
+  extract tags  "$live" | sort -u >"$out/_live.tags.set"
+  comm -23 "$out/_vintage.types.set" "$out/_live.types.set" >"$out/_types.vintage-only.txt"
+  comm -23 "$out/_vintage.tags.set"  "$out/_live.tags.set"  >"$out/_tags.vintage-only.txt"
+  echo
+  echo "#### assigned TYPES in vintages but NOT in the live repo ($(wc -l <"$out/_types.vintage-only.txt")):"
+  cat "$out/_types.vintage-only.txt"
+  echo
+  echo "#### TAGS in vintages but NOT in the live repo ($(wc -l <"$out/_tags.vintage-only.txt"), first 80):"
+  head -80 "$out/_tags.vintage-only.txt"
+  echo
+  echo "full vocabulary tables + diffs under $out"
+
+# Take4 consolidation Phase-2 step #3 (#16): real no-op init-from-lists
+# scratch run for the PARSER-VALIDATED union vocabulary. Unlike the raw
+# hand-parse in consolidate-union-vocabulary, this decodes the union
+# through dodder's OWN inventory-list decoder (readUnion), so it answers
+# the load-bearing question the raw scan cannot: does the decoder ACCEPT
+# the P1 fused 'gayur' type tokens (making them repairable in
+# tags-cleanup.lua via object.Typ) or REJECT them at decode time (forcing
+# a pre-clean of objects-2025-09-19 before it can enter the union)? A
+# no-op transform (return dodder.list()) imports the union verbatim into a
+# fresh, DISPOSABLE cwd-scoped repo under take4/scratch/<name>/, re-signed
+# under a throwaway key; blobs resolve read-only from dodder-v8-take3.
+# Then it fscks, lists the newborn's defined types, and exports its graph
+# so the surviving (canonical) vocabulary can be extracted. Heavy: holds
+# the whole union in RAM (OOM risk on the full set), so run one big file
+# first. Everything it writes is under take4/scratch/ and is rm-safe.
+# `lists` is a space-separated list of inventory-list file paths.
+[group('consolidate')]
+consolidate-scratch-import name lists:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  scratch=/home/sasha/workspaces/take4/scratch/{{ name }}
+  rm -rf "$scratch"; mkdir -p "$scratch"
+  printf 'return dodder.list()\n' >"$scratch/noop.lua"
+  cd "$scratch"
+  echo "==> init-from-lists into disposable .{{ name }} (blob-source dodder-v8-take3)"
+  # shellcheck disable=SC2086
+  dodder init-from-lists -encryption none -script "$scratch/noop.lua" \
+    -blob-source dodder-v8-take3 .{{ name }} {{ lists }}
+  rc=$?
+  echo "==> init-from-lists exit: $rc"
+  if [[ $rc -ne 0 ]]; then
+    echo "IMPORT FAILED (exit $rc) -- this IS a finding: the decoder/importer rejected some union input"
+    exit "$rc"
+  fi
+  echo "==> fsck (self-containment proof):"
+  dodder fsck || echo "(fsck exit $?)"
+  echo "==> defined type objects in the newborn (parser-validated):"
+  dodder show :t 2>/dev/null | sed 's/ @.*//' || true
+  echo "==> exporting newborn graph for vocabulary extraction"
+  dodder export -print-time=true +z,e,t,k >"$scratch/export.inventory_list" 2>"$scratch/export.err" || echo "(export exit $?)"
+  echo "exported $(grep -c '^\[' "$scratch/export.inventory_list" 2>/dev/null || echo 0) object line(s) to $scratch/export.inventory_list"
+
+# Take4 consolidation Phase-2 (#16) plan-B pre-process: prepend a hyphence
+# inventory-list header to a raw, headerless object-list file. The
+# pre-madder vintage objects-2025-09-19 was EXTRACTED from an old store's
+# blob without its `---\n! inventory_list-vN\n---` envelope, so dodder's
+# decoder reads its first object line as the (empty) list-type header and
+# aborts readUnion with "no coders available for type: \"\"". This writes a
+# headered COPY to take4/staged/ (originals in dodder_migration2 are left
+# untouched). Only needed for headerless inputs; every other union input
+# already carries its envelope.
+[group('consolidate')]
+consolidate-add-list-header src version="inventory_list-v2":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  stage=/home/sasha/workspaces/take4/staged
+  mkdir -p "$stage"
+  out="$stage/$(basename "{{ src }}").headered"
+  { printf -- '---\n! %s\n---\n\n' "{{ version }}"; cat "{{ src }}"; } >"$out"
+  echo "wrote $out"
+  head -5 "$out"
+
+# Take4 consolidation Phase-2 (#16) plan-B pre-process: strip the derived-tag
+# tokens an old export serialized into objects-2025-09-19. The doddish
+# decoder rejects them ("unsupported seq: \"%now\"") and they are COMPUTED
+# tags, not stored data (per Sasha 2026-09-11), so dropping them loses
+# nothing. Edits FILE in place (run it on a staged copy, not a
+# dodder_migration2 original). Extend the alternation as new derived-tag
+# names surface in dry-run decode errors.
+[group('consolidate')]
+consolidate-strip-derived-tags file:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  before=$(grep -cE ' %(complete|done|now)\b' "{{ file }}" || true)
+  sed -i -E 's/ %(complete|done|now)\b//g' "{{ file }}"
+  echo "stripped derived-tag tokens from $before line(s) in {{ file }}"
+
+# Take4 consolidation Phase-2 (#16): run init-from-lists -plan-only over a union
+# with a given transform script, into a disposable repo, capturing the plan
+# classification report WITHOUT committing or copying the (tens of GB) blob
+# closure -- the fast iteration loop for tags-cleanup.lua and the Gate-1
+# classification surface. `script` is a path to the Lua transform; `lists` is
+# a space-separated set of inventory-list file paths. Output is tee'd to
+# take4/scratch/<name>/dryrun.out. Still reads the whole union into RAM (OOM
+# risk on the full set), but skips the blob copy that makes a real run heavy.
+[group('consolidate')]
+consolidate-union-dryrun name script lists:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  scratch=/home/sasha/workspaces/take4/scratch/{{ name }}
+  rm -rf "$scratch"; mkdir -p "$scratch"
+  cd "$scratch"
+  echo "==> init-from-lists -plan-only into disposable .{{ name }} (blob-source dodder-v8-take3)"
+  # -skip-validation: the union references known-missing blobs (P8 Cat-3
+  # remote-only media + receipts whose blobs never reached take3); fsck-style
+  # validation would abort before the plan classification prints. The
+  # classification IS the point of a dry-run, so skip validation here. Enumerate
+  # missing blobs separately when needed (a validating pass).
+  # shellcheck disable=SC2086
+  dodder init-from-lists -plan-only -skip-validation -encryption none -script "{{ script }}" \
+    -blob-source dodder-v8-take3 .{{ name }} {{ lists }} 2>&1 | tee "$scratch/dryrun.out"
+  echo "==> init-from-lists -plan-only exit: ${PIPESTATUS[0]}"
+
+# Take4 consolidation Phase-2 (#16) step #3 output: extract the PARSER-VALIDATED
+# type and tag vocabulary from a consolidate-union-dryrun dryrun.out. Each line
+# is TAB-separated `classification \t genre \t <box render> \t tai`; the box
+# render is space-tokenized as `tai (date) Genre id pubkey sig [mothersig]
+# objdigest [blobdigest] !type[@locksig] tags... "desc"`. Type = first !-token
+# at word-index >= 5 (skips the id at index 4, which is itself !-prefixed for
+# type-def objects); tags = trailing bare tokens after the type, quoted desc
+# removed. This is dodder's own decoded+re-rendered vocabulary, so it is the
+# authoritative counterpart to the raw hand-parse in consolidate-union-vocabulary
+# -- and it shows exactly which P1 fused (dodder-repo-*) types a no-op union
+# still carries, i.e. what tags-cleanup.lua must repair.
+[group('consolidate')]
+consolidate-dryrun-vocabulary file:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  out=/home/sasha/workspaces/take4/vocabulary
+  mkdir -p "$out"
+  b=$(basename "{{ file }}")
+  awk -F'\t' '$1=="import"||$1=="resolve-tai-reassign"{
+    n=split($3,w," "); ti=0
+    for(i=5;i<=n;i++){if(substr(w[i],1,1)=="!"){ti=i;break}}
+    if(ti==0){print "(none)";next}
+    t=w[ti]; sub(/@.*/,"",t); print t
+  }' "{{ file }}" | sort | uniq -c | sort -rn >"$out/$b.dryrun-types.txt"
+  awk -F'\t' '$1=="import"||$1=="resolve-tai-reassign"{
+    r=$3; gsub(/"[^"]*"/,"",r)
+    n=split(r,w," "); ti=0
+    for(i=5;i<=n;i++){if(substr(w[i],1,1)=="!"){ti=i;break}}
+    if(ti==0)next
+    for(i=ti+1;i<=n;i++){tok=w[i]; if(tok=="")continue; c=substr(tok,1,1); if(c=="@"||c=="!")continue; if(index(tok,"@")>0)continue; print tok}
+  }' "{{ file }}" | sort | uniq -c | sort -rn >"$out/$b.dryrun-tags.txt"
+  echo "types: $(wc -l <"$out/$b.dryrun-types.txt"), tags: $(wc -l <"$out/$b.dryrun-tags.txt")"
+  echo "== P1 fused type tokens (dodder-repo-*): $(grep -c 'dodder-repo-' "$out/$b.dryrun-types.txt" || true) =="
+  echo "== non-fused types (the real vocabulary), by count =="
+  grep -v 'dodder-repo-' "$out/$b.dryrun-types.txt"
+
 # Read-only full-repo signature audit via fsck -recompute. NOTE: this
 # does NOT detect the description-newline-collapse bug class (dodder#TBD,
 # fixed this session) -- fsck recomputes the digest directly from the
@@ -1190,7 +1444,8 @@ consolidate-probe-rsyncnet-madder:
 debug-fsck-full-repo-audit repo_id="default":
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
   dodder fsck -recompute -repo_id {{ repo_id }}
 
@@ -1210,7 +1465,8 @@ debug-fsck-full-repo-audit repo_id="default":
 debug-export-import-audit repo_id="default":
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
 
   export_dir="{{ justfile_directory() }}/.tmp/debug-export-import-audit"
@@ -1244,7 +1500,8 @@ debug-export-import-audit repo_id="default":
 debug-pull-home-repo-repro:
   #!/usr/bin/env bash
   set -euo pipefail
-  bin=$(nix build --no-link --print-out-paths .#dodder-debug)
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
   export PATH="$bin/bin:$PATH"
 
   dest="{{ justfile_directory() }}/.tmp/debug-pull-home-repo-repro/$(date +%s)"

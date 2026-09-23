@@ -50,9 +50,11 @@ type InitFromLists struct {
 	command_components_dodder.Genesis
 	command_components_dodder.InventoryLists
 
-	Script       string
-	ScriptDigest string
-	BlobSources  stringSliceFlag
+	Script         string
+	ScriptDigest   string
+	BlobSources    stringSliceFlag
+	PlanOnly       bool
+	SkipValidation bool
 }
 
 var (
@@ -86,7 +88,9 @@ func (cmd InitFromLists) GetDescription() command.Description {
 			"through a Lua list-in/list-out transform, and commit the result " +
 			"into a freshly initialized repository. The new repo is born with " +
 			"a fresh keypair and every object is fully re-signed under it; " +
-			"blobs are resolved read-only from the -blob-source stores.",
+			"blobs are resolved read-only from the -blob-source stores. Use " +
+			"-plan-only to build, validate, and report the plan's classification " +
+			"without committing or copying source blobs.",
 	}
 }
 
@@ -113,6 +117,20 @@ func (cmd *InitFromLists) SetFlagDefinitions(
 		&cmd.BlobSources,
 		"blob-source",
 		"name of an existing madder blob store to resolve source blobs from, read-only (repeatable)",
+	)
+
+	flagDefinitions.BoolVar(
+		&cmd.PlanOnly,
+		"plan-only",
+		false,
+		"build, validate, and report the plan's classification without committing or copying source blobs (blobs.write is staged to a discardable store); the newborn repo is still genesised but stays empty",
+	)
+
+	flagDefinitions.BoolVar(
+		&cmd.SkipValidation,
+		"skip-validation",
+		false,
+		"skip the fsck-style validation of the transform output (for staged, intentionally-inconsistent migration passes)",
 	)
 }
 
@@ -177,6 +195,11 @@ func (cmd *InitFromLists) Run(req command.Request) {
 		repo:         local,
 		scriptReader: scriptReader,
 		objects:      objects,
+		dryRun:       cmd.PlanOnly,
+		// -skip-validation also relaxes the pre-commit blob-copy to tolerate a
+		// source blob missing from every -blob-source (staged passes over a
+		// partial blob mirror); under -plan-only nothing is copied at all.
+		skipValidation: cmd.SkipValidation,
 		// A history union carries many (id,tai) versions per id by design, and
 		// fork-resolution is a deliberate same-id merge — so do NOT reject
 		// duplicate object ids (dodder#392); the import builder's within-batch

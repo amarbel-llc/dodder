@@ -321,9 +321,16 @@ is the self-containment proof, asserted in both commands' e2e tests.
 ### 7.4 New command surface
 
 ```
-dodder init-from-lists -script <path> [-blob-source <store>...] <repo-id> <list-path>...
+dodder init-from-lists -script <path> [-blob-source <store>...] [-plan-only] [-skip-validation] <repo-id> <list-path>...
 dodder clone -direct <path> -script <path> <repo-id> [query args...]
 ```
+
+`init-from-lists` spells `transform`'s `-dry_run` as `-plan-only` (build,
+validate, and report the plan; no commit, no blob copy; the newborn is still
+genesised but stays empty) and `-skip_validation` as `-skip-validation`.
+`-dry-run` is unavailable as a per-command name: it is dodder's global
+config flag, which also gates genesis and store flushes. Aligning
+`transform`'s spelling is dodder#397.
 
 `init-from-lists` genesises a fresh repo (fresh keypair, fresh instance
 identity, end-state config, `ExcludeDefaultType`) and consolidates N
