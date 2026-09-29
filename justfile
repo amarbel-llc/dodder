@@ -1427,6 +1427,54 @@ consolidate-dryrun-vocabulary file:
   echo "== non-fused types (the real vocabulary), by count =="
   grep -v 'dodder-repo-' "$out/$b.dryrun-types.txt"
 
+# Take4 actionable sub-grill (#16): count actionable versions (!task*/!chore)
+# in a consolidate-union-dryrun dryrun.out whose state carriers (state type +
+# state tags, per the sub-grill Q4/Q5 mapping) disagree about `status`.
+# Prints the conflict count, the per-pattern breakdown, and a few examples.
+# Read-only.
+[group('consolidate')]
+consolidate-state-conflicts file:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  awk -F'\t' '
+    function st(tok) {
+      if (tok ~ /^(task-todo|k-task-todo|t-todo|task-blocked|k-task-blocked|t-gtd-someday)$/) return "todo"
+      if (tok ~ /^(task-in_progress|k-task-in_progress|k-todo-in_progress|today-in_progress|task-in_progress-blocked)$/) return "in_progress"
+      if (tok ~ /^(zz-archive-task-done(-10)?|k-task-done|zz-task-done|zz-archive-done|zz-archive-tast-done|t-done|t-task-done|t-gtd-done|donezz-archive-task-done)$/) return "done"
+      if (tok ~ /^(zz-archive-task-cancelled|zz-archive-cancelled|zz-task-cancelled|k-task-cancelled|zz-archive-task-blocked|zz-archive-deferred|zz-archive-task-deferred|zz-archive-task-delegated)$/) return "cancelled"
+      if (tok == "zz-archive-task-donek-task-todo") return "done+todo"
+      return ""
+    }
+    $1=="import"||$1=="resolve-tai-reassign" {
+      r=$3; gsub(/"[^"]*"/,"",r)
+      n=split(r,w," "); ti=0
+      for(i=5;i<=n;i++){if(substr(w[i],1,1)=="!"){ti=i;break}}
+      if(ti==0) next
+      t=w[ti]; sub(/@.*/,"",t)
+      if (t !~ /^!(task|task-done|task-in_progress|task-cancelled|taswk-done|chore)$/) next
+      total++
+      delete seen; k=0
+      if (t ~ /done$/) {seen["done"]=1}
+      if (t=="!task-in_progress") {seen["in_progress"]=1}
+      if (t=="!task-cancelled") {seen["cancelled"]=1}
+      for(i=ti+1;i<=n;i++){
+        s=st(w[i]); if(s=="") continue
+        if (s=="done+todo") {seen["done"]=1; seen["todo"]=1} else seen[s]=1
+      }
+      key=""; for (s in seen) {k++; key=key (key==""?"":"+") s}
+      if (k>1) {
+        conflicts++
+        m=split(key,parts,"+"); asort(parts); key=parts[1]; for(j=2;j<=m;j++) key=key "+" parts[j]
+        pat[key]++
+        if (shown<8) {print "  e.g. " w[4] " " t " :: " substr(r, index(r,t)); shown++}
+      }
+    }
+    END {
+      printf "actionable versions: %d\nversions with conflicting state carriers: %d\n", total, conflicts
+      for (p in pat) printf "  %6d  %s\n", pat[p], p
+    }
+  ' "{{ file }}"
+
 # Read-only full-repo signature audit via fsck -recompute. NOTE: this
 # does NOT detect the description-newline-collapse bug class (dodder#TBD,
 # fixed this session) -- fsck recomputes the digest directly from the
