@@ -9,6 +9,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/delta/objects"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/ui"
+	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 )
@@ -47,6 +48,11 @@ func (store *Store) ReadObjectTypeAndLockIfNecessary(
 		return store.ReadTypeObject(typeLock)
 	}
 
+	if typeObject = store.readUnflushedTypeObject(object.GetType()); typeObject != nil {
+		typeLock.GetValueMutable().ResetWithMarklId(typeObject.GetMetadata().GetObjectSig())
+		return typeObject, err
+	}
+
 	if typeObject, err = store.ReadOneObjectId(object.GetType()); err != nil {
 		err = errors.Wrap(err)
 		return typeObject, err
@@ -74,7 +80,12 @@ func (store *Store) ReadTypeObject(
 	var typeObjectRepool interfaces.FuncRepool
 	typeObject, typeObjectRepool = sku.GetTransactedPool().GetWithRepool() //repool:suppress ownership transfer via return
 
-	if !store.streamIndex.ReadOneMarklId(
+	// A type committed earlier in this session is found in the addition probes
+	// only; see readUnflushedTypeObject.
+	if !store.streamIndex.ReadOneMarklIdAdded(
+		typeLock.GetValue(),
+		typeObject,
+	) && !store.streamIndex.ReadOneMarklId(
 		typeLock.GetValue(),
 		typeObject,
 	) {
@@ -86,6 +97,31 @@ func (store *Store) ReadTypeObject(
 	}
 
 	return typeObject, err
+}
+
+// readUnflushedTypeObject returns the type object committed earlier in this
+// session, or nil. An import batch (e.g. init-from-lists) commits types and
+// the objects that use them without flushing in between, and the persisted
+// probe index behind ReadOneObjectId cannot see those types yet — so field
+// projection silently found no type (dodder#399). This is deliberately scoped
+// to type resolution: general object lookups must keep ignoring unflushed
+// objects, since history imports rely on that for conflict detection.
+func (store *Store) readUnflushedTypeObject(
+	tipe domain_interfaces.ObjectId,
+) *sku.Transacted {
+	digest, digestRepool := markl.FormatHashSha256.GetMarklIdForString(
+		tipe.String(),
+	)
+	defer digestRepool()
+
+	typeObject, typeObjectRepool := sku.GetTransactedPool().GetWithRepool() //repool:suppress ownership transfer via return
+
+	if !store.streamIndex.ReadOneMarklIdAdded(digest, typeObject) {
+		typeObjectRepool()
+		return nil
+	}
+
+	return typeObject
 }
 
 // IsInlineType resolves whether objects of the given type render their blob

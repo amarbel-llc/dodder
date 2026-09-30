@@ -11,7 +11,6 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
 	"code.linenisgreat.com/dodder/go/internal/hotel/inventory_list_coders"
 	"code.linenisgreat.com/dodder/go/internal/india/config_log"
-	"code.linenisgreat.com/dodder/go/lib/bravo/catgut"
 	"code.linenisgreat.com/madder/go/pkgs/blob_store_id"
 	mad_domain_interfaces "code.linenisgreat.com/madder/go/pkgs/domain_interfaces"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
@@ -23,23 +22,6 @@ func Genesis(
 	envRepo env_repo.Env,
 ) (repo *Repo) {
 	repo = MakeWithEnvRepo(OptionsEmpty, envRepo)
-
-	// Seed the archive tag into the dormant index so the built-in actionable
-	// types' on_commit_fields archive hook takes effect: an object the hook
-	// tags with type_blobs.ArchiveTag is recognized as dormant. Scoped to the
-	// actionable opt-in since that is the only thing that emits the tag.
-	if bigBang.IncludeBuiltinActionableTypes {
-		archiveTag, archiveTagRepool := catgut.MakeFromString(
-			type_blobs.ArchiveTag,
-		)
-
-		if err := repo.dormantIndex.AddDormantTag(archiveTag); err != nil {
-			archiveTagRepool()
-			repo.Cancel(err)
-		}
-
-		archiveTagRepool()
-	}
 
 	if err := repo.dormantIndex.Flush(
 		repo.GetEnvRepo(),

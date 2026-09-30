@@ -158,6 +158,10 @@ func projectFields(
 	appendField func(fields.Field),
 ) (err error) {
 	for _, fd := range fieldDefs {
+		if err = fd.ValidateTerminal(); err != nil {
+			return errors.Wrap(fmt.Errorf("type %s: %w", tipe, err))
+		}
+
 		value, ok := scriptOutput[fd.Name]
 		if !ok {
 			value = fd.Default

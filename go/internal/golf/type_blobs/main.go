@@ -19,8 +19,6 @@ type (
 	TomlV2                 = golf_tb.TomlV2
 )
 
-const ArchiveTag = golf_tb.ArchiveTag
-
 var (
 	Default                    = golf_tb.Default
 	DefaultWithPandocFormatter = golf_tb.DefaultWithPandocFormatter

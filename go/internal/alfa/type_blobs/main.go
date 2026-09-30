@@ -4,25 +4,12 @@ import (
 	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 )
 
-// ArchiveTag is the tag the built-in actionable hooks add to archive an object
-// on a terminal status. Genesis seeds it into the dormant index (when the
-// built-in actionable types are included) so a carrying object becomes
-// dormant. The "zz-" prefix follows the repo's archive-tag convention and
-// keeps it sorted last.
-//
-// COUPLING: the "zz-archive" string literal in the blob-backed
-// actionable-common.lua module
-// (romeo/local_working_copy/embedded/actionable/actionable-common.lua) MUST
-// match this const. The archive logic lives in that lua module now (delivered
-// as a blob reference on the actionable type objects); this const is still
-// used by genesis to seed the dormant index.
-const ArchiveTag = "zz-archive"
-
 // actionableCommonHook is the thin type-blob hook script for the built-in
 // actionable types: it require()s the blob-backed actionable-common module
 // (delivered as a blob reference on the type object, preloaded into the hook
-// VM by oscar/store) and returns its hooks table. The archive/recurrence/
-// completed-date logic lives in embedded/actionable/actionable-common.lua.
+// VM by oscar/store) and returns its hooks table. The recurrence/
+// completed-date logic lives in embedded/actionable/actionable-common.lua;
+// dormancy is declared by the status field's Terminal values (FDR 0025).
 func actionableCommonHook() string {
 	return `local common = require("actionable-common")
 return common.hooks
@@ -160,13 +147,19 @@ func DefaultPandocLuaFilter() TomlV2 {
 // is to extract this into an !actionable abstract type that both compose
 // against. The urgency field is left without a default so an untriaged
 // instance reads as urgency-unset rather than silently defaulting.
-func actionableFields() []FieldDefinition {
+//
+// terminalStatuses are the status values that make an instance dormant (FDR
+// 0025): a one-shot !task is finished by done or cancelled, while a recurring
+// type's done only completes one occurrence (the recurrence hook resets it to
+// todo), so only cancelled retires it.
+func actionableFields(terminalStatuses ...string) []FieldDefinition {
 	return []FieldDefinition{
 		{
-			Name:    "status",
-			Kind:    "enum",
-			Values:  []string{"todo", "in_progress", "done", "cancelled"},
-			Default: "todo",
+			Name:     "status",
+			Kind:     "enum",
+			Values:   []string{"todo", "in_progress", "done", "cancelled"},
+			Default:  "todo",
+			Terminal: terminalStatuses,
 		},
 		{
 			Name:   "urgency",
@@ -192,7 +185,7 @@ func actionableFields() []FieldDefinition {
 // rather than a dedicated date kind since there is no date FieldDefinition
 // kind.
 func recurringFields() []FieldDefinition {
-	return append(actionableFields(), FieldDefinition{
+	return append(actionableFields("cancelled"), FieldDefinition{
 		Name: "recurrence",
 		Kind: "string",
 	})
@@ -301,7 +294,7 @@ func DefaultTaskType() TomlV2 {
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
 		Hooks:         actionableCommonHook(),
-		Fields:        actionableFields(),
+		Fields:        actionableFields("done", "cancelled"),
 		FieldsReader:  actionableFieldsReader(),
 		FieldsWriter:  actionableFieldsWriter(),
 	}

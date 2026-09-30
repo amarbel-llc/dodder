@@ -40,8 +40,9 @@ A type blob carries a `hooks` lua string (`WithStringLuaHooks`). During a commit
    actionable-types work; the kinder table now also exposes the projected
    **fields** (read-only) via `kinder.Fields`. A hook may mutate tags here, and
    `applyDormantAndRealizeTags` (which runs later, after `tryPrecommit`) makes a
-   tag-driven dormancy change take effect. This is how the built-in archive
-   behavior (`done` `!task` / `cancelled` → `zz-archive`) is implemented.
+   tag-driven dormancy change take effect. (The built-in actionable types
+   once archived this way via a `zz-archive` tag; they now declare terminal
+   status values on the type instead, see FDR 0025.)
 6. `tryNewHook` → lua `on_new` (genesis-only).
 
 The binding `ToLuaTableV1` projects tags + (now) read-only fields into the

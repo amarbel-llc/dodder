@@ -347,6 +347,20 @@ dodder checkout :?z                # checkout including dormant
 The dormant index is part of the repository configuration. Use `dormant-edit` to
 directly edit the configuration blob that controls which tags trigger dormancy.
 
+A type can also make its objects dormant by state: an `enum` field in the
+type blob may list `terminal` values (a subset of its `values`), and any
+object whose field holds one of them is dormant, with no tag involved. The
+built-in `!task` is dormant at `status` `done` or `cancelled`; `!chore` and
+`!habit` only at `cancelled` (their `done` recurs back to `todo`).
+
+```toml
+[[fields]]
+name = "status"
+kind = "enum"
+values = ["open", "closed", "wontfix"]
+terminal = ["closed", "wontfix"]
+```
+
 ## Maintenance
 
 ```bash

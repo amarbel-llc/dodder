@@ -61,7 +61,12 @@ func (store *Store) applyDormantAndRealizeTags(
 		return err
 	}
 
-	object.SetDormant(store.dormantIndex.ContainsSku(object))
+	// Tag-based dormancy (the dormant index) and type-declared dormancy (a
+	// projected field in a terminal state, FDR 0025) are independent sources.
+	object.SetDormant(
+		store.dormantIndex.ContainsSku(object) ||
+			store.isInTerminalState(object),
+	)
 
 	return err
 }

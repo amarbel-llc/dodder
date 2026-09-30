@@ -40,6 +40,8 @@ type Store struct {
 	zettelIdIndex zettel_id_index.Index
 	dormantIndex  *dormant_index.Index
 
+	terminalValuesCache terminalValuesCache
+
 	protoZettel  sku.Proto
 	queryBuilder *queries.Builder
 

@@ -739,3 +739,150 @@ function field_required_and_reader_guard_coexist { # @test
 		[one/uno @blake2b256-rkhsn7033c8w7jyg98nxcj3fg272yx0n3u5qc6uanzqctrl2kccsd9h5p7 !guarded "a url worth keeping" url="https://example.com/page"]
 	EOM
 }
+
+# A !ticket-shaped type that declares terminal status values (FDR 0025) and
+# carries NO hooks: dormancy comes from the type declaration alone.
+function create_ticket_type {
+  cat - >ticket.type <<-'EOM'
+		file-extension = "toml"
+		vim-syntax-type = "toml"
+
+		[[fields]]
+		name = "status"
+		kind = "enum"
+		values = ["open", "closed", "wontfix"]
+		default = "open"
+		terminal = ["closed", "wontfix"]
+
+		[fields-reader]
+		script = "yq -p toml -o json '{\"status\": .status} | with_entries(select(.value != null))'"
+
+		[fields-writer]
+		script = "yq -p toml -o toml -i \".status = \\\"$DODDER_FIELD_status\\\"\" \"$DODDER_BLOB_PATH\""
+	EOM
+
+  run_dodder checkin -delete ticket.type
+  assert_success
+}
+
+function field_terminal_value_makes_object_dormant { # @test
+  command -v yq >/dev/null || skip "yq not available"
+  create_ticket_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# open ticket
+		! ticket
+		---
+
+		status = "open"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# closed ticket
+		! ticket
+		---
+
+		status = "closed"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# wontfix ticket
+		! ticket
+		---
+
+		status = "wontfix"
+	EOM
+  assert_success
+
+  run_dodder show '!ticket'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-yewskx4f7m4dq236h0qv4jmdwl72jlvucrmpu26s36naruzue9qqccwpe8 !ticket "open ticket" status=open]
+	EOM
+
+  run_dodder show '!ticket?z'
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-vqa6km92vzyunztnudsaan62668w4xmh5ez2gx4fr37ugx33g5tsh5r4zp !ticket "closed ticket" status=closed]
+		[one/uno @blake2b256-yewskx4f7m4dq236h0qv4jmdwl72jlvucrmpu26s36naruzue9qqccwpe8 !ticket "open ticket" status=open]
+		[two/uno @blake2b256-l2q9xy2afy2klnuprlynv3hq626vmkt939rxmd5lq8efqthf5rcqus5ukl !ticket "wontfix ticket" status=wontfix]
+	EOM
+}
+
+# Moving an object out of a terminal state makes it active again: dormancy is
+# recomputed on every commit, not latched.
+function field_terminal_value_reopened_is_active { # @test
+  command -v yq >/dev/null || skip "yq not available"
+  create_ticket_type
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# ticket
+		! ticket
+		---
+
+		status = "closed"
+	EOM
+  assert_success
+
+  run_dodder show '!ticket'
+  assert_success
+  assert_output ''
+
+  run_dodder checkout one/uno
+  assert_success
+
+  cat >one/uno.zettel <<-EOM
+		---
+		# ticket
+		! ticket
+		---
+
+		status = "open"
+	EOM
+
+  run_dodder checkin -delete one/uno.zettel
+  assert_success
+
+  run_dodder show '!ticket'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-yewskx4f7m4dq236h0qv4jmdwl72jlvucrmpu26s36naruzue9qqccwpe8 !ticket "ticket" status=open]
+	EOM
+}
+
+function field_terminal_value_outside_values_rejects_commit { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  cat - >broken.type <<-'EOM'
+		file-extension = "toml"
+
+		[[fields]]
+		name = "status"
+		kind = "enum"
+		values = ["open", "closed"]
+		terminal = ["archived"]
+
+		[fields-reader]
+		script = "yq -p toml -o json '{\"status\": .status}'"
+	EOM
+
+  run_dodder checkin -delete broken.type
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# broken
+		! broken
+		---
+
+		status = "open"
+	EOM
+  assert_failure
+  assert_output --regexp 'type !broken: field "status": terminal value "archived" is not in allowed values \[open closed\]'
+}

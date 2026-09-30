@@ -120,6 +120,95 @@ function init_from_lists_union_collapses_exact_duplicates { # @test
 	EOM
 }
 
+# dodder#399 / FDR 0025: an imported !task whose status is terminal is dormant
+# in the newborn just by being committed -- no dormancy tag, no dormant-index
+# entry. The consolidation transform is the identity; the newborn recomputes
+# dormancy from the !task type's declared terminal status values.
+function init_from_lists_terminal_status_is_dormant_without_tags { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  mkdir source
+  pushd source || exit 1
+
+  run_dodder init \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -encryption none \
+    -blob_store-id shared \
+    -include-builtin-actionable-types \
+    .default
+  assert_success
+
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# finished task
+		! task
+		---
+
+		status = "done"
+		priority = "p1"
+		due = "2026-07-01"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# open task
+		! task
+		---
+
+		status = "todo"
+		priority = "p2"
+		due = "2026-07-02"
+	EOM
+  assert_success
+
+  run_madder sync .default-local shared
+  assert_success
+
+  run_dodder export -print-time=true '+?z,e,t'
+  assert_success
+  echo "$output" >list
+  source_list="$(realpath list)"
+
+  popd || exit 1
+
+  cat >s.lua <<-'EOM'
+		return dodder.list()
+	EOM
+  script="$(realpath s.lua)"
+
+  mkdir consolidated
+  cd consolidated || exit 1
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -script "$script" \
+    -blob-source shared \
+    .default \
+    "$source_list"
+  assert_success
+
+  # only the open task is active. Its fields are projected on import, which
+  # requires resolving the !task type committed earlier in the same unflushed
+  # import batch.
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/dos @blake2b256-zga2ruulc0qv6sgpzth5gqmg227ea6dsgdnq7nlxtj3r9d00ae5qtqyhyl !task "open task" status=todo priority=p2 due=2026-07-02]
+	EOM
+
+  # the finished task is dormant and carries no tags
+  run_dodder show '!task?z'
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/uno @blake2b256-pzz4ldfmq5khdt3e4ktcs7ukhnptt94hdf8xaus935mz7eu08zyq7aed5w !task "finished task" status=done priority=p1 due=2026-07-01]
+		[one/dos @blake2b256-zga2ruulc0qv6sgpzth5gqmg227ea6dsgdnq7nlxtj3r9d00ae5qtqyhyl !task "open task" status=todo priority=p2 due=2026-07-02]
+	EOM
+}
+
 # dodder#392: -plan-only builds and reports the plan's classification without
 # committing. It reports the union, prints the dry-run marker, and leaves the
 # freshly genesised repo empty (nothing imported, no source blobs copied) —
