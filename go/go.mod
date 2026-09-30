@@ -4,12 +4,12 @@ go 1.26.2
 
 require (
 	code.linenisgreat.com/chrest/go v0.4.0
-	code.linenisgreat.com/hyphence/go v0.3.1-0.20260720154720-ea7f1e0933f9
-	code.linenisgreat.com/madder/go v0.4.6-0.20260804120852-1401a4a90675
-	code.linenisgreat.com/piggy/go v0.0.0-20260720155209-77cfdea0031e
-	code.linenisgreat.com/purse-first/libs/dewey v0.5.0
-	code.linenisgreat.com/purse-first/libs/go-mcp v0.5.0
-	code.linenisgreat.com/tap/go v0.2.0
+	code.linenisgreat.com/hyphence/go v0.4.1-0.20260929204433-56af05237d8a
+	code.linenisgreat.com/madder/go v0.4.7-0.20260929205020-1a55d290c7bf
+	code.linenisgreat.com/piggy/go v0.1.24-0.20260929202219-5371122a5af5
+	code.linenisgreat.com/purse-first/libs/dewey v0.6.3-0.20260930013913-d5aef57dbc0e
+	code.linenisgreat.com/purse-first/libs/go-mcp v0.6.3-0.20260930013913-d5aef57dbc0e
+	code.linenisgreat.com/tap/go v0.2.1-0.20260929193235-d65ff37a9e7a
 	code.linenisgreat.com/tommy v0.5.0
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7

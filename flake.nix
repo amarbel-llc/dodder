@@ -77,6 +77,23 @@
       inputs.tap.follows = "tap";
     };
 
+    # chrest builds with godyn and publishes no committed go.mod, so a
+    # versioned `require` stops resolving after its godyn cutover
+    # (chrest#116, igloo FDR 0008). Bridged through its go-pkgs producer
+    # via goFlakeInputs (subPath "go") — see go/gomod.nix.
+    chrest = {
+      url = "https://code.linenisgreat.com/chrest/archive/master.tar.gz";
+      inputs.igloo.follows = "igloo";
+      inputs.nixpkgs-master.follows = "nixpkgs-master";
+      inputs.utils.follows = "utils";
+      inputs.tommy.follows = "tommy";
+      inputs.bats.follows = "bats";
+      inputs.tap.follows = "tap";
+      inputs.purse-first.follows = "purse-first";
+      inputs.conformist.follows = "conformist";
+      inputs.doppelgang.follows = "hyphence/doppelgang";
+    };
+
     # conformist: the linter + formatter multiplexer (treefmt successor).
     # Config is Nix-generated from ./conformist.nix (+ presets.eng) via
     # conformist.lib.evalModule — see conformistEval below and
@@ -136,6 +153,7 @@
       hyphence,
       piggy,
       purse-first,
+      chrest,
       conformist,
       langlang,
       ...
@@ -171,6 +189,7 @@
             tap
             tommy
             purse-first
+            chrest
             ;
           # Scope the producer at go/ so downstream consumers reference
           # go-pkgs directly with no subPath. Dodder's repo root has

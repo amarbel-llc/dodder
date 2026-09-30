@@ -7,33 +7,33 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/hyphence/go']
-    version = 'v0.3.1-0.20260720154720-ea7f1e0933f9'
-    hash = 'sha256-HMeJOBTmoABNHhQho2KUazvLAhDvdWCba8ZvMtKiEv8='
+    version = 'v0.4.1-0.20260929204433-56af05237d8a'
+    hash = 'sha256-Y7+up8oBjxIOhYGthqH9wYVLDQZSpSJVDRT0DP+fCkQ='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/madder/go']
-    version = 'v0.4.6-0.20260804120852-1401a4a90675'
-    hash = 'sha256-Dn3O/7AbtVAlT6VpREtk04xY5fyDg+SBXA+cBwhVTsE='
+    version = 'v0.4.7-0.20260929205020-1a55d290c7bf'
+    hash = 'sha256-aH8f4Tfa6iMwanTO/hynp+qHK9grmfEAl7JvLrJJVVY='
     goVersion = '1.26.1'
 
   [mod.'code.linenisgreat.com/piggy/go']
-    version = 'v0.0.0-20260720155209-77cfdea0031e'
-    hash = 'sha256-HGekZfv1QS5BGlIlU+eJpTDQBd+7HqXNFJZWV/cpo7c='
+    version = 'v0.1.24-0.20260929202219-5371122a5af5'
+    hash = 'sha256-fP9d52sl+W23cGTSQAoZLeoV6THY1cqf+BnFeTYjQPc='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/purse-first/libs/dewey']
-    version = 'v0.5.0'
-    hash = 'sha256-WaAb5xVdkek2jtlcD8y+99VuZyAoCVzezyIrs5X9Mbg='
+    version = 'v0.6.3-0.20260930013913-d5aef57dbc0e'
+    hash = 'sha256-QHZmumv2j5yLpnDdob9roOp0ulpOc5eiRjWofVYFqPU='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/purse-first/libs/go-mcp']
-    version = 'v0.5.0'
-    hash = 'sha256-dX5SW7t2TrvJjQvzsZB+Yue9mD2yJosBN8fPWWC819c='
+    version = 'v0.6.3-0.20260930013913-d5aef57dbc0e'
+    hash = 'sha256-JQDDIB3CFq0xICW4uMvIL9GosmIzMcu/tjGcVdgje8s='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/tap/go']
-    version = 'v0.2.0'
-    hash = 'sha256-ifwq9+ER3gl317X0uizQkn2cYTtXiqWwPsFyfHZ91Bs='
+    version = 'v0.2.1-0.20260929193235-d65ff37a9e7a'
+    hash = 'sha256-YIBmR9OcU9mH8oCBnliA8tm+/0maHmEpntyhasVUG9E='
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/tommy']

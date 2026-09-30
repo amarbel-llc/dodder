@@ -6,10 +6,10 @@
 #     downstream amarbel-llc consumers can bridge dodder's Go module
 #     without organic gomod2nix.toml resolution (#217).
 #
-#   - consumer: goFlakeInputs routes the 7 cross-amarbel `require`
+#   - consumer: goFlakeInputs routes the 8 cross-amarbel `require`
 #     lines onto flake inputs, bypassing the organic gomod2nix.toml
 #     hash and eliminating the flake.lock / go.mod / gomod2nix.toml
-#     drift surface (#218). Consequence: for these 7 deps the go.mod
+#     drift surface (#218). Consequence: for these 8 deps the go.mod
 #     rev (and the gomod2nix.toml hash) is VESTIGIAL — every
 #     buildGoApplication here (release, dodder-debug, dodder-go-test,
 #     race, cover, bats lanes) inherits goFlakeInputs and so compiles
@@ -34,6 +34,7 @@
   tap,
   tommy,
   purse-first,
+  chrest,
   system,
 }:
 {
@@ -100,6 +101,15 @@
     "code.linenisgreat.com/purse-first/libs/go-mcp" = {
       src = purse-first.packages.${system}.go-pkgs;
       subPath = "libs/go-mcp";
+    };
+    # chrest builds with godyn (chrest#116): its go-pkgs is full-repo with
+    # the rendered go.mod + gomod2nix.toml under go/, so slice with
+    # subPath "go". Unlike the others, the go.mod require for chrest is
+    # not a safe fallback — the published tree carries no committed
+    # go.mod, so only this bridge resolves it (igloo FDR 0008).
+    "code.linenisgreat.com/chrest/go" = {
+      src = chrest.packages.${system}.go-pkgs;
+      subPath = "go";
     };
   };
 }

@@ -264,7 +264,7 @@ update-flake-input input:
   # module path that contains linenisgreat.com/{{input}} and pass that to
   # `go get`. Falls back to the bare path when no longer-form match is
   # found. For goFlakeInputs-bridged inputs (madder, hyphence, piggy,
-  # tap, tommy, purse-first) the nix build ignores this go.mod rev and
+  # tap, tommy, purse-first, chrest) the nix build ignores this go.mod rev and
   # builds from
   # the flake input just refreshed above; the `go get` here only keeps
   # the vestigial shadow rev aligned for the bare-`go test` /
@@ -318,24 +318,38 @@ update-flake-input input:
 # from go.mod — each code.linenisgreat.com/<name>/... require whose
 # <name> matches a flake input in flake.lock; linenisgreat.com deps with
 # no matching flake input are skipped (not bridged).
+#
+# Producers that build with godyn (e.g. chrest, chrest#116) publish no
+# committed go.mod, so `go get @<rev>` cannot resolve them and their
+# go.mod require is frozen at the last versioned release. Those are
+# skipped here: only the goFlakeInputs bridge resolves them (igloo FDR
+# 0008), and the frozen require serves the devshell escape hatches.
 resync-flake-go:
   #!/usr/bin/env bash
   set -euo pipefail
   changed=0
   while read -r mod_path; do
     input=$(sed -E 's#^code\.linenisgreat\.com/([^/]+).*#\1#' <<<"${mod_path}")
+    url=$(jq -r --arg i "${input}" '.nodes[$i].locked.url // empty' ../flake.lock)
     rev=$(jq -r --arg i "${input}" '.nodes[$i].locked.rev // empty' ../flake.lock)
     if [[ -z "${rev}" ]]; then
       # Tarball-type inputs (code.linenisgreat.com host migration) carry no
       # .locked.rev -- only .locked.url, whose filename is the commit hash
       # (.../archive/<hash>.tar.gz).
-      url=$(jq -r --arg i "${input}" '.nodes[$i].locked.url // empty' ../flake.lock)
       rev="${url##*/}"
       rev="${rev%.tar.gz}"
     fi
     if [[ -z "${rev}" ]]; then
       echo "skip ${mod_path} (no flake input '${input}' in flake.lock)"
       continue
+    fi
+    if [[ -n "${url}" ]]; then
+      store_path=$(nix flake prefetch --json "${url}" | jq -r .storePath)
+      sub_path=$(sed -E 's#^code\.linenisgreat\.com/[^/]+/?##' <<<"${mod_path}")
+      if [[ ! -f "${store_path}/${sub_path:+${sub_path}/}go.mod" ]]; then
+        echo "skip ${mod_path} (${input}@${rev} has no committed go.mod; flake-bridge only)"
+        continue
+      fi
     fi
     echo "resync ${mod_path} -> ${input}@${rev}"
     GOPROXY=direct go get "${mod_path}@${rev}"
