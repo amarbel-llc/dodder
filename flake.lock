@@ -482,11 +482,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790709481,
-        "narHash": "sha256-jm8esYokH4qfZilCOTRhuDvv/fpCJ3W12oQhYDKOo0I=",
-        "rev": "adf616c39ed59dce71ef3a0ef4e1c0cdc2cc8ca5",
+        "lastModified": 1790732353,
+        "narHash": "sha256-xukEDOSDEAKZl/KYp6Mgurbe2hxJWLwWALFEpmqVlrs=",
+        "rev": "d5aef57dbc0ef9854997f916d9cf9483fa54be56",
         "type": "tarball",
-        "url": "https://code.linenisgreat.com/purse-first/archive/adf616c39ed59dce71ef3a0ef4e1c0cdc2cc8ca5.tar.gz"
+        "url": "https://code.linenisgreat.com/purse-first/archive/d5aef57dbc0ef9854997f916d9cf9483fa54be56.tar.gz"
       },
       "original": {
         "type": "tarball",
