@@ -1,7 +1,7 @@
 {
   inputs = {
     igloo.url = "https://code.linenisgreat.com/igloo/archive/master.tar.gz";
-    nixpkgs-master.url = "github:NixOS/nixpkgs/7a0f122f5090cf4c2ade2a13a0e229d4e19ba71f";
+    nixpkgs-master.url = "github:NixOS/nixpkgs/b4fd65b198c599cbe814fcb9f42d25d021595ec9";
     utils.url = "https://flakehub.com/f/numtide/flake-utils/0.1.102";
 
     bats = {
@@ -93,6 +93,11 @@
       inputs.conformist.follows = "conformist";
       inputs.doppelgang.follows = "hyphence/doppelgang";
     };
+    chrest.inputs.cutting-garden.inputs.hyphence.follows = "hyphence";
+    chrest.inputs.cutting-garden.inputs.langlang.follows = "hyphence/langlang";
+    chrest.inputs.cutting-garden.inputs.madder.follows = "madder";
+    chrest.inputs.cutting-garden.inputs.crap.follows = "madder/crap";
+    chrest.inputs.cutting-garden.inputs.piggy.follows = "piggy";
 
     # conformist: the linter + formatter multiplexer (treefmt successor).
     # Config is Nix-generated from ./conformist.nix (+ presets.eng) via
@@ -108,6 +113,7 @@
     tap.inputs.treefmt-nix.follows = "igloo/treefmt-nix";
     utils.inputs.systems.follows = "igloo/systems";
     igloo.inputs.nixpkgs-master.follows = "nixpkgs-master";
+    igloo.inputs.bun2nix.follows = "chrest/bun2nix";
     tap.inputs.gomod2nix.follows = "purse-first/gomod2nix";
     tap.inputs.purse-first.follows = "purse-first";
     madder.inputs.tap.follows = "tap";
