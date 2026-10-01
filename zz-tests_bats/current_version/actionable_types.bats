@@ -118,13 +118,42 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 		name = "due"
 		kind = "string"
 
+		[[fields]]
+		name = "effort"
+		kind = "string"
+
 		[fields-reader]
 		script = """
-		yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due} | with_entries(select(.value != null))'"""
+		yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "effort": .effort} | with_entries(select(.value != null))'"""
 
 		[fields-writer]
 		script = """
-		yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due)' "$DODDER_BLOB_PATH""""
+		yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due) | .effort = strenv(DODDER_FIELD_effort)' "$DODDER_BLOB_PATH""""
+	EOM
+}
+
+# effort is an open-set string field (#400): any value, unit included, projects
+# through unvalidated.
+function actionable_task_projects_open_set_effort { # @test
+  init_fixture -include-builtin-actionable-types
+  run_dodder init-workspace -experimental-repo=false
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# sized task
+		! task
+		---
+
+		status = "todo"
+		priority = "p2"
+		effort = "2pom"
+	EOM
+  assert_success
+
+  run_dodder show '!task'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-fcy860vz0sf4zzcrhr4dzyvaqwwtkfp85uw7jnpehn9ggcfnd26qzgw3cz !task "sized task" status=todo priority=p2 due= effort=2pom]
 	EOM
 }
 
@@ -154,7 +183,7 @@ function actionable_task_projects_urgency_field { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-mypv50rw9hr79g7c0r4fe06uurrldnre5s3va70wvrwlvc48tf3qpjqgx4 !task "my probe task" status=in_progress urgency=2_week priority=p1 due=20260415T120000Z]
+		[one/uno @blake2b256-fknj3d0nfzp0mg4u6ewz46adzsl6qez76qle768dflgg59xy6npsyk2szj !task "my probe task" status=in_progress urgency=2_week priority=p1 due=20260415T120000Z effort=]
 	EOM
 }
 
@@ -184,7 +213,7 @@ function actionable_task_omits_urgency_when_unset { # @test
   run_dodder show '!task'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "untriaged task" status=todo priority=p3 due=]
+		\[one/uno @blake2b256-.+ !task "untriaged task" status=todo priority=p3 due= effort=]
 	EOM
 }
 
@@ -226,7 +255,7 @@ function actionable_chore_has_recurrence_task_does_not { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-hxu6jqr2ecq6ntnzax4spk0usv39havp73cvr8qsvv8q5wys35rqe3lc0w !chore "weekly chore" status=todo urgency=2_week priority=p2 due=20260415T120000Z recurrence=P1W]
+		[one/uno @blake2b256-da8z8uqaagmfj2xe8tl45rmjcunaz38fnqpndkt3wtrjjhqzs5rs4epyaq !chore "weekly chore" status=todo urgency=2_week priority=p2 due=20260415T120000Z effort= recurrence=P1W]
 	EOM
 
   # The same recurrence key in a !task blob is NOT projected: !task has no
@@ -236,7 +265,7 @@ function actionable_chore_has_recurrence_task_does_not { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/dos @blake2b256-hxu6jqr2ecq6ntnzax4spk0usv39havp73cvr8qsvv8q5wys35rqe3lc0w !task "a plain task" status=todo urgency=2_week priority=p2 due=20260415T120000Z]
+		[one/dos @blake2b256-da8z8uqaagmfj2xe8tl45rmjcunaz38fnqpndkt3wtrjjhqzs5rs4epyaq !task "a plain task" status=todo urgency=2_week priority=p2 due=20260415T120000Z effort=]
 	EOM
 }
 
@@ -371,7 +400,7 @@ function actionable_hook_resolves_via_blob_reference { # @test
   run_dodder show '!task?z'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "graph-resolved done task" status=done priority=p2 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
+		\[one/uno @blake2b256-.+ !task "graph-resolved done task" status=done priority=p2 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
 	EOM
 }
 
@@ -405,7 +434,7 @@ function actionable_task_dormant_on_done { # @test
   run_dodder show '!task?z'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
+		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
 	EOM
 }
 
@@ -449,7 +478,7 @@ function actionable_task_dormant_on_done_hidden_under_empty_genre_query { # @tes
   run_dodder show ':?z'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
+		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
 	EOM
 }
 
@@ -514,9 +543,9 @@ function actionable_cancelled_dormant_all_types { # @test
   run_dodder show ':?z'
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "cancelled task" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
-		\[one/dos @blake2b256-.+ !chore "cancelled chore" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} recurrence=P1W]
-		\[two/uno @blake2b256-.+ !habit "cancelled habit" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} recurrence=P1D]
+		\[one/uno @blake2b256-.+ !task "cancelled task" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
+		\[one/dos @blake2b256-.+ !chore "cancelled chore" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort= recurrence=P1W]
+		\[two/uno @blake2b256-.+ !habit "cancelled habit" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort= recurrence=P1D]
 	EOM
 }
 
@@ -550,7 +579,7 @@ function actionable_chore_recurs_on_done { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-7cqs2zt3f8nfxdjnxvcrpdgt3ftfmnkmlxxkudmuskuavwq2z2psxatwq2 !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
+		[one/uno @blake2b256-xy9wwu5dtf7rp0mtcmp4myhvnsp6ack7w69uk56rf5rvp2r6fvgqu84gsj !chore "weekly chore" status=todo priority=p1 due=2026-07-08 effort= recurrence=P1W]
 	EOM
 }
 
@@ -579,7 +608,7 @@ function actionable_habit_recurs_on_done { # @test
   run_dodder show '!habit'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-r6t8h7ylhdahpgl2g9qkd75zmrktjgulgtzt6awxgu32ua2t2pvs8cv8x8 !habit "daily habit" status=todo priority=p1 due=2026-07-02 recurrence=P1D]
+		[one/uno @blake2b256-qf3dswek2tuh69n33g36ajhm4j9haewq4fw69f2czkrv33nav64s4n4dse !habit "daily habit" status=todo priority=p1 due=2026-07-02 effort= recurrence=P1D]
 	EOM
 }
 
@@ -607,7 +636,7 @@ function actionable_recurring_done_resets_status_with_empty_due { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-mz2vlvexlkamunp4s4vpf3mep89a2ae2uthngd2ythgdyl64ff5slxzvrh !chore "done chore" status=todo priority=p1 due= recurrence=P1W]
+		[one/uno @blake2b256-gtzv2d7z7kqg7fusthxhdj5hc6ty6wnrh44y4eah5jj2zhpfxdusflux4m !chore "done chore" status=todo priority=p1 due= effort= recurrence=P1W]
 	EOM
 }
 
@@ -651,7 +680,7 @@ function actionable_chore_recurrence_is_idempotent { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-7cqs2zt3f8nfxdjnxvcrpdgt3ftfmnkmlxxkudmuskuavwq2z2psxatwq2 !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
+		[one/uno @blake2b256-xy9wwu5dtf7rp0mtcmp4myhvnsp6ack7w69uk56rf5rvp2r6fvgqu84gsj !chore "weekly chore" status=todo priority=p1 due=2026-07-08 effort= recurrence=P1W]
 	EOM
 }
 
@@ -698,6 +727,6 @@ function actionable_field_writer_survives_quote_in_due { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-9gn057hrvpq8utxmuhvlng6fwmp6nh8qwrmdvzvyy25xayf2xmrs2zpg0k !task "quote task" status=todo priority=p1 due="he said \"hi\""]
+		[one/uno @blake2b256-e9fdrlj6gd3qt9qf2gnyp48jcrffnyqek96fy5s93y4agsk26scqguwfza !task "quote task" status=todo priority=p1 due="he said \"hi\"" effort=]
 	EOM
 }

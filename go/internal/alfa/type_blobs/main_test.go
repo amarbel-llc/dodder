@@ -325,6 +325,11 @@ func actionableExpectedFields() []expectedField {
 			kind:      "string",
 			hasValues: false,
 		},
+		{
+			name:      "effort",
+			kind:      "string",
+			hasValues: false,
+		},
 	}
 }
 

@@ -176,6 +176,12 @@ func actionableFields(terminalStatuses ...string) []FieldDefinition {
 			Name: "due",
 			Kind: "string",
 		},
+		// effort is an open set (#400): users size work in their own units, so
+		// the value carries its unit (e.g. "2pom", "3h") and is not validated.
+		{
+			Name: "effort",
+			Kind: "string",
+		},
 	}
 }
 
@@ -200,26 +206,27 @@ func recurringFields() []FieldDefinition {
 // restores the field-level defaults for status/priority when absent.
 func actionableFieldsReader() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due} | with_entries(select(.value != null))'`,
+		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "effort": .effort} | with_entries(select(.value != null))'`,
 	}
 }
 
 // actionableFieldsWriter returns the yq script that projects field edits back
 // into the TOML blob during organize mutations. Reads DODDER_FIELD_status,
-// DODDER_FIELD_urgency, DODDER_FIELD_priority, DODDER_FIELD_due env vars and
+// DODDER_FIELD_urgency, DODDER_FIELD_priority, DODDER_FIELD_due,
+// DODDER_FIELD_effort env vars and
 // writes them into the blob at DODDER_BLOB_PATH.
 //
 // Values are read via yq's strenv() env accessor rather than shell-interpolated
 // into the expression, so a field value containing a double-quote (or yq
 // expression syntax) is treated as string data, not expression text. The
-// free-form `due`/`recurrence` fields make this a live injection surface; the
+// free-form `due`/`effort`/`recurrence` fields make this a live injection surface; the
 // enum-constrained fields are safe by construction but use strenv() uniformly.
 // strenv (not env) forces the value to a string, matching the enum/string field
 // kinds. The expression is single-quoted so the shell performs no substitution
 // (see #297).
 func actionableFieldsWriter() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due)' "$DODDER_BLOB_PATH"`,
+		Script: `yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due) | .effort = strenv(DODDER_FIELD_effort)' "$DODDER_BLOB_PATH"`,
 	}
 }
 
@@ -229,7 +236,7 @@ func actionableFieldsWriter() *script_config.ScriptConfig {
 // commit-rejected explicit null.
 func recurringFieldsReader() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "recurrence": .recurrence} | with_entries(select(.value != null))'`,
+		Script: `yq -p toml -o json '{"status": .status, "urgency": .urgency, "priority": .priority, "due": .due, "effort": .effort, "recurrence": .recurrence} | with_entries(select(.value != null))'`,
 	}
 }
 
@@ -241,7 +248,7 @@ func recurringFieldsReader() *script_config.ScriptConfig {
 // (see #297).
 func recurringFieldsWriter() *script_config.ScriptConfig {
 	return &script_config.ScriptConfig{
-		Script: `yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due) | .recurrence = strenv(DODDER_FIELD_recurrence)' "$DODDER_BLOB_PATH"`,
+		Script: `yq -p toml -o toml -i '.status = strenv(DODDER_FIELD_status) | .urgency = strenv(DODDER_FIELD_urgency) | .priority = strenv(DODDER_FIELD_priority) | .due = strenv(DODDER_FIELD_due) | .effort = strenv(DODDER_FIELD_effort) | .recurrence = strenv(DODDER_FIELD_recurrence)' "$DODDER_BLOB_PATH"`,
 	}
 }
 

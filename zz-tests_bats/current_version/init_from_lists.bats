@@ -197,15 +197,15 @@ function init_from_lists_terminal_status_is_dormant_without_tags { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/dos @blake2b256-zga2ruulc0qv6sgpzth5gqmg227ea6dsgdnq7nlxtj3r9d00ae5qtqyhyl !task "open task" status=todo priority=p2 due=2026-07-02]
+		[one/dos @blake2b256-hcnh97v0zf4nrn4jzwrqc90a24nf8zygxpng7mln2fcw6rypef2sje98ql !task "open task" status=todo priority=p2 due=2026-07-02 effort=]
 	EOM
 
   # the finished task is dormant and carries no tags
   run_dodder show '!task?z'
   assert_success
   assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-pzz4ldfmq5khdt3e4ktcs7ukhnptt94hdf8xaus935mz7eu08zyq7aed5w !task "finished task" status=done priority=p1 due=2026-07-01]
-		[one/dos @blake2b256-zga2ruulc0qv6sgpzth5gqmg227ea6dsgdnq7nlxtj3r9d00ae5qtqyhyl !task "open task" status=todo priority=p2 due=2026-07-02]
+		[one/uno @blake2b256-a0ydpcr67wt7ty9e0k6p2wc6j5cypcs44gs5rq02g24p94vwu37qg2sene !task "finished task" status=done priority=p1 due=2026-07-01 effort=]
+		[one/dos @blake2b256-hcnh97v0zf4nrn4jzwrqc90a24nf8zygxpng7mln2fcw6rypef2sje98ql !task "open task" status=todo priority=p2 due=2026-07-02 effort=]
 	EOM
 }
 
