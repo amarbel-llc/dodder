@@ -1427,6 +1427,42 @@ consolidate-dryrun-vocabulary file:
   echo "== non-fused types (the real vocabulary), by count =="
   grep -v 'dodder-repo-' "$out/$b.dryrun-types.txt"
 
+# Take4 (#16): count actionable (!task*/!chore) blob bodies in a
+# consolidate-union-dryrun listing whose first line is a `#!dang` shebang
+# (FDR 0022 Phase-1 convention), to confirm whether take4's source data
+# carries any dang references. Reads each distinct blob once from the
+# given madder store; blobs missing from it (P8) are counted, not fatal.
+# Read-only.
+[group('consolidate')]
+consolidate-dang-census file store="dodder-v8-take3":
+  #!/usr/bin/env bash
+  set -uo pipefail
+  digests=$(awk -F'\t' '$1=="import"||$1=="resolve-tai-reassign"{
+    r=$3; gsub(/"[^"]*"/,"",r)
+    n=split(r,w," "); ti=0
+    for(i=5;i<=n;i++){if(substr(w[i],1,1)=="!"){ti=i;break}}
+    if(ti==0) next
+    t=w[ti]; sub(/@.*/,"",t)
+    if (t !~ /^!(task|task-done|task-in_progress|task-cancelled|taswk-done|chore)$/) next
+    for(i=5;i<ti;i++) if (w[i] ~ /^dodder-blob-digest/) { d=w[i]; sub(/^[^@]*@/,"",d); print d }
+  }' "{{ file }}" | sort -u)
+  total=0; dang=0; missing=0
+  for d in $digests; do
+    total=$((total+1))
+    if ! first=$(madder cat {{ store }} "$d" 2>/dev/null | head -n1); then
+      missing=$((missing+1)); continue
+    fi
+    if [[ -z $first ]] && ! madder cat {{ store }} "$d" >/dev/null 2>&1; then
+      missing=$((missing+1)); continue
+    fi
+    if [[ $first == '#!dang'* || $first == '#! dang'* ]]; then
+      dang=$((dang+1)); echo "  dang: $d :: $first"
+    fi
+  done
+  echo "distinct actionable blobs: $total"
+  echo "first line is #!dang: $dang"
+  echo "unreadable from {{ store }}: $missing"
+
 # Take4 actionable sub-grill (#16): count actionable versions (!task*/!chore)
 # in a consolidate-union-dryrun dryrun.out whose state carriers (state type +
 # state tags, per the sub-grill Q4/Q5 mapping) disagree about `status`.
