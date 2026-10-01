@@ -30,8 +30,12 @@ type StoreOptions struct {
 	ApplyProtoType     bool // TODO remove
 	MergeCheckedOut    bool
 	RunHooks           bool
-	UpdateTai          bool
-	Validate           bool
+	// ProjectFields re-runs only the type's fields-reader projection, without
+	// hooks. Projected fields aren't persisted in inventory lists, so reindex
+	// must re-project them or type-declared dormancy (FDR 0025) is lost.
+	ProjectFields bool
+	UpdateTai     bool
+	Validate      bool
 }
 
 type LockfileOptions struct {
@@ -74,6 +78,7 @@ func GetStoreOptionsReindex() StoreOptions {
 			ForceLatest:      true,
 			AddToStreamIndex: true,
 		},
+		ProjectFields: true,
 	}
 }
 

@@ -85,7 +85,7 @@ function type_dormancy_survives_pull_direct { # @test
 
   run_dodder_init_disable_age
 
-  run_dodder pull -direct "$(realpath ../them)" +zettel,typ,etikett
+  run_dodder pull -direct "$(realpath ../them)" '+?z,t,e'
   assert_success
 
   assert_done_task_dormant_with_fields
@@ -103,7 +103,7 @@ function type_dormancy_survives_clone { # @test
     .default \
     toml-repo-local_override_path-v0 \
     "$(realpath ../them)" \
-    +zettel,typ,etikett
+    '+?z,t,e'
   assert_success
 
   assert_done_task_dormant_with_fields

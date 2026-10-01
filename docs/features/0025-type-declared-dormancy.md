@@ -116,13 +116,15 @@ repo (covered by `init_from_lists.bats`).
 
 ## Limitations
 
-- **Dormancy follows field projection.** Fields are projected only on
-  commits that run hooks (`RunHooks`): create, update, import, and
-  init-from-lists do; `GetStoreOptionsReindex` and
-  `GetStoreOptionsRemoteTransfer` do not. Whether projected fields survive
-  those two paths is unverified; if they don't, type-dormancy is lost there
-  exactly as field queries are, and that's a field-projection bug to fix at
-  the projection layer, not here.
+- **Dormancy follows field projection.** Projected fields are not stored
+  in inventory lists; they're re-derived by the type's fields-reader.
+  Create, update, import, init-from-lists, pull and clone project them
+  (`RunHooks`); reindex re-projects them without running hooks
+  (`ProjectFields`, dodder#403), logging and skipping a projection that
+  fails. Covered by `type_dormancy_transfer.bats`.
+- **Dormant objects only transfer when asked for.** Pull/clone queries
+  without the `?` sigil skip dormant objects, so a done `!task` travels
+  only with e.g. `+?z,t,e`.
 - **Same-batch type resolution.** Projection needs the object's type
   object. An import (e.g. init-from-lists) commits types and the objects
   that use them in one unflushed batch, and type resolution read only the

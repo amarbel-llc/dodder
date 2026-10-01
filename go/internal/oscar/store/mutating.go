@@ -116,7 +116,12 @@ func (commitFacilitator commitFacilitator) tryPrecommit(
 	}
 
 	if err = commitFacilitator.tryReadFields(daughter, options); err != nil {
-		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors {
+		// A projection-only commit (reindex) re-derives fields for objects that
+		// were already accepted; a type changed since then must not make the
+		// rebuild fail, so the object is indexed without fields.
+		if commitFacilitator.storeConfig.GetConfig().IgnoreHookErrors ||
+			!options.RunHooks {
+			ui.Log().Printf("projecting fields for %s: %s", daughter, err)
 			err = nil
 		} else {
 			err = errors.Wrap(err)

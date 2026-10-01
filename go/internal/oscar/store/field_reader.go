@@ -28,7 +28,7 @@ func (store *Store) tryReadFields(
 	// them, and the caller in mutating.go swallows their errors when
 	// IgnoreHookErrors is set. Field validation is a projection-level
 	// constraint, not an unconditional store invariant.
-	if !options.RunHooks {
+	if !options.RunHooks && !options.ProjectFields {
 		return err
 	}
 
