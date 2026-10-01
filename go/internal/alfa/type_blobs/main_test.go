@@ -295,6 +295,7 @@ type expectedField struct {
 	values    []string
 	dflt      string
 	hasValues bool
+	omitEmpty bool
 }
 
 func actionableExpectedFields() []expectedField {
@@ -329,6 +330,7 @@ func actionableExpectedFields() []expectedField {
 			name:      "effort",
 			kind:      "string",
 			hasValues: false,
+			omitEmpty: true,
 		},
 	}
 }
@@ -360,6 +362,10 @@ func assertFields(t *ui.T, expected []expectedField, fields []FieldDefinition) {
 		t.AssertEqualStrings(want.name, got.Name)
 		t.AssertEqualStrings(want.kind, got.Kind)
 		t.AssertEqualStrings(want.dflt, got.Default)
+
+		if want.omitEmpty != got.OmitEmpty {
+			t.Errorf("field %d (%s): expected omitEmpty=%t", i, want.name, want.omitEmpty)
+		}
 
 		if want.hasValues {
 			if len(got.Values) != len(want.values) {

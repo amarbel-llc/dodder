@@ -25,6 +25,10 @@ type FieldDefinition struct {
 	// (FDR 0025). Only valid on enum fields, and every entry must also be in
 	// Values. omitempty keeps existing blobs byte-identical.
 	Terminal []string `toml:"terminal,omitempty"`
+
+	// OmitEmpty makes an empty projected value read as unset (not projected),
+	// as a no-default enum already does, instead of keeping the empty string.
+	OmitEmpty bool `toml:"omit-empty,omitempty"`
 }
 
 // ValidateTerminal rejects a Terminal list on a non-enum field or one naming

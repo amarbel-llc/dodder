@@ -121,6 +121,7 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 		[[fields]]
 		name = "effort"
 		kind = "string"
+		omit-empty = true
 
 		[fields-reader]
 		script = """
@@ -133,7 +134,8 @@ function genesis_task_type_blob_has_fields_scripts_and_formatter { # @test
 }
 
 # effort is an open-set string field (#400): any value, unit included, projects
-# through unvalidated.
+# through unvalidated, is queryable as a field, and an unset effort reads as
+# unset (omit-empty) rather than `effort=`.
 function actionable_task_projects_open_set_effort { # @test
   init_fixture -include-builtin-actionable-types
   run_dodder init-workspace -experimental-repo=false
@@ -154,6 +156,40 @@ function actionable_task_projects_open_set_effort { # @test
   assert_success
   assert_output - <<-EOM
 		[one/uno @blake2b256-fcy860vz0sf4zzcrhr4dzyvaqwwtkfp85uw7jnpehn9ggcfnd26qzgw3cz !task "sized task" status=todo priority=p2 due= effort=2pom]
+	EOM
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# uncountable task
+		! task
+		---
+
+		effort = "uncountable"
+	EOM
+  assert_success
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# unsized task
+		! task
+		---
+
+		status = "todo"
+	EOM
+  assert_success
+
+  run_dodder show 'effort=2pom'
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-fcy860vz0sf4zzcrhr4dzyvaqwwtkfp85uw7jnpehn9ggcfnd26qzgw3cz !task "sized task" status=todo priority=p2 due= effort=2pom]
+	EOM
+
+  run_dodder show '!task'
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-vpk26d42syfelm3tgs3jy86e962zmsrwmt26j46dy5xuj82rem9qqhga4j !task "uncountable task" status=todo priority=p3 due= effort=uncountable]
+		[one/uno @blake2b256-fcy860vz0sf4zzcrhr4dzyvaqwwtkfp85uw7jnpehn9ggcfnd26qzgw3cz !task "sized task" status=todo priority=p2 due= effort=2pom]
+		[two/uno @blake2b256-y4hnl7xvp98ejlzw86dkf3hwkm85sjpngzj4et08fsctfx0sd56s980svu !task "unsized task" status=todo priority=p3 due=]
 	EOM
 }
 
@@ -183,7 +219,7 @@ function actionable_task_projects_urgency_field { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-fknj3d0nfzp0mg4u6ewz46adzsl6qez76qle768dflgg59xy6npsyk2szj !task "my probe task" status=in_progress urgency=2_week priority=p1 due=20260415T120000Z effort=]
+		[one/uno @blake2b256-fknj3d0nfzp0mg4u6ewz46adzsl6qez76qle768dflgg59xy6npsyk2szj !task "my probe task" status=in_progress urgency=2_week priority=p1 due=20260415T120000Z]
 	EOM
 }
 
@@ -213,7 +249,7 @@ function actionable_task_omits_urgency_when_unset { # @test
   run_dodder show '!task'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "untriaged task" status=todo priority=p3 due= effort=]
+		\[one/uno @blake2b256-.+ !task "untriaged task" status=todo priority=p3 due=]
 	EOM
 }
 
@@ -255,7 +291,7 @@ function actionable_chore_has_recurrence_task_does_not { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-da8z8uqaagmfj2xe8tl45rmjcunaz38fnqpndkt3wtrjjhqzs5rs4epyaq !chore "weekly chore" status=todo urgency=2_week priority=p2 due=20260415T120000Z effort= recurrence=P1W]
+		[one/uno @blake2b256-da8z8uqaagmfj2xe8tl45rmjcunaz38fnqpndkt3wtrjjhqzs5rs4epyaq !chore "weekly chore" status=todo urgency=2_week priority=p2 due=20260415T120000Z recurrence=P1W]
 	EOM
 
   # The same recurrence key in a !task blob is NOT projected: !task has no
@@ -265,7 +301,7 @@ function actionable_chore_has_recurrence_task_does_not { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/dos @blake2b256-da8z8uqaagmfj2xe8tl45rmjcunaz38fnqpndkt3wtrjjhqzs5rs4epyaq !task "a plain task" status=todo urgency=2_week priority=p2 due=20260415T120000Z effort=]
+		[one/dos @blake2b256-da8z8uqaagmfj2xe8tl45rmjcunaz38fnqpndkt3wtrjjhqzs5rs4epyaq !task "a plain task" status=todo urgency=2_week priority=p2 due=20260415T120000Z]
 	EOM
 }
 
@@ -400,7 +436,7 @@ function actionable_hook_resolves_via_blob_reference { # @test
   run_dodder show '!task?z'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "graph-resolved done task" status=done priority=p2 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
+		\[one/uno @blake2b256-.+ !task "graph-resolved done task" status=done priority=p2 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
 	EOM
 }
 
@@ -434,7 +470,7 @@ function actionable_task_dormant_on_done { # @test
   run_dodder show '!task?z'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
+		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
 	EOM
 }
 
@@ -478,7 +514,7 @@ function actionable_task_dormant_on_done_hidden_under_empty_genre_query { # @tes
   run_dodder show ':?z'
   assert_success
   assert_output --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
+		\[one/uno @blake2b256-.+ !task "done task" status=done priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
 	EOM
 }
 
@@ -543,9 +579,9 @@ function actionable_cancelled_dormant_all_types { # @test
   run_dodder show ':?z'
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\[one/uno @blake2b256-.+ !task "cancelled task" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort=]
-		\[one/dos @blake2b256-.+ !chore "cancelled chore" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort= recurrence=P1W]
-		\[two/uno @blake2b256-.+ !habit "cancelled habit" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} effort= recurrence=P1D]
+		\[one/uno @blake2b256-.+ !task "cancelled task" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2}]
+		\[one/dos @blake2b256-.+ !chore "cancelled chore" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} recurrence=P1W]
+		\[two/uno @blake2b256-.+ !habit "cancelled habit" status=cancelled priority=p1 due=[0-9]{4}-[0-9]{2}-[0-9]{2} recurrence=P1D]
 	EOM
 }
 
@@ -579,7 +615,7 @@ function actionable_chore_recurs_on_done { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-xy9wwu5dtf7rp0mtcmp4myhvnsp6ack7w69uk56rf5rvp2r6fvgqu84gsj !chore "weekly chore" status=todo priority=p1 due=2026-07-08 effort= recurrence=P1W]
+		[one/uno @blake2b256-xy9wwu5dtf7rp0mtcmp4myhvnsp6ack7w69uk56rf5rvp2r6fvgqu84gsj !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
 	EOM
 }
 
@@ -608,7 +644,7 @@ function actionable_habit_recurs_on_done { # @test
   run_dodder show '!habit'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-qf3dswek2tuh69n33g36ajhm4j9haewq4fw69f2czkrv33nav64s4n4dse !habit "daily habit" status=todo priority=p1 due=2026-07-02 effort= recurrence=P1D]
+		[one/uno @blake2b256-qf3dswek2tuh69n33g36ajhm4j9haewq4fw69f2czkrv33nav64s4n4dse !habit "daily habit" status=todo priority=p1 due=2026-07-02 recurrence=P1D]
 	EOM
 }
 
@@ -636,7 +672,7 @@ function actionable_recurring_done_resets_status_with_empty_due { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-gtzv2d7z7kqg7fusthxhdj5hc6ty6wnrh44y4eah5jj2zhpfxdusflux4m !chore "done chore" status=todo priority=p1 due= effort= recurrence=P1W]
+		[one/uno @blake2b256-gtzv2d7z7kqg7fusthxhdj5hc6ty6wnrh44y4eah5jj2zhpfxdusflux4m !chore "done chore" status=todo priority=p1 due= recurrence=P1W]
 	EOM
 }
 
@@ -680,7 +716,7 @@ function actionable_chore_recurrence_is_idempotent { # @test
   run_dodder show '!chore'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-xy9wwu5dtf7rp0mtcmp4myhvnsp6ack7w69uk56rf5rvp2r6fvgqu84gsj !chore "weekly chore" status=todo priority=p1 due=2026-07-08 effort= recurrence=P1W]
+		[one/uno @blake2b256-xy9wwu5dtf7rp0mtcmp4myhvnsp6ack7w69uk56rf5rvp2r6fvgqu84gsj !chore "weekly chore" status=todo priority=p1 due=2026-07-08 recurrence=P1W]
 	EOM
 }
 
@@ -727,6 +763,6 @@ function actionable_field_writer_survives_quote_in_due { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-e9fdrlj6gd3qt9qf2gnyp48jcrffnyqek96fy5s93y4agsk26scqguwfza !task "quote task" status=todo priority=p1 due="he said \"hi\"" effort=]
+		[one/uno @blake2b256-e9fdrlj6gd3qt9qf2gnyp48jcrffnyqek96fy5s93y4agsk26scqguwfza !task "quote task" status=todo priority=p1 due="he said \"hi\""]
 	EOM
 }

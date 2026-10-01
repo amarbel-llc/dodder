@@ -177,10 +177,13 @@ func actionableFields(terminalStatuses ...string) []FieldDefinition {
 			Kind: "string",
 		},
 		// effort is an open set (#400): users size work in their own units, so
-		// the value carries its unit (e.g. "2pom", "3h") and is not validated.
+		// the value carries its unit (e.g. "2pom", "3h", or a sentinel like
+		// "uncountable") and is not validated. Unset reads as unset, like
+		// urgency, rather than as an empty string.
 		{
-			Name: "effort",
-			Kind: "string",
+			Name:      "effort",
+			Kind:      "string",
+			OmitEmpty: true,
 		},
 	}
 }

@@ -188,7 +188,7 @@ func projectFields(
 		// String fields keep empty values: an empty string is a legitimate
 		// value (e.g. the no-default `due` field renders as `due=`). A field
 		// that declares a default still rejects an explicit empty value.
-		if fd.Kind == "enum" && value == "" && fd.Default == "" {
+		if value == "" && (fd.OmitEmpty || (fd.Kind == "enum" && fd.Default == "")) {
 			continue
 		}
 

@@ -162,6 +162,7 @@ function init_from_lists_terminal_status_is_dormant_without_tags { # @test
 		status = "todo"
 		priority = "p2"
 		due = "2026-07-02"
+		effort = "2pom"
 	EOM
   assert_success
 
@@ -197,15 +198,15 @@ function init_from_lists_terminal_status_is_dormant_without_tags { # @test
   run_dodder show '!task'
   assert_success
   assert_output - <<-EOM
-		[one/dos @blake2b256-hcnh97v0zf4nrn4jzwrqc90a24nf8zygxpng7mln2fcw6rypef2sje98ql !task "open task" status=todo priority=p2 due=2026-07-02 effort=]
+		[one/dos @blake2b256-tv7h22q0qd265fh8agheqtczs9lvaqvfaz5mvju3lvcteup9pscsf4lq8s !task "open task" status=todo priority=p2 due=2026-07-02 effort=2pom]
 	EOM
 
   # the finished task is dormant and carries no tags
   run_dodder show '!task?z'
   assert_success
   assert_output_unsorted - <<-EOM
-		[one/uno @blake2b256-a0ydpcr67wt7ty9e0k6p2wc6j5cypcs44gs5rq02g24p94vwu37qg2sene !task "finished task" status=done priority=p1 due=2026-07-01 effort=]
-		[one/dos @blake2b256-hcnh97v0zf4nrn4jzwrqc90a24nf8zygxpng7mln2fcw6rypef2sje98ql !task "open task" status=todo priority=p2 due=2026-07-02 effort=]
+		[one/uno @blake2b256-a0ydpcr67wt7ty9e0k6p2wc6j5cypcs44gs5rq02g24p94vwu37qg2sene !task "finished task" status=done priority=p1 due=2026-07-01]
+		[one/dos @blake2b256-tv7h22q0qd265fh8agheqtczs9lvaqvfaz5mvju3lvcteup9pscsf4lq8s !task "open task" status=todo priority=p2 due=2026-07-02 effort=2pom]
 	EOM
 }
 

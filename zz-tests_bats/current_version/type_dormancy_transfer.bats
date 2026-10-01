@@ -57,7 +57,7 @@ function assert_done_task_dormant_with_fields {
   run_dodder show '!task?z'
   assert_success
   assert_output - <<-EOM
-		[one/uno @blake2b256-a0ydpcr67wt7ty9e0k6p2wc6j5cypcs44gs5rq02g24p94vwu37qg2sene !task "finished task" status=done priority=p1 due=2026-07-01 effort=]
+		[one/uno @blake2b256-a0ydpcr67wt7ty9e0k6p2wc6j5cypcs44gs5rq02g24p94vwu37qg2sene !task "finished task" status=done priority=p1 due=2026-07-01]
 	EOM
 }
 
