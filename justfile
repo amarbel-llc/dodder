@@ -1427,6 +1427,135 @@ consolidate-dryrun-vocabulary file:
   echo "== non-fused types (the real vocabulary), by count =="
   grep -v 'dodder-repo-' "$out/$b.dryrun-types.txt"
 
+# Take4 (#16): build the sha256→blake2b256 digest map from the
+# `madder sync -format ndjson` outputs of the blob migration (madder#285
+# dest_id), validate it, and write take4/maps/sha256-to-blake2b256.tsv
+# (`<sha256 id>\t<blake2b256 id>`, sorted). Fails if any record is
+# `failed` other than the ones listed in `allow_failed`, or if a source id
+# maps to two different dest ids. Reports counts per input. Read-only
+# against the inputs.
+[group('consolidate')]
+consolidate-build-digest-map dir="/home/sasha/workspaces/take4/maps" allow_failed="sha256-kcxlhta0ejg66n8ra8uy804c7m6s83nfe2tkljcsrx3darzr9a7s3z9sjy":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  cd "{{ dir }}"
+  out=sha256-to-blake2b256.tsv
+  inputs=(sync.ndjson sync-rsyncnet.ndjson)
+  for f in "${inputs[@]}"; do
+    [[ -s $f ]] || { echo "missing input: {{ dir }}/$f"; exit 1; }
+    echo "== $f"
+    jq -r '.state' "$f" | sort | uniq -c
+    echo "  with dest_id: $(jq -c 'select(.dest_id)' "$f" | wc -l)"
+  done
+  bad=$(jq -r --arg ok "{{ allow_failed }}" \
+    'select(.state=="failed" and (.id != $ok)) | .id' "${inputs[@]}")
+  [[ -z $bad ]] || { echo "UNEXPECTED failed records:"; echo "$bad"; exit 1; }
+  jq -r 'select(.dest_id) | [.id, .dest_id] | @tsv' "${inputs[@]}" | sort -u >"$out"
+  dup=$(cut -f1 "$out" | uniq -d | head -5)
+  [[ -z $dup ]] || { echo "source id maps to >1 dest id (first few):"; echo "$dup"; exit 1; }
+  nonsha=$(cut -f1 "$out" | grep -vc '^sha256-' || true)
+  nonblake=$(cut -f2 "$out" | grep -vc '^blake2b256-' || true)
+  echo "map entries: $(wc -l <"$out")  (non-sha256 sources: $nonsha, non-blake2b256 dests: $nonblake)"
+  echo "distinct dest ids: $(cut -f2 "$out" | sort -u | wc -l)"
+  sha256sum "$out"
+  echo "wrote {{ dir }}/$out"
+
+# Take4 (#16): coverage of the digest map against what the union actually
+# references. Extracts every sha256 blob digest named in a
+# consolidate-union-dryrun listing (any `*-blob-digest-*@sha256-…` token)
+# and splits them into mapped (present in sha256-to-blake2b256.tsv) and
+# UNMAPPED. The unmapped set is the repair pass's P8 allowlist candidate.
+# Writes take4/maps/unmapped-sha256.txt. Read-only.
+[group('consolidate')]
+consolidate-digest-map-coverage file map="/home/sasha/workspaces/take4/maps/sha256-to-blake2b256.tsv":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  dir=$(dirname "{{ map }}")
+  grep -oE 'blob-digest[^ @]*@sha256-[a-z0-9]+' "{{ file }}" | sed 's/^[^@]*@//' | sort -u >"$dir/referenced-sha256.txt"
+  cut -f1 "{{ map }}" | sort -u >"$dir/.mapped"
+  comm -23 "$dir/referenced-sha256.txt" "$dir/.mapped" >"$dir/unmapped-sha256.txt"
+  rm -f "$dir/.mapped"
+  echo "distinct sha256 blob digests referenced by the union: $(wc -l <"$dir/referenced-sha256.txt")"
+  echo "unmapped: $(wc -l <"$dir/unmapped-sha256.txt")  -> $dir/unmapped-sha256.txt"
+  grep -oE 'blob-digest[^ @]*@blake2b256-[a-z0-9]+' "{{ file }}" | sed 's/^[^@]*@//' | sort -u >"$dir/referenced-blake2b256.txt"
+  cut -f2 "{{ map }}" | sort -u >"$dir/.dests"
+  comm -23 "$dir/referenced-blake2b256.txt" "$dir/.dests" >"$dir/blake2b256-not-a-map-dest.txt"
+  rm -f "$dir/.dests"
+  echo "blake2b256 blob digests referenced (need no map): $(wc -l <"$dir/referenced-blake2b256.txt")"
+  echo "  of which NOT a rehash destination (must exist natively in the store): $(wc -l <"$dir/blake2b256-not-a-map-dest.txt") -> $dir/blake2b256-not-a-map-dest.txt"
+
+# Take4 (#16): for each digest in `ids` (one per line), report which of
+# the given local madder stores holds it, via `madder has <store> <id>`.
+# Prints per-store hit counts and writes the ids found in NO store to
+# <ids>.absent. Read-only.
+[group('consolidate')]
+consolidate-digest-presence ids +stores:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  : >"{{ ids }}.absent"
+  declare -A hits
+  n=0
+  while read -r id; do
+    [[ -n $id ]] || continue
+    n=$((n+1)); found=0
+    for s in {{ stores }}; do
+      if madder has "$s" "$id" >/dev/null 2>&1; then
+        hits[$s]=$(( ${hits[$s]:-0} + 1 )); found=1
+      fi
+    done
+    [[ $found -eq 1 ]] || echo "$id" >>"{{ ids }}.absent"
+  done <"{{ ids }}"
+  echo "ids checked: $n"
+  for s in {{ stores }}; do echo "  in $s: ${hits[$s]:-0}"; done
+  echo "in NO listed store: $(wc -l <"{{ ids }}.absent") -> {{ ids }}.absent"
+
+# Take4 (#16): which blobs in rsync.net's Library/Madder are NOT in the
+# local dodder-v8-take3 store? Compares the remote listing captured by
+# consolidate-rsyncnet-sweep (take4/rsync-sweep/listing.txt; the remote is
+# never deleted-from, so a current listing is a superset) against take3's
+# sha256 bucket names, both as `<2-hex bucket>/<rest>`. Writes the missing
+# paths (with sizes) to take4/rsync-sweep/missing-from-take3.tsv, largest
+# first, and prints totals + the biggest. Read-only.
+[group('consolidate')]
+consolidate-rsyncnet-delta listing="/home/sasha/workspaces/take4/rsync-sweep/listing.txt":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  take3=/home/sasha/.local/share/madder/blob_stores/dodder-v8-take3/sha256
+  out=/home/sasha/workspaces/take4/rsync-sweep/missing-from-take3.tsv
+  ( cd "$take3" && find . -mindepth 2 -type f -printf '%P\n' ) | sort -u >"$out.local"
+  awk '$1 ~ /^-/ { size=$2; gsub(",","",size); path=$NF;
+    if (path ~ /^[0-9a-f][0-9a-f]\// && path !~ /tmp_/) print path "\t" size }' "{{ listing }}" \
+    | sort -t$'\t' -k1,1 >"$out.remote"
+  join -t$'\t' -v1 "$out.remote" "$out.local" | sort -t$'\t' -k2,2nr >"$out"
+  rm -f "$out.local" "$out.remote"
+  n=$(wc -l <"$out")
+  bytes=$(awk -F'\t' '{s+=$2} END {print s+0}' "$out")
+  echo "remote blobs missing from take3: $n ($bytes bytes, $(numfmt --to=iec "$bytes"))"
+  echo "of which >= 1GiB: $(awk -F'\t' '$2>=1073741824' "$out" | wc -l)"
+  echo "of which >= 100MiB: $(awk -F'\t' '$2>=104857600' "$out" | wc -l)"
+  echo "== largest 20 =="
+  head -20 "$out" | awk -F'\t' '{printf "  %10s  %s\n", $2, $1}' | numfmt --field=1 --to=iec --padding=10 2>/dev/null || head -20 "$out"
+  echo "full list: $out"
+
+# Take4 (#16) host check: print every madder on PATH with its version and
+# this host's ssh ed25519 host-key fingerprint, so a peer host (nikulin)
+# can confirm the host key it trusted on first use and pick a madder that
+# carries madder#285 (dest_id). Read-only; reads only the PUBLIC host key.
+[group('debug')]
+debug-host-madder-and-hostkey:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  echo "== madder binaries on PATH =="
+  type -a -p madder | awk '!seen[$0]++' | while read -r m; do
+    printf '%s -> %s : ' "$m" "$(readlink -f "$m")"
+    "$m" version 2>&1 | head -n1
+  done
+  for m in /run/current-system/sw/bin/madder "$HOME/.nix-profile/bin/madder"; do
+    [[ -x $m ]] && { printf '%s : ' "$m"; "$m" version 2>&1 | head -n1; }
+  done
+  echo "== ssh host key fingerprint =="
+  ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
+
 # Take4 (#16): count actionable (!task*/!chore) blob bodies in a
 # consolidate-union-dryrun listing whose first line is a `#!dang` shebang
 # (FDR 0022 Phase-1 convention), to confirm whether take4's source data
