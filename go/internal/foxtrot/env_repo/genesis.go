@@ -108,6 +108,19 @@ func (env *Env) Genesis(bigBang BigBang) {
 		}
 	}
 
+	if !bigBang.WriteBlobStoreId.IsEmpty() {
+		env.blobStoreEnv = mad_blob_store_env.MakeBlobStoreEnv(env.blobStoreEnv.Env)
+
+		if store := env.blobStoreEnv.GetBlobStore(bigBang.WriteBlobStoreId); store.BlobStore == nil {
+			env.Cancel(errors.ErrorWithStackf(
+				"blob store %q not found; -write-blob_store-id adopts an EXISTING store (create it first, e.g. `madder init %q`)",
+				bigBang.WriteBlobStoreId,
+				bigBang.WriteBlobStoreId,
+			))
+			return
+		}
+	}
+
 	if err := env.MakeDirs(env.DirsGenesis()...); err != nil {
 		env.Cancel(err)
 		return
@@ -260,8 +273,18 @@ func (env *Env) writeBlobStoreConfigIfNecessary(
 		return multiId
 	}
 
-	localId, localDigest := env.ensureLocalWriteStore(bigBang, directoryLayout)
-	writeStore := localId.WithDigest(localDigest)
+	var writeStore blob_store_id.Id
+
+	if bigBang.WriteBlobStoreId.IsEmpty() {
+		localId, localDigest := env.ensureLocalWriteStore(bigBang, directoryLayout)
+		writeStore = localId.WithDigest(localDigest)
+	} else {
+		// adopt the named, pre-existing store as the write store; no
+		// default-local is created for this repo
+		writeStore = bigBang.WriteBlobStoreId.WithDigest(
+			env.ensureBlobStoreDigest(bigBang.WriteBlobStoreId),
+		)
+	}
 
 	var readStores []blob_store_id.Id
 

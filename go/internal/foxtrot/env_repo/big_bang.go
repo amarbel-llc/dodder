@@ -41,6 +41,10 @@ type BigBang struct {
 	ExcludeDefaultPandocTools     bool
 	IncludeBuiltinActionableTypes bool
 	BlobStoreId                   blob_store_id.Id
+	// WriteBlobStoreId names an EXISTING store to be the repo multi's write
+	// store in place of the scope-shared default-local (take4 #16: adopt a
+	// pre-filled per-host store without copying it).
+	WriteBlobStoreId blob_store_id.Id
 
 	// RepoId is the dodder repo location/name being genesis'd (FDR-0019's
 	// scoped_id, the same value command_components_dodder.Genesis's

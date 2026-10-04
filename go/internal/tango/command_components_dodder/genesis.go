@@ -82,6 +82,12 @@ func (cmd *Genesis) SetFlagDefinitions(
 		"The name of the existing madder blob store to use",
 	)
 
+	flagSet.Var(
+		&cmd.BigBang.WriteBlobStoreId,
+		"write-blob_store-id",
+		"An EXISTING madder blob store to adopt as the repo's write store, in place of the shared default-local (no copy)",
+	)
+
 	flagSet.BoolVar(
 		&cmd.BigBang.ExcludeDefaultPandocTools,
 		"exclude-default-pandoc-tools",

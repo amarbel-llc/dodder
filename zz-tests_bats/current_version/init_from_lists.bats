@@ -253,6 +253,55 @@ function init_from_lists_added_object_avoids_union_ids { # @test
 	EOM
 }
 
+# take4 (#16): -write-blob_store-id adopts an EXISTING store as the newborn's
+# write store instead of creating the scope-shared default-local, so a
+# consolidation into a pre-filled store copies nothing. `shared` already holds
+# every source blob (setup syncs them in); the user-scoped newborn writes
+# into it, never creates default-local, and reads its zettels back clean.
+function init_from_lists_adopts_named_write_store { # @test
+  cat >s.lua <<-'EOM'
+		return dodder.list()
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -write-blob_store-id shared \
+    -script "$script" \
+    take4 \
+    "$list"
+  assert_success
+
+  run test -e "$XDG_DATA_HOME/madder/blob_stores/default-local"
+  assert_failure
+
+  run_dodder show -repo_id take4 :z
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+
+  run_dodder fsck -repo_id take4
+  assert_success
+}
+
+# a store that does not exist cannot be adopted
+function init_from_lists_write_store_must_exist { # @test
+  cat >s.lua <<-'EOM'
+		return dodder.list()
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -write-blob_store-id no_such_store \
+    -script "$script" \
+    take4 \
+    "$list"
+  assert_failure
+}
+
 # dodder#392: -plan-only builds and reports the plan's classification without
 # committing. It reports the union, prints the dry-run marker, and leaves the
 # freshly genesised repo empty (nothing imported, no source blobs copied) —

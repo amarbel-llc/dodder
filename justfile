@@ -1524,6 +1524,63 @@ consolidate-take4-attempt name:
   echo "== tail"; grep -vP '^(TAKE4|import|resolve-tai-reassign)\t' "$scratch/attempt.out" | tail -15
   exit "$rc"
 
+# Take4 (#16) P3: pair every resolve-tai-reassign entry in an attempt
+# listing with its twin (the import entry with the same id at the ORIGINAL
+# tai) and classify what differs between the two variants: blob, type,
+# tags, description. Prints per-category counts and examples, and writes
+# every pair to <dir>/p3-pairs.tsv for per-pair rulings. Read-only.
+[group('consolidate')]
+consolidate-p3-collisions file:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  dir=$(dirname "{{ file }}")
+  awk -F'\t' '
+    function parse(render,   r, n, w, i, ti, desc, tags, blob, typ) {
+      desc = ""
+      if (match(render, /"[^"]*"/)) desc = substr(render, RSTART, RLENGTH)
+      r = render; gsub(/"[^"]*"/, "", r)
+      n = split(r, w, " "); ti = 0; blob = ""
+      for (i = 5; i <= n; i++) {
+        if (w[i] ~ /blob-digest/) { blob = w[i]; sub(/^[^@]*@/, "", blob) }
+        if (substr(w[i], 1, 1) == "!" && ti == 0) ti = i
+      }
+      typ = ""; if (ti) { typ = w[ti]; sub(/@.*/, "", typ) }
+      tags = ""
+      if (ti) for (i = ti + 1; i <= n; i++) if (w[i] != "") tags = tags " " w[i]
+      P_blob = blob; P_type = typ; P_tags = tags; P_desc = desc
+      P_id = w[4]
+    }
+    $1 == "import" { parse($3); key = P_id "\t" $4
+      IB[key] = P_blob; IT[key] = P_type; IG[key] = P_tags; ID[key] = P_desc; next }
+    $1 == "resolve-tai-reassign" {
+      split($4, t, " -> "); parse($3)
+      n++; RK[n] = P_id "\t" t[1]
+      RB[n] = P_blob; RTY[n] = P_type; RG[n] = P_tags; RD[n] = P_desc
+    }
+    END {
+      out = dir "/p3-pairs.tsv"
+      print "id\ttai\tdiff\tA(kept-tai)\tB(reassigned)" > out
+      for (i = 1; i <= n; i++) {
+        k = RK[i]
+        if (!(k in IB)) { cat = "twin-missing" }
+        else {
+          cat = ""
+          if (IB[k] != RB[i]) cat = cat "+blob"
+          if (IT[k] != RTY[i]) cat = cat "+type"
+          if (IG[k] != RG[i]) cat = cat "+tags"
+          if (ID[k] != RD[i]) cat = cat "+desc"
+          if (cat == "") cat = "+none(digest-only)"
+        }
+        C[cat]++
+        if (E[cat] < 3) { E[cat]++
+          ex[cat] = ex[cat] sprintf("    %s\n      A: %s %s%s %s\n      B: %s %s%s %s\n", k, IT[k], IB[k], IG[k], ID[k], RTY[i], RB[i], RG[i], RD[i]) }
+        printf "%s\t%s\t%s | %s%s %s\t%s | %s%s %s\n", k, cat, IT[k], IB[k], IG[k], ID[k], RTY[i], RB[i], RG[i], RD[i] >> out
+      }
+      for (c in C) { printf "%5d  %s\n%s", C[c], c, ex[c] }
+      printf "pairs: %d -> %s\n", n, out
+    }
+  ' dir="$dir" "{{ file }}"
+
 # Take4 (#16): coverage of the digest map against what the union actually
 # references. Extracts every sha256 blob digest named in a
 # consolidate-union-dryrun listing (any `*-blob-digest-*@sha256-…` token)
@@ -1600,6 +1657,60 @@ consolidate-rsyncnet-delta listing="/home/sasha/workspaces/take4/rsync-sweep/lis
   echo "== largest 20 =="
   head -20 "$out" | awk -F'\t' '{printf "  %10s  %s\n", $2, $1}' | numfmt --field=1 --to=iec --padding=10 2>/dev/null || head -20 "$out"
   echo "full list: $out"
+
+# Take4 (#16) store-adoption proof, in a throwaway XDG: a pre-existing,
+# encrypted store renamed to `default-local` must be REUSED by a
+# user-scoped genesis as its write store, and init-from-lists over a list
+# referencing a blob already in it must not copy anything (blob file count
+# unchanged) while the repo can read the blob. Rehearses renaming
+# dodder-v8-take4 -> default-local on nikulin before the real run.
+[group('debug')]
+debug-take4-adopt-store-proof:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  base=$(mktemp -d)
+  trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
+  export XDG_DATA_HOME=$base/data XDG_CONFIG_HOME=$base/config \
+    XDG_STATE_HOME=$base/state XDG_CACHE_HOME=$base/cache XDG_RUNTIME_DIR=$base/run
+  mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+  stores=$XDG_DATA_HOME/madder/blob_stores
+  cd "$base"
+  printf 'one\n' >yin; printf 'uno\ndos\ntres\n' >yang
+
+  echo "==> 1. source repo + an encrypted store standing in for dodder-v8-take4"
+  madder init -encryption generate migrated
+  dodder init -yin yin -yang yang -encryption none -blob_store-id migrated src >/dev/null
+  printf 'adopted body\n' | dodder new -repo_id src -edit=false -description "adopt me" - >/dev/null 2>&1 || \
+    dodder new -edit=false -description "adopt me" src - <<<'adopted body' >/dev/null
+  madder sync default-local migrated >/dev/null
+  dodder export -repo_id src -print-time=true +z,e,t >list 2>/dev/null || true
+  [[ -s list ]] || { echo "export produced nothing"; exit 1; }
+
+  echo "==> 2. retire the source's default-local; rename migrated -> default-local"
+  rm -rf "$stores/default-local"
+  mv "$stores/migrated" "$stores/default-local"
+  before=$(find "$stores/default-local" -type f | wc -l)
+  echo "blob-store files before: $before"
+
+  echo "==> 3. user-scoped init-from-lists (no -blob_store-id, no -blob-source)"
+  printf 'return dodder.list()\n' >noop.lua
+  dodder init-from-lists -encryption none -yin yin -yang yang \
+    -script noop.lua take4 list
+
+  after=$(find "$stores/default-local" -type f | wc -l)
+  echo "blob-store files after:  $after (genesis + inventory-list blobs land HERE)"
+  echo "==> 4. checks"
+  echo "stores: $(ls "$stores" | tr '\n' ' ') (default-take4 = take4's multi over default-local)"
+  dodder show -repo_id take4 :z
+  dodder fsck -repo_id take4 || { echo "FAIL: fsck"; exit 1; }
+  # adoption = the take4 repo's writes went INTO the renamed store, and no
+  # second local store was created for it
+  [[ $after -gt $before ]] || { echo "FAIL: nothing written to the adopted store"; exit 1; }
+  [[ ! -e $stores/default-local-1 ]] || { echo "FAIL: a second local store appeared"; exit 1; }
+  echo "PASS: take4 adopted the renamed store as its write store; fsck clean"
 
 # Take4 (#16) host check: print every madder on PATH with its version and
 # this host's ssh ed25519 host-key fingerprint, so a peer host (nikulin)
