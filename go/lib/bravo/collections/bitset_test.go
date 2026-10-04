@@ -7,6 +7,41 @@ import (
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/ui"
 )
 
+// Adding an already-set bit must not inflate CountOn: NthOn walks the real
+// bits, so an overcount makes it fail for n past the true count.
+func TestBitsetAddIsIdempotentForCount(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	sut := MakeBitset(64)
+	sut.Add(7)
+	sut.Add(7)
+
+	t.AssertEqual(1, sut.CountOn())
+}
+
+// Decoding into an already-populated bitset replaces its contents, so
+// CountOn must equal the decoded bits, not their sum with the old count
+// (the zettel id index's Reset-then-read sequence, take4 #16).
+func TestBitsetUnmarshalIntoPopulatedResetsCount(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	sut := MakeBitset(64)
+
+	for _, idx := range []int{1, 5, 40} {
+		sut.Add(idx)
+	}
+
+	encoded, err := sut.(*bitset).MarshalBinary()
+	t.AssertNoError(err)
+	t.AssertNoError(sut.(*bitset).UnmarshalBinary(encoded))
+
+	t.AssertEqual(3, sut.CountOn())
+
+	n, ok := sut.NthOn(2)
+	t.AssertTrue(ok, "NthOn(2) should find the third set bit")
+	t.AssertEqual(40, n)
+}
+
 func TestBitset0CapGreaterAdd(t1 *testing.T) {
 	t := ui.MakeT(t1)
 

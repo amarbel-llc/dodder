@@ -193,6 +193,135 @@ return list
 	t.AssertError(err)
 }
 
+// The list binding projects each object's tai read-only, in three shapes a
+// version-aware transform needs: the canonical string, a fixed-width key
+// that sorts lexicographically in tai order (Lua numbers would lose the
+// attosecond part), and the local calendar date.
+func TestListTransformV1ProjectsTai(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	earlier, earlierRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer earlierRepool()
+	t.AssertNoError(earlier.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(
+		earlier.GetMetadataMutable().GetTaiMutable().SetFromRFC3339(
+			"2022-08-11T12:00:00Z",
+		),
+	)
+
+	later, laterRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer laterRepool()
+	t.AssertNoError(later.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(
+		later.GetMetadataMutable().GetTaiMutable().SetFromRFC3339(
+			"2023-01-02T12:00:00Z",
+		),
+	)
+
+	script := `
+local list = dodder.list()
+local seen = {}
+
+for object in list:each() do
+  seen[#seen + 1] = object
+end
+
+assert(seen[1].Tai == "` + earlier.GetTai().String() + `", "Tai: " .. tostring(seen[1].Tai))
+assert(seen[1].TaiDate == "2022-08-11", "TaiDate: " .. tostring(seen[1].TaiDate))
+assert(seen[2].TaiDate == "2023-01-02", "TaiDate: " .. tostring(seen[2].TaiDate))
+assert(seen[1].TaiSortKey < seen[2].TaiSortKey, "TaiSortKey must sort in tai order")
+
+return list
+`
+
+	var binding *ListTransformV1
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript(
+		script,
+	).WithApply(func(vm *lua.VM) error {
+		binding = MakeListTransformV1(vm, []*sku.Transacted{earlier, later})
+		binding.RegisterGlobals()
+		return nil
+	}).Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+	defer binding.Repool()
+
+	t.AssertTrue(binding.IsHandle(vm.Top), "script should return the handle")
+
+	outputs, err := binding.Objects()
+	t.AssertNoError(err)
+	t.AssertEqual(2, len(outputs))
+}
+
+// Transform scripts can read and write an object's description
+// (Bezeichnung) and add metadata object references (References, an array of
+// object id strings; write-back is additive). take4 uses both to create a new
+// !task that points at an existing note.
+func TestListTransformV1DescriptionAndReferences(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	note, noteRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer noteRepool()
+	t.AssertNoError(note.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(note.GetMetadataMutable().GetDescriptionMutable().Set("the note"))
+
+	script := `
+local list = dodder.list()
+local note
+
+for object in list:each() do
+  note = object
+end
+
+assert(note.Bezeichnung == "the note", "Bezeichnung: " .. tostring(note.Bezeichnung))
+assert(#note.References == 0, "References should start empty")
+
+local task = list:add()
+task.Typ = "task"
+task.Bezeichnung = note.Bezeichnung
+task.References[#task.References + 1] = note.Kennung
+
+return list
+`
+
+	var binding *ListTransformV1
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript(
+		script,
+	).WithApply(func(vm *lua.VM) error {
+		binding = MakeListTransformV1(vm, []*sku.Transacted{note})
+		binding.RegisterGlobals()
+		return nil
+	}).Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+	defer binding.Repool()
+
+	t.AssertTrue(binding.IsHandle(vm.Top), "script should return the handle")
+
+	outputs, err := binding.Objects()
+	t.AssertNoError(err)
+	t.AssertEqual(2, len(outputs))
+
+	task := outputs[1]
+
+	t.AssertEqualStrings("the note", task.GetMetadata().GetDescription().String())
+
+	var references []string
+
+	for reference := range task.GetMetadata().AllReferencedObjects() {
+		references = append(references, reference.String())
+	}
+
+	t.AssertEqual(1, len(references))
+	t.AssertEqualStrings("one/uno", references[0])
+}
+
 // list:remove rejects a table that is not an object handle from this list.
 func TestListTransformV1RemoveRejectsForeignTable(t1 *testing.T) {
 	t := ui.MakeT(t1)

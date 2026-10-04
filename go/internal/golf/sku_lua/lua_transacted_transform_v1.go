@@ -75,6 +75,14 @@ func FromLuaTableTransformV1(
 		}
 	}
 
+	if err = writeDescriptionBack(object, luaState, transacted); err != nil {
+		return fieldsChanged, err
+	}
+
+	if err = writeReferencesBack(object, luaState, transacted); err != nil {
+		return fieldsChanged, err
+	}
+
 	tags := luaState.GetField(transacted, "Etiketten")
 	tagsTable, ok := tags.(*lua.LTable)
 
@@ -119,4 +127,79 @@ func FromLuaTableTransformV1(
 	fieldsChanged = writeFieldsBack(object, luaTable.Fields)
 
 	return fieldsChanged, err
+}
+
+// writeDescriptionBack applies the transform-only Bezeichnung field (projected
+// by the list binding; absent in hook contexts, where GetField yields nil).
+func writeDescriptionBack(
+	object *sku.Transacted,
+	luaState *lua.LState,
+	transacted *lua.LTable,
+) (err error) {
+	value := luaState.GetField(transacted, "Bezeichnung")
+
+	if value == lua.LNil {
+		return err
+	}
+
+	description := value.String()
+
+	if description == object.GetMetadata().GetDescription().String() {
+		return err
+	}
+
+	if err = object.GetMetadataMutable().GetDescriptionMutable().Set(
+		description,
+	); err != nil {
+		err = errors.Wrapf(err, "invalid Bezeichnung %q", description)
+		return err
+	}
+
+	return err
+}
+
+// writeReferencesBack adds every object id listed in the transform-only
+// References array that the object does not already reference. Additive
+// only: removing a reference is not expressible.
+func writeReferencesBack(
+	object *sku.Transacted,
+	luaState *lua.LState,
+	transacted *lua.LTable,
+) (err error) {
+	value := luaState.GetField(transacted, "References")
+	referencesTable, ok := value.(*lua.LTable)
+
+	if !ok {
+		return err
+	}
+
+	existing := make(map[string]struct{})
+
+	for reference := range object.GetMetadata().AllReferencedObjects() {
+		existing[reference.String()] = struct{}{}
+	}
+
+	for index := 1; index <= referencesTable.Len(); index++ {
+		idString := referencesTable.RawGetInt(index).String()
+
+		if _, present := existing[idString]; present {
+			continue
+		}
+
+		var reference ids.SeqId
+
+		if err = reference.Set(idString); err != nil {
+			err = errors.Wrapf(err, "invalid reference %q", idString)
+			return err
+		}
+
+		if err = object.GetMetadataMutable().AddReference(reference); err != nil {
+			err = errors.Wrapf(err, "adding reference %q", idString)
+			return err
+		}
+
+		existing[idString] = struct{}{}
+	}
+
+	return err
 }

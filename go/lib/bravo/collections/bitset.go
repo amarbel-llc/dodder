@@ -247,6 +247,12 @@ func (b *bitset) Add(idx int) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 
+	// count only a bit that actually turns on, so countOn always matches the
+	// set bits NthOn walks
+	if b.len() > idx && b.get(idx) {
+		return
+	}
+
 	b.countOn += 1
 	b.set(idx, true)
 }
@@ -319,6 +325,11 @@ func (b bitset) MarshalBinary() (bs []byte, err error) {
 func (b *bitset) UnmarshalBinary(bs []byte) (err error) {
 	b.slice = make([]uint32, len(bs)/bytesPerInt)
 	b.lock = &sync.Mutex{}
+	// The slice is replaced wholesale, so the count must be too: decoding
+	// into an already-populated bitset (the zettel id index's Reset then
+	// readIfNecessary) otherwise doubles countOn, and NthOn then fails for
+	// any n past the real count ("zettel ids exhausted" with ids free).
+	b.countOn = 0
 
 	for i := range b.slice {
 		n := binary.BigEndian.Uint32(bs[bytesPerInt*i:])

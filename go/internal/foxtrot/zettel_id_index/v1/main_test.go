@@ -1,6 +1,8 @@
 package zettel_id_index
 
 import (
+	"encoding"
+	"math/rand"
 	"testing"
 
 	"code.linenisgreat.com/dodder/go/internal/0/coordinates"
@@ -190,6 +192,57 @@ func TestFixedResetRoundTripCoordinates(t1 *testing.T) {
 	})
 
 	t.AssertEqual(len(validIds), bs.CountOn())
+}
+
+// Probe for take4's "zettel ids exhausted" (dodder #16): allocating ~519 ids
+// from a live-sized pool (184 x 230) after reserving a few thousand used ids
+// must never fail while CountOn() > 0. Mirrors CreateZettelId's selection
+// (rand.Intn(CountOn()) then NthOn), once on a fresh bitset and once after a
+// marshal/unmarshal round trip into the SAME bitset value (the index's
+// Reset -> Flush -> readIfNecessary sequence).
+func TestAllocationAfterReserveAtLiveScale(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	lMax, rMax := 183, 229
+
+	allocate := func(bs collections.Bitset, label string) {
+		reserved := 0
+
+		for id := 0; reserved < 5000 && id < bs.Len(); id += 7 {
+			if bs.Get(id) {
+				bs.DelIfPresent(id)
+				reserved++
+			}
+		}
+
+		real := 0
+		bs.EachOn(func(int) error { real++; return nil })
+
+		t.AssertEqual(real, bs.CountOn())
+
+		for i := 0; i < 519; i++ {
+			count := bs.CountOn()
+			t.AssertTrue(count > 0, label+": pool unexpectedly empty")
+
+			n, ok := bs.NthOn(rand.Intn(count))
+			if !ok {
+				t.Fatalf("%s: NthOn failed at allocation %d (CountOn=%d)", label, i, count)
+			}
+
+			bs.DelIfPresent(n)
+		}
+	}
+
+	allocate(makeBitsetFromCoordinates(lMax, rMax), "fresh")
+
+	// Round trip: unmarshal the flushed bytes back INTO the populated bitset,
+	// as readIfNecessary does with index.bitset after Reset populated it.
+	populated := makeBitsetFromCoordinates(lMax, rMax)
+	encoded, err := populated.(encoding.BinaryMarshaler).MarshalBinary()
+	t.AssertNoError(err)
+	t.AssertNoError(populated.(encoding.BinaryUnmarshaler).UnmarshalBinary(encoded))
+
+	allocate(populated, "round-trip")
 }
 
 func TestFixedResetRealisticSize(t1 *testing.T) {

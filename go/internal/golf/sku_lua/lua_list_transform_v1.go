@@ -1,6 +1,9 @@
 package sku_lua
 
 import (
+	"fmt"
+	"time"
+
 	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
@@ -77,6 +80,24 @@ func (binding *ListTransformV1) appendObject(
 		lua.LString(object.GetBlobDigest().String()),
 	)
 
+	projectTaiReadOnly(binding.vm, table.Transacted, object)
+
+	// Transform-only, writable: the description and the metadata object
+	// references (read back by FromLuaTableTransformV1).
+	binding.vm.SetField(
+		table.Transacted,
+		"Bezeichnung",
+		lua.LString(object.GetMetadata().GetDescription().String()),
+	)
+
+	references := binding.vm.NewTable()
+
+	for reference := range object.GetMetadata().AllReferencedObjects() {
+		references.Append(lua.LString(reference.String()))
+	}
+
+	binding.vm.SetField(table.Transacted, "References", references)
+
 	binding.handleToIndex[table.Transacted] = len(binding.entries)
 	binding.entries = append(binding.entries, listTransformEntryV1{
 		object: object,
@@ -84,6 +105,37 @@ func (binding *ListTransformV1) appendObject(
 	})
 
 	return table
+}
+
+// projectTaiReadOnly exposes the object's tai to transform scripts so they
+// can reason about an id's version history (e.g. inherit a type from the
+// previous version, date a field from the version it lands on). Read-only:
+// FromLuaTableTransformV1 never reads these keys back, so a script cannot
+// retime an object.
+//
+//   - Tai: the canonical tai string.
+//   - TaiSortKey: fixed-width "<sec>.<asec>", lexicographically ordered like
+//     the tai (Lua numbers would drop the attosecond part).
+//   - TaiDate: the tai's local calendar date, YYYY-MM-DD (the sandbox blocks
+//     `os`, so scripts cannot format dates themselves).
+func projectTaiReadOnly(
+	vm *lua.VM,
+	transacted *lua.LTable,
+	object *sku.Transacted,
+) {
+	tai := object.GetTai()
+
+	vm.SetField(transacted, "Tai", lua.LString(tai.String()))
+	vm.SetField(
+		transacted,
+		"TaiSortKey",
+		lua.LString(fmt.Sprintf("%020d.%018d", tai.Sec, tai.Asec)),
+	)
+	vm.SetField(
+		transacted,
+		"TaiDate",
+		lua.LString(tai.Format(time.DateOnly)),
+	)
 }
 
 // RegisterGlobals installs the `dodder` global carrying list() (RFC-0008

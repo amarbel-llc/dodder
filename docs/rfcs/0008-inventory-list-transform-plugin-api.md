@@ -116,6 +116,23 @@ markl id string. `Blob` is projected by the list binding, not by
 it rewrote — the composition the FDR's hash-migration story depends on. An
 empty string clears the digest.
 
+The list binding also projects, transform-only:
+
+- `Tai`, `TaiSortKey`, `TaiDate` — read-only. The canonical tai string; a
+  fixed-width `<sec>.<asec>` key that sorts lexicographically in tai order
+  (Lua numbers would drop the attosecond part); and the local calendar date
+  `YYYY-MM-DD` (the sandbox blocks `os`). Write-back ignores them, so a
+  script can order and date an id's versions but cannot retime them.
+- `Bezeichnung` — the description, read/write.
+- `References` — an array of object id strings for the metadata object
+  references, write-back additive (an id not already referenced is added;
+  removal is not expressible).
+
+An object created with `list:add()` gets a current tai at plan time, and every
+zettel id already present in the output set is reserved in the id index
+before ids are allocated for added objects, so an addition never collides
+with an id the same batch imports.
+
 The draft's illustrative lowercase surface (`object.type`,
 `object.tags:remove(...)`) was NOT adopted: the normative rule "reuse the
 existing projection unchanged" won, keeping transform scripts and RFC-0006

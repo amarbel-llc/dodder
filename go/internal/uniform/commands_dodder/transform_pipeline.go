@@ -7,8 +7,11 @@ import (
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
+	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/internal/echo/zettel_id_provider"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/env_repo"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
+	"code.linenisgreat.com/dodder/go/internal/foxtrot/zettel_id_index"
 	"code.linenisgreat.com/dodder/go/internal/golf/blob_transfers"
 	"code.linenisgreat.com/dodder/go/internal/golf/sku_lua"
 	"code.linenisgreat.com/dodder/go/internal/hotel/import_plan"
@@ -228,6 +231,15 @@ func (p transformPipeline) run() error {
 	if err := p.checkOutputIds(outputs); err != nil {
 		return err
 	}
+
+	if err := reserveOutputZettelIds(
+		repo.GetStore().GetZettelIdIndex(),
+		outputs,
+	); err != nil {
+		return err
+	}
+
+	stampAddedObjectTais(outputs)
 
 	builder := import_plan.MakeLocalBuilder()
 	builder.AddTransform(
@@ -471,6 +483,49 @@ func (p transformPipeline) validate(
 	}
 
 	return nil
+}
+
+// reserveOutputZettelIds marks every zettel id already present in the output
+// set as used in the id index BEFORE ids are allocated for objects the
+// script added (list:add). Ids are otherwise only marked used at commit, after
+// plan build, so allocation could hand a new object an id the same batch is
+// importing — fatal for init-from-lists, whose newborn index starts empty.
+// Ids whose words are not in this repo's yin/yang pool (inherited from an
+// older pool) cannot collide with an allocation and are skipped, mirroring
+// the commit path.
+func reserveOutputZettelIds(
+	index zettel_id_index.Index,
+	outputs []*sku.Transacted,
+) error {
+	for _, object := range outputs {
+		objectId := object.GetObjectIdMutable()
+
+		if objectId.IsEmpty() || !objectId.GetGenre().IsZettel() {
+			continue
+		}
+
+		if err := index.AddZettelId(objectId); err != nil {
+			if errors.Is(err, zettel_id_provider.ErrDoesNotExist{}) {
+				continue
+			}
+
+			return errors.Wrapf(err, "reserving zettel id %s", objectId)
+		}
+	}
+
+	return nil
+}
+
+// stampAddedObjectTais gives every object the script added (list:add) a
+// current tai. Imported objects keep theirs; added ones start with none, and
+// the re-signing commit path (init-from-lists' OverwriteSignatures) computes
+// the object digest over the tai, so an empty one fails with "empty tai".
+func stampAddedObjectTais(outputs []*sku.Transacted) {
+	for _, object := range outputs {
+		if object.GetTai().IsEmpty() {
+			object.GetMetadataMutable().GetTaiMutable().ResetWith(ids.NowTai())
+		}
+	}
 }
 
 // printPlanSummary renders the plan via import's existing formatters

@@ -210,6 +210,49 @@ function init_from_lists_terminal_status_is_dormant_without_tags { # @test
 	EOM
 }
 
+# take4 (#16): an object the script adds (list:add) is allocated a zettel id
+# that the imported union does not already use. The newborn's id index starts
+# empty, so without reserving the union's ids first the allocator could hand
+# the new object one/uno or one/dos; the pool here (one × uno,dos,tres) leaves
+# exactly one free id. The added object also carries a description and a
+# metadata reference set by the script.
+function init_from_lists_added_object_avoids_union_ids { # @test
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+
+		local added = l:add()
+		added.Typ = "md"
+		added.Bezeichnung = "spun off"
+		added.References[#added.References + 1] = "one/uno"
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  mkdir consolidated
+  cd consolidated || exit 1
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -yin <(printf 'one\n') \
+    -yang <(printf 'uno\ndos\ntres\n') \
+    -script "$script" \
+    -blob-source shared \
+    .default \
+    "$list"
+  assert_success
+
+  # the reference is locked to one/uno's signature under the newborn's fresh
+  # (non-deterministic) key
+  run_dodder show :z
+  assert_success
+  assert_output_unsorted --regexp - <<-'EOM'
+		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md "wow ok again" tag-3 tag-4\]
+		\[one/tres !md "spun off" <one/uno@ed25519_sig-[a-z0-9]+\]
+		\[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4\]
+	EOM
+}
+
 # dodder#392: -plan-only builds and reports the plan's classification without
 # committing. It reports the union, prints the dry-run marker, and leaves the
 # freshly genesised repo empty (nothing imported, no source blobs copied) —
