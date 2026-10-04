@@ -103,9 +103,10 @@ identity is the invocation's input set, not a fresh copy per call.
 
 Each element is projected via the *existing* read-side projection,
 unchanged: `sku_lua.ToLuaTableV1`
-(`go/internal/golf/sku_lua/lua_transacted_v1.go`). V1, not V2, because only
-V1 projects the metadata index fields (`Fields`), which transform scripts
-need for field rewriting. An object handle therefore has the established V1
+(`go/internal/golf/sku_lua/lua_transacted_v1.go`). V1, not V2, because when
+this binding was specified only V1 projected the metadata index fields
+(`Fields`), which transform scripts need for field rewriting; V2 has since
+gained them and backs the opt-in binding in §3.6. An object handle therefore has the established V1
 shape: `Gattung` (genre), `Kennung` (object id), `Typ` (type), `Etiketten`
 (tags table: name → true), `EtikettenImplicit`, `Fields` (name → value) —
 plus one transform-only addition: `Blob`, the object's blob digest as a
