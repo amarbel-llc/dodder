@@ -322,6 +322,55 @@ return list
 	t.AssertEqualStrings("one/uno", references[0])
 }
 
+// A script that assigns nil to Typ, Kennung, or Gattung leaves the object's
+// type, id, and genre unchanged (nil must not read back as the string "nil").
+func TestListTransformV1NilScalarsLeaveObjectUnchanged(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	one, oneRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer oneRepool()
+	t.AssertNoError(one.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(one.GetMetadataMutable().GetTypeMutable().SetType("task"))
+
+	script := `
+local list = dodder.list()
+
+for object in list:each() do
+  object.Typ = nil
+  object.Kennung = nil
+  object.Gattung = nil
+end
+
+return list
+`
+
+	var binding *ListTransformV1
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript(
+		script,
+	).WithApply(func(vm *lua.VM) error {
+		binding = MakeListTransformV1(vm, []*sku.Transacted{one})
+		binding.RegisterGlobals()
+		return nil
+	}).Build()
+	t.AssertNoError(err)
+
+	_, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+	defer binding.Repool()
+
+	outputs, err := binding.Objects()
+	t.AssertNoError(err)
+	t.AssertEqual(1, len(outputs))
+	t.AssertEqualStrings("one/uno", outputs[0].GetObjectId().String())
+	t.AssertEqual(genres.Zettel, genres.Make(outputs[0].GetGenre()))
+
+	expected, expectedRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer expectedRepool()
+	t.AssertNoError(expected.GetMetadataMutable().GetTypeMutable().SetType("task"))
+	t.AssertEqualStrings(expected.GetType().String(), outputs[0].GetType().String())
+}
+
 // Assigning Bezeichnung on an object that already has a description replaces
 // it; Description.Set alone would append ("the note renamed").
 func TestListTransformV1DescriptionReplacesExisting(t1 *testing.T) {

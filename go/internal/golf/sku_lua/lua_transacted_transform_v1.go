@@ -1,7 +1,6 @@
 package sku_lua
 
 import (
-	"code.linenisgreat.com/dodder/go/internal/alfa/genres"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
 	"code.linenisgreat.com/dodder/go/internal/foxtrot/sku"
 	"code.linenisgreat.com/dodder/go/lib/alfa/lua"
@@ -28,23 +27,11 @@ func FromLuaTableTransformV1(
 ) (fieldsChanged bool, err error) {
 	transacted := luaTable.Transacted
 
-	genre := genres.MakeOrUnknown(
-		luaState.GetField(transacted, "Gattung").String(),
-	)
-
-	object.GetObjectIdMutable().SetGenre(genre)
-	id := luaState.GetField(transacted, "Kennung").String()
-
-	if id != "" {
-		if err = object.GetObjectIdMutable().Set(id); err != nil {
-			err = errors.Wrap(err)
-			return fieldsChanged, err
-		}
+	if err = writeGenreAndIdBack(object, luaState, transacted); err != nil {
+		return fieldsChanged, err
 	}
 
-	typeString := luaState.GetField(transacted, "Typ").String()
-
-	if typeString != "" {
+	if typeString := luaStringFieldOrEmpty(luaState, transacted, "Typ"); typeString != "" {
 		var typeStruct ids.TypeStruct
 
 		if err = typeStruct.Set(typeString); err != nil {

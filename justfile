@@ -1575,6 +1575,32 @@ consolidate-split-removed-list attempt:
   fi
   ls -la "$out"
 
+# Take4 (#16) manual review: for each zettel id, print the number of
+# distinct versions in the union manifest, the latest version's box line,
+# and its body (read from the source store by the line's blob digest).
+# Read-only; serves the PLAN's manual-review list (taskpaper / toml-task /
+# list-tag ids).
+[group('consolidate')]
+consolidate-take4-show-ids store +ids:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  t4=/home/sasha/workspaces/take4
+  mapfile -t lists <"$t4/transform/manifest.txt"
+  for id in {{ ids }}; do
+    lines=$(grep -h "^\[$id " "${lists[@]}" | sed -E 's/ dodder-(repo-public_key|object-sig|object-digest)-v[0-9]+@[^ ]+//g' | sort -u)
+    n=$(printf '%s\n' "$lines" | grep -c . || true)
+    latest=$(printf '%s\n' "$lines" | awk '{ for (i = 2; i <= NF; i++) if ($i ~ /^[0-9]+\.[0-9]+$/) { print $i "\t" $0; break } }' | sort -t$'\t' -k1,1n | tail -1 | cut -f2-)
+    echo "================ $id ($n distinct versions)"
+    echo "$latest"
+    digest=$(printf '%s' "$latest" | grep -oE '@(sha256|blake2b256)-[a-z0-9]+' | head -1 | cut -c2-)
+    if [[ -n $digest ]]; then
+      echo "---- body ($digest)"
+      madder cat {{ store }} "$digest" 2>&1 | head -80
+    else
+      echo "---- (no blob)"
+    fi
+  done
+
 # Take4 (#16) archives, step 2 of 2 (post-genesis, PLAN §5): one archive
 # zettel per drop class in the consolidated repo. Each archive list
 # (take4/archives/<class>.inventory_list, from consolidate-split-removed-list)

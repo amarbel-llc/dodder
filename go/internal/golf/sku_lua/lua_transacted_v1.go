@@ -72,18 +72,8 @@ func FromLuaTableV1(
 ) (fieldsChanged bool, err error) {
 	transacted := luaTable.Transacted
 
-	genre := genres.MakeOrUnknown(
-		luaState.GetField(transacted, "Gattung").String(),
-	)
-
-	object.GetObjectIdMutable().SetGenre(genre)
-	id := luaState.GetField(transacted, "Kennung").String()
-
-	if id != "" {
-		if err = object.GetObjectIdMutable().Set(id); err != nil {
-			err = errors.Wrap(err)
-			return fieldsChanged, err
-		}
+	if err = writeGenreAndIdBack(object, luaState, transacted); err != nil {
+		return fieldsChanged, err
 	}
 
 	tags := luaState.GetField(transacted, "Etiketten")
@@ -118,6 +108,28 @@ func FromLuaTableV1(
 	// TODO Verzeichnisse
 
 	return fieldsChanged, err
+}
+
+// writeGenreAndIdBack applies the Gattung and Kennung scalars. A nil or empty
+// value leaves the object's genre / id unchanged (luaStringFieldOrEmpty, shared
+// with the V2 write-back, maps nil to "").
+func writeGenreAndIdBack(
+	object *sku.Transacted,
+	luaState *lua.LState,
+	transacted *lua.LTable,
+) (err error) {
+	if genre := luaStringFieldOrEmpty(luaState, transacted, "Gattung"); genre != "" {
+		object.GetObjectIdMutable().SetGenre(genres.MakeOrUnknown(genre))
+	}
+
+	if id := luaStringFieldOrEmpty(luaState, transacted, "Kennung"); id != "" {
+		if err = object.GetObjectIdMutable().Set(id); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	return err
 }
 
 // writeFieldsBack applies any values the hook set on kinder.Fields back onto
