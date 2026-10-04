@@ -165,10 +165,33 @@ func (binding *ListTransformV1) Objects() (
 	objects []*sku.Transacted,
 	err error,
 ) {
+	return binding.writeBackEntries(false)
+}
+
+// RemovedObjects reads the script's mutations back off every entry the script
+// removed (list:remove), in input order, so a consumer can archive what the
+// transform dropped -- including any tags the script set on an object just
+// before removing it (e.g. a drop-class marker). Objects the script added and
+// then removed never existed in the input and are omitted.
+func (binding *ListTransformV1) RemovedObjects() (
+	objects []*sku.Transacted,
+	err error,
+) {
+	return binding.writeBackEntries(true)
+}
+
+func (binding *ListTransformV1) writeBackEntries(removed bool) (
+	objects []*sku.Transacted,
+	err error,
+) {
 	for index := range binding.entries {
 		entry := &binding.entries[index]
 
-		if entry.removed {
+		if entry.removed != removed {
+			continue
+		}
+
+		if removed && entry.object.GetObjectIdMutable().IsEmpty() {
 			continue
 		}
 

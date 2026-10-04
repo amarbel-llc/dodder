@@ -358,3 +358,69 @@ return list
 	t.AssertNoError(err)
 	t.AssertEqual(1, len(outputs))
 }
+
+// RemovedObjects returns exactly the removed input objects with the script's
+// pre-removal mutations applied (here a drop-class tag), and omits an object
+// the script added and then removed.
+func TestListTransformV1RemovedObjects(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	one, oneRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer oneRepool()
+	t.AssertNoError(one.GetObjectIdMutable().Set("one/uno"))
+
+	two, twoRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer twoRepool()
+	t.AssertNoError(two.GetObjectIdMutable().Set("two/dos"))
+
+	script := `
+local list = dodder.list()
+
+for object in list:each() do
+  if object.Kennung == "two/dos" then
+    object.Etiketten["zz-dropped-test"] = true
+    list:remove(object)
+  end
+end
+
+local scratch = list:add()
+list:remove(scratch)
+
+return list
+`
+
+	var binding *ListTransformV1
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript(
+		script,
+	).WithApply(func(vm *lua.VM) error {
+		binding = MakeListTransformV1(vm, []*sku.Transacted{one, two})
+		binding.RegisterGlobals()
+		return nil
+	}).Build()
+	t.AssertNoError(err)
+
+	_, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+	defer binding.Repool()
+
+	outputs, err := binding.Objects()
+	t.AssertNoError(err)
+	t.AssertEqual(1, len(outputs))
+	t.AssertEqualStrings("one/uno", outputs[0].GetObjectId().String())
+
+	removed, err := binding.RemovedObjects()
+	t.AssertNoError(err)
+	t.AssertEqual(1, len(removed))
+	t.AssertEqualStrings("two/dos", removed[0].GetObjectId().String())
+
+	removedTags := make(map[string]bool)
+	for tag := range removed[0].GetMetadata().AllTags() {
+		removedTags[tag.String()] = true
+	}
+
+	t.AssertTrue(
+		removedTags["zz-dropped-test"],
+		"removed object should carry the tag set before removal",
+	)
+}

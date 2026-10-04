@@ -338,7 +338,7 @@ is the self-containment proof, asserted in both commands' e2e tests.
 ### 7.4 New command surface
 
 ```
-dodder init-from-lists -script <path> [-blob-source <store>...] [-plan-only] [-skip-validation] <repo-id> <list-path>...
+dodder init-from-lists -script <path> [-blob-source <store>...] [-plan-only] [-skip-validation] [-removed-list <path>] <repo-id> <list-path>...
 dodder clone -direct <path> -script <path> <repo-id> [query args...]
 ```
 
@@ -348,6 +348,16 @@ genesised but stays empty) and `-skip_validation` as `-skip-validation`.
 `-dry-run` is unavailable as a per-command name: it is dodder's global
 config flag, which also gates genesis and store flushes. Aligning
 `transform`'s spelling is dodder#397.
+
+`-removed-list <path>` archives the script's drops: every input object the
+script `list:remove()`d, with the script's pre-removal mutations applied (so a
+drop-class tag set just before removal survives), is written to `<path>` as an
+`inventory_list-v1` — also under `-plan-only`. It is v1 deliberately: removed
+objects are never committed, so they are not re-signed (legacy ones carry no
+signature, and a pre-removal mutation invalidates the source signature of the
+rest), and v2's encoder rejects unsigned objects. The list holds only the
+removed objects, not the types they are locked to, so it is an archive rather
+than a standalone import source.
 
 `init-from-lists` genesises a fresh repo (fresh keypair, fresh instance
 identity, end-state config, `ExcludeDefaultType`) and consolidates N

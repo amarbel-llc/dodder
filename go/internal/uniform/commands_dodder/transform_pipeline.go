@@ -4,6 +4,7 @@ import (
 	"io"
 	"iter"
 	"os"
+	"slices"
 
 	"code.linenisgreat.com/dodder/go/internal/alfa/string_format_writer"
 	"code.linenisgreat.com/dodder/go/internal/bravo/env_ui"
@@ -25,6 +26,7 @@ import (
 	"code.linenisgreat.com/piggy/go/pkgs/markl"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/errors"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/files"
+	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/pool"
 	tap "code.linenisgreat.com/tap/go/pkgs/writer"
 )
 
@@ -108,6 +110,13 @@ type transformPipeline struct {
 	// import builder's within-batch (id,tai) reassign guards the genuine
 	// last-write-wins hazard instead. Do not "fix" this asymmetry.
 	disallowDuplicateObjectIds bool
+
+	// removedListPath, when set, receives every input object the script
+	// removed (list:remove), with the script's pre-removal mutations applied,
+	// as an (unsigned-tolerant) inventory_list-v1 -- an archive of what the
+	// transform dropped. Written even under -dry_run, before the plan is
+	// built, so a plan-only iteration can inspect its drops.
+	removedListPath string
 
 	// extraReadStores are read-only blob stores consulted ahead of the repo's
 	// own read view (and, under -dry_run, ahead of the staging store) by the
@@ -230,6 +239,12 @@ func (p transformPipeline) run() error {
 
 	if err := p.checkOutputIds(outputs); err != nil {
 		return err
+	}
+
+	if p.removedListPath != "" {
+		if err := p.writeRemovedList(binding); err != nil {
+			return err
+		}
 	}
 
 	if err := reserveOutputZettelIds(
@@ -363,6 +378,53 @@ func (p transformPipeline) checkOutputIds(outputs []*sku.Transacted) error {
 	}
 
 	return nil
+}
+
+// writeRemovedList writes the objects the script removed to removedListPath
+// as an inventory list via the repo's list coder closet (as `export` does).
+func (p transformPipeline) writeRemovedList(
+	binding *sku_lua.ListTransformV1,
+) (err error) {
+	removed, err := binding.RemovedObjects()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	file, err := os.Create(p.removedListPath)
+	if err != nil {
+		return errors.Wrapf(err, "creating -removed-list %q", p.removedListPath)
+	}
+
+	defer errors.DeferredCloser(&err, file)
+
+	bufferedWriter, repoolBufferedWriter := pool.GetBufferedWriter(file)
+	defer repoolBufferedWriter()
+
+	// inventory_list-v1, not the repo's (signed) list type: removed objects
+	// are never committed, so they are not re-signed -- legacy ones carry no
+	// object digest/sig at all, and a pre-removal mutation (e.g. a drop-class
+	// tag) invalidates the source signature of the rest. v2's encoder rejects
+	// unsigned objects; v1 writes them and re-finalizes on decode.
+	if _, err = p.repo.GetInventoryListCoderCloset().WriteTypedBlobToWriter(
+		p.repo,
+		ids.GetOrPanic(ids.TypeInventoryListV1).TypeStruct,
+		quiter.MakeSeqErrorFromSeq(slices.Values(removed)),
+		bufferedWriter,
+	); err != nil {
+		return errors.Wrapf(err, "writing -removed-list %q", p.removedListPath)
+	}
+
+	if err = bufferedWriter.Flush(); err != nil {
+		return errors.Wrap(err)
+	}
+
+	p.repo.GetUI().Printf(
+		"removed list: %d object(s) written to %s",
+		len(removed),
+		p.removedListPath,
+	)
+
+	return err
 }
 
 // committableObjects lazily yields each committable entry's object from the

@@ -1510,6 +1510,7 @@ consolidate-take4-attempt name:
     -include-builtin-actionable-types -exclude-default-type=false \
     -yin "$t4/transform/Yin" -yang "$t4/transform/Yang" \
     -encryption none -script "$t4/staged/take4-transform.lua" \
+    -removed-list "$scratch/removed.inventory_list" \
     -blob-source dodder-v8-take3 .{{ name }} "${lists[@]}" >"$scratch/attempt.out" 2>&1
   rc=$?
   echo "==> exit: $rc"
@@ -1523,6 +1524,56 @@ consolidate-take4-attempt name:
   echo "== plan classification"; grep -oP '^(import|resolve-tai-reassign|committable)\t' "$scratch/attempt.out" | sort | uniq -c
   echo "== tail"; grep -vP '^(TAKE4|import|resolve-tai-reassign)\t' "$scratch/attempt.out" | tail -15
   exit "$rc"
+
+# Take4 (#16) archives, step 1 of 2: split an attempt's removed list
+# (init-from-lists -removed-list, written by consolidate-take4-attempt) into
+# one inventory list per drop class, keyed on the zz-take4-dropped-<class>
+# marker the transform's drop() sets. Objects carrying only the
+# zz-take4-moved-id_split marker are not drops and are skipped. Each output
+# keeps the source list's header verbatim. Cross-checks every class count
+# against the attempt's DROP report and fails on a mismatch or an
+# unclassified line. Writes take4/archives/<class>.inventory_list.
+[group('consolidate')]
+consolidate-split-removed-list attempt:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  t4=/home/sasha/workspaces/take4
+  scratch=$t4/scratch/{{ attempt }}
+  removed=$scratch/removed.inventory_list
+  out=$t4/archives
+  [[ -s $removed ]] || { echo "no removed list at $removed"; exit 1; }
+  rm -rf "$out"; mkdir -p "$out"
+  awk -v out="$out" '
+    !body { header = header $0 "\n"; if ($0 == "" && fences >= 2) body = 1; if ($0 == "---") fences++; next }
+    /^[ \t]*$/ { next }
+    {
+      if (match($0, /zz-take4-dropped-[a-z0-9_-]+/)) {
+        c = substr($0, RSTART + 17, RLENGTH - 17)
+        file = out "/" c ".inventory_list"
+        if (!(c in started)) { printf "%s", header > file; started[c] = 1 }
+        print >> file
+        n[c]++
+      } else if ($0 ~ /zz-take4-moved-id_split/) {
+        moved++
+      } else {
+        bad++; if (bad <= 5) print "UNCLASSIFIED\t" $0 > "/dev/stderr"
+      }
+    }
+    END {
+      for (c in n) printf "%s\t%d\n", c, n[c]
+      printf "moved-id_split\t%d\n", moved
+      exit (bad > 0)
+    }
+  ' "$removed" | sort >"$out/split-counts.tsv"
+  awk -F'\t' '$2=="DROP"{print $3}' "$scratch/report.tsv" | sort | uniq -c \
+    | awk '{ printf "%s\t%d\n", $2, $1 }' | sort >"$out/report-counts.tsv"
+  echo "== archived per class"; cat "$out/split-counts.tsv"
+  if diff <(grep -v '^moved-id_split' "$out/split-counts.tsv") "$out/report-counts.tsv"; then
+    echo "OK: every class archived its full drop count"
+  else
+    echo "MISMATCH between removed list and DROP report (see diff above)"; exit 1
+  fi
+  ls -la "$out"
 
 # Take4 (#16) P3: pair every resolve-tai-reassign entry in an attempt
 # listing with its twin (the import entry with the same id at the ORIGINAL

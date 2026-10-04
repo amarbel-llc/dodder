@@ -286,6 +286,56 @@ function init_from_lists_adopts_named_write_store { # @test
   assert_success
 }
 
+# take4 (#16): -removed-list archives what the script dropped. Every version of
+# one/dos is tagged with a drop-class marker and removed; the newborn holds only
+# one/uno, and the removed list carries one/dos with the marker the script set
+# before removing it. (The list holds only the removed objects, not the types
+# they are locked to, so it is an archive, not a standalone import source.)
+function init_from_lists_removed_list_archives_drops { # @test
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+
+		for object in l:each() do
+		  if object.Kennung == "one/dos" then
+		    object.Etiketten["zz-dropped-test"] = true
+		    l:remove(object)
+		  end
+		end
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  mkdir consolidated
+  cd consolidated || exit 1
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -script "$script" \
+    -blob-source shared \
+    -removed-list "$BATS_TEST_TMPDIR/removed" \
+    .default \
+    "$list"
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+
+  # one line per removed object; keys and signatures are per-run
+  run cat "$BATS_TEST_TMPDIR/removed"
+  assert_success
+  assert_output --regexp - <<-'EOM'
+		^---
+		! inventory_list-v1
+		---
+
+		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd [0-9]+\.[0-9]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !md@ed25519_sig-[a-z0-9]+ "wow ok again" tag-3 tag-4 zz-dropped-test\]$
+	EOM
+}
+
 # a store that does not exist cannot be adopted
 function init_from_lists_write_store_must_exist { # @test
   cat >s.lua <<-'EOM'

@@ -55,6 +55,7 @@ type InitFromLists struct {
 	BlobSources    stringSliceFlag
 	PlanOnly       bool
 	SkipValidation bool
+	RemovedList    string
 }
 
 var (
@@ -132,6 +133,13 @@ func (cmd *InitFromLists) SetFlagDefinitions(
 		false,
 		"skip the fsck-style validation of the transform output (for staged, intentionally-inconsistent migration passes)",
 	)
+
+	flagDefinitions.StringVar(
+		&cmd.RemovedList,
+		"removed-list",
+		"",
+		"write every object the script removed (list:remove), with its pre-removal mutations applied, to this path as an inventory list -- an archive of the transform's drops (also written under -plan-only)",
+	)
 }
 
 // ResetCLIState clears the repeatable -blob-source accumulator so a reused
@@ -205,6 +213,7 @@ func (cmd *InitFromLists) Run(req command.Request) {
 		// duplicate object ids (dodder#392); the import builder's within-batch
 		// reassign guards the genuine last-write-wins hazard instead.
 		disallowDuplicateObjectIds: false,
+		removedListPath:            cmd.RemovedList,
 		extraReadStores:            extraReadStores,
 		// Copy every referenced source blob into the newborn before commit so
 		// the consolidation is self-contained and survives deleting the
