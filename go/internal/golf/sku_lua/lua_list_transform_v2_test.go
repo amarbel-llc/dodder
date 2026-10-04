@@ -156,6 +156,42 @@ func TestFromLuaTableV2WithholdsTypeWriteBack(t1 *testing.T) {
 	t.AssertEqualStrings(expected.GetType().String(), object.GetType().String())
 }
 
+// Assigning nil to a scalar key leaves that part of the object alone: nil
+// must not be read back as the literal string "nil".
+func TestFromLuaTableTransformV2NilScalarsAreNoOps(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript("return {}").Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+
+	table, tableRepool := MakeLuaTablePoolV2(vm).GetWithRepool()
+	defer tableRepool()
+
+	object, repool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer repool()
+
+	t.AssertNoError(object.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(object.GetMetadataMutable().GetTypeMutable().SetType("task"))
+
+	originalType := object.GetType().String()
+	originalGenre := object.GetGenre().String()
+
+	ToLuaTableV2(object, vm.LState, table)
+	vm.LState.SetField(table.Transacted, "Type", lua.LNil)
+	vm.LState.SetField(table.Transacted, "ObjectId", lua.LNil)
+	vm.LState.SetField(table.Transacted, "Genre", lua.LNil)
+
+	_, err = FromLuaTableTransformV2(object, vm.LState, table)
+	t.AssertNoError(err)
+
+	t.AssertEqualStrings(originalType, object.GetType().String())
+	t.AssertEqualStrings("one/uno", object.GetObjectId().String())
+	t.AssertEqualStrings(originalGenre, object.GetGenre().String())
+}
+
 // End-to-end V2 binding exercise with English keys: mutate type, tags, and
 // description; read the transform-only Tai keys; remove one object; add one
 // that references a survivor.

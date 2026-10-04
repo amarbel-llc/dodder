@@ -26,23 +26,15 @@ func FromLuaTableTransformV2(
 ) (fieldsChanged bool, err error) {
 	transacted := luaTable.Transacted
 
-	genre := genres.MakeOrUnknown(
-		luaState.GetField(transacted, "Genre").String(),
-	)
-
-	object.GetObjectIdMutable().SetGenre(genre)
-	id := luaState.GetField(transacted, "ObjectId").String()
-
-	if id != "" {
-		if err = object.GetObjectIdMutable().Set(id); err != nil {
-			err = errors.Wrap(err)
-			return fieldsChanged, err
-		}
+	if err = writeGenreAndObjectIdBackV2(object, luaState, transacted); err != nil {
+		return fieldsChanged, err
 	}
 
-	typeString := luaState.GetField(transacted, "Type").String()
-
-	if typeString != "" {
+	if typeString := luaStringFieldOrEmpty(
+		luaState,
+		transacted,
+		"Type",
+	); typeString != "" {
 		var typeStruct ids.TypeStruct
 
 		if err = typeStruct.Set(typeString); err != nil {
@@ -74,6 +66,45 @@ func FromLuaTableTransformV2(
 	fieldsChanged = writeFieldsBack(object, luaTable.Fields)
 
 	return fieldsChanged, err
+}
+
+// luaStringFieldOrEmpty reads a scalar key as a string, mapping an absent
+// (nil) key to "". LValue.String() renders nil as the literal "nil", so
+// without this a script assigning `object.Type = nil` would retype the
+// object to `!nil` rather than leaving it alone.
+func luaStringFieldOrEmpty(
+	luaState *lua.LState,
+	table *lua.LTable,
+	key string,
+) string {
+	value := luaState.GetField(table, key)
+
+	if value == lua.LNil {
+		return ""
+	}
+
+	return value.String()
+}
+
+// writeGenreAndObjectIdBackV2 applies Genre and ObjectId. An absent or empty
+// key leaves the corresponding part of the object id alone.
+func writeGenreAndObjectIdBackV2(
+	object *sku.Transacted,
+	luaState *lua.LState,
+	transacted *lua.LTable,
+) (err error) {
+	if genre := luaStringFieldOrEmpty(luaState, transacted, "Genre"); genre != "" {
+		object.GetObjectIdMutable().SetGenre(genres.MakeOrUnknown(genre))
+	}
+
+	if id := luaStringFieldOrEmpty(luaState, transacted, "ObjectId"); id != "" {
+		if err = object.GetObjectIdMutable().Set(id); err != nil {
+			err = errors.Wrap(err)
+			return err
+		}
+	}
+
+	return err
 }
 
 // writeBlobDigestBackV2 applies the transform-only Blob field. An absent key
