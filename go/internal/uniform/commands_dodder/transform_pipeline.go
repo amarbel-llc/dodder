@@ -264,14 +264,14 @@ func (p transformPipeline) run() error {
 		)
 	}
 
-	var outputs []*sku.Transacted
+	var returnedBinding listTransformBinding
 
 	switch {
 	case binding.IsHandle(vm.Top):
-		outputs, err = binding.Objects()
+		returnedBinding = binding
 
 	case bindingV2.IsHandle(vm.Top):
-		outputs, err = bindingV2.Objects()
+		returnedBinding = bindingV2
 
 	default:
 		return errors.ErrorWithStackf(
@@ -279,6 +279,7 @@ func (p transformPipeline) run() error {
 		)
 	}
 
+	outputs, err := returnedBinding.Objects()
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -288,7 +289,7 @@ func (p transformPipeline) run() error {
 	}
 
 	if p.removedListPath != "" {
-		if err := p.writeRemovedList(binding); err != nil {
+		if err := p.writeRemovedList(returnedBinding); err != nil {
 			return err
 		}
 	}
@@ -426,10 +427,17 @@ func (p transformPipeline) checkOutputIds(outputs []*sku.Transacted) error {
 	return nil
 }
 
+// listTransformBinding is the read-back surface shared by the V1
+// (dodder.list()) and V2 (dodder.list_v2()) list bindings.
+type listTransformBinding interface {
+	Objects() ([]*sku.Transacted, error)
+	RemovedObjects() ([]*sku.Transacted, error)
+}
+
 // writeRemovedList writes the objects the script removed to removedListPath
 // as an inventory list via the repo's list coder closet (as `export` does).
 func (p transformPipeline) writeRemovedList(
-	binding *sku_lua.ListTransformV1,
+	binding listTransformBinding,
 ) (err error) {
 	removed, err := binding.RemovedObjects()
 	if err != nil {
