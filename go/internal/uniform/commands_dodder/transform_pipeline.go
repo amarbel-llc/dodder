@@ -198,13 +198,35 @@ func (p transformPipeline) run() error {
 		readStore = envRepo.MakeReadBlobStoreWithOverlay(p.extraReadStores...)
 	}
 
+	// dodder.list() is the German-keyed V1 binding and stays the default;
+	// dodder.list_v2() is the opt-in English-keyed binding (#407). A script
+	// uses exactly one: only the returned handle's binding is read back, so
+	// mutations made through the other would be silently dropped.
 	var binding *sku_lua.ListTransformV1
+	var bindingV2 *sku_lua.ListTransformV2
+	var listV1Requested bool
 
 	vm, err := (&lua.VMPoolBuilder{}).WithReader(
 		p.scriptReader,
 	).WithApply(func(vm *lua.VM) error {
 		binding = sku_lua.MakeListTransformV1(vm, p.objects)
 		binding.RegisterGlobals()
+
+		bindingV2 = sku_lua.MakeListTransformV2(vm, p.objects)
+		bindingV2.RegisterGlobals()
+
+		dodderTable := vm.GetGlobal("dodder").(*lua.LTable)
+		listV1 := vm.GetField(dodderTable, "list")
+		vm.SetField(
+			dodderTable,
+			"list",
+			vm.NewFunction(func(luaState *lua.LState) int {
+				listV1Requested = true
+				luaState.Push(listV1)
+				luaState.Call(0, 1)
+				return 1
+			}),
+		)
 
 		blobsTable := vm.NewTable()
 		vm.SetField(blobsTable, "read", vm.NewFunction(makeLuaBlobRead(readStore)))
@@ -228,11 +250,35 @@ func (p transformPipeline) run() error {
 		defer binding.Repool()
 	}
 
-	if binding == nil || !binding.IsHandle(vm.Top) {
+	if bindingV2 != nil {
+		defer bindingV2.Repool()
+	}
+
+	if binding == nil || bindingV2 == nil {
 		return errors.ErrorWithStackf("script must return the dodder.list() handle")
 	}
 
-	outputs, err := binding.Objects()
+	if listV1Requested && bindingV2.WasRequested() {
+		return errors.ErrorWithStackf(
+			"script must use exactly one of dodder.list() and dodder.list_v2()",
+		)
+	}
+
+	var outputs []*sku.Transacted
+
+	switch {
+	case binding.IsHandle(vm.Top):
+		outputs, err = binding.Objects()
+
+	case bindingV2.IsHandle(vm.Top):
+		outputs, err = bindingV2.Objects()
+
+	default:
+		return errors.ErrorWithStackf(
+			"script must return the dodder.list() handle (or the dodder.list_v2() handle)",
+		)
+	}
+
 	if err != nil {
 		return errors.Wrap(err)
 	}

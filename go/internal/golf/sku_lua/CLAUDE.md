@@ -10,11 +10,15 @@ Enables Lua scripting integration by converting SKU objects to/from Lua tables.
 
 - `LuaTableV1`: Lua table structure with transacted data, tag tables, and the
   Fields projection (RFC-0006 Phase 1)
-- `LuaTableV2`: Renamed-key projection (Genre/ObjectId/Type instead of
-  Gattung/Kennung/Typ) without the Fields projection
+- `LuaTableV2`: English-keyed projection (Genre/ObjectId/Type/Tags instead of
+  Gattung/Kennung/Typ/Etiketten), with the Fields projection and fields
+  write-back at parity with V1 (#407)
 - `ListTransformV1`: list handle backing `dodder.list()` for the
   inventory-list transform plugin (FDR-0024 / RFC-0008), with
   each()/remove()/add() and read-back via `FromLuaTableTransformV1`
+- `ListTransformV2`: English-keyed list handle backing the opt-in
+  `dodder.list_v2()` (RFC-0008 §3.6), lazily projected, read-back via
+  `FromLuaTableTransformV2`
 
 ## Features
 
@@ -43,3 +47,16 @@ The only V1 surface without users after the transform work,
 blobs remain decodable per the store-version decodable-forever rule.
 Inverse finding: `FromLuaTableV2` currently has no callers (the `!lua-tag-v2`
 filter path is read-only); kept as the V2 write-back counterpart.
+
+## V2 parity (Forgejo #407)
+
+The audit's gap is closed on the V2 side: `LuaTableV2` projects Fields,
+`FromLuaTableV2` writes fields back (hook-safe: Type and Blob still withheld,
+#319), and `ListTransformV2`/`FromLuaTableTransformV2` give the transform an
+English-keyed binding. V1 is NOT yet deprecated and every V1 user above is
+still on V1: migrating hooks, tag filters, `exec-lua`, and `format_type`, and
+renaming keys in RFC-0006, wait on the take4 consolidation (#16), whose
+transform script is written against the V1 keys. Until then do not rename or
+remove V1 keys or change what `dodder.list()` returns. The V1 and V2
+transform files duplicate each other on purpose (V1 files are left untouched
+to avoid churn under take4); collapse them when V1 is retired.

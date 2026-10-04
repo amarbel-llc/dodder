@@ -184,6 +184,48 @@ function transform_add_creates_zettel { # @test
 	EOM
 }
 
+# dodder.list_v2() is the opt-in English-keyed binding (#407): same list
+# handle, Genre/ObjectId/Type/Tags/Description instead of the V1 German keys.
+function transform_list_v2_english_keys_commit { # @test
+  cat >t.lua <<-'EOM'
+		local list = dodder.list_v2()
+
+		for object in list:each() do
+		  if object.Genre == "Zettel" then
+		    object.Type = "md2"
+		    object.Tags["tag-4"] = nil
+		  end
+
+		  if object.ObjectId == "one/uno" then
+		    object.Description = "renamed via v2"
+		  end
+		end
+
+		return list
+	EOM
+
+  run_dodder transform -script t.lua
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output_unsorted - <<-EOM
+		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !md2 "wow ok again" tag-3]
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md2 "renamed via v2" tag-3]
+	EOM
+}
+
+function transform_rejects_mixing_list_and_list_v2 { # @test
+  cat >t.lua <<-'EOM'
+		local legacy = dodder.list()
+		return dodder.list_v2()
+	EOM
+
+  run_dodder transform -script t.lua
+  assert_failure
+  assert_output --regexp 'script must use exactly one of dodder.list\(\) and dodder.list_v2\(\)'
+}
+
 function transform_no_new_objects_rejects_add { # @test
   cat >t.lua <<-'EOM'
 		local list = dodder.list()

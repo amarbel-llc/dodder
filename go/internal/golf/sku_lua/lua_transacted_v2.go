@@ -15,6 +15,7 @@ type LuaTableV2 struct {
 	// tag_paths.PathWithType
 	Tags         *lua.LTable
 	TagsImplicit *lua.LTable
+	Fields       *lua.LTable
 }
 
 func ToLuaTableV2(
@@ -51,13 +52,28 @@ func ToLuaTableV2(
 	for tag := range object.GetMetadata().GetIndex().GetImplicitTags().All() {
 		luaState.SetField(tags, tag.String(), lua.LBool(true))
 	}
+
+	// Project the metadata index fields (name -> string value) as
+	// object.Fields.<name>, mirroring ToLuaTableV1 (RFC 0006 Phase 1);
+	// FromLuaTableV2 reads mutated values back.
+	fieldsTable := luaTable.Fields
+
+	for field := range object.GetMetadata().GetIndex().GetFields() {
+		luaState.SetField(fieldsTable, field.Key, lua.LString(field.Value))
+	}
 }
 
+// FromLuaTableV2 is the English-keyed counterpart of FromLuaTableV1: it writes
+// genre, id, tags, and projected field values back onto object, and returns
+// fieldsChanged when any projected field value was altered (RFC 0006 Phase 1
+// field write-back). Like FromLuaTableV1 it deliberately withholds Type and
+// Blob write-back (RFC 0006 Phase 2, #319); the batch transform context uses
+// FromLuaTableTransformV2 for those.
 func FromLuaTableV2(
 	object *sku.Transacted,
 	luaState *lua.LState,
 	luaTable *LuaTableV2,
-) (err error) {
+) (fieldsChanged bool, err error) {
 	t := luaTable.Transacted
 
 	genre := genres.MakeOrUnknown(luaState.GetField(t, "Genre").String())
@@ -68,7 +84,7 @@ func FromLuaTableV2(
 	if id != "" {
 		if err = object.GetObjectIdMutable().Set(id); err != nil {
 			err = errors.Wrap(err)
-			return err
+			return fieldsChanged, err
 		}
 	}
 
@@ -77,7 +93,7 @@ func FromLuaTableV2(
 
 	if !ok {
 		err = errors.ErrorWithStackf("expected table but got %T", tags)
-		return err
+		return fieldsChanged, err
 	}
 
 	object.GetMetadataMutable().ResetTags()
@@ -95,11 +111,13 @@ func FromLuaTableV2(
 		},
 	)
 
+	fieldsChanged = writeFieldsBack(object, luaTable.Fields)
+
 	// TODO Description
-	// TODO Type
+	// TODO Type — retyping from a hook: RFC 0006 Phase 2 (currently forbidden), #319
 	// TODO Tai
-	// TODO Blob
+	// TODO Blob — hook direct blob mutation: RFC 0006 Phase 2, #319
 	// TODO Cache
 
-	return err
+	return fieldsChanged, err
 }

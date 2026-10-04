@@ -185,7 +185,8 @@ repo's proto-zettel default type at commit.
 
 #### 3.4 Return value
 
-The script MUST `return` the handle produced by `dodder.list()`; anything
+The script MUST `return` the handle produced by `dodder.list()` (or by
+`dodder.list_v2()`, §3.6); anything
 else aborts the command before any plan is built. The Go side then reads
 the output set back off the retained per-object projections — membership
 from the remove/add bookkeeping, mutations via §3.5. An output set naming
@@ -205,6 +206,51 @@ genre/id/tags/fields write-back plus, additionally, `Typ` write-back via
 existing mutator) and `Blob` write-back (§3.1) via the metadata's mutable
 blob digest. Blob *content* still moves exclusively through the FFI (§4);
 the `Blob` field carries only the digest.
+
+#### 3.6 The opt-in English-keyed binding: `dodder.list_v2()`
+
+Added by #407, alongside (not replacing) `dodder.list()`. Backed by
+`sku_lua.ListTransformV2`
+(`go/internal/golf/sku_lua/lua_list_transform_v2.go`), projected via
+`sku_lua.ToLuaTableV2` and written back via
+`sku_lua.FromLuaTableTransformV2`.
+
+`dodder.list_v2()` returns a list handle with the same `each`, `remove`, and
+`add` methods and the same semantics as §3.1--§3.5. Only the per-object keys
+differ:
+
+  `dodder.list()` (V1)   `dodder.list_v2()` (V2)
+  ---------------------- -------------------------
+  `Gattung`              `Genre`
+  `Kennung`              `ObjectId`
+  `Typ`                  `Type`
+  `Etiketten`            `Tags`
+  `EtikettenImplicit`    `TagsImplicit`
+  `Bezeichnung`          `Description`
+
+`Fields`, `Blob`, `References`, `Tai`, `TaiSortKey`, and `TaiDate` carry the
+same names and behaviour in both.
+
+```lua
+local list = dodder.list_v2()
+
+for object in list:each() do
+  if object.Type == "!task-legacy" then
+    object.Type = "!task"
+  end
+
+  object.Tags["migrated"] = true
+  object.Fields.status = "done"
+end
+
+return list
+```
+
+A script MUST use exactly one of the two bindings and return that binding's
+handle: only the returned handle's projections are read back, so a script
+that calls both is rejected rather than having the other binding's mutations
+silently dropped. `dodder.list()` remains the default and its behaviour is
+unchanged; V2 projection is lazy, so a V1 script pays nothing for it.
 
 ### 4. The `blobs` FFI
 

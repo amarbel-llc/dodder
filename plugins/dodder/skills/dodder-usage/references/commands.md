@@ -610,6 +610,25 @@ end
 return list
 ```
 
+`dodder.list_v2()` is an opt-in alternative to `dodder.list()` with English
+keys: `Genre`, `ObjectId`, `Type`, `Tags`, `TagsImplicit`, and `Description`
+in place of `Gattung`, `Kennung`, `Typ`, `Etiketten`, `EtikettenImplicit`,
+and `Bezeichnung`. `Fields`, `Blob`, `References`, and the read-only `Tai`,
+`TaiSortKey`, and `TaiDate` are named the same in both. A script uses one or
+the other, never both, and returns the handle it used.
+
+```lua
+-- cleanup.lua, with dodder.list_v2()
+local list = dodder.list_v2()
+for object in list:each() do
+  if object.Type == "!task-legacy" then
+    object.Type = "!task"
+  end
+  object.Tags["newsblur"] = nil
+end
+return list
+```
+
 ### find-missing
 
 Check whether blob SHAs exist in the store.
