@@ -146,7 +146,10 @@ test-bats-tags *tags:
 # `show.bats` against. For tag-level filtering, use
 # `test-bats-tags <tag>` (faster, hermetic) instead. The debug-tagged
 # dodder binary is resolved through the flake so this recipe doesn't
-# need `just build` first.
+# need `just build` first. The flake-pinned madder (.#madder-bin) goes on
+# PATH beside it: `run_madder` tests otherwise pick up whatever madder the
+# host session provides, and an older one rejects blob-store config types
+# the pinned dodder writes ("no coders available for type").
 #
 # run a single bats test file (or list of files) via the legacy batman path
 test-bats-targets *targets:
@@ -154,7 +157,8 @@ test-bats-targets *targets:
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
   [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
-  export PATH="$bin/bin:$PATH"
+  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin) || { echo "nix build .#madder-bin FAILED (see above)"; exit 1; }
+  export PATH="$bin/bin:$madder_bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -173,7 +177,8 @@ test-bats-targets-no-sandbox *targets:
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
   [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
-  export PATH="$bin/bin:$PATH"
+  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin) || { echo "nix build .#madder-bin FAILED (see above)"; exit 1; }
+  export PATH="$bin/bin:$madder_bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -200,12 +205,11 @@ debug-test-bats-sftp madder_path="" *targets:
   set -euo pipefail
   if [ -n "{{madder_path}}" ]; then
     bin=$(nix build --no-link --print-out-paths .#dodder-debug --override-input madder "path:$(realpath '{{madder_path}}')")
-    madder_bin=$(nix build --no-link --print-out-paths .#madder-bin)
-    export PATH="$bin/bin:$madder_bin/bin:$PATH"
   else
     bin=$(nix build --no-link --print-out-paths .#dodder-debug)
-    export PATH="$bin/bin:$PATH"
   fi
+  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin)
+  export PATH="$bin/bin:$madder_bin/bin:$PATH"
   sftp_bin=$(nix build --no-link --print-out-paths .#madder-test-sftp-server)
   GOMEMLIMIT=512MiB \
     MADDER_TEST_SFTP_SERVER="$sftp_bin/bin/madder-test-sftp-server" \
@@ -257,7 +261,8 @@ test-bats-update-goldens *targets="current_version/*.bats":
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
   [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
-  export PATH="$bin/bin:$PATH"
+  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin) || { echo "nix build .#madder-bin FAILED (see above)"; exit 1; }
+  export PATH="$bin/bin:$madder_bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_UPDATE_GOLDENS=1 \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
@@ -657,7 +662,8 @@ explore-bats-debug *targets:
   set -euo pipefail
   bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
   [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
-  export PATH="$bin/bin:$PATH"
+  madder_bin=$(nix build --no-link --print-out-paths .#madder-bin) || { echo "nix build .#madder-bin FAILED (see above)"; exit 1; }
+  export PATH="$bin/bin:$madder_bin/bin:$PATH"
   GOMEMLIMIT=512MiB \
     DODDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \
     MADDER_CEILING_DIRECTORIES="{{bats_ceiling}}" \

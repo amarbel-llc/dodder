@@ -336,6 +336,54 @@ function init_from_lists_removed_list_archives_drops { # @test
 	EOM
 }
 
+# #407: -removed-list archives the drops of whichever binding the script
+# returned. Same scenario as above through the opt-in English-keyed
+# dodder.list_v2(); an archive read off the V1 binding would be empty.
+function init_from_lists_removed_list_archives_drops_list_v2 { # @test
+  cat >s.lua <<-'EOM'
+		local l = dodder.list_v2()
+
+		for object in l:each() do
+		  if object.ObjectId == "one/dos" then
+		    object.Tags["zz-dropped-test"] = true
+		    l:remove(object)
+		  end
+		end
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  mkdir consolidated
+  cd consolidated || exit 1
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -script "$script" \
+    -blob-source shared \
+    -removed-list "$BATS_TEST_TMPDIR/removed" \
+    .default \
+    "$list"
+  assert_success
+
+  run_dodder show :z
+  assert_success
+  assert_output - <<-EOM
+		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !md "wow the first" tag-3 tag-4]
+	EOM
+
+  # one line per removed object; keys and signatures are per-run
+  run cat "$BATS_TEST_TMPDIR/removed"
+  assert_success
+  assert_output --regexp - <<-'EOM'
+		^---
+		! inventory_list-v1
+		---
+
+		\[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd [0-9]+\.[0-9]+ dodder-repo-public_key-v1@ed25519_pub-[a-z0-9]+ dodder-object-sig-v3@ed25519_sig-[a-z0-9]+ !md@ed25519_sig-[a-z0-9]+ "wow ok again" tag-3 tag-4 zz-dropped-test\]$
+	EOM
+}
+
 # a store that does not exist cannot be adopted
 function init_from_lists_write_store_must_exist { # @test
   cat >s.lua <<-'EOM'
