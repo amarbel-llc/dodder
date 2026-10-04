@@ -322,6 +322,47 @@ return list
 	t.AssertEqualStrings("one/uno", references[0])
 }
 
+// Assigning Bezeichnung on an object that already has a description replaces
+// it; Description.Set alone would append ("the note renamed").
+func TestListTransformV1DescriptionReplacesExisting(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	note, noteRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer noteRepool()
+	t.AssertNoError(note.GetObjectIdMutable().Set("one/uno"))
+	t.AssertNoError(note.GetMetadataMutable().GetDescriptionMutable().Set("the note"))
+
+	script := `
+local list = dodder.list()
+
+for object in list:each() do
+  object.Bezeichnung = "renamed"
+end
+
+return list
+`
+
+	var binding *ListTransformV1
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript(
+		script,
+	).WithApply(func(vm *lua.VM) error {
+		binding = MakeListTransformV1(vm, []*sku.Transacted{note})
+		binding.RegisterGlobals()
+		return nil
+	}).Build()
+	t.AssertNoError(err)
+
+	_, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+	defer binding.Repool()
+
+	outputs, err := binding.Objects()
+	t.AssertNoError(err)
+	t.AssertEqual(1, len(outputs))
+	t.AssertEqualStrings("renamed", outputs[0].GetMetadata().GetDescription().String())
+}
+
 // list:remove rejects a table that is not an object handle from this list.
 func TestListTransformV1RemoveRejectsForeignTable(t1 *testing.T) {
 	t := ui.MakeT(t1)

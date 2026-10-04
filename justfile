@@ -1575,6 +1575,40 @@ consolidate-split-removed-list attempt:
   fi
   ls -la "$out"
 
+# Take4 (#16) archives, step 2 of 2 (post-genesis, PLAN §5): one archive
+# zettel per drop class in the consolidated repo. Each archive list
+# (take4/archives/<class>.inventory_list, from consolidate-split-removed-list)
+# is written to `store` (the repo's write store: baikal on the real run) and
+# becomes a `!inventory_list-v1` zettel whose blob IS the list, tagged
+# zz-archive-take4-<class> (dodder folds the zz-archive-take4 parent in as
+# implied) -- proven by debug-take4-archive-zettel-type. Idempotent: a class
+# that already has its zettel (dormant or not) is skipped. Ends with fsck.
+[group('consolidate')]
+consolidate-take4-archive-zettels repo store:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  archives=/home/sasha/workspaces/take4/archives
+  shopt -s nullglob
+  files=("$archives"/*.inventory_list)
+  (( ${#files[@]} > 0 )) || { echo "no archives under $archives"; exit 1; }
+  for file in "${files[@]}"; do
+    class=$(basename "$file" .inventory_list)
+    tag=zz-archive-take4-$class
+    if [[ -n $(dodder show -repo_id {{ repo }} "$tag?z" 2>/dev/null) ]]; then
+      echo "skip $class: already archived"; continue
+    fi
+    n=$(grep -c '^\[' "$file")
+    digest=$(madder write {{ store }} "$file" | grep -oE 'blake2b256-[a-z0-9]+' | head -1)
+    [[ -n $digest ]] || { echo "FAIL: no digest writing $file to {{ store }}"; exit 1; }
+    dodder new -repo_id {{ repo }} -edit=false -shas -type inventory_list-v1 \
+      -tags "$tag" -description "take4 archive: $class ($n objects)" "$digest"
+  done
+  echo "==> archive zettels"; dodder show -repo_id {{ repo }} 'zz-archive-take4?z'
+  echo "==> fsck"; dodder fsck -repo_id {{ repo }}
+
 # Take4 (#16) P3: pair every resolve-tai-reassign entry in an attempt
 # listing with its twin (the import entry with the same id at the ORIGINAL
 # tai) and classify what differs between the two variants: blob, type,
@@ -1708,6 +1742,46 @@ consolidate-rsyncnet-delta listing="/home/sasha/workspaces/take4/rsync-sweep/lis
   echo "== largest 20 =="
   head -20 "$out" | awk -F'\t' '{printf "  %10s  %s\n", $2, $1}' | numfmt --field=1 --to=iec --padding=10 2>/dev/null || head -20 "$out"
   echo "full list: $out"
+
+# Take4 (#16) archive-zettel probe, in a throwaway XDG: can an archive
+# (take4/archives/<class>.inventory_list, an inventory_list-v1 file) become a
+# zettel of type `type` whose blob is the list? Writes the blob with madder,
+# creates the zettel via `new -shas`, then exercises show, the blob read-back
+# (format-blob / cat), and fsck, so a type that is rejected or mis-rendered
+# shows up before the post-genesis step is written.
+[group('debug')]
+debug-take4-archive-zettel-type type class="remote-defs":
+  #!/usr/bin/env bash
+  set -uo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  archive=/home/sasha/workspaces/take4/archives/{{ class }}.inventory_list
+  [[ -s $archive ]] || { echo "no archive at $archive"; exit 1; }
+  base=$(mktemp -d)
+  trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
+  export XDG_DATA_HOME=$base/data XDG_CONFIG_HOME=$base/config \
+    XDG_STATE_HOME=$base/state XDG_CACHE_HOME=$base/cache XDG_RUNTIME_DIR=$base/run
+  mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+  cd "$base"
+  printf 'one\n' >yin; printf 'uno\ndos\ntres\n' >yang
+  dodder init -yin yin -yang yang -encryption none -exclude-default-type=false probe >/dev/null || { echo "FAIL: init"; exit 1; }
+  echo "==> madder write"
+  madder write default-local "$archive"
+  digest=$(madder write default-local "$archive" 2>&1 | grep -oE 'blake2b256-[a-z0-9]+' | head -1)
+  [[ -n $digest ]] || { echo "FAIL: no digest from madder write"; exit 1; }
+  echo "digest: $digest"
+  echo "==> new -shas -type {{ type }}"
+  dodder new -repo_id probe -edit=false -shas -type '{{ type }}' \
+    -tags zz-archive-take4,zz-archive-take4-{{ class }} \
+    -description "take4 archive: {{ class }}" "$digest"
+  rc=$?; echo "new exit: $rc"
+  echo "==> show :z"; dodder show -repo_id probe :z
+  echo "==> show -format blob :z (first 8 lines)"; dodder show -repo_id probe -format blob :z 2>&1 | head -8
+  echo "==> blob round-trips byte-identical?"
+  if cmp <(dodder show -repo_id probe -format blob :z 2>/dev/null) "$archive"; then echo "yes"; else echo "NO"; fi
+  echo "==> query by the implied parent tag zz-archive-take4"; dodder show -repo_id probe zz-archive-take4:z
+  echo "==> fsck"; dodder fsck -repo_id probe; echo "fsck exit: $?"
 
 # Take4 (#16) store-adoption proof, in a throwaway XDG: a pre-existing,
 # encrypted store renamed to `default-local` must be REUSED by a

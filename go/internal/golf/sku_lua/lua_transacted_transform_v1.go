@@ -148,9 +148,12 @@ func writeDescriptionBack(
 		return err
 	}
 
-	if err = object.GetMetadataMutable().GetDescriptionMutable().Set(
-		description,
-	); err != nil {
+	// Reset first: Description.Set appends to a non-empty, differing value
+	// (its box-scanner accumulation semantics), but Bezeichnung replaces.
+	descriptionMutable := object.GetMetadataMutable().GetDescriptionMutable()
+	descriptionMutable.Reset()
+
+	if err = descriptionMutable.Set(description); err != nil {
 		err = errors.Wrapf(err, "invalid Bezeichnung %q", description)
 		return err
 	}
