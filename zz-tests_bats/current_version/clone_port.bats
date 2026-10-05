@@ -46,9 +46,9 @@ function clone_history_zettel_type_tag_port { # @test
   # as a duplicate second version while genesis objects were invisible to
   # the same-process import).
   assert_output_unsorted --regexp - <<-'EOM'
-		\[!md @blake2b256-e3ew5ma0s399rmk3akms90ah2kdmr88l4jluckmdqylnlqtzu7dq60533j !toml-type-v2 .+]
-		\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
-		\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
+		\[!md @blake2b256-e3ew5ma0s399rmk3akms90ah2kdmr88l4jluckmdqylnlqtzu7dq60533j !toml-type-v3 .+]
+		\[!pandoc-defaults @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v3]
+		\[!pandoc-lua_filter @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v3]
 		\[one/dos @blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 !md "zettel with multiple etiketten" this_is_the_first this_is_the_second]
 		\[one/uno @blake2b256-gu738nunyrnsqukgqkuaau9zslu0fhwg4dgs9ltuyvnlp42wal8sdpn2hc !md "wow" tag]
 		copied Blob blake2b256-fm7kce7793j3npevpm29spk04r6ycxv38dvx3hjxlzl8tcm5m3qq2mml86 \(36 B\)

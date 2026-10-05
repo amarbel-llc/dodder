@@ -48,5 +48,6 @@ var (
 	DecodeTomlV1           = golf_tb.DecodeTomlV1
 	DecodeTomlV2           = golf_tb.DecodeTomlV2
 	DecodeTomlV3           = golf_tb.DecodeTomlV3
+	DecodeTomlV3Strict     = golf_tb.DecodeTomlV3Strict
 	DecodeReferencesConfig = golf_tb.DecodeReferencesConfig
 )

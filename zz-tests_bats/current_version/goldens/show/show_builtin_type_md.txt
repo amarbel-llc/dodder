@@ -5,9 +5,9 @@
   : >"$tmp/out.pdf"
   exit 1
   wait
-! toml-type-v2
-! toml-type-v2
-! toml-type-v2
+! toml-type-v3
+! toml-type-v3
+! toml-type-v3
 "com.adobe.pdf" = "pdf-beamer"
 "public.html" = "html"
 "public.html" = "html"

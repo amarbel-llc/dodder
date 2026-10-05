@@ -203,7 +203,7 @@ function json_inventory_list_preserves_all_lock_kinds { # @test
   # Create a type with reference discovery that outputs typed blob refs
   cat >ref-blob.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"

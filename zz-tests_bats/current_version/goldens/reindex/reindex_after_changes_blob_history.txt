@@ -52,5 +52,4 @@ description = "Render markdown for output with pandoc (typed code blocks become 
 script = """
 pandoc --data-dir="$DODDER_BLOB_TREE" --defaults=dodder-render"""
 file-extension = "md"
-inline-akte = false
 vim-syntax-type = "test"

@@ -1,6 +1,6 @@
 ---
 # scalable vector graphics image
-! toml-type-v2
+! toml-type-v3
 ---
 
 # nixpkgs-formatter-candidates: xmllint --format (libxml2)

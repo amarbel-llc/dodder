@@ -62,7 +62,7 @@ func TestBuiltinActionableTerminalStatuses(t1 *testing.T) {
 
 	for _, testCase := range []struct {
 		name     string
-		blob     TomlV2
+		blob     TomlV3
 		terminal []string
 	}{
 		{"task", DefaultTaskType(), []string{"done", "cancelled"}},

@@ -34,7 +34,7 @@ function dirty_new_zettel() {
 
   assert_success
   assert_output --partial - <<-EOM
-		[!txt !toml-type-v2]
+		[!txt !toml-type-v3]
 		[two/uno @blake2b256-x4dstl5rrxp60932zj0sgmaku39ylula4fg3scgcgyj4yyneyy3qdtnzlm !txt "the new zettel" etikett-one]
 	EOM
 }
@@ -283,12 +283,12 @@ function status_simple_all { # @test
   run_dodder status .
   assert_success
   assert_output_unsorted - <<-EOM
-		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
+		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v3]
 		          changed [one/dos.zettel @blake2b256-wn30f7j6g62r7lgz0jhmnapnkem09c7lkkv65k005wv3fnj44m7q6auex2 !md "dos wildly different" etikett-two]
 		          changed [one/uno.zettel @blake2b256-k87yyah5da3c8h9j4ugf44edeurrqztn7zddh7ksc88pfg4zzx0smqmuf9 !md "wildly different" etikett-one]
-		             same [pandoc-defaults.type @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
-		             same [pandoc-lua_filter.type @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
-		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v2]
+		             same [pandoc-defaults.type @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v3]
+		             same [pandoc-lua_filter.type @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v3]
+		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v3]
 		        untracked [zz-archive.tag @blake2b256-4nnaw9wx7vwsdlx777qf48drgxeatj762ykhlwhe6pykmmutglvsz2szgt]
 	EOM
 }
@@ -305,10 +305,10 @@ function status_simple_typ { # @test
   run_dodder status .t
   assert_success
   assert_output_unsorted - <<-EOM
-		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
-		             same [pandoc-defaults.type @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v2]
-		             same [pandoc-lua_filter.type @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v2]
-		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v2]
+		          changed [md.type @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v3]
+		             same [pandoc-defaults.type @blake2b256-zcfmrghzp36r4r4qxtrh4t8xcd5g0f3mkpm8f3swac0vr5x503msyfsu3d !toml-type-v3]
+		             same [pandoc-lua_filter.type @blake2b256-afnd989ttt3vmeunlj2asss5hjtkqe75vhupupuz2y9uv8wfx8hs6q8szw !toml-type-v3]
+		        untracked [da-new.type @blake2b256-9rzlpgryfegathtl4ss3s80cwskx7e5w77usfjxgxrrg4ns80epqnzxjvs !toml-type-v3]
 	EOM
 }
 
@@ -361,7 +361,7 @@ function status_conflict { # @test
 	EOM
   assert_success
   assert_output - <<-EOM
-		[!txt2 !toml-type-v2]
+		[!txt2 !toml-type-v3]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt2 "wow ok again" new-etikett-for-all tag-3 tag-4]
 	EOM
 

@@ -1,6 +1,6 @@
 ---
 # microsoft excel spreadsheet
-! toml-type-v2
+! toml-type-v3
 ---
 
 # nixpkgs-formatter-candidates: xlsx2csv

@@ -117,7 +117,7 @@ function use_blob_digests { # @test
   run_dodder new -edit=false -shas -type txt "$the_blob2_digest"
   assert_success
   assert_output - <<-EOM
-		[!txt !toml-type-v2]
+		[!txt !toml-type-v3]
 		[one/tres @$the_blob2_digest !txt]
 	EOM
 
@@ -243,14 +243,14 @@ EOM
 }
 
 # -object-id with a type id authors the type object directly, with the
-# meta-type (!toml-type-v2) set automatically from the id's genre, and the
+# meta-type (!toml-type-v3) set automatically from the id's genre, and the
 # -blob written as the type's TOML body.
 function new_object_id_type_with_blob { # @test
   run_dodder new -edit=false -object-id '!task' -blob 'file-extension = "toml"
 '
   assert_success
   assert_output - <<-EOM
-		[!task @blake2b256-agj380zh3wwj6n65chear8e4ednrwdxesrh6ccszc7xtu4707ujqucnjth !toml-type-v2]
+		[!task @blake2b256-agj380zh3wwj6n65chear8e4ednrwdxesrh6ccszc7xtu4707ujqucnjth !toml-type-v3]
 	EOM
 
   run_dodder show -format blob '!task:t'
@@ -318,7 +318,7 @@ function new_object_id_rejects_positional { # @test
 # A non-zettel -object-id sets the meta-type from the genre, so an explicit
 # -type would be silently overridden — reject the combination.
 function new_object_id_type_rejects_explicit_type { # @test
-  run_dodder new -edit=false -object-id '!task' -type '!toml-type-v2'
+  run_dodder new -edit=false -object-id '!task' -type '!toml-type-v3'
   assert_failure
   assert_line --index 0 \
     '-type cannot be combined with a non-zettel -object-id (!task); the meta-type is set automatically from the id'"'"'s genre'

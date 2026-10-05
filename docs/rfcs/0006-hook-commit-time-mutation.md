@@ -117,6 +117,12 @@ Everything else in this RFC applies to both: the same stages, the same
 capability matrix, the same write-back. Examples in this document use the
 `v0`--`v2` names.
 
+`!toml-type-v3` is the latest version and the default for newly created
+types, including the built-in ones genesis commits. A new type whose hooks
+use the `v0`--`v2` names must therefore declare `! toml-type-v2` explicitly
+in its type file. `!toml-type-v3` blobs are also decoded strictly: invalid
+TOML, a value of the wrong type, or an unknown key is rejected at commit.
+
 The repo-wide config-mutable hook script is not carried by a type blob and
 receives the `v0`--`v2` names regardless of the committed object's type.
 

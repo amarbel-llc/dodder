@@ -21,7 +21,7 @@ function basic { # @test
 		! inventory_list-v2
 		---
 
-		\[!md @blake2b256-.+ .* !toml-type-v2]
+		\[!md @blake2b256-.+ .* !toml-type-v3]
 	EOM
 
   assert_output_unsorted --regexp - <<-'EOM'

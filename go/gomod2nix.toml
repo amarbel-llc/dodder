@@ -37,8 +37,8 @@ schema = 3
     goVersion = '1.26'
 
   [mod.'code.linenisgreat.com/tommy']
-    version = 'v0.5.1-0.20261005161049-47364f23ab72'
-    hash = 'sha256-5aI4LQarkNDE6Ne7eZssveYLoNBb1HNVGWV6mUuNRLw='
+    version = 'v0.6.0'
+    hash = 'sha256-YktCwftBD1EBbF6htCvnWsMdPe/YNPnzpRnij774iEw='
 
   [mod.'filippo.io/age']
     version = 'v1.3.1'

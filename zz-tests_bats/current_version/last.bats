@@ -17,7 +17,7 @@ function last_after_init { # @test
   run_dodder last -format inventory_list-sans-tai
   assert_success
   assert_output_unsorted --regexp - <<-EOM
-		\\[!md @$(get_type_blob_sha) .* !toml-type-v2]
+		\\[!md @$(get_type_blob_sha) .* !toml-type-v3]
 	EOM
 }
 
@@ -31,14 +31,13 @@ function last_after_type_mutate { # @test
 	EOM
 
   cat >md.type <<-EOM
-		inline-akte = false
 		vim-syntax-type = "test"
 	EOM
 
   run_dodder checkin .t
   assert_success
   assert_output - <<-EOM
-		[!md @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
+		[!md @blake2b256-8mdvh8u92eyh2kghcxgsucvkupkxlpfkj8xk3ef0077gnpadnsdqpn2ec5 !toml-type-v3]
 	EOM
 
   run_dodder show :b
@@ -51,13 +50,13 @@ function last_after_type_mutate { # @test
   run_dodder show -format blob :b
   assert_success
   assert_output --regexp - <<-EOM
-		\\[!md @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq .* !toml-type-v2]
+		\\[!md @blake2b256-8mdvh8u92eyh2kghcxgsucvkupkxlpfkj8xk3ef0077gnpadnsdqpn2ec5 .* !toml-type-v3]
 	EOM
 
   run_dodder last -format inventory_list-sans-tai
   assert_success
   assert_output --regexp - <<-EOM
-		\\[!md @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq .* !toml-type-v2]
+		\\[!md @blake2b256-8mdvh8u92eyh2kghcxgsucvkupkxlpfkj8xk3ef0077gnpadnsdqpn2ec5 .* !toml-type-v3]
 	EOM
 }
 
@@ -72,7 +71,7 @@ function last_organize { # @test
   run_dodder checkin .t
   assert_success
   assert_output - <<-EOM
-		[!md @blake2b256-tugmx90k7ajv6atknze43ptgphz08x4f929c0f0n4y394nh5gh7qmau4w9 !toml-type-v2]
+		[!md @blake2b256-tugmx90k7ajv6atknze43ptgphz08x4f929c0f0n4y394nh5gh7qmau4w9 !toml-type-v3]
 	EOM
 
   function editor() {
@@ -86,7 +85,7 @@ function last_organize { # @test
     # change -- the editor must represent a user making an INCREMENTAL
     # edit to the existing line, not replacing the file wholesale or
     # adding a conflicting duplicate entry for the same object.
-    sed -i 's/\[!md !toml-type-v2\]/[!md !toml-type-v2 added-tag]/' "$1"
+    sed -i 's/\[!md !toml-type-v3\]/[!md !toml-type-v3 added-tag]/' "$1"
   }
 
   export -f editor
@@ -97,6 +96,6 @@ function last_organize { # @test
   run_dodder last -organize
   assert_success
   assert_output - <<-EOM
-		[!md @blake2b256-tugmx90k7ajv6atknze43ptgphz08x4f929c0f0n4y394nh5gh7qmau4w9 !toml-type-v2 added-tag]
+		[!md @blake2b256-tugmx90k7ajv6atknze43ptgphz08x4f929c0f0n4y394nh5gh7qmau4w9 !toml-type-v3 added-tag]
 	EOM
 }

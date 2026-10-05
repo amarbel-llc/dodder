@@ -16,8 +16,8 @@ return common.hooks
 `
 }
 
-func Default() TomlV2 {
-	return TomlV2{
+func Default() TomlV3 {
+	return TomlV3{
 		FileExtension: "md",
 		VimSyntaxType: "markdown",
 	}
@@ -53,8 +53,8 @@ wait`
 // filter: builtin types ship no png formatter, so the render filter would
 // hard-fail any document embedding a builtin-typed code block, and its
 // image-file side effects don't fit stdout-pipe formatters.
-func DefaultWithPandocFormatter() TomlV2 {
-	return TomlV2{
+func DefaultWithPandocFormatter() TomlV3 {
+	return TomlV3{
 		FileExtension: "md",
 		Formatters: map[string]script_config.WithOutputFormat{
 			"text": {
@@ -126,15 +126,15 @@ func DefaultWithPandocFormatter() TomlV2 {
 	}
 }
 
-func DefaultPandocDefaults() TomlV2 {
-	return TomlV2{
+func DefaultPandocDefaults() TomlV3 {
+	return TomlV3{
 		FileExtension: "yaml",
 		Formatters:    make(map[string]script_config.WithOutputFormat),
 	}
 }
 
-func DefaultPandocLuaFilter() TomlV2 {
-	return TomlV2{
+func DefaultPandocLuaFilter() TomlV3 {
+	return TomlV3{
 		FileExtension: "lua",
 		Formatters:    make(map[string]script_config.WithOutputFormat),
 	}
@@ -298,8 +298,8 @@ func actionableFormatters() map[string]script_config.WithOutputFormat {
 // the index on commit, the writer script projects user edits back into the
 // blob during organize mutations. The CalDAV haustoria emits these blobs
 // directly during compile.
-func DefaultTaskType() TomlV2 {
-	return TomlV2{
+func DefaultTaskType() TomlV3 {
+	return TomlV3{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
@@ -315,8 +315,8 @@ func DefaultTaskType() TomlV2 {
 // actionable triple; calendar-to-type binding stays a workspace config concern
 // (the CalDAV haustoria's tasks calendar binds to !task and chores binds to
 // !chore). Future !actionable abstract type will replace the duplication.
-func DefaultChoreType() TomlV2 {
-	return TomlV2{
+func DefaultChoreType() TomlV3 {
+	return TomlV3{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),
@@ -332,8 +332,8 @@ func DefaultChoreType() TomlV2 {
 // shares the actionable recurrence hook; the semantic distinction (a
 // consistency practice vs a periodic obligation) surfaces in the per-instance
 // recurrence cadence and the type description, not in the field schema.
-func DefaultHabitType() TomlV2 {
-	return TomlV2{
+func DefaultHabitType() TomlV3 {
+	return TomlV3{
 		FileExtension: "toml",
 		VimSyntaxType: "toml",
 		Formatters:    actionableFormatters(),

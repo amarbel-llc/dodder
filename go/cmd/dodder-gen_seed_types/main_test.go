@@ -203,11 +203,11 @@ func TestSeedTypeGenerationDeterministic(t1 *testing.T) {
 	}
 }
 
-// TestSeedTypeBlobsParseAsTomlV2 confirms every generated blob body (the
-// content after the hyphence metadata section, including the
-// nixpkgs-formatter-candidates TOML comment) decodes as a TomlV2 type blob
-// via the existing coding and round-trips the table's values.
-func TestSeedTypeBlobsParseAsTomlV2(t1 *testing.T) {
+// TestSeedTypeBlobsParseAsLatestTypeBlob confirms every generated blob body
+// (the content after the hyphence metadata section, including the
+// nixpkgs-formatter-candidates TOML comment) decodes strictly as the latest
+// type-blob version and round-trips the table's values.
+func TestSeedTypeBlobsParseAsLatestTypeBlob(t1 *testing.T) {
 	t := ui.MakeT(t1)
 
 	boundary := []byte("---\n\n")
@@ -222,7 +222,7 @@ func TestSeedTypeBlobsParseAsTomlV2(t1 *testing.T) {
 			)
 		}
 
-		doc, err := type_blobs.DecodeTomlV2(parts[1])
+		doc, err := type_blobs.DecodeTomlV3Strict(parts[1])
 		if err != nil {
 			t.Fatalf("seed type %q: blob does not decode: %s", entry.Name, err)
 		}

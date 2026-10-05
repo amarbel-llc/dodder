@@ -62,7 +62,7 @@ func TestDefaultWithPandocFormatter(t1 *testing.T) {
 // assertUTIGroups asserts the builtin !md UTI groups: the expected group
 // shape, and that every group value names a shipped formatter (a dangling
 // name would make `format-object -uti-group` fail at lookup time).
-func assertUTIGroups(t *ui.T, blob TomlV2) {
+func assertUTIGroups(t *ui.T, blob TomlV3) {
 	expected := map[string]UTIGroup{
 		"default": {
 			"public.utf8-plain-text": "text",

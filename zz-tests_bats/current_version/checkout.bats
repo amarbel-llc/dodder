@@ -13,7 +13,7 @@ setup() {
 
   cat >txt.type <<-EOM
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		binary = false
@@ -21,7 +21,7 @@ setup() {
 
   cat >bin.type <<-EOM
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		binary = true
@@ -32,8 +32,8 @@ setup() {
   assert_output_unsorted - <<-EOM
 		          deleted [bin.type]
 		          deleted [txt.type]
-		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v2]
-		[!txt @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
+		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v3]
+		[!txt @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v3]
 	EOM
 }
 
@@ -211,7 +211,7 @@ function mode_both { # @test
 
 # bats test_tags=user_story:builtin_types
 function checkout_builtin_type { # @test
-  run_dodder checkout !toml-type-v2:t
+  run_dodder checkout !toml-type-v3:t
   assert_success
   assert_golden_unsorted checkout_builtin_type
 }

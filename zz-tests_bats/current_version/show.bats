@@ -164,13 +164,13 @@ function show_simple_one_zettel_binary { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		          deleted [file.bin]
-		[!bin !toml-type-v2]
+		[!bin !toml-type-v3]
 		[two/uno @blake2b256-w9l3z9c2w8lhr42fwekmhrxeqtmzw40s9p46vt88ydgwux4rxxuqnfqsmk !bin "file"]
 	EOM
 
   cat >bin.type <<-EOM
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		binary = true
@@ -180,7 +180,7 @@ function show_simple_one_zettel_binary { # @test
   assert_success
   assert_output_unsorted - <<-EOM
 		          deleted [bin.type]
-		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v2]
+		[!bin @blake2b256-zhvux7vmpch9f44kvnua7n69f8jzgk5s7p9k2s3kuvkrcpjh07lse493jl !toml-type-v3]
 	EOM
 
   run_dodder show -format text two/uno
@@ -578,7 +578,7 @@ function show_inventory_list_blob_sort_correct { # @test
 
 # bats test_tags=user_story:builtin_types
 function show_builtin_type_md { # @test
-  run_dodder show -format text !toml-type-v2:t
+  run_dodder show -format text !toml-type-v3:t
   assert_success
   # Pandoc tools default-on (#208): all three genesis type objects render,
   # and !md's hyphence header carries the blob-reference lines (fixture
@@ -670,7 +670,7 @@ function show_zettel_with_discovered_references { # @test
   # Create a type with reference discovery script
   cat >ref-md.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -715,7 +715,7 @@ function show_zettel_with_pandoc_discovered_references { # @test
   # Create a type with pandoc-based reference discovery
   cat >ref-pandoc-md.type <<-TYPEFILE
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -760,7 +760,7 @@ function show_zettel_with_pandoc_discovered_code_block_type_references { # @test
   # Create a type with pandoc-based reference discovery
   cat >ref-pandoc-cb.type <<-TYPEFILE
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -812,7 +812,7 @@ function format_blob_stdin_resolves_type_with_and_without_lock { # @test
   # Create a type with a pandoc formatter (markdown → plain text)
   cat >fmt-test.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "txt"
@@ -863,7 +863,7 @@ function format_blob_stdin_selects_formatter_via_uti_group { # @test
   #   markdown preserves it, html wraps in tags, plain strips formatting
   cat >uti-test.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "txt"
@@ -912,7 +912,7 @@ function format_blob_prefers_text_edit_over_text { # @test
   # when no format is specified, format-blob should prefer text-edit
   cat >edit-pref.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "txt"
@@ -951,7 +951,7 @@ function show_zettel_with_discovered_blob_references { # @test
   # Create a type with reference discovery that outputs typed blob refs
   cat >ref-blob.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -997,7 +997,7 @@ function blob_reference_without_type_fails { # @test
   # Create a type whose reference discovery outputs untyped blob refs
   cat >ref-untyped.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1032,7 +1032,7 @@ function discovery_script_crash_required_fails { # @test
   # Type with required discovery script that exits non-zero
   cat >crashy.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1066,7 +1066,7 @@ function discovery_script_crash_optional_succeeds { # @test
   # Type with optional discovery script that exits non-zero
   cat >crashy-opt.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1101,7 +1101,7 @@ function show_box_format_includes_blob_references { # @test
   # Create a type with reference discovery that outputs typed blob refs
   cat >ref-blob.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1142,7 +1142,7 @@ function show_blob_references_sorted_in_hyphence { # @test
   # Create a type whose reference discovery outputs multiple typed blob refs
   cat >ref-multi.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1189,7 +1189,7 @@ function show_blob_references_sorted_in_inventory_list { # @test
   # Create a type whose reference discovery outputs multiple typed blob refs
   cat >ref-multi.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1239,7 +1239,7 @@ function blob_ref_type_lock_succeeds_when_type_matches_zettel { # @test
   # Create a type with discovery that emits blob refs typed as itself
   cat >img.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"
@@ -1281,7 +1281,7 @@ function blob_ref_type_lock_resolves_heterogeneous_types { # @test
   # Create a custom type for blob references
   cat >img.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "png"
@@ -1293,7 +1293,7 @@ function blob_ref_type_lock_resolves_heterogeneous_types { # @test
   # Create a discovery type that emits blob refs typed as !img
   cat >ref-img.type <<-'TYPEFILE'
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		file-extension = "md"

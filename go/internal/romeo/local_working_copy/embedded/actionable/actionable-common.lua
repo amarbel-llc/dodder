@@ -3,8 +3,13 @@
 -- dodder object graph (FDR-0000): the type objects carry this as a blob
 -- reference, preloaded into the hook VM by name (see oscar/store).
 --
+-- Written against the English-keyed hook tables (child.Type, child.Fields):
+-- the built-in actionable types are !toml-type-v3, whose hooks receive that
+-- projection (dodder#407). Repos created earlier keep their own committed
+-- copy of this module, written against the German keys, on their v2 types.
+--
 -- on_commit_fields runs after the commit pipeline projects fields into
--- kinder.Fields. Behavior (field model):
+-- child.Fields. Behavior (field model):
 --   * status=="cancelled": stamp today into an empty `due` (completed-on).
 --   * status=="done" on !task: stamp today into an empty `due`.
 --   * status=="done" on a recurring type (!chore/!habit) with non-empty
@@ -25,8 +30,8 @@ local function stamp_completed_on(f)
 	end
 end
 
-function P.on_commit_fields(kinder, mutter)
-	local f = kinder.Fields
+function P.on_commit_fields(child, mother)
+	local f = child.Fields
 	if not f then
 		return
 	end
@@ -34,7 +39,7 @@ function P.on_commit_fields(kinder, mutter)
 	if status == "cancelled" then
 		stamp_completed_on(f)
 	elseif status == "done" then
-		if kinder.Typ == "!task" then
+		if child.Type == "!task" then
 			stamp_completed_on(f)
 		elseif f.recurrence ~= nil and f.recurrence ~= "" then
 			if f.due ~= nil and f.due ~= "" then

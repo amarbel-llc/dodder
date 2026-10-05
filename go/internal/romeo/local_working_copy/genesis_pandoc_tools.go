@@ -28,7 +28,7 @@ func (local *Repo) prepareToolTypes(
 ) (err error) {
 	tipe := ids.DefaultOrPanic(genres.Type)
 
-	prepareOne := func(objectIdString string, blob type_blobs.TomlV2) error {
+	prepareOne := func(objectIdString string, blob type_blobs.TomlV3) error {
 		object, _ := sku.GetTransactedPool().GetWithRepool() //repool:owned
 
 		if err := object.GetObjectIdMutable().SetWithId(

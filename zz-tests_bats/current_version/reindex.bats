@@ -62,14 +62,13 @@ function reindex_after_changes { # @test
   assert_golden reindex_after_changes_type
 
   cat >md.type <<-EOM
-		inline-akte = false
 		vim-syntax-type = "test"
 	EOM
 
   run_dodder checkin .t
   assert_success
   assert_output - <<-EOM
-		[!md @blake2b256-473260as3d3pd4uramcc60877srvpkxs4krlap45dkl3mfvq2npq2duvvq !toml-type-v2]
+		[!md @blake2b256-8mdvh8u92eyh2kghcxgsucvkupkxlpfkj8xk3ef0077gnpadnsdqpn2ec5 !toml-type-v3]
 	EOM
 
   function verify() {
@@ -84,7 +83,6 @@ function reindex_after_changes { # @test
     run_dodder show -format blob !md:t
     assert_success
     assert_output - <<-EOM
-			inline-akte = false
 			vim-syntax-type = "test"
 		EOM
   }

@@ -71,7 +71,7 @@ function transform_dry_run_does_not_commit { # @test
   assert_output --regexp - <<-'EOM'
 		selected 3 object\(s\)
 		TAP version 14
-		import[[:blank:]]Type[[:blank:]].+!toml-type-v2@.+
+		import[[:blank:]]Type[[:blank:]].+!toml-type-v3@.+
 		import[[:blank:]]Zettel[[:blank:]].+Zettel one/dos .+"wow ok again".+
 		import[[:blank:]]Zettel[[:blank:]].+Zettel one/uno .+"wow the first".+
 		╭────────────────┬─────────────╮

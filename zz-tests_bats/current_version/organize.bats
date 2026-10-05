@@ -64,9 +64,9 @@ function organize_simple { # @test
   # references (per-run ed25519 sigs -> --regexp), plus the two tool types.
   assert_output_unsorted --regexp - <<-'EOM'
 
-		- \[!md !toml-type-v2 .+]
-		- \[!pandoc-defaults !toml-type-v2]
-		- \[!pandoc-lua_filter !toml-type-v2]
+		- \[!md !toml-type-v3 .+]
+		- \[!pandoc-defaults !toml-type-v3]
+		- \[!pandoc-lua_filter !toml-type-v3]
 		- \[one/dos !md tag-3 tag-4] wow ok again
 		- \[one/uno !md tag-3 tag-4] wow the first
 	EOM
@@ -201,7 +201,7 @@ function organize_simple_checkedout_merge_conflict { # @test
   #TODO-project-2022-zit-collapse_skus
   cat - >txt.type <<-EOM
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		binary = false
@@ -209,7 +209,7 @@ function organize_simple_checkedout_merge_conflict { # @test
 
   cat - >txt2.type <<-EOM
 		---
-		! toml-type-v2
+		! toml-type-v3
 		---
 
 		binary = false
@@ -220,8 +220,8 @@ function organize_simple_checkedout_merge_conflict { # @test
   assert_output_unsorted - <<-EOM
 		          deleted [txt.type]
 		          deleted [txt2.type]
-		[!txt2 @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
-		[!txt @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v2]
+		[!txt2 @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v3]
+		[!txt @blake2b256-qxzg22c3axe9m42tpwqd4usnfag4elp20q7zvnkgmyea4f4rwcwsurfp5e !toml-type-v3]
 	EOM
 
   run_dodder checkout one/dos
@@ -449,7 +449,7 @@ function organize_with_type_commit { # @test
 
   assert_success
   assert_output_unsorted - <<-EOM
-		[!txt !toml-type-v2]
+		[!txt !toml-type-v3]
 		[one/dos @blake2b256-z3zpdf6uhqd3tx6nehjtvyjsjqelgyxfjkx46pq04l6qryxz4efs37xhkd !txt "wow ok again" tag-3 tag-4]
 		[one/uno @blake2b256-9ft3m74l5t2ppwjrvfg3wp380jqj2zfrm6zevxqx34sdethvey0s5vm9gd !txt "wow the first" tag-3 tag-4]
 	EOM
@@ -1313,7 +1313,7 @@ function create_structured_zettels { # @test
 	EOM
   assert_success
   assert_output_unsorted - <<-EOM
-		[!task !toml-type-v2]
+		[!task !toml-type-v3]
 		[one/tres !task "second" tag-3 test]
 		[two/uno !md "first" test]
 	EOM
@@ -1464,11 +1464,11 @@ function organize_checked_out { # @test
   # references (per-run ed25519 sigs -> --regexp), plus the two tool types.
   assert_output_unsorted --regexp - <<-'EOM'
 
-		- \[md.type !toml-type-v2 .+]
+		- \[md.type !toml-type-v3 .+]
 		- \[one/dos.zettel !md tag-3 tag-4] wow ok again
 		- \[one/uno.zettel !md tag-3 tag-4] wow the first
-		- \[pandoc-defaults.type !toml-type-v2]
-		- \[pandoc-lua_filter.type !toml-type-v2]
+		- \[pandoc-defaults.type !toml-type-v3]
+		- \[pandoc-lua_filter.type !toml-type-v3]
 	EOM
 }
 

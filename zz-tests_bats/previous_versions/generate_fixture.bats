@@ -47,8 +47,8 @@ function generate { # @test
   run_dodder show !md:t
   assert_success
   # Pandoc tools default-on (#208): the !md type carries three blob references
-  # after its type, so the box line no longer ends at !toml-type-v2].
-  assert_line --regexp '\[!md @blake2b256-.+ !toml-type-v2 .+]'
+  # after its type, so the box line no longer ends at !toml-type-v3].
+  assert_line --regexp '\[!md @blake2b256-.+ !toml-type-v3 .+]'
 
   run_dodder show-config
   assert_success

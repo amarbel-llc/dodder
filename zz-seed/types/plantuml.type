@@ -1,6 +1,6 @@
 ---
 # plantuml diagram source
-! toml-type-v2
+! toml-type-v3
 ---
 
 # nixpkgs-formatter-candidates: plantuml -tutxt (ascii-art render; layout varies across versions)

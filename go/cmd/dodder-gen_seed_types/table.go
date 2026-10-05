@@ -455,7 +455,7 @@ var seedTypes = []seedType{
 }
 
 // render produces the hyphence .type file for the entry: a metadata section
-// (description + blob type) followed by the TomlV2 TOML blob body, ready for
+// (description + blob type) followed by the latest-version TOML type blob body, ready for
 // a future `dodder checkin` / import into a seed repo. The blank line between
 // the closing boundary and the blob body is load-bearing: without it the
 // hyphence parser silently drops the blob (issue #41).
@@ -464,7 +464,7 @@ func (entry seedType) render() []byte {
 
 	sb.WriteString("---\n")
 	fmt.Fprintf(&sb, "# %s\n", entry.Description)
-	fmt.Fprintf(&sb, "! %s\n", strings.TrimPrefix(ids.TypeTomlTypeV2, "!"))
+	fmt.Fprintf(&sb, "! %s\n", strings.TrimPrefix(ids.TypeTomlTypeVLatest, "!"))
 	sb.WriteString("---\n")
 	sb.WriteString("\n")
 

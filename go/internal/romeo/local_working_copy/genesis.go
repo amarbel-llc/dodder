@@ -200,7 +200,7 @@ func (local *Repo) prepareDefaultType(
 	objectIdType = ids.MustTypeStruct("md")
 	tipe := ids.DefaultOrPanic(genres.Type)
 
-	var blob type_blobs.TomlV2
+	var blob type_blobs.TomlV3
 	if !bigBang.ExcludeDefaultPandocTools {
 		blob = type_blobs.DefaultWithPandocFormatter()
 	} else {
@@ -277,7 +277,7 @@ func (local *Repo) prepareBuiltinActionableTypes(
 
 	for _, builtin := range []struct {
 		objectIdString string
-		blob           type_blobs.TomlV2
+		blob           type_blobs.TomlV3
 	}{
 		{
 			objectIdString: "task",
@@ -363,7 +363,7 @@ func (local *Repo) prepareActionableCommonType(
 		return err
 	}
 
-	blob := type_blobs.TomlV2{
+	blob := type_blobs.TomlV3{
 		FileExtension: "lua",
 		VimSyntaxType: "lua",
 	}

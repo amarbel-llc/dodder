@@ -10,7 +10,7 @@ require (
 	code.linenisgreat.com/purse-first/libs/dewey v0.6.3-0.20260930013913-d5aef57dbc0e
 	code.linenisgreat.com/purse-first/libs/go-mcp v0.6.3-0.20260930013913-d5aef57dbc0e
 	code.linenisgreat.com/tap/go v0.2.1-0.20260929193235-d65ff37a9e7a
-	code.linenisgreat.com/tommy v0.5.1-0.20261005161049-47364f23ab72
+	code.linenisgreat.com/tommy v0.6.0
 	filippo.io/age v1.3.1
 	github.com/DataDog/zstd v1.5.7
 	github.com/brandondube/tai v0.1.0

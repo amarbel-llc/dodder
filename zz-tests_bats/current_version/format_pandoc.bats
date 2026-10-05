@@ -27,8 +27,8 @@ function init_with_pandoc_tools_creates_type_objects { # @test
   assert_success
 
   # Genesis should create the pandoc tool types alongside !md
-  assert_line --regexp '\[!pandoc-defaults @blake2b256-.+ !toml-type-v2]'
-  assert_line --regexp '\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v2]'
+  assert_line --regexp '\[!pandoc-defaults @blake2b256-.+ !toml-type-v3]'
+  assert_line --regexp '\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v3]'
 
   run_dodder init-workspace -experimental-repo=false
 
@@ -350,7 +350,6 @@ function format_blob_with_trivial_formatter_no_blob_refs { # @test
   assert_success
 
   cat >md.type <<-'EOM'
-		inline-akte = true
 		[formatters.text]
 		shell = [
 		  "bash",

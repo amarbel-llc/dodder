@@ -26,7 +26,7 @@ func TestTomlV2EncodeDeterministic(t1 *testing.T) {
 		blob := DefaultWithPandocFormatter()
 
 		typedBlob := TypedBlob{
-			Type: ids.MustTypeStruct(ids.TypeTomlTypeV2).ToMadder(),
+			Type: ids.MustTypeStruct(ids.TypeTomlTypeVLatest).ToMadder(),
 			Blob: &blob,
 		}
 
@@ -139,26 +139,13 @@ func TestTomlV3RejectsMalformedBlob(t1 *testing.T) {
 // unconsumed-key check must not trip on the map-backed tables the encoder
 // seeds (uti-groups, formatters) or on nested field definitions.
 func TestTomlV3StrictDecodeAcceptsBuiltinShapes(t1 *testing.T) {
-	for name, v2 := range map[string]TomlV2{
+	for name, blob := range map[string]TomlV3{
+		"md":        Default(),
 		"md-pandoc": DefaultWithPandocFormatter(),
 		"task":      DefaultTaskType(),
 		"chore":     DefaultChoreType(),
+		"habit":     DefaultHabitType(),
 	} {
-		blob := TomlV3{
-			Binary:        v2.Binary,
-			FileExtension: v2.FileExtension,
-			MimeType:      v2.MimeType,
-			ExecCommand:   v2.ExecCommand,
-			VimSyntaxType: v2.VimSyntaxType,
-			UTIGroups:     v2.UTIGroups,
-			Formatters:    v2.Formatters,
-			Hooks:         v2.Hooks,
-			References:    v2.References,
-			Fields:        v2.Fields,
-			FieldsReader:  v2.FieldsReader,
-			FieldsWriter:  v2.FieldsWriter,
-		}
-
 		encoded := TypedBlob{
 			Type: ids.MustTypeStruct(ids.TypeTomlTypeV3).ToMadder(),
 			Blob: &blob,
@@ -194,7 +181,7 @@ func TestTomlV3StrictDecodeAcceptsBuiltinShapes(t1 *testing.T) {
 // TestTomlV3RefusesOtherVersionStruct pins the encode guard: a v2 struct under
 // the v3 type string is an error, not an empty type blob.
 func TestTomlV3RefusesOtherVersionStruct(t1 *testing.T) {
-	blob := Default()
+	blob := TomlV2{FileExtension: "md"}
 
 	typedBlob := TypedBlob{
 		Type: ids.MustTypeStruct(ids.TypeTomlTypeV3).ToMadder(),
@@ -221,7 +208,7 @@ func TestTomlV2UTIGroupsRoundTrip(t1 *testing.T) {
 	original := DefaultWithPandocFormatter()
 
 	typedBlob := TypedBlob{
-		Type: ids.MustTypeStruct(ids.TypeTomlTypeV2).ToMadder(),
+		Type: ids.MustTypeStruct(ids.TypeTomlTypeVLatest).ToMadder(),
 		Blob: &original,
 	}
 
@@ -239,7 +226,7 @@ func TestTomlV2UTIGroupsRoundTrip(t1 *testing.T) {
 		t.Fatalf("flush failed: %s", err)
 	}
 
-	doc, err := DecodeTomlV2(buf.Bytes())
+	doc, err := DecodeTomlV3(buf.Bytes())
 	if err != nil {
 		t.Fatalf("decode failed: %s", err)
 	}

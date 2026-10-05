@@ -25,9 +25,9 @@ function init_default_creates_repo { # @test
   assert_success
   # Pandoc tools default-on (#208): !md carries unquoted two-token blob
   # references after its type; the pandoc tool types are committed too.
-  assert_line --regexp '^\[!md @blake2b256-.+ !toml-type-v2 .+\]$'
-  assert_line --regexp '^\[!pandoc-defaults @blake2b256-.+ !toml-type-v2\]$'
-  assert_line --regexp '^\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v2\]$'
+  assert_line --regexp '^\[!md @blake2b256-.+ !toml-type-v3 .+\]$'
+  assert_line --regexp '^\[!pandoc-defaults @blake2b256-.+ !toml-type-v3\]$'
+  assert_line --regexp '^\[!pandoc-lua_filter @blake2b256-.+ !toml-type-v3\]$'
 
   run test -f .dodder/local/share/repos/default/config-seed
   assert_success

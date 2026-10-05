@@ -1,6 +1,6 @@
 ---
 # open policy agent rego policy
-! toml-type-v2
+! toml-type-v3
 ---
 
 # nixpkgs-formatter-candidates: opa fmt (open-policy-agent)
