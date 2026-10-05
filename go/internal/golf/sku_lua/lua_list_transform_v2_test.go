@@ -317,6 +317,58 @@ return list
 	t.AssertEqualStrings("two/dos", removed[0].GetObjectId().String())
 }
 
+// SkipHooks projects as false; SkipsHooks reports exactly the objects whose
+// script set it to true.
+func TestListTransformV2SkipsHooks(t1 *testing.T) {
+	t := ui.MakeT(t1)
+
+	one, oneRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer oneRepool()
+	t.AssertNoError(one.GetObjectIdMutable().Set("one/uno"))
+
+	two, twoRepool := sku.GetTransactedPool().GetWithRepool() //repool:owned
+	defer twoRepool()
+	t.AssertNoError(two.GetObjectIdMutable().Set("two/dos"))
+
+	script := `
+local list = dodder.list_v2()
+
+for object in list:each() do
+  assert(object.SkipHooks == false, "SkipHooks should project as false")
+
+  if object.ObjectId == "two/dos" then
+    object.SkipHooks = true
+  end
+end
+
+return list
+`
+
+	var binding *ListTransformV2
+
+	vmPool, err := (&lua.VMPoolBuilder{}).WithScript(
+		script,
+	).WithApply(func(vm *lua.VM) error {
+		binding = MakeListTransformV2(vm, []*sku.Transacted{one, two})
+		binding.RegisterGlobals()
+		return nil
+	}).Build()
+	t.AssertNoError(err)
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+	defer binding.Repool()
+
+	t.AssertTrue(binding.IsHandle(vm.Top), "script should return the handle")
+
+	outputs, err := binding.Objects()
+	t.AssertNoError(err)
+	t.AssertEqual(2, len(outputs))
+
+	t.AssertFalse(binding.SkipsHooks(outputs[0]), "one/uno should run hooks")
+	t.AssertTrue(binding.SkipsHooks(outputs[1]), "two/dos should skip hooks")
+}
+
 // Projection is lazy: a script that never calls dodder.list_v2() leaves the
 // binding unrequested and yields no output objects.
 func TestListTransformV2UnrequestedProjectsNothing(t1 *testing.T) {

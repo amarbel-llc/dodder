@@ -137,8 +137,8 @@ The list binding also projects, transform-only:
   case: importing history, where a hook written for live edits (e.g. the
   built-in actionable hook advancing a done recurring chore's due date and
   resetting it to todo) would rewrite a historical version. The command
-  reports `hooks skipped for N object(s)`. V1 (`dodder.list()`) only for now;
-  a `dodder.list_v2()` object's `SkipHooks` is ignored until #407 mirrors it.
+  reports `hooks skipped for N object(s)`. `dodder.list_v2()` objects (§3.6)
+  carry the same key with the same behaviour.
 
 An object created with `list:add()` gets a current tai at plan time, and every
 zettel id already present in the output set is reserved in the id index
@@ -240,8 +240,8 @@ differ:
   `EtikettenImplicit`    `TagsImplicit`
   `Bezeichnung`          `Description`
 
-`Fields`, `Blob`, `References`, `Tai`, `TaiSortKey`, and `TaiDate` carry the
-same names and behaviour in both.
+`Fields`, `Blob`, `References`, `SkipHooks`, `Tai`, `TaiSortKey`, and
+`TaiDate` carry the same names and behaviour in both.
 
 ```lua
 local list = dodder.list_v2()

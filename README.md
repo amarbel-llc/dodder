@@ -231,7 +231,8 @@ just test                  # unit + integration (bats) tests
 ## Documentation map
 
 - [`docs/man.7/`](docs/man.7/) — concept reference manpages (workspace,
-  hyphence, blob-store, doddish, markl-id, box, organize-text).
+  hyphence, blob-store, doddish, markl-id, box, organize-text,
+  transform-script).
 - [`docs/features/`](docs/features/) — Feature Design Records (FDRs): the design
   intent, interface, and status of user-facing features.
 - [`docs/decisions/`](docs/decisions/) — Architecture Decision Records (ADRs).

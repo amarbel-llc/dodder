@@ -384,6 +384,52 @@ function init_from_lists_script_skips_hooks_per_object { # @test
 	EOM
 }
 
+# #407: the same per-object hook skip through the opt-in English-keyed
+# dodder.list_v2() binding.
+function init_from_lists_script_skips_hooks_per_object_list_v2 { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  cat >s.lua <<-'EOM'
+		local l = dodder.list_v2()
+		local blob = blobs.write(
+		  "status = \"done\"\nrecurrence = \"P1W\"\ndue = \"2020-01-06\"\n"
+		)
+
+		local hooked = l:add()
+		hooked.Type = "chore"
+		hooked.Description = "hooked"
+		hooked.Blob = blob
+
+		local skipped = l:add()
+		skipped.Type = "chore"
+		skipped.Description = "skipped"
+		skipped.Blob = blob
+		skipped.SkipHooks = true
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -include-builtin-actionable-types \
+    -script "$script" \
+    -blob-source shared \
+    take4 \
+    "$list"
+  assert_success
+  assert_line 'hooks skipped for 1 object(s)'
+
+  run_dodder show -repo_id take4 '!chore?z'
+  assert_success
+  assert_output_unsorted - <<-'EOM'
+		[two/uno @blake2b256-ygk237qe64p8xrh0ztfxp9zzm934r6cqpacqp4re6hl76mhlzw4qs6yzu7 !chore "hooked" status=todo priority=p3 due=2020-01-13 recurrence=P1W]
+		[one/tres @blake2b256-xfka4l854xc3g49qm98emkxs874v38zpavcfdtudn6m7p8dk3vvqmf5u4e !chore "skipped" status=done priority=p3 due=2020-01-06 recurrence=P1W]
+	EOM
+}
+
 # take4 (#16): -removed-list archives what the script dropped. Every version of
 # one/dos is tagged with a drop-class marker and removed; the newborn holds only
 # one/uno, and the removed list carries one/dos with the marker the script set

@@ -91,7 +91,8 @@ func (cmd InitFromLists) GetDescription() command.Description {
 			"a fresh keypair and every object is fully re-signed under it; " +
 			"blobs are resolved read-only from the -blob-source stores. Use " +
 			"-plan-only to build, validate, and report the plan's classification " +
-			"without committing or copying source blobs.",
+			"without committing or copying source blobs. See " +
+			"transform-script(7) for the script API.",
 	}
 }
 

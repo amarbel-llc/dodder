@@ -52,7 +52,10 @@ func (cmd Transform) GetDescription() command.Description {
 			"matched by the query and commit the resulting object list back " +
 			"to the store. The script is given either by path (-script) or as " +
 			"a stored blob (-script-digest). Use -dry_run to build and " +
-			"validate the output plan without committing.",
+			"validate the output plan without committing. See " +
+			"transform-script(7) for the script API: the dodder.list() and " +
+			"dodder.list_v2() list bindings, the per-object keys, and the " +
+			"blobs global.",
 	}
 }
 
