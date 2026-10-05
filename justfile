@@ -1775,6 +1775,60 @@ consolidate-rsyncnet-delta listing="/home/sasha/workspaces/take4/rsync-sweep/lis
   head -20 "$out" | awk -F'\t' '{printf "  %10s  %s\n", $2, $1}' | numfmt --field=1 --to=iec --padding=10 2>/dev/null || head -20 "$out"
   echo "full list: $out"
 
+# Genesis-index-reset probe, in a throwaway XDG: what does a clone hold for
+# the tool types (!pandoc-defaults / !pandoc-lua_filter) that BOTH its own
+# genesis and the pulled remote define? Prints the source's and the clone's
+# full type history (with signatures) and fscks the clone, so a change in
+# how genesis leaves the indexes shows up as a missing remote version or a
+# dangling type lock.
+#
+# rev: build dodder from that git revision instead of the working tree, for an
+# A/B against a known-good commit (e.g. `origin/master`).
+[group('debug')]
+debug-clone-genesis-tool-types rev="":
+  #!/usr/bin/env bash
+  set -uo pipefail
+  flake=.
+  if [[ -n "{{ rev }}" ]]; then
+    sha=$(git rev-parse "{{ rev }}") || exit 1
+    flake="git+file://$PWD?rev=$sha"
+    echo "==> dodder from $sha"
+  else
+    echo "==> dodder from the working tree"
+  fi
+  bin=$(nix build --no-link --print-out-paths "$flake#dodder-debug") || { echo "nix build $flake#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  base=$(mktemp -d)
+  trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
+  export XDG_DATA_HOME=$base/data XDG_CONFIG_HOME=$base/config \
+    XDG_STATE_HOME=$base/state XDG_CACHE_HOME=$base/cache XDG_RUNTIME_DIR=$base/run
+  mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+  printf 'one\n' >"$base/yin"; printf 'uno\ndos\ntres\n' >"$base/yang"
+  mkdir "$base/them" "$base/us"
+  cd "$base/them"
+  dodder init -yin "$base/yin" -yang "$base/yang" -encryption none -exclude-default-type=false .default >/dev/null || { echo "FAIL: init them"; exit 1; }
+  dodder new -edit=false -type md -description "wow" -blob 'body' >/dev/null || { echo "FAIL: new"; exit 1; }
+  # one line per object version: tai, genre, id, own sig (first 12), type lock
+  summarize() {
+    dodder fsck 2>&1 | grep -E '^(not )?ok ' | awk '{
+      sig = ""; lock = ""
+      for (i = 1; i <= NF; i++) {
+        if ($i ~ /^dodder-object-sig-/) { n = split($i, p, "ed25519_sig-"); sig = substr(p[n], 1, 12) }
+        if ($i ~ /^![a-z_-]+@/) { n = split($i, p, "ed25519_sig-"); lock = $i; sub(/@.*/, "", lock); lock = lock "@" substr(p[n], 1, 12) }
+      }
+      printf "%s %-14s %-22s sig=%-12s lock=%s\n", $1 == "not" ? "NOT-OK" : "ok", $6, $7, sig, lock
+    }' | sort -k2,3
+  }
+  echo "==> SOURCE objects"; summarize
+  cd "$base/us"
+  echo "==> clone -direct (-print-unchanged=false, as the bats suite runs it)"
+  dodder clone -print-unchanged=false -print-time=false -direct "$base/them" -yin "$base/yin" -yang "$base/yang" -encryption none .default '+zettel,typ,etikett' 2>/dev/null | cut -c1-90
+  echo "clone exit: ${PIPESTATUS[0]}"
+  echo "==> CLONE objects"; summarize
+  echo "==> CLONE zettels"; dodder show ':z'
+  dodder fsck >/dev/null 2>&1; echo "clone fsck exit: $?"
+
 # Take4 (#16) hook probe, in a throwaway XDG: do the built-in actionable
 # types' commit hooks fire on objects committed by init-from-lists? A script
 # adds a done !task with NO due (the built-in hook stamps an empty due with
