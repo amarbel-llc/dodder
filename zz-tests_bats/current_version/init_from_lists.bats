@@ -332,6 +332,47 @@ function init_from_lists_genesis_types_resolve_in_run { # @test
   assert_success
 }
 
+# take4 (#16): an object commits AFTER the object it references. The added
+# !task's type exists only from genesis (not in the batch -> dependency
+# height 0), while the referenced one/uno is an !md whose type IS in the batch
+# (height 1). Ordering by type dependencies alone committed the task first,
+# and its reference lock could not be resolved ("failed to write referenced
+# object lock"); the plan now orders a referencing object after every
+# in-batch version of its target.
+function init_from_lists_reference_commits_after_its_target { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+
+		local task = l:add()
+		task.Typ = "task"
+		task.Bezeichnung = "follow up"
+		task.Blob = blobs.write("status = \"todo\"\n")
+		task.References[#task.References + 1] = "one/uno"
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -include-builtin-actionable-types \
+    -script "$script" \
+    -blob-source shared \
+    take4 \
+    "$list"
+  assert_success
+
+  run_dodder show -repo_id take4 '!task'
+  assert_success
+  assert_output --regexp - <<-'EOM'
+		^\[two/uno @blake2b256-[a-z0-9]+ !task "follow up" <one/uno@ed25519_sig-[a-z0-9]+ status=todo priority=p3 due=\]$
+	EOM
+}
+
 # take4 (#16): a script can commit an object without its lua hook stages via
 # `object.SkipHooks = true`. Two identical done weekly chores are added; the
 # built-in actionable hook advances a done recurring chore's due date and

@@ -27,11 +27,24 @@ type Builder struct {
 	edges         []dagnabit.Edge
 	typeNameToKey map[string]string
 
+	// referenceEdges are (entry key, referenced object id) pairs collected
+	// from each entry's metadata object references; keysByObjectId maps an
+	// object id to every entry key (version) of it in the batch. Build
+	// resolves them into ordering edges so a referencing object commits
+	// after every in-batch version of what it references.
+	referenceEdges []referenceEdge
+	keysByObjectId map[string][]string
+
 	dedupFormatId string
 	dedupLookup   map[string]struct{}
 
 	abbrIndex  *store_abbr.InMemoryIndex
 	transforms []ObjectTransform
+}
+
+type referenceEdge struct {
+	sourceKey          string
+	referencedObjectId string
 }
 
 func MakeImportBuilder(
@@ -230,6 +243,30 @@ func (b *Builder) appendEntryWithKey(entry Entry, key string) {
 		b.taiByObjectId[objectIdString] = tai
 	}
 
+	if b.keysByObjectId == nil {
+		b.keysByObjectId = make(map[string][]string)
+	}
+
+	b.keysByObjectId[objectIdString] = append(
+		b.keysByObjectId[objectIdString],
+		key,
+	)
+
+	for reference := range entry.object.GetMetadata().AllReferencedObjects() {
+		referencedObjectId := reference.String()
+
+		// a version referencing its own object id orders nothing: its
+		// versions are already ordered by tai
+		if referencedObjectId == objectIdString {
+			continue
+		}
+
+		b.referenceEdges = append(b.referenceEdges, referenceEdge{
+			sourceKey:          key,
+			referencedObjectId: referencedObjectId,
+		})
+	}
+
 	genre := genres.Make(entry.object.GetGenre())
 
 	if genre == genres.Type {
@@ -263,7 +300,31 @@ func (b *Builder) Build() (*Plan, error) {
 		}
 	}
 
-	heights, err := dagnabit.TopologicalSort(resolvedEdges)
+	// A referencing object's lock is written from the referenced object's
+	// latest committed version, so it must commit after every in-batch
+	// version of that object. Without these edges an object whose type is
+	// NOT in the batch (height 0) commits before a referenced object whose
+	// type IS in the batch (height 1), and its reference lock cannot be
+	// resolved ("failed to write referenced object lock").
+	orderingEdges := resolvedEdges
+
+	for _, reference := range b.referenceEdges {
+		for _, targetKey := range b.keysByObjectId[reference.referencedObjectId] {
+			orderingEdges = append(orderingEdges, dagnabit.Edge{
+				Source: reference.sourceKey,
+				Target: targetKey,
+			})
+		}
+	}
+
+	heights, err := dagnabit.TopologicalSort(orderingEdges)
+	if err != nil && len(orderingEdges) > len(resolvedEdges) {
+		// Objects may reference each other in a cycle (a links b, b links
+		// a); no order satisfies that, so fall back to type ordering alone
+		// rather than failing the whole plan.
+		heights, err = dagnabit.TopologicalSort(resolvedEdges)
+	}
+
 	if err != nil {
 		return nil, errors.Wrapf(err, "cycle in type dependencies")
 	}

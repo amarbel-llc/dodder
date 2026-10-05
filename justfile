@@ -1607,6 +1607,44 @@ consolidate-take4-show-ids store +ids:
     fi
   done
 
+# Take4 (#16): validate every TOML blob an attempt's transform wrote, the
+# way the committing run will read it. A plan-only attempt stages its
+# blobs.write output (zstd) under the attempt's transform-dry_run dir; the
+# built-in actionable types project fields with `yq -p toml -o json`, and a
+# blob yq rejects fails that object's commit (seen on the nikulin rehearsal:
+# exit status 1). Runs yq over each staged blob and reports every failure
+# with yq's error, grouped by error text, plus the first offending file per
+# group. Read-only; non-TOML blobs (rewritten typedefs) are checked the same
+# way since they are TOML too.
+[group('consolidate')]
+consolidate-take4-validate-staged-toml attempt:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  t4=/home/sasha/workspaces/take4
+  dir=$(grep -a -oP '^dry run: staged \d+ blob\(s\) under \K\S+' "$t4/scratch/{{ attempt }}/attempt.out" | head -1)
+  [[ -d $dir ]] || { echo "no staging dir for {{ attempt }} (was it a -plan-only attempt?)"; exit 1; }
+  command -v zstd >/dev/null || { echo "zstd not on PATH"; exit 1; }
+  yq --version
+  out=$t4/scratch/{{ attempt }}/toml-validation; rm -rf "$out"; mkdir -p "$out"
+  total=0; bad=0
+  while IFS= read -r file; do
+    total=$((total + 1))
+    if ! err=$(zstd -dcq "$file" | yq -p toml -o json '.status' 2>&1 >/dev/null); then
+      bad=$((bad + 1))
+      printf '%s\t%s\n' "$file" "$(printf '%s' "$err" | tr '\n' ' ' | cut -c1-200)" >>"$out/failures.tsv"
+    fi
+  done < <(find "$dir" -type f)
+  echo "staged blobs: $total   rejected by yq: $bad"
+  [[ $bad -eq 0 ]] && { echo "OK: every staged blob parses"; exit 0; }
+  echo "== failures grouped by error (line/column numbers folded)"
+  cut -f2 "$out/failures.tsv" | sed -E 's/[0-9]+/N/g' | sort | uniq -c | sort -rn | head -20
+  echo "== first failing blob, with control characters made visible (first 40 lines)"
+  first=$(head -1 "$out/failures.tsv" | cut -f1)
+  echo "$first"; head -1 "$out/failures.tsv" | cut -f2
+  zstd -dcq "$first" | cat -A | head -40
+  echo "full list: $out/failures.tsv"
+  exit 1
+
 # Take4 (#16) hook census: which Type objects in the union manifest define
 # lua hooks, and which of those use globals dodder's Lua sandbox blocks (os,
 # io, require, ...)? For every type id, takes its LATEST version's blob from
