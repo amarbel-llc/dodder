@@ -1607,6 +1607,39 @@ consolidate-take4-show-ids store +ids:
     fi
   done
 
+# Take4 (#16) hook census: which Type objects in the union manifest define
+# lua hooks, and which of those use globals dodder's Lua sandbox blocks (os,
+# io, require, ...)? For every type id, takes its LATEST version's blob from
+# the source store and reports the hook entry points it defines and any
+# blocked-global use. Read-only. Hooks fire on import and on every later
+# commit, so a type listed here either needs its objects to skip hooks or
+# its hook rewritten.
+[group('consolidate')]
+consolidate-take4-hook-census store="dodder-v8-take3":
+  #!/usr/bin/env bash
+  set -uo pipefail
+  t4=/home/sasha/workspaces/take4
+  mapfile -t lists <"$t4/transform/manifest.txt"
+  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+  grep -h '^\[!' "${lists[@]}" \
+    | awk '{ id = substr($1, 2); tai = ""; blob = ""
+             for (i = 2; i <= NF; i++) { if ($i ~ /^@(sha256|blake2b256)-/) blob = substr($i, 2); if ($i ~ /^[0-9]+\.[0-9]+\]?$/) { tai = $i; sub(/\]$/, "", tai) } }
+             if (tai + 0 >= best[id] + 0) { best[id] = tai; digest[id] = blob } }
+           END { for (id in best) print id "\t" digest[id] }' | sort >"$tmp/types.tsv"
+  echo "type ids in the union: $(wc -l <"$tmp/types.tsv")"
+  printf '%-28s %-34s %s\n' TYPE HOOKS 'BLOCKED GLOBALS USED'
+  with=0
+  while IFS=$'\t' read -r id digest; do
+    [[ -n $digest ]] || continue
+    madder cat "{{ store }}" "$digest" >"$tmp/blob" 2>/dev/null || continue
+    grep -q '^hooks' "$tmp/blob" || continue
+    with=$((with + 1))
+    hooks=$(grep -oE '\bon_[a-z_]+' "$tmp/blob" | sort -u | tr '\n' ' ')
+    blocked=$(grep -oE '\b(os|io|debug|coroutine)\.[a-z_]+|\b(require|dofile|loadfile|loadstring)\b' "$tmp/blob" | sort -u | tr '\n' ' ')
+    printf '%-28s %-34s %s\n' "$id" "${hooks:-(none found)}" "${blocked:--}"
+  done <"$tmp/types.tsv"
+  echo "types defining hooks: $with"
+
 # Take4 (#16) archives, step 2 of 2 (post-genesis, PLAN §5): one archive
 # zettel per drop class in the consolidated repo. Each archive list
 # (take4/archives/<class>.inventory_list, from consolidate-split-removed-list)
@@ -2025,7 +2058,14 @@ consolidate-take4-stage-handoff attempt:
   grep -E '^(union of|hooks skipped)' "$scratch/attempt.out" >"$out/expected/summary.txt"
   entries=$(grep -cP '^(import|resolve-tai-reassign)\t' "$scratch/attempt.out" || true)
   printf 'plan entries\t%s\n' "$entries" >>"$out/expected/summary.txt"
-  git rev-parse HEAD >"$out/expected/dodder-rev.txt"
+  # Pin a revision the other host can fetch: the newest commit shared with
+  # origin/master. The attempt ran the working tree's dodder, so refuse if
+  # anything that builds the binary differs from that revision.
+  base=$(git merge-base HEAD origin/master)
+  if ! git diff --quiet "$base" -- go flake.nix flake.lock; then
+    echo "FAIL: go/ or the flake differs from $base (the newest commit on origin/master); merge first"; exit 1
+  fi
+  echo "$base" >"$out/expected/dodder-rev.txt"
   ( cd "$out" && find lists expected take4-transform.lua Yin Yang -type f | sort | xargs sha256sum >SHA256SUMS )
   echo "staged $n lists into $out"
   du -sh "$out"; cat "$out/expected/summary.txt"; echo "dodder rev: $(cat "$out/expected/dodder-rev.txt")"
@@ -2040,9 +2080,9 @@ consolidate-take4-stage-handoff attempt:
 debug-take4-handoff-selftest:
   #!/usr/bin/env bash
   set -uo pipefail
-  bin=$(nix build --no-link --print-out-paths "git+file://$PWD?rev=$(git rev-parse HEAD)#dodder-debug") || { echo "nix build FAILED (see above)"; exit 1; }
-  [[ -n $bin ]] || { echo "empty build output path"; exit 1; }
   handoff=/home/sasha/workspaces/take4/handoff
+  bin=$(nix build --no-link --print-out-paths "git+file://$PWD?rev=$(cat "$handoff/expected/dodder-rev.txt")#dodder-debug") || { echo "nix build FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty build output path"; exit 1; }
   base=$(mktemp -d)
   trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
   export HOME=$base/home
