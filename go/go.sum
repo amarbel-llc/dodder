@@ -14,8 +14,8 @@ code.linenisgreat.com/purse-first/libs/go-mcp v0.6.3-0.20260930013913-d5aef57dbc
 code.linenisgreat.com/purse-first/libs/go-mcp v0.6.3-0.20260930013913-d5aef57dbc0e/go.mod h1:qA0uH7HA2SdBF/W9kV9avEurJghTW2WVsOyX2hf6oAo=
 code.linenisgreat.com/tap/go v0.2.1-0.20260929193235-d65ff37a9e7a h1:upMXBn8Cx8TLrm5Mp0utnAvCjPOlhLDK6bSwm/+W70E=
 code.linenisgreat.com/tap/go v0.2.1-0.20260929193235-d65ff37a9e7a/go.mod h1:ldOXHYcw5RPm1llq11gUBiGiQymEsh0ppy24jhTM2ak=
-code.linenisgreat.com/tommy v0.5.0 h1:tgFeUayWv/C9+xHYXT+TFltHhVt6PE2LOF2PuX5SmKY=
-code.linenisgreat.com/tommy v0.5.0/go.mod h1:Ri1R1ybYJ7ZQ4247LxmwnUTnHh8QUYDbo3MgVWvp8Fs=
+code.linenisgreat.com/tommy v0.5.1-0.20261005161049-47364f23ab72 h1:DGpHXnloQm+tlV5dI4TmX7rkD62r4gqXLHDzuoDbcWI=
+code.linenisgreat.com/tommy v0.5.1-0.20261005161049-47364f23ab72/go.mod h1:u9zasym2n3l3LmoN5kjRZ6nDoAD3GkZqhEa/Qwr+vOA=
 filippo.io/age v1.3.1 h1:hbzdQOJkuaMEpRCLSN1/C5DX74RPcNCk6oqhKMXmZi0=
 filippo.io/age v1.3.1/go.mod h1:EZorDTYUxt836i3zdori5IJX/v2Lj6kWFU0cfh6C0D4=
 filippo.io/edwards25519 v1.2.0 h1:crnVqOiS4jqYleHd9vaKZ+HKtHfllngJIiOpNpoJsjo=

@@ -205,32 +205,56 @@ var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
 				*Blob,
 			]{
 				Decode: func(b []byte) (Blob, error) {
-					doc, err := golf_tb.DecodeTomlV3(b)
+					// Unlike the v0-v2 coders, a malformed blob is an
+					// error, not an empty type: silently dropping a type's
+					// hooks, formatters, and fields hides the breakage.
+					// The strict decoder errors on invalid TOML and on a
+					// value whose type does not match its field; the
+					// lenient DecodeTomlV3 the other versions' shape uses
+					// returns a value for almost any input.
+					doc, err := golf_tb.DecodeTomlV3Strict(b)
 					if err != nil {
-						return &TomlV3{}, nil
+						return nil, fmt.Errorf(
+							"malformed %s blob: %w",
+							ids.TypeTomlTypeV3,
+							err,
+						)
+					}
+					// Strict decoding leaves unknown keys alone (they are
+					// only reported as undecoded); reject those too, so a
+					// misspelled key cannot silently drop a setting.
+					if undecoded := doc.Undecoded(); len(undecoded) > 0 {
+						return nil, fmt.Errorf(
+							"malformed %s blob: unknown keys: %s",
+							ids.TypeTomlTypeV3,
+							strings.Join(undecoded, ", "),
+						)
 					}
 					return doc.Data(), nil
 				},
 				Encode: func(blob Blob) ([]byte, error) {
-					// Same deterministic-order seeding as v2 (see
-					// tomlV2EncodeSkeleton).
-					var skeleton []byte
+					// Unlike the v0-v2 coders, refuse a struct of another
+					// version: encoding it would silently write an empty
+					// type blob under the v3 type string.
 					v, isV3 := blob.(*TomlV3)
-					if isV3 {
-						skeleton = tomlMapTablesEncodeSkeleton(
-							v.UTIGroups,
-							v.Formatters,
+					if !isV3 {
+						return nil, fmt.Errorf(
+							"%s encodes *TomlV3 but got %T",
+							ids.TypeTomlTypeV3,
+							blob,
 						)
 					}
-					doc, err := golf_tb.DecodeTomlV3(skeleton)
+					// Same deterministic-order seeding as v2 (see
+					// tomlV2EncodeSkeleton).
+					doc, err := golf_tb.DecodeTomlV3(
+						tomlMapTablesEncodeSkeleton(v.UTIGroups, v.Formatters),
+					)
 					if err != nil {
 						return nil, err
 					}
-					if isV3 {
-						data := *v
-						data.UTIGroups = nil
-						*doc.Data() = data
-					}
+					data := *v
+					data.UTIGroups = nil
+					*doc.Data() = data
 					return doc.Encode()
 				},
 			},

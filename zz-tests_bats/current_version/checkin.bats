@@ -259,6 +259,27 @@ function checkin_zettel_typ_has_commit_hook { # @test
 	EOM
 }
 
+# A malformed !toml-type-v3 blob is rejected at commit rather than stored as a
+# type that silently decodes empty (v0-v2 blobs decode leniently).
+function checkin_malformed_typ_v3_is_rejected { # @test
+  cat >broken.type <<-EOM
+		---
+		! toml-type-v3
+		---
+
+		file-extension = "md
+		hooks = [unterminated
+	EOM
+
+  run_dodder checkin -delete broken.type
+  assert_failure
+  # the rest of the output is a stack trace with sandbox paths
+  assert_line 'malformed !toml-type-v3 blob: line 1, column 18: unterminated string'
+
+  run_dodder show '!broken:t'
+  assert_output ''
+}
+
 # #407: a !toml-type-v3 type's hooks receive the English-keyed object tables
 # (Tags/ObjectId/Type/Genre) instead of the German-keyed ones v0-v2 types get.
 function checkin_zettel_typ_v3_hook_gets_english_keys { # @test
