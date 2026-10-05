@@ -34,7 +34,7 @@ func MakeLuaSelfApplyV1(
 // error. It needs the dodder iso_duration package, so it is registered per-VM
 // here rather than in the lua package's sandbox setup.
 //
-// dodder_today() (the os.date("!%Y-%m-%d") replacement) is NOT registered here:
+// dodder_today() (the os.date("%Y-%m-%d") replacement) is NOT registered here:
 // it needs only the time stdlib, so the lua package installs it in every
 // sandboxed VM via applySandboxRestrictions — see go/lib/alfa/lua/stdlib.go.
 func registerDateHelpers(vm *lua.VM) {

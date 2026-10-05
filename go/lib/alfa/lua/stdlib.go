@@ -87,7 +87,8 @@ func applySandboxRestrictions(ls *lua.LState) {
 	}
 
 	// dodder_today() is the sandbox's supported replacement for
-	// os.date("!%Y-%m-%d") — the os proxy message above names it. It needs only
+	// os.date("%Y-%m-%d") (the local calendar date; it returned the UTC date
+	// before dodder#409) — the os proxy message above names it. It needs only
 	// the time stdlib, so it lives here in the lua package: that guarantees it
 	// in every sandboxed VM (not just the ones whose apply hook happens to
 	// register it) and restores it on repool. dodder_advance_date (ISO-8601
@@ -97,8 +98,17 @@ func applySandboxRestrictions(ls *lua.LState) {
 }
 
 func luaTodayDate(ls *lua.LState) int {
-	ls.Push(lua.LString(time.Now().UTC().Format("2006-01-02")))
+	ls.Push(lua.LString(todayDate(time.Now(), time.Local)))
 	return 1
+}
+
+// todayDate renders instant as a YYYY-MM-DD calendar date in location.
+// dodder_today() passes the host's local zone: the date is user-facing (a
+// completed-on stamp, a dated tag), so it must be the day the user is living
+// in, not the UTC day, which is already "tomorrow" in the evening west of UTC
+// (dodder#409).
+func todayDate(instant time.Time, location *time.Location) string {
+	return instant.In(location).Format(time.DateOnly)
 }
 
 // setBlockedGlobalProxy installs a table whose __index and __newindex

@@ -465,7 +465,7 @@ function actionable_task_dormant_on_done { # @test
   assert_output ''
 
   # visible with the dormant sigil, with no archive tag. The B1
-  # completed-date auto-stamp fills the empty `due` with today (UTC), so the
+  # completed-date auto-stamp fills the empty `due` with today (local date), so the
   # blob digest and `due` value are date-dependent -- match with --regexp.
   run_dodder show '!task?z'
   assert_success

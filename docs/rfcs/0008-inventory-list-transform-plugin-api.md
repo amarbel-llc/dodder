@@ -457,7 +457,7 @@ sandbox was hardened (issue #389) may need small updates:
 
 | Removed | Replacement |
 |---------|-------------|
-| `os.date("!%Y-%m-%d")` | `dodder_today()` — Go-side global, returns current UTC date as `YYYY-MM-DD` |
+| `os.date("%Y-%m-%d")` | `dodder_today()` — Go-side global, returns the current date in the host's local timezone as `YYYY-MM-DD` (UTC before #409) |
 | Any `os.*` access | Blocked; proxy raises `os is not available in dodder Lua scripts; use dodder_today() for the current date` |
 | Any `io.*` access | Blocked; proxy raises `io is not available in dodder Lua scripts` |
 | `dofile`, `loadfile`, `load`, `loadstring` | Blocked; no replacement — arbitrary code execution from the filesystem is not permitted |

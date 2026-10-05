@@ -4,6 +4,7 @@ package lua
 
 import (
 	"testing"
+	"time"
 
 	glua "github.com/yuin/gopher-lua"
 )
@@ -61,6 +62,30 @@ func TestSandbox_DodderTodayAvailable(t *testing.T) {
 
 	if err := ls.DoString(check); err != nil {
 		t.Errorf("dodder_today() after applySandboxRestrictions: %v", err)
+	}
+}
+
+// TestTodayDate_UsesLocalCalendarDate pins dodder#409: an evening instant west
+// of UTC is still "today" locally even though the UTC date has already rolled
+// over, and a morning instant east of UTC is already "tomorrow" relative to UTC.
+func TestTodayDate_UsesLocalCalendarDate(t *testing.T) {
+	// 2026-10-04 20:06 at UTC-04:00, the instant from the issue report.
+	instant := time.Date(2026, time.October, 5, 0, 6, 0, 0, time.UTC)
+
+	west := time.FixedZone("west", -4*60*60)
+	if got := todayDate(instant, west); got != "2026-10-04" {
+		t.Errorf("todayDate west of UTC: got %q, want %q", got, "2026-10-04")
+	}
+
+	if got := todayDate(instant, time.UTC); got != "2026-10-05" {
+		t.Errorf("todayDate in UTC: got %q, want %q", got, "2026-10-05")
+	}
+
+	// 2026-10-04 23:30 UTC is already 2026-10-05 08:30 at UTC+09:00.
+	lateUTC := time.Date(2026, time.October, 4, 23, 30, 0, 0, time.UTC)
+	east := time.FixedZone("east", 9*60*60)
+	if got := todayDate(lateUTC, east); got != "2026-10-05" {
+		t.Errorf("todayDate east of UTC: got %q, want %q", got, "2026-10-05")
 	}
 }
 

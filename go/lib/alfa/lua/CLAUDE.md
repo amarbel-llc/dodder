@@ -36,7 +36,7 @@ raise an actionable error message instead of the generic "attempt to index nil"
 Lua produces for absent globals. `__newindex` is required so a script cannot
 re-enable a blocked global by assigning through it (`io.open = fn`), which would
 otherwise raw-set the key and shadow `__index`. The `os` proxy names
-`dodder_today()` as the replacement for `os.date("!%Y-%m-%d")`.
+`dodder_today()` as the replacement for `os.date("%Y-%m-%d")`.
 
 ### Repool re-arming
 
@@ -55,8 +55,10 @@ loading anyway without the blocked `io`/`os`.
 
 **Go-side date globals:**
 
-- `dodder_today()` — returns current UTC date as `YYYY-MM-DD`; replaces
-  `os.date("!%Y-%m-%d")`. Registered by the lua package itself
+- `dodder_today()` — returns the current date in the host's local timezone as
+  `YYYY-MM-DD`; replaces `os.date("%Y-%m-%d")`. It returned the UTC date
+  before #409, which stamped evening completions west of UTC with tomorrow's
+  date. Registered by the lua package itself
   (`applySandboxRestrictions`, `stdlib.go`), so it is present in **every**
   sandboxed VM and restored on repool.
 - `dodder_advance_date(date, duration)` — advances a `YYYY-MM-DD` date by an
