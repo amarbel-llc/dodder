@@ -1991,6 +1991,140 @@ debug-take4-adopt-store-proof:
   [[ ! -e $stores/default-local-1 ]] || { echo "FAIL: a second local store appeared"; exit 1; }
   echo "PASS: take4 adopted the renamed store as its write store; fsck clean"
 
+# Take4 (#16): stage the handoff bundle for the real run on another host
+# (take4/handoff/). Copies the union manifest's list files in manifest order
+# (NN-<name>, so the order survives the copy), the freshly assembled
+# transform, the Yin/Yang id pools, and the expected counts from `attempt`
+# (its counts.tsv, DROP class counts, and plan size) that the remote
+# verification diffs against; writes SHA256SUMS over all of it. Leaves
+# handoff/justfile (the remote-side run recipes) untouched. Read-only
+# against everything outside take4/handoff.
+[group('consolidate')]
+consolidate-take4-stage-handoff attempt:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  just consolidate-build-transform
+  t4=/home/sasha/workspaces/take4
+  scratch=$t4/scratch/{{ attempt }}
+  out=$t4/handoff
+  [[ -s $scratch/counts.tsv ]] || { echo "no counts for {{ attempt }}"; exit 1; }
+  mkdir -p "$out"
+  rm -rf "$out/lists" "$out/expected"
+  mkdir -p "$out/lists" "$out/expected"
+  n=0
+  while IFS= read -r list; do
+    [[ -n $list ]] || continue
+    n=$((n + 1))
+    cp "$list" "$out/lists/$(printf '%02d' "$n")-$(basename "$list")"
+  done <"$t4/transform/manifest.txt"
+  cp "$t4/staged/take4-transform.lua" "$out/take4-transform.lua"
+  cp "$t4/transform/Yin" "$t4/transform/Yang" "$out/"
+  cp "$scratch/counts.tsv" "$out/expected/counts.tsv"
+  awk -F'\t' '$2=="DROP"{print $3}' "$scratch/report.tsv" | sort | uniq -c \
+    | awk '{ printf "%s\t%d\n", $2, $1 }' | sort >"$out/expected/drop-counts.tsv"
+  grep -E '^(union of|hooks skipped)' "$scratch/attempt.out" >"$out/expected/summary.txt"
+  entries=$(grep -cP '^(import|resolve-tai-reassign)\t' "$scratch/attempt.out" || true)
+  printf 'plan entries\t%s\n' "$entries" >>"$out/expected/summary.txt"
+  git rev-parse HEAD >"$out/expected/dodder-rev.txt"
+  ( cd "$out" && find lists expected take4-transform.lua Yin Yang -type f | sort | xargs sha256sum >SHA256SUMS )
+  echo "staged $n lists into $out"
+  du -sh "$out"; cat "$out/expected/summary.txt"; echo "dodder rev: $(cat "$out/expected/dodder-rev.txt")"
+
+# Take4 (#16): self-test the handoff bundle's own justfile
+# (take4/handoff/justfile) before it is sent to another host: lists its
+# recipes (a parse check) and runs its read-only `preflight` in a throwaway
+# XDG holding an empty stand-in `baikal`, with dodder built from HEAD (which
+# must be the staged expected/dodder-rev.txt). Nothing in the real XDG or
+# the bundle is touched.
+[group('debug')]
+debug-take4-handoff-selftest:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  bin=$(nix build --no-link --print-out-paths "git+file://$PWD?rev=$(git rev-parse HEAD)#dodder-debug") || { echo "nix build FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty build output path"; exit 1; }
+  handoff=/home/sasha/workspaces/take4/handoff
+  base=$(mktemp -d)
+  trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
+  export HOME=$base/home
+  export XDG_DATA_HOME=$HOME/.local/share XDG_CONFIG_HOME=$HOME/.config \
+    XDG_STATE_HOME=$HOME/.local/state XDG_CACHE_HOME=$HOME/.cache XDG_RUNTIME_DIR=$base/run
+  mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+  madder init -encryption generate baikal >/dev/null || { echo "FAIL: stand-in baikal"; exit 1; }
+  echo "==> recipes"; just -f "$handoff/justfile" -d "$handoff" --list --unsorted || exit 1
+  echo "==> preflight"
+  TAKE4_DODDER="$bin/bin/dodder" just -f "$handoff/justfile" -d "$handoff" preflight selftest
+  echo "preflight exit: $?"
+  echo "==> the store-id count the teardown recipe relies on"
+  madder cat-ids baikal | wc -l
+
+# Take4 (#16) rehearsal-teardown safety proof, in a throwaway XDG: is
+# `dodder deinit` of a user-scoped repo that ADOPTED a store
+# (-write-blob_store-id) safe for that store and for other user-scoped repos?
+# Mirrors the nikulin plan: an encrypted `baikal` store with content, a
+# bystander repo `other`, a rehearsal repo adopting baikal, then deinit of
+# the rehearsal. Reports what deinit removed and fails if baikal lost a
+# file, baikal's fsck fails, or the bystander repo stops working; finally
+# checks the real name can still be created afterwards.
+[group('debug')]
+debug-take4-deinit-keeps-adopted-store:
+  #!/usr/bin/env bash
+  set -uo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  base=$(mktemp -d)
+  trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
+  export HOME=$base/home
+  export XDG_DATA_HOME=$HOME/.local/share XDG_CONFIG_HOME=$HOME/.config \
+    XDG_STATE_HOME=$HOME/.local/state XDG_CACHE_HOME=$HOME/.cache XDG_RUNTIME_DIR=$base/run
+  mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+  stores=$XDG_DATA_HOME/madder/blob_stores
+  cd "$base"
+  printf 'one\ntwo\n' >yin; printf 'uno\ndos\ntres\n' >yang
+  snapshot() { ( cd "$HOME" && find . -mindepth 1 \( -type f -o -type l \) | sort ) >"$base/$1"; }
+
+  echo "==> 1. bystander repo 'other', and a source list"
+  dodder init -yin yin -yang yang -encryption none -exclude-default-type=false other >/dev/null || { echo "FAIL: init other"; exit 1; }
+  dodder new -repo_id other -edit=false -type md -description "bystander" -blob 'bystander body' >/dev/null || { echo "FAIL: new in other"; exit 1; }
+  dodder export -repo_id other -print-time=true '+?z,e,t' >list 2>/dev/null
+  [[ -s list ]] || { echo "export produced nothing"; exit 1; }
+
+  echo "==> 2. encrypted 'baikal' holding the source blobs"
+  madder init -encryption generate baikal >/dev/null || { echo "FAIL: init baikal"; exit 1; }
+  madder sync default-local baikal >/dev/null || { echo "FAIL: sync into baikal"; exit 1; }
+  before=$(find "$stores/baikal" -type f | wc -l)
+  echo "baikal files before rehearsal: $before"
+
+  echo "==> 3. rehearsal repo adopting baikal as its write store"
+  printf 'return dodder.list()\n' >noop.lua
+  dodder init-from-lists -encryption none -yin yin -yang yang -exclude-default-type=false \
+    -write-blob_store-id baikal -script noop.lua rehearsal list >/dev/null 2>&1 || { echo "FAIL: rehearsal init-from-lists"; exit 1; }
+  dodder show -repo_id rehearsal ':z'
+  during=$(find "$stores/baikal" -type f | wc -l)
+  echo "baikal files after rehearsal:  $during"
+  snapshot before.txt
+
+  echo "==> 4. deinit -force the rehearsal"
+  dodder deinit -force -repo_id rehearsal; echo "deinit exit: $?"
+  snapshot after.txt
+  echo "-- paths deinit removed (top-level groups):"
+  comm -23 "$base/before.txt" "$base/after.txt" | cut -d/ -f2-6 | sort | uniq -c | sort -rn | head -20
+  echo "-- stores left: $(ls "$stores" | tr '\n' ' ')"
+
+  echo "==> 5. checks"
+  fail=0
+  after=$(find "$stores/baikal" -type f 2>/dev/null | wc -l)
+  echo "baikal files after deinit:     $after"
+  [[ $after -eq $during ]] || { echo "FAIL: baikal lost or gained files across deinit ($during -> $after)"; fail=1; }
+  madder fsck baikal >/dev/null 2>&1 && echo "baikal fsck: ok" || { echo "FAIL: baikal fsck"; fail=1; }
+  dodder show -repo_id other ':z' && dodder fsck -repo_id other >/dev/null 2>&1 && echo "bystander repo: ok" || { echo "FAIL: bystander repo broken"; fail=1; }
+  if dodder show -repo_id rehearsal ':z' >/dev/null 2>&1; then echo "FAIL: rehearsal repo still answers"; fail=1; else echo "rehearsal repo: gone"; fi
+  echo "==> 6. the real name can be created afterwards, adopting baikal again"
+  dodder init-from-lists -encryption none -yin yin -yang yang -exclude-default-type=false \
+    -write-blob_store-id baikal -script noop.lua take4 list >/dev/null 2>&1 \
+    && dodder fsck -repo_id take4 >/dev/null 2>&1 && echo "take4 after rehearsal teardown: ok" || { echo "FAIL: take4 after teardown"; fail=1; }
+  [[ $fail -eq 0 ]] && echo "PASS: deinit of the rehearsal left baikal and the bystander repo intact" || { echo "RESULT: FAIL (see above)"; exit 1; }
+
 # Take4 (#16) host check: print every madder on PATH with its version and
 # this host's ssh ed25519 host-key fingerprint, so a peer host (nikulin)
 # can confirm the host key it trusted on first use and pick a madder that
