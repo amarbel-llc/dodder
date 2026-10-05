@@ -259,6 +259,50 @@ function checkin_zettel_typ_has_commit_hook { # @test
 	EOM
 }
 
+# #407: a !toml-type-v3 type's hooks receive the English-keyed object tables
+# (Tags/ObjectId/Type/Genre) instead of the German-keyed ones v0-v2 types get.
+function checkin_zettel_typ_v3_hook_gets_english_keys { # @test
+  cat >typ_with_hook.type <<-EOM
+		---
+		! toml-type-v3
+		---
+
+		hooks = """
+		return {
+		  on_new = function (child)
+		    assert(child["Etiketten"] == nil, "v3 hooks must not see German keys")
+		    child["Tags"]["on_new"] = true
+		    return nil
+		  end,
+		  on_pre_commit = function (child, mother)
+		    child["Tags"]["on_pre_commit"] = true
+		    return nil
+		  end,
+		}
+		"""
+	EOM
+
+  run_dodder checkin -delete typ_with_hook.type
+  assert_success
+  assert_output - <<-EOM
+		[!typ_with_hook @blake2b256-sq7nwcf547cu3dfplr4uyaw39pk9s83y8u7x0rj53mnq5md6su6sgccpzs !toml-type-v3]
+		          deleted [typ_with_hook.type]
+	EOM
+
+  run_dodder new -edit=false - <<-EOM
+		---
+		# test lua
+		! typ_with_hook
+		---
+
+		should add new etikett
+	EOM
+  assert_success
+  assert_output - <<-EOM
+		[two/uno @blake2b256-hhew85kxn9usmuqxalnupnt2jpwwlje3m68y6v0kyr4yqj9w49vq9w79lk !typ_with_hook "test lua" on_new on_pre_commit]
+	EOM
+}
+
 function checkin_zettel_with_komment { # @test
   run_dodder checkin -print-inventory_list=true -comment "message" one/uno.zettel
   assert_success

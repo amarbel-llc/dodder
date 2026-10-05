@@ -60,6 +60,10 @@ func (blob *TomlV1) GetStringLuaHooks() string {
 	return blob.Hooks
 }
 
+func (blob *TomlV1) GetLuaHookTableVersion() LuaHookTableVersion {
+	return LuaHookTableV1
+}
+
 func (blob *TomlV1) GetReferences() *ReferencesConfig {
 	return blob.References
 }

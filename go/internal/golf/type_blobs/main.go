@@ -17,6 +17,13 @@ type (
 	TomlV0                 = golf_tb.TomlV0
 	TomlV1                 = golf_tb.TomlV1
 	TomlV2                 = golf_tb.TomlV2
+	TomlV3                 = golf_tb.TomlV3
+	LuaHookTableVersion    = golf_tb.LuaHookTableVersion
+)
+
+const (
+	LuaHookTableV1 = golf_tb.LuaHookTableV1
+	LuaHookTableV2 = golf_tb.LuaHookTableV2
 )
 
 var (
@@ -33,11 +40,13 @@ var (
 	_ Blob = &TomlV0{}
 	_ Blob = &TomlV1{}
 	_ Blob = &TomlV2{}
+	_ Blob = &TomlV3{}
 )
 
 var (
 	DecodeTomlV0           = golf_tb.DecodeTomlV0
 	DecodeTomlV1           = golf_tb.DecodeTomlV1
 	DecodeTomlV2           = golf_tb.DecodeTomlV2
+	DecodeTomlV3           = golf_tb.DecodeTomlV3
 	DecodeReferencesConfig = golf_tb.DecodeReferencesConfig
 )

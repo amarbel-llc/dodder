@@ -17,17 +17,17 @@ var (
 	_ = strings.Contains
 )
 
-type tomlV2FieldsHandle struct {
+type tomlV3FieldsHandle struct {
 	node *cst.Node
 }
-type TomlV2Document struct {
-	data   TomlV2
+type TomlV3Document struct {
+	data   TomlV3
 	cstDoc *document.Document
 	model  *cst.Value
-	fields []tomlV2FieldsHandle
+	fields []tomlV3FieldsHandle
 }
 
-func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
+func DecodeTomlV3(input []byte) (*TomlV3Document, error) {
 	doc, err := document.Parse(input)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 		return nil, err
 	}
 
-	d := &TomlV2Document{
+	d := &TomlV3Document{
 		cstDoc: doc,
 		model:  model,
 	}
@@ -201,11 +201,11 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 	if _vFields, _ok := model.Get("fields"); _ok && _vFields.Kind == cst.VArray {
 		_vFields.MarkSeen()
 		d.data.Fields = make([]FieldDefinition, len(_vFields.Items))
-		d.fields = make([]tomlV2FieldsHandle, len(_vFields.Items))
+		d.fields = make([]tomlV3FieldsHandle, len(_vFields.Items))
 		for i := range _vFields.Items {
 			_eFields := &_vFields.Items[i]
 			_eFields.MarkSeen()
-			d.fields[i] = tomlV2FieldsHandle{node: _eFields.Node}
+			d.fields[i] = tomlV3FieldsHandle{node: _eFields.Node}
 			if _vFieldsName, _ok := _eFields.Get("name"); _ok && _vFieldsName.Kind == cst.VLeaf {
 				if _x, _xok := cst.ExtractString(_vFieldsName.Leaf); _xok {
 					d.data.Fields[i].Name = _x
@@ -279,11 +279,11 @@ func DecodeTomlV2(input []byte) (*TomlV2Document, error) {
 	return d, nil
 }
 
-func (d *TomlV2Document) Data() *TomlV2 {
+func (d *TomlV3Document) Data() *TomlV3 {
 	return &d.data
 }
 
-func (d *TomlV2Document) Encode() ([]byte, error) {
+func (d *TomlV3Document) Encode() ([]byte, error) {
 	if d.data.Binary != false {
 		if err := cst.SetAny(d.cstDoc.Root(), "binary", d.data.Binary); err != nil {
 			return nil, fmt.Errorf("%w", err)
@@ -448,30 +448,30 @@ func (d *TomlV2Document) Encode() ([]byte, error) {
 	return d.cstDoc.Bytes(), nil
 }
 
-func (d *TomlV2Document) Undecoded() []string {
+func (d *TomlV3Document) Undecoded() []string {
 	if d.model == nil {
 		return nil
 	}
 	return d.model.Undecoded()
 }
 
-func (d *TomlV2Document) Comment(key string) string {
+func (d *TomlV3Document) Comment(key string) string {
 	return d.cstDoc.GetComment(key)
 }
 
-func (d *TomlV2Document) SetComment(key, comment string) {
+func (d *TomlV3Document) SetComment(key, comment string) {
 	d.cstDoc.SetComment(key, comment)
 }
 
-func (d *TomlV2Document) InlineComment(key string) string {
+func (d *TomlV3Document) InlineComment(key string) string {
 	return d.cstDoc.GetInlineComment(key)
 }
 
-func (d *TomlV2Document) SetInlineComment(key, comment string) {
+func (d *TomlV3Document) SetInlineComment(key, comment string) {
 	d.cstDoc.SetInlineComment(key, comment)
 }
 
-func DecodeTomlV2Into(data *TomlV2, sub *cst.Value) error {
+func DecodeTomlV3Into(data *TomlV3, sub *cst.Value) error {
 	if _vBinary, _ok := sub.Get("binary"); _ok && _vBinary.Kind == cst.VLeaf {
 		if _x, _xok := cst.ExtractBool(_vBinary.Leaf); _xok {
 			data.Binary = _x
@@ -707,7 +707,7 @@ func DecodeTomlV2Into(data *TomlV2, sub *cst.Value) error {
 	return nil
 }
 
-func EncodeTomlV2From(data *TomlV2, doc *document.Document, container *cst.Node) error {
+func EncodeTomlV3From(data *TomlV3, doc *document.Document, container *cst.Node) error {
 	if data.Binary != false {
 		if err := cst.SetAny(container, "binary", data.Binary); err != nil {
 			return fmt.Errorf("%w", err)

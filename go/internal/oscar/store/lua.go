@@ -61,6 +61,28 @@ func (store *Store) MakeLuaVMPoolV1(
 	return vp, err
 }
 
+// MakeLuaVMPoolV2 is MakeLuaVMPoolV1 for a hook script written against the
+// English-keyed tables (sku_lua.LuaTableV2).
+func (store *Store) MakeLuaVMPoolV2(
+	self *sku.Transacted,
+	script string,
+) (vp sku_lua.LuaVMPoolV2, err error) {
+	b := store.envLua.MakeLuaVMPoolBuilder().
+		WithScript(script).
+		WithApply(store.makeHookApplyV2(self))
+
+	var lvmp *lua.VMPool
+
+	if lvmp, err = b.Build(); err != nil {
+		err = errors.Wrap(err)
+		return vp, err
+	}
+
+	vp = sku_lua.MakeLuaVMPoolV2(lvmp, self)
+
+	return vp, err
+}
+
 func (store *Store) MakeLuaVMPoolWithReader(
 	selbst *sku.Transacted,
 	r io.Reader,

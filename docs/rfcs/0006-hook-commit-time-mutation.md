@@ -100,6 +100,26 @@ A hook MUST NOT:
 Whether `Typ` (retyping) is mutable here is an open question (see below); this
 RFC does not permit it.
 
+### Key names follow the type-blob version
+
+The key names a hook sees are fixed by the version of the type blob that
+carries the hook script (dodder#407), so a committed hook keeps the names it
+was written for:
+
+  Type blob                        Genre / id / type                   Tags          Self table
+  -------------------------------- ----------------------------------- ------------- ------------
+  `!toml-type-v0` through `v2`     `Gattung` / `Kennung` / `Typ`       `Etiketten`   `Selbst`
+  `!toml-type-v3` onward           `Genre` / `ObjectId` / `Type`       `Tags`        `Self`
+
+`Fields` carries the same name and behaviour in both. The implicit-tags table
+is `EtikettenImplicit` in the first row and `TagsImplicit` in the second.
+Everything else in this RFC applies to both: the same stages, the same
+capability matrix, the same write-back. Examples in this document use the
+`v0`--`v2` names.
+
+The repo-wide config-mutable hook script is not carried by a type blob and
+receives the `v0`--`v2` names regardless of the committed object's type.
+
 ## Write-back model (the bounded pass)
 
 **Scope (Phase 1).** This RFC's initial scope is **field write-back only**: a

@@ -60,6 +60,7 @@ func (store *Store) tryNewHook(
 		options,
 		typeObject,
 		script,
+		blob.GetLuaHookTableVersion(),
 		"on_new",
 	); err != nil {
 		err = errors.Wrapf(err, "Hook: %#v", script)
@@ -123,6 +124,7 @@ func (store *Store) TryFormatHook(
 		sku.CommitOptions{},
 		typeObject,
 		script,
+		blob.GetLuaHookTableVersion(),
 		"on_format",
 	); err != nil {
 		err = errors.Wrapf(err, "Hook: %#v", script)
@@ -134,9 +136,15 @@ func (store *Store) TryFormatHook(
 
 // commitHookScript is one named lua hook script resolved for a commit: either
 // the type object's own hook script or the repo's config-mutable hook script.
+//
+// tableVersion is the object-table projection the script was written against:
+// a type's own script follows its type-blob version (!toml-type-v3 onward gets
+// the English-keyed tables); the config-mutable script has no such version and
+// stays on the German-keyed tables (dodder#407).
 type commitHookScript struct {
-	script      string
-	description string
+	script       string
+	description  string
+	tableVersion type_blobs.LuaHookTableVersion
 }
 
 // resolveCommitHookScripts loads a commit's type object once and extracts both
@@ -191,10 +199,15 @@ func (store *Store) resolveCommitHookScripts(
 	}
 
 	scripts = []commitHookScript{
-		{script: blob.GetStringLuaHooks(), description: "type"},
 		{
-			script:      store.GetConfigStore().GetConfig().Hooks,
-			description: "config-mutable",
+			script:       blob.GetStringLuaHooks(),
+			description:  "type",
+			tableVersion: blob.GetLuaHookTableVersion(),
+		},
+		{
+			script:       store.GetConfigStore().GetConfig().Hooks,
+			description:  "config-mutable",
+			tableVersion: type_blobs.LuaHookTableV1,
 		},
 	}
 
@@ -233,6 +246,7 @@ func (store *Store) tryNamedCommitHooks(
 			options,
 			typeObject,
 			h.script,
+			h.tableVersion,
 			name,
 		); err != nil {
 			err = errors.Wrapf(err, "Hook: %#v", h)
@@ -354,8 +368,13 @@ func (store *Store) tryHookWithName(
 	options sku.CommitOptions,
 	self *sku.Transacted,
 	script string,
+	tableVersion type_blobs.LuaHookTableVersion,
 	name string,
 ) (fieldsChanged bool, err error) {
+	if tableVersion == type_blobs.LuaHookTableV2 {
+		return store.tryHookWithNameV2(child, mother, self, script, name)
+	}
+
 	var vp sku_lua.LuaVMPoolV1
 
 	if vp, err = store.MakeLuaVMPoolV1(self, script); err != nil {
@@ -437,6 +456,94 @@ func (store *Store) tryHookWithName(
 		child,
 		vm.LState,
 		tableKinder,
+	); err != nil {
+		err = errors.Wrap(err)
+		return fieldsChanged, err
+	}
+
+	return fieldsChanged, err
+}
+
+// tryHookWithNameV2 is tryHookWithName for a hook script written against the
+// English-keyed tables: the child and mother are projected via
+// sku_lua.ToLuaTableV2 and the child is read back via sku_lua.FromLuaTableV2,
+// which carries the same hook-safe write-back as FromLuaTableV1 (genre, id,
+// tags, fields; Type and Blob withheld, #319).
+func (store *Store) tryHookWithNameV2(
+	child *sku.Transacted,
+	mother *sku.Transacted,
+	self *sku.Transacted,
+	script string,
+	name string,
+) (fieldsChanged bool, err error) {
+	var vmPool sku_lua.LuaVMPoolV2
+
+	if vmPool, err = store.MakeLuaVMPoolV2(self, script); err != nil {
+		err = errors.Wrap(err)
+		return fieldsChanged, err
+	}
+
+	vm, vmRepool := vmPool.GetWithRepool()
+	defer vmRepool()
+
+	var hooksTable *lua.LTable
+
+	if hooksTable, err = vm.GetTopTableOrError(); err != nil {
+		err = errors.Wrap(err)
+		return fieldsChanged, err
+	}
+
+	hookFunction := vm.GetField(hooksTable, name)
+
+	if hookFunction.Type() != lua.LTFunction {
+		return fieldsChanged, err
+	}
+
+	tableChild, tableChildRepool := vm.TablePool.GetWithRepool()
+	defer tableChildRepool()
+
+	sku_lua.ToLuaTableV2(child, vm.LState, tableChild)
+
+	var tableMother *sku_lua.LuaTableV2
+
+	if mother != nil {
+		var tableMotherRepool interfaces.FuncRepool
+		tableMother, tableMotherRepool = vm.TablePool.GetWithRepool()
+		defer tableMotherRepool()
+
+		sku_lua.ToLuaTableV2(mother, vm.LState, tableMother)
+	}
+
+	vm.Push(hookFunction)
+	vm.Push(tableChild.Transacted)
+
+	if tableMother != nil {
+		vm.Push(tableMother.Transacted)
+	} else {
+		vm.Push(lua.LNil)
+	}
+
+	// Same re-entrancy guard as tryHookWithName (RFC 0006 cycle guarantee #3).
+	store.hookDepth.Add(1)
+	defer store.hookDepth.Add(-1)
+
+	if err = vm.PCall(2, 1, nil); err != nil {
+		err = errors.Wrap(err)
+		return fieldsChanged, err
+	}
+
+	retval := vm.LState.Get(1)
+	vm.Pop(1)
+
+	if retval.Type() != lua.LTNil {
+		err = errors.ErrorWithStackf("lua error: %s", retval)
+		return fieldsChanged, err
+	}
+
+	if fieldsChanged, err = sku_lua.FromLuaTableV2(
+		child,
+		vm.LState,
+		tableChild,
 	); err != nil {
 		err = errors.Wrap(err)
 		return fieldsChanged, err

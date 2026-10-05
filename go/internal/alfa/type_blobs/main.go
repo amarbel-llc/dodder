@@ -364,9 +364,24 @@ type WithFormatterUTIGroups interface {
 	GetFormatterUTIGroups() map[string]UTIGroup
 }
 
+// LuaHookTableVersion names the object-table projection a type's lua hook
+// script is written against. It is fixed per type-blob version, so a committed
+// hook keeps the key names it was written for (decodable-forever).
+type LuaHookTableVersion int
+
+const (
+	// LuaHookTableV1 is the German-keyed projection
+	// (Gattung/Kennung/Typ/Etiketten): !toml-type-v0 through v2.
+	LuaHookTableV1 LuaHookTableVersion = iota + 1
+	// LuaHookTableV2 is the English-keyed projection
+	// (Genre/ObjectId/Type/Tags): !toml-type-v3 onward.
+	LuaHookTableV2
+)
+
 // TODO make typed hooks
 type WithStringLuaHooks interface {
 	GetStringLuaHooks() string
+	GetLuaHookTableVersion() LuaHookTableVersion
 }
 
 type WithReferences interface {

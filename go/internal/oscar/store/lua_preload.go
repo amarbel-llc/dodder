@@ -29,6 +29,21 @@ func (store *Store) makeHookApply(
 	}
 }
 
+// makeHookApplyV2 is makeHookApply for a hook script written against the
+// English-keyed tables (a !toml-type-v3 type's hooks): the self table is the
+// V2 projection, exposed as `Self`.
+func (store *Store) makeHookApplyV2(
+	self *sku.Transacted,
+) interfaces.FuncIter[*lua.VM] {
+	selfApply := tag_blobs.MakeLuaSelfApplyV2(self)
+	return func(vm *lua.VM) (err error) {
+		if err = selfApply(vm); err != nil {
+			return err
+		}
+		return store.preloadBlobReferenceModules(vm, self)
+	}
+}
+
 // preloadBlobReferenceModules registers every `.lua` blob reference on self
 // (the type object) as a lua module named by its alias basename, so a hook
 // script can `require("<basename>")` it. Resolution reads the referenced blob

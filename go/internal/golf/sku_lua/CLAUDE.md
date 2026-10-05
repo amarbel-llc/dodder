@@ -53,10 +53,14 @@ filter path is read-only); kept as the V2 write-back counterpart.
 The audit's gap is closed on the V2 side: `LuaTableV2` projects Fields,
 `FromLuaTableV2` writes fields back (hook-safe: Type and Blob still withheld,
 #319), and `ListTransformV2`/`FromLuaTableTransformV2` give the transform an
-English-keyed binding. V1 is NOT yet deprecated and every V1 user above is
-still on V1: migrating hooks, tag filters, `exec-lua`, and `format_type`, and
-renaming keys in RFC-0006, wait on the take4 consolidation (#16), whose
-transform script is written against the V1 keys. Until then do not rename or
+English-keyed binding.
+
+Commit hooks pick their table by the type-blob version carrying the script
+(`type_blobs.Blob.GetLuaHookTableVersion`): `!toml-type-v3` hooks run through
+`store.tryHookWithNameV2` on V2 tables, `v0`--`v2` hooks stay on V1 forever
+(committed hooks must keep the keys they were written for). Still on V1 with
+no V2 path yet: the config-mutable hook script, `exec-lua`, `format_type`, and
+`!toml-tag-v1` filters. V1 therefore cannot be removed; do not rename or
 remove V1 keys or change what `dodder.list()` returns. The V1 and V2
-transform files duplicate each other on purpose (V1 files are left untouched
-to avoid churn under take4); collapse them when V1 is retired.
+transform files duplicate each other on purpose; collapse them only if V1 is
+ever retired.

@@ -8,6 +8,7 @@ import (
 	"code.linenisgreat.com/dodder/go/internal/0/hyphence"
 	golf_tb "code.linenisgreat.com/dodder/go/internal/alfa/type_blobs"
 	"code.linenisgreat.com/dodder/go/internal/bravo/ids"
+	"code.linenisgreat.com/dodder/go/lib/bravo/script_config"
 	"code.linenisgreat.com/purse-first/libs/dewey/pkgs/interfaces"
 	"code.linenisgreat.com/tommy/pkg/cst"
 )
@@ -42,10 +43,19 @@ type TypedBlob = hyphence.TypedBlob[Blob]
 // the seeded tables in place instead of appending in map-iteration order.
 // Delete once tommy sorts map keys on encode.
 func tomlV2EncodeSkeleton(blob *TomlV2) []byte {
+	return tomlMapTablesEncodeSkeleton(blob.UTIGroups, blob.Formatters)
+}
+
+// tomlMapTablesEncodeSkeleton is the skeleton shared by every type-blob
+// version that carries the uti-groups and formatters map tables (v2, v3).
+func tomlMapTablesEncodeSkeleton(
+	utiGroups map[string]UTIGroup,
+	formatters map[string]script_config.WithOutputFormat,
+) []byte {
 	var sb strings.Builder
 
-	writeSortedUTIGroupTables(&sb, blob.UTIGroups)
-	writeSortedTableHeaders(&sb, "formatters", blob.Formatters)
+	writeSortedUTIGroupTables(&sb, utiGroups)
+	writeSortedTableHeaders(&sb, "formatters", formatters)
 
 	return []byte(sb.String())
 }
@@ -184,6 +194,40 @@ var CoderToTypedBlob = hyphence.CoderToTypedBlob[Blob]{
 						// re-add the inner keys in random order (tommy#139
 						// one level deeper). The encoder leaves the seeded
 						// CST tables untouched when UTIGroups is empty.
+						data.UTIGroups = nil
+						*doc.Data() = data
+					}
+					return doc.Encode()
+				},
+			},
+			ids.TypeTomlTypeV3: hyphence.CoderTommy[
+				Blob,
+				*Blob,
+			]{
+				Decode: func(b []byte) (Blob, error) {
+					doc, err := golf_tb.DecodeTomlV3(b)
+					if err != nil {
+						return &TomlV3{}, nil
+					}
+					return doc.Data(), nil
+				},
+				Encode: func(blob Blob) ([]byte, error) {
+					// Same deterministic-order seeding as v2 (see
+					// tomlV2EncodeSkeleton).
+					var skeleton []byte
+					v, isV3 := blob.(*TomlV3)
+					if isV3 {
+						skeleton = tomlMapTablesEncodeSkeleton(
+							v.UTIGroups,
+							v.Formatters,
+						)
+					}
+					doc, err := golf_tb.DecodeTomlV3(skeleton)
+					if err != nil {
+						return nil, err
+					}
+					if isV3 {
+						data := *v
 						data.UTIGroups = nil
 						*doc.Data() = data
 					}
