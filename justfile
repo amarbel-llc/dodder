@@ -1775,6 +1775,74 @@ consolidate-rsyncnet-delta listing="/home/sasha/workspaces/take4/rsync-sweep/lis
   head -20 "$out" | awk -F'\t' '{printf "  %10s  %s\n", $2, $1}' | numfmt --field=1 --to=iec --padding=10 2>/dev/null || head -20 "$out"
   echo "full list: $out"
 
+# Take4 (#16) hook probe, in a throwaway XDG: do the built-in actionable
+# types' commit hooks fire on objects committed by init-from-lists? A script
+# adds a done !task with NO due (the built-in hook stamps an empty due with
+# today on done/cancelled) and a body-less todo !task, commits them through
+# a real (non -plan-only) init-from-lists, and shows the projected fields: a
+# due on the done task means the hook ran. Also proves the built-in reader
+# projects fields from body-less TOML.
+#
+# type_in_list=true: the SOURCE repo is also genesised with the built-in
+# actionable types, so the exported list carries the !task type object into
+# the import batch -- isolates "type committed only at genesis" vs "type in
+# the batch" for the type-lock failure seen with the default (false).
+[group('debug')]
+debug-take4-hooks-on-import type_in_list="false":
+  #!/usr/bin/env bash
+  set -uo pipefail
+  bin=$(nix build --no-link --print-out-paths .#dodder-debug) || { echo "nix build .#dodder-debug FAILED (see above)"; exit 1; }
+  [[ -n $bin ]] || { echo "empty .#dodder-debug build output path"; exit 1; }
+  export PATH="$bin/bin:$PATH"
+  base=$(mktemp -d)
+  trap 'chmod -R u+w "$base" 2>/dev/null; rm -rf "$base"' EXIT
+  export XDG_DATA_HOME=$base/data XDG_CONFIG_HOME=$base/config \
+    XDG_STATE_HOME=$base/state XDG_CACHE_HOME=$base/cache XDG_RUNTIME_DIR=$base/run
+  mkdir -p "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
+  cd "$base"
+  printf 'one\ntwo\n' >yin; printf 'uno\ndos\ntres\ncuatro\n' >yang
+  echo "==> source repo with one note, exported"
+  src_flags=()
+  [[ {{ type_in_list }} == true ]] && src_flags=(-include-builtin-actionable-types)
+  dodder init -yin yin -yang yang -encryption none -exclude-default-type=false "${src_flags[@]}" src >/dev/null || { echo "FAIL: init src"; exit 1; }
+  echo "==> types in the exported list:"
+  dodder new -repo_id src -edit=false -type md -description "a note" -blob 'note body' >/dev/null || { echo "FAIL: new note"; exit 1; }
+  dodder export -repo_id src -print-time=true '+?z,e,t' >list 2>/dev/null
+  [[ -s list ]] || { echo "export produced nothing"; exit 1; }
+  grep -oE '^\[![a-z_-]+' list | sort -u
+  printf '%s\n' \
+    'local l = dodder.list()' \
+    'local done = l:add()' \
+    'done.Typ = "task"' \
+    'done.Bezeichnung = "done no due"' \
+    'done.Blob = blobs.write("status = \"done\"\n")' \
+    'local todo = l:add()' \
+    'todo.Typ = "task"' \
+    'todo.Bezeichnung = "todo bodyless"' \
+    'todo.Blob = blobs.write("status = \"todo\"\npriority = \"p2\"\n")' \
+    'local chore = l:add()' \
+    'chore.Typ = "chore"' \
+    'chore.Bezeichnung = "done weekly chore"' \
+    'chore.Blob = blobs.write("status = \"done\"\nrecurrence = \"1w\"\ndue = \"2020-01-06\"\n")' \
+    'return l' >s.lua
+  echo "==> init-from-lists (real commit) with built-in actionable types"
+  dodder init-from-lists -encryption none -yin yin -yang yang \
+    -include-builtin-actionable-types -exclude-default-type=false \
+    -script s.lua dst list
+  echo "exit: $?"
+  echo "==> !task (active)"; dodder show -repo_id dst '!task'
+  echo "==> !task incl. dormant"; dodder show -repo_id dst '!task?z'
+  echo "==> !chore incl. dormant (written: done, 1w, due 2020-01-06)"; dodder show -repo_id dst '!chore?z'
+  echo "==> committed blobs (written vs stored: a due/priority/status change = hook write-back)"
+  for q in '!task?z' '!chore?z'; do
+    dodder show -repo_id dst -format json "$q" 2>/dev/null \
+      | jq -r '"\(.description)\t\(."blob-id")"' \
+      | while IFS=$'\t' read -r desc blob; do
+          echo "--- $desc ($blob)"; madder cat "$blob" 2>/dev/null
+        done
+  done
+  echo "==> today: $(date +%F)"
+
 # Take4 (#16) archive-zettel probe, in a throwaway XDG: can an archive
 # (take4/archives/<class>.inventory_list, an inventory_list-v1 file) become a
 # zettel of type `type` whose blob is the list? Writes the blob with madder,

@@ -34,13 +34,21 @@ func Genesis(
 	repo.Must(errors.MakeFuncContextFromFuncErr(repo.Reset))
 	repo.Must(errors.MakeFuncContextFromFuncErr(repo.envRepo.ResetCache))
 
-	if err := repo.initDefaultTypeAndConfig(bigBang); err != nil {
-		repo.Cancel(err)
-	}
-
+	// Reset the indexes BEFORE the genesis commit, never after it:
+	// ResetIndexes closes the object probe pages without reopening them, so a
+	// post-commit reset hid every genesis object from by-id lookups for the
+	// rest of the process (init-from-lists failed to lock objects to the
+	// genesis !task type), and the next in-process flush rewrote the probe
+	// pages without the genesis rows. A pre-commit reset still starts the
+	// newborn from empty indexes; the genesis commit's own flush reopens the
+	// pages.
 	repo.Must(errors.MakeFuncContextFromFuncErr(repo.Lock))
 	repo.Must(errors.MakeFuncContextFromFuncErr(repo.GetStore().ResetIndexes))
 	repo.Must(errors.MakeFuncContextFromFuncErr(repo.Unlock))
+
+	if err := repo.initDefaultTypeAndConfig(bigBang); err != nil {
+		repo.Cancel(err)
+	}
 
 	return repo
 }

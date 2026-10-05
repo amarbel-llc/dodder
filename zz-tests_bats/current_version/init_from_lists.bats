@@ -286,6 +286,52 @@ function init_from_lists_adopts_named_write_store { # @test
   assert_success
 }
 
+# take4 (#16): objects whose type exists only because GENESIS created it
+# (here the built-in !task from -include-builtin-actionable-types; the source
+# list carries no !task) commit in the same init-from-lists run, and the
+# genesis objects stay resolvable by id in later runs (a later `new -type
+# task` locks against the genesis !task). Genesis used to reset the indexes
+# AFTER its own commit, closing the object probe pages in-process: same-run
+# lookups failed ("failed to write type lock") and the next flush rewrote the
+# pages without the genesis rows.
+function init_from_lists_genesis_types_resolve_in_run { # @test
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+
+		local task = l:add()
+		task.Typ = "task"
+		task.Bezeichnung = "added task"
+		task.Blob = blobs.write("status = \"todo\"\npriority = \"p2\"\n")
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -include-builtin-actionable-types \
+    -script "$script" \
+    -blob-source shared \
+    take4 \
+    "$list"
+  assert_success
+
+  run_dodder show -repo_id take4 '!task'
+  assert_success
+  assert_output - <<-'EOM'
+		[two/uno @blake2b256-5ztwtk8e0c2jpm6ycda6jwl253u0237uax678qgekrzvlt0dg4lsnjxpvz !task "added task" status=todo priority=p2 due=]
+	EOM
+
+  run_dodder new -repo_id take4 -edit=false -type task -description "later task" \
+    -blob 'status = "todo"'
+  assert_success
+
+  run_dodder fsck -repo_id take4
+  assert_success
+}
+
 # take4 (#16): -removed-list archives what the script dropped. Every version of
 # one/dos is tagged with a drop-class marker and removed; the newborn holds only
 # one/uno, and the removed list carries one/dos with the marker the script set
