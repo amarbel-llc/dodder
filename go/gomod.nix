@@ -37,7 +37,7 @@
   chrest,
   system,
 }:
-{
+rec {
   # mkGoPkgs defaults drop non-Go files; assets `//go:embed`ed at
   # compile time would otherwise vanish from the filtered source tree:
   # the pandoc filters/defaults under
@@ -112,4 +112,23 @@
       subPath = "go";
     };
   };
+
+  # The bare-`go` escape hatches (`just go/test-go-pkg`,
+  # `just generate-seed-types`) cannot resolve these modules through the
+  # module proxy once a producer drops its committed go.mod (tommy, chrest:
+  # igloo FDR 0008) — Go then compiles the fetched tree as go1.16. This file
+  # holds one go.work `replace` line per bridged module, pointing at the same
+  # go-pkgs store path the nix builds compile, so a throwaway go.work built
+  # from it gives bare `go` the identical sources. Consumed by the
+  # `_go-work-flake-inputs` recipe in go/justfile.
+  goWorkReplaces = pkgs.writeText "dodder-go-work-replaces" (
+    pkgs.lib.concatStrings (
+      pkgs.lib.mapAttrsToList (
+        module: input:
+        "replace ${module} => ${input.src}${
+          pkgs.lib.optionalString (input ? subPath) "/${input.subPath}"
+        }\n"
+      ) goFlakeInputs
+    )
+  );
 }

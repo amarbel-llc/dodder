@@ -286,6 +286,9 @@
       {
         packages = result.packages // {
           inherit go-pkgs go-pkgs-test;
+          # go.work `replace` lines for the bridged modules; see
+          # goWorkReplaces in go/gomod.nix.
+          go-work-replaces = gomod.goWorkReplaces;
           # Dogfood the hook wrappers: `nix build .#conformist-pre-commit`
           # forces the hook-eval output to build and is the same wrapper the
           # devShell puts on PATH (mirrors madder).

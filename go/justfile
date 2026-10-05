@@ -645,8 +645,34 @@ check: check-go-vuln check-go-vet check-go-repool check-go-seqerror check-go-def
 test-go-unit:
   nix build .#dodder-go-test -L
 
+# Writes a throwaway go.work that `use`s this module and `replace`s every
+# flake-input-bridged module (tommy, madder, piggy, ...) with the go-pkgs
+# store path the nix builds compile (`.#go-work-replaces`, go/gomod.nix), and
+# prints its path. Bare `go` cannot fetch those modules from the proxy once a
+# producer has no committed go.mod (igloo FDR 0008), so the bare-go recipes
+# run with GOWORK pointing here. The committed go.mod is never rewritten.
+#
+# write a temp go.work resolving bridged modules from the flake inputs
+[private]
+_go-work-flake-inputs:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  replaces=$(nix build --no-link --print-out-paths '..#go-work-replaces')
+  [[ -n $replaces ]] || { echo "empty .#go-work-replaces build output path" >&2; exit 1; }
+  dir=$(mktemp -d)
+  {
+    echo "go $(sed -n 's/^go //p' go.mod)"
+    echo
+    echo "use $(pwd)"
+    echo
+    cat "$replaces"
+  } >"$dir/go.work"
+  echo "$dir/go.work"
+
+# Unsandboxed per-package test loop. Bridged modules resolve from the flake
+# inputs via a temp go.work (see _go-work-flake-inputs).
 test-go-pkg pkg *flags:
-  go test -tags test,debug -v -count=1 {{flags}} {{pkg}}
+  GOWORK="$(just _go-work-flake-inputs)" go test -tags test,debug -v -count=1 {{flags}} {{pkg}}
 
 test-go: test-go-unit
 

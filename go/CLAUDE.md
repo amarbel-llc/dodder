@@ -39,8 +39,15 @@ tier ordering).
   the source of truth**:
   every nix build (release, debug, `dodder-go-test`, race, cover, bats lanes)
   compiles them from the flake-input source via `goFlakeInputs`, so the `go.mod`
-  rev is a vestigial shadow the recipe keeps aligned only for the bare-`go test`
-  (`test-go-pkg`) and devshell-`go build` escape hatches. See `go/gomod.nix`.
+  rev is a vestigial shadow. The bare-`go` recipes (`test-go-pkg`,
+  `generate-seed-types`) do not use it either: they run with a throwaway
+  `go.work` that `replace`s every bridged module with the same go-pkgs store
+  path the nix builds compile (`.#go-work-replaces`, built by the
+  `_go-work-flake-inputs` recipe). That is required, not a nicety: producers
+  without a committed `go.mod` (tommy, chrest; igloo FDR 0008) cannot be
+  fetched by the Go module proxy at all. A hand-typed `go build`/`go test`
+  outside those recipes still resolves through `go.mod` and will fail on such
+  modules. See `go/gomod.nix`.
   The project has a single flake at the repo root; there is no `go/flake.nix`.
 
 ### Unit Test Conventions
