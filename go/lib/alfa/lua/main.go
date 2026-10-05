@@ -23,4 +23,9 @@ type (
 	LGFunction    = lua.LGFunction
 )
 
-var LNil = lua.LNil
+// gopher-lua declares these as variables, not constants.
+var (
+	LNil   = lua.LNil
+	LTrue  = lua.LTrue
+	LFalse = lua.LFalse
+)

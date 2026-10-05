@@ -30,6 +30,13 @@ type StoreOptions struct {
 	ApplyProtoType     bool // TODO remove
 	MergeCheckedOut    bool
 	RunHooks           bool
+	// SkipLuaHooks suppresses ONLY the lua hook stages (on_new,
+	// on_pre_commit, on_commit_fields) of a commit that otherwise runs with
+	// RunHooks: reference discovery, fields projection, and field validation
+	// still run and still fail the commit. Set per object by the transform
+	// pipeline (a script's `object.SkipHooks = true`), e.g. so importing a
+	// historical done !chore does not advance its due date.
+	SkipLuaHooks bool
 	// ProjectFields re-runs only the type's fields-reader projection, without
 	// hooks. Projected fields aren't persisted in inventory lists, so reindex
 	// must re-project them or type-declared dormancy (FDR 0025) is lost.

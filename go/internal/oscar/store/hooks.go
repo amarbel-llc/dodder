@@ -13,7 +13,7 @@ func (store *Store) tryNewHook(
 	child *sku.Transacted,
 	options sku.CommitOptions,
 ) (err error) {
-	if !options.RunHooks {
+	if !options.RunHooks || options.SkipLuaHooks {
 		return err
 	}
 
@@ -154,7 +154,7 @@ func (store *Store) resolveCommitHookScripts(
 	child *sku.Transacted,
 	options sku.CommitOptions,
 ) (typeObject *sku.Transacted, scripts []commitHookScript, err error) {
-	if !options.RunHooks {
+	if !options.RunHooks || options.SkipLuaHooks {
 		return typeObject, scripts, err
 	}
 
@@ -216,7 +216,7 @@ func (store *Store) tryNamedCommitHooks(
 	scripts []commitHookScript,
 	name string,
 ) (fieldsChanged bool, err error) {
-	if !options.RunHooks || typeObject == nil {
+	if !options.RunHooks || options.SkipLuaHooks || typeObject == nil {
 		return fieldsChanged, err
 	}
 
@@ -263,7 +263,8 @@ func (store *Store) tryPreCommitHook(
 	selbst *sku.Transacted,
 	script string,
 ) (err error) {
-	if !storeOptions.RunHooks || !storeOptions.AddToInventoryList {
+	if !storeOptions.RunHooks || storeOptions.SkipLuaHooks ||
+		!storeOptions.AddToInventoryList {
 		return err
 	}
 

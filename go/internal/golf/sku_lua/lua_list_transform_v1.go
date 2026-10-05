@@ -24,6 +24,10 @@ type ListTransformV1 struct {
 	entries       []listTransformEntryV1
 	handleToIndex map[*lua.LTable]int
 
+	// skipsHooks holds the objects whose script set SkipHooks = true,
+	// recorded at read-back.
+	skipsHooks map[*sku.Transacted]struct{}
+
 	repools []func()
 }
 
@@ -46,6 +50,7 @@ func MakeListTransformV1(
 		tablePool:     MakeLuaTablePoolV1(vm),
 		handle:        vm.NewTable(),
 		handleToIndex: make(map[*lua.LTable]int, len(objects)),
+		skipsHooks:    make(map[*sku.Transacted]struct{}),
 		repools:       make([]func(), 0, len(objects)),
 	}
 
@@ -97,6 +102,10 @@ func (binding *ListTransformV1) appendObject(
 	}
 
 	binding.vm.SetField(table.Transacted, "References", references)
+
+	// Transform-only, writable: SkipHooks = true commits this object without
+	// its lua hook stages (see SkipsHooks).
+	binding.vm.SetField(table.Transacted, "SkipHooks", lua.LFalse)
 
 	binding.handleToIndex[table.Transacted] = len(binding.entries)
 	binding.entries = append(binding.entries, listTransformEntryV1{
@@ -208,10 +217,26 @@ func (binding *ListTransformV1) writeBackEntries(removed bool) (
 			return objects, err
 		}
 
+		if binding.vm.GetField(entry.table.Transacted, "SkipHooks") == lua.LTrue {
+			binding.skipsHooks[entry.object] = struct{}{}
+		} else {
+			delete(binding.skipsHooks, entry.object)
+		}
+
 		objects = append(objects, entry.object)
 	}
 
 	return objects, err
+}
+
+// SkipsHooks reports whether the script set `SkipHooks = true` on object (one
+// of the objects Objects() returned): the consumer commits it without its lua
+// hook stages -- on_new, on_pre_commit, on_commit_fields -- while reference
+// discovery, fields projection, and validation still run. Meaningful only
+// after Objects().
+func (binding *ListTransformV1) SkipsHooks(object *sku.Transacted) bool {
+	_, skips := binding.skipsHooks[object]
+	return skips
 }
 
 func (binding *ListTransformV1) Repool() {

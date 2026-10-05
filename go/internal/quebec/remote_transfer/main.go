@@ -399,6 +399,16 @@ func (importer importer) importLeaf(
 func (importer importer) importNewObject(
 	object *sku.Transacted,
 ) (err error) {
+	return importer.importNewObjectWithOptions(object, false)
+}
+
+// importNewObjectWithOptions commits object with the importer's store
+// options; skipLuaHooks additionally suppresses this one object's lua hook
+// stages (a plan entry's SkipLuaHooks).
+func (importer importer) importNewObjectWithOptions(
+	object *sku.Transacted,
+	skipLuaHooks bool,
+) (err error) {
 	options := sku.CommitOptions{
 		Clock:              object,
 		StoreOptions:       importer.storeOptions,
@@ -406,6 +416,7 @@ func (importer importer) importNewObject(
 	}
 
 	options.UpdateTai = false
+	options.SkipLuaHooks = options.SkipLuaHooks || skipLuaHooks
 
 	if err = importer.committer.Commit(
 		object,

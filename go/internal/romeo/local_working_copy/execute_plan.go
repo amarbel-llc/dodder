@@ -29,6 +29,10 @@ func (local *Repo) ExecutePlan(
 			options = *entry.Options
 		}
 
+		if entry.SkipLuaHooks {
+			options.SkipLuaHooks = true
+		}
+
 		object := entry.GetObject()
 
 		if err = local.GetStore().Commit(object, options); err != nil {

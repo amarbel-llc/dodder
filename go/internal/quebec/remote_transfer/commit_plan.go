@@ -103,7 +103,10 @@ func (imp importer) commitPlan(
 			}
 		}
 
-		if commitErr := imp.importNewObject(object); commitErr != nil {
+		if commitErr := imp.importNewObjectWithOptions(
+			object,
+			entry.SkipLuaHooks,
+		); commitErr != nil {
 			if errors.Is(commitErr, errors.ErrExists) {
 				continue
 			}

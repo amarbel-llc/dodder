@@ -310,8 +310,24 @@ func (p transformPipeline) run() error {
 		),
 	)
 
-	for _, object := range outputs {
-		if err := builder.AddObject(object, 0); err != nil {
+	// Each output's index is its entry's SourceIndex, so per-object settings
+	// read off the binding (hook skipping) can be applied to the built plan:
+	// entries copy their object and Build may reorder them, so neither
+	// pointer identity nor position survives.
+	hookSkipper, _ := returnedBinding.(listTransformHookSkipper)
+
+	var skipLuaHooksByOutput map[int]struct{}
+
+	for outputIndex, object := range outputs {
+		if hookSkipper != nil && hookSkipper.SkipsHooks(object) {
+			if skipLuaHooksByOutput == nil {
+				skipLuaHooksByOutput = make(map[int]struct{})
+			}
+
+			skipLuaHooksByOutput[outputIndex] = struct{}{}
+		}
+
+		if err := builder.AddObject(object, outputIndex); err != nil {
 			return errors.Wrap(err)
 		}
 	}
@@ -319,6 +335,21 @@ func (p transformPipeline) run() error {
 	plan, err := builder.Build()
 	if err != nil {
 		return errors.Wrap(err)
+	}
+
+	if len(skipLuaHooksByOutput) > 0 {
+		for i := range plan.Entries {
+			entry := &plan.Entries[i]
+
+			if _, skip := skipLuaHooksByOutput[entry.SourceIndex]; skip {
+				entry.SkipLuaHooks = true
+			}
+		}
+
+		repo.GetUI().Printf(
+			"hooks skipped for %d object(s)",
+			len(skipLuaHooksByOutput),
+		)
 	}
 
 	plan.DefaultCommitOptions = sku.CommitOptions{
@@ -425,6 +456,13 @@ func (p transformPipeline) checkOutputIds(outputs []*sku.Transacted) error {
 	}
 
 	return nil
+}
+
+// listTransformHookSkipper is the optional per-object hook-skip surface of a
+// list binding (a script's `object.SkipHooks = true`). Optional so a binding
+// without it still satisfies listTransformBinding; its objects all run hooks.
+type listTransformHookSkipper interface {
+	SkipsHooks(*sku.Transacted) bool
 }
 
 // listTransformBinding is the read-back surface shared by the V1

@@ -10,6 +10,7 @@ Type aliases for the gopher-lua library to simplify imports.
 ## Constants
 
 - `LTNil`, `LTFunction`, `LTTable`, `LTBool`, `MultRet`, `LNil`
+- `LTrue`, `LFalse` (the two `LBool` values)
 
 ## VM Pool Sandbox
 

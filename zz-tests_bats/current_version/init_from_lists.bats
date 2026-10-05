@@ -332,6 +332,58 @@ function init_from_lists_genesis_types_resolve_in_run { # @test
   assert_success
 }
 
+# take4 (#16): a script can commit an object without its lua hook stages via
+# `object.SkipHooks = true`. Two identical done weekly chores are added; the
+# built-in actionable hook advances a done recurring chore's due date and
+# resets it to todo. The one that skips hooks keeps its historical state; its
+# fields are still projected (hook skipping is not projection skipping).
+function init_from_lists_script_skips_hooks_per_object { # @test
+  command -v yq >/dev/null || skip "yq not available"
+
+  cat >s.lua <<-'EOM'
+		local l = dodder.list()
+		local blob = blobs.write(
+		  "status = \"done\"\nrecurrence = \"P1W\"\ndue = \"2020-01-06\"\n"
+		)
+
+		local hooked = l:add()
+		hooked.Typ = "chore"
+		hooked.Bezeichnung = "hooked"
+		hooked.Blob = blob
+
+		local skipped = l:add()
+		skipped.Typ = "chore"
+		skipped.Bezeichnung = "skipped"
+		skipped.Blob = blob
+		skipped.SkipHooks = true
+
+		return l
+	EOM
+  script="$(realpath s.lua)"
+
+  run_dodder init-from-lists \
+    -encryption none \
+    -yin <(cat_yin) \
+    -yang <(cat_yang) \
+    -include-builtin-actionable-types \
+    -script "$script" \
+    -blob-source shared \
+    take4 \
+    "$list"
+  assert_success
+  assert_line 'hooks skipped for 1 object(s)'
+
+  # hooked: advanced a week and reset to todo (blob rewritten by the hook's
+  # write-back). skipped: historical state and blob untouched; priority=p3 is
+  # the field default, projected only.
+  run_dodder show -repo_id take4 '!chore?z'
+  assert_success
+  assert_output_unsorted - <<-'EOM'
+		[two/uno @blake2b256-ygk237qe64p8xrh0ztfxp9zzm934r6cqpacqp4re6hl76mhlzw4qs6yzu7 !chore "hooked" status=todo priority=p3 due=2020-01-13 recurrence=P1W]
+		[one/tres @blake2b256-xfka4l854xc3g49qm98emkxs874v38zpavcfdtudn6m7p8dk3vvqmf5u4e !chore "skipped" status=done priority=p3 due=2020-01-06 recurrence=P1W]
+	EOM
+}
+
 # take4 (#16): -removed-list archives what the script dropped. Every version of
 # one/dos is tagged with a drop-class marker and removed; the newborn holds only
 # one/uno, and the removed list carries one/dos with the marker the script set
